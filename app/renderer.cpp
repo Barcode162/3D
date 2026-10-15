@@ -86,9 +86,10 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   }
 
   // Object uniforms: the scene objects (written once) followed by the avatar
-  // (its position is rewritten every frame as you move).
+  // (its position is rewritten every frame as you move), the other players'
+  // avatars and the models.
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + 1 + kMaxModels;
+  const size_t total = objects.size() + 1 + kMaxOthers + kMaxModels;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -123,12 +124,19 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     avatarOffset_ = static_cast<uint32_t>(objects.size() * kObjectStride);
     std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
     avatarMesh_ = engine::SkinnedMesh::upload(device, avatar);
+    for (size_t i = 0; i < kMaxOthers; ++i) {
+      OtherSlot slot;
+      slot.offset = static_cast<uint32_t>((objects.size() + 1 + i) * kObjectStride);
+      std::memcpy(objectData.data() + slot.offset, &u, sizeof(u));
+      others_.push_back(slot);
+    }
   }
   loadModels(scene, objectData);
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
   bonesBindGroup_ = makeBonesBindGroup(bonesBuffer_, "avatar bones");
   firstPersonBonesBindGroup_ = makeBonesBindGroup(firstPersonBonesBuffer_, "avatar bones (first person)");
+  for (OtherSlot& slot : others_) slot.bonesBindGroup = makeBonesBindGroup(slot.bonesBuffer, "other player bones");
   LOG_INFO("Avatar: %zu vertices.", avatar.vertices.size());
 
   // Lights and atmosphere don't change per frame.
@@ -404,7 +412,7 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
 // away; the model itself streams in and is drawn once it's ready. Each file
 // is downloaded once, however many times it's placed.
 void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& objectData) {
-  const size_t firstSlot = scene.objects.size() + 1;  // after the objects and the avatar
+  const size_t firstSlot = scene.objects.size() + 1 + kMaxOthers;  // after the objects and the avatars
   std::vector<std::string> files;
   std::vector<std::vector<size_t>> users;
   for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
@@ -474,6 +482,25 @@ void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::
   pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
   pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
   pass.DrawIndexed(avatarMesh_.indexCount);
+}
+
+void SceneRenderer::setOthers(const std::vector<Mat4>& transforms, const std::vector<std::vector<Mat4>>& bones) {
+  othersShown_ = std::min({transforms.size(), bones.size(), others_.size()});
+  for (size_t i = 0; i < othersShown_; ++i) {
+    gpu_->queue.WriteBuffer(objectBuffer_, others_[i].offset, &transforms[i], sizeof(Mat4));
+    const size_t count = std::min<size_t>(bones[i].size(), kMaxBones);
+    if (count) gpu_->queue.WriteBuffer(others_[i].bonesBuffer, 0, bones[i].data(), count * sizeof(Mat4));
+  }
+}
+
+void SceneRenderer::drawOthers(const wgpu::RenderPassEncoder& pass) const {
+  for (size_t i = 0; i < othersShown_; ++i) {
+    pass.SetBindGroup(1, objectBindGroup_, 1, &others_[i].offset);
+    pass.SetBindGroup(2, others_[i].bonesBindGroup);
+    pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
+    pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
+    pass.DrawIndexed(avatarMesh_.indexCount);
+  }
 }
 
 void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
@@ -548,6 +575,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
+  drawOthers(pass);
   if (full) {
     pass.SetPipeline(modelBlendMirroredPipeline_);
     drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
@@ -600,6 +628,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   drawModels(pass, false, eye);
   pass.SetPipeline(skinnedPipeline_);
   drawAvatar(pass, firstPersonBonesBindGroup_);  // your body, minus the head
+  drawOthers(pass);
   pass.SetPipeline(modelBlendPipeline_);
   drawModels(pass, true, eye);  // glass, after everything solid
 

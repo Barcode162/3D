@@ -19,6 +19,12 @@ concurrency:
 
 env:
   EMSDK_VERSION: 6.0.12
+  # IONOS web hosting login (repo Settings -> Secrets and variables ->
+  # Actions). When set, the game and the multiplayer relay are also
+  # uploaded to the IONOS site, into the folder IONOS_DIR.
+  IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+  IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+  IONOS_DIR: bar
 
 jobs:
   build-and-publish:
@@ -72,3 +78,25 @@ jobs:
           git add -A
           git commit -q -m "Site build ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      # The multiplayer relay (server/relay.php) runs on the IONOS web
+      # hosting, next to a second copy of the game. Only files whose size
+      # changed are sent, except the small per-build files, always sent.
+      - name: Upload to IONOS
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          sudo apt-get install -y lftp >/dev/null
+          cp server/relay.php server/.htaccess build/site/
+          cd build/site
+          lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<EOF
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 30
+          mkdir -p -f $IONOS_DIR
+          mirror -R --ignore-time --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
+          cd $IONOS_DIR
+          mput index.html version.txt app.js app.wasm audio.js net.js relay.php .htaccess
+          bye
+          EOF

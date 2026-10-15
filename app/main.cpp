@@ -11,6 +11,7 @@
 #include "app/bar_scene.h"
 #include "app/avatar.h"
 #include "app/jukebox.h"
+#include "app/players.h"
 #include "app/props.h"
 #include "app/renderer.h"
 #include "engine/audio.h"
@@ -51,6 +52,9 @@ struct App {
   app::Avatar avatar;
   app::AvatarMotion avatarMotion;
   std::vector<Mat4> avatarBones, firstPersonBones;
+  app::OtherPlayers others;  // multiplayer
+  std::vector<Mat4> otherTransforms;
+  std::vector<std::vector<Mat4>> otherBones;
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
   engine::TextRenderer text;
@@ -99,10 +103,11 @@ void updateFps(double nowMs) {
   ++g_app.fpsFrames;
   const double elapsed = nowMs - g_app.fpsWindowStartMs;
   if (elapsed < 500) return;
-  char text[96];
-  std::snprintf(text, sizeof(text), "%.0f fps  |  %ux%u @%.1fx  |  %zu objects",
+  char text[128];
+  const std::string online = g_app.others.statusText();
+  std::snprintf(text, sizeof(text), "%.0f fps  |  %ux%u @%.1fx  |  %zu objects%s%s",
                 g_app.fpsFrames * 1000.0 / elapsed, g_app.gpu.width, g_app.gpu.height, g_app.gpu.pixelRatio,
-                g_app.renderer.objectCount());
+                g_app.renderer.objectCount(), online.empty() ? "" : "  |  ", online.c_str());
   engine::setStatus(text);
   g_app.fpsFrames = 0;
   g_app.fpsWindowStartMs = nowMs;
@@ -144,6 +149,15 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.outline.w *= style.color.w;
     style.outlineWidth = 0.8f;
     text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
+  }
+  // Other players' names float over their heads.
+  for (const app::OtherPlayer& o : g_app.others.players()) {
+    if (!o.placed) continue;
+    engine::TextStyle style;
+    style.align = 0.5f;
+    style.color = {0.75f, 0.9f, 1.0f, 1.0f};
+    style.outlineWidth = 0.8f;
+    text.addWorld(o.name, o.eye + Vec3{0, 0.32f, 0}, right, up, 0.07f, style);
   }
   if (!g_app.jukeboxMenu.isOpen() && (g_app.held >= 0 || g_app.aimed >= 0)) {
     engine::TextStyle style;
@@ -380,6 +394,8 @@ void frame() {
   updateCamera(dt);
   updateInteraction(nowMs);
   updatePhysics(dt);
+  g_app.others.sendSelf(nowMs, g_app.camera.position, g_app.camera.yaw, g_app.camera.pitch);
+  g_app.others.update(nowMs, dt, kWalkSpeed);
 
   wgpu::TextureView target = g_app.gpu.beginFrame();
   if (!target) return;
@@ -392,6 +408,17 @@ void frame() {
   g_app.avatarMotion.time = static_cast<float>(nowMs / 1000.0);
   g_app.avatar.pose(g_app.avatarMotion, g_app.avatarBones);
   g_app.avatar.hideHead(g_app.avatarBones, g_app.firstPersonBones);
+  const auto& others = g_app.others.players();
+  g_app.otherTransforms.clear();
+  g_app.otherBones.resize(others.size());
+  for (size_t i = 0; i < others.size(); ++i) {
+    const app::OtherPlayer& o = others[i];
+    if (!o.placed) continue;
+    g_app.avatar.pose(o.motion, g_app.otherBones[g_app.otherTransforms.size()]);
+    g_app.otherTransforms.push_back(app::avatarTransform(o.eye, o.yaw, o.pitch));
+  }
+  g_app.otherBones.resize(g_app.otherTransforms.size());
+  g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones);
   g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw, cam.pitch),
                         g_app.avatarBones, g_app.firstPersonBones, g_app.scene.mirrors, g_app.text);
 }
@@ -430,6 +457,7 @@ void onGpuReady(bool ok) {
   applyTestCamera();
   g_app.input.attach("#canvas");
   g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
+  g_app.others.start();
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
   g_app.introEndMs = g_app.lastFrameMs + kIntroMaxMs;
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");

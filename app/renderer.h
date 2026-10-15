@@ -38,6 +38,11 @@ class SceneRenderer {
               const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,
               const engine::TextRenderer& text);
 
+  // Other players' avatars this frame (multiplayer): where each one stands
+  // (avatarTransform) and its full pose. At most kMaxOthers are drawn.
+  static constexpr size_t kMaxOthers = 7;
+  void setOthers(const std::vector<engine::Mat4>& transforms, const std::vector<std::vector<engine::Mat4>>& bones);
+
   size_t objectCount() const { return sceneDraws_.size() + modelsLoaded_; }
 
   // Moves placed model `index` (BarScene::models order), e.g. a glass that
@@ -107,6 +112,7 @@ class SceneRenderer {
   void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye) const;
   void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
+  void drawOthers(const wgpu::RenderPassEncoder& pass) const;
   wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
   void renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
                     const engine::Mat4& viewProj, engine::Vec3 eye);
@@ -135,6 +141,13 @@ class SceneRenderer {
   uint32_t avatarOffset_ = 0;  // the avatar's slot in objectBuffer_
   wgpu::Buffer bonesBuffer_, firstPersonBonesBuffer_;
   wgpu::BindGroup bonesBindGroup_, firstPersonBonesBindGroup_;
+  struct OtherSlot {
+    uint32_t offset;  // in objectBuffer_
+    wgpu::Buffer bonesBuffer;
+    wgpu::BindGroup bonesBindGroup;
+  };
+  std::vector<OtherSlot> others_;
+  size_t othersShown_ = 0;
   FrameUniforms frame_ = {};
   std::vector<MirrorTarget> mirrorTargets_;
   uint32_t targetW_ = 0, targetH_ = 0;

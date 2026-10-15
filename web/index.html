@@ -90,8 +90,13 @@
     audio.async = false;
     audio.onerror = function () { append('Failed to load audio.js', true); };
     document.body.appendChild(audio);
+    var net = document.createElement('script');
+    net.src = 'net.js?v=' + build;
+    net.async = false;
+    net.onerror = function () { append('Failed to load net.js', true); };
+    document.body.appendChild(net);
     var script = document.createElement('script');
-    script.async = false;  // run after audio.js
+    script.async = false;  // run after audio.js and net.js
     script.src = 'app.js?v=' + build;
     script.onerror = function () { append('Failed to load app.js', true); };
     document.body.appendChild(script);

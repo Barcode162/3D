@@ -70,7 +70,8 @@ judged on the user's phone.
 - `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
-  `jukebox.cpp` is the playlist and its menu. `main.cpp` is the frame loop,
+  `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
+  players (multiplayer smoothing). `main.cpp` is the frame loop,
   input → interaction, and on-screen text.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
@@ -78,9 +79,13 @@ judged on the user's phone.
   `assets/music/CREDITS.md`).
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
-  automatically. `web/audio.js` is the thin Web Audio + song-picker bridge.
+  automatically. `web/audio.js` is the thin Web Audio + song-picker bridge, `web/net.js`
+  the multiplayer bridge.
+- `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
+  web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
-  `check_live.mjs` (loads the deployed site headlessly).
+  `check_live.mjs` (loads the deployed site headlessly), `mp_test.mjs`
+  (two players through a local PHP relay).
   `tools/assets/` builds the 3D models in headless Blender (see
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes

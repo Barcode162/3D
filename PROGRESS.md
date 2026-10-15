@@ -11,11 +11,18 @@ push after each, tell the user what to look at.
 **Asset pass done and verified on iPhone (build `964adfe`):** every piece
 looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
 (it caps Safari at 30 fps), not the engine. Next:
-1. **Multiplayer (user asked 2026-10-15).** The user bought IONOS hosting
-   and wants it as the game server so they and their brother can join the
-   same bar. Waiting on which IONOS plan it is (shared web hosting can't
-   run a live WebSocket server; a VPS can). See `docs/DECISIONS.md` →
-   Multiplayer.
+1. **Multiplayer (user asked 2026-10-15).** The user has **IONOS Web
+   Hosting Plus** (1 year): PHP + SFTP, no live server process. M1 is built
+   (see `docs/DECISIONS.md` → Multiplayer): `server/relay.php` passes
+   positions between phones ~10x/s, others show as avatars with name tags.
+   **Waiting on the user:** (a) their domain name → put it in
+   `DEFAULT_SERVER` in `web/net.js` (`https://DOMAIN/bar/relay.php`);
+   (b) three GitHub secrets so the deploy uploads to IONOS:
+   `IONOS_SFTP_HOST`, `IONOS_SFTP_USER`, `IONOS_SFTP_PASSWORD`. Then check
+   the "Upload to IONOS" step in the Actions run and
+   `https://DOMAIN/bar/relay.php` (should say `{"ok":1,"relay":"bar3d"}`).
+   After that: M2 = see each other pick up/throw glasses, shared jukebox;
+   M3 = smoother movement with WebRTC (phone to phone), voice chat.
 2. **Performance pass (no longer urgent).** Re-measure with Low Power Mode
    off first. Goal: 60 fps on the iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
    textures (all RGBA, uncompressed), and the full mirror draws the whole
@@ -69,7 +76,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - **An avatar you can see in a mirror,** like VRChat.
 - **Real background music** from a jukebox, with sound placed in 3D space.
 - Top-quality lighting: warm lamps, neon signs, glow, reflections.
-- Multiplayer: the user and their brother in the same bar (started 2026-10-15). Voice chat later.
+- Multiplayer: the user and their brother in the same bar (M1 built 2026-10-15). Voice chat later.
 
 ## Roadmap
 ### Stage 1: Engine foundation
@@ -126,6 +133,12 @@ A small DAW inside the bar, all DSP written in C++:
 
 ### Stage 7: Imports
 - [x] GLB model loader (done as W2)
+
+### Stage M: Multiplayer (2026-10-15)
+- [x] M1 See each other: PHP relay on IONOS (`server/relay.php`), bridge `web/net.js` + `engine/net.*`, smoothing + walk animation `app/players.*`, up to 7 other avatars with name tags, in mirrors too. `?room=`, `?name=`. Test: `tools/mp_test.mjs`
+- [ ] Hook up the user's IONOS domain + upload secrets (waiting on user)
+- [ ] M2 Shared world: held/thrown glasses, jukebox song, mirrors on/off
+- [ ] M3 WebRTC phone-to-phone for smoother movement; voice chat
 
 ### Stage W: World simulation (new north star, 2026-10-15)
 - [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
@@ -222,3 +235,6 @@ A small DAW inside the bar, all DSP written in C++:
   starts with the performance pass.
 - **2026-10-15:** The 30 fps was iOS Low Power Mode. The user wants
   multiplayer next, hosted on their new IONOS plan (waiting on which plan).
+- **2026-10-15:** M1 multiplayer built and tested headless (two browsers,
+  local PHP relay: each sees the other walk, with name tag). Deploy now
+  uploads the game + relay to IONOS over SFTP once the secrets exist.

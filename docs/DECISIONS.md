@@ -87,13 +87,36 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - Multiplayer: yes, now (2026-10-15). The user bought IONOS hosting to
   use as the server, for them and their brother. Voice chat: not yet.
 
-## Multiplayer (2026-10-15, in progress)
-- Plan: the game page stays on GitHub Pages; a small server sends each
-  player's position, look direction and held objects to the others
-  (WebSockets, ~10-20 updates/s). Others show up as avatars.
-- IONOS **shared Web Hosting** (PHP + static files) can't keep a live
-  WebSocket server running. An IONOS **VPS** (Linux, root access) can.
-  Waiting on which plan the user has.
+## Multiplayer (2026-10-15)
+- The user has **IONOS Web Hosting Plus** (paid for a year): Apache + PHP
+  + SFTP, no long-running processes, so **no WebSocket server**. Chosen
+  instead: a **PHP relay** (`server/relay.php`). Each phone POSTs its state
+  (eye x,y,z, yaw, pitch) every 100 ms and gets back everyone else's latest.
+  Rooms are JSON files in `rooms/` next to the script (flock'd, private via
+  `.htaccess`); a player who stops sending is dropped after 5 s.
+  Fine for 2-8 players. If it ever feels laggy: M3 = WebRTC data channels
+  phone-to-phone, with the PHP relay only for the handshake.
+- Requests are sent as `text/plain` so browsers skip the CORS preflight;
+  the relay answers with `Access-Control-Allow-Origin: *`, so the GitHub
+  Pages copy of the game can use the IONOS relay.
+- Smoothing (`app/players.cpp`): others are played back 250 ms in the past,
+  interpolated between received states, on the sender's clock (offset
+  estimated from the fastest delivery). Their walk animation comes from how
+  far they move, like your own.
+- Rendering: `SceneRenderer::setOthers` draws up to 7 extra copies of the
+  avatar mesh (own object slot + bone buffer each), in the room and in both
+  mirrors. Name tags are world text over their heads.
+- Deploy: `deploy.yml` → "Upload to IONOS" (only when the
+  `IONOS_SFTP_HOST/USER/PASSWORD` secrets exist) mirrors `build/site` +
+  the relay into `bar/` on the webspace with lftp. So the game is also at
+  `https://DOMAIN/bar/`, and there it uses `relay.php` next to itself.
+  On github.io it uses `DEFAULT_SERVER` in `web/net.js`.
+- Page options: `?room=name` (separate bars), `?name=Josh` (remembered),
+  `?server=URL` or `?server=off`.
+- Testing: `NODE_PATH=$(npm root -g) node tools/mp_test.mjs` (needs `php`)
+  opens two players and saves `build/mp-bob.png`. Gotcha: don't pause
+  sending on `document.hidden`; headless background tabs count as hidden
+  (and iOS pauses timers in the background anyway).
 
 ## World-simulation principles (2026-10-15)
 - **One material, all senses:** a material record holds look (PBR), physics
