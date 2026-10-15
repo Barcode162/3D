@@ -14,6 +14,41 @@ This file explains why it exists and where it's heading.
 - Everything is tested on the user's **iPhone 15 Pro Max (iOS 26, Safari)**,
   their only device.
 
+## North star (updated by the user, 2026-10-15)
+**Build a world simulation, not a set of props.** The bar stays the place
+we build first, but the real goal is engines that simulate what the senses
+perceive (sight, sound, feel, and more), so that real behavior *emerges*
+from the systems instead of being faked one object at a time. Every engine
+we add should make every other engine more powerful: "it stacks".
+Highest quality is the bar for everything, so genuine world building
+(real shapes, real materials, real physics) is required, not optional.
+
+How that turns into engineering (Claude's plan, user agreed to let Claude
+decide the details and only review/critique):
+1. **One material = every sense.** Each surface type (oak, glass, brass,
+   leather, brick, cloth...) is defined once with its look (PBR color,
+   roughness, metalness, normal detail), its physics (density, friction,
+   bounciness, how it breaks) and its sound (what it sounds like when hit,
+   scraped, or walked on, and how much echo it soaks up). Add an object
+   made of glass and it automatically looks, moves and sounds like glass.
+2. **Sight:** physically based light (PBR), shadows, bloom, reflections,
+   later global illumination.
+3. **Feel / touch:** rigid-body physics (pick up, throw, stack, knock
+   over), then soft things (cloth, cushions), then liquids (pouring
+   drinks). Feel on screen = weight, inertia, footsteps that match the
+   floor. (iPhone Safari has no vibration API, so no haptics.)
+4. **Sound:** sounds *generated from the physics* (a glass clinking is
+   synthesized from the collision and the material, not a recorded clip),
+   room echo computed from the room's shape and materials, sound blocked by
+   walls and doors.
+5. **Beyond the senses' basics:** temperature and heat (candle flames, hot
+   coffee, ice melting in a drink), smell as an invisible simulated field
+   that spreads through the room (shown as subtle haze/particles), time of
+   day and weather outside the window, wear and dirt that build up where
+   things are used.
+6. **Real assets:** every piece of the room gets replaced with a properly
+   modeled one, one piece at a time (see "Art upgrade").
+
 ## The main thing: a VRChat-style 3D hangout bar
 "Like a real-life 3D hangout bar would look", built as a game plus engine
 that keeps getting upgraded:
@@ -44,17 +79,19 @@ that keeps getting upgraded:
 - The jukebox works like a real one: pick a song from its menu. Songs the
   user downloads can be loaded for testing.
 
-## Art upgrade (user, 2026-10-15)
-The blockout looks like "basic AI 3D". The user wants to rework the whole
-room into real-looking assets, one piece at a time (proper shapes,
-sculpted detail, real textures). Lighting is considered fine. Open
-question: where the models come from (free CC0 models, modeled by Claude
-with scripts, or made by the user with a phone AI-3D app), which needs the
-GLB loader first.
+## Art upgrade (user, 2026-10-15; decided by Claude)
+The blockout looks like "basic AI 3D". Rework the whole room into
+real-looking assets, one piece at a time, big to small: bar counter →
+walls/floor → stools → back bar and bottles → tables and booth → jukebox →
+small props. Sources, mixed per piece:
+- Free CC0 models and textures (Poly Haven, ambientCG) where they fit.
+- Custom pieces modeled by Claude with scripted tools (e.g. Blender run
+  headless) for the signature items (counter, jukebox, neon).
+- The user's own GLB files (e.g. from a phone AI-3D app) whenever they like.
+The user's role: look at screenshots / the live site and critique.
 
 ## Later (explicitly NOT now)
-- Importing 3D models (GLB/glTF loader written from scratch) and custom
-  avatars (VRM).
+- Custom avatars (VRM). (The GLB loader itself moved up: it's needed now.)
 - Multiplayer: friends join by link and see each other. This needs a server
   beyond GitHub Pages.
 - Voice chat (WebRTC).

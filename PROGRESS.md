@@ -1,19 +1,30 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 3 physics (pick up / throw)
+**Current focus:** Stage W, the world-simulation foundation (materials for every sense, PBR, GLB loader), then real assets one piece at a time
 
 ## Next up (start here in a new session)
-The user's chosen order (2026-10-15): jukebox menu → mirrors → avatar →
-animation (all done) → physics.
-1. **Ask the user how the first-person body looks** on the iPhone (look
-   down: shirt, belt, jeans, shoes; build after `fa20592`).
-2. **Physics**: pick up / throw glasses, darts, pool.
-3. **More things to use**: light switches, the door, glasses. Each is an
-   `Interactable` in `bar_scene.cpp` plus an `Action`.
-4. Small polish noticed on iPhone: the candle spheres on the tables look
-   like white balls (make them real little candles with a flame glow), and
-   the stools look plain.
+New direction (2026-10-15): the goal is now a **world simulation** where
+engines stack (see `docs/VISION.md` → North star). The user lets Claude
+decide the details and only reviews/critiques. Work one step at a time,
+push after each, tell the user what to look at.
+1. **W1 Material system + PBR shading**: one `Material` record (look +
+   physics + sound fields), PBR lighting (roughness/metalness/normal maps)
+   in the lit shader. Existing scene switches to it with no visual loss.
+2. **W2 GLB loader** (from scratch): meshes, UVs, normals, tangents, PBR
+   textures; assets streamed from `assets/models/`.
+3. **W3 First real asset: the bar counter**, replacing the blockout one.
+   Set up the asset tool pipeline (try headless Blender in the container;
+   CC0 textures from Poly Haven/ambientCG with credits).
+4. **W4 Rigid-body physics** using the material's physics fields: pick up,
+   throw, stack glasses (was "Physics" before).
+5. **W5 Physical sound**: impact sounds synthesized from collisions and
+   materials; room echo from room size and materials.
+6. Then continue the art upgrade piece by piece (walls/floor → stools →
+   back bar → tables/booth → jukebox → props), alternating with sim
+   engines (shadows/bloom, heat/flames, liquids, smell field, day/night).
+- Still open: ask the user how the first-person body looks on the iPhone
+  (build after `fa20592`).
 
 Last verified on iPhone: build `fa20592` (mirrors, avatar, walk animation, music), 60 fps even at the mirror, no bugs.
 
@@ -81,7 +92,17 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] Reflections on bar top/floor, haze/light shafts
 
 ### Stage 7: Imports
-- [ ] GLB model loader, so you can bring your own 3D models into the bar
+- [ ] GLB model loader (moved up: it's W2 in Stage W)
+
+### Stage W: World simulation (new north star, 2026-10-15)
+- [ ] W1 Material system (look + physics + sound in one record) + PBR shading
+- [ ] W2 GLB loader + asset pipeline
+- [ ] W3 Real assets, one piece at a time (bar counter first)
+- [ ] W4 Rigid-body physics driven by materials
+- [ ] W5 Physical sound: synthesized impacts, room acoustics
+- [ ] W6 Heat and fire (candle flames, steam, melting ice)
+- [ ] W7 Liquids (pour and mix drinks)
+- [ ] W8 Smell/air field (spreading haze), day/night and weather outside
 
 ## Decisions
 - **Music:** (1) CC BY smooth-jazz tracks by Kevin MacLeod as the bar's
@@ -129,3 +150,6 @@ A small DAW inside the bar, all DSP written in C++:
   mirror, music works, animations good, no bugs. Added the first-person
   body (look down to see yourself). Smoke test now also saves
   `build/smoke-down.png` (looking ~70° down).
+- **2026-10-15:** New north star from the user: a world simulation where
+  engines stack and cover every sense, highest quality, real assets.
+  Claude decides details, user reviews. Roadmap reordered (Stage W).

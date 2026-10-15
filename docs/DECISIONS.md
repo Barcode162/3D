@@ -12,7 +12,7 @@ future session re-litigates or repeats it.
 | Build | CMake + Ninja | Standard, incremental |
 | Shaders | WGSL files in `shaders/`, embedded into the binary | The only shader language WebGPU accepts |
 | Engines/libraries | None. Everything from scratch | User's explicit wish; discuss any exception first |
-| Assets | Generated in code where possible; third-party only with a license and credits | Public repo |
+| Assets | Real modeled assets as GLB files in `assets/`: CC0 models/textures (Poly Haven, ambientCG), custom ones Claude makes with offline tools (Blender headless is a *tool*, like a compiler, never a runtime dependency), and the user's own GLBs. Every third-party file gets a license + credit entry. Procedural code stays for things that are better generated | Decided 2026-10-15: code-built boxes/cylinders look "basic AI 3D"; user wants highest quality |
 | Async setup | Callbacks with `CallbackMode::AllowSpontaneous`, no Asyncify | Smaller and faster |
 | Threads | None (yet) | Pages can't send COOP/COEP headers |
 | Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
@@ -72,8 +72,23 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - Physics, avatar with mirror, and animations: yes, all ours.
 - Order: jukebox menu → mirrors (full + avatars-only) → avatar (bones,
   shapes, textures) → animation → physics.
-- Not answered yet: free third-party 3D models vs. everything from code;
-  multiplayer server; voice chat.
+- Third-party models vs. code: answered 2026-10-15, real assets, mixed
+  sources (see the Assets row and VISION.md → Art upgrade). The user lets
+  Claude decide details and only reviews.
+- Not answered yet: multiplayer server; voice chat.
+
+## World-simulation principles (2026-10-15)
+- **One material, all senses:** a material record holds look (PBR), physics
+  (density, friction, restitution) and sound (impact/scrape synthesis
+  parameters, absorption). Objects reference a material; engines read the
+  part they need. New engines extend the record instead of adding per-object
+  special cases.
+- **Simulate, don't script:** prefer a behavior that falls out of a system
+  (a glass sounds like glass because it hit something) over a hand-placed
+  effect.
+- **Phone budget rules:** 60 fps on the iPhone 15 Pro Max is the hard limit.
+  A sim that can't fit runs at lower rate, lower resolution, or only near
+  the player.
 
 ## Gotchas hit so far
 - Avatar rotation signs (avatar faces -Z, +X is its right side): rotating
