@@ -8,16 +8,11 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-1. **W2 GLB loader** (from scratch): meshes, UVs, normals, tangents, PBR
-   textures; assets streamed from `assets/models/`.
-2. **W3 First real asset: the bar counter**, replacing the blockout one.
-   Set up the asset tool pipeline (try headless Blender in the container;
-   CC0 textures from Poly Haven/ambientCG with credits).
-3. **W4 Rigid-body physics** using the material's physics fields: pick up,
+1. **W4 Rigid-body physics** using the material's physics fields: pick up,
    throw, stack glasses (was "Physics" before).
-4. **W5 Physical sound**: impact sounds synthesized from collisions and
+2. **W5 Physical sound**: impact sounds synthesized from collisions and
    materials; room echo from room size and materials.
-5. Then continue the art upgrade piece by piece (walls/floor → stools →
+3. Then continue the art upgrade piece by piece (stools → walls/floor →
    back bar → tables/booth → jukebox → props), alternating with sim
    engines (shadows/bloom, heat/flames, liquids, smell field, day/night).
 - Still open: ask the user how the first-person body looks on the iPhone
@@ -89,12 +84,12 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] Reflections on bar top/floor, haze/light shafts
 
 ### Stage 7: Imports
-- [ ] GLB model loader (moved up: it's W2 in Stage W)
+- [x] GLB model loader (done as W2)
 
 ### Stage W: World simulation (new north star, 2026-10-15)
 - [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
-- [ ] W2 GLB loader + asset pipeline
-- [ ] W3 Real assets, one piece at a time (bar counter first)
+- [x] W2 GLB loader (`engine/json.*`, `engine/gltf.*`, `engine/model.*`, `engine/fetch.*`) + asset pipeline (`tools/assets/`, Blender headless)
+- [ ] W3 Real assets, one piece at a time: bar counter done (`assets/models/bar_counter.glb`)
 - [ ] W4 Rigid-body physics driven by materials
 - [ ] W5 Physical sound: synthesized impacts, room acoustics
 - [ ] W6 Heat and fire (candle flames, steam, melting ice)
@@ -155,3 +150,8 @@ A small DAW inside the bar, all DSP written in C++:
   that also carries physics and sound values for later engines. The shader
   is physically based (GGX). Chrome now looks darker: it reflects the dark
   room; real reflections come with environment maps later.
+- **2026-10-15:** W2 + W3. Own GLB loader (JSON parser, node tree, PBR
+  textures decoded by the browser). Blender 4.5 runs headless in the
+  container; `tools/assets/bar_counter.py` models the counter (paneled
+  front, mahogany top with drink rail, brass foot rail on brackets) with
+  CC0 Poly Haven wood. Test camera: `?cam=x,y,z,yaw,pitch`.

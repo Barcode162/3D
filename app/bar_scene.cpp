@@ -69,11 +69,9 @@ void buildRoom(Builder& b) {
 
 void buildBar(Builder& b) {
   const float barZ = -3.2f, barLen = 7.0f;
-  b.add(makeBox({barLen, 1.05f, 0.7f}), {0, 0.525f, barZ}, kDarkWood);
-  b.add(makeBox({barLen + 0.3f, 0.06f, 0.9f}), {0, 1.08f, barZ + 0.05f}, kVarnishedWood).scale(0.7f);
-  // Brass foot rail along the front.
-  b.add(makeCylinder(0.025f, barLen, 16), {0, 0.2f, barZ + 0.48f}, kBrass,
-        Quat::axisAngle({0, 0, 1}, engine::kPi / 2));
+  // The counter is a real model (tools/assets/bar_counter.py): paneled
+  // front, mahogany top with a drink rail, brass foot rail on brackets.
+  b.scene.models.push_back({"bar_counter.glb", {0, 0, barZ}, {}, 1, kVarnishedWood});
   // Counter plus the bartender's area behind it.
   b.block({0, 0, (barZ + 0.5f + -kRoomHalfZ) / 2}, barLen / 2 + 0.15f,
           (barZ + 0.5f + kRoomHalfZ) / 2);

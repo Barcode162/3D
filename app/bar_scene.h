@@ -37,6 +37,17 @@ struct SceneObject {
   }
 };
 
+// A real 3D model from a .glb file in assets/models/. The file gives its
+// look; `material` says what it's made of for the other senses (weight,
+// friction, sound).
+struct ModelPlacement {
+  std::string file;  // e.g. "bar_counter.glb"
+  engine::Vec3 position;
+  engine::Quat rotation;
+  float scale = 1;
+  MaterialId material = kDarkWood;
+};
+
 struct PointLight {
   engine::Vec3 position;
   engine::Vec3 color;
@@ -79,6 +90,7 @@ struct Mirror {
 
 struct BarScene {
   std::vector<SceneObject> objects;
+  std::vector<ModelPlacement> models;
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
   std::vector<Interactable> interactables;

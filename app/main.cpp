@@ -305,6 +305,22 @@ void frame() {
                         g_app.avatarBones, g_app.firstPersonBones, g_app.scene.mirrors, g_app.text);
 }
 
+// For testing: "?cam=x,y,z,yaw,pitch" in the page URL starts the camera
+// there (yaw/pitch in degrees), so any spot can be screenshotted.
+void applyTestCamera() {
+  char buffer[128] = {};
+  EM_ASM({
+    var m = /[?&]cam=([^&]*)/.exec(location.search);
+    stringToUTF8(m ? decodeURIComponent(m[1]) : '', $0, $1);
+  }, buffer, sizeof(buffer));
+  float x, y, z, yaw, pitch;
+  if (std::sscanf(buffer, "%f,%f,%f,%f,%f", &x, &y, &z, &yaw, &pitch) != 5) return;
+  g_app.camera.position = {x, y, z};
+  g_app.camera.yaw = engine::radians(yaw);
+  g_app.camera.pitch = engine::radians(pitch);
+  LOG_INFO("Test camera at %.2f, %.2f, %.2f.", x, y, z);
+}
+
 void onGpuReady(bool ok) {
   if (!ok) {
     engine::setStatus("Startup failed - see log");
@@ -319,6 +335,7 @@ void onGpuReady(bool ok) {
   }
   g_app.camera.position = g_app.scene.spawnPosition;
   g_app.camera.yaw = g_app.scene.spawnYaw;
+  applyTestCamera();
   g_app.input.attach("#canvas");
   g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();

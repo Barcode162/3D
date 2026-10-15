@@ -1,0 +1,86 @@
+#include "engine/fetch.h"
+
+#include <emscripten/emscripten.h>
+
+#include <cstdlib>
+#include <map>
+
+#include "engine/log.h"
+
+namespace engine {
+namespace {
+
+using FetchDone = std::function<void(bool, std::vector<uint8_t>)>;
+using DecodeDone = std::function<void(bool, Rgba8Image)>;
+
+std::map<int, DecodeDone>& pendingDecodes() {
+  static std::map<int, DecodeDone> pending;
+  return pending;
+}
+
+void onFetchLoad(void* arg, void* data, int size) {
+  auto* done = static_cast<FetchDone*>(arg);
+  const auto* bytes = static_cast<const uint8_t*>(data);
+  (*done)(true, std::vector<uint8_t>(bytes, bytes + size));
+  delete done;
+}
+
+void onFetchError(void* arg) {
+  auto* done = static_cast<FetchDone*>(arg);
+  (*done)(false, {});
+  delete done;
+}
+
+}  // namespace
+
+// Called from JavaScript when an image has been decoded (pixels = 0 on failure).
+extern "C" EMSCRIPTEN_KEEPALIVE void engine_imageDecoded(int id, uint8_t* pixels, int width, int height) {
+  auto& pending = pendingDecodes();
+  const auto it = pending.find(id);
+  if (it == pending.end()) return;
+  DecodeDone done = std::move(it->second);
+  pending.erase(it);
+  Rgba8Image image;
+  if (pixels) {
+    image.width = width;
+    image.height = height;
+    image.pixels.assign(pixels, pixels + static_cast<size_t>(width) * height * 4);
+    free(pixels);
+  }
+  done(pixels != nullptr, std::move(image));
+}
+
+// createImageBitmap + a 2D canvas give raw RGBA pixels; they're copied into
+// WebAssembly memory and handed back to C++.
+EM_JS(void, js_decodeImage, (int id, const uint8_t* data, int size, const char* mime), {
+  var bytes = HEAPU8.slice(data, data + size);
+  var blob = new Blob([bytes], {type: UTF8ToString(mime)});
+  createImageBitmap(blob, {colorSpaceConversion: 'none', premultiplyAlpha: 'none'}).then(function(bitmap) {
+    var canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(bitmap.width, bitmap.height)
+                                                        : document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    var ctx = canvas.getContext('2d', {colorSpace: 'srgb', willReadFrequently: true});
+    ctx.drawImage(bitmap, 0, 0);
+    var pixels = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
+    var ptr = _malloc(pixels.length);
+    HEAPU8.set(pixels, ptr);
+    _engine_imageDecoded(id, ptr, bitmap.width, bitmap.height);
+  }).catch(function(e) {
+    err('Image decode failed: ' + e);
+    _engine_imageDecoded(id, 0, 0, 0);
+  });
+});
+
+void fetchFile(const std::string& url, FetchDone done) {
+  emscripten_async_wget_data(url.c_str(), new FetchDone(std::move(done)), onFetchLoad, onFetchError);
+}
+
+void decodeImage(const std::vector<uint8_t>& bytes, const std::string& mimeType, DecodeDone done) {
+  static int nextId = 1;
+  const int id = nextId++;
+  pendingDecodes()[id] = std::move(done);
+  js_decodeImage(id, bytes.data(), static_cast<int>(bytes.size()), mimeType.c_str());
+}
+
+}  // namespace engine

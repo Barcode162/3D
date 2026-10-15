@@ -54,10 +54,10 @@ NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software W
 The smoke test prints the on-screen log and saves `build/smoke.png` and
 `build/smoke-walk.png` (after walking forward and turning) and
 `build/smoke-down.png` (looking down at your own body), which
-can be viewed with the Read tool. To look at a specific spot (a mirror, the
-jukebox), temporarily change `scene.spawnPosition`/`spawnYaw` in
-`app/bar_scene.cpp`, build, screenshot, then restore it (see
-`docs/DECISIONS.md` → Gotchas for testing music and the song picker). Software WebGPU (SwiftShader) works in this
+can be viewed with the Read tool. To look at a specific spot, run with
+`CAM="x,y,z,yaw,pitch"` (degrees) → `build/smoke-cam.png`; the page itself
+accepts `?cam=x,y,z,yaw,pitch` (see `docs/DECISIONS.md` → Gotchas for
+testing music and the song picker). Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
 
@@ -78,6 +78,8 @@ judged on the user's phone.
   panel. Everything C++ prints goes to the log panel; errors open it
   automatically. `web/audio.js` is the thin Web Audio + song-picker bridge.
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test).
+  `tools/assets/` builds the 3D models in headless Blender (see
+  `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes
   to the `gh-pages` branch (see `docs/DECISIONS.md` → Hosting).
 - `docs/` holds the long-term context: `VISION.md` and `DECISIONS.md`.

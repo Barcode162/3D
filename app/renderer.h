@@ -9,6 +9,7 @@
 // drawn, to save GPU time). The glass then shows that texture.
 #include <webgpu/webgpu_cpp.h>
 
+#include <memory>
 #include <vector>
 
 #include "app/avatar.h"
@@ -16,6 +17,7 @@
 #include "engine/gpu.h"
 #include "engine/math.h"
 #include "engine/mesh.h"
+#include "engine/model.h"
 #include "engine/skinned_mesh.h"
 #include "engine/text.h"
 
@@ -36,11 +38,12 @@ class SceneRenderer {
               const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,
               const engine::TextRenderer& text);
 
-  size_t objectCount() const { return sceneDraws_.size(); }
+  size_t objectCount() const { return sceneDraws_.size() + modelsLoaded_; }
 
  private:
   static constexpr uint32_t kMaxLights = 8;
   static constexpr uint32_t kMaxBones = 32;  // matches shaders/scene.wgsl
+  static constexpr size_t kMaxModels = 64;
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
@@ -69,6 +72,11 @@ class SceneRenderer {
     float up[4];
     float params[4];
   };
+  // A placed .glb model; `gpu` stays empty until it has finished loading.
+  struct ModelDraw {
+    std::shared_ptr<engine::GpuModel> gpu;
+    uint32_t uniformOffset;
+  };
   struct DrawItem {
     engine::Mesh mesh;
     uint32_t uniformOffset;
@@ -90,6 +98,8 @@ class SceneRenderer {
   void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler);
   void resizeMirrorTargets();
   void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items) const;
+  void drawModels(const wgpu::RenderPassEncoder& pass) const;
+  void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
   wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
   void renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
@@ -101,8 +111,12 @@ class SceneRenderer {
   wgpu::RenderPipeline mirroredPipeline_;  // reflected views (triangle winding flips)
   wgpu::RenderPipeline skinnedPipeline_;          // the avatar, first person
   wgpu::RenderPipeline skinnedMirroredPipeline_;  // the avatar, in mirrors
+  wgpu::RenderPipeline modelPipeline_, modelMirroredPipeline_;  // loaded .glb models
   wgpu::RenderPipeline glassPipeline_;
-  wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_;
+  wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_, modelLayout_;
+  wgpu::Sampler modelSampler_;
+  std::vector<ModelDraw> models_;
+  size_t modelsLoaded_ = 0;
   wgpu::TextureView colorMaps_, bumpMaps_;
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i

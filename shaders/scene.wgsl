@@ -158,7 +158,7 @@ fn fs_main(in: VsOut) -> @location(0) vec4f {
     roughness = 1.0 - (1.0 - roughness) * s.gloss;
     n = normalize((object.model * vec4f(s.normal, 0.0)).xyz);
   }
-  return shade(in.worldPos, n, base, roughness, object.color.a, object.material.x);
+  return shade(in.worldPos, n, base, roughness, object.color.a, base * object.material.x, 1.0);
 }
 
 // Skinned meshes: color and gloss come from each vertex; parts marked with a
@@ -184,7 +184,72 @@ fn fs_skinned(in: VsOut) -> @location(0) vec4f {
   }
   // Vertex gloss (0..1) maps to roughness: skin and cloth stay soft.
   let roughness = mix(0.9, 0.25, clamp(gloss, 0.0, 1.0));
-  return shade(in.worldPos, normalize(in.normal), base, roughness, 0.0, object.material.x);
+  return shade(in.worldPos, normalize(in.normal), base, roughness, 0.0, base * object.material.x, 1.0);
+}
+
+// ---- Loaded models (.glb): textures come from the file, with UVs. ----
+
+struct ModelMaterial {
+  baseColor: vec4f,
+  params: vec4f,    // x = metallic, y = roughness, z = normal scale, w = occlusion strength
+  emissive: vec4f,  // rgb
+};
+// Group 2 is shared with the bones above, so these start at binding 1.
+@group(2) @binding(1) var<uniform> modelMaterial: ModelMaterial;
+@group(2) @binding(2) var baseColorMap: texture_2d<f32>;
+@group(2) @binding(3) var metalRoughMap: texture_2d<f32>;  // g = roughness, b = metallic (glTF)
+@group(2) @binding(4) var normalMap: texture_2d<f32>;
+@group(2) @binding(5) var occlusionMap: texture_2d<f32>;    // r = occlusion
+@group(2) @binding(6) var modelSampler: sampler;
+
+struct ModelIn {
+  @location(0) position: vec3f,
+  @location(1) normal: vec3f,
+  @location(2) uv: vec2f,
+  @location(3) tangent: vec4f,
+};
+
+struct ModelOut {
+  @builtin(position) clip: vec4f,
+  @location(0) worldPos: vec3f,
+  @location(1) normal: vec3f,
+  @location(2) uv: vec2f,
+  @location(3) tangent: vec4f,
+};
+
+@vertex
+fn vs_model(in: ModelIn) -> ModelOut {
+  let world = object.model * vec4f(in.position, 1.0);
+  var out: ModelOut;
+  out.clip = frame.viewProj * world;
+  out.worldPos = world.xyz;
+  out.normal = (object.model * vec4f(in.normal, 0.0)).xyz;
+  out.uv = in.uv;
+  out.tangent = vec4f((object.model * vec4f(in.tangent.xyz, 0.0)).xyz, in.tangent.w);
+  return out;
+}
+
+@fragment
+fn fs_model(in: ModelOut) -> @location(0) vec4f {
+  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
+    discard;
+  }
+  let m = modelMaterial;
+  let baseSample = textureSample(baseColorMap, modelSampler, in.uv);
+  let mr = textureSample(metalRoughMap, modelSampler, in.uv);
+  let nt = textureSample(normalMap, modelSampler, in.uv).xyz * 2.0 - 1.0;
+  let occlusion = textureSample(occlusionMap, modelSampler, in.uv).r;
+
+  let base = baseSample.rgb * m.baseColor.rgb;
+  // The surface frame: tangent (along u), bitangent (along v), normal.
+  let n0 = normalize(in.normal);
+  let t = normalize(in.tangent.xyz - n0 * dot(n0, in.tangent.xyz));
+  let b = cross(n0, t) * in.tangent.w;
+  let n = normalize(t * (nt.x * m.params.z) + b * (nt.y * m.params.z) + n0 * nt.z);
+  let ao = mix(1.0, occlusion, m.params.w);
+  // object.material.x = highlight glow when you stand at something.
+  let emission = m.emissive.rgb + base * object.material.x;
+  return shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
 }
 
 const kPi = 3.14159265;
@@ -229,7 +294,10 @@ fn roomGlow(r: vec3f) -> vec3f {
 // Lighting shared by every mesh: physically based point lights, ambient,
 // haze, tone mapping. Light units: diffuse leaves out the 1/pi, so the
 // specular term is multiplied by pi to match.
-fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32, emissive: f32) -> vec4f {
+// `emission` is light the surface gives off itself; `ao` (0..1) darkens the
+// ambient light in creases (ambient occlusion).
+fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32, emission: vec3f,
+         ao: f32) -> vec4f {
   let v = normalize(frame.cameraPos.xyz - worldPos);
   let roughness = clamp(roughnessIn, 0.04, 1.0);
   let a = roughness * roughness;
@@ -239,7 +307,7 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let diffuseColor = base * (1.0 - metallic);
   let f0 = mix(vec3f(0.04), base, metallic);
 
-  var diffuse = frame.ambient.rgb * (0.6 + 0.4 * n.y);  // a little brighter on top
+  var diffuse = frame.ambient.rgb * (0.6 + 0.4 * n.y) * ao;  // a little brighter on top
   var specular = vec3f(0.0);
   for (var i = 0u; i < frame.lightCount.x; i++) {
     let l = frame.lights[i];
@@ -264,9 +332,9 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     specular += radiance * spec * (nl * kPi);
   }
   let r = reflect(-v, n);
-  specular += roomGlow(r) * environmentBrdf(f0, roughness, nv);
+  specular += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
 
-  var color = diffuseColor * diffuse + specular + base * emissive;
+  var color = diffuseColor * diffuse + specular + emission;
 
   let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);

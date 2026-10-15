@@ -62,6 +62,15 @@ await page.mouse.move(215, 520, { steps: 10 });  // about 70 degrees down
 await page.mouse.up();
 await page.waitForTimeout(500);
 await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
+
+// Optional close-up for checking a spot: CAM="x,y,z,yaw,pitch" (degrees)
+// saves build/smoke-cam.png from there.
+if (process.env.CAM) {
+  const camPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  await camPage.goto(`http://localhost:${port}/?cam=${encodeURIComponent(process.env.CAM)}`);
+  await camPage.waitForTimeout(6000);
+  await camPage.screenshot({ path: shotPath.replace(/\.png$/, '-cam.png') });
+}
 await browser.close();
 server.close();
 

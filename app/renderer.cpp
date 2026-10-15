@@ -80,7 +80,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   // Object uniforms: the scene objects (written once) followed by the avatar
   // (its position is rewritten every frame as you move).
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + 1;
+  const size_t total = objects.size() + 1 + kMaxModels;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -116,6 +116,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
     avatarMesh_ = engine::SkinnedMesh::upload(device, avatar);
   }
+  loadModels(scene, objectData);
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
   bonesBindGroup_ = makeBonesBindGroup(bonesBuffer_, "avatar bones");
@@ -251,6 +252,28 @@ bool SceneRenderer::createScenePipelines() {
   desc.label = "skinned";
   desc.primitive.frontFace = wgpu::FrontFace::CCW;
   skinnedPipeline_ = device.CreateRenderPipeline(&desc);
+
+  // Loaded .glb models: textured with UVs; group 2 holds the material.
+  modelLayout_ = engine::GpuModel::createLayout(device);
+  wgpu::BindGroupLayout modelLayouts[] = {frameLayout_, objectLayout_, modelLayout_};
+  layoutDesc.bindGroupLayouts = modelLayouts;
+  const wgpu::VertexBufferLayout modelVertexLayout = engine::GpuModel::vertexLayout();
+  desc.label = "model";
+  desc.layout = device.CreatePipelineLayout(&layoutDesc);
+  desc.vertex.entryPoint = "vs_model";
+  desc.vertex.buffers = &modelVertexLayout;
+  fragment.entryPoint = "fs_model";
+  modelPipeline_ = device.CreateRenderPipeline(&desc);
+  desc.label = "model (mirrored)";
+  desc.primitive.frontFace = wgpu::FrontFace::CW;
+  modelMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+
+  wgpu::SamplerDescriptor samplerDesc;
+  samplerDesc.addressModeU = samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+  samplerDesc.magFilter = samplerDesc.minFilter = wgpu::FilterMode::Linear;
+  samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+  samplerDesc.maxAnisotropy = 8;
+  modelSampler_ = device.CreateSampler(&samplerDesc);
   return true;
 }
 
@@ -349,6 +372,43 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
   }
 }
 
+// Each placement gets an object slot (its position/rotation/scale) right
+// away; the model itself streams in and is drawn once it's ready.
+void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& objectData) {
+  const size_t firstSlot = scene.objects.size() + 1;  // after the objects and the avatar
+  for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
+    const ModelPlacement& p = scene.models[i];
+    ObjectUniforms u = {};
+    u.model = Mat4::transform(p.position, p.rotation);
+    for (int c = 0; c < 3; ++c) {
+      for (int r = 0; r < 3; ++r) u.model.at(c, r) *= p.scale;
+    }
+    setVec4(u.color, {1, 1, 1}, 0);
+    const auto offset = static_cast<uint32_t>((firstSlot + i) * kObjectStride);
+    std::memcpy(objectData.data() + offset, &u, sizeof(u));
+    models_.push_back({nullptr, offset});
+    engine::GpuModel::load(gpu_->device, modelLayout_, modelSampler_, "assets/models/" + p.file,
+                           [this, i](std::shared_ptr<engine::GpuModel> model) {
+                             models_[i].gpu = std::move(model);
+                             if (models_[i].gpu) ++modelsLoaded_;
+                           });
+  }
+  if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
+}
+
+void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass) const {
+  for (const ModelDraw& m : models_) {
+    if (!m.gpu) continue;
+    pass.SetBindGroup(1, objectBindGroup_, 1, &m.uniformOffset);
+    for (const engine::GpuModel::Part& part : m.gpu->parts) {
+      pass.SetBindGroup(2, m.gpu->bindGroups[part.material]);
+      pass.SetVertexBuffer(0, part.vertexBuffer);
+      pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
+      pass.DrawIndexed(part.indexCount);
+    }
+  }
+}
+
 void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
   pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
   pass.SetBindGroup(2, bones);
@@ -422,7 +482,11 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   pass.SetScissorRect(x0, y0, x1 - x0, y1 - y0);
   pass.SetPipeline(mirroredPipeline_);
   pass.SetBindGroup(0, view.bindGroup);
-  if (full) drawItems(pass, sceneDraws_);
+  if (full) {
+    drawItems(pass, sceneDraws_);
+    pass.SetPipeline(modelMirroredPipeline_);
+    drawModels(pass);
+  }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
   pass.End();
@@ -469,6 +533,8 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
   drawItems(pass, sceneDraws_);
+  pass.SetPipeline(modelPipeline_);
+  drawModels(pass);
   pass.SetPipeline(skinnedPipeline_);
   drawAvatar(pass, firstPersonBonesBindGroup_);  // your body, minus the head
 

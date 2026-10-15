@@ -25,7 +25,9 @@ target_link_options(app PRIVATE
   -sENVIRONMENT=web
   -sEXPORTED_RUNTIME_METHODS=[]
   # Used from EM_ASM blocks (engine/audio.cpp).
-  "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$stringToUTF8"
+  "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$stringToUTF8,$UTF8ToString"
+  # Used by the image decoder (engine/fetch.cpp).
+  "-sEXPORTED_FUNCTIONS=_main,_malloc,_free"
 )
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   target_link_options(app PRIVATE -O3 --closure=1)

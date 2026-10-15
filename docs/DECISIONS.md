@@ -22,6 +22,8 @@ future session re-litigates or repeats it.
 | Avatar | Procedural skinned mesh: rings (tubes) along the limbs and torso + ellipsoids for the head, each vertex weighted to 2 bones, blended near joints; per-vertex color/gloss/texture layer | No model files needed; one continuous mesh bends cleanly at elbows/knees. A GLB/VRM loader can feed the same skinning path later |
 | Materials | `engine::Material` (look + physics + sound) in `engine/material.h`; the bar's library in `app/materials.cpp`, objects reference a `MaterialId` and may override color/glow/texture scale | One definition per kind of stuff feeds every engine (see World-simulation principles) |
 | Shading | PBR metal/roughness: GGX + Smith + Schlick, Karis sphere-light widening (`PointLight::radius`), Karis env-BRDF approximation against a fake "room glow" (`roomGlow` in `scene.wgsl`) | Same model as glTF, so loaded assets look right. Diffuse leaves out 1/pi (keeps the old light tuning), so specular is scaled by pi |
+| Model files | glTF 2.0 binary (.glb), own loader: `engine/json.*` (parser), `engine/gltf.*` (meshes, node tree flattened into model space, PBR materials, tangents computed if missing), `engine/model.*` (GPU upload, per-material bind group). PNG/JPEG decoded by the browser (`createImageBitmap`, `colorSpaceConversion: 'none'`) in `engine/fetch.cpp` | Standard format every tool exports; image decoding is a platform "driver" like AAC |
+| Model placement | `BarScene::models` (`ModelPlacement`: file, position, rotation, scale, `MaterialId` for feel/sound). The file gives the look | Look from the asset, physics/sound from the material library |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -91,6 +93,20 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - **Phone budget rules:** 60 fps on the iPhone 15 Pro Max is the hard limit.
   A sim that can't fit runs at lower rate, lower resolution, or only near
   the player.
+
+## Asset pipeline (W3)
+- Blender 4.5 LTS runs headless in the container: `bash tools/assets/get_blender.sh`
+  (installs to `/opt/blender`, ~350 MB, not in setup.sh).
+- Textures: `bash tools/assets/fetch_textures.sh <dir>` (CC0 Poly Haven 1k).
+- Build a model: `/opt/blender/blender -b --factory-startup --python tools/assets/<name>.py -- <texdir> assets/models/<name>.glb`.
+  Shared helpers in `tools/assets/common.py`: beveled boxes, cylinders,
+  spheres, wood materials (tint + roughness baked into the images), box UVs
+  with the grain along each piece (`grain_axis`), harden-normal bevels.
+- Geometry is built y-up in model space, so export uses `export_yup=False`.
+- Ngons (cylinder caps) must be triangulated or Blender can't export tangents.
+- Check a model in the engine with the test camera:
+  `CAM="x,y,z,yaw,pitch" node tools/smoke.mjs` → `build/smoke-cam.png`
+  (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
 ## Gotchas hit so far
 - Pages sends `cache-control: max-age=600`, so Safari can show a build up
