@@ -19,6 +19,10 @@ visible in a mirror, and real music.
   Claude app. They can't run anything locally or open devtools.
 - They're a beginner in graphics and C++. Explain in plain language, keep
   replies short, and say what they'll see on the phone after each change.
+- After every deploy, give the user a short **"How to check it worked"**
+  list: the build code, then 2-4 specific things to look at, each saying
+  where to stand or look and what they should see (and what would mean it
+  failed). They can't always tell what changed, so be concrete.
 - Testing loop: push to `main` → GitHub Actions builds and force-pushes the site
   to the `gh-pages` branch (Pages serves it) → user opens
   **https://barcode162.github.io/3D/** in Safari. The `build xxxxxxx` label in
