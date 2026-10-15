@@ -111,6 +111,13 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   the relay into `bar/` on the webspace with lftp. So the game is also at
   `https://DOMAIN/bar/`, and there it uses `relay.php` next to itself.
   On github.io it uses `DEFAULT_SERVER` in `web/net.js`.
+- IONOS account facts: SFTP host `access-5021658795.webspace-host.com`
+  (port 22), user `su454332` (password only in GitHub secrets). System
+  domain `s1114537466.onlinehome.us` answers on http only (no SSL), and the
+  webspace said "No domain connected". IONOS offers a free
+  `s1114537466.online`. **HTTPS is required**: Safari only allows WebGPU on
+  https pages, and the https github.io page can't call an http relay.
+  The container can't reach port 22 (proxy); only GitHub Actions uploads.
 - Page options: `?room=name` (separate bars), `?name=Josh` (remembered),
   `?server=URL` or `?server=off`.
 - Testing: `NODE_PATH=$(npm root -g) node tools/mp_test.mjs` (needs `php`)
