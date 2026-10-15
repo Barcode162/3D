@@ -3,9 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-using engine::makeBox;
-using engine::makeCylinder;
-using engine::makeSphere;
 using engine::Quat;
 using engine::Vec3;
 
@@ -20,7 +17,6 @@ constexpr float kRoomHeight = 3.2f;
 // Light and glow colors.
 constexpr Vec3 kWarmBulb{1.0f, 0.68f, 0.38f};
 constexpr Vec3 kNeonPink{1.0f, 0.18f, 0.55f};
-constexpr Vec3 kNeonCyan{0.2f, 0.85f, 1.0f};
 
 struct Builder {
   BarScene& scene;
@@ -32,6 +28,17 @@ struct Builder {
     return scene.objects.back();
   }
 
+  // Places a .glb model (assets/models/<file>); returns its index.
+  size_t model(const char* file, Vec3 pos, MaterialId m, Quat rot = {}, Prop prop = Prop::kNone) {
+    scene.models.push_back({file, pos, rot, 1, m, prop});
+    return scene.models.size() - 1;
+  }
+
+  // An invisible solid box for physics (a model's shape).
+  void solid(Vec3 center, Vec3 half, MaterialId m, Quat rot = {}) {
+    scene.colliders.push_back({center, half, rot, m});
+  }
+
   void block(Vec3 center, float halfX, float halfZ) {
     scene.blockers.push_back({center.x - halfX, center.z - halfZ, center.x + halfX, center.z + halfZ});
   }
@@ -41,145 +48,141 @@ struct Builder {
   }
 };
 
+Quat turnY(float radians) { return Quat::axisAngle({0, 1, 0}, radians); }
+
 void buildRoom(Builder& b) {
-  const float w = kRoomHalfX * 2, d = kRoomHalfZ * 2, t = 0.2f;
-  b.add(makeBox({w, 0.1f, d}), {0, -0.05f, 0}, kOakFloor);
-  b.add(makeBox({w, 0.1f, d}), {0, kRoomHeight + 0.05f, 0}, kPlaster);
-  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, -kRoomHalfZ - t / 2}, kBrick);
-  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, kRoomHalfZ + t / 2}, kBrick);
-  b.add(makeBox({t, kRoomHeight, d}), {-kRoomHalfX - t / 2, kRoomHeight / 2, 0}, kBrick);
-  b.add(makeBox({t, kRoomHeight, d}), {kRoomHalfX + t / 2, kRoomHeight / 2, 0}, kBrick);
-
-  // Dark wood paneling on the lower part of the side and front walls.
-  const float panel = 1.0f, inset = 0.03f;
-  b.add(makeBox({w, panel, inset}), {0, panel / 2, kRoomHalfZ - inset / 2}, kDarkWood);
-  b.add(makeBox({inset, panel, d}), {-kRoomHalfX + inset / 2, panel / 2, 0}, kDarkWood);
-  b.add(makeBox({inset, panel, d}), {kRoomHalfX - inset / 2, panel / 2, 0}, kDarkWood);
-
-  // Entrance door on the front wall.
-  b.add(makeBox({1.1f, 2.2f, 0.06f}), {-3.5f, 1.1f, kRoomHalfZ - 0.03f}, kDoorWood);
-  b.add(makeSphere(0.04f, 12, 8), {-3.1f, 1.05f, kRoomHalfZ - 0.08f}, kBrass);
+  // The shell is one model (tools/assets/room.py): plank floor, brick
+  // walls, plaster ceiling with beams and crown molding, wainscot with a
+  // chair rail, baseboards, and the entrance door on the front wall.
+  b.model("room.glb", {0, 0, 0}, kBrick);
+  const float hx = kRoomHalfX, hz = kRoomHalfZ, h = kRoomHeight;
+  b.solid({0, -0.05f, 0}, {hx, 0.05f, hz}, kOakFloor);
+  b.solid({0, h + 0.05f, 0}, {hx, 0.05f, hz}, kPlaster);
+  b.solid({0, h / 2, -hz - 0.1f}, {hx + 0.2f, h / 2, 0.1f}, kBrick);
+  b.solid({0, h / 2, hz + 0.1f}, {hx + 0.2f, h / 2, 0.1f}, kBrick);
+  b.solid({-hx - 0.1f, h / 2, 0}, {0.1f, h / 2, hz}, kBrick);
+  b.solid({hx + 0.1f, h / 2, 0}, {0.1f, h / 2, hz}, kBrick);
 
   // Walls block walking.
-  b.block({0, 0, -kRoomHalfZ - 0.5f}, kRoomHalfX + 1, 0.5f);
-  b.block({0, 0, kRoomHalfZ + 0.5f}, kRoomHalfX + 1, 0.5f);
-  b.block({-kRoomHalfX - 0.5f, 0, 0}, 0.5f, kRoomHalfZ + 1);
-  b.block({kRoomHalfX + 0.5f, 0, 0}, 0.5f, kRoomHalfZ + 1);
+  b.block({0, 0, -hz - 0.5f}, hx + 1, 0.5f);
+  b.block({0, 0, hz + 0.5f}, hx + 1, 0.5f);
+  b.block({-hx - 0.5f, 0, 0}, 0.5f, hz + 1);
+  b.block({hx + 0.5f, 0, 0}, 0.5f, hz + 1);
 }
 
 void buildBar(Builder& b) {
   const float barZ = -3.2f, barLen = 7.0f;
-  // The counter is a real model (tools/assets/bar_counter.py): paneled
-  // front, mahogany top with a drink rail, brass foot rail on brackets.
-  b.scene.models.push_back({"bar_counter.glb", {0, 0, barZ}, {}, 1, kVarnishedWood});
+  // The counter (tools/assets/bar_counter.py): paneled front, mahogany top
+  // with a drink rail, brass foot rail on brackets.
+  b.model("bar_counter.glb", {0, 0, barZ}, kVarnishedWood);
   // Its solid shape: the top, the raised drink rail and the body below.
-  b.scene.colliders.push_back({{0, 1.07f, barZ + 0.05f}, {3.65f, 0.03f, 0.47f}, {}, kVarnishedWood});
-  b.scene.colliders.push_back({{0, 1.1175f, barZ + 0.46f}, {3.65f, 0.0175f, 0.06f}, {}, kVarnishedWood});
-  b.scene.colliders.push_back({{0, 0.52f, barZ}, {3.52f, 0.52f, 0.37f}, {}, kDarkWood});
+  b.solid({0, 1.07f, barZ + 0.05f}, {3.65f, 0.03f, 0.47f}, kVarnishedWood);
+  b.solid({0, 1.1175f, barZ + 0.46f}, {3.65f, 0.0175f, 0.06f}, kVarnishedWood);
+  b.solid({0, 0.52f, barZ}, {3.52f, 0.52f, 0.37f}, kDarkWood);
 
   // Glasses on the bar top (its surface is 1.10 m up) to pick up and throw.
   const float topY = 1.10f, glassZ = barZ + 0.08f;
-  for (float x : {-2.3f, -0.4f, 1.3f, 2.6f}) {
-    b.scene.models.push_back({"pint_glass.glb", {x, topY, glassZ}, {}, 1, kBottleGlass, Prop::kPintGlass});
-  }
+  for (float x : {-2.3f, -0.4f, 1.3f, 2.6f}) b.model("pint_glass.glb", {x, topY, glassZ}, kBottleGlass, {}, Prop::kPintGlass);
   for (float x : {-1.4f, 0.6f}) {
-    b.scene.models.push_back({"rocks_glass.glb", {x, topY, glassZ - 0.1f}, {}, 1, kBottleGlass, Prop::kRocksGlass});
+    b.model("rocks_glass.glb", {x, topY, glassZ - 0.1f}, kBottleGlass, {}, Prop::kRocksGlass);
   }
-  // Counter plus the bartender's area behind it.
-  b.block({0, 0, (barZ + 0.5f + -kRoomHalfZ) / 2}, barLen / 2 + 0.15f,
-          (barZ + 0.5f + kRoomHalfZ) / 2);
-
-  // Stools in front of the bar.
+  // Beer taps on the bartender's side (the faucets face the back bar).
+  const float tapX = -0.9f, tapZ = barZ - 0.2f;
+  b.model("beer_taps.glb", {tapX, topY, tapZ}, kChrome, turnY(engine::kPi));
+  b.solid({tapX, topY + 0.19f, tapZ}, {0.04f, 0.19f, 0.04f}, kChrome);
+  b.solid({tapX, topY + 0.37f, tapZ}, {0.28f, 0.035f, 0.035f}, kChrome);
+  // Coasters in front of each stool, a napkin holder and a menu.
   for (int i = 0; i < 6; ++i) {
-    const float x = -2.5f + static_cast<float>(i);
-    const float z = barZ + 0.95f;
-    b.add(makeCylinder(0.2f, 0.08f), {x, 0.78f, z}, kLeather);
-    b.add(makeCylinder(0.035f, 0.74f, 12), {x, 0.37f, z}, kChrome);
-    b.add(makeCylinder(0.18f, 0.03f), {x, 0.015f, z}, kChrome);
-    b.add(makeCylinder(0.15f, 0.02f, 16), {x, 0.3f, z}, kChrome);  // foot ring
+    b.model("coaster.glb", {-2.5f + static_cast<float>(i) + 0.12f, topY, barZ + 0.3f}, kPlaster, turnY(0.3f * i));
+  }
+  b.model("napkin_holder.glb", {2.05f, topY, barZ + 0.05f}, kChrome, turnY(0.2f));
+  b.solid({2.05f, topY + 0.06f, barZ + 0.05f}, {0.075f, 0.06f, 0.045f}, kChrome, turnY(0.2f));
+  b.model("menu_stand.glb", {-3.0f, topY, barZ + 0.12f}, kDarkWood, turnY(0.15f));
+  // Counter plus the bartender's area behind it.
+  b.block({0, 0, (barZ + 0.5f + -kRoomHalfZ) / 2}, barLen / 2 + 0.15f, (barZ + 0.5f + kRoomHalfZ) / 2);
+
+  // Bar stools: chrome pedestal, foot ring, tufted leather seat.
+  for (int i = 0; i < 6; ++i) {
+    const float x = -2.5f + static_cast<float>(i), z = barZ + 0.95f;
+    b.model("bar_stool.glb", {x, 0, z}, kLeather, turnY(0.4f * static_cast<float>(i)));
+    b.solid({x, 0.77f, z}, {0.2f, 0.05f, 0.2f}, kLeather);
+    b.solid({x, 0.37f, z}, {0.03f, 0.33f, 0.03f}, kChrome);
+    b.solid({x, 0.023f, z}, {0.2f, 0.023f, 0.2f}, kChrome);
   }
 
-  // Back bar: three backlit shelves of bottles against the back wall.
-  const float shelfZ = -kRoomHalfZ + 0.2f;
-  const Vec3 bottleColors[] = {
-      {0.55f, 0.25f, 0.05f}, {0.1f, 0.35f, 0.12f}, {0.6f, 0.6f, 0.55f},
-      {0.45f, 0.08f, 0.1f},  {0.7f, 0.45f, 0.1f},  {0.15f, 0.25f, 0.45f},
-  };
-  for (int s = 0; s < 3; ++s) {
-    const float y = 1.3f + 0.45f * static_cast<float>(s);
-    b.add(makeBox({6.0f, 0.04f, 0.35f}), {0, y, shelfZ}, kDarkWood).scale(1.5f);
-    b.add(makeBox({6.0f, 0.015f, 0.02f}), {0, y - 0.03f, shelfZ + 0.16f}, kGlowGlass).tint(kWarmBulb).glow(1.2f);
-    for (int i = 0; i < 16; ++i) {
-      const float x = -2.7f + 0.36f * static_cast<float>(i) + 0.05f * static_cast<float>(s % 2);
-      const Vec3 color = bottleColors[(i * 7 + s * 3) % 6];
-      const float h = 0.24f + 0.06f * static_cast<float>((i + s) % 3);
-      // A little glow stands in for the shelf light shining through the glass.
-      b.add(makeCylinder(0.04f, h, 12), {x, y + 0.02f + h / 2, shelfZ}, kBottleGlass).tint(color).glow(0.25f);
-      b.add(makeCylinder(0.014f, 0.08f, 8), {x, y + 0.02f + h + 0.04f, shelfZ}, kBottleGlass).tint(color).glow(0.25f);
-    }
-  }
-  b.light({0, 1.9f, shelfZ + 0.9f}, kWarmBulb, 0.9f, 4.0f, 0.5f);
+  // Back bar: cabinet, smoked mirror, three shelves of bottles with LED strips.
+  const float backZ = -kRoomHalfZ;
+  b.model("back_bar.glb", {0, 0, backZ}, kDarkWood);
+  b.solid({0, 0.5f, backZ + 0.29f}, {3.23f, 0.5f, 0.29f}, kDarkWood);
+  b.solid({0, 1.74f, backZ + 0.006f}, {3.2f, 0.74f, 0.006f}, kGlowGlass);
+  for (float y : {1.30f, 1.75f, 2.20f}) b.solid({0, y, backZ + 0.17f}, {3.2f, 0.0175f, 0.16f}, kDarkWood);
+  b.light({0, 1.9f, backZ + 0.9f}, kWarmBulb, 0.9f, 4.0f, 0.5f);
 
-  // Pendant lamps over the counter.
+  // Pendant lamps over the counter (each hangs from the ceiling).
   for (int i = -1; i <= 1; ++i) {
     const float x = 2.4f * static_cast<float>(i);
-    b.add(makeSphere(0.08f), {x, 2.28f, barZ}, kGlowGlass).tint(kWarmBulb).glow(8.0f);
-    b.add(makeCylinder(0.2f, 0.18f), {x, 2.42f, barZ}, kBlackSteel);
-    b.add(makeCylinder(0.008f, 0.7f, 6), {x, 2.86f, barZ}, kBlackSteel);
-    b.light({x, 2.2f, barZ}, kWarmBulb, 2.4f, 6.0f, 0.08f);
+    b.model("pendant_lamp.glb", {x, kRoomHeight, barZ}, kBlackSteel);
+    b.light({x, 2.3f, barZ}, kWarmBulb, 2.4f, 6.0f, 0.08f);
   }
 
-  // Neon sign above the shelves: a pink frame with a cyan line inside.
-  const float signY = 2.78f, signZ = -kRoomHalfZ + 0.05f;
-  const auto neon = [&](Vec3 size, Vec3 pos, Vec3 color) {
-    b.add(makeBox(size), pos, kGlowGlass).tint(color).glow(3.0f);
-  };
-  neon({2.2f, 0.04f, 0.04f}, {0, signY + 0.28f, signZ}, kNeonPink);
-  neon({2.2f, 0.04f, 0.04f}, {0, signY - 0.28f, signZ}, kNeonPink);
-  neon({0.04f, 0.6f, 0.04f}, {-1.1f, signY, signZ}, kNeonPink);
-  neon({0.04f, 0.6f, 0.04f}, {1.1f, signY, signZ}, kNeonPink);
-  neon({1.5f, 0.035f, 0.035f}, {0, signY, signZ}, kNeonCyan);
-  b.light({0, signY, signZ + 0.4f}, kNeonPink, 1.2f, 4.5f, 0.6f);
+  // Neon sign above the back bar: "BAR" with martini glasses.
+  const float signY = 2.88f;
+  b.model("neon_sign.glb", {0, signY, backZ}, kGlowGlass);
+  b.light({0, signY, backZ + 0.4f}, kNeonPink, 1.2f, 4.5f, 0.6f);
 }
 
 void buildSeating(Builder& b) {
-  // Two round tables with stools on the right side.
+  // Two round pub tables with low stools on the right side.
   for (float z : {-0.2f, 2.4f}) {
     const Vec3 c{3.6f, 0, z};
-    b.add(makeCylinder(0.45f, 0.05f, 32), {c.x, 0.76f, c.z}, kVarnishedWood).scale(1.5f);
-    b.add(makeCylinder(0.05f, 0.74f, 12), {c.x, 0.37f, c.z}, kBlackSteel);
-    b.add(makeCylinder(0.25f, 0.03f), {c.x, 0.015f, c.z}, kBlackSteel);
-    b.add(makeSphere(0.035f, 12, 8), {c.x, 0.82f, c.z}, kGlowGlass).tint(kWarmBulb).glow(4.0f);  // candle glow
+    const float topY = 0.785f;
+    b.model("round_table.glb", c, kVarnishedWood);
+    b.solid({c.x, topY - 0.0225f, c.z}, {0.45f, 0.0225f, 0.45f}, kVarnishedWood);
+    b.solid({c.x, 0.37f, c.z}, {0.05f, 0.37f, 0.05f}, kBlackSteel);
+    b.solid({c.x, 0.025f, c.z}, {0.25f, 0.025f, 0.25f}, kBlackSteel);
     b.block(c, 0.5f, 0.5f);
-    b.scene.models.push_back({"rocks_glass.glb", {c.x + 0.22f, 0.785f, c.z + 0.12f}, {}, 1, kBottleGlass,
-                              Prop::kRocksGlass});
+    b.model("candle.glb", {c.x, topY, c.z}, kBottleGlass);
+    b.solid({c.x, topY + 0.04f, c.z}, {0.037f, 0.04f, 0.037f}, kBottleGlass);
+    b.model("rocks_glass.glb", {c.x + 0.22f, topY, c.z + 0.12f}, kBottleGlass, {}, Prop::kRocksGlass);
+    b.model("menu_stand.glb", {c.x - 0.2f, topY, c.z - 0.18f}, kDarkWood, turnY(-engine::kPi / 2 + 0.3f));
     for (float dx : {-0.8f, 0.8f}) {
-      b.add(makeCylinder(0.19f, 0.07f), {c.x + dx, 0.5f, c.z}, kLeather);
-      b.add(makeCylinder(0.03f, 0.47f, 12), {c.x + dx, 0.235f, c.z}, kChrome);
+      b.model("table_stool.glb", {c.x + dx, 0, c.z}, kLeather, turnY(dx));
+      b.solid({c.x + dx, 0.5f, c.z}, {0.18f, 0.04f, 0.18f}, kLeather);
+      b.solid({c.x + dx, 0.23f, c.z}, {0.13f, 0.22f, 0.13f}, kBlackSteel);
     }
   }
-  b.light({3.6f, 2.5f, 1.1f}, kWarmBulb, 1.6f, 6.0f);
+  // Over the tables, a bit toward the darts corner on the front wall.
+  b.light({3.3f, 2.5f, 1.8f}, kWarmBulb, 1.7f, 7.0f);
 
-  // A long leather booth against the left wall with two small tables.
-  const float boothX = -kRoomHalfX + 0.35f, boothZ = 0.6f, boothLen = 3.6f;
-  b.add(makeBox({0.65f, 0.45f, boothLen}), {boothX, 0.225f, boothZ}, kLeather).scale(3);
-  b.add(makeBox({0.15f, 0.75f, boothLen}), {-kRoomHalfX + 0.1f, 0.8f, boothZ}, kLeather).scale(3);
-  b.block({boothX, 0, boothZ}, 0.35f, boothLen / 2);
+  // A long channel-tufted leather booth against the left wall, two small
+  // tables, and two framed posters above it.
+  const float boothX = -kRoomHalfX + 0.03f, boothZ = 0.6f, boothLen = 3.6f;
+  b.model("booth.glb", {boothX, 0, boothZ}, kLeather);
+  b.solid({boothX + 0.33f, 0.23f, boothZ}, {0.33f, 0.23f, boothLen / 2}, kLeather);
+  b.solid({boothX + 0.1f, 0.83f, boothZ}, {0.1f, 0.38f, boothLen / 2}, kLeather);
+  b.block({-kRoomHalfX + 0.35f, 0, boothZ}, 0.35f, boothLen / 2);
   for (float z : {-0.3f, 1.5f}) {
-    b.add(makeBox({0.75f, 0.05f, 0.75f}), {-4.75f, 0.74f, z}, kVarnishedWood).scale(1.5f);
-    b.add(makeCylinder(0.05f, 0.72f, 12), {-4.75f, 0.36f, z}, kBlackSteel);
-    b.add(makeSphere(0.035f, 12, 8), {-4.75f, 0.8f, z}, kGlowGlass).tint(kWarmBulb).glow(4.0f);
+    const float topY = 0.765f;
+    b.model("booth_table.glb", {-4.75f, 0, z}, kVarnishedWood);
+    b.solid({-4.75f, topY - 0.02f, z}, {0.375f, 0.02f, 0.375f}, kVarnishedWood);
+    b.solid({-4.75f, 0.36f, z}, {0.05f, 0.36f, 0.05f}, kBlackSteel);
+    b.model("candle.glb", {-4.75f, topY, z}, kBottleGlass);
+    b.solid({-4.75f, topY + 0.04f, z}, {0.037f, 0.04f, 0.037f}, kBottleGlass);
+    b.model("napkin_holder.glb", {-4.95f, topY, z + 0.2f}, kChrome, turnY(engine::kPi / 2));
     b.block({-4.75f, 0, z}, 0.42f, 0.42f);
   }
+  b.model("poster_jazz.glb", {-kRoomHalfX, 1.9f, -0.3f}, kDarkWood, turnY(engine::kPi / 2));
+  b.model("poster_cocktails.glb", {-kRoomHalfX, 1.9f, 1.5f}, kDarkWood, turnY(engine::kPi / 2));
   b.light({-4.8f, 2.4f, 0.6f}, kWarmBulb, 1.5f, 6.0f);
 }
 
-// A mirror on the right wall (facing -x) with its frame; `m` is the frame center.
-void addMirror(Builder& b, Vec3 m, MirrorMode mode, MaterialId frame, const char* name) {
-  const size_t first = b.scene.objects.size();
-  b.add(makeBox({0.04f, 2.1f, 1.5f}), m, frame);
+// A mirror on the right wall (facing -x) in a framed model; `m` is the
+// center of the frame's back, on the wall.
+void addMirror(Builder& b, Vec3 m, MirrorMode mode, const char* frame, MaterialId frameMat, const char* name) {
+  const size_t model = b.model(frame, m, frameMat, turnY(-engine::kPi / 2));
+  b.solid({m.x - 0.03f, m.y, m.z}, {0.03f, 1.05f, 0.75f}, frameMat);
   const float glassW = 1.35f, glassH = 1.95f;
-  // The glass sits just in front of the frame and is drawn by the renderer.
+  // The glass sits just in front of the frame's backing and is drawn by the renderer.
   b.scene.mirrors.push_back({{m.x - 0.025f, m.y, m.z}, {-1, 0, 0}, {0, 0, -1}, {0, 1, 0}, glassW / 2, glassH / 2,
                              mode});
   Interactable it;
@@ -187,32 +190,38 @@ void addMirror(Builder& b, Vec3 m, MirrorMode mode, MaterialId frame, const char
   it.tagPosition = {m.x - 0.3f, 2.65f, m.z};
   it.boundsMin = {m.x - 0.1f, m.y - 1.05f, m.z - 0.75f};
   it.boundsMax = {m.x + 0.05f, m.y + 1.05f, m.z + 0.75f};
-  it.firstObject = first;
-  it.objectCount = b.scene.objects.size() - first;
+  it.firstModel = model;
+  it.modelCount = 1;
   it.action = Action::kMirror;
   it.mirror = static_cast<int>(b.scene.mirrors.size() - 1);
   b.scene.interactables.push_back(it);
 }
 
 void buildFeatures(Builder& b) {
-  // Jukebox in the back-right corner.
+  // Jukebox in the back-right corner: arched walnut cabinet, glow tubes,
+  // the record behind a domed window, chrome grille.
   const Vec3 j{4.9f, 0, -4.45f};
-  const size_t jukeboxFirst = b.scene.objects.size();
-  b.add(makeBox({0.9f, 1.4f, 0.6f}), {j.x, 0.7f, j.z}, kLacquer);
-  b.add(makeCylinder(0.45f, 0.6f, 32), {j.x, 1.4f, j.z}, kLacquer, Quat::axisAngle({1, 0, 0}, engine::kPi / 2));
-  b.add(makeBox({0.7f, 0.45f, 0.02f}), {j.x, 1.05f, j.z + 0.31f}, kGlowGlass).tint({1.0f, 0.55f, 0.2f}).glow(2.0f);
-  b.add(makeBox({0.6f, 0.04f, 0.02f}), {j.x, 0.6f, j.z + 0.31f}, kGlowGlass).tint({0.6f, 0.3f, 1.0f}).glow(3.0f);
+  const size_t jukebox = b.model("jukebox.glb", j, kLacquer);
+  b.solid({j.x, 0.73f, j.z - 0.015f}, {0.45f, 0.73f, 0.27f}, kLacquer);
   b.block(j, 0.5f, 0.35f);
-  b.light({j.x, 1.2f, j.z + 0.7f}, {0.7f, 0.35f, 1.0f}, 1.0f, 3.5f, 0.3f);
-  b.scene.interactables.push_back({"JUKEBOX", "Jukebox", {j.x, 2.1f, j.z}, {j.x - 0.5f, 0, j.z - 0.35f},
-                                   {j.x + 0.5f, 1.9f, j.z + 0.35f}, jukeboxFirst,
-                                   b.scene.objects.size() - jukeboxFirst, Action::kJukebox});
-  b.scene.jukeboxSpeaker = {j.x, 1.1f, j.z + 0.3f};
+  b.light({j.x, 1.2f, j.z + 0.7f}, {1.0f, 0.45f, 0.25f}, 1.0f, 3.5f, 0.3f);
+  Interactable it{"JUKEBOX", "Jukebox", {j.x, 2.1f, j.z}, {j.x - 0.5f, 0, j.z - 0.35f}, {j.x + 0.5f, 1.9f, j.z + 0.35f}};
+  it.firstModel = jukebox;
+  it.modelCount = 1;
+  it.action = Action::kJukebox;
+  b.scene.interactables.push_back(it);
+  b.scene.jukeboxSpeaker = {j.x, 0.6f, j.z + 0.3f};
 
   // Two mirrors on the right wall: a full one in a brass frame, and an
   // avatars-only one in a black frame (VRChat style).
-  addMirror(b, {kRoomHalfX - 0.03f, 1.45f, -2.2f}, MirrorMode::kFull, kBrass, "MIRROR");
-  addMirror(b, {kRoomHalfX - 0.03f, 1.45f, 1.1f}, MirrorMode::kAvatarsOnly, kBlackSteel, "AVATAR MIRROR");
+  addMirror(b, {kRoomHalfX, 1.45f, -2.2f}, MirrorMode::kFull, "mirror_frame_brass.glb", kBrass, "MIRROR");
+  addMirror(b, {kRoomHalfX, 1.45f, 1.1f}, MirrorMode::kAvatarsOnly, "mirror_frame_black.glb", kBlackSteel,
+            "AVATAR MIRROR");
+
+  // Darts corner on the front wall: the dartboard cabinet and a chalkboard.
+  b.model("dartboard.glb", {1.6f, 1.73f, kRoomHalfZ}, kDarkWood, turnY(engine::kPi));
+  b.solid({1.6f, 1.73f, kRoomHalfZ - 0.04f}, {0.66f, 0.32f, 0.04f}, kDarkWood);
+  b.model("chalkboard.glb", {3.3f, 1.6f, kRoomHalfZ}, kDarkWood, turnY(engine::kPi));
 }
 
 }  // namespace

@@ -99,13 +99,35 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 ## Asset pipeline (W3)
 - Blender 4.5 LTS runs headless in the container: `bash tools/assets/get_blender.sh`
   (installs to `/opt/blender`, ~350 MB, not in setup.sh).
-- Textures: `bash tools/assets/fetch_textures.sh <dir>` (CC0 Poly Haven 1k).
+- Textures: `bash tools/assets/fetch_textures.sh <dir> [ids]` (CC0 Poly Haven 1k, via
+  the Poly Haven files API, since some sets call the color map "albedo"/"coll1").
 - Build a model: `/opt/blender/blender -b --factory-startup --python tools/assets/<name>.py -- <texdir> assets/models/<name>.glb`.
   Shared helpers in `tools/assets/common.py`: beveled boxes, cylinders,
   spheres, wood materials (tint + roughness baked into the images), box UVs
   with the grain along each piece (`grain_axis`), harden-normal bevels.
 - Geometry is built y-up in model space, so export uses `export_yup=False`.
 - Ngons (cylinder caps) must be triangulated or Blender can't export tangents.
+- Rebuild everything in one go: `bash tools/assets/build_all.sh <scratch dir>`
+  (installs Blender, fetches textures, runs every script, renders Cycles
+  previews of each model to `<scratch>/previews/` for a quick look).
+- `finish_and_export` joins all parts that share a material into one mesh,
+  so each model is a handful of draw calls (the counter went from 53 to 4).
+- Many small things in one model (the ~110 bottles) share one material by
+  pointing their UVs at a spot in a small color atlas (`swatch_uvs`);
+  labels share one label atlas. One draw call per material, not per bottle.
+- Glow: `plain_material(..., emission=rgb, strength=s)`; strengths above 1
+  export as `KHR_materials_emissive_strength`, which `engine/gltf.cpp`
+  reads. The tone mapper turns strong glow white: neon looks colored at
+  strength ~2, bulbs and flames want 8-20.
+- Painted text in textures (menus, chalkboard, posters, title cards) uses
+  the engine's own 5x7 pixel font, parsed from `engine/font.cpp`
+  (`common.draw_text`). Image arrays have row 0 at the bottom (v = 0).
+- Box UVs follow `grain_axis`: walls running along z need `grain_axis="z"`,
+  or the bricks come out turned 90 degrees.
+- Interactables can light up models (`firstModel`/`modelCount`), not just
+  scene objects: the renderer writes the glow into the model's slot.
+- `CAM="a;b;c" node tools/smoke.mjs` saves several close-ups in one run
+  (`build/smoke-cam-1.png`, ...).
 - Check a model in the engine with the test camera:
   `CAM="x,y,z,yaw,pitch" node tools/smoke.mjs` → `build/smoke-cam.png`
   (yaw 0 looks toward -z, degrees; positive pitch looks up).

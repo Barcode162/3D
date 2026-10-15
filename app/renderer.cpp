@@ -356,6 +356,12 @@ void SceneRenderer::setGlow(const Interactable& it, float glow) {
     u.material[0] += glow;
     gpu_->queue.WriteBuffer(objectBuffer_, i * kObjectStride, &u, sizeof(u));
   }
+  // Models: only the glow (material.x) changes; their other values are zero.
+  for (size_t i = it.firstModel; i < it.firstModel + it.modelCount && i < models_.size(); ++i) {
+    const float material[4] = {glow, 0, 0, 0};
+    gpu_->queue.WriteBuffer(objectBuffer_, models_[i].uniformOffset + offsetof(ObjectUniforms, material), material,
+                            sizeof(material));
+  }
 }
 
 // Reflection textures match the screen, so the glass can read them 1:1.

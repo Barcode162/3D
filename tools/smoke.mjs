@@ -63,13 +63,19 @@ await page.mouse.up();
 await page.waitForTimeout(500);
 await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
 
-// Optional close-up for checking a spot: CAM="x,y,z,yaw,pitch" (degrees)
-// saves build/smoke-cam.png from there.
+// Optional close-ups for checking spots: CAM="x,y,z,yaw,pitch" (degrees)
+// saves build/smoke-cam.png from there. Several spots separated by ";"
+// save build/smoke-cam-1.png, -2.png, ... (one page at a time).
 if (process.env.CAM) {
-  const camPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-  await camPage.goto(`http://localhost:${port}/?cam=${encodeURIComponent(process.env.CAM)}`);
-  await camPage.waitForTimeout(6000);
-  await camPage.screenshot({ path: shotPath.replace(/\.png$/, '-cam.png') });
+  const cams = process.env.CAM.split(';').map((c) => c.trim()).filter(Boolean);
+  for (let i = 0; i < cams.length; ++i) {
+    const camPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+    await camPage.goto(`http://localhost:${port}/?cam=${encodeURIComponent(cams[i])}`);
+    await camPage.waitForTimeout(6000);
+    const suffix = cams.length === 1 ? '-cam.png' : `-cam-${i + 1}.png`;
+    await camPage.screenshot({ path: shotPath.replace(/\.png$/, suffix) });
+    await camPage.close();
+  }
 }
 await browser.close();
 server.close();

@@ -8,36 +8,35 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-**The user's plan (2026-10-15): the next chat is the 3D-asset chat.**
-Start it with the "Asset session checklist" below, then:
-1. **Stools** (6 bar stools + 4 table stools): real models replacing the
-   cylinder stacks. Chrome base + footring, padded leather seat with seams.
-2. **Walls and floor**: real brick and wood floor textures (Poly Haven),
-   baseboards, wainscot paneling with trim, ceiling with beams.
-3. **Back bar**: shelving unit with real bottles (varied shapes, labels),
-   mirror backing, LED shelf strips.
-4. **Tables and booth**, then **jukebox** (signature piece), then props
-   (candles with flame glow, coasters, menus, napkin holders).
-One piece per step: model → `CAM=` close-up screenshot → push → user checks.
-After the art pass: **W5 Physical sound** (impact sounds synthesized from
-collisions and materials; room echo), then more sim engines (shadows/bloom,
-heat/flames, liquids, smell field, day/night).
+**Asset pass done (2026-10-15):** every blockout piece is now a real
+Blender model (see the Log). Next:
+1. **iPhone check of the asset build**: frame rate (the room is now
+   ~170k triangles, ~200 draw calls, ~80 textures; the full mirror draws
+   it twice), load time, and anything that looks wrong. If it's slow:
+   shrink the counter/back bar textures to 512, drop stool/bottle detail.
+2. **Asset polish from the user's review** (one round, all fixes at once).
+3. **W5 Physical sound** (impact sounds synthesized from collisions and
+   materials; room echo), then more sim engines (shadows/bloom,
+   heat/flames, liquids, smell field, day/night).
 
-### Asset session checklist
-1. `bash tools/assets/get_blender.sh` (Blender 4.5 to `/opt/blender`, ~2 min).
-2. `bash tools/assets/fetch_textures.sh <scratch dir> [polyhaven ids...]`.
-   Browse ids: `curl -s "https://api.polyhaven.com/assets?t=textures&c=wood"`.
-3. Write `tools/assets/<piece>.py` with the helpers in `common.py`, export to
-   `assets/models/<piece>.glb`, add a row to `assets/models/CREDITS.md`.
-4. Place it in `app/bar_scene.cpp` (`scene.models`, plus `scene.colliders`
-   for its solid shape), remove the old blockout shapes and their blockers
-   only if the new collider replaces them.
-5. Check: build, smoke test, `CAM="x,y,z,yaw,pitch"` close-up; after the
-   deploy, `node tools/check_live.mjs` loads the live site and prints
-   the build and model log.
-Budget per piece: keep textures 1k, triangles in the low thousands; the
-whole room should stay under ~20 MB of models.
+### Asset workflow (for new or changed models)
+1. `bash tools/assets/build_all.sh <scratch dir>` rebuilds every model in one
+   go (installs Blender 4.5, fetches CC0 Poly Haven textures, runs all
+   scripts) and renders Cycles previews to `<scratch>/previews/`.
+   Or run one script: `/opt/blender/blender -b --factory-startup --python
+   tools/assets/<script>.py -- <texdir> <out>`.
+2. Helpers in `tools/assets/common.py` (boxes, lathe, torus, tube, PBR and
+   image materials, glow, pixel text, atlas UVs); add a row to
+   `assets/models/CREDITS.md`.
+3. Place it in `app/bar_scene.cpp` (`b.model(...)` plus `b.solid(...)` for
+   its physics shape).
+4. Check: build, smoke test, `CAM="a;b;c"` close-ups (several in one run);
+   after the deploy, `node tools/check_live.mjs`.
+Budget: textures 1k for big surfaces, 512/256 for props; the whole room
+should stay under ~20 MB of models (now 8.3 MB).
 
+- Asset follow-ups: bottles as physics bodies (knock them off shelves),
+  darts game on the dartboard, jukebox buttons, door that opens.
 - Physics follow-ups: knock bottles off shelves (make them bodies), glass
   breaking (material flag), stacking glasses, beer in the pint (W7).
 - Still open: ask the user how the first-person body looks on the iPhone
@@ -68,7 +67,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - [x] Rough blockout (`app/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
       pendant lamps, neon frame, tables, booth, jukebox, mirror frame, door
 - [x] Procedural textures (`engine/procedural.*`, `engine/texture.*`): wood planks (floor), wood grain (bar, tables, shelves, panels, door), brick (walls), leather (stools, booth), plaster (ceiling). Color + gloss + bump, mipmaps, triplanar mapping (no UVs needed)
-- [ ] More detail and props; better neon (real sign shapes)
+- [x] More detail and props; better neon (real sign shapes): all real models now (W3)
 - [x] Collision so you can't walk through walls or furniture (circle vs. floor rectangles)
 
 ### Stage 3: Interaction ("everything is interactable")
@@ -114,7 +113,7 @@ A small DAW inside the bar, all DSP written in C++:
 ### Stage W: World simulation (new north star, 2026-10-15)
 - [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
 - [x] W2 GLB loader (`engine/json.*`, `engine/gltf.*`, `engine/model.*`, `engine/fetch.*`) + asset pipeline (`tools/assets/`, Blender headless)
-- [ ] W3 Real assets, one piece at a time: bar counter done (`assets/models/bar_counter.glb`)
+- [x] W3 Real assets: room shell, bar counter, back bar with ~110 bottles, stools, tables, booth, jukebox, lamps, neon sign, candles, beer taps, coasters, napkin holders, menus, dartboard, chalkboard, posters, mirror frames (`tools/assets/`, `assets/models/`)
 - [x] W4 Rigid-body physics (`engine/physics.*`, `app/props.*`): compound-sphere bodies, fixed boxes, friction/bounce/mass from materials, sleeping, impact events; pick up / put down / throw glasses
 - [ ] W5 Physical sound: synthesized impacts, room acoustics
 - [ ] W6 Heat and fire (candle flames, steam, melting ice)
@@ -186,3 +185,16 @@ A small DAW inside the bar, all DSP written in C++:
   rocks, modeled in Blender, see-through glass with Fresnel edges): look at
   one and tap to pick up; tap a surface to put it down, tap elsewhere to
   throw. Impacts are recorded for W5 sounds.
+- **2026-10-15:** Asset pass, all at once (the user asked for every piece
+  in one go, then one test round). 23 Blender-built models replace every
+  blockout shape: room shell (Poly Haven plank floor, red brick, plaster
+  ceiling with beams, wainscot, baseboards, door with window), back bar
+  (cabinet, smoked mirror, LED-lit shelves, ~110 bottles in 6 shapes with
+  generated labels), bar stools and table stools (tufted leather), round
+  and booth tables, channel-tufted booth, arched jukebox with glow tubes and
+  a record under a glass dome, pendant lamps, neon "BAR" sign with martini
+  glasses, candles, beer taps, coasters, napkin holders, menu cards,
+  dartboard cabinet, chalkboard, two posters, mirror frames. Parts are
+  merged per material (few draw calls), glow strength comes through
+  `KHR_materials_emissive_strength`, and interactables can light up
+  models. `tools/assets/build_all.sh` rebuilds everything.

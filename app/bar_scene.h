@@ -84,6 +84,7 @@ struct Interactable {
   engine::Vec3 tagPosition;
   engine::Vec3 boundsMin, boundsMax;  // world box that taps hit
   size_t firstObject = 0, objectCount = 0;  // parts that light up when focused
+  size_t firstModel = 0, modelCount = 0;    // models (BarScene::models) that light up
   Action action = Action::kNone;
   int mirror = -1;  // for Action::kMirror: index into BarScene::mirrors
 };

@@ -6,7 +6,8 @@
 //
 // Supported: triangle meshes with positions, normals, texture coordinates
 // and tangents (computed if missing), PBR metal/roughness materials with
-// base color, metal/roughness, normal, occlusion and emissive values.
+// base color, metal/roughness, normal, occlusion and emissive values
+// (with KHR_materials_emissive_strength).
 // Not (yet): animation, skins, morph targets, cameras, lights.
 #include <cstdint>
 #include <string>

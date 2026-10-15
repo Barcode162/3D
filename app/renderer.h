@@ -47,7 +47,7 @@ class SceneRenderer {
  private:
   static constexpr uint32_t kMaxLights = 8;
   static constexpr uint32_t kMaxBones = 32;  // matches shaders/scene.wgsl
-  static constexpr size_t kMaxModels = 64;
+  static constexpr size_t kMaxModels = 128;
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity

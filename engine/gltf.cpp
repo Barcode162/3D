@@ -340,8 +340,11 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
     mat.occlusionImage = imageOf(m["occlusionTexture"]);
     mat.occlusionStrength = static_cast<float>(m["occlusionTexture"]["strength"].number(1));
     const Json& e = m["emissiveFactor"];
-    mat.emissive = {static_cast<float>(e[0].number()), static_cast<float>(e[1].number()),
-                    static_cast<float>(e[2].number())};
+    // KHR_materials_emissive_strength lets glow go past 1 (bulbs, neon).
+    const float strength =
+        static_cast<float>(m["extensions"]["KHR_materials_emissive_strength"]["emissiveStrength"].number(1));
+    mat.emissive = Vec3{static_cast<float>(e[0].number()), static_cast<float>(e[1].number()),
+                        static_cast<float>(e[2].number())} * strength;
     out.materials.push_back(mat);
   }
   for (size_t i = 0; i < doc["images"].size(); ++i) {
