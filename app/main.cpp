@@ -14,6 +14,7 @@
 #include "engine/input.h"
 #include "engine/log.h"
 #include "engine/mesh.h"
+#include "engine/text.h"
 
 using engine::Mat4;
 using engine::Vec3;
@@ -26,6 +27,10 @@ constexpr uint64_t kObjectStride = 256;
 constexpr float kWalkSpeed = 2.2f;           // meters per second
 constexpr float kLookSensitivity = 0.0055f;  // radians per CSS pixel
 constexpr float kBodyRadius = 0.3f;          // meters
+constexpr float kLabelShowDistance = 6.0f;   // name tags appear within this range
+constexpr float kPromptDistance = 2.2f;      // ...and their prompt this close
+constexpr double kIntroMaxMs = 12000;        // title + controls hint on start...
+constexpr double kIntroAfterInputMs = 1500;  // ...until shortly after you first move
 
 // These structs mirror the WGSL structs in shaders/scene.wgsl byte for byte.
 struct GpuLight {
@@ -58,6 +63,7 @@ struct App {
   engine::Input input;
   engine::FirstPersonCamera camera;
   app::BarScene scene;
+  engine::TextRenderer text;
   FrameUniforms frameUniforms = {};
 
   wgpu::RenderPipeline pipeline;
@@ -67,6 +73,7 @@ struct App {
   wgpu::BindGroup objectBindGroup;
   std::vector<DrawItem> draws;
 
+  double introEndMs = 0;
   double lastFrameMs = 0;
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
@@ -202,6 +209,9 @@ void updateCamera(float dt) {
   g_app.camera.look(look.x * kLookSensitivity, -look.y * kLookSensitivity);
 
   const engine::Vec2 move = g_app.input.move();
+  if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
+    g_app.introEndMs = std::min(g_app.introEndMs, emscripten_get_now() + kIntroAfterInputMs);
+  }
   Vec3 p = g_app.camera.position;
   p += g_app.camera.flatForward() * (move.y * kWalkSpeed * dt);
   p += g_app.camera.flatRight() * (move.x * kWalkSpeed * dt);
@@ -219,6 +229,63 @@ void updateFps(double nowMs) {
   engine::setStatus(text);
   g_app.fpsFrames = 0;
   g_app.fpsWindowStartMs = nowMs;
+}
+
+// Queues this frame's text: name tags over things in the bar, the prompt
+// for whatever you're standing at, and the intro title.
+void queueText(double nowMs, const Mat4& viewProj) {
+  engine::TextRenderer& text = g_app.text;
+  const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
+  const float px = g_app.gpu.pixelRatio;  // device pixels per CSS pixel
+  text.begin(viewProj, g_app.gpu.width, g_app.gpu.height);
+
+  const engine::FirstPersonCamera& cam = g_app.camera;
+  const Vec3 forward = cam.forward();
+  const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
+  const Vec3 up = engine::cross(right, forward);
+  const app::Label* promptLabel = nullptr;
+  float bestFacing = 0.8f;  // must be looking roughly toward it
+  for (const app::Label& label : g_app.scene.labels) {
+    const Vec3 toLabel = label.position - cam.position;
+    const float dist = engine::length(toLabel);
+    if (dist > kLabelShowDistance) continue;
+    // Fade in as you approach; the tag always turns to face you.
+    engine::TextStyle style;
+    style.align = 0.5f;
+    style.color = {1.0f, 0.86f, 0.62f, engine::clampf((kLabelShowDistance - dist) / 1.5f, 0, 1)};
+    style.outline.w *= style.color.w;
+    style.outlineWidth = 0.8f;
+    text.addWorld(label.text, label.position, right, up, 0.1f, style);
+
+    const Vec3 toFlat{toLabel.x, 0, toLabel.z};
+    const float facing = engine::dot(engine::normalize(toFlat), cam.flatForward());
+    if (engine::length(toFlat) < kPromptDistance && facing > bestFacing) {
+      bestFacing = facing;
+      promptLabel = &label;
+    }
+  }
+  if (promptLabel) {
+    engine::TextStyle style;
+    style.align = 0.5f;
+    style.outlineWidth = 0.8f;
+    text.addScreen(promptLabel->prompt, W * 0.5f, H * 0.62f, 14 * px, style);
+  }
+
+  if (nowMs < g_app.introEndMs) {
+    const float fade = engine::clampf(static_cast<float>((g_app.introEndMs - nowMs) / 1000.0), 0, 1);
+    engine::TextStyle title;
+    title.align = 0.5f;
+    title.color = {1.0f, 0.35f, 0.7f, fade};
+    title.outline.w *= fade;
+    title.outlineWidth = 0.9f;
+    text.addScreen("BAR3D", W * 0.5f, H * 0.2f, 34 * px, title);
+    engine::TextStyle hint;
+    hint.align = 0.5f;
+    hint.color.w = fade;
+    hint.outline.w *= fade;
+    text.addScreen("Left thumb: walk\nRight thumb: look around", W * 0.5f, H * 0.2f + 52 * px, 11 * px, hint);
+  }
+  text.upload(g_app.gpu.queue);
 }
 
 void frame() {
@@ -241,6 +308,7 @@ void frame() {
   f.cameraPos[1] = g_app.camera.position.y;
   f.cameraPos[2] = g_app.camera.position.z;
   g_app.gpu.queue.WriteBuffer(g_app.frameBuffer, 0, &f, sizeof(f));
+  queueText(nowMs, f.viewProj);
 
   wgpu::RenderPassColorAttachment color;
   color.view = target;
@@ -269,6 +337,7 @@ void frame() {
     pass.SetIndexBuffer(d.mesh.indexBuffer, wgpu::IndexFormat::Uint32);
     pass.DrawIndexed(d.mesh.indexCount);
   }
+  g_app.text.draw(pass);  // after the scene: text is see-through and on top
   pass.End();
   wgpu::CommandBuffer commands = encoder.Finish();
   g_app.gpu.queue.Submit(1, &commands);
@@ -280,7 +349,8 @@ void onGpuReady(bool ok) {
     return;
   }
   g_app.scene = app::buildBarScene();
-  if (!createRenderer()) {
+  if (!createRenderer() ||
+      !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");
     return;
   }
@@ -288,6 +358,7 @@ void onGpuReady(bool ok) {
   g_app.camera.yaw = g_app.scene.spawnYaw;
   g_app.input.attach("#canvas");
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
+  g_app.introEndMs = g_app.lastFrameMs + kIntroMaxMs;
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around.");
   emscripten_set_main_loop(frame, 0, false);
 }

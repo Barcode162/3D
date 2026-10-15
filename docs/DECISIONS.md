@@ -15,6 +15,7 @@ future session re-litigates or repeats it.
 | Assets | Generated in code where possible; third-party only with a license and credits | Public repo |
 | Async setup | Callbacks with `CallbackMode::AllowSpontaneous`, no Asyncify | Smaller and faster |
 | Threads | None (yet) | Pages can't send COOP/COEP headers |
+| Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -51,6 +52,9 @@ future session re-litigates or repeats it.
   `Version/26.3`. This is normal.
 
 ## Gotchas hit so far
+- Text vertices are placed in clip space on the CPU (screen text at depth 0),
+  so one pipeline and one draw call cover both screen and world text. World
+  text is depth-tested but doesn't write depth.
 - A global variable named `app` clashes with `namespace app`. The global is `g_app`.
 - The on-screen log panel covers the bottom of the screen and takes touches.
   It's hidden by default and opens automatically on errors.

@@ -1,6 +1,7 @@
 #pragma once
 // The bar's layout: which shapes go where, their colors, the lights and the
 // walls/furniture you can't walk through. Pure data, no GPU code.
+#include <string>
 #include <vector>
 
 #include "engine/math.h"
@@ -29,10 +30,19 @@ struct Blocker {
   float minX, minZ, maxX, maxZ;
 };
 
+// A floating name tag over something you'll be able to use. Walking close
+// and looking at it shows `prompt` on screen.
+struct Label {
+  engine::Vec3 position;
+  std::string text;
+  std::string prompt;
+};
+
 struct BarScene {
   std::vector<SceneObject> objects;
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
+  std::vector<Label> labels;
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
   float fogDensity;

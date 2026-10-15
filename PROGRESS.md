@@ -1,19 +1,19 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 1, Engine foundation (next: 1.5 lighting polish, 1.6 text)
+**Current focus:** Stage 2 look (procedural textures), then Stage 3 interaction
 
 ## Next up (start here in a new session)
-1. **1.6 In-engine text**: a bitmap font rendered by our own renderer
-   (labels, prompts like "Tap to play jukebox"). Needed for interaction UI.
-2. **Procedural textures**: wood grain (floor, bar), brick or plaster
+1. **Procedural textures**: wood grain (floor, bar), brick or plaster
    (walls), leather, generated in code into GPU textures, with mipmaps.
    Upgrades the look a lot.
-3. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
+2. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
    highlight the object you're pointing at. First interaction: tap the
    jukebox → it plays the jazz playlist (pulls part of Stage 4 forward,
-   because the user wants the music early).
-4. Small polish noticed on iPhone: the candle spheres on the tables look
+   because the user wants the music early). The text system and the
+   `Label` list in `bar_scene` (name tag + prompt) are ready for this: swap
+   "Music coming soon" for "Tap to play".
+3. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
@@ -36,7 +36,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - [x] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres (`engine/mesh.*`)
 - [x] 1.4 First-person camera + touch controls (left stick move, right drag look; WASD + mouse on a computer)
 - [ ] 1.5 Lighting: 8 warm point lights + emissive + haze + tone mapping done; still to do: real PBR materials
-- [ ] 1.6 Text rendering in-engine (bitmap font) for labels/UI
+- [x] 1.6 Text rendering in-engine (`engine/font.*`, `engine/text.*`, `shaders/text.wgsl`): hand-drawn 5x7 pixel font → SDF atlas with mipmaps, outlines, screen + 3D world text, one draw call
 
 ### Stage 2: The bar room
 - [x] Rough blockout (`app/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
@@ -101,3 +101,8 @@ A small DAW inside the bar, all DSP written in C++:
   handoff: `docs/VISION.md`, `docs/DECISIONS.md`, a "Next up" list, and a
   SessionStart hook that installs Emscripten, so a brand-new chat can resume
   from the repo alone.
+- **2026-10-15:** 1.6 in-engine text. Own 95-character pixel font, drawn
+  as a distance-field texture (sharp at any size, with outlines). Shows a
+  "BAR3D" title + controls hint on start (fades once you move; replaces the
+  HTML hint), floating JUKEBOX / MIRROR name tags, and an on-screen prompt
+  when you stand at one and look at it.
