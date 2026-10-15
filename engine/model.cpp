@@ -145,6 +145,8 @@ void finish(const std::shared_ptr<Loading>& l) {
     part.indexCount = static_cast<uint32_t>(p.indices.size());
     const bool hasMaterial = p.material >= 0 && static_cast<size_t>(p.material) < l->data.materials.size();
     part.material = hasMaterial ? static_cast<size_t>(p.material) : l->data.materials.size();
+    part.blend = hasMaterial && l->data.materials[static_cast<size_t>(p.material)].blend;
+    model->hasBlend = model->hasBlend || part.blend;
     triangles += p.indices.size() / 3;
     model->parts.push_back(part);
   }

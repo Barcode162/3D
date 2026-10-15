@@ -37,6 +37,7 @@ struct ModelMaterial {
   Vec3 emissive;
   float normalScale = 1, occlusionStrength = 1;
   int baseColorImage = -1, metalRoughImage = -1, normalImage = -1, occlusionImage = -1;
+  bool blend = false;  // see-through (glTF alphaMode BLEND), e.g. glass
 };
 
 struct ModelImage {

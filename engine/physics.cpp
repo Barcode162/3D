@@ -1,0 +1,345 @@
+#include "engine/physics.h"
+
+#include <algorithm>
+#include <cmath>
+
+namespace engine {
+namespace {
+
+constexpr Vec3 kGravity{0, -9.81f, 0};
+constexpr float kSlop = 0.0005f;           // allowed overlap, avoids jitter
+constexpr float kPushFraction = 0.6f;      // share of overlap fixed per substep
+constexpr float kBounceThreshold = 0.4f;   // slower impacts don't bounce (m/s)
+constexpr float kImpactThreshold = 0.25f;  // slower impacts make no sound (m/s)
+constexpr float kSleepLinear = 0.1f;       // m/s
+constexpr float kSleepAngular = 0.4f;      // rad/s
+constexpr float kSleepTime = 0.5f;         // seconds of stillness before sleeping
+constexpr float kHoldStiffness = 14.0f;    // how hard a held body chases its target
+constexpr float kHoldMaxSpeed = 6.0f;
+constexpr float kMaxAngularSpeed = 40.0f;
+
+Quat conjugate(Quat q) { return {-q.x, -q.y, -q.z, q.w}; }
+
+Quat normalized(Quat q) {
+  const float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+  return {q.x / len, q.y / len, q.z / len, q.w / len};
+}
+
+Vec3 mulComponents(Vec3 a, Vec3 b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }
+
+// Applies the world-space inverse inertia: rotate into body space, scale,
+// rotate back.
+Vec3 applyInverseInertia(const Body& b, Vec3 v) {
+  return b.rotation.rotate(mulComponents(b.inverseInertia, conjugate(b.rotation).rotate(v)));
+}
+
+Vec3 velocityAt(const Body& b, Vec3 point) {
+  return b.velocity + cross(b.angularVelocity, point - b.worldCenter());
+}
+
+void applyImpulse(Body& b, Vec3 point, Vec3 impulse) {
+  if (b.held) {
+    // A held body is moved by the hand; contacts only nudge it a little.
+    impulse = impulse * 0.3f;
+  }
+  b.velocity += impulse * b.inverseMass;
+  b.angularVelocity += applyInverseInertia(b, cross(point - b.worldCenter(), impulse));
+}
+
+// How much a unit impulse along `n` at `point` changes the speed there.
+float impulseResponse(const Body& b, Vec3 point, Vec3 n) {
+  const Vec3 r = point - b.worldCenter();
+  return b.inverseMass + dot(n, cross(applyInverseInertia(b, cross(r, n)), r));
+}
+
+// Combined surface values: friction averages (geometric mean), bounce takes
+// the larger, like most engines.
+float combinedFriction(const Material* a, const Material* b) {
+  const float fa = a ? a->friction : 0.5f, fb = b ? b->friction : 0.5f;
+  return std::sqrt(fa * fb);
+}
+float combinedBounce(const Material* a, const Material* b) {
+  return std::max(a ? a->restitution : 0.3f, b ? b->restitution : 0.3f);
+}
+
+}  // namespace
+
+size_t PhysicsWorld::addBody(Vec3 position, Quat rotation, std::vector<BodySphere> spheres, float volume,
+                             const Material* material) {
+  Body b;
+  b.position = position;
+  b.rotation = rotation;
+  b.material = material;
+  b.spheres = std::move(spheres);
+  const float mass = std::max(0.01f, (material ? material->density : 1000.0f) * volume);
+  b.inverseMass = 1.0f / mass;
+
+  // Mass is spread evenly over the spheres (weighted by volume); inertia
+  // adds each sphere's own spin resistance to its offset from the center.
+  float total = 0;
+  Vec3 com;
+  for (const BodySphere& s : b.spheres) {
+    const float w = s.radius * s.radius * s.radius;
+    com += s.center * w;
+    total += w;
+  }
+  com = com * (1.0f / total);
+  b.centerOfMass = com;
+  Vec3 inertia;
+  for (const BodySphere& s : b.spheres) {
+    const float m = mass * (s.radius * s.radius * s.radius) / total;
+    const Vec3 d = s.center - com;
+    const float own = 0.4f * m * s.radius * s.radius;
+    inertia += Vec3{m * (d.y * d.y + d.z * d.z) + own, m * (d.x * d.x + d.z * d.z) + own,
+                    m * (d.x * d.x + d.y * d.y) + own};
+    b.boundRadius = std::max(b.boundRadius, length(d) + s.radius);
+  }
+  b.inverseInertia = {1.0f / inertia.x, 1.0f / inertia.y, 1.0f / inertia.z};
+  bodies_.push_back(std::move(b));
+  return bodies_.size() - 1;
+}
+
+void PhysicsWorld::step(float dt) {
+  pending_ = std::min(pending_ + std::max(dt, 0.0f), kStep * kMaxStepsPerFrame);
+  while (pending_ >= kStep) {
+    pending_ -= kStep;
+    for (int i = 0; i < kSubsteps; ++i) substep(kStep / kSubsteps);
+    for (Body& b : bodies_) updateSleep(b, kStep);
+  }
+}
+
+void PhysicsWorld::substep(float h) {
+  for (Body& b : bodies_) {
+    if (b.asleep) continue;
+    if (b.held) {
+      // Chase the hand: velocity toward the target, rotation toward upright.
+      Vec3 v = (b.holdTarget - b.position) * kHoldStiffness;
+      const float speed = length(v);
+      if (speed > kHoldMaxSpeed) v = v * (kHoldMaxSpeed / speed);
+      b.velocity = v;
+      // cross(up, worldUp) is the axis (scaled by the sine of the tilt) that
+      // turns the body back upright.
+      const Vec3 up = b.rotation.rotate({0, 1, 0});
+      b.angularVelocity = cross(up, {0, 1, 0}) * 10.0f;
+    } else {
+      b.velocity += kGravity * h;
+    }
+  }
+
+  // Contacts: against the fixed world, then between bodies.
+  for (Body& b : bodies_) {
+    if (!b.asleep) collideStatic(b, h);
+  }
+  for (size_t i = 0; i < bodies_.size(); ++i) {
+    for (size_t j = i + 1; j < bodies_.size(); ++j) {
+      Body &a = bodies_[i], &b = bodies_[j];
+      if (a.asleep && b.asleep) continue;
+      const Vec3 d = a.worldCenter() - b.worldCenter();
+      const float r = a.boundRadius + b.boundRadius;
+      if (dot(d, d) < r * r) collidePair(a, b);
+    }
+  }
+
+  // Integrate.
+  for (Body& b : bodies_) {
+    if (b.asleep) continue;
+    const float spin = length(b.angularVelocity);
+    if (spin > kMaxAngularSpeed) b.angularVelocity = b.angularVelocity * (kMaxAngularSpeed / spin);
+    // Rotate around the center of mass, not the origin.
+    const Vec3 comBefore = b.worldCenter();
+    if (spin > 1e-6f) {
+      const Quat dq = Quat::axisAngle(b.angularVelocity * (1.0f / spin), spin * h);
+      b.rotation = normalized(dq * b.rotation);
+    }
+    b.position = b.position + (comBefore - b.worldCenter()) + b.velocity * h;
+  }
+}
+
+void PhysicsWorld::collideStatic(Body& b, float /*h*/) {
+  const Vec3 center = b.worldCenter();
+  for (const StaticBox& box : statics_) {
+    // Quick reject: bounding sphere vs the box's bounding sphere.
+    const Vec3 toBox = center - box.center;
+    const float reach = b.boundRadius + length(box.half);
+    if (dot(toBox, toBox) > reach * reach) continue;
+    const Quat inv = conjugate(box.rotation);
+    for (const BodySphere& s : b.spheres) {
+      const Vec3 world = b.position + b.rotation.rotate(s.center);
+      const Vec3 local = inv.rotate(world - box.center);
+      const Vec3 clamped{std::clamp(local.x, -box.half.x, box.half.x), std::clamp(local.y, -box.half.y, box.half.y),
+                         std::clamp(local.z, -box.half.z, box.half.z)};
+      const Vec3 diff = local - clamped;
+      const float dist2 = dot(diff, diff);
+      if (dist2 > s.radius * s.radius) continue;
+      Vec3 normalLocal;
+      float depth;
+      if (dist2 > 1e-12f) {
+        const float dist = std::sqrt(dist2);
+        normalLocal = diff * (1.0f / dist);
+        depth = s.radius - dist;
+      } else {
+        // Center inside the box: leave through the nearest face.
+        const float px = box.half.x - std::fabs(local.x), py = box.half.y - std::fabs(local.y),
+                    pz = box.half.z - std::fabs(local.z);
+        if (px <= py && px <= pz) {
+          normalLocal = {local.x < 0 ? -1.0f : 1.0f, 0, 0};
+          depth = px + s.radius;
+        } else if (py <= pz) {
+          normalLocal = {0, local.y < 0 ? -1.0f : 1.0f, 0};
+          depth = py + s.radius;
+        } else {
+          normalLocal = {0, 0, local.z < 0 ? -1.0f : 1.0f};
+          depth = pz + s.radius;
+        }
+      }
+      const Vec3 normal = box.rotation.rotate(normalLocal);
+      const Vec3 contact = world - normal * s.radius;
+      applyContact(b, nullptr, contact, normal, depth, box.material);
+    }
+  }
+}
+
+void PhysicsWorld::collidePair(Body& a, Body& b) {
+  for (const BodySphere& sa : a.spheres) {
+    const Vec3 pa = a.position + a.rotation.rotate(sa.center);
+    for (const BodySphere& sb : b.spheres) {
+      const Vec3 pb = b.position + b.rotation.rotate(sb.center);
+      const Vec3 d = pa - pb;
+      const float r = sa.radius + sb.radius;
+      const float dist2 = dot(d, d);
+      if (dist2 >= r * r || dist2 < 1e-12f) continue;
+      const float dist = std::sqrt(dist2);
+      const Vec3 n = d * (1.0f / dist);  // from b toward a
+      a.asleep = b.asleep = false;
+      a.sleepTimer = b.sleepTimer = 0;
+      applyContact(a, &b, pb + n * sb.radius, n, r - dist, b.material);
+    }
+  }
+}
+
+// One contact between `a` and `b` (b = null for the fixed world). `normal`
+// points from b toward a.
+void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float depth,
+                                const Material* otherMaterial) {
+  const Vec3 rel = velocityAt(a, point) - (b ? velocityAt(*b, point) : Vec3{});
+  const float vn = dot(rel, normal);
+  if (vn < 0) {
+    if (-vn > kImpactThreshold && !a.held && impacts_.size() < 256) {
+      impacts_.push_back({point, -vn, a.material, otherMaterial});
+    }
+    const float k = impulseResponse(a, point, normal) + (b ? impulseResponse(*b, point, normal) : 0);
+    const float bounce = -vn > kBounceThreshold ? combinedBounce(a.material, otherMaterial) : 0;
+    const float jn = -(1 + bounce) * vn / k;
+    applyImpulse(a, point, normal * jn);
+    if (b) applyImpulse(*b, point, normal * -jn);
+
+    // Friction: stop sliding, up to friction x the normal push.
+    const Vec3 rel2 = velocityAt(a, point) - (b ? velocityAt(*b, point) : Vec3{});
+    Vec3 tangent = rel2 - normal * dot(rel2, normal);
+    const float slide = length(tangent);
+    if (slide > 1e-6f) {
+      tangent = tangent * (1.0f / slide);
+      const float kt = impulseResponse(a, point, tangent) + (b ? impulseResponse(*b, point, tangent) : 0);
+      const float limit = combinedFriction(a.material, otherMaterial) * jn;
+      const float jt = std::min(slide / kt, limit);
+      applyImpulse(a, point, tangent * -jt);
+      if (b) applyImpulse(*b, point, tangent * jt);
+    }
+    // Rolling resistance: things on their side slow down instead of
+    // rolling forever.
+    a.angularVelocity = a.angularVelocity * 0.9995f;
+  }
+
+  // Push apart (split by mass) so shapes don't sink into each other.
+  const float push = std::max(0.0f, depth - kSlop) * kPushFraction;
+  if (push <= 0) return;
+  const float wa = a.held ? 0.0f : a.inverseMass, wb = b && !b->held ? b->inverseMass : 0.0f;
+  if (!b) {
+    a.position += normal * push;
+    return;
+  }
+  const float total = wa + wb;
+  if (total <= 0) return;
+  a.position += normal * (push * wa / total);
+  b->position += normal * (-push * wb / total);
+}
+
+void PhysicsWorld::updateSleep(Body& b, float dt) {
+  if (b.asleep) return;
+  if (b.held || length(b.velocity) > kSleepLinear || length(b.angularVelocity) > kSleepAngular) {
+    b.sleepTimer = 0;
+    return;
+  }
+  b.sleepTimer += dt;
+  if (b.sleepTimer > kSleepTime) {
+    b.asleep = true;
+    b.velocity = {};
+    b.angularVelocity = {};
+  }
+}
+
+int PhysicsWorld::raycastBodies(Vec3 origin, Vec3 dir, float maxDist, float* hitDist) const {
+  int best = -1;
+  float bestT = maxDist;
+  for (size_t i = 0; i < bodies_.size(); ++i) {
+    // Ray vs bounding sphere, slightly enlarged so small things are easy to tap.
+    const Vec3 oc = origin - bodies_[i].worldCenter();
+    const float r = bodies_[i].boundRadius * 1.3f + 0.02f;
+    const float bq = dot(oc, dir);
+    const float c = dot(oc, oc) - r * r;
+    const float disc = bq * bq - c;
+    if (disc < 0) continue;
+    const float t = -bq - std::sqrt(disc);
+    if (t >= 0 && t < bestT) {
+      bestT = t;
+      best = static_cast<int>(i);
+    }
+  }
+  if (hitDist) *hitDist = bestT;
+  return best;
+}
+
+bool PhysicsWorld::raycastStatic(Vec3 origin, Vec3 dir, float maxDist, float* hitDist, Vec3* hitNormal) const {
+  bool hit = false;
+  float best = maxDist;
+  for (const StaticBox& box : statics_) {
+    const Quat inv = conjugate(box.rotation);
+    const Vec3 o = inv.rotate(origin - box.center), d = inv.rotate(dir);
+    float tNear = -1e30f, tFar = 1e30f;
+    Vec3 nNear;
+    bool miss = false;
+    const float oa[3] = {o.x, o.y, o.z}, da[3] = {d.x, d.y, d.z}, ha[3] = {box.half.x, box.half.y, box.half.z};
+    for (int axis = 0; axis < 3 && !miss; ++axis) {
+      if (std::fabs(da[axis]) < 1e-9f) {
+        if (std::fabs(oa[axis]) > ha[axis]) miss = true;
+        continue;
+      }
+      float t1 = (-ha[axis] - oa[axis]) / da[axis], t2 = (ha[axis] - oa[axis]) / da[axis];
+      float sign = -1;
+      if (t1 > t2) {
+        std::swap(t1, t2);
+        sign = 1;
+      }
+      if (t1 > tNear) {
+        tNear = t1;
+        nNear = {axis == 0 ? sign : 0, axis == 1 ? sign : 0, axis == 2 ? sign : 0};
+      }
+      tFar = std::min(tFar, t2);
+      if (tNear > tFar) miss = true;
+    }
+    if (miss || tNear < 0 || tNear >= best) continue;
+    best = tNear;
+    hit = true;
+    if (hitNormal) *hitNormal = box.rotation.rotate(nNear);
+  }
+  if (hitDist) *hitDist = best;
+  return hit;
+}
+
+std::vector<Impact> PhysicsWorld::takeImpacts() {
+  std::vector<Impact> out;
+  out.swap(impacts_);
+  return out;
+}
+
+}  // namespace engine

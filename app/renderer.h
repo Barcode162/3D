@@ -40,6 +40,10 @@ class SceneRenderer {
 
   size_t objectCount() const { return sceneDraws_.size() + modelsLoaded_; }
 
+  // Moves placed model `index` (BarScene::models order), e.g. a glass that
+  // physics is moving.
+  void setModelTransform(size_t index, engine::Vec3 position, engine::Quat rotation);
+
  private:
   static constexpr uint32_t kMaxLights = 8;
   static constexpr uint32_t kMaxBones = 32;  // matches shaders/scene.wgsl
@@ -76,6 +80,8 @@ class SceneRenderer {
   struct ModelDraw {
     std::shared_ptr<engine::GpuModel> gpu;
     uint32_t uniformOffset;
+    engine::Vec3 position;  // for sorting see-through models back to front
+    float scale = 1;
   };
   struct DrawItem {
     engine::Mesh mesh;
@@ -98,7 +104,7 @@ class SceneRenderer {
   void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler);
   void resizeMirrorTargets();
   void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items) const;
-  void drawModels(const wgpu::RenderPassEncoder& pass) const;
+  void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye) const;
   void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
   wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
@@ -112,6 +118,7 @@ class SceneRenderer {
   wgpu::RenderPipeline skinnedPipeline_;          // the avatar, first person
   wgpu::RenderPipeline skinnedMirroredPipeline_;  // the avatar, in mirrors
   wgpu::RenderPipeline modelPipeline_, modelMirroredPipeline_;  // loaded .glb models
+  wgpu::RenderPipeline modelBlendPipeline_, modelBlendMirroredPipeline_;  // their see-through parts
   wgpu::RenderPipeline glassPipeline_;
   wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_, modelLayout_;
   wgpu::Sampler modelSampler_;

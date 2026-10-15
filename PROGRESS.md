@@ -8,13 +8,13 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-1. **W4 Rigid-body physics** using the material's physics fields: pick up,
-   throw, stack glasses (was "Physics" before).
-2. **W5 Physical sound**: impact sounds synthesized from collisions and
+1. **W5 Physical sound**: impact sounds synthesized from collisions and
    materials; room echo from room size and materials.
-3. Then continue the art upgrade piece by piece (stools → walls/floor →
+2. Then continue the art upgrade piece by piece (stools → walls/floor →
    back bar → tables/booth → jukebox → props), alternating with sim
    engines (shadows/bloom, heat/flames, liquids, smell field, day/night).
+- Physics follow-ups: knock bottles off shelves (make them bodies), glass
+  breaking (material flag), stacking glasses, beer in the pint (W7).
 - Still open: ask the user how the first-person body looks on the iPhone
   (build after `fa20592`).
 
@@ -48,7 +48,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 
 ### Stage 3: Interaction ("everything is interactable")
 - [x] Tap-to-use (ray from the tap point, `Interactable` boxes in `bar_scene`), glow highlight + prompt when you stand at something
-- [ ] Pick up / drop / throw objects (simple physics)
+- [x] Pick up / put down / throw objects (W4)
 - [ ] Light switches, doors, taps, jukebox buttons
 - [ ] Bar games: darts, pool table
 
@@ -90,7 +90,7 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
 - [x] W2 GLB loader (`engine/json.*`, `engine/gltf.*`, `engine/model.*`, `engine/fetch.*`) + asset pipeline (`tools/assets/`, Blender headless)
 - [ ] W3 Real assets, one piece at a time: bar counter done (`assets/models/bar_counter.glb`)
-- [ ] W4 Rigid-body physics driven by materials
+- [x] W4 Rigid-body physics (`engine/physics.*`, `app/props.*`): compound-sphere bodies, fixed boxes, friction/bounce/mass from materials, sleeping, impact events; pick up / put down / throw glasses
 - [ ] W5 Physical sound: synthesized impacts, room acoustics
 - [ ] W6 Heat and fire (candle flames, steam, melting ice)
 - [ ] W7 Liquids (pour and mix drinks)
@@ -155,3 +155,9 @@ A small DAW inside the bar, all DSP written in C++:
   container; `tools/assets/bar_counter.py` models the counter (paneled
   front, mahogany top with drink rail, brass foot rail on brackets) with
   CC0 Poly Haven wood. Test camera: `?cam=x,y,z,yaw,pitch`.
+- **2026-10-15:** W4 physics. Own rigid-body engine: glasses are rings of
+  small spheres, the world is boxes (every scene object + colliders for the
+  counter model), fixed 60 Hz steps with 8 substeps. 7 glasses (pint and
+  rocks, modeled in Blender, see-through glass with Fresnel edges): look at
+  one and tap to pick up; tap a surface to put it down, tap elsewhere to
+  throw. Impacts are recorded for W5 sounds.

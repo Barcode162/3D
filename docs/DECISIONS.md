@@ -24,6 +24,8 @@ future session re-litigates or repeats it.
 | Shading | PBR metal/roughness: GGX + Smith + Schlick, Karis sphere-light widening (`PointLight::radius`), Karis env-BRDF approximation against a fake "room glow" (`roomGlow` in `scene.wgsl`) | Same model as glTF, so loaded assets look right. Diffuse leaves out 1/pi (keeps the old light tuning), so specular is scaled by pi |
 | Model files | glTF 2.0 binary (.glb), own loader: `engine/json.*` (parser), `engine/gltf.*` (meshes, node tree flattened into model space, PBR materials, tangents computed if missing), `engine/model.*` (GPU upload, per-material bind group). PNG/JPEG decoded by the browser (`createImageBitmap`, `colorSpaceConversion: 'none'`) in `engine/fetch.cpp` | Standard format every tool exports; image decoding is a platform "driver" like AAC |
 | Model placement | `BarScene::models` (`ModelPlacement`: file, position, rotation, scale, `MaterialId` for feel/sound). The file gives the look | Look from the asset, physics/sound from the material library |
+| Physics | Own engine (`engine/physics.*`): moving bodies = compound spheres (cheap, stable contacts), world = oriented boxes; sequential impulses with Coulomb friction, restitution above 0.4 m/s, split position correction; fixed 1/60 s steps x 8 substeps, max 8 steps per frame; sleeping. Mass = material density x real solid volume | Stable on a phone without a full convex-collision system; materials drive weight, grip and bounce |
+| Glass | glTF `alphaMode: BLEND` → see-through pipeline: premultiplied alpha, no depth write, sorted back to front, opacity rises at grazing angles (Fresnel) | Real glass look without refraction cost |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -109,6 +111,10 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
 ## Gotchas hit so far
+- Physics in the headless test runs at ~2 fps, so the world moves in slow
+  motion there (max 8 fixed steps per frame). Judge timing on the phone.
+- A model's object slot must get its full matrix before the initial
+  `objectData` upload, or it renders at the origin until it moves.
 - Pages sends `cache-control: max-age=600`, so Safari can show a build up
   to 10 minutes old. The deploy writes `version.txt`; `index.html` fetches
   it with `cache: 'no-store'` and reloads with `?b=<sha>` if it's newer.

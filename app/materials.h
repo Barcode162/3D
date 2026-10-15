@@ -30,7 +30,7 @@ enum MaterialId : int {
   kChrome,
   kBrass,
   kBlackSteel,     // powder-coated table legs, lamp shades
-  kBottleGlass,    // color set per bottle
+  kBottleGlass,    // bottles (color set per bottle) and drinking glasses
   kLacquer,        // jukebox cabinet
   kGlowGlass,      // bulbs, neon tubes, lit panels: color and glow per object
   kMaterialCount,

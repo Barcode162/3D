@@ -40,6 +40,14 @@ wgpu::Buffer makeUniformBuffer(const wgpu::Device& device, uint64_t size, const 
   return device.CreateBuffer(&desc);
 }
 
+Mat4 modelMatrix(Vec3 position, engine::Quat rotation, float scale) {
+  Mat4 m = Mat4::transform(position, rotation);
+  for (int c = 0; c < 3; ++c) {
+    for (int r = 0; r < 3; ++r) m.at(c, r) *= scale;
+  }
+  return m;
+}
+
 void setVec4(float out[4], Vec3 v, float w) {
   out[0] = v.x;
   out[1] = v.y;
@@ -268,6 +276,20 @@ bool SceneRenderer::createScenePipelines() {
   desc.primitive.frontFace = wgpu::FrontFace::CW;
   modelMirroredPipeline_ = device.CreateRenderPipeline(&desc);
 
+  // See-through parts (glass): premultiplied alpha blending, tested against
+  // the depth buffer but not written to it, drawn back to front.
+  wgpu::BlendState blend;
+  blend.color = {wgpu::BlendOperation::Add, wgpu::BlendFactor::One, wgpu::BlendFactor::OneMinusSrcAlpha};
+  blend.alpha = {wgpu::BlendOperation::Add, wgpu::BlendFactor::One, wgpu::BlendFactor::OneMinusSrcAlpha};
+  colorTarget.blend = &blend;
+  depth.depthWriteEnabled = false;
+  fragment.entryPoint = "fs_model_blend";
+  desc.label = "model see-through (mirrored)";
+  modelBlendMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  desc.label = "model see-through";
+  desc.primitive.frontFace = wgpu::FrontFace::CCW;
+  modelBlendPipeline_ = device.CreateRenderPipeline(&desc);
+
   wgpu::SamplerDescriptor samplerDesc;
   samplerDesc.addressModeU = samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
   samplerDesc.magFilter = samplerDesc.minFilter = wgpu::FilterMode::Linear;
@@ -373,35 +395,66 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
 }
 
 // Each placement gets an object slot (its position/rotation/scale) right
-// away; the model itself streams in and is drawn once it's ready.
+// away; the model itself streams in and is drawn once it's ready. Each file
+// is downloaded once, however many times it's placed.
 void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& objectData) {
   const size_t firstSlot = scene.objects.size() + 1;  // after the objects and the avatar
+  std::vector<std::string> files;
+  std::vector<std::vector<size_t>> users;
   for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
     const ModelPlacement& p = scene.models[i];
-    ObjectUniforms u = {};
-    u.model = Mat4::transform(p.position, p.rotation);
-    for (int c = 0; c < 3; ++c) {
-      for (int r = 0; r < 3; ++r) u.model.at(c, r) *= p.scale;
-    }
-    setVec4(u.color, {1, 1, 1}, 0);
     const auto offset = static_cast<uint32_t>((firstSlot + i) * kObjectStride);
+    models_.push_back({nullptr, offset, p.position, p.scale});
+    ObjectUniforms u = {};
+    u.model = modelMatrix(p.position, p.rotation, p.scale);
+    setVec4(u.color, {1, 1, 1}, 0);
     std::memcpy(objectData.data() + offset, &u, sizeof(u));
-    models_.push_back({nullptr, offset});
-    engine::GpuModel::load(gpu_->device, modelLayout_, modelSampler_, "assets/models/" + p.file,
-                           [this, i](std::shared_ptr<engine::GpuModel> model) {
-                             models_[i].gpu = std::move(model);
-                             if (models_[i].gpu) ++modelsLoaded_;
-                           });
+    const auto it = std::find(files.begin(), files.end(), p.file);
+    if (it == files.end()) {
+      files.push_back(p.file);
+      users.push_back({i});
+    } else {
+      users[static_cast<size_t>(it - files.begin())].push_back(i);
+    }
   }
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
+  for (size_t f = 0; f < files.size(); ++f) {
+    engine::GpuModel::load(gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f],
+                           [this, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
+                             if (!model) return;
+                             for (size_t i : placements) models_[i].gpu = model;
+                             modelsLoaded_ += placements.size();
+                           });
+  }
 }
 
-void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass) const {
+void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat rotation) {
+  if (index >= models_.size()) return;
+  ModelDraw& m = models_[index];
+  m.position = position;
+  const Mat4 model = modelMatrix(position, rotation, m.scale);
+  // Only the matrix (the start of ObjectUniforms) changes.
+  gpu_->queue.WriteBuffer(objectBuffer_, m.uniformOffset, &model, sizeof(model));
+}
+
+// Solid parts in any order; see-through parts sorted farthest first so
+// nearer glass blends over farther glass.
+void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye) const {
+  std::vector<const ModelDraw*> order;
   for (const ModelDraw& m : models_) {
-    if (!m.gpu) continue;
-    pass.SetBindGroup(1, objectBindGroup_, 1, &m.uniformOffset);
-    for (const engine::GpuModel::Part& part : m.gpu->parts) {
-      pass.SetBindGroup(2, m.gpu->bindGroups[part.material]);
+    if (m.gpu && (!blend || m.gpu->hasBlend)) order.push_back(&m);
+  }
+  if (blend) {
+    std::sort(order.begin(), order.end(), [eye](const ModelDraw* a, const ModelDraw* b) {
+      const Vec3 da = a->position - eye, db = b->position - eye;
+      return engine::dot(da, da) > engine::dot(db, db);
+    });
+  }
+  for (const ModelDraw* m : order) {
+    pass.SetBindGroup(1, objectBindGroup_, 1, &m->uniformOffset);
+    for (const engine::GpuModel::Part& part : m->gpu->parts) {
+      if (part.blend != blend) continue;
+      pass.SetBindGroup(2, m->gpu->bindGroups[part.material]);
       pass.SetVertexBuffer(0, part.vertexBuffer);
       pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
       pass.DrawIndexed(part.indexCount);
@@ -485,10 +538,14 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   if (full) {
     drawItems(pass, sceneDraws_);
     pass.SetPipeline(modelMirroredPipeline_);
-    drawModels(pass);
+    drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
   }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
+  if (full) {
+    pass.SetPipeline(modelBlendMirroredPipeline_);
+    drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
+  }
   pass.End();
 }
 
@@ -534,9 +591,11 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   pass.SetBindGroup(0, views_[0].bindGroup);
   drawItems(pass, sceneDraws_);
   pass.SetPipeline(modelPipeline_);
-  drawModels(pass);
+  drawModels(pass, false, eye);
   pass.SetPipeline(skinnedPipeline_);
   drawAvatar(pass, firstPersonBonesBindGroup_);  // your body, minus the head
+  pass.SetPipeline(modelBlendPipeline_);
+  drawModels(pass, true, eye);  // glass, after everything solid
 
   // Mirror glass.
   pass.SetPipeline(glassPipeline_);

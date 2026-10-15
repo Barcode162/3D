@@ -328,6 +328,7 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
   for (const Json& m : doc["materials"].items()) {
     ModelMaterial mat;
     mat.name = m["name"].string();
+    mat.blend = m["alphaMode"].string() == "BLEND";
     const Json& pbr = m["pbrMetallicRoughness"];
     for (size_t i = 0; i < 4; ++i) mat.baseColor[i] = static_cast<float>(pbr["baseColorFactor"][i].number(1));
     mat.metallic = static_cast<float>(pbr["metallicFactor"].number(1));

@@ -72,6 +72,19 @@ void buildBar(Builder& b) {
   // The counter is a real model (tools/assets/bar_counter.py): paneled
   // front, mahogany top with a drink rail, brass foot rail on brackets.
   b.scene.models.push_back({"bar_counter.glb", {0, 0, barZ}, {}, 1, kVarnishedWood});
+  // Its solid shape: the top, the raised drink rail and the body below.
+  b.scene.colliders.push_back({{0, 1.07f, barZ + 0.05f}, {3.65f, 0.03f, 0.47f}, {}, kVarnishedWood});
+  b.scene.colliders.push_back({{0, 1.1175f, barZ + 0.46f}, {3.65f, 0.0175f, 0.06f}, {}, kVarnishedWood});
+  b.scene.colliders.push_back({{0, 0.52f, barZ}, {3.52f, 0.52f, 0.37f}, {}, kDarkWood});
+
+  // Glasses on the bar top (its surface is 1.10 m up) to pick up and throw.
+  const float topY = 1.10f, glassZ = barZ + 0.08f;
+  for (float x : {-2.3f, -0.4f, 1.3f, 2.6f}) {
+    b.scene.models.push_back({"pint_glass.glb", {x, topY, glassZ}, {}, 1, kBottleGlass, Prop::kPintGlass});
+  }
+  for (float x : {-1.4f, 0.6f}) {
+    b.scene.models.push_back({"rocks_glass.glb", {x, topY, glassZ - 0.1f}, {}, 1, kBottleGlass, Prop::kRocksGlass});
+  }
   // Counter plus the bartender's area behind it.
   b.block({0, 0, (barZ + 0.5f + -kRoomHalfZ) / 2}, barLen / 2 + 0.15f,
           (barZ + 0.5f + kRoomHalfZ) / 2);
@@ -138,6 +151,8 @@ void buildSeating(Builder& b) {
     b.add(makeCylinder(0.25f, 0.03f), {c.x, 0.015f, c.z}, kBlackSteel);
     b.add(makeSphere(0.035f, 12, 8), {c.x, 0.82f, c.z}, kGlowGlass).tint(kWarmBulb).glow(4.0f);  // candle glow
     b.block(c, 0.5f, 0.5f);
+    b.scene.models.push_back({"rocks_glass.glb", {c.x + 0.22f, 0.785f, c.z + 0.12f}, {}, 1, kBottleGlass,
+                              Prop::kRocksGlass});
     for (float dx : {-0.8f, 0.8f}) {
       b.add(makeCylinder(0.19f, 0.07f), {c.x + dx, 0.5f, c.z}, kLeather);
       b.add(makeCylinder(0.03f, 0.47f, 12), {c.x + dx, 0.235f, c.z}, kChrome);

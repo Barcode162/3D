@@ -19,6 +19,7 @@ class GpuModel {
     wgpu::Buffer vertexBuffer, indexBuffer;
     uint32_t indexCount = 0;
     size_t material = 0;  // index into bindGroups
+    bool blend = false;   // see-through: drawn after everything solid
   };
 
   // Matches `struct ModelMaterial` in shaders/scene.wgsl.
@@ -40,6 +41,7 @@ class GpuModel {
                    const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done);
 
   std::vector<Part> parts;
+  bool hasBlend = false;
   std::vector<wgpu::BindGroup> bindGroups;  // one per material
   Vec3 boundsMin, boundsMax;                // in model space
 };

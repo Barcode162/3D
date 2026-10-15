@@ -40,12 +40,25 @@ struct SceneObject {
 // A real 3D model from a .glb file in assets/models/. The file gives its
 // look; `material` says what it's made of for the other senses (weight,
 // friction, sound).
+// Movable things: their physics shape (see app/props.cpp).
+enum class Prop { kNone, kPintGlass, kRocksGlass };
+
 struct ModelPlacement {
   std::string file;  // e.g. "bar_counter.glb"
   engine::Vec3 position;
   engine::Quat rotation;
   float scale = 1;
   MaterialId material = kDarkWood;
+  Prop prop = Prop::kNone;  // kNone = fixed in place
+};
+
+// An invisible solid box for physics, where the visible shape is a model
+// (e.g. the counter). Scene objects get boxes automatically.
+struct Collider {
+  engine::Vec3 center;
+  engine::Vec3 half;
+  engine::Quat rotation;
+  MaterialId material;
 };
 
 struct PointLight {
@@ -91,6 +104,7 @@ struct Mirror {
 struct BarScene {
   std::vector<SceneObject> objects;
   std::vector<ModelPlacement> models;
+  std::vector<Collider> colliders;
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
   std::vector<Interactable> interactables;

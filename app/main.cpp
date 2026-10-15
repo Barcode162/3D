@@ -11,6 +11,7 @@
 #include "app/bar_scene.h"
 #include "app/avatar.h"
 #include "app/jukebox.h"
+#include "app/props.h"
 #include "app/renderer.h"
 #include "engine/audio.h"
 #include "engine/camera.h"
@@ -37,6 +38,9 @@ constexpr float kHighlightGlow = 0.35f;      // extra glow on the thing you're a
 constexpr double kBannerMs = 7000;           // "now playing" banner duration
 constexpr double kIntroMaxMs = 12000;        // title + controls hint on start...
 constexpr double kIntroAfterInputMs = 1500;  // ...until shortly after you first move
+constexpr float kGrabReach = 2.2f;           // how far away you can pick things up
+constexpr float kPlaceReach = 2.0f;          // ...and put them down
+constexpr float kThrowSpeed = 4.0f;          // meters per second
 
 struct App {
   engine::Gpu gpu;
@@ -50,6 +54,10 @@ struct App {
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
   engine::TextRenderer text;
+  engine::PhysicsWorld physics;
+  std::vector<int> bodyOfModel;  // physics body per BarScene::models entry
+  int held = -1;                 // body in your hand
+  int aimed = -1;                // body in the middle of the screen, within reach
 
   int focused = -1;      // interactable you're standing at and facing
   int highlighted = -1;  // interactable currently drawn glowing
@@ -137,7 +145,14 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.outlineWidth = 0.8f;
     text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
   }
-  if (g_app.focused >= 0 && !g_app.jukeboxMenu.isOpen()) {
+  if (!g_app.jukeboxMenu.isOpen() && (g_app.held >= 0 || g_app.aimed >= 0)) {
+    engine::TextStyle style;
+    style.align = 0.5f;
+    style.outlineWidth = 0.8f;
+    const char* prompt = g_app.held >= 0 ? "Tap a table or the bar: put it down\nTap anywhere else: throw"
+                                         : "Glass\nTap: pick up";
+    text.addScreen(prompt, W * 0.5f, H * 0.62f, 14 * px, style);
+  } else if (g_app.focused >= 0 && !g_app.jukeboxMenu.isOpen()) {
     const app::Interactable& it = g_app.scene.interactables[static_cast<size_t>(g_app.focused)];
     engine::TextStyle style;
     style.align = 0.5f;
@@ -218,6 +233,65 @@ void use(const app::Interactable& it) {
   }
 }
 
+// Holding something: a tap on a surface within reach puts it down there;
+// a tap anywhere else throws it that way.
+void putDownOrThrow(Vec3 dir) {
+  engine::Body& b = g_app.physics.body(static_cast<size_t>(g_app.held));
+  const Vec3 eye = g_app.camera.position;
+  float dist;
+  Vec3 normal;
+  b.held = false;
+  b.asleep = false;
+  b.sleepTimer = 0;
+  if (g_app.physics.raycastStatic(eye, dir, kPlaceReach, &dist, &normal) && normal.y > 0.7f) {
+    // Stand it upright on the spot, facing the same way.
+    b.position = eye + dir * dist + Vec3{0, 0.002f, 0};
+    b.rotation = {};
+    b.velocity = {};
+    b.angularVelocity = {};
+    LOG_INFO("Put down at %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
+  } else {
+    b.velocity = dir * kThrowSpeed + Vec3{0, 1.0f, 0};
+    b.angularVelocity = {0, 0, 0};
+    LOG_INFO("Thrown from %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
+  }
+  g_app.held = -1;
+}
+
+// Picks up the body a tap lands on, if it's within reach and nothing solid
+// is in the way.
+bool tryPickUp(Vec3 dir) {
+  const Vec3 eye = g_app.camera.position;
+  float dist;
+  const int body = g_app.physics.raycastBodies(eye, dir, kGrabReach, &dist);
+  if (body < 0) return false;
+  float wallDist;
+  if (g_app.physics.raycastStatic(eye, dir, dist, &wallDist, nullptr)) return false;
+  engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
+  b.held = true;
+  b.asleep = false;
+  g_app.held = body;
+  return true;
+}
+
+// Steps physics, keeps a held thing in front of you, and moves the models.
+void updatePhysics(float dt) {
+  const engine::FirstPersonCamera& cam = g_app.camera;
+  if (g_app.held >= 0) {
+    // In your right hand, a bit below eye level.
+    const Vec3 right = cam.flatRight();
+    g_app.physics.body(static_cast<size_t>(g_app.held)).holdTarget =
+        cam.position + cam.forward() * 0.5f + right * 0.12f + Vec3{0, -0.28f, 0};
+  }
+  g_app.physics.step(dt);
+  g_app.physics.takeImpacts();  // sounds come later (W5)
+  for (size_t i = 0; i < g_app.bodyOfModel.size(); ++i) {
+    if (g_app.bodyOfModel[i] < 0) continue;
+    const engine::Body& b = g_app.physics.body(static_cast<size_t>(g_app.bodyOfModel[i]));
+    if (!b.asleep) g_app.renderer.setModelTransform(i, b.position, b.rotation);
+  }
+}
+
 // Makes one interactable's parts glow (or stop glowing).
 void setGlow(int index, float glow) {
   if (index >= 0) g_app.renderer.setGlow(g_app.scene.interactables[static_cast<size_t>(index)], glow);
@@ -247,6 +321,17 @@ void updateInteraction(double nowMs) {
     g_app.highlighted = g_app.focused;
   }
 
+  // Something you could pick up, right where you're looking?
+  g_app.aimed = -1;
+  if (g_app.held < 0) {
+    float dist;
+    const int body = g_app.physics.raycastBodies(cam.position, cam.forward(), kGrabReach, &dist);
+    float wallDist;
+    if (body >= 0 && !(g_app.physics.raycastStatic(cam.position, cam.forward(), dist, &wallDist, nullptr))) {
+      g_app.aimed = body;
+    }
+  }
+
   // A tap uses what it lands on; tapping anywhere also works while you're
   // standing at something (easier on a small screen).
   for (const engine::Vec2 tap : g_app.input.takeTaps()) {
@@ -256,6 +341,11 @@ void updateInteraction(double nowMs) {
       continue;
     }
     const Vec3 dir = screenRay(tap);
+    if (g_app.held >= 0) {
+      putDownOrThrow(dir);
+      continue;
+    }
+    if (tryPickUp(dir)) continue;
     int hit = -1;
     float nearest = kTapReach;
     for (size_t i = 0; i < items.size(); ++i) {
@@ -289,6 +379,7 @@ void frame() {
   updateFps(nowMs);
   updateCamera(dt);
   updateInteraction(nowMs);
+  updatePhysics(dt);
 
   wgpu::TextureView target = g_app.gpu.beginFrame();
   if (!target) return;
@@ -311,7 +402,7 @@ void applyTestCamera() {
   char buffer[128] = {};
   EM_ASM({
     var m = /[?&]cam=([^&]*)/.exec(location.search);
-    stringToUTF8(m ? decodeURIComponent(m[1]) : '', $0, $1);
+    stringToUTF8(m ? decodeURIComponent(m[1]) : "", $0, $1);
   }, buffer, sizeof(buffer));
   float x, y, z, yaw, pitch;
   if (std::sscanf(buffer, "%f,%f,%f,%f,%f", &x, &y, &z, &yaw, &pitch) != 5) return;
@@ -327,6 +418,7 @@ void onGpuReady(bool ok) {
     return;
   }
   g_app.scene = app::buildBarScene();
+  app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   g_app.avatar.build();
   if (!g_app.renderer.init(g_app.gpu, g_app.scene, g_app.avatar.mesh()) ||
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {

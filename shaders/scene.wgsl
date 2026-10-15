@@ -229,18 +229,22 @@ fn vs_model(in: ModelIn) -> ModelOut {
   return out;
 }
 
-@fragment
-fn fs_model(in: ModelOut) -> @location(0) vec4f {
-  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
-    discard;
-  }
+// Shared by solid and see-through models. Returns the lit color and the
+// surface's own opacity (base color alpha).
+fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let m = modelMaterial;
   let baseSample = textureSample(baseColorMap, modelSampler, in.uv);
   let mr = textureSample(metalRoughMap, modelSampler, in.uv);
   let nt = textureSample(normalMap, modelSampler, in.uv).xyz * 2.0 - 1.0;
   let occlusion = textureSample(occlusionMap, modelSampler, in.uv).r;
 
-  let base = baseSample.rgb * m.baseColor.rgb;
+  let alpha = baseSample.a * m.baseColor.a;
+  var base = baseSample.rgb * m.baseColor.rgb;
+  // See-through surfaces only scatter light in proportion to their opacity;
+  // their reflections stay at full strength.
+  if (seeThrough) {
+    base = base * alpha;
+  }
   // The surface frame: tangent (along u), bitangent (along v), normal.
   let n0 = normalize(in.normal);
   let t = normalize(in.tangent.xyz - n0 * dot(n0, in.tangent.xyz));
@@ -249,7 +253,31 @@ fn fs_model(in: ModelOut) -> @location(0) vec4f {
   let ao = mix(1.0, occlusion, m.params.w);
   // object.material.x = highlight glow when you stand at something.
   let emission = m.emissive.rgb + base * object.material.x;
-  return shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
+  let lit = shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
+  return vec4f(lit.rgb, alpha);
+}
+
+@fragment
+fn fs_model(in: ModelOut) -> @location(0) vec4f {
+  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
+    discard;
+  }
+  return vec4f(litModel(in, false).rgb, 1.0);
+}
+
+// See-through models (glass). Output is premultiplied: the color already
+// includes its opacity. Glass gets more opaque at grazing angles (Fresnel),
+// which is what makes its edges visible.
+@fragment
+fn fs_model_blend(in: ModelOut) -> @location(0) vec4f {
+  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
+    discard;
+  }
+  let c = litModel(in, true);
+  let v = normalize(frame.cameraPos.xyz - in.worldPos);
+  let edge = pow(1.0 - abs(dot(normalize(in.normal), v)), 5.0);
+  let alpha = clamp(c.a + (1.0 - c.a) * edge * 0.8, 0.0, 1.0);
+  return vec4f(c.rgb, alpha);
 }
 
 const kPi = 3.14159265;
