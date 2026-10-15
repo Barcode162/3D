@@ -14,6 +14,7 @@
 #include "engine/input.h"
 #include "engine/log.h"
 #include "engine/mesh.h"
+#include "engine/texture.h"
 #include "engine/text.h"
 
 using engine::Mat4;
@@ -81,30 +82,71 @@ struct App {
 
 App g_app;
 
-wgpu::BindGroupLayout makeUniformLayout(bool dynamicOffset, uint64_t size) {
-  wgpu::BindGroupLayoutEntry entry;
-  entry.binding = 0;
-  entry.visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
-  entry.buffer.type = wgpu::BufferBindingType::Uniform;
-  entry.buffer.hasDynamicOffset = dynamicOffset;
-  entry.buffer.minBindingSize = size;
+// Binding 0 is a uniform buffer. With `textures`, bindings 1-3 are the
+// surface color maps, bump maps and their sampler.
+wgpu::BindGroupLayout makeUniformLayout(bool dynamicOffset, uint64_t size, bool textures = false) {
+  wgpu::BindGroupLayoutEntry entries[4];
+  entries[0].binding = 0;
+  entries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+  entries[0].buffer.type = wgpu::BufferBindingType::Uniform;
+  entries[0].buffer.hasDynamicOffset = dynamicOffset;
+  entries[0].buffer.minBindingSize = size;
+  for (uint32_t i = 1; i <= 2; ++i) {
+    entries[i].binding = i;
+    entries[i].visibility = wgpu::ShaderStage::Fragment;
+    entries[i].texture.sampleType = wgpu::TextureSampleType::Float;
+    entries[i].texture.viewDimension = wgpu::TextureViewDimension::e2DArray;
+  }
+  entries[3].binding = 3;
+  entries[3].visibility = wgpu::ShaderStage::Fragment;
+  entries[3].sampler.type = wgpu::SamplerBindingType::Filtering;
   wgpu::BindGroupLayoutDescriptor desc;
-  desc.entryCount = 1;
-  desc.entries = &entry;
+  desc.entryCount = textures ? 4 : 1;
+  desc.entries = entries;
   return g_app.gpu.device.CreateBindGroupLayout(&desc);
 }
 
 wgpu::BindGroup makeBindGroup(const wgpu::BindGroupLayout& layout, const wgpu::Buffer& buffer,
-                              uint64_t size) {
-  wgpu::BindGroupEntry entry;
-  entry.binding = 0;
-  entry.buffer = buffer;
-  entry.size = size;
+                              uint64_t size, const wgpu::TextureView& colorMaps = nullptr,
+                              const wgpu::TextureView& bumpMaps = nullptr, const wgpu::Sampler& sampler = nullptr) {
+  wgpu::BindGroupEntry entries[4];
+  entries[0].binding = 0;
+  entries[0].buffer = buffer;
+  entries[0].size = size;
+  entries[1].binding = 1;
+  entries[1].textureView = colorMaps;
+  entries[2].binding = 2;
+  entries[2].textureView = bumpMaps;
+  entries[3].binding = 3;
+  entries[3].sampler = sampler;
   wgpu::BindGroupDescriptor desc;
   desc.layout = layout;
-  desc.entryCount = 1;
-  desc.entries = &entry;
+  desc.entryCount = colorMaps ? 4 : 1;
+  desc.entries = entries;
   return g_app.gpu.device.CreateBindGroup(&desc);
+}
+
+// Generates the bar's surface textures and uploads them as two texture
+// arrays (colors, bumps).
+void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler) {
+  const double start = emscripten_get_now();
+  std::vector<engine::Image> colors, bumps;
+  for (engine::MaterialImages& m : app::buildBarMaterials()) {
+    colors.push_back(std::move(m.color));
+    bumps.push_back(std::move(m.bump));
+  }
+  wgpu::TextureViewDescriptor viewDesc;
+  viewDesc.dimension = wgpu::TextureViewDimension::e2DArray;
+  colorMaps = engine::createTextureArray(g_app.gpu.device, colors, true, "material colors").CreateView(&viewDesc);
+  bumpMaps = engine::createTextureArray(g_app.gpu.device, bumps, false, "material bumps").CreateView(&viewDesc);
+
+  wgpu::SamplerDescriptor samplerDesc;
+  samplerDesc.addressModeU = samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
+  samplerDesc.magFilter = samplerDesc.minFilter = wgpu::FilterMode::Linear;
+  samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+  samplerDesc.maxAnisotropy = 4;  // keeps the floor sharp at shallow angles
+  sampler = g_app.gpu.device.CreateSampler(&samplerDesc);
+  LOG_INFO("Textures: %zu materials generated in %.0f ms.", colors.size(), emscripten_get_now() - start);
 }
 
 wgpu::Buffer makeUniformBuffer(uint64_t size, const char* label) {
@@ -127,7 +169,7 @@ bool createRenderer() {
   moduleDesc.label = "scene";
   wgpu::ShaderModule module = device.CreateShaderModule(&moduleDesc);
 
-  wgpu::BindGroupLayout frameLayout = makeUniformLayout(false, sizeof(FrameUniforms));
+  wgpu::BindGroupLayout frameLayout = makeUniformLayout(false, sizeof(FrameUniforms), true);
   wgpu::BindGroupLayout objectLayout = makeUniformLayout(true, sizeof(ObjectUniforms));
   wgpu::BindGroupLayout layouts[] = {frameLayout, objectLayout};
   wgpu::PipelineLayoutDescriptor pipelineLayoutDesc;
@@ -163,7 +205,11 @@ bool createRenderer() {
   g_app.pipeline = device.CreateRenderPipeline(&desc);
 
   g_app.frameBuffer = makeUniformBuffer(sizeof(FrameUniforms), "frame uniforms");
-  g_app.frameBindGroup = makeBindGroup(frameLayout, g_app.frameBuffer, sizeof(FrameUniforms));
+  wgpu::TextureView colorMaps, bumpMaps;
+  wgpu::Sampler sampler;
+  createMaterials(colorMaps, bumpMaps, sampler);
+  g_app.frameBindGroup =
+      makeBindGroup(frameLayout, g_app.frameBuffer, sizeof(FrameUniforms), colorMaps, bumpMaps, sampler);
 
   // Upload every object once; the bar doesn't move (yet), so its per-object
   // data is written a single time.
@@ -180,6 +226,8 @@ bool createRenderer() {
     u.color[2] = o.color.z;
     u.material[0] = o.emissive;
     u.material[1] = o.shininess;
+    u.material[2] = static_cast<float>(o.texture);
+    u.material[3] = o.textureScale;
     std::memcpy(objectData.data() + i * kObjectStride, &u, sizeof(u));
     g_app.draws.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride)});
   }

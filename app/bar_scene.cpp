@@ -21,7 +21,9 @@ constexpr float kRoomHeight = 3.2f;
 constexpr Vec3 kFloorWood{0.16f, 0.09f, 0.05f};
 constexpr Vec3 kDarkWood{0.20f, 0.10f, 0.05f};
 constexpr Vec3 kPolishedWood{0.38f, 0.18f, 0.08f};
-constexpr Vec3 kWallRed{0.32f, 0.11f, 0.08f};
+// Brick colors come from the texture itself; mid-gray keeps them as is.
+constexpr Vec3 kBrickTint{0.5f, 0.5f, 0.5f};
+constexpr float kBrickScale = 1.0f / 0.9f;  // one brick tile = 0.9 m
 constexpr Vec3 kCeiling{0.07f, 0.055f, 0.05f};
 constexpr Vec3 kLeather{0.45f, 0.06f, 0.05f};
 constexpr Vec3 kChrome{0.65f, 0.66f, 0.70f};
@@ -50,21 +52,22 @@ struct Builder {
 
 void buildRoom(Builder& b) {
   const float w = kRoomHalfX * 2, d = kRoomHalfZ * 2, t = 0.2f;
-  b.add(makeBox({w, 0.1f, d}), {0, -0.05f, 0}, kFloorWood, 0.35f);
-  b.add(makeBox({w, 0.1f, d}), {0, kRoomHeight + 0.05f, 0}, kCeiling);
-  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, -kRoomHalfZ - t / 2}, kWallRed);
-  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, kRoomHalfZ + t / 2}, kWallRed);
-  b.add(makeBox({t, kRoomHeight, d}), {-kRoomHalfX - t / 2, kRoomHeight / 2, 0}, kWallRed);
-  b.add(makeBox({t, kRoomHeight, d}), {kRoomHalfX + t / 2, kRoomHeight / 2, 0}, kWallRed);
+  b.add(makeBox({w, 0.1f, d}), {0, -0.05f, 0}, kFloorWood, 0.35f).textured(kTexWoodPlanks, 0.8f);
+  b.add(makeBox({w, 0.1f, d}), {0, kRoomHeight + 0.05f, 0}, kCeiling).textured(kTexPlaster, 0.4f);
+  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, -kRoomHalfZ - t / 2}, kBrickTint).textured(kTexBrick, kBrickScale);
+  b.add(makeBox({w, kRoomHeight, t}), {0, kRoomHeight / 2, kRoomHalfZ + t / 2}, kBrickTint).textured(kTexBrick, kBrickScale);
+  b.add(makeBox({t, kRoomHeight, d}), {-kRoomHalfX - t / 2, kRoomHeight / 2, 0}, kBrickTint).textured(kTexBrick, kBrickScale);
+  b.add(makeBox({t, kRoomHeight, d}), {kRoomHalfX + t / 2, kRoomHeight / 2, 0}, kBrickTint).textured(kTexBrick, kBrickScale);
 
   // Dark wood paneling on the lower part of the side and front walls.
   const float panel = 1.0f, inset = 0.03f;
-  b.add(makeBox({w, panel, inset}), {0, panel / 2, kRoomHalfZ - inset / 2}, kDarkWood, 0.2f);
-  b.add(makeBox({inset, panel, d}), {-kRoomHalfX + inset / 2, panel / 2, 0}, kDarkWood, 0.2f);
-  b.add(makeBox({inset, panel, d}), {kRoomHalfX - inset / 2, panel / 2, 0}, kDarkWood, 0.2f);
+  b.add(makeBox({w, panel, inset}), {0, panel / 2, kRoomHalfZ - inset / 2}, kDarkWood, 0.2f).textured(kTexWoodGrain, 1);
+  b.add(makeBox({inset, panel, d}), {-kRoomHalfX + inset / 2, panel / 2, 0}, kDarkWood, 0.2f).textured(kTexWoodGrain, 1);
+  b.add(makeBox({inset, panel, d}), {kRoomHalfX - inset / 2, panel / 2, 0}, kDarkWood, 0.2f).textured(kTexWoodGrain, 1);
 
   // Entrance door on the front wall.
-  b.add(makeBox({1.1f, 2.2f, 0.06f}), {-3.5f, 1.1f, kRoomHalfZ - 0.03f}, {0.12f, 0.06f, 0.03f}, 0.3f);
+  b.add(makeBox({1.1f, 2.2f, 0.06f}), {-3.5f, 1.1f, kRoomHalfZ - 0.03f}, {0.12f, 0.06f, 0.03f}, 0.3f)
+      .textured(kTexWoodGrain, 1.2f);
   b.add(makeSphere(0.04f, 12, 8), {-3.1f, 1.05f, kRoomHalfZ - 0.08f}, kBrass, 0.9f);
 
   // Walls block walking.
@@ -76,8 +79,9 @@ void buildRoom(Builder& b) {
 
 void buildBar(Builder& b) {
   const float barZ = -3.2f, barLen = 7.0f;
-  b.add(makeBox({barLen, 1.05f, 0.7f}), {0, 0.525f, barZ}, kDarkWood, 0.25f);
-  b.add(makeBox({barLen + 0.3f, 0.06f, 0.9f}), {0, 1.08f, barZ + 0.05f}, kPolishedWood, 0.9f);
+  b.add(makeBox({barLen, 1.05f, 0.7f}), {0, 0.525f, barZ}, kDarkWood, 0.25f).textured(kTexWoodGrain, 1);
+  b.add(makeBox({barLen + 0.3f, 0.06f, 0.9f}), {0, 1.08f, barZ + 0.05f}, kPolishedWood, 0.9f)
+      .textured(kTexWoodGrain, 0.7f);
   // Brass foot rail along the front.
   b.add(makeCylinder(0.025f, barLen, 16), {0, 0.2f, barZ + 0.48f}, kBrass, 0.85f, 0,
         Quat::axisAngle({0, 0, 1}, engine::kPi / 2));
@@ -89,7 +93,7 @@ void buildBar(Builder& b) {
   for (int i = 0; i < 6; ++i) {
     const float x = -2.5f + static_cast<float>(i);
     const float z = barZ + 0.95f;
-    b.add(makeCylinder(0.2f, 0.08f), {x, 0.78f, z}, kLeather, 0.45f);
+    b.add(makeCylinder(0.2f, 0.08f), {x, 0.78f, z}, kLeather, 0.45f).textured(kTexLeather, 4);
     b.add(makeCylinder(0.035f, 0.74f, 12), {x, 0.37f, z}, kChrome, 0.9f);
     b.add(makeCylinder(0.18f, 0.03f), {x, 0.015f, z}, kChrome, 0.9f);
     b.add(makeCylinder(0.15f, 0.02f, 16), {x, 0.3f, z}, kChrome, 0.9f);  // foot ring
@@ -103,7 +107,7 @@ void buildBar(Builder& b) {
   };
   for (int s = 0; s < 3; ++s) {
     const float y = 1.3f + 0.45f * static_cast<float>(s);
-    b.add(makeBox({6.0f, 0.04f, 0.35f}), {0, y, shelfZ}, kDarkWood, 0.3f);
+    b.add(makeBox({6.0f, 0.04f, 0.35f}), {0, y, shelfZ}, kDarkWood, 0.3f).textured(kTexWoodGrain, 1.5f);
     b.add(makeBox({6.0f, 0.015f, 0.02f}), {0, y - 0.03f, shelfZ + 0.16f}, kWarmBulb, 0, 1.2f);
     for (int i = 0; i < 16; ++i) {
       const float x = -2.7f + 0.36f * static_cast<float>(i) + 0.05f * static_cast<float>(s % 2);
@@ -138,13 +142,13 @@ void buildSeating(Builder& b) {
   // Two round tables with stools on the right side.
   for (float z : {-0.2f, 2.4f}) {
     const Vec3 c{3.6f, 0, z};
-    b.add(makeCylinder(0.45f, 0.05f, 32), {c.x, 0.76f, c.z}, kPolishedWood, 0.7f);
+    b.add(makeCylinder(0.45f, 0.05f, 32), {c.x, 0.76f, c.z}, kPolishedWood, 0.7f).textured(kTexWoodGrain, 1.5f);
     b.add(makeCylinder(0.05f, 0.74f, 12), {c.x, 0.37f, c.z}, {0.06f, 0.06f, 0.06f}, 0.5f);
     b.add(makeCylinder(0.25f, 0.03f), {c.x, 0.015f, c.z}, {0.06f, 0.06f, 0.06f}, 0.5f);
     b.add(makeSphere(0.035f, 12, 8), {c.x, 0.82f, c.z}, kWarmBulb, 0, 4.0f);  // candle glow
     b.block(c, 0.5f, 0.5f);
     for (float dx : {-0.8f, 0.8f}) {
-      b.add(makeCylinder(0.19f, 0.07f), {c.x + dx, 0.5f, c.z}, kLeather, 0.45f);
+      b.add(makeCylinder(0.19f, 0.07f), {c.x + dx, 0.5f, c.z}, kLeather, 0.45f).textured(kTexLeather, 4);
       b.add(makeCylinder(0.03f, 0.47f, 12), {c.x + dx, 0.235f, c.z}, kChrome, 0.9f);
     }
   }
@@ -152,11 +156,12 @@ void buildSeating(Builder& b) {
 
   // A long leather booth against the left wall with two small tables.
   const float boothX = -kRoomHalfX + 0.35f, boothZ = 0.6f, boothLen = 3.6f;
-  b.add(makeBox({0.65f, 0.45f, boothLen}), {boothX, 0.225f, boothZ}, kLeather, 0.4f);
-  b.add(makeBox({0.15f, 0.75f, boothLen}), {-kRoomHalfX + 0.1f, 0.8f, boothZ}, kLeather, 0.4f);
+  b.add(makeBox({0.65f, 0.45f, boothLen}), {boothX, 0.225f, boothZ}, kLeather, 0.4f).textured(kTexLeather, 3);
+  b.add(makeBox({0.15f, 0.75f, boothLen}), {-kRoomHalfX + 0.1f, 0.8f, boothZ}, kLeather, 0.4f)
+      .textured(kTexLeather, 3);
   b.block({boothX, 0, boothZ}, 0.35f, boothLen / 2);
   for (float z : {-0.3f, 1.5f}) {
-    b.add(makeBox({0.75f, 0.05f, 0.75f}), {-4.75f, 0.74f, z}, kPolishedWood, 0.7f);
+    b.add(makeBox({0.75f, 0.05f, 0.75f}), {-4.75f, 0.74f, z}, kPolishedWood, 0.7f).textured(kTexWoodGrain, 1.5f);
     b.add(makeCylinder(0.05f, 0.72f, 12), {-4.75f, 0.36f, z}, {0.06f, 0.06f, 0.06f}, 0.5f);
     b.add(makeSphere(0.035f, 12, 8), {-4.75f, 0.8f, z}, kWarmBulb, 0, 4.0f);
     b.block({-4.75f, 0, z}, 0.42f, 0.42f);
@@ -184,6 +189,17 @@ void buildFeatures(Builder& b) {
 }
 
 }  // namespace
+
+std::vector<engine::MaterialImages> buildBarMaterials() {
+  constexpr int kSize = 512;
+  std::vector<engine::MaterialImages> m;
+  m.push_back(engine::makeWoodPlanks(kSize, 11));  // kTexWoodPlanks
+  m.push_back(engine::makeWoodGrain(kSize, 23));   // kTexWoodGrain
+  m.push_back(engine::makeBrick(kSize, 37));       // kTexBrick
+  m.push_back(engine::makeLeather(kSize, 41));     // kTexLeather
+  m.push_back(engine::makePlaster(kSize, 53));     // kTexPlaster
+  return m;
+}
 
 BarScene buildBarScene() {
   BarScene scene;

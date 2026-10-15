@@ -16,6 +16,7 @@ future session re-litigates or repeats it.
 | Async setup | Callbacks with `CallbackMode::AllowSpontaneous`, no Asyncify | Smaller and faster |
 | Threads | None (yet) | Pages can't send COOP/COEP headers |
 | Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
+| Textures | Generated in code at startup (`engine/procedural.cpp`), 512px, texture arrays with mips; projected triplanar in object space | No image files in the repo; meshes need no UVs; object-space keeps textures stuck to objects once they can move |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -52,6 +53,11 @@ future session re-litigates or repeats it.
   `Version/26.3`. This is normal.
 
 ## Gotchas hit so far
+- Texture color maps store a *multiplier*, halved (0.5 = keep the object's
+  color), so one wood texture serves dark and polished wood. Brick colors
+  are absolute: give brick objects a mid-gray (0.5) color.
+- A material enum named `kLeather` clashed with the color `kLeather`; the
+  texture enum uses `kTex...` names.
 - A fresh session can start on a detached HEAD with a stale local `main`.
   If `git push` is rejected, check `git status -sb`; if HEAD is ahead of
   `origin/main`, push with `git push origin HEAD:main`.

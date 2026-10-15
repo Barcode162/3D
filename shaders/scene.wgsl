@@ -1,5 +1,10 @@
 // Main scene shader: lit, solid-colored meshes with several point lights,
-// emissive surfaces (neon, lamp bulbs), distance haze and tone mapping.
+// emissive surfaces (neon, lamp bulbs), procedural textures, distance haze
+// and tone mapping.
+//
+// Textures: meshes have no texture coordinates, so textures are projected
+// "triplanar": along the object's own x, y and z axes, blended by which way
+// the surface faces. Boxes get one clean projection per side.
 
 const kMaxLights = 8u;
 
@@ -20,10 +25,14 @@ struct Frame {
 struct Object {
   model: mat4x4f,
   color: vec4f,       // rgb = base color
-  material: vec4f,    // x = emissive strength, y = shininess (0..1)
+  material: vec4f,    // x = emissive strength, y = shininess (0..1),
+                      // z = texture layer (< 0 = none), w = texture repeats per meter
 };
 
 @group(0) @binding(0) var<uniform> frame: Frame;
+@group(0) @binding(1) var colorMaps: texture_2d_array<f32>;
+@group(0) @binding(2) var bumpMaps: texture_2d_array<f32>;
+@group(0) @binding(3) var mapSampler: sampler;
 @group(1) @binding(0) var<uniform> object: Object;
 
 struct VsIn {
@@ -35,6 +44,8 @@ struct VsOut {
   @builtin(position) clip: vec4f,
   @location(0) worldPos: vec3f,
   @location(1) normal: vec3f,
+  @location(2) localPos: vec3f,
+  @location(3) localNormal: vec3f,
 };
 
 @vertex
@@ -46,6 +57,8 @@ fn vs_main(in: VsIn) -> VsOut {
   // Models only translate/rotate (sizes are baked into the mesh), so the
   // model matrix is safe for normals.
   out.normal = (object.model * vec4f(in.normal, 0.0)).xyz;
+  out.localPos = in.position;
+  out.localNormal = in.normal;
   return out;
 }
 
@@ -54,12 +67,53 @@ fn tonemap(x: vec3f) -> vec3f {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), vec3f(0.0), vec3f(1.0));
 }
 
+struct Surface {
+  color: vec3f,
+  gloss: f32,       // multiplier for shininess
+  normal: vec3f,    // object space
+};
+
+// Samples one projection: color (x2 so 0.5 = unchanged) and the slope.
+fn sampleColor(uv: vec2f, layer: i32) -> vec4f {
+  return textureSample(colorMaps, mapSampler, uv, layer) * 2.0;
+}
+fn sampleSlope(uv: vec2f, layer: i32) -> vec2f {
+  return textureSample(bumpMaps, mapSampler, uv, layer).rg * 2.0 - 1.0;
+}
+
+fn texturedSurface(p: vec3f, n0: vec3f) -> Surface {
+  let n = normalize(n0);
+  let layer = i32(object.material.z);
+  let q = p * object.material.w;
+  // Blend weights: sharpened so mostly one projection wins.
+  var w = pow(abs(n), vec3f(4.0));
+  w = w / (w.x + w.y + w.z);
+  // Projections: X sides use (z, y), top/bottom use (x, z), Z sides use (x, y).
+  // u always runs horizontally, so wood grain and bricks lie flat.
+  let cx = sampleColor(q.zy, layer);
+  let cy = sampleColor(q.xz, layer);
+  let cz = sampleColor(q.xy, layer);
+  let sx = sampleSlope(q.zy, layer);
+  let sy = sampleSlope(q.xz, layer);
+  let sz = sampleSlope(q.xy, layer);
+  let c = cx * w.x + cy * w.y + cz * w.z;
+  // Tilt the normal by the height slope along each projection's u/v axes.
+  let tilt = w.x * vec3f(0.0, sx.y, sx.x) + w.y * vec3f(sy.x, 0.0, sy.y) + w.z * vec3f(sz.x, sz.y, 0.0);
+  return Surface(c.rgb, c.a, normalize(n + tilt));
+}
+
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f {
-  let n = normalize(in.normal);
+  var base = object.color.rgb;
+  var shininess = object.material.y;
+  var n = normalize(in.normal);
+  if (object.material.z >= 0.0) {
+    let s = texturedSurface(in.localPos, in.localNormal);
+    base = base * s.color;
+    shininess = clamp(shininess * s.gloss, 0.0, 1.0);
+    n = normalize((object.model * vec4f(s.normal, 0.0)).xyz);
+  }
   let toEye = normalize(frame.cameraPos.xyz - in.worldPos);
-  let base = object.color.rgb;
-  let shininess = object.material.y;
 
   var light = frame.ambient.rgb * (0.6 + 0.4 * n.y);  // a little brighter on top
   var specular = vec3f(0.0);

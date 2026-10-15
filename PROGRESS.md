@@ -1,19 +1,16 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 2 look (procedural textures), then Stage 3 interaction
+**Current focus:** Stage 3 interaction (tap the jukebox → music)
 
 ## Next up (start here in a new session)
-1. **Procedural textures**: wood grain (floor, bar), brick or plaster
-   (walls), leather, generated in code into GPU textures, with mipmaps.
-   Upgrades the look a lot.
-2. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
+1. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
    highlight the object you're pointing at. First interaction: tap the
    jukebox → it plays the jazz playlist (pulls part of Stage 4 forward,
    because the user wants the music early). The text system and the
    `Label` list in `bar_scene` (name tag + prompt) are ready for this: swap
    "Music coming soon" for "Tap to play".
-3. Small polish noticed on iPhone: the candle spheres on the tables look
+2. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
@@ -41,7 +38,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 ### Stage 2: The bar room
 - [x] Rough blockout (`app/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
       pendant lamps, neon frame, tables, booth, jukebox, mirror frame, door
-- [ ] Procedural wood/brick/tile textures
+- [x] Procedural textures (`engine/procedural.*`, `engine/texture.*`): wood planks (floor), wood grain (bar, tables, shelves, panels, door), brick (walls), leather (stools, booth), plaster (ceiling). Color + gloss + bump, mipmaps, triplanar mapping (no UVs needed)
 - [ ] More detail and props; better neon (real sign shapes)
 - [x] Collision so you can't walk through walls or furniture (circle vs. floor rectangles)
 
@@ -106,3 +103,6 @@ A small DAW inside the bar, all DSP written in C++:
   "BAR3D" title + controls hint on start (fades once you move; replaces the
   HTML hint), floating JUKEBOX / MIRROR name tags, and an on-screen prompt
   when you stand at one and look at it.
+- **2026-10-15:** Procedural textures. Five materials generated in C++ at
+  startup (about 1.3 s in the test container), with bump maps so mortar
+  and plank gaps catch the light.
