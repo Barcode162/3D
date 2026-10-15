@@ -1,6 +1,6 @@
 # Progress
 
-**Live site:** https://barcode162.github.io/3d/
+**Live site:** https://barcode162.github.io/3D/
 **Current focus:** Stage 1, Engine foundation
 
 ## The vision
