@@ -3,6 +3,7 @@
 // lets Alice walk while Bob looks at her, and saves Bob's view to
 // build/mp-bob.png. Needs `php` installed.
 // Usage: NODE_PATH=$(npm root -g) node tools/mp_test.mjs
+// RELAY=https://joshuavelasco.org/relay.php tests through the live relay.
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
@@ -32,7 +33,7 @@ const relayDir = mkdtempSync(join(tmpdir(), 'relay-'));
 copyFileSync('server/relay.php', join(relayDir, 'relay.php'));
 const relayPort = port + 1;
 const php = spawn('php', ['-S', `127.0.0.1:${relayPort}`, '-t', relayDir], { stdio: 'ignore' });
-const relay = `http://127.0.0.1:${relayPort}/relay.php`;
+const relay = process.env.RELAY ?? `http://127.0.0.1:${relayPort}/relay.php`;
 
 const browser = await playwright.chromium.launch({
   args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',

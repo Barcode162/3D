@@ -9,7 +9,7 @@ window.bar3dNet = (function () {
   'use strict';
   // Where the relay lives when the game is served from GitHub Pages. When
   // the page itself is on the IONOS site, relay.php sits right next to it.
-  var DEFAULT_SERVER = '';
+  var DEFAULT_SERVER = 'https://joshuavelasco.org/relay.php';
   var SEND_INTERVAL_MS = 100;
 
   function param(name) {
@@ -22,7 +22,10 @@ window.bar3dNet = (function () {
   }
 
   var server = param('server');
-  if (server === null) server = /github\.io$|^localhost$|^127\./.test(location.hostname) ? DEFAULT_SERVER : 'relay.php';
+  if (server === null) {
+    var host = location.hostname;
+    server = /github\.io$/.test(host) ? DEFAULT_SERVER : /^localhost$|^127\./.test(host) ? '' : 'relay.php';
+  }
   if (server === 'off') server = '';
   var room = (param('room') || 'main').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || 'main';
   var name = param('name');
@@ -38,9 +41,6 @@ window.bar3dNet = (function () {
   var status = server ? 1 : 0;      // 0 off, 1 connecting, 2 connected, 3 failing
   var inFlight = false, failures = 0, started = false;
 
-  function report(text) {
-    if (window.Module && Module.printErr) Module.printErr('[error] ' + text);
-  }
   function info(text) {
     if (window.Module && Module.print) Module.print('[info] ' + text);
   }
@@ -59,7 +59,7 @@ window.bar3dNet = (function () {
     post({ room: room, id: id, name: name, t: stateTime, s: state }, function (reply) {
       inFlight = false;
       if (!reply) {
-        if (++failures === 5) { status = 3; report('Multiplayer: can\'t reach the server (' + server + ').'); }
+        if (++failures === 5) { status = 3; info('Multiplayer: can\'t reach the server (' + server + ').'); }
         return;
       }
       if (status !== 2) info('Multiplayer: connected to room "' + room + '" as ' + name + '.');

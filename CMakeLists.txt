@@ -44,7 +44,8 @@ add_custom_command(TARGET app POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/web $<TARGET_FILE_DIR:app>/site
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm $<TARGET_FILE_DIR:app>/site
 )
-# Streamed assets (music, models) are served as separate files. Copied on
-# every build, so a rebuilt model shows up even when no C++ changed.
+# Streamed assets (music, models) and the page's own files (web/) are
+# copied on every build, so a change there shows up even when no C++ changed.
 add_custom_target(site_assets ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/web ${CMAKE_BINARY_DIR}/site
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/site/assets)

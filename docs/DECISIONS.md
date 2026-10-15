@@ -118,6 +118,14 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   `s1114537466.online`. **HTTPS is required**: Safari only allows WebGPU on
   https pages, and the https github.io page can't call an http relay.
   The container can't reach port 22 (proxy); only GitHub Actions uploads.
+- **Domain: `joshuavelasco.org`** (IONOS, 2026-10-15). It points straight
+  at the `bar/` webspace folder, so the game is at the domain root and the
+  relay at `https://joshuavelasco.org/relay.php` (`DEFAULT_SERVER` in
+  `web/net.js`, used by the github.io copy). Tested live over http: health
+  check OK, two headless players through it OK, ~85 ms per request,
+  `rooms/` gives 403. IONOS sends `x-ws-ratelimit-limit: 1000` (seems per
+  second; fine). HTTPS was not on yet at first (TLS "internal error" = no
+  certificate assigned to the domain in IONOS → Domains & SSL).
 - Page options: `?room=name` (separate bars), `?name=Josh` (remembered),
   `?server=URL` or `?server=off`.
 - Testing: `NODE_PATH=$(npm root -g) node tools/mp_test.mjs` (needs `php`)
@@ -175,6 +183,8 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
 ## Gotchas hit so far
+- Files in `web/` are copied by the `site_assets` target on every build
+  (before, only when app.js relinked, so a JS-only change could test stale).
 - Physics in the headless test runs at ~2 fps, so the world moves in slow
   motion there (max 8 fixed steps per frame). Judge timing on the phone.
 - A model's object slot must get its full matrix before the initial
