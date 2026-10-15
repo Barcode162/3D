@@ -8,6 +8,8 @@
 #include <vector>
 
 #include "app/bar_scene.h"
+#include "app/jukebox.h"
+#include "engine/audio.h"
 #include "engine/camera.h"
 #include "engine/file.h"
 #include "engine/gpu.h"
@@ -30,6 +32,9 @@ constexpr float kLookSensitivity = 0.0055f;  // radians per CSS pixel
 constexpr float kBodyRadius = 0.3f;          // meters
 constexpr float kLabelShowDistance = 6.0f;   // name tags appear within this range
 constexpr float kPromptDistance = 2.2f;      // ...and their prompt this close
+constexpr float kTapReach = 4.0f;            // how far away a tap can use things
+constexpr float kHighlightGlow = 0.35f;      // extra glow on the thing you're at
+constexpr double kBannerMs = 7000;           // "now playing" banner duration
 constexpr double kIntroMaxMs = 12000;        // title + controls hint on start...
 constexpr double kIntroAfterInputMs = 1500;  // ...until shortly after you first move
 
@@ -64,6 +69,7 @@ struct App {
   engine::Input input;
   engine::FirstPersonCamera camera;
   app::BarScene scene;
+  app::Jukebox jukebox;
   engine::TextRenderer text;
   FrameUniforms frameUniforms = {};
 
@@ -73,6 +79,12 @@ struct App {
   wgpu::BindGroup frameBindGroup;
   wgpu::BindGroup objectBindGroup;
   std::vector<DrawItem> draws;
+  std::vector<ObjectUniforms> objectUniforms;  // CPU copy, for highlighting
+
+  int focused = -1;      // interactable you're standing at and facing
+  int highlighted = -1;  // interactable currently drawn glowing
+  int bannerSong = 0;
+  double bannerEndMs = 0;
 
   double introEndMs = 0;
   double lastFrameMs = 0;
@@ -229,6 +241,7 @@ bool createRenderer() {
     u.material[2] = static_cast<float>(o.texture);
     u.material[3] = o.textureScale;
     std::memcpy(objectData.data() + i * kObjectStride, &u, sizeof(u));
+    g_app.objectUniforms.push_back(u);
     g_app.draws.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride)});
   }
   g_app.gpu.queue.WriteBuffer(g_app.objectBuffer, 0, objectData.data(), objectData.size());
@@ -291,11 +304,8 @@ void queueText(double nowMs, const Mat4& viewProj) {
   const Vec3 forward = cam.forward();
   const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
   const Vec3 up = engine::cross(right, forward);
-  const app::Label* promptLabel = nullptr;
-  float bestFacing = 0.8f;  // must be looking roughly toward it
-  for (const app::Label& label : g_app.scene.labels) {
-    const Vec3 toLabel = label.position - cam.position;
-    const float dist = engine::length(toLabel);
+  for (const app::Interactable& it : g_app.scene.interactables) {
+    const float dist = engine::length(it.tagPosition - cam.position);
     if (dist > kLabelShowDistance) continue;
     // Fade in as you approach; the tag always turns to face you.
     engine::TextStyle style;
@@ -303,20 +313,29 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.color = {1.0f, 0.86f, 0.62f, engine::clampf((kLabelShowDistance - dist) / 1.5f, 0, 1)};
     style.outline.w *= style.color.w;
     style.outlineWidth = 0.8f;
-    text.addWorld(label.text, label.position, right, up, 0.1f, style);
-
-    const Vec3 toFlat{toLabel.x, 0, toLabel.z};
-    const float facing = engine::dot(engine::normalize(toFlat), cam.flatForward());
-    if (engine::length(toFlat) < kPromptDistance && facing > bestFacing) {
-      bestFacing = facing;
-      promptLabel = &label;
-    }
+    text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
   }
-  if (promptLabel) {
+  if (g_app.focused >= 0) {
+    const app::Interactable& it = g_app.scene.interactables[static_cast<size_t>(g_app.focused)];
     engine::TextStyle style;
     style.align = 0.5f;
     style.outlineWidth = 0.8f;
-    text.addScreen(promptLabel->prompt, W * 0.5f, H * 0.62f, 14 * px, style);
+    const std::string prompt = it.action == app::Action::kJukebox ? g_app.jukebox.prompt() : it.prompt;
+    text.addScreen(prompt, W * 0.5f, H * 0.62f, 14 * px, style);
+  }
+
+  // "Now playing" banner with the song credit, whenever a new song starts.
+  const app::Track* track = g_app.jukebox.currentTrack();
+  if (track && nowMs < g_app.bannerEndMs) {
+    const float fade = engine::clampf(static_cast<float>((g_app.bannerEndMs - nowMs) / 1000.0), 0, 1);
+    engine::TextStyle style;
+    style.align = 0.5f;
+    style.color = {1.0f, 0.86f, 0.62f, fade};
+    style.outline.w *= fade;
+    style.outlineWidth = 0.8f;
+    text.addScreen(std::string("Now playing: ") + track->title, W * 0.5f, H * 0.11f, 12 * px, style);
+    style.color = {0.85f, 0.85f, 0.85f, fade};
+    text.addScreen(app::kMusicCredit, W * 0.5f, H * 0.11f + 22 * px, 9 * px, style);
   }
 
   if (nowMs < g_app.introEndMs) {
@@ -331,9 +350,106 @@ void queueText(double nowMs, const Mat4& viewProj) {
     hint.align = 0.5f;
     hint.color.w = fade;
     hint.outline.w *= fade;
-    text.addScreen("Left thumb: walk\nRight thumb: look around", W * 0.5f, H * 0.2f + 52 * px, 11 * px, hint);
+    text.addScreen("Left thumb: walk\nRight thumb: look around\nTap things to use them", W * 0.5f, H * 0.2f + 52 * px, 11 * px, hint);
   }
   text.upload(g_app.gpu.queue);
+}
+
+// Slab test: distance along the ray to the box, or -1 if it misses.
+float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax) {
+  float tNear = 0, tFar = 1e9f;
+  const float o[3] = {origin.x, origin.y, origin.z}, d[3] = {dir.x, dir.y, dir.z};
+  const float lo[3] = {boxMin.x, boxMin.y, boxMin.z}, hi[3] = {boxMax.x, boxMax.y, boxMax.z};
+  for (int i = 0; i < 3; ++i) {
+    if (std::fabs(d[i]) < 1e-8f) {
+      if (o[i] < lo[i] || o[i] > hi[i]) return -1;
+      continue;
+    }
+    float t0 = (lo[i] - o[i]) / d[i], t1 = (hi[i] - o[i]) / d[i];
+    if (t0 > t1) std::swap(t0, t1);
+    tNear = std::max(tNear, t0);
+    tFar = std::min(tFar, t1);
+    if (tNear > tFar) return -1;
+  }
+  return tNear;
+}
+
+// The world-space ray through a point on the screen (0..1 fractions).
+Vec3 screenRay(engine::Vec2 tap) {
+  const engine::FirstPersonCamera& cam = g_app.camera;
+  const Vec3 forward = cam.forward();
+  const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
+  const Vec3 up = engine::cross(right, forward);
+  const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
+  const float tanHalf = std::tan(cam.fovY * 0.5f);
+  const float x = (tap.x * 2 - 1) * tanHalf * aspect, y = (1 - tap.y * 2) * tanHalf;
+  return engine::normalize(forward + right * x + up * y);
+}
+
+void use(const app::Interactable& it) {
+  if (it.action == app::Action::kJukebox) g_app.jukebox.tap();
+}
+
+// Makes one interactable's parts glow (or stop glowing).
+void setGlow(int index, float glow) {
+  if (index < 0) return;
+  const app::Interactable& it = g_app.scene.interactables[static_cast<size_t>(index)];
+  for (size_t i = it.firstObject; i < it.firstObject + it.objectCount; ++i) {
+    ObjectUniforms u = g_app.objectUniforms[i];
+    u.material[0] += glow;
+    g_app.gpu.queue.WriteBuffer(g_app.objectBuffer, i * kObjectStride, &u, sizeof(u));
+  }
+}
+
+// Works out what you're standing at, handles taps, and keeps the music and
+// your "ears" in sync with the camera.
+void updateInteraction(double nowMs) {
+  const engine::FirstPersonCamera& cam = g_app.camera;
+  const auto& items = g_app.scene.interactables;
+
+  g_app.focused = -1;
+  float bestFacing = 0.8f;  // must be looking roughly toward it
+  for (size_t i = 0; i < items.size(); ++i) {
+    const Vec3 center = (items[i].boundsMin + items[i].boundsMax) * 0.5f;
+    const Vec3 toFlat{center.x - cam.position.x, 0, center.z - cam.position.z};
+    const float facing = engine::dot(engine::normalize(toFlat), cam.flatForward());
+    if (engine::length(toFlat) < kPromptDistance && facing > bestFacing) {
+      bestFacing = facing;
+      g_app.focused = static_cast<int>(i);
+    }
+  }
+  if (g_app.focused != g_app.highlighted) {
+    setGlow(g_app.highlighted, 0);
+    setGlow(g_app.focused, kHighlightGlow);
+    g_app.highlighted = g_app.focused;
+  }
+
+  // A tap uses what it lands on; tapping anywhere also works while you're
+  // standing at something (easier on a small screen).
+  for (const engine::Vec2 tap : g_app.input.takeTaps()) {
+    g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
+    const Vec3 dir = screenRay(tap);
+    int hit = -1;
+    float nearest = kTapReach;
+    for (size_t i = 0; i < items.size(); ++i) {
+      const float t = rayBoxDistance(cam.position, dir, items[i].boundsMin, items[i].boundsMax);
+      if (t >= 0 && t < nearest) {
+        nearest = t;
+        hit = static_cast<int>(i);
+      }
+    }
+    if (hit < 0) hit = g_app.focused;
+    if (hit >= 0) use(items[static_cast<size_t>(hit)]);
+  }
+
+  g_app.jukebox.update();
+  if (g_app.jukebox.songCount() != g_app.bannerSong) {
+    g_app.bannerSong = g_app.jukebox.songCount();
+    g_app.bannerEndMs = nowMs + kBannerMs;
+  }
+  const Vec3 forward = cam.forward();
+  const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
+  engine::audio::setListener(cam.position, forward, engine::cross(right, forward));
 }
 
 void frame() {
@@ -345,6 +461,7 @@ void frame() {
   g_app.gpu.resizeIfNeeded();
   updateFps(nowMs);
   updateCamera(dt);
+  updateInteraction(nowMs);
 
   wgpu::TextureView target = g_app.gpu.beginFrame();
   if (!target) return;
@@ -405,9 +522,10 @@ void onGpuReady(bool ok) {
   g_app.camera.position = g_app.scene.spawnPosition;
   g_app.camera.yaw = g_app.scene.spawnYaw;
   g_app.input.attach("#canvas");
+  g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
   g_app.introEndMs = g_app.lastFrameMs + kIntroMaxMs;
-  LOG_INFO("Running. Left thumb: walk. Right thumb: look around.");
+  LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");
   emscripten_set_main_loop(frame, 0, false);
 }
 

@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -31,6 +32,40 @@ Vec2 clampToStick(Vec2 origin, Vec2 p) {
   return {origin.x + d.x, origin.y + d.y};
 }
 
+constexpr double kTapMaxMs = 350;
+constexpr float kTapMaxMove = 12;  // CSS pixels
+
+Input::Press* findPress(Input& in, int id) {
+  for (Input::Press& p : in.presses) {
+    if (p.id == id) return &p;
+  }
+  return nullptr;
+}
+
+void pressStart(Input& in, int id, Vec2 p) {
+  Input::Press* slot = findPress(in, Input::kNone);
+  if (slot) *slot = {id, p, emscripten_get_now(), 0};
+}
+
+void pressMove(Input& in, int id, Vec2 p) {
+  if (Input::Press* press = findPress(in, id)) {
+    const float dx = p.x - press->start.x, dy = p.y - press->start.y;
+    press->moved = std::max(press->moved, std::sqrt(dx * dx + dy * dy));
+  }
+}
+
+void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
+  Input::Press* press = findPress(in, id);
+  if (!press) return;
+  pressMove(in, id, p);
+  if (!cancelled && press->moved < kTapMaxMove && emscripten_get_now() - press->startMs < kTapMaxMs) {
+    double w = 0, h = 0;
+    emscripten_get_element_css_size("#canvas", &w, &h);
+    if (w > 0 && h > 0) in.taps.push_back({static_cast<float>(p.x / w), static_cast<float>(p.y / h)});
+  }
+  press->id = Input::kNone;
+}
+
 bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   double canvasW = 0, canvasH = 0;
@@ -41,6 +76,10 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
     if (!t.isChanged) continue;
     const Vec2 p{static_cast<float>(t.targetX), static_cast<float>(t.targetY)};
     const int id = static_cast<int>(t.identifier);
+
+    if (type == EMSCRIPTEN_EVENT_TOUCHSTART) pressStart(in, id, p);
+    else if (type == EMSCRIPTEN_EVENT_TOUCHMOVE) pressMove(in, id, p);
+    else pressEnd(in, id, p, type == EMSCRIPTEN_EVENT_TOUCHCANCEL);
 
     if (type == EMSCRIPTEN_EVENT_TOUCHSTART) {
       if (p.x < canvasW * 0.5 && in.stickTouchId == Input::kNone) {
@@ -74,9 +113,17 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
 
 bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
-  if (type == EMSCRIPTEN_EVENT_MOUSEDOWN) in.mouseLooking = true;
-  if (type == EMSCRIPTEN_EVENT_MOUSEUP) in.mouseLooking = false;
+  const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
+  if (type == EMSCRIPTEN_EVENT_MOUSEDOWN) {
+    in.mouseLooking = true;
+    pressStart(in, Input::kMouseId, p);
+  }
+  if (type == EMSCRIPTEN_EVENT_MOUSEUP && in.mouseLooking) {
+    in.mouseLooking = false;
+    pressEnd(in, Input::kMouseId, p, false);
+  }
   if (type == EMSCRIPTEN_EVENT_MOUSEMOVE && in.mouseLooking) {
+    pressMove(in, Input::kMouseId, p);
     in.lookDelta.x += static_cast<float>(e->movementX);
     in.lookDelta.y += static_cast<float>(e->movementY);
   }
@@ -123,6 +170,12 @@ Vec2 Input::move() const {
     m.y /= len;
   }
   return m;
+}
+
+std::vector<Vec2> Input::takeTaps() {
+  std::vector<Vec2> t;
+  t.swap(taps);
+  return t;
 }
 
 Vec2 Input::takeLookDelta() {

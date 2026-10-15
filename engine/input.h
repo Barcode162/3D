@@ -4,6 +4,9 @@
 // - Touch on the left half of the screen: a virtual joystick for walking.
 // - Drag on the right half: look around.
 // - Computer: WASD/arrow keys to walk, drag the mouse to look.
+// - A quick tap or click that doesn't move counts as a "tap" (to use things).
+#include <vector>
+
 #include "engine/math.h"
 
 namespace engine {
@@ -19,6 +22,10 @@ class Input {
   // Look movement since the last call, in CSS pixels. Resets after reading.
   Vec2 takeLookDelta();
 
+  // Taps since the last call, as screen fractions (0,0 = top-left,
+  // 1,1 = bottom-right). Resets after reading.
+  std::vector<Vec2> takeTaps();
+
   // Internal state, updated by the event callbacks in input.cpp.
   static constexpr int kNone = -1;
   int stickTouchId = kNone;
@@ -28,6 +35,19 @@ class Input {
   Vec2 lookDelta;
   bool mouseLooking = false;
   bool keyForward = false, keyBack = false, keyLeft = false, keyRight = false;
+
+  // Tap detection: where/when each finger (or the mouse) went down, and
+  // how far it has wandered since.
+  struct Press {
+    int id = kNone;
+    Vec2 start;
+    double startMs = 0;
+    float moved = 0;
+  };
+  static constexpr int kMaxPresses = 5;
+  static constexpr int kMouseId = -2;
+  Press presses[kMaxPresses];
+  std::vector<Vec2> taps;
 
   static constexpr float kStickRadius = 60.0f;  // CSS pixels
 };

@@ -51,22 +51,28 @@ struct Blocker {
   float minX, minZ, maxX, maxZ;
 };
 
-// A floating name tag over something you'll be able to use. Walking close
-// and looking at it shows `prompt` on screen.
-struct Label {
-  engine::Vec3 position;
-  std::string text;
-  std::string prompt;
+// Something you can use. It has a floating name tag; walking close and
+// looking at it highlights it and shows a prompt; tapping it runs `action`.
+enum class Action { kNone, kJukebox };
+
+struct Interactable {
+  std::string name;               // floating name tag
+  std::string prompt;             // shown when you're at it (if no action overrides it)
+  engine::Vec3 tagPosition;
+  engine::Vec3 boundsMin, boundsMax;  // world box that taps hit
+  size_t firstObject = 0, objectCount = 0;  // parts that light up when focused
+  Action action = Action::kNone;
 };
 
 struct BarScene {
   std::vector<SceneObject> objects;
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
-  std::vector<Label> labels;
+  std::vector<Interactable> interactables;
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
   float fogDensity;
+  engine::Vec3 jukeboxSpeaker;  // where the music comes from
   engine::Vec3 spawnPosition;
   float spawnYaw;
 };

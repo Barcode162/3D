@@ -172,6 +172,7 @@ void buildSeating(Builder& b) {
 void buildFeatures(Builder& b) {
   // Jukebox in the back-right corner.
   const Vec3 j{4.9f, 0, -4.45f};
+  const size_t jukeboxFirst = b.scene.objects.size();
   b.add(makeBox({0.9f, 1.4f, 0.6f}), {j.x, 0.7f, j.z}, {0.32f, 0.06f, 0.08f}, 0.8f);
   b.add(makeCylinder(0.45f, 0.6f, 32), {j.x, 1.4f, j.z}, {0.32f, 0.06f, 0.08f}, 0.8f, 0,
         Quat::axisAngle({1, 0, 0}, engine::kPi / 2));
@@ -179,13 +180,19 @@ void buildFeatures(Builder& b) {
   b.add(makeBox({0.6f, 0.04f, 0.02f}), {j.x, 0.6f, j.z + 0.31f}, {0.6f, 0.3f, 1.0f}, 0, 3.0f);
   b.block(j, 0.5f, 0.35f);
   b.light({j.x, 1.2f, j.z + 0.7f}, {0.7f, 0.35f, 1.0f}, 1.0f, 3.5f);
-  b.scene.labels.push_back({{j.x, 2.1f, j.z}, "JUKEBOX", "Jukebox\nMusic coming soon"});
+  b.scene.interactables.push_back({"JUKEBOX", "Jukebox", {j.x, 2.1f, j.z}, {j.x - 0.5f, 0, j.z - 0.35f},
+                                   {j.x + 0.5f, 1.9f, j.z + 0.35f}, jukeboxFirst,
+                                   b.scene.objects.size() - jukeboxFirst, Action::kJukebox});
+  b.scene.jukeboxSpeaker = {j.x, 1.1f, j.z + 0.3f};
 
   // Mirror frame on the right wall (the reflection comes in Stage 5).
   const Vec3 m{kRoomHalfX - 0.03f, 1.45f, -2.2f};
+  const size_t mirrorFirst = b.scene.objects.size();
   b.add(makeBox({0.04f, 2.1f, 1.5f}), m, {0.75f, 0.6f, 0.3f}, 0.9f);
   b.add(makeBox({0.02f, 1.95f, 1.35f}), {m.x - 0.02f, m.y, m.z}, {0.5f, 0.55f, 0.6f}, 1.0f);
-  b.scene.labels.push_back({{m.x - 0.3f, 2.65f, m.z}, "MIRROR", "Mirror\nReflections coming soon"});
+  b.scene.interactables.push_back({"MIRROR", "Mirror\nReflections coming soon", {m.x - 0.3f, 2.65f, m.z},
+                                   {m.x - 0.1f, m.y - 1.05f, m.z - 0.75f}, {m.x + 0.05f, m.y + 1.05f, m.z + 0.75f},
+                                   mirrorFirst, b.scene.objects.size() - mirrorFirst, Action::kNone});
 }
 
 }  // namespace

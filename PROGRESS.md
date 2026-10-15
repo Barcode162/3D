@@ -1,20 +1,22 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 3 interaction (tap the jukebox → music)
+**Current focus:** Stage 3 interaction + Stage 4 audio (jukebox works; next: more things to use)
 
 ## Next up (start here in a new session)
-1. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
-   highlight the object you're pointing at. First interaction: tap the
-   jukebox → it plays the jazz playlist (pulls part of Stage 4 forward,
-   because the user wants the music early). The text system and the
-   `Label` list in `bar_scene` (name tag + prompt) are ready for this: swap
-   "Music coming soon" for "Tap to play".
-2. Small polish noticed on iPhone: the candle spheres on the tables look
+1. **Wait for the user's answers** to the "what do we build ourselves" list
+   (given in chat on 2026-10-15; summary in `docs/DECISIONS.md` → "Build
+   ourselves vs. use the platform"). Their answers may reorder this list.
+2. **Load your own songs into the jukebox** from the iPhone Files app
+   (an `<input type=file>` bridge; local only, never uploaded).
+3. **More things to use**: light switches (dim/brighten the lamps), the
+   door, glasses on the bar. Each is an `Interactable` in `bar_scene.cpp`
+   plus an `Action`.
+4. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
-Last verified on iPhone: build `858398e`, 60 fps, 860x1550 @2x.
+Last verified on iPhone: build `c1cc070` (textures), 60 fps, loads in under 1 s.
 
 ## The vision (full details in `docs/VISION.md`)
 A cozy 3D hangout bar, viewed in first person on an iPhone:
@@ -43,17 +45,17 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - [x] Collision so you can't walk through walls or furniture (circle vs. floor rectangles)
 
 ### Stage 3: Interaction ("everything is interactable")
-- [ ] Tap-to-select (raycasting) and an interaction prompt
+- [x] Tap-to-use (ray from the tap point, `Interactable` boxes in `bar_scene`), glow highlight + prompt when you stand at something
 - [ ] Pick up / drop / throw objects (simple physics)
 - [ ] Light switches, doors, taps, jukebox buttons
 - [ ] Bar games: darts, pool table
 
 ### Stage 4: Audio
-- [ ] C++ audio engine through Web Audio (starts on first tap)
-- [ ] Jukebox plays the smooth-jazz playlist (`assets/music/`), spatialized in 3D
+- [x] C++ audio through Web Audio (`engine/audio.*` + thin bridge `web/audio.js`; unlocks on first tap)
+- [x] Jukebox plays the smooth-jazz playlist (`app/jukebox.*`), 3D-positioned (HRTF), tap = next song, after the last song tap = off
 - [ ] Jukebox "load song" button: play the user's own songs from the iPhone
       Files app (local only, never uploaded)
-- [ ] In-game credits for the CC BY tracks (see `assets/music/CREDITS.md`)
+- [x] In-game credits for the CC BY tracks ("Now playing" banner with the credit)
 - [ ] Generated sound effects (glass clink, footsteps, switches)
 
 ### Stage 4b: Mini music studio (the fun extra, later)
@@ -105,4 +107,8 @@ A small DAW inside the bar, all DSP written in C++:
   when you stand at one and look at it.
 - **2026-10-15:** Procedural textures. Five materials generated in C++ at
   startup (about 1.3 s in the test container), with bump maps so mortar
-  and plank gaps catch the light.
+  and plank gaps catch the light. Verified on iPhone: 60 fps, < 1 s load.
+- **2026-10-15:** Jukebox music. Tap detection, ray picking, highlight
+  glow, Web Audio bridge with iOS unlock, 3D-positioned music, "Now
+  playing" banner with the CC BY credit. Tested headless with an Ogg
+  stand-in (test Chromium can't decode AAC).

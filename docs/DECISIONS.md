@@ -17,6 +17,7 @@ future session re-litigates or repeats it.
 | Threads | None (yet) | Pages can't send COOP/COEP headers |
 | Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
 | Textures | Generated in code at startup (`engine/procedural.cpp`), 512px, texture arrays with mips; projected triplanar in object space | No image files in the repo; meshes need no UVs; object-space keeps textures stuck to objects once they can move |
+| Audio | Browser Web Audio for output; C++ decides what plays and where (thin JS bridge `web/audio.js`). Music streams through an `<audio>` element → `PannerNode` (HRTF) | Like WebGPU for graphics: the platform API is the "driver". Streaming avoids decoding 3-minute songs into ~60 MB of memory each |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -52,7 +53,25 @@ future session re-litigates or repeats it.
 - iOS 26 Safari reports `iPhone OS 18_7` in the user agent (frozen UA), with
   `Version/26.3`. This is normal.
 
+## Build ourselves vs. use the platform
+The rule: we write the engine logic ourselves (rendering, math, physics,
+animation, game logic, DSP for the music studio), but we use the
+browser/phone APIs that are the only way to reach the hardware: WebGPU
+(GPU), Web Audio output and its built-in AAC decoder (speakers), touch
+events, file picker, network. Those are "drivers", not engines. Writing
+our own AAC/MP3 decoder is possible but has no visible benefit. Big
+optional choices are listed for the user in the 2026-10-15 chat; record
+their answers here.
+
 ## Gotchas hit so far
+- The Playwright test Chromium can't play AAC (`.m4a`). To test music
+  headless, copy an Ogg/Opus version over the file in `build/site` only
+  (ffmpeg is installed). Safari plays AAC fine.
+- iOS only lets sound start inside a tap. `web/audio.js` unlocks on the
+  first touchend (creates the AudioContext, plays a moment of silence in
+  each music element); later `play()` calls from C++ then work.
+- The error log panel opens on errors and covers the lower screen, so
+  taps there go to the panel, not the game.
 - Texture color maps store a *multiplier*, halved (0.5 = keep the object's
   color), so one wood texture serves dark and polished wood. Brick colors
   are absolute: give brick objects a mid-gray (0.5) color.
