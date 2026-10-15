@@ -44,6 +44,14 @@ that keeps getting upgraded:
 - The jukebox works like a real one: pick a song from its menu. Songs the
   user downloads can be loaded for testing.
 
+## Art upgrade (user, 2026-10-15)
+The blockout looks like "basic AI 3D". The user wants to rework the whole
+room into real-looking assets, one piece at a time (proper shapes,
+sculpted detail, real textures). Lighting is considered fine. Open
+question: where the models come from (free CC0 models, modeled by Claude
+with scripts, or made by the user with a phone AI-3D app), which needs the
+GLB loader first.
+
 ## Later (explicitly NOT now)
 - Importing 3D models (GLB/glTF loader written from scratch) and custom
   avatars (VRM).
