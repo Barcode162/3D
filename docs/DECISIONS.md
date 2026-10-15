@@ -137,6 +137,11 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   motion there (max 8 fixed steps per frame). Judge timing on the phone.
 - A model's object slot must get its full matrix before the initial
   `objectData` upload, or it renders at the origin until it moves.
+- GitHub's own "pages build and deployment" run can hang in its "Deploy to
+  GitHub Pages" step and time out after 10 minutes (seen on `3e3dcd9`, the
+  first ~8 MB model upload). Our build is fine then; the site just stays
+  on the old version. This session can't re-run workflows (403), so the
+  fix is the next push to `main`. Check with `version.txt`.
 - Pages sends `cache-control: max-age=600`, so Safari can show a build up
   to 10 minutes old. The deploy writes `version.txt`; `index.html` fetches
   it with `cache: 'no-store'` and reloads with `?b=<sha>` if it's newer.
