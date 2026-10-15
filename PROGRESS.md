@@ -1,7 +1,7 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 1, Engine foundation
+**Current focus:** Stage 1, Engine foundation (next: 1.5 lighting polish, 1.6 text)
 
 ## The vision
 A cozy 3D hangout bar, viewed in first person on an iPhone:
@@ -15,18 +15,19 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 
 ## Roadmap
 ### Stage 1: Engine foundation
-- [x] 1.1 Pipeline proof: C++ → WASM → WebGPU triangle, tap to change color, on-screen log, auto-deploy
-- [ ] 1.2 Math library: vectors, matrices, quaternions
-- [ ] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres
-- [ ] 1.4 First-person camera + touch controls (left stick move, right drag look)
-- [ ] 1.5 Lighting: multiple warm point lights, basic PBR materials
+- [x] 1.1 Pipeline proof: C++ → WASM → WebGPU triangle, tap to change color, on-screen log, auto-deploy (verified on iPhone: 60 fps, Apple GPU)
+- [x] 1.2 Math library: vectors, matrices, quaternions (`engine/math.h`)
+- [x] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres (`engine/mesh.*`)
+- [x] 1.4 First-person camera + touch controls (left stick move, right drag look; WASD + mouse on a computer)
+- [ ] 1.5 Lighting: 8 warm point lights + emissive + haze + tone mapping done; still to do: real PBR materials
 - [ ] 1.6 Text rendering in-engine (bitmap font) for labels/UI
 
 ### Stage 2: The bar room
-- [ ] Room shell: floor, walls, ceiling, procedural wood/brick/tile textures
-- [ ] Furniture: bar counter, stools, booths, tables, shelves of bottles
-- [ ] Lighting set: pendant lamps, neon signs, candles
-- [ ] Collision so you can't walk through walls or furniture
+- [x] Rough blockout (`app/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
+      pendant lamps, neon frame, tables, booth, jukebox, mirror frame, door
+- [ ] Procedural wood/brick/tile textures
+- [ ] More detail and props; better neon (real sign shapes)
+- [x] Collision so you can't walk through walls or furniture (circle vs. floor rectangles)
 
 ### Stage 3: Interaction ("everything is interactable")
 - [ ] Tap-to-select (raycasting) and an interaction prompt
@@ -76,3 +77,7 @@ A small DAW inside the bar, all DSP written in C++:
   SwiftShader WebGPU.
 - **2026-10-15:** Music decided. Added 4 CC BY jazz tracks (AAC, about 15 MB),
   served at `/assets/music/`. Added Stage 4b, the mini music studio.
+- **2026-10-15:** Site live via the `gh-pages` branch (Pages → Deploy from branch).
+  The triangle ran on the iPhone at 60 fps. Built the math library, meshes,
+  depth buffer, first-person camera, touch joysticks, lit shader and the first
+  walkable bar blockout (184 objects, 8 lights).

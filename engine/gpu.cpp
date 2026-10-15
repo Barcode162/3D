@@ -122,6 +122,13 @@ void Gpu::configureSurface() {
   config.alphaMode = wgpu::CompositeAlphaMode::Opaque;
   config.presentMode = wgpu::PresentMode::Fifo;
   surface_.Configure(&config);
+
+  wgpu::TextureDescriptor depthDesc;
+  depthDesc.label = "depth";
+  depthDesc.size = {width, height, 1};
+  depthDesc.format = kDepthFormat;
+  depthDesc.usage = wgpu::TextureUsage::RenderAttachment;
+  depthView = device.CreateTexture(&depthDesc).CreateView();
 }
 
 wgpu::TextureView Gpu::beginFrame() {

@@ -25,6 +25,9 @@ class Gpu {
   wgpu::Device device;
   wgpu::Queue queue;
   wgpu::TextureFormat surfaceFormat = wgpu::TextureFormat::Undefined;
+  static constexpr wgpu::TextureFormat kDepthFormat = wgpu::TextureFormat::Depth24Plus;
+  // Depth buffer matching the screen size; recreated on resize.
+  wgpu::TextureView depthView;
   uint32_t width = 0;
   uint32_t height = 0;
   float pixelRatio = 1.0f;

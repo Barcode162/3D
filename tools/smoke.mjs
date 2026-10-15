@@ -39,10 +39,21 @@ const page = await browser.newPage({ viewport: { width: 430, height: 932 }, devi
 await page.goto(`http://localhost:${port}/`);
 await page.waitForTimeout(4000);
 
-const log = await page.$eval('#log', (el) => el.innerText);
+const log = await page.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
 const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
 const status = await page.$eval('#status', (el) => el.textContent);
 await page.screenshot({ path: shotPath });
+
+// Walk forward, then turn right by dragging, to exercise input + collisions.
+await page.keyboard.down('KeyW');
+await page.waitForTimeout(2500);
+await page.keyboard.up('KeyW');
+await page.mouse.move(215, 400);
+await page.mouse.down();
+await page.mouse.move(415, 420, { steps: 10 });
+await page.mouse.up();
+await page.waitForTimeout(800);
+await page.screenshot({ path: shotPath.replace(/\.png$/, '-walk.png') });
 await browser.close();
 server.close();
 

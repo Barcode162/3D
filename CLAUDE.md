@@ -36,15 +36,17 @@ emcmake cmake -B build -G Ninja      # once
 cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
 ```
-The smoke test prints the on-screen log and saves `build/smoke.png`, which
+The smoke test prints the on-screen log and saves `build/smoke.png` and
+`build/smoke-walk.png` (after walking forward and turning), which
 can be viewed with the Read tool. Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
 
 ## Layout
-- `engine/` is the reusable engine: GPU setup, logging, files. Later: math,
-  meshes, camera, input, audio.
-- `app/` is the bar world itself (game code).
+- `engine/` is the reusable engine: GPU setup, math, meshes, camera, input,
+  logging, files. Later: audio, text, physics.
+- `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights and
+  colliders. `main.cpp` holds the renderer and frame loop.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
   third-party asset needs a license and credit entry (see
