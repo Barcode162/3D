@@ -2,8 +2,17 @@
 
 A from-scratch 3D engine in **C++ → WebAssembly → WebGPU**, building toward a
 VRChat-style **3D hangout bar**: walkable, every object interactive, an avatar
-visible in a mirror, and real music. Read `PROGRESS.md` first: it says what
-is done and what is next.
+visible in a mirror, and real music.
+
+## Start of every session (the user often starts fresh chats to save tokens)
+1. Read **`PROGRESS.md`** (roadmap, what's done, and the "Next up" list),
+   **`docs/VISION.md`** (the user's full dream for the project) and
+   **`docs/DECISIONS.md`** (what was chosen, why, and what failed).
+2. The SessionStart hook (`.claude/settings.json` → `tools/setup.sh`)
+   installs Emscripten. If it didn't run, run `bash tools/setup.sh`.
+3. Build and run the smoke test (below) to confirm everything works.
+4. When the user says "continue", pick the first unchecked item in "Next up"
+   and go. Don't re-ask questions already answered in these files.
 
 ## Working with the user
 - The user works **only from an iPhone 15 Pro Max (iOS 26, Safari)** through the
@@ -21,15 +30,17 @@ is done and what is next.
   step**, without waiting to be asked. Pushing straight to `main` is the agreed
   workflow (no PRs).
 - Update `PROGRESS.md` in the same commit whenever a step is finished or a plan
-  changes.
+  changes. Record new decisions or gotchas in `docs/DECISIONS.md`, and new
+  ideas from the user in `docs/VISION.md`. A fresh session only knows what's
+  written in the repo.
+- After pushing, confirm the deploy: wait for `gh-pages` to get a
+  "Site build <sha>" commit, then tell the user the build code to look for.
 - Before pushing: the build passes and the smoke test passes. Look at the
   screenshot.
 
 ## Build and test
 ```sh
-# One-time per container: install the compiler (same version CI uses).
-git clone --depth 1 https://github.com/emscripten-core/emsdk.git /opt/emsdk
-/opt/emsdk/emsdk install 6.0.12 && /opt/emsdk/emsdk activate 6.0.12
+bash tools/setup.sh                  # installs Emscripten 6.0.12 if missing (CI uses the same)
 
 source /opt/emsdk/emsdk_env.sh
 emcmake cmake -B build -G Ninja      # once
@@ -54,8 +65,10 @@ judged on the user's phone.
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
   automatically.
-- `tools/` holds dev scripts. `.github/workflows/deploy.yml` builds and
-  deploys to Pages.
+- `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test).
+- `.github/workflows/deploy.yml` builds on every push to `main` and publishes
+  to the `gh-pages` branch (see `docs/DECISIONS.md` → Hosting).
+- `docs/` holds the long-term context: `VISION.md` and `DECISIONS.md`.
 
 ## Conventions
 - C++20, 2-space indent, `namespace engine` for engine code. Use the Dawn

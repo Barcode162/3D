@@ -3,7 +3,23 @@
 **Live site:** https://barcode162.github.io/3D/
 **Current focus:** Stage 1, Engine foundation (next: 1.5 lighting polish, 1.6 text)
 
-## The vision
+## Next up (start here in a new session)
+1. **1.6 In-engine text**: a bitmap font rendered by our own renderer
+   (labels, prompts like "Tap to play jukebox"). Needed for interaction UI.
+2. **Procedural textures**: wood grain (floor, bar), brick or plaster
+   (walls), leather, generated in code into GPU textures, with mipmaps.
+   Upgrades the look a lot.
+3. **Stage 3 start: tap-to-interact**: raycast from a tap on the screen and
+   highlight the object you're pointing at. First interaction: tap the
+   jukebox → it plays the jazz playlist (pulls part of Stage 4 forward,
+   because the user wants the music early).
+4. Small polish noticed on iPhone: the candle spheres on the tables look
+   like white balls (make them real little candles with a flame glow), and
+   the stools look plain.
+
+Last verified on iPhone: build `858398e`, 60 fps, 860x1550 @2x.
+
+## The vision (full details in `docs/VISION.md`)
 A cozy 3D hangout bar, viewed in first person on an iPhone:
 - Walk around with touch joysticks.
 - **Everything is interactive:** pick up glasses, flip light switches, use
@@ -81,3 +97,7 @@ A small DAW inside the bar, all DSP written in C++:
   The triangle ran on the iPhone at 60 fps. Built the math library, meshes,
   depth buffer, first-person camera, touch joysticks, lit shader and the first
   walkable bar blockout (184 objects, 8 lights).
+- **2026-10-15:** Bar blockout verified on iPhone at 60 fps. Saved the full
+  handoff: `docs/VISION.md`, `docs/DECISIONS.md`, a "Next up" list, and a
+  SessionStart hook that installs Emscripten, so a brand-new chat can resume
+  from the repo alone.
