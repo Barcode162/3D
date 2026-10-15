@@ -186,24 +186,73 @@ void Avatar::build() {
   }
 }
 
-void Avatar::pose(float pitch, std::vector<engine::Mat4>& out) const {
+void advanceWalk(AvatarMotion& m, float forward, float sideways, float dt, float fullSpeed) {
+  constexpr float kCycleLength = 1.5f;  // meters per full cycle (two steps)
+  const float distance = std::sqrt(forward * forward + sideways * sideways);
+  // Walking backward plays the cycle in reverse.
+  m.walkPhase += (forward < -0.3f * distance ? -1.0f : 1.0f) * distance / kCycleLength * 2.0f * engine::kPi;
+  m.walkPhase = std::fmod(m.walkPhase, 2.0f * engine::kPi);
+  // Ease in and out of walking instead of snapping.
+  const float speed = dt > 0 ? distance / dt : 0;
+  const float target = engine::clampf(speed / fullSpeed, 0, 1);
+  m.walkAmount += (target - m.walkAmount) * std::min(1.0f, dt * 8.0f);
+}
+
+void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   using engine::Quat;
+  using engine::radians;
   std::vector<Quat> rot(skeleton_.bones.size());
-  const Vec3 xAxis{1, 0, 0}, zAxis{0, 0, 1};
-  // Relaxed stance: arms slightly away from the body, elbows a little bent.
+  const Vec3 xAxis{1, 0, 0}, yAxis{0, 1, 0}, zAxis{0, 0, 1};
+  auto bone = [&](const std::string& name) -> Quat& { return rot[static_cast<size_t>(skeleton_.find(name))]; };
+
+  const float w = m.walkAmount;
+  const float phase = m.walkPhase;
+  const float swing = std::sin(phase);  // +1: left leg forward, right leg back
+  // Idle: slow breathing and a gentle sway, fading out while walking.
+  const float idle = 1.0f - w;
+  const float breath = std::sin(m.time * 2.0f * engine::kPi / 4.2f);
+  const float sway = std::sin(m.time * 2.0f * engine::kPi / 7.0f);
+
+  // Body: hips twist with the stride, chest twists back, slight forward lean.
+  bone("hips") = Quat::axisAngle(yAxis, radians(6.0f) * swing * w) *
+                 Quat::axisAngle(zAxis, radians(1.2f) * sway * idle);
+  bone("spine") = Quat::axisAngle(xAxis, -radians(3.0f) * w);
+  bone("chest") = Quat::axisAngle(yAxis, -radians(9.0f) * swing * w) *
+                  Quat::axisAngle(xAxis, radians(1.5f) * breath * idle);
+
   for (int i = 0; i < 2; ++i) {
-    const float s = i == 0 ? -1.0f : 1.0f;
-    const char* n = i == 0 ? ".L" : ".R";
-    rot[static_cast<size_t>(skeleton_.find(std::string("upperArm") + n))] =
-        Quat::axisAngle(zAxis, s * engine::radians(9.0f));
-    rot[static_cast<size_t>(skeleton_.find(std::string("forearm") + n))] =
-        Quat::axisAngle(xAxis, engine::radians(12.0f));  // forearm forward
+    const float s = i == 0 ? -1.0f : 1.0f;  // -1 = left, +1 = right
+    const std::string n = i == 0 ? ".L" : ".R";
+    // This leg's swing: forward when positive. The legs are half a cycle apart.
+    const float legSwing = i == 0 ? swing : -swing;
+    const float legSpeed = i == 0 ? std::cos(phase) : -std::cos(phase);  // > 0 while swinging forward
+
+    // Legs: the thigh swings, the knee bends while the leg travels forward,
+    // and the foot stays roughly level with the floor.
+    const float thigh = radians(26.0f) * legSwing * w;
+    const float knee = -radians(5.0f) * w - radians(50.0f) * std::max(0.0f, legSpeed) * w;
+    bone("thigh" + n) = Quat::axisAngle(xAxis, thigh);
+    bone("shin" + n) = Quat::axisAngle(xAxis, knee);
+    bone("foot" + n) = Quat::axisAngle(xAxis, -(thigh + knee) * 0.75f);
+
+    // Arms swing opposite to the legs; elbows bend a little more going forward.
+    const float armSwing = -legSwing;
+    bone("upperArm" + n) = Quat::axisAngle(zAxis, s * radians(9.0f + 1.0f * breath * idle)) *
+                           Quat::axisAngle(xAxis, radians(20.0f) * armSwing * w + radians(2.0f) * sway * idle * s);
+    bone("forearm" + n) =
+        Quat::axisAngle(xAxis, radians(12.0f) + radians(18.0f) * std::max(0.0f, armSwing) * w);
   }
+
   // Look up/down: the neck takes some of it, the head the rest.
-  const float look = engine::clampf(pitch, engine::radians(-60.0f), engine::radians(60.0f));
-  rot[static_cast<size_t>(skeleton_.find("neck"))] = Quat::axisAngle(xAxis, look * 0.35f);
-  rot[static_cast<size_t>(skeleton_.find("head"))] = Quat::axisAngle(xAxis, look * 0.65f);
+  const float look = engine::clampf(m.pitch, radians(-60.0f), radians(60.0f));
+  bone("neck") = Quat::axisAngle(xAxis, look * 0.35f);
+  bone("head") = Quat::axisAngle(xAxis, look * 0.65f);
   skeleton_.skinMatrices(rot, out);
+
+  // Bob: the body is lowest when the legs are spread, highest mid-step.
+  const float bob = -0.03f * swing * swing * w + 0.004f * breath * idle;
+  const engine::Mat4 lift = engine::Mat4::translation({0, bob, 0});
+  for (engine::Mat4& mat : out) mat = lift * mat;
 }
 
 engine::Mat4 avatarTransform(Vec3 eye, float yaw) {

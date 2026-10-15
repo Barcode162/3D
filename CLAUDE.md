@@ -49,22 +49,29 @@ NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software W
 ```
 The smoke test prints the on-screen log and saves `build/smoke.png` and
 `build/smoke-walk.png` (after walking forward and turning), which
-can be viewed with the Read tool. Software WebGPU (SwiftShader) works in this
+can be viewed with the Read tool. To look at a specific spot (a mirror, the
+jukebox), temporarily change `scene.spawnPosition`/`spawnYaw` in
+`app/bar_scene.cpp`, build, screenshot, then restore it (see
+`docs/DECISIONS.md` → Gotchas for testing music and the song picker). Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
 
 ## Layout
-- `engine/` is the reusable engine: GPU setup, math, meshes, camera, input,
-  logging, files. Later: audio, text, physics.
-- `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights and
-  colliders. `main.cpp` holds the renderer and frame loop.
+- `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
+  (incl. taps), logging, files, text (own pixel font), procedural textures,
+  audio bridge, skeletons and skinned meshes. Later: physics.
+- `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
+  colliders, interactables and mirrors. `renderer.cpp` draws the scene,
+  mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
+  `jukebox.cpp` is the playlist and its menu. `main.cpp` is the frame loop,
+  input → interaction, and on-screen text.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
   third-party asset needs a license and credit entry (see
   `assets/music/CREDITS.md`).
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
-  automatically.
+  automatically. `web/audio.js` is the thin Web Audio + song-picker bridge.
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test).
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes
   to the `gh-pages` branch (see `docs/DECISIONS.md` → Hosting).

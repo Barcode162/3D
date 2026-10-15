@@ -45,6 +45,7 @@ struct App {
   app::BarScene scene;
   app::SceneRenderer renderer;
   app::Avatar avatar;
+  app::AvatarMotion avatarMotion;
   std::vector<Mat4> avatarBones;
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
@@ -65,7 +66,10 @@ App g_app;
 
 void updateCamera(float dt) {
   const engine::Vec2 look = g_app.input.takeLookDelta();
-  if (g_app.jukeboxMenu.isOpen()) return;  // stand still while choosing a song
+  if (g_app.jukeboxMenu.isOpen()) {  // stand still while choosing a song
+    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
+    return;
+  }
   g_app.camera.look(look.x * kLookSensitivity, -look.y * kLookSensitivity);
 
   const engine::Vec2 move = g_app.input.move();
@@ -75,7 +79,12 @@ void updateCamera(float dt) {
   Vec3 p = g_app.camera.position;
   p += g_app.camera.flatForward() * (move.y * kWalkSpeed * dt);
   p += g_app.camera.flatRight() * (move.x * kWalkSpeed * dt);
+  const Vec3 before = g_app.camera.position;
   g_app.camera.position = app::resolveCollisions(g_app.scene, p, kBodyRadius);
+  // Drive the walk animation by how far you actually moved (walls stop it).
+  const Vec3 moved = g_app.camera.position - before;
+  app::advanceWalk(g_app.avatarMotion, engine::dot(moved, g_app.camera.flatForward()),
+                   engine::dot(moved, g_app.camera.flatRight()), dt, kWalkSpeed);
 }
 
 void updateFps(double nowMs) {
@@ -288,7 +297,9 @@ void frame() {
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
   const Mat4 viewProj = cam.projection(aspect) * cam.view();
   queueText(nowMs, viewProj);
-  g_app.avatar.pose(cam.pitch, g_app.avatarBones);
+  g_app.avatarMotion.pitch = cam.pitch;
+  g_app.avatarMotion.time = static_cast<float>(nowMs / 1000.0);
+  g_app.avatar.pose(g_app.avatarMotion, g_app.avatarBones);
   g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw),
                         g_app.avatarBones, g_app.scene.mirrors, g_app.text);
 }

@@ -1,15 +1,19 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 5, mirrors + avatar (the user's chosen order, 2026-10-15)
+**Current focus:** Stage 5 wrap-up (first-person body), then Stage 3 physics
 
 ## Next up (start here in a new session)
-The user's chosen order (2026-10-15): jukebox menu (done) → mirrors →
-avatar → animation → physics.
-1. **Animation**: idle (breathing, small sway) and walk cycles on the
-   skeleton (`Avatar::pose` in `app/avatar.cpp` builds per-bone rotations),
-   driven by how fast you move; arms swing, legs step, feet don't slide.
-   Then: see your own body when you look down in first person.
+The user's chosen order (2026-10-15): jukebox menu → mirrors → avatar →
+animation (all done) → physics.
+1. **Ask the user how the latest build felt on the iPhone**: fps standing
+   close to the full mirror (the most expensive view: the room is drawn
+   twice), load time (7 textures now), and how the walk looks. If fps
+   drops, render reflections at half resolution first.
+2. **See your own body in first person**: draw the avatar in the main view
+   too, without the head (so it doesn't block the camera), so looking down
+   shows your body and feet. Needs a non-mirrored skinned pipeline in
+   `app/renderer.cpp` (only `skinnedMirroredPipeline_` exists now).
 3. **Physics**: pick up / throw glasses, darts, pool.
 4. **More things to use**: light switches, the door, glasses. Each is an
    `Interactable` in `bar_scene.cpp` plus an `Action`.
@@ -72,7 +76,8 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] Mirror 1: full reflection (reflected camera into a screen-sized texture, scissored to the mirror, clip plane at the glass)
 - [x] Mirror 2: avatars-only mirror (VRChat style), studio-lit backdrop. Tap a mirror to turn it on/off
 - [x] Skinned humanoid avatar (`engine/skeleton.*`, `engine/skinned_mesh.*`, `app/avatar.*`): 18 bones, one smooth mesh (~4k vertices) built from tubes/ellipsoids, 2-bone skinning in `vs_skinned`; face, hair, t-shirt (fabric texture), jeans (denim texture), belt, shoes; head follows where you look
-- [ ] Walk/idle animation
+- [x] Walk/idle animation (`advanceWalk` + `Avatar::pose`): stride driven by distance moved, legs/knees/feet, arm swing, hip/chest twist, bob; idle breathing and sway; head follows where you look
+- [ ] First-person body (see your legs when you look down)
 - [ ] Avatar follows your movement; visible in the mirror
 - [ ] Later: load your own avatar model (GLB/VRM)
 
@@ -123,3 +128,6 @@ A small DAW inside the bar, all DSP written in C++:
   avatar. Drawing code moved from `main.cpp` to `app/renderer.*`.
 - **2026-10-15:** Skinned avatar with skeleton, body shapes, face and
   clothes textures; replaces the mannequin.
+- **2026-10-15:** Walk and idle animation. Session wrapped up here; all
+  work committed and deployed. Not yet verified on iPhone: mirrors,
+  avatar, animation (builds `0f74167` onward).

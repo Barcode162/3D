@@ -74,6 +74,11 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   multiplayer server; voice chat.
 
 ## Gotchas hit so far
+- Avatar rotation signs (avatar faces -Z, +X is its right side): rotating
+  a limb by a positive angle about +X swings it forward; knees bend with a
+  negative angle; a positive angle about +Z moves the right arm outward.
+  The walk is phase-driven by distance moved (1.5 m per cycle), not time,
+  so steps match speed and walls stop the legs.
 - Skinned clothes textures use the *rest-pose* position for triplanar
   mapping, so the pattern sticks to the body as limbs move. Skinned
   shading skips bump mapping (the bump would need per-vertex bone rotation).

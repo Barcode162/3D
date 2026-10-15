@@ -10,14 +10,27 @@
 
 namespace app {
 
+// What drives the avatar's animation this frame.
+struct AvatarMotion {
+  float pitch = 0;       // where you look (radians, + up)
+  float walkPhase = 0;   // position in the walk cycle (radians; one cycle = 2 steps)
+  float walkAmount = 0;  // 0 = standing, 1 = full walking speed
+  float time = 0;        // seconds, for idle breathing and sway
+};
+
+// Advances the walk cycle by how far you moved, so steps match your speed
+// and the feet don't skate. `forwardDistance` is signed (backward < 0).
+void advanceWalk(AvatarMotion& motion, float forwardDistance, float sideDistance, float dt, float fullSpeed);
+
 class Avatar {
  public:
   void build();
   const engine::Skeleton& skeleton() const { return skeleton_; }
   const engine::SkinnedMeshData& mesh() const { return mesh_; }
 
-  // Bone matrices for this frame. `pitch` = where you look (radians, + up).
-  void pose(float pitch, std::vector<engine::Mat4>& boneMatrices) const;
+  // Bone matrices for this frame: idle breathing/sway blended with the walk
+  // cycle, plus the head following where you look.
+  void pose(const AvatarMotion& motion, std::vector<engine::Mat4>& boneMatrices) const;
 
  private:
   engine::Skeleton skeleton_;
