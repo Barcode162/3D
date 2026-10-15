@@ -38,6 +38,13 @@ struct Object {
 @group(0) @binding(3) var mapSampler: sampler;
 @group(1) @binding(0) var<uniform> object: Object;
 
+// Skinned meshes (the avatar): one matrix per bone, set every frame.
+const kMaxBones = 32u;
+struct Bones {
+  m: array<mat4x4f, kMaxBones>,
+};
+@group(2) @binding(0) var<uniform> bones: Bones;
+
 struct VsIn {
   @location(0) position: vec3f,
   @location(1) normal: vec3f,
@@ -49,6 +56,8 @@ struct VsOut {
   @location(1) normal: vec3f,
   @location(2) localPos: vec3f,
   @location(3) localNormal: vec3f,
+  @location(4) paint: vec4f,  // skinned only: rgb = color (linear), a = gloss
+  @location(5) @interpolate(flat) layer: i32,  // skinned only: texture layer
 };
 
 @vertex
@@ -62,6 +71,34 @@ fn vs_main(in: VsIn) -> VsOut {
   out.normal = (object.model * vec4f(in.normal, 0.0)).xyz;
   out.localPos = in.position;
   out.localNormal = in.normal;
+  out.paint = vec4f(1.0);
+  out.layer = -1;
+  return out;
+}
+
+struct SkinIn {
+  @location(0) position: vec3f,
+  @location(1) normal: vec3f,
+  @location(2) paint: vec4f,     // rgb = color (display space), a = gloss
+  @location(3) joints: vec4u,
+  @location(4) weights: vec4f,
+  @location(5) material: vec4u,  // x = texture layer + 1
+};
+
+@vertex
+fn vs_skinned(in: SkinIn) -> VsOut {
+  // Each vertex follows two bones, blended by its weights.
+  let skin = bones.m[in.joints.x] * in.weights.x + bones.m[in.joints.y] * in.weights.y;
+  let world = object.model * (skin * vec4f(in.position, 1.0));
+  var out: VsOut;
+  out.clip = frame.viewProj * world;
+  out.worldPos = world.xyz;
+  out.normal = (object.model * (skin * vec4f(in.normal, 0.0))).xyz;
+  // Textures use the rest pose, so clothes patterns stay put as limbs move.
+  out.localPos = in.position;
+  out.localNormal = in.normal;
+  out.paint = vec4f(pow(in.paint.rgb, vec3f(2.2)), in.paint.a);
+  out.layer = i32(in.material.x) - 1;
   return out;
 }
 
@@ -119,13 +156,42 @@ fn fs_main(in: VsOut) -> @location(0) vec4f {
     shininess = clamp(shininess * s.gloss, 0.0, 1.0);
     n = normalize((object.model * vec4f(s.normal, 0.0)).xyz);
   }
-  let toEye = normalize(frame.cameraPos.xyz - in.worldPos);
+  return shade(in.worldPos, n, base, shininess, object.material.x);
+}
+
+// Skinned meshes: color and gloss come from each vertex; parts marked with a
+// texture layer (clothes) get that texture's pattern.
+@fragment
+fn fs_skinned(in: VsOut) -> @location(0) vec4f {
+  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
+    discard;
+  }
+  // Always sample (texture reads must not sit behind per-pixel branches),
+  // then only use the result where the vertex asks for a texture.
+  let n0 = normalize(in.localNormal);
+  var w = pow(abs(n0), vec3f(4.0));
+  w = w / (w.x + w.y + w.z);
+  let q = in.localPos * object.material.w;
+  let layer = max(in.layer, 0);
+  let c = sampleColor(q.zy, layer) * w.x + sampleColor(q.xz, layer) * w.y + sampleColor(q.xy, layer) * w.z;
+  var base = object.color.rgb * in.paint.rgb;
+  var shininess = in.paint.a;
+  if (in.layer >= 0) {
+    base = base * c.rgb;
+    shininess = clamp(shininess * c.a, 0.0, 1.0);
+  }
+  return shade(in.worldPos, normalize(in.normal), base, shininess, object.material.x);
+}
+
+// Lighting shared by every mesh: point lights, ambient, haze, tone mapping.
+fn shade(worldPos: vec3f, n: vec3f, base: vec3f, shininess: f32, emissive: f32) -> vec4f {
+  let toEye = normalize(frame.cameraPos.xyz - worldPos);
 
   var light = frame.ambient.rgb * (0.6 + 0.4 * n.y);  // a little brighter on top
   var specular = vec3f(0.0);
   for (var i = 0u; i < frame.lightCount.x; i++) {
     let l = frame.lights[i];
-    let toLight = l.position.xyz - in.worldPos;
+    let toLight = l.position.xyz - worldPos;
     let dist = length(toLight);
     let dir = toLight / dist;
     // Inverse-square falloff that fades smoothly to zero at the light's range.
@@ -138,9 +204,9 @@ fn fs_main(in: VsOut) -> @location(0) vec4f {
     specular += radiance * pow(max(dot(n, h), 0.0), power) * shininess;
   }
 
-  var color = base * light + specular + base * object.material.x;
+  var color = base * light + specular + base * emissive;
 
-  let dist = length(frame.cameraPos.xyz - in.worldPos);
+  let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);
   color = mix(color, frame.fog.rgb, haze);
 

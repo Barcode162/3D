@@ -49,7 +49,7 @@ void setVec4(float out[4], Vec3 v, float w) {
 
 }  // namespace
 
-bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vector<AvatarPart>& avatar) {
+bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::SkinnedMeshData& avatar) {
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrors.size();
@@ -78,9 +78,9 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
   }
 
   // Object uniforms: the scene objects (written once) followed by the avatar
-  // parts (rewritten every frame as you move).
+  // (its position is rewritten every frame as you move).
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + avatar.size();
+  const size_t total = objects.size() + 1;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -107,18 +107,29 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
     objectUniforms_.push_back(u);
     sceneDraws_.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride)});
   }
-  for (size_t i = 0; i < avatar.size(); ++i) {
-    const AvatarPart& part = avatar[i];
+  {
     ObjectUniforms u = {};
-    setVec4(u.color, part.color, 1);
-    u.material[1] = part.shininess;
-    u.material[2] = -1;  // untextured
-    const size_t slot = objects.size() + i;
-    std::memcpy(objectData.data() + slot * kObjectStride, &u, sizeof(u));
-    avatarDraws_.push_back({engine::Mesh::upload(device, part.mesh), static_cast<uint32_t>(slot * kObjectStride)});
-    avatarOffsets_.push_back(part.position);
+    setVec4(u.color, {1, 1, 1}, 1);  // colors come from the mesh itself
+    u.material[3] = kAvatarTextureScale;
+    avatarOffset_ = static_cast<uint32_t>(objects.size() * kObjectStride);
+    std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
+    avatarMesh_ = engine::SkinnedMesh::upload(device, avatar);
   }
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
+
+  bonesBuffer_ = makeUniformBuffer(device, kMaxBones * sizeof(Mat4), "avatar bones");
+  {
+    wgpu::BindGroupEntry entry;
+    entry.binding = 0;
+    entry.buffer = bonesBuffer_;
+    entry.size = kMaxBones * sizeof(Mat4);
+    wgpu::BindGroupDescriptor desc;
+    desc.layout = bonesLayout_;
+    desc.entryCount = 1;
+    desc.entries = &entry;
+    bonesBindGroup_ = device.CreateBindGroup(&desc);
+  }
+  LOG_INFO("Avatar: %zu vertices.", avatar.vertices.size());
 
   // Lights and atmosphere don't change per frame.
   const auto lightCount = std::min<size_t>(scene.lights.size(), kMaxLights);
@@ -174,11 +185,24 @@ bool SceneRenderer::createScenePipelines() {
   objectDesc.entries = &objectEntry;
   objectLayout_ = device.CreateBindGroupLayout(&objectDesc);
 
-  wgpu::BindGroupLayout layouts[] = {frameLayout_, objectLayout_};
+  wgpu::BindGroupLayoutEntry bonesEntry;
+  bonesEntry.binding = 0;
+  bonesEntry.visibility = wgpu::ShaderStage::Vertex;
+  bonesEntry.buffer.type = wgpu::BufferBindingType::Uniform;
+  bonesEntry.buffer.minBindingSize = kMaxBones * sizeof(Mat4);
+  wgpu::BindGroupLayoutDescriptor bonesDesc;
+  bonesDesc.entryCount = 1;
+  bonesDesc.entries = &bonesEntry;
+  bonesLayout_ = device.CreateBindGroupLayout(&bonesDesc);
+
+  // Group 2 (bones) is only used by the skinned pipeline.
+  wgpu::BindGroupLayout layouts[] = {frameLayout_, objectLayout_, bonesLayout_};
   wgpu::PipelineLayoutDescriptor layoutDesc;
   layoutDesc.bindGroupLayoutCount = 2;
   layoutDesc.bindGroupLayouts = layouts;
   wgpu::PipelineLayout layout = device.CreatePipelineLayout(&layoutDesc);
+  layoutDesc.bindGroupLayoutCount = 3;
+  wgpu::PipelineLayout skinnedLayout = device.CreatePipelineLayout(&layoutDesc);
 
   wgpu::ColorTargetState colorTarget;
   colorTarget.format = gpu_->surfaceFormat;
@@ -210,6 +234,15 @@ bool SceneRenderer::createScenePipelines() {
   desc.label = "scene (mirrored)";
   desc.primitive.frontFace = wgpu::FrontFace::CW;
   mirroredPipeline_ = device.CreateRenderPipeline(&desc);
+
+  // The avatar: skinned vertices. (Only seen in mirrors for now.)
+  const wgpu::VertexBufferLayout skinnedVertexLayout = engine::SkinnedMesh::vertexLayout();
+  desc.label = "skinned (mirrored)";
+  desc.layout = skinnedLayout;
+  desc.vertex.entryPoint = "vs_skinned";
+  desc.vertex.buffers = &skinnedVertexLayout;
+  fragment.entryPoint = "fs_skinned";
+  skinnedMirroredPipeline_ = device.CreateRenderPipeline(&desc);
   return true;
 }
 
@@ -374,22 +407,26 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   pass.SetPipeline(mirroredPipeline_);
   pass.SetBindGroup(0, view.bindGroup);
   if (full) drawItems(pass, sceneDraws_);
-  drawItems(pass, avatarDraws_);
+  pass.SetPipeline(skinnedMirroredPipeline_);
+  pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
+  pass.SetBindGroup(2, bonesBindGroup_);
+  pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
+  pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
+  pass.DrawIndexed(avatarMesh_.indexCount);
   pass.End();
 }
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
-                           const std::vector<Mirror>& mirrors, const engine::TextRenderer& text) {
+                           const std::vector<Mat4>& avatarBones, const std::vector<Mirror>& mirrors,
+                           const engine::TextRenderer& text) {
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
 
-  // Avatar parts follow you.
-  for (size_t i = 0; i < avatarDraws_.size(); ++i) {
-    // Only the model matrix changes; colors were written at startup and sit
-    // right after it, so write just the matrix.
-    const Mat4 model = avatar * Mat4::translation(avatarOffsets_[i]);
-    queue.WriteBuffer(objectBuffer_, avatarDraws_[i].uniformOffset, &model, sizeof(model));
-  }
+  // The avatar follows you. Only its model matrix changes (it comes first in
+  // ObjectUniforms), plus the bone matrices for its pose.
+  queue.WriteBuffer(objectBuffer_, avatarOffset_, &avatar, sizeof(avatar));
+  const size_t boneCount = std::min<size_t>(avatarBones.size(), kMaxBones);
+  if (boneCount) queue.WriteBuffer(bonesBuffer_, 0, avatarBones.data(), boneCount * sizeof(Mat4));
 
   FrameUniforms f = frame_;
   f.viewProj = viewProj;

@@ -6,13 +6,10 @@
 ## Next up (start here in a new session)
 The user's chosen order (2026-10-15): jukebox menu (done) → mirrors →
 avatar → animation → physics.
-1. **Avatar body**: replace the placeholder mannequin (`app/avatar.*`,
-   rigid shapes) with a skinned humanoid: a skeleton (bones), one smooth
-   body mesh whose vertices follow the bones (skinning in the vertex
-   shader), nicer shapes, and textures (clothes, face). Head turns with
-   the camera pitch. Shows in both mirrors.
-2. **Animation**: idle and walk cycles on the skeleton, driven by
-   movement, so the bar feels alive.
+1. **Animation**: idle (breathing, small sway) and walk cycles on the
+   skeleton (`Avatar::pose` in `app/avatar.cpp` builds per-bone rotations),
+   driven by how fast you move; arms swing, legs step, feet don't slide.
+   Then: see your own body when you look down in first person.
 3. **Physics**: pick up / throw glasses, darts, pool.
 4. **More things to use**: light switches, the door, glasses. Each is an
    `Interactable` in `bar_scene.cpp` plus an `Action`.
@@ -74,8 +71,8 @@ A small DAW inside the bar, all DSP written in C++:
 ### Stage 5: Avatar + mirror
 - [x] Mirror 1: full reflection (reflected camera into a screen-sized texture, scissored to the mirror, clip plane at the glass)
 - [x] Mirror 2: avatars-only mirror (VRChat style), studio-lit backdrop. Tap a mirror to turn it on/off
-- [x] Placeholder avatar (mannequin of basic shapes) that follows you; drawn only in mirrors
-- [ ] Skinned humanoid avatar with skeleton + walk/idle animation
+- [x] Skinned humanoid avatar (`engine/skeleton.*`, `engine/skinned_mesh.*`, `app/avatar.*`): 18 bones, one smooth mesh (~4k vertices) built from tubes/ellipsoids, 2-bone skinning in `vs_skinned`; face, hair, t-shirt (fabric texture), jeans (denim texture), belt, shoes; head follows where you look
+- [ ] Walk/idle animation
 - [ ] Avatar follows your movement; visible in the mirror
 - [ ] Later: load your own avatar model (GLB/VRM)
 
@@ -124,3 +121,5 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-15:** Mirrors. Full mirror (brass frame, z = -2.2) and avatar
   mirror (black frame, z = 1.1) on the right wall; tap to toggle. Placeholder
   avatar. Drawing code moved from `main.cpp` to `app/renderer.*`.
+- **2026-10-15:** Skinned avatar with skeleton, body shapes, face and
+  clothes textures; replaces the mannequin.

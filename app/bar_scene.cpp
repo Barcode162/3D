@@ -222,6 +222,8 @@ std::vector<engine::MaterialImages> buildBarMaterials() {
   m.push_back(engine::makeBrick(kSize, 37));       // kTexBrick
   m.push_back(engine::makeLeather(kSize, 41));     // kTexLeather
   m.push_back(engine::makePlaster(kSize, 53));     // kTexPlaster
+  m.push_back(engine::makeFabric(kSize, 61));      // kTexFabric
+  m.push_back(engine::makeDenim(kSize, 67));       // kTexDenim
   return m;
 }
 

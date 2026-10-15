@@ -15,25 +15,29 @@
 #include "engine/gpu.h"
 #include "engine/math.h"
 #include "engine/mesh.h"
+#include "engine/skinned_mesh.h"
 #include "engine/text.h"
 
 namespace app {
 
 class SceneRenderer {
  public:
-  bool init(engine::Gpu& gpu, const BarScene& scene, const std::vector<AvatarPart>& avatar);
+  bool init(engine::Gpu& gpu, const BarScene& scene, const engine::SkinnedMeshData& avatar);
 
   // Extra glow on an interactable's parts (0 = normal).
   void setGlow(const Interactable& it, float glow);
 
-  // Renders one frame to `target`. `avatar` places the avatar in the world.
+  // Renders one frame to `target`. `avatar` places the avatar in the world;
+  // `avatarBones` are its skinning matrices (see Avatar::pose).
   void render(const wgpu::TextureView& target, const engine::Mat4& viewProj, engine::Vec3 eye,
-              const engine::Mat4& avatar, const std::vector<Mirror>& mirrors, const engine::TextRenderer& text);
+              const engine::Mat4& avatar, const std::vector<engine::Mat4>& avatarBones,
+              const std::vector<Mirror>& mirrors, const engine::TextRenderer& text);
 
   size_t objectCount() const { return sceneDraws_.size(); }
 
  private:
   static constexpr uint32_t kMaxLights = 8;
+  static constexpr uint32_t kMaxBones = 32;  // matches shaders/scene.wgsl
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
@@ -89,16 +93,20 @@ class SceneRenderer {
   size_t mirrorCount_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view
   wgpu::RenderPipeline mirroredPipeline_;  // reflected views (triangle winding flips)
+  wgpu::RenderPipeline skinnedMirroredPipeline_;  // the avatar, in mirrors
   wgpu::RenderPipeline glassPipeline_;
-  wgpu::BindGroupLayout frameLayout_, objectLayout_;
+  wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_;
   wgpu::TextureView colorMaps_, bumpMaps_;
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;
-  std::vector<DrawItem> sceneDraws_, avatarDraws_;
+  std::vector<DrawItem> sceneDraws_;
   std::vector<ObjectUniforms> objectUniforms_;  // CPU copy of the scene objects
-  std::vector<engine::Vec3> avatarOffsets_;
+  engine::SkinnedMesh avatarMesh_;
+  uint32_t avatarOffset_ = 0;  // the avatar's slot in objectBuffer_
+  wgpu::Buffer bonesBuffer_;
+  wgpu::BindGroup bonesBindGroup_;
   FrameUniforms frame_ = {};
   std::vector<MirrorTarget> mirrorTargets_;
   uint32_t targetW_ = 0, targetH_ = 0;

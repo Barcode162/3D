@@ -28,6 +28,10 @@ MaterialImages makeBrick(int size, uint32_t seed);
 MaterialImages makeLeather(int size, uint32_t seed);
 // Soft, uneven plaster.
 MaterialImages makePlaster(int size, uint32_t seed);
+// Fine plain-weave cloth (shirts).
+MaterialImages makeFabric(int size, uint32_t seed);
+// Diagonal twill weave with faded threads (jeans).
+MaterialImages makeDenim(int size, uint32_t seed);
 
 // Tileable noise, all returning 0..1. (u, v) are texture coordinates in
 // 0..1; fu/fv is how many noise cells fit across the tile (whole numbers so

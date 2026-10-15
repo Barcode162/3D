@@ -19,6 +19,8 @@ enum Material : int {
   kTexBrick,
   kTexLeather,
   kTexPlaster,
+  kTexFabric,  // avatar shirt and socks
+  kTexDenim,   // avatar jeans
   kMaterialCount,
 };
 

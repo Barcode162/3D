@@ -44,6 +44,8 @@ struct App {
   engine::FirstPersonCamera camera;
   app::BarScene scene;
   app::SceneRenderer renderer;
+  app::Avatar avatar;
+  std::vector<Mat4> avatarBones;
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
   engine::TextRenderer text;
@@ -286,8 +288,9 @@ void frame() {
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
   const Mat4 viewProj = cam.projection(aspect) * cam.view();
   queueText(nowMs, viewProj);
+  g_app.avatar.pose(cam.pitch, g_app.avatarBones);
   g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw),
-                        g_app.scene.mirrors, g_app.text);
+                        g_app.avatarBones, g_app.scene.mirrors, g_app.text);
 }
 
 void onGpuReady(bool ok) {
@@ -296,7 +299,8 @@ void onGpuReady(bool ok) {
     return;
   }
   g_app.scene = app::buildBarScene();
-  if (!g_app.renderer.init(g_app.gpu, g_app.scene, app::buildAvatar()) ||
+  g_app.avatar.build();
+  if (!g_app.renderer.init(g_app.gpu, g_app.scene, g_app.avatar.mesh()) ||
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");
     return;

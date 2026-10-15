@@ -188,4 +188,36 @@ MaterialImages makePlaster(int size, uint32_t seed) {
   });
 }
 
+MaterialImages makeFabric(int size, uint32_t seed) {
+  constexpr int kThreads = 96;
+  return generate(size, 1.0f, [&](float u, float v, float& height) -> Image::Pixel {
+    // Over-under weave: in alternating cells the vertical or the horizontal
+    // thread is on top; each thread is rounded across its width.
+    const int cx = static_cast<int>(u * kThreads), cy = static_cast<int>(v * kThreads);
+    const bool warpOnTop = (cx + cy) % 2 == 0;
+    const float across = warpOnTop ? fract(u * kThreads) : fract(v * kThreads);
+    const float thread = 1.0f - std::abs(across * 2.0f - 1.0f);
+    const float noise = fbm(u, v, 8, 8, 4, seed);
+    height = thread;
+    const float c = 0.5f * (0.86f + 0.14f * thread + 0.1f * (noise - 0.5f));
+    return {c, c, c, 0.5f * (0.7f + 0.3f * thread)};
+  });
+}
+
+MaterialImages makeDenim(int size, uint32_t seed) {
+  constexpr int kThreads = 72;
+  return generate(size, 1.2f, [&](float u, float v, float& height) -> Image::Pixel {
+    // Twill: the weave steps one thread per row, making diagonal ridges.
+    const float diagonal = fract((u + v) * kThreads);
+    const float ridge = 1.0f - std::abs(diagonal * 2.0f - 1.0f);
+    // White weft threads peek through; worn patches are lighter.
+    const float weft = valueNoise(u, v, kThreads * 2, kThreads * 2, seed);
+    const float wear = fbm(u, v, 4, 4, 4, seed + 3);
+    height = ridge;
+    const float light = 0.78f + 0.22f * ridge + 0.18f * weft + 0.2f * (wear - 0.5f);
+    const float c = 0.5f * light;
+    return {c * 0.97f, c, c * 1.04f, 0.5f * 0.8f};
+  });
+}
+
 }  // namespace engine
