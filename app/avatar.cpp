@@ -255,10 +255,34 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   for (engine::Mat4& mat : out) mat = lift * mat;
 }
 
-engine::Mat4 avatarTransform(Vec3 eye, float yaw) {
+void Avatar::hideHead(const std::vector<engine::Mat4>& bones, std::vector<engine::Mat4>& out) const {
+  out = bones;
+  const int neck = skeleton_.find("neck"), head = skeleton_.find("head");
+  if (neck < 0 || head < 0 || static_cast<size_t>(head) >= out.size()) return;
+  // The base of the neck stays put when you look down (only the neck and
+  // head bend), so the head and neck fold into it there, out of your view.
+  // A skinning matrix maps a rest-pose joint to where it is now.
+  const auto n = static_cast<size_t>(neck);
+  const engine::Vec4 base = engine::transformPoint(out[n], skeleton_.bones[n].restPosition);
+  engine::Mat4 collapse = engine::Mat4::translation({base.x, base.y, base.z});
+  for (int c = 0; c < 3; ++c) collapse.at(c, c) = 0;  // every point -> base
+  out[n] = collapse;
+  out[static_cast<size_t>(head)] = collapse;
+}
+
+engine::Mat4 avatarTransform(Vec3 eye, float yaw, float pitch) {
   // The camera looks along (sin yaw, 0, -cos yaw); the avatar is built
-  // facing -Z, so turn it by -yaw. The eyes are about 1.65 m up.
-  return engine::Mat4::transform({eye.x, eye.y - 1.65f, eye.z}, engine::Quat::axisAngle({0, 1, 0}, -yaw));
+  // facing -Z, so turn it by -yaw. Its eyes sit 16 cm above and 9 cm in
+  // front of the neck, which the head tilts around: looking down swings the
+  // eyes forward over the chest (that's how you see your feet). Shift the
+  // body back by that much to keep the eyes at the camera. The feet stay on
+  // the floor, so the height is fixed.
+  constexpr float kEyeHeight = 1.66f, kEyeAbove = 0.16f, kEyeForward = 0.09f;
+  const float p = engine::clampf(pitch, engine::radians(-60.0f), engine::radians(60.0f));
+  const float forward = kEyeForward * std::cos(p) - kEyeAbove * std::sin(p);
+  const engine::Vec3 back{-std::sin(yaw) * forward, 0, std::cos(yaw) * forward};
+  return engine::Mat4::transform({eye.x + back.x, eye.y - kEyeHeight, eye.z + back.z},
+                                 engine::Quat::axisAngle({0, 1, 0}, -yaw));
 }
 
 }  // namespace app

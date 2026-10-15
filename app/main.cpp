@@ -46,7 +46,7 @@ struct App {
   app::SceneRenderer renderer;
   app::Avatar avatar;
   app::AvatarMotion avatarMotion;
-  std::vector<Mat4> avatarBones;
+  std::vector<Mat4> avatarBones, firstPersonBones;
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
   engine::TextRenderer text;
@@ -300,8 +300,9 @@ void frame() {
   g_app.avatarMotion.pitch = cam.pitch;
   g_app.avatarMotion.time = static_cast<float>(nowMs / 1000.0);
   g_app.avatar.pose(g_app.avatarMotion, g_app.avatarBones);
-  g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw),
-                        g_app.avatarBones, g_app.scene.mirrors, g_app.text);
+  g_app.avatar.hideHead(g_app.avatarBones, g_app.firstPersonBones);
+  g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw, cam.pitch),
+                        g_app.avatarBones, g_app.firstPersonBones, g_app.scene.mirrors, g_app.text);
 }
 
 void onGpuReady(bool ok) {

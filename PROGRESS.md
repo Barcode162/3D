@@ -1,27 +1,21 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 5 wrap-up (first-person body), then Stage 3 physics
+**Current focus:** Stage 3 physics (pick up / throw)
 
 ## Next up (start here in a new session)
 The user's chosen order (2026-10-15): jukebox menu → mirrors → avatar →
 animation (all done) → physics.
-1. **Ask the user how the latest build felt on the iPhone**: fps standing
-   close to the full mirror (the most expensive view: the room is drawn
-   twice), load time (7 textures now), and how the walk looks. If fps
-   drops, render reflections at half resolution first.
-2. **See your own body in first person**: draw the avatar in the main view
-   too, without the head (so it doesn't block the camera), so looking down
-   shows your body and feet. Needs a non-mirrored skinned pipeline in
-   `app/renderer.cpp` (only `skinnedMirroredPipeline_` exists now).
-3. **Physics**: pick up / throw glasses, darts, pool.
-4. **More things to use**: light switches, the door, glasses. Each is an
+1. **Ask the user how the first-person body looks** on the iPhone (look
+   down: shirt, belt, jeans, shoes; build after `fa20592`).
+2. **Physics**: pick up / throw glasses, darts, pool.
+3. **More things to use**: light switches, the door, glasses. Each is an
    `Interactable` in `bar_scene.cpp` plus an `Action`.
-5. Small polish noticed on iPhone: the candle spheres on the tables look
+4. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
-Last verified on iPhone: build `c1cc070` (textures), 60 fps, loads in under 1 s.
+Last verified on iPhone: build `fa20592` (mirrors, avatar, walk animation, music), 60 fps even at the mirror, no bugs.
 
 ## The vision (full details in `docs/VISION.md`)
 A cozy 3D hangout bar, viewed in first person on an iPhone:
@@ -77,8 +71,8 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] Mirror 2: avatars-only mirror (VRChat style), studio-lit backdrop. Tap a mirror to turn it on/off
 - [x] Skinned humanoid avatar (`engine/skeleton.*`, `engine/skinned_mesh.*`, `app/avatar.*`): 18 bones, one smooth mesh (~4k vertices) built from tubes/ellipsoids, 2-bone skinning in `vs_skinned`; face, hair, t-shirt (fabric texture), jeans (denim texture), belt, shoes; head follows where you look
 - [x] Walk/idle animation (`advanceWalk` + `Avatar::pose`): stride driven by distance moved, legs/knees/feet, arm swing, hip/chest twist, bob; idle breathing and sway; head follows where you look
-- [ ] First-person body (see your legs when you look down)
-- [ ] Avatar follows your movement; visible in the mirror
+- [x] First-person body: the avatar is drawn in the main view with the head and neck folded away (`Avatar::hideHead`); looking down tilts the head around the neck, so the body shifts back and you see your feet
+- [x] Avatar follows your movement; visible in the mirror
 - [ ] Later: load your own avatar model (GLB/VRM)
 
 ### Stage 6: Visual quality
@@ -131,3 +125,7 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-15:** Walk and idle animation. Session wrapped up here; all
   work committed and deployed. Not yet verified on iPhone: mirrors,
   avatar, animation (builds `0f74167` onward).
+- **2026-10-15:** iPhone check of `fa20592`: 60 fps even at the full
+  mirror, music works, animations good, no bugs. Added the first-person
+  body (look down to see yourself). Smoke test now also saves
+  `build/smoke-down.png` (looking ~70° down).

@@ -117,18 +117,8 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   }
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
-  bonesBuffer_ = makeUniformBuffer(device, kMaxBones * sizeof(Mat4), "avatar bones");
-  {
-    wgpu::BindGroupEntry entry;
-    entry.binding = 0;
-    entry.buffer = bonesBuffer_;
-    entry.size = kMaxBones * sizeof(Mat4);
-    wgpu::BindGroupDescriptor desc;
-    desc.layout = bonesLayout_;
-    desc.entryCount = 1;
-    desc.entries = &entry;
-    bonesBindGroup_ = device.CreateBindGroup(&desc);
-  }
+  bonesBindGroup_ = makeBonesBindGroup(bonesBuffer_, "avatar bones");
+  firstPersonBonesBindGroup_ = makeBonesBindGroup(firstPersonBonesBuffer_, "avatar bones (first person)");
   LOG_INFO("Avatar: %zu vertices.", avatar.vertices.size());
 
   // Lights and atmosphere don't change per frame.
@@ -147,6 +137,19 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   for (MirrorTarget& m : mirrorTargets_) m.glassBuffer = makeUniformBuffer(device, sizeof(GlassUniforms), "glass");
   LOG_INFO("Scene: %zu objects, %zu lights, %zu mirrors.", objects.size(), lightCount, mirrorCount_);
   return true;
+}
+
+wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const char* label) {
+  buffer = makeUniformBuffer(gpu_->device, kMaxBones * sizeof(Mat4), label);
+  wgpu::BindGroupEntry entry;
+  entry.binding = 0;
+  entry.buffer = buffer;
+  entry.size = kMaxBones * sizeof(Mat4);
+  wgpu::BindGroupDescriptor desc;
+  desc.layout = bonesLayout_;
+  desc.entryCount = 1;
+  desc.entries = &entry;
+  return gpu_->device.CreateBindGroup(&desc);
 }
 
 bool SceneRenderer::createScenePipelines() {
@@ -235,7 +238,7 @@ bool SceneRenderer::createScenePipelines() {
   desc.primitive.frontFace = wgpu::FrontFace::CW;
   mirroredPipeline_ = device.CreateRenderPipeline(&desc);
 
-  // The avatar: skinned vertices. (Only seen in mirrors for now.)
+  // The avatar: skinned vertices, in mirrors and in first person.
   const wgpu::VertexBufferLayout skinnedVertexLayout = engine::SkinnedMesh::vertexLayout();
   desc.label = "skinned (mirrored)";
   desc.layout = skinnedLayout;
@@ -243,6 +246,9 @@ bool SceneRenderer::createScenePipelines() {
   desc.vertex.buffers = &skinnedVertexLayout;
   fragment.entryPoint = "fs_skinned";
   skinnedMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  desc.label = "skinned";
+  desc.primitive.frontFace = wgpu::FrontFace::CCW;
+  skinnedPipeline_ = device.CreateRenderPipeline(&desc);
   return true;
 }
 
@@ -341,6 +347,14 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
   }
 }
 
+void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
+  pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
+  pass.SetBindGroup(2, bones);
+  pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
+  pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
+  pass.DrawIndexed(avatarMesh_.indexCount);
+}
+
 void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
                                  const Mat4& viewProj, Vec3 eye) {
   // Only when you're in front of the glass and it's on screen.
@@ -408,17 +422,13 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   pass.SetBindGroup(0, view.bindGroup);
   if (full) drawItems(pass, sceneDraws_);
   pass.SetPipeline(skinnedMirroredPipeline_);
-  pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
-  pass.SetBindGroup(2, bonesBindGroup_);
-  pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
-  pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
-  pass.DrawIndexed(avatarMesh_.indexCount);
+  drawAvatar(pass, bonesBindGroup_);
   pass.End();
 }
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
-                           const std::vector<Mat4>& avatarBones, const std::vector<Mirror>& mirrors,
-                           const engine::TextRenderer& text) {
+                           const std::vector<Mat4>& avatarBones, const std::vector<Mat4>& firstPersonBones,
+                           const std::vector<Mirror>& mirrors, const engine::TextRenderer& text) {
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
 
@@ -427,6 +437,8 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   queue.WriteBuffer(objectBuffer_, avatarOffset_, &avatar, sizeof(avatar));
   const size_t boneCount = std::min<size_t>(avatarBones.size(), kMaxBones);
   if (boneCount) queue.WriteBuffer(bonesBuffer_, 0, avatarBones.data(), boneCount * sizeof(Mat4));
+  const size_t fpCount = std::min<size_t>(firstPersonBones.size(), kMaxBones);
+  if (fpCount) queue.WriteBuffer(firstPersonBonesBuffer_, 0, firstPersonBones.data(), fpCount * sizeof(Mat4));
 
   FrameUniforms f = frame_;
   f.viewProj = viewProj;
@@ -454,7 +466,9 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
-  drawItems(pass, sceneDraws_);  // the avatar isn't drawn in first person
+  drawItems(pass, sceneDraws_);
+  pass.SetPipeline(skinnedPipeline_);
+  drawAvatar(pass, firstPersonBonesBindGroup_);  // your body, minus the head
 
   // Mirror glass.
   pass.SetPipeline(glassPipeline_);

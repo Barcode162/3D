@@ -54,6 +54,14 @@ await page.mouse.move(415, 420, { steps: 10 });
 await page.mouse.up();
 await page.waitForTimeout(800);
 await page.screenshot({ path: shotPath.replace(/\.png$/, '-walk.png') });
+
+// Look down at your own body (first-person avatar).
+await page.mouse.move(215, 300);
+await page.mouse.down();
+await page.mouse.move(215, 520, { steps: 10 });  // about 70 degrees down
+await page.mouse.up();
+await page.waitForTimeout(500);
+await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
 await browser.close();
 server.close();
 

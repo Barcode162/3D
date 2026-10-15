@@ -49,6 +49,8 @@ future session re-litigates or repeats it.
   from the repo alone. Keep `PROGRESS.md` current in every commit.
 
 ## Measured results
+- Mirrors + skinned avatar + walk animation (`fa20592`): **60 fps on iPhone**,
+  even standing at the full mirror (room drawn twice).
 - Triangle (1.1): 60 fps on iPhone 15 Pro Max, Apple GPU, 860x1422 @2x.
 - Bar blockout (184 objects, 8 lights, one draw call per object): **60 fps on
   iPhone**, 860x1550 @2x. Lots of headroom.
@@ -79,6 +81,12 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   negative angle; a positive angle about +Z moves the right arm outward.
   The walk is phase-driven by distance moved (1.5 m per cycle), not time,
   so steps match speed and walls stop the legs.
+- First-person body: the head and neck bones get a "collapse" skinning
+  matrix (scale 0, moved to the base of the neck), so the same mesh draws
+  headless with no extra geometry. The camera (your eyes) stays where it
+  is; the body is placed so its eyes match it, and looking down pivots the
+  eyes forward around the neck (`avatarTransform` takes the pitch).
+  Without that shift, the chest hides your feet on a narrow portrait screen.
 - Skinned clothes textures use the *rest-pose* position for triplanar
   mapping, so the pattern sticks to the body as limbs move. Skinned
   shading skips bump mapping (the bump would need per-vertex bone rotation).

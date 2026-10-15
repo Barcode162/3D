@@ -32,13 +32,20 @@ class Avatar {
   // cycle, plus the head following where you look.
   void pose(const AvatarMotion& motion, std::vector<engine::Mat4>& boneMatrices) const;
 
+  // First-person version of a pose: the head and neck shrink to a point at
+  // the base of the neck, so they don't block your view while you can
+  // still look down at your own body.
+  void hideHead(const std::vector<engine::Mat4>& boneMatrices, std::vector<engine::Mat4>& out) const;
+
  private:
   engine::Skeleton skeleton_;
   engine::SkinnedMeshData mesh_;
 };
 
-// Where the avatar's feet are and which way it faces, from the camera.
-engine::Mat4 avatarTransform(engine::Vec3 eyePosition, float yaw);
+// Where the avatar's feet are and which way it faces, from the camera. The
+// eyes line up with the camera (also when your head tilts), so in first
+// person you see your body from where your eyes would be.
+engine::Mat4 avatarTransform(engine::Vec3 eyePosition, float yaw, float pitch);
 
 // Texture repeats per meter for the avatar's clothes.
 constexpr float kAvatarTextureScale = 3.0f;

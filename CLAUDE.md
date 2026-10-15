@@ -48,7 +48,8 @@ cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
 ```
 The smoke test prints the on-screen log and saves `build/smoke.png` and
-`build/smoke-walk.png` (after walking forward and turning), which
+`build/smoke-walk.png` (after walking forward and turning) and
+`build/smoke-down.png` (looking down at your own body), which
 can be viewed with the Read tool. To look at a specific spot (a mirror, the
 jukebox), temporarily change `scene.spawnPosition`/`spawnYaw` in
 `app/bar_scene.cpp`, build, screenshot, then restore it (see

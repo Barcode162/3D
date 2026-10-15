@@ -1,6 +1,7 @@
 #pragma once
-// Draws the bar: the scene objects, your avatar (seen only in mirrors), the
-// mirrors themselves, and the text on top.
+// Draws the bar: the scene objects, your avatar (whole in mirrors, headless
+// in first person so you can see your body), the mirrors themselves, and
+// the text on top.
 //
 // Mirrors: before the main view, each visible mirror gets its own pass that
 // renders the room from a camera reflected across the glass into a
@@ -28,10 +29,12 @@ class SceneRenderer {
   void setGlow(const Interactable& it, float glow);
 
   // Renders one frame to `target`. `avatar` places the avatar in the world;
-  // `avatarBones` are its skinning matrices (see Avatar::pose).
+  // `avatarBones` are its skinning matrices (see Avatar::pose) for mirrors,
+  // `firstPersonBones` the same pose without the head (Avatar::hideHead).
   void render(const wgpu::TextureView& target, const engine::Mat4& viewProj, engine::Vec3 eye,
               const engine::Mat4& avatar, const std::vector<engine::Mat4>& avatarBones,
-              const std::vector<Mirror>& mirrors, const engine::TextRenderer& text);
+              const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,
+              const engine::TextRenderer& text);
 
   size_t objectCount() const { return sceneDraws_.size(); }
 
@@ -86,6 +89,8 @@ class SceneRenderer {
   void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler);
   void resizeMirrorTargets();
   void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items) const;
+  void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
+  wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
   void renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
                     const engine::Mat4& viewProj, engine::Vec3 eye);
 
@@ -93,6 +98,7 @@ class SceneRenderer {
   size_t mirrorCount_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view
   wgpu::RenderPipeline mirroredPipeline_;  // reflected views (triangle winding flips)
+  wgpu::RenderPipeline skinnedPipeline_;          // the avatar, first person
   wgpu::RenderPipeline skinnedMirroredPipeline_;  // the avatar, in mirrors
   wgpu::RenderPipeline glassPipeline_;
   wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_;
@@ -105,8 +111,8 @@ class SceneRenderer {
   std::vector<ObjectUniforms> objectUniforms_;  // CPU copy of the scene objects
   engine::SkinnedMesh avatarMesh_;
   uint32_t avatarOffset_ = 0;  // the avatar's slot in objectBuffer_
-  wgpu::Buffer bonesBuffer_;
-  wgpu::BindGroup bonesBindGroup_;
+  wgpu::Buffer bonesBuffer_, firstPersonBonesBuffer_;
+  wgpu::BindGroup bonesBindGroup_, firstPersonBonesBindGroup_;
   FrameUniforms frame_ = {};
   std::vector<MirrorTarget> mirrorTargets_;
   uint32_t targetW_ = 0, targetH_ = 0;
