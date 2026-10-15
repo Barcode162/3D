@@ -60,6 +60,9 @@ future session re-litigates or repeats it.
 - Triangle (1.1): 60 fps on iPhone 15 Pro Max, Apple GPU, 860x1422 @2x.
 - Bar blockout (184 objects, 8 lights, one draw call per object): **60 fps on
   iPhone**, 860x1550 @2x. Lots of headroom.
+- Asset pass (`964adfe`): showed **30 fps**, but that was **iOS Low Power
+  Mode**, which caps Safari at 30 fps. Always ask whether Low Power Mode
+  is on before chasing a 30 fps reading.
 - iOS 26 Safari reports `iPhone OS 18_7` in the user agent (frozen UA), with
   `Version/26.3`. This is normal.
 
@@ -81,7 +84,16 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - Third-party models vs. code: answered 2026-10-15, real assets, mixed
   sources (see the Assets row and VISION.md → Art upgrade). The user lets
   Claude decide details and only reviews.
-- Not answered yet: multiplayer server; voice chat.
+- Multiplayer: yes, now (2026-10-15). The user bought IONOS hosting to
+  use as the server, for them and their brother. Voice chat: not yet.
+
+## Multiplayer (2026-10-15, in progress)
+- Plan: the game page stays on GitHub Pages; a small server sends each
+  player's position, look direction and held objects to the others
+  (WebSockets, ~10-20 updates/s). Others show up as avatars.
+- IONOS **shared Web Hosting** (PHP + static files) can't keep a live
+  WebSocket server running. An IONOS **VPS** (Linux, root access) can.
+  Waiting on which plan the user has.
 
 ## World-simulation principles (2026-10-15)
 - **One material, all senses:** a material record holds look (PBR), physics

@@ -9,9 +9,15 @@ engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
 **Asset pass done and verified on iPhone (build `964adfe`):** every piece
-looks as it should, but the frame rate fell from 60 to **30 fps**. Next:
-1. **Performance pass (do this first).** Goal: back to 60 fps on the
-   iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
+looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
+(it caps Safari at 30 fps), not the engine. Next:
+1. **Multiplayer (user asked 2026-10-15).** The user bought IONOS hosting
+   and wants it as the game server so they and their brother can join the
+   same bar. Waiting on which IONOS plan it is (shared web hosting can't
+   run a live WebSocket server; a VPS can). See `docs/DECISIONS.md` →
+   Multiplayer.
+2. **Performance pass (no longer urgent).** Re-measure with Low Power Mode
+   off first. Goal: 60 fps on the iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
    textures (all RGBA, uncompressed), and the full mirror draws the whole
    scene a second time. Ideas, cheapest first:
    - Measure: add a debug toggle (`?perf=`) to switch off the mirror pass,
@@ -26,7 +32,7 @@ looks as it should, but the frame rate fell from 60 to **30 fps**. Next:
    - Shading: 8 point lights per pixel is the main per-pixel cost; light
      culling per object (only the nearest 3-4 lights) could halve it.
    - Pixel ratio: try 1.5 instead of 2 as a fallback.
-2. **W5 Physical sound** (impact sounds synthesized from collisions and
+3. **W5 Physical sound** (impact sounds synthesized from collisions and
    materials; room echo), then more sim engines (shadows/bloom,
    heat/flames, liquids, smell field, day/night).
 
@@ -53,7 +59,7 @@ should stay under ~20 MB of models (now 8.3 MB).
 - Still open: ask the user how the first-person body looks on the iPhone
   (build after `fa20592`).
 
-Last verified on iPhone: build `964adfe` (all real models): everything looks right, but **30 fps** (was 60 before the asset pass). Performance pass is next.
+Last verified on iPhone: build `964adfe` (all real models): everything looks right. 30 fps was Low Power Mode, not the engine.
 
 ## The vision (full details in `docs/VISION.md`)
 A cozy 3D hangout bar, viewed in first person on an iPhone:
@@ -63,7 +69,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - **An avatar you can see in a mirror,** like VRChat.
 - **Real background music** from a jukebox, with sound placed in 3D space.
 - Top-quality lighting: warm lamps, neon signs, glow, reflections.
-- Not now: multiplayer, voice chat (much later).
+- Multiplayer: the user and their brother in the same bar (started 2026-10-15). Voice chat later.
 
 ## Roadmap
 ### Stage 1: Engine foundation
@@ -214,3 +220,5 @@ A small DAW inside the bar, all DSP written in C++:
   unfinished Pages deployments before publishing. iPhone check of
   `964adfe`: all assets look right, 30 fps. Session closed; next session
   starts with the performance pass.
+- **2026-10-15:** The 30 fps was iOS Low Power Mode. The user wants
+  multiplayer next, hosted on their new IONOS plan (waiting on which plan).
