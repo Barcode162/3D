@@ -142,8 +142,9 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   first ~8 MB model upload). Our build is fine then; the site just stays
   on the old version, and every later deploy fails at once with "in progress
   deployment, please cancel <sha> first" until GitHub clears the stuck
-  one. This session can't cancel or re-run it (403), so: wait, then push
-  again (or the user taps Re-run in the Actions tab). Check `version.txt`.
+  one. Fix: `deploy.yml` cancels recent unfinished Pages deployments
+  (`POST /repos/.../pages/deployments/<sha>/cancel`, needs `pages: write`)
+  before it pushes `gh-pages`. A Claude session can't do this itself (403).
 - Pages sends `cache-control: max-age=600`, so Safari can show a build up
   to 10 minutes old. The deploy writes `version.txt`; `index.html` fetches
   it with `cache: 'no-store'` and reloads with `?b=<sha>` if it's newer.

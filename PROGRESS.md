@@ -8,14 +8,25 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-**Asset pass done (2026-10-15):** every blockout piece is now a real
-Blender model (see the Log). Next:
-1. **iPhone check of the asset build**: frame rate (the room is now
-   ~170k triangles, ~200 draw calls, ~80 textures; the full mirror draws
-   it twice), load time, and anything that looks wrong. If it's slow:
-   shrink the counter/back bar textures to 512, drop stool/bottle detail.
-2. **Asset polish from the user's review** (one round, all fixes at once).
-3. **W5 Physical sound** (impact sounds synthesized from collisions and
+**Asset pass done and verified on iPhone (build `964adfe`):** every piece
+looks as it should, but the frame rate fell from 60 to **30 fps**. Next:
+1. **Performance pass (do this first).** Goal: back to 60 fps on the
+   iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
+   textures (all RGBA, uncompressed), and the full mirror draws the whole
+   scene a second time. Ideas, cheapest first:
+   - Measure: add a debug toggle (`?perf=`) to switch off the mirror pass,
+     models by group, or lights, to find what costs the most.
+   - Mirror: draw the reflection at half resolution, skip small props in
+     it, and only render it when the mirror is on screen.
+   - Fewer triangles: bottles (37k in the back bar) and stools (5.6k each)
+     can drop a lot (lathe segments, bevel segments); simplify far props.
+   - Fewer draw calls: merge static models that share materials into one
+     scene mesh at load time (stools, tables, coasters).
+   - Textures: 512 for most surfaces, 1k only for floor/brick/counter top.
+   - Shading: 8 point lights per pixel is the main per-pixel cost; light
+     culling per object (only the nearest 3-4 lights) could halve it.
+   - Pixel ratio: try 1.5 instead of 2 as a fallback.
+2. **W5 Physical sound** (impact sounds synthesized from collisions and
    materials; room echo), then more sim engines (shadows/bloom,
    heat/flames, liquids, smell field, day/night).
 
@@ -42,7 +53,7 @@ should stay under ~20 MB of models (now 8.3 MB).
 - Still open: ask the user how the first-person body looks on the iPhone
   (build after `fa20592`).
 
-Last verified on iPhone: build `fa20592` (mirrors, avatar, walk animation, music), 60 fps even at the mirror, no bugs.
+Last verified on iPhone: build `964adfe` (all real models): everything looks right, but **30 fps** (was 60 before the asset pass). Performance pass is next.
 
 ## The vision (full details in `docs/VISION.md`)
 A cozy 3D hangout bar, viewed in first person on an iPhone:
@@ -198,3 +209,8 @@ A small DAW inside the bar, all DSP written in C++:
   merged per material (few draw calls), glow strength comes through
   `KHR_materials_emissive_strength`, and interactables can light up
   models. `tools/assets/build_all.sh` rebuilds everything.
+- **2026-10-15:** Deploy got stuck: GitHub's Pages deployment for the
+  asset build hung and blocked every later one. `deploy.yml` now cancels
+  unfinished Pages deployments before publishing. iPhone check of
+  `964adfe`: all assets look right, 30 fps. Session closed; next session
+  starts with the performance pass.
