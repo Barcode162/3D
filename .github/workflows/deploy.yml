@@ -1,0 +1,60 @@
+# Builds the C++ app to WebAssembly and publishes it to GitHub Pages on every
+# push to main. Requires: repo Settings -> Pages -> Source: "GitHub Actions".
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  EMSDK_VERSION: 6.0.12
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Emscripten
+        uses: actions/cache@v4
+        with:
+          path: emsdk
+          key: emsdk-${{ env.EMSDK_VERSION }}-v1
+
+      - name: Install Emscripten
+        run: |
+          if [ ! -d emsdk ]; then git clone --depth 1 https://github.com/emscripten-core/emsdk.git; fi
+          ./emsdk/emsdk install $EMSDK_VERSION
+          ./emsdk/emsdk activate $EMSDK_VERSION
+
+      - name: Build
+        run: |
+          source ./emsdk/emsdk_env.sh
+          sudo apt-get install -y ninja-build >/dev/null
+          emcmake cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
