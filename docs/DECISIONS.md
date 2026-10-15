@@ -108,8 +108,9 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   mirrors. Name tags are world text over their heads.
 - Deploy: `deploy.yml` → "Upload to IONOS" (only when the
   `IONOS_SFTP_HOST/USER/PASSWORD` secrets exist) mirrors `build/site` +
-  the relay into `bar/` on the webspace with lftp. So the game is also at
-  `https://DOMAIN/bar/`, and there it uses `relay.php` next to itself.
+  the relay into `home/bar/` on the webspace with lftp, plus the landing
+  page into `home/`. So the game is also at `https://joshuavelasco.com/bar/`,
+  and there it uses `relay.php` next to itself.
   On github.io it uses `DEFAULT_SERVER` in `web/net.js`.
 - IONOS account facts: SFTP host `access-5021658795.webspace-host.com`
   (port 22), user `su454332` (password only in GitHub secrets). System
@@ -126,12 +127,31 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   `rooms/` gives 403. IONOS sends `x-ws-ratelimit-limit: 1000` (seems per
   second; fine). HTTPS was not on yet at first (TLS "internal error" = no
   certificate assigned to the domain in IONOS → Domains & SSL).
+- **Domain now `joshuavelasco.com`** (2026-10-15; `.org` dropped). It
+  points at the webspace folder **`home/`** (the old `bar/` folder is no
+  longer served). HTTPS works. See "One domain, many projects" below.
 - Page options: `?room=name` (separate bars), `?name=Josh` (remembered),
   `?server=URL` or `?server=off`.
 - Testing: `NODE_PATH=$(npm root -g) node tools/mp_test.mjs` (needs `php`)
   opens two players and saves `build/mp-bob.png`. Gotcha: don't pause
   sending on `document.hidden`; headless background tabs count as hidden
   (and iOS pauses timers in the background anyway).
+
+## One domain, many projects (2026-10-15)
+- joshuavelasco.com → IONOS webspace `home/`. Each project is a subfolder
+  (`home/bar/` = https://joshuavelasco.com/bar/), deployed by **that
+  project's own repo** (its GitHub Action uploads over SFTP with the same
+  three `IONOS_SFTP_*` secrets, which must be added to each repo; GitHub
+  personal accounts have no account-wide secrets).
+- The landing page `homepage/index.php` (in this repo for now, uploaded to
+  `home/` by `deploy.yml`) shows one "Projects" button. Its dropdown lists
+  every subfolder that has a **`project.json`**
+  (`{"name", "description", "order"}`), read on each visit, so a new project
+  appears when its first deploy lands; no landing-page change needed.
+  Bar3D's is `web/project.json`.
+- Deploys only add/replace files (lftp `mirror -R` without `--delete`, `put`),
+  so one project's deploy never touches another's folder.
+- Could move to its own repo later; then remove the two `put` lines here.
 
 ## World-simulation principles (2026-10-15)
 - **One material, all senses:** a material record holds look (PBR), physics

@@ -9,7 +9,7 @@ window.bar3dNet = (function () {
   'use strict';
   // Where the relay lives when the game is served from GitHub Pages. When
   // the page itself is on the IONOS site, relay.php sits right next to it.
-  var DEFAULT_SERVER = 'https://joshuavelasco.org/relay.php';
+  var DEFAULT_SERVER = 'https://joshuavelasco.com/bar/relay.php';
   var SEND_INTERVAL_MS = 100;
 
   function param(name) {

@@ -3,7 +3,7 @@
 // lets Alice walk while Bob looks at her, and saves Bob's view to
 // build/mp-bob.png. Needs `php` installed.
 // Usage: NODE_PATH=$(npm root -g) node tools/mp_test.mjs
-// RELAY=https://joshuavelasco.org/relay.php tests through the live relay.
+// RELAY=https://joshuavelasco.com/bar/relay.php tests through the live relay.
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';

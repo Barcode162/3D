@@ -1,0 +1,4 @@
+# joshuavelasco.com root (the IONOS "home/" folder). Each project lives in
+# its own subfolder; index.php lists the ones with a project.json.
+DirectoryIndex index.php index.html
+Options -Indexes

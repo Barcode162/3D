@@ -15,13 +15,14 @@ looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
    Hosting Plus** (1 year): PHP + SFTP, no live server process. M1 is built
    (see `docs/DECISIONS.md` → Multiplayer): `server/relay.php` passes
    positions between phones ~10x/s, others show as avatars with name tags.
-   Secrets are set, the upload works, and the domain **joshuavelasco.org**
-   serves the game (domain root = webspace `bar/`) and the relay (tested
-   live over http with two headless players). **Waiting on the user:** turn
-   on the SSL certificate for joshuavelasco.org in IONOS (Domains & SSL).
-   Then check `https://joshuavelasco.org/relay.php` answers
-   `{"ok":1,"relay":"bar3d"}` and run `RELAY=https://joshuavelasco.org/relay.php
-   node tools/mp_test.mjs`.
+   Secrets are set and the upload works. The domain is now
+   **joshuavelasco.com** (HTTPS works), pointing at webspace `home/`: a
+   landing page (`homepage/index.php`, one "Projects" dropdown) and one
+   subfolder per project. The game + relay deploy to `home/bar/` →
+   https://joshuavelasco.com/bar/. After the first deploy there, check
+   `https://joshuavelasco.com/bar/relay.php` answers
+   `{"ok":1,"relay":"bar3d"}` and run
+   `RELAY=https://joshuavelasco.com/bar/relay.php node tools/mp_test.mjs`.
    After that: M2 = see each other pick up/throw glasses, shared jukebox;
    M3 = smoother movement with WebRTC (phone to phone), voice chat.
 2. **Performance pass (no longer urgent).** Re-measure with Low Power Mode
@@ -138,7 +139,7 @@ A small DAW inside the bar, all DSP written in C++:
 ### Stage M: Multiplayer (2026-10-15)
 - [x] M1 See each other: PHP relay on IONOS (`server/relay.php`), bridge `web/net.js` + `engine/net.*`, smoothing + walk animation `app/players.*`, up to 7 other avatars with name tags, in mirrors too. `?room=`, `?name=`. Test: `tools/mp_test.mjs`
 - [x] IONOS upload + domain joshuavelasco.org (game + relay live over http)
-- [ ] HTTPS certificate on joshuavelasco.org (waiting on user, IONOS → Domains & SSL)
+- [x] Domain moved to joshuavelasco.com (HTTPS on), landing page + game at `/bar/`
 - [ ] M2 Shared world: held/thrown glasses, jukebox song, mirrors on/off
 - [ ] M3 WebRTC phone-to-phone for smoother movement; voice chat
 
@@ -242,3 +243,7 @@ A small DAW inside the bar, all DSP written in C++:
   uploads the game + relay to IONOS over SFTP once the secrets exist.
 - **2026-10-15:** Domain joshuavelasco.org connected (points at `bar/`).
   Relay tested live with two players. Only the SSL certificate is missing.
+- **2026-10-15:** User switched to **joshuavelasco.com** (points at webspace
+  `home/`) to host several projects. Added the landing page
+  (`homepage/index.php`): one "Projects" button, dropdown lists every
+  subfolder with a `project.json`. The bar now deploys to `home/bar/`.

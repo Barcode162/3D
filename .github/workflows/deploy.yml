@@ -21,10 +21,13 @@ env:
   EMSDK_VERSION: 6.0.12
   # IONOS web hosting login (repo Settings -> Secrets and variables ->
   # Actions). When set, the game and the multiplayer relay are also
-  # uploaded to the IONOS site, into the folder IONOS_DIR.
+  # uploaded to the IONOS site. joshuavelasco.com points at the webspace
+  # folder IONOS_HOME; every project deploys into its own subfolder of it
+  # (this one: IONOS_DIR), and homepage/index.php lists them all.
   IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
   IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
-  IONOS_DIR: bar
+  IONOS_HOME: home
+  IONOS_DIR: home/bar
 
 jobs:
   build-and-publish:
@@ -96,9 +99,11 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           mkdir -p -f $IONOS_DIR
+          put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/index.php
+          put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/.htaccess
           mirror -R --verbose --ignore-time --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
-          mput index.html version.txt app.js app.wasm audio.js net.js relay.php .htaccess
+          mput index.html version.txt app.js app.wasm audio.js net.js project.json relay.php .htaccess
           cls -l
           bye
           EOF
