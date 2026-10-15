@@ -6,20 +6,17 @@
 ## Next up (start here in a new session)
 The user's chosen order (2026-10-15): jukebox menu (done) → mirrors →
 avatar → animation → physics.
-1. **Two mirrors, like VRChat's mirror options**: (a) a full mirror that
-   reflects the whole room like a real mirror (render the scene from the
-   camera reflected across the mirror plane into a texture, with a clip
-   plane), and (b) a "lite" mirror that shows only avatars / 3D models
-   (cheaper; VRChat's players-only mirror). There's one mirror frame on
-   the right wall now; add a second, or a toggle between the two modes.
-2. **Avatar body**: procedural humanoid with a skeleton (bones), body
-   shapes, and textures. It stands where the camera is and shows in the mirror.
-3. **Animation**: idle and walk cycles on the skeleton, driven by
+1. **Avatar body**: replace the placeholder mannequin (`app/avatar.*`,
+   rigid shapes) with a skinned humanoid: a skeleton (bones), one smooth
+   body mesh whose vertices follow the bones (skinning in the vertex
+   shader), nicer shapes, and textures (clothes, face). Head turns with
+   the camera pitch. Shows in both mirrors.
+2. **Animation**: idle and walk cycles on the skeleton, driven by
    movement, so the bar feels alive.
-4. **Physics**: pick up / throw glasses, darts, pool.
-5. **More things to use**: light switches, the door, glasses. Each is an
+3. **Physics**: pick up / throw glasses, darts, pool.
+4. **More things to use**: light switches, the door, glasses. Each is an
    `Interactable` in `bar_scene.cpp` plus an `Action`.
-6. Small polish noticed on iPhone: the candle spheres on the tables look
+5. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
@@ -75,9 +72,10 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] Later: export the same DSP code as a real VST plugin (desktop)
 
 ### Stage 5: Avatar + mirror
-- [ ] Mirror 1: full reflection (render the scene from a reflected camera)
-- [ ] Mirror 2: "lite" mirror that shows only avatars/models (VRChat style)
-- [ ] Procedural humanoid avatar with skeleton + walk/idle animation
+- [x] Mirror 1: full reflection (reflected camera into a screen-sized texture, scissored to the mirror, clip plane at the glass)
+- [x] Mirror 2: avatars-only mirror (VRChat style), studio-lit backdrop. Tap a mirror to turn it on/off
+- [x] Placeholder avatar (mannequin of basic shapes) that follows you; drawn only in mirrors
+- [ ] Skinned humanoid avatar with skeleton + walk/idle animation
 - [ ] Avatar follows your movement; visible in the mirror
 - [ ] Later: load your own avatar model (GLB/VRM)
 
@@ -123,3 +121,6 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-15:** User answered the build-ourselves list (see
   `docs/DECISIONS.md`). Jukebox menu: tap the jukebox → song list with
   jukebox codes, paging, Load song (Files app), Stop, Close.
+- **2026-10-15:** Mirrors. Full mirror (brass frame, z = -2.2) and avatar
+  mirror (black frame, z = 1.1) on the right wall; tap to toggle. Placeholder
+  avatar. Drawing code moved from `main.cpp` to `app/renderer.*`.

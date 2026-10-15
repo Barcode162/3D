@@ -53,7 +53,7 @@ struct Blocker {
 
 // Something you can use. It has a floating name tag; walking close and
 // looking at it highlights it and shows a prompt; tapping it runs `action`.
-enum class Action { kNone, kJukebox };
+enum class Action { kNone, kJukebox, kMirror };
 
 struct Interactable {
   std::string name;               // floating name tag
@@ -62,6 +62,20 @@ struct Interactable {
   engine::Vec3 boundsMin, boundsMax;  // world box that taps hit
   size_t firstObject = 0, objectCount = 0;  // parts that light up when focused
   Action action = Action::kNone;
+  int mirror = -1;  // for Action::kMirror: index into BarScene::mirrors
+};
+
+// A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole
+// room; kAvatarsOnly shows just avatars on a plain backdrop (much cheaper).
+enum class MirrorMode { kFull, kAvatarsOnly };
+
+struct Mirror {
+  engine::Vec3 center;  // middle of the glass surface
+  engine::Vec3 normal;  // which way the glass faces (into the room)
+  engine::Vec3 right, up;  // unit directions along the glass
+  float halfWidth, halfHeight;
+  MirrorMode mode;
+  bool on = true;
 };
 
 struct BarScene {
@@ -69,6 +83,7 @@ struct BarScene {
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
   std::vector<Interactable> interactables;
+  std::vector<Mirror> mirrors;
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
   float fogDensity;

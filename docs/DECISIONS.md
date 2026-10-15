@@ -18,6 +18,7 @@ future session re-litigates or repeats it.
 | Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
 | Textures | Generated in code at startup (`engine/procedural.cpp`), 512px, texture arrays with mips; projected triplanar in object space | No image files in the repo; meshes need no UVs; object-space keeps textures stuck to objects once they can move |
 | Audio | Browser Web Audio for output; C++ decides what plays and where (thin JS bridge `web/audio.js`). Music streams through an `<audio>` element → `PannerNode` (HRTF) | Like WebGPU for graphics: the platform API is the "driver". Streaming avoids decoding 3-minute songs into ~60 MB of memory each |
+| Mirrors | Planar reflection: scene rendered with `viewProj * reflection` into a screen-sized texture, scissored to the mirror's screen rectangle; glass reads it 1:1 with `textureLoad` | Exact, simple, and cost scales with how much of the screen the mirror covers. Avatars-only mode skips the room (VRChat's cheap mirror) |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -72,6 +73,11 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   multiplayer server; voice chat.
 
 ## Gotchas hit so far
+- Reflected views flip triangle winding: the mirror pass uses a second
+  scene pipeline with `FrontFace::CW`. Things behind the glass (the wall,
+  the frame) are dropped by a clip plane in `scene.wgsl` (`discard`).
+- Each camera view (main + one per mirror) needs its own frame uniform
+  buffer: `WriteBuffer` calls all land before the single submit.
 - iOS opens the file picker only from a real tap on a real element. The
   jukebox menu draws its "Load song" button in WebGPU, and `web/audio.js`
   places an invisible `<label for=songPicker>` exactly over it while the

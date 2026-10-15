@@ -169,6 +169,26 @@ void buildSeating(Builder& b) {
   b.light({-4.8f, 2.4f, 0.6f}, kWarmBulb, 1.5f, 6.0f);
 }
 
+// A mirror on the right wall (facing -x) with its frame; `m` is the frame center.
+void addMirror(Builder& b, Vec3 m, MirrorMode mode, Vec3 frameColor, const char* name) {
+  const size_t first = b.scene.objects.size();
+  b.add(makeBox({0.04f, 2.1f, 1.5f}), m, frameColor, 0.9f);
+  const float glassW = 1.35f, glassH = 1.95f;
+  // The glass sits just in front of the frame and is drawn by the renderer.
+  b.scene.mirrors.push_back({{m.x - 0.025f, m.y, m.z}, {-1, 0, 0}, {0, 0, -1}, {0, 1, 0}, glassW / 2, glassH / 2,
+                             mode});
+  Interactable it;
+  it.name = name;
+  it.tagPosition = {m.x - 0.3f, 2.65f, m.z};
+  it.boundsMin = {m.x - 0.1f, m.y - 1.05f, m.z - 0.75f};
+  it.boundsMax = {m.x + 0.05f, m.y + 1.05f, m.z + 0.75f};
+  it.firstObject = first;
+  it.objectCount = b.scene.objects.size() - first;
+  it.action = Action::kMirror;
+  it.mirror = static_cast<int>(b.scene.mirrors.size() - 1);
+  b.scene.interactables.push_back(it);
+}
+
 void buildFeatures(Builder& b) {
   // Jukebox in the back-right corner.
   const Vec3 j{4.9f, 0, -4.45f};
@@ -185,14 +205,11 @@ void buildFeatures(Builder& b) {
                                    b.scene.objects.size() - jukeboxFirst, Action::kJukebox});
   b.scene.jukeboxSpeaker = {j.x, 1.1f, j.z + 0.3f};
 
-  // Mirror frame on the right wall (the reflection comes in Stage 5).
-  const Vec3 m{kRoomHalfX - 0.03f, 1.45f, -2.2f};
-  const size_t mirrorFirst = b.scene.objects.size();
-  b.add(makeBox({0.04f, 2.1f, 1.5f}), m, {0.75f, 0.6f, 0.3f}, 0.9f);
-  b.add(makeBox({0.02f, 1.95f, 1.35f}), {m.x - 0.02f, m.y, m.z}, {0.5f, 0.55f, 0.6f}, 1.0f);
-  b.scene.interactables.push_back({"MIRROR", "Mirror\nReflections coming soon", {m.x - 0.3f, 2.65f, m.z},
-                                   {m.x - 0.1f, m.y - 1.05f, m.z - 0.75f}, {m.x + 0.05f, m.y + 1.05f, m.z + 0.75f},
-                                   mirrorFirst, b.scene.objects.size() - mirrorFirst, Action::kNone});
+  // Two mirrors on the right wall: a full one in a brass frame, and an
+  // avatars-only one in a black frame (VRChat style).
+  addMirror(b, {kRoomHalfX - 0.03f, 1.45f, -2.2f}, MirrorMode::kFull, {0.75f, 0.6f, 0.3f}, "MIRROR");
+  addMirror(b, {kRoomHalfX - 0.03f, 1.45f, 1.1f}, MirrorMode::kAvatarsOnly, {0.04f, 0.04f, 0.05f},
+            "AVATAR MIRROR");
 }
 
 }  // namespace

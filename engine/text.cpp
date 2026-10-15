@@ -14,13 +14,6 @@ constexpr int kMipLevels = 4;
 
 uint8_t toByte(float v) { return static_cast<uint8_t>(std::lround(clampf(v, 0.0f, 1.0f) * 255.0f)); }
 
-Vec4 transformPoint(const Mat4& m, Vec3 p) {
-  return {m.at(0, 0) * p.x + m.at(1, 0) * p.y + m.at(2, 0) * p.z + m.at(3, 0),
-          m.at(0, 1) * p.x + m.at(1, 1) * p.y + m.at(2, 1) * p.z + m.at(3, 1),
-          m.at(0, 2) * p.x + m.at(1, 2) * p.y + m.at(2, 2) * p.z + m.at(3, 2),
-          m.at(0, 3) * p.x + m.at(1, 3) * p.y + m.at(2, 3) * p.z + m.at(3, 3)};
-}
-
 int lineLength(std::string_view text, size_t start) {
   const size_t end = text.find('\n', start);
   return static_cast<int>((end == std::string_view::npos ? text.size() : end) - start);

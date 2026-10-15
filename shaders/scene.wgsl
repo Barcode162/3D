@@ -20,6 +20,9 @@ struct Frame {
   fog: vec4f,         // rgb = haze color, w = density
   lightCount: vec4u,  // x = number of active lights
   lights: array<Light, kMaxLights>,
+  // Mirror views: drop anything behind the glass (dot(xyz, p) + w < 0).
+  // The normal view uses (0, 0, 0, 1), which keeps everything.
+  clipPlane: vec4f,
 };
 
 struct Object {
@@ -104,6 +107,9 @@ fn texturedSurface(p: vec3f, n0: vec3f) -> Surface {
 
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f {
+  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
+    discard;
+  }
   var base = object.color.rgb;
   var shininess = object.material.y;
   var n = normalize(in.normal);

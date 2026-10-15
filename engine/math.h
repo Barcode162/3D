@@ -116,6 +116,18 @@ struct Mat4 {
     return r;
   }
 
+  // Mirrors everything across the plane through `point` with unit `normal`.
+  static Mat4 reflection(Vec3 normal, Vec3 point) {
+    const float n[3] = {normal.x, normal.y, normal.z};
+    const float d = -dot(normal, point);
+    Mat4 r;
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) r.at(col, row) = (row == col ? 1.0f : 0.0f) - 2.0f * n[row] * n[col];
+      r.at(3, row) = -2.0f * d * n[row];
+    }
+    return r;
+  }
+
   static Mat4 lookAt(Vec3 eye, Vec3 target, Vec3 up) {
     const Vec3 f = normalize(target - eye);
     const Vec3 s = normalize(cross(f, up));
@@ -130,5 +142,13 @@ struct Mat4 {
     return r;
   }
 };
+
+// Transforms a point (w = 1); the result keeps w (for clip space).
+inline Vec4 transformPoint(const Mat4& m, Vec3 p) {
+  return {m.at(0, 0) * p.x + m.at(1, 0) * p.y + m.at(2, 0) * p.z + m.at(3, 0),
+          m.at(0, 1) * p.x + m.at(1, 1) * p.y + m.at(2, 1) * p.z + m.at(3, 1),
+          m.at(0, 2) * p.x + m.at(1, 2) * p.y + m.at(2, 2) * p.z + m.at(3, 2),
+          m.at(0, 3) * p.x + m.at(1, 3) * p.y + m.at(2, 3) * p.z + m.at(3, 3)};
+}
 
 }  // namespace engine
