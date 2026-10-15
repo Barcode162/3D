@@ -45,6 +45,9 @@ judged on the user's phone.
   meshes, camera, input, audio.
 - `app/` is the bar world itself (game code).
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
+- `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
+  third-party asset needs a license and credit entry (see
+  `assets/music/CREDITS.md`).
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
   automatically.

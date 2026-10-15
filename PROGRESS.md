@@ -36,9 +36,20 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 
 ### Stage 4: Audio
 - [ ] C++ audio engine through Web Audio (starts on first tap)
-- [ ] Music playback from the jukebox, spatialized in 3D
+- [ ] Jukebox plays the smooth-jazz playlist (`assets/music/`), spatialized in 3D
+- [ ] Jukebox "load song" button: play the user's own songs from the iPhone
+      Files app (local only, never uploaded)
+- [ ] In-game credits for the CC BY tracks (see `assets/music/CREDITS.md`)
 - [ ] Generated sound effects (glass clink, footsteps, switches)
-- [ ] C++ synth instrument (e.g. a playable piano in the bar)
+
+### Stage 4b: Mini music studio (the fun extra, later)
+A small DAW inside the bar, all DSP written in C++:
+- [ ] Synth engine: oscillators, envelopes, filters (the "VST-style" core)
+- [ ] Drum machine + step sequencer
+- [ ] Piano roll / pattern editor, tempo, loop
+- [ ] Mixer with effects (reverb, delay, EQ)
+- [ ] Songs made in the studio can play on the jukebox
+- [ ] Later: export the same DSP code as a real VST plugin (desktop)
 
 ### Stage 5: Avatar + mirror
 - [ ] Mirror: render the scene from a reflected camera
@@ -54,12 +65,14 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 ### Stage 7: Imports
 - [ ] GLB model loader, so you can bring your own 3D models into the bar
 
-## Open questions
-- **Music source:** generated music from our C++ synth, CC-licensed tracks
-  (with credits), and/or the user's own songs loaded from their phone (never
-  committed to the public repo).
+## Decisions
+- **Music:** (1) CC BY smooth-jazz tracks by Kevin MacLeod as the bar's
+  ambiance, (2) the user's own songs loaded from the phone, (3) a C++
+  synth/mini DAW as a fun extra (Stage 4b).
 
 ## Log
 - **2026-10-15:** Project set up. Toolchain is Emscripten 6.0.12 with the
   emdawnwebgpu port. First triangle renders, and the smoke test passes using
   SwiftShader WebGPU.
+- **2026-10-15:** Music decided. Added 4 CC BY jazz tracks (AAC, about 15 MB),
+  served at `/assets/music/`. Added Stage 4b, the mini music studio.

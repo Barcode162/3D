@@ -39,4 +39,6 @@ set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${SHADER_FILES})
 add_custom_command(TARGET app POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/web $<TARGET_FILE_DIR:app>/site
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm $<TARGET_FILE_DIR:app>/site
+  # Streamed assets (music, later models/textures) are served as separate files.
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:app>/site/assets
 )
