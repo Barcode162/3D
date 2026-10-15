@@ -10,7 +10,8 @@ is done and what is next.
   Claude app. They can't run anything locally or open devtools.
 - They're a beginner in graphics and C++. Explain in plain language, keep
   replies short, and say what they'll see on the phone after each change.
-- Testing loop: push to `main` → GitHub Actions builds and deploys → user opens
+- Testing loop: push to `main` → GitHub Actions builds and force-pushes the site
+  to the `gh-pages` branch (Pages serves it) → user opens
   **https://barcode162.github.io/3D/** in Safari. The `build xxxxxxx` label in
   the top-right shows which commit is live, so the user can confirm they have
   the newest version.

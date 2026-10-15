@@ -1,5 +1,6 @@
-# Builds the C++ app to WebAssembly and publishes it to GitHub Pages on every
-# push to main. Requires: repo Settings -> Pages -> Source: "GitHub Actions".
+# Builds the C++ app to WebAssembly and publishes the result to the
+# `gh-pages` branch on every push to main. GitHub Pages serves that branch
+# (repo Settings -> Pages -> Deploy from a branch -> gh-pages / root).
 name: Build and deploy
 
 on:
@@ -8,9 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -20,7 +19,7 @@ env:
   EMSDK_VERSION: 6.0.12
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,17 +43,14 @@ jobs:
           emcmake cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build
           sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
+          touch build/site/.nojekyll
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish to gh-pages
+        run: |
+          cd build/site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Site build ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
