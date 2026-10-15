@@ -140,8 +140,10 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - GitHub's own "pages build and deployment" run can hang in its "Deploy to
   GitHub Pages" step and time out after 10 minutes (seen on `3e3dcd9`, the
   first ~8 MB model upload). Our build is fine then; the site just stays
-  on the old version. This session can't re-run workflows (403), so the
-  fix is the next push to `main`. Check with `version.txt`.
+  on the old version, and every later deploy fails at once with "in progress
+  deployment, please cancel <sha> first" until GitHub clears the stuck
+  one. This session can't cancel or re-run it (403), so: wait, then push
+  again (or the user taps Re-run in the Actions tab). Check `version.txt`.
 - Pages sends `cache-control: max-age=600`, so Safari can show a build up
   to 10 minutes old. The deploy writes `version.txt`; `index.html` fetches
   it with `cache: 'no-store'` and reloads with `?b=<sha>` if it's newer.
