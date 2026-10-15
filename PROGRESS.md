@@ -15,10 +15,12 @@ looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
    Hosting Plus** (1 year): PHP + SFTP, no live server process. M1 is built
    (see `docs/DECISIONS.md` → Multiplayer): `server/relay.php` passes
    positions between phones ~10x/s, others show as avatars with name tags.
-   **Waiting on the user:** (a) their domain name → put it in
+   Secrets are set and the upload **works** (build `ea3d2f1`: files are in
+   `bar/` on the webspace). **Waiting on the user:** (a) a domain with
+   HTTPS connected to the webspace (maybe `joshua-velasco.com`, seen in
+   their IONOS domain list; or the free `s1114537466.online`) → put it in
    `DEFAULT_SERVER` in `web/net.js` (`https://DOMAIN/bar/relay.php`);
-   (b) three GitHub secrets so the deploy uploads to IONOS:
-   `IONOS_SFTP_HOST`, `IONOS_SFTP_USER`, `IONOS_SFTP_PASSWORD`. Then check
+   (b) done. Then check
    the "Upload to IONOS" step in the Actions run and
    `https://DOMAIN/bar/relay.php` (should say `{"ok":1,"relay":"bar3d"}`).
    After that: M2 = see each other pick up/throw glasses, shared jukebox;
