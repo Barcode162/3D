@@ -38,7 +38,9 @@ visible in a mirror, and real music.
   ideas from the user in `docs/VISION.md`. A fresh session only knows what's
   written in the repo.
 - After pushing, confirm the deploy: wait for `gh-pages` to get a
-  "Site build <sha>" commit, then tell the user the build code to look for.
+  "Site build <sha>" commit (or poll `version.txt` on the site), then run
+  `NODE_PATH=$(npm root -g) node tools/check_live.mjs` to load the live
+  site headlessly, and tell the user the build code to look for.
 - Before pushing: the build passes and the smoke test passes. Look at the
   screenshot.
 
@@ -77,7 +79,8 @@ judged on the user's phone.
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
   automatically. `web/audio.js` is the thin Web Audio + song-picker bridge.
-- `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test).
+- `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
+  `check_live.mjs` (loads the deployed site headlessly).
   `tools/assets/` builds the 3D models in headless Blender (see
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes

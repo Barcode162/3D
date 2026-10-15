@@ -8,11 +8,36 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-1. **W5 Physical sound**: impact sounds synthesized from collisions and
-   materials; room echo from room size and materials.
-2. Then continue the art upgrade piece by piece (stools → walls/floor →
-   back bar → tables/booth → jukebox → props), alternating with sim
-   engines (shadows/bloom, heat/flames, liquids, smell field, day/night).
+**The user's plan (2026-10-15): the next chat is the 3D-asset chat.**
+Start it with the "Asset session checklist" below, then:
+1. **Stools** (6 bar stools + 4 table stools): real models replacing the
+   cylinder stacks. Chrome base + footring, padded leather seat with seams.
+2. **Walls and floor**: real brick and wood floor textures (Poly Haven),
+   baseboards, wainscot paneling with trim, ceiling with beams.
+3. **Back bar**: shelving unit with real bottles (varied shapes, labels),
+   mirror backing, LED shelf strips.
+4. **Tables and booth**, then **jukebox** (signature piece), then props
+   (candles with flame glow, coasters, menus, napkin holders).
+One piece per step: model → `CAM=` close-up screenshot → push → user checks.
+After the art pass: **W5 Physical sound** (impact sounds synthesized from
+collisions and materials; room echo), then more sim engines (shadows/bloom,
+heat/flames, liquids, smell field, day/night).
+
+### Asset session checklist
+1. `bash tools/assets/get_blender.sh` (Blender 4.5 to `/opt/blender`, ~2 min).
+2. `bash tools/assets/fetch_textures.sh <scratch dir> [polyhaven ids...]`.
+   Browse ids: `curl -s "https://api.polyhaven.com/assets?t=textures&c=wood"`.
+3. Write `tools/assets/<piece>.py` with the helpers in `common.py`, export to
+   `assets/models/<piece>.glb`, add a row to `assets/models/CREDITS.md`.
+4. Place it in `app/bar_scene.cpp` (`scene.models`, plus `scene.colliders`
+   for its solid shape), remove the old blockout shapes and their blockers
+   only if the new collider replaces them.
+5. Check: build, smoke test, `CAM="x,y,z,yaw,pitch"` close-up; after the
+   deploy, `node tools/check_live.mjs` loads the live site and prints
+   the build and model log.
+Budget per piece: keep textures 1k, triangles in the low thousands; the
+whole room should stay under ~20 MB of models.
+
 - Physics follow-ups: knock bottles off shelves (make them bodies), glass
   breaking (material flag), stacking glasses, beer in the pint (W7).
 - Still open: ask the user how the first-person body looks on the iPhone
