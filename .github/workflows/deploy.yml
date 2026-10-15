@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: write
+  pages: write        # to cancel a stuck Pages deployment (see below)
+  deployments: read
 
 concurrency:
   group: pages
@@ -45,6 +47,21 @@ jobs:
           sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
           echo "${GITHUB_SHA::7}" > build/site/version.txt
           touch build/site/.nojekyll
+
+      # A Pages deployment that hangs on GitHub's side blocks every later
+      # one ("in progress deployment, please cancel <sha> first"). Cancel
+      # any unfinished ones so this build can go live.
+      - name: Cancel stuck Pages deployments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          repo=${{ github.repository }}
+          live=$(git ls-remote origin refs/heads/gh-pages | cut -f1)
+          for sha in $(gh api "repos/$repo/deployments?environment=github-pages&per_page=5" --jq '.[].sha'); do
+            [ "$sha" = "$live" ] && continue  # the site that's up now
+            echo "Cancelling Pages deployment $sha (no-op if it already finished)"
+            gh api -X POST "repos/$repo/pages/deployments/$sha/cancel" || true
+          done
 
       - name: Publish to gh-pages
         run: |
