@@ -43,6 +43,7 @@ jobs:
           emcmake cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build
           sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
+          echo "${GITHUB_SHA::7}" > build/site/version.txt
           touch build/site/.nojekyll
 
       - name: Publish to gh-pages

@@ -93,6 +93,9 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   the player.
 
 ## Gotchas hit so far
+- Pages sends `cache-control: max-age=600`, so Safari can show a build up
+  to 10 minutes old. The deploy writes `version.txt`; `index.html` fetches
+  it with `cache: 'no-store'` and reloads with `?b=<sha>` if it's newer.
 - PBR metals (chrome, brass) have no diffuse color, so without real
   reflections they only show what `roomGlow` and the light highlights give
   them. Chrome looks darker than the old Phong version; environment maps
