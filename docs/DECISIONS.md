@@ -52,6 +52,9 @@ future session re-litigates or repeats it.
   `Version/26.3`. This is normal.
 
 ## Gotchas hit so far
+- A fresh session can start on a detached HEAD with a stale local `main`.
+  If `git push` is rejected, check `git status -sb`; if HEAD is ahead of
+  `origin/main`, push with `git push origin HEAD:main`.
 - Text vertices are placed in clip space on the CPU (screen text at depth 0),
   so one pipeline and one draw call cover both screen and world text. World
   text is depth-tested but doesn't write depth.
