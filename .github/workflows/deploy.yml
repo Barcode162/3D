@@ -91,12 +91,14 @@ jobs:
           cp server/relay.php server/.htaccess build/site/
           cd build/site
           lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<EOF
+          set cmd:fail-exit yes
           set sftp:auto-confirm yes
           set net:max-retries 3
           set net:timeout 30
           mkdir -p -f $IONOS_DIR
-          mirror -R --ignore-time --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
+          mirror -R --verbose --ignore-time --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
           mput index.html version.txt app.js app.wasm audio.js net.js relay.php .htaccess
+          cls -l
           bye
           EOF
