@@ -70,6 +70,7 @@ struct App {
   engine::FirstPersonCamera camera;
   app::BarScene scene;
   app::Jukebox jukebox;
+  app::JukeboxMenu jukeboxMenu;
   engine::TextRenderer text;
   FrameUniforms frameUniforms = {};
 
@@ -267,6 +268,7 @@ bool createRenderer() {
 
 void updateCamera(float dt) {
   const engine::Vec2 look = g_app.input.takeLookDelta();
+  if (g_app.jukeboxMenu.isOpen()) return;  // stand still while choosing a song
   g_app.camera.look(look.x * kLookSensitivity, -look.y * kLookSensitivity);
 
   const engine::Vec2 move = g_app.input.move();
@@ -305,6 +307,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
   const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
   const Vec3 up = engine::cross(right, forward);
   for (const app::Interactable& it : g_app.scene.interactables) {
+    if (g_app.jukeboxMenu.isOpen()) break;  // keep the menu uncluttered
     const float dist = engine::length(it.tagPosition - cam.position);
     if (dist > kLabelShowDistance) continue;
     // Fade in as you approach; the tag always turns to face you.
@@ -315,7 +318,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.outlineWidth = 0.8f;
     text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
   }
-  if (g_app.focused >= 0) {
+  if (g_app.focused >= 0 && !g_app.jukeboxMenu.isOpen()) {
     const app::Interactable& it = g_app.scene.interactables[static_cast<size_t>(g_app.focused)];
     engine::TextStyle style;
     style.align = 0.5f;
@@ -325,17 +328,18 @@ void queueText(double nowMs, const Mat4& viewProj) {
   }
 
   // "Now playing" banner with the song credit, whenever a new song starts.
-  const app::Track* track = g_app.jukebox.currentTrack();
-  if (track && nowMs < g_app.bannerEndMs) {
+  const app::Song* song = g_app.jukebox.currentSong();
+  if (song && nowMs < g_app.bannerEndMs) {
     const float fade = engine::clampf(static_cast<float>((g_app.bannerEndMs - nowMs) / 1000.0), 0, 1);
     engine::TextStyle style;
     style.align = 0.5f;
     style.color = {1.0f, 0.86f, 0.62f, fade};
     style.outline.w *= fade;
     style.outlineWidth = 0.8f;
-    text.addScreen(std::string("Now playing: ") + track->title, W * 0.5f, H * 0.11f, 12 * px, style);
+    text.addScreen("Now playing: " + song->title, W * 0.5f, H * 0.11f, 12 * px, style);
     style.color = {0.85f, 0.85f, 0.85f, fade};
-    text.addScreen(app::kMusicCredit, W * 0.5f, H * 0.11f + 22 * px, 9 * px, style);
+    text.addScreen(song->builtIn ? app::kMusicCredit : "Your song (only on this phone)", W * 0.5f,
+                   H * 0.11f + 22 * px, 9 * px, style);
   }
 
   if (nowMs < g_app.introEndMs) {
@@ -352,6 +356,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
     hint.outline.w *= fade;
     text.addScreen("Left thumb: walk\nRight thumb: look around\nTap things to use them", W * 0.5f, H * 0.2f + 52 * px, 11 * px, hint);
   }
+  g_app.jukeboxMenu.draw(text, g_app.jukebox, W, H, px);  // last, so it's on top
   text.upload(g_app.gpu.queue);
 }
 
@@ -387,7 +392,7 @@ Vec3 screenRay(engine::Vec2 tap) {
 }
 
 void use(const app::Interactable& it) {
-  if (it.action == app::Action::kJukebox) g_app.jukebox.tap();
+  if (it.action == app::Action::kJukebox) g_app.jukeboxMenu.open();
 }
 
 // Makes one interactable's parts glow (or stop glowing).
@@ -428,6 +433,10 @@ void updateInteraction(double nowMs) {
   // standing at something (easier on a small screen).
   for (const engine::Vec2 tap : g_app.input.takeTaps()) {
     g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
+    if (g_app.jukeboxMenu.isOpen()) {
+      g_app.jukeboxMenu.tap(tap, g_app.jukebox);
+      continue;
+    }
     const Vec3 dir = screenRay(tap);
     int hit = -1;
     float nearest = kTapReach;
@@ -443,8 +452,8 @@ void updateInteraction(double nowMs) {
   }
 
   g_app.jukebox.update();
-  if (g_app.jukebox.songCount() != g_app.bannerSong) {
-    g_app.bannerSong = g_app.jukebox.songCount();
+  if (g_app.jukebox.songsStarted() != g_app.bannerSong) {
+    g_app.bannerSong = g_app.jukebox.songsStarted();
     g_app.bannerEndMs = nowMs + kBannerMs;
   }
   const Vec3 forward = cam.forward();

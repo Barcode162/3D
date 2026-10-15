@@ -59,11 +59,27 @@ animation, game logic, DSP for the music studio), but we use the
 browser/phone APIs that are the only way to reach the hardware: WebGPU
 (GPU), Web Audio output and its built-in AAC decoder (speakers), touch
 events, file picker, network. Those are "drivers", not engines. Writing
-our own AAC/MP3 decoder is possible but has no visible benefit. Big
-optional choices are listed for the user in the 2026-10-15 chat; record
-their answers here.
+our own AAC/MP3 decoder is possible but has no visible benefit. 
+**User's answers (2026-10-15):**
+- Song decoding: use the phone's built-in decoder. Test with songs the
+  user downloads.
+- Font: keep our own big pixel font (the user loves it).
+- Own songs: the phone's file picker.
+- Physics, avatar with mirror, and animations: yes, all ours.
+- Order: jukebox menu → mirrors (full + avatars-only) → avatar (bones,
+  shapes, textures) → animation → physics.
+- Not answered yet: free third-party 3D models vs. everything from code;
+  multiplayer server; voice chat.
 
 ## Gotchas hit so far
+- iOS opens the file picker only from a real tap on a real element. The
+  jukebox menu draws its "Load song" button in WebGPU, and `web/audio.js`
+  places an invisible `<label for=songPicker>` exactly over it while the
+  menu is open (`setSongPickerRect`).
+- Solid rectangles (menu panels) go through the text pipeline: the font
+  has a hidden solid-block glyph (char 127, `font::kSolid`).
+- In headless tests, `page.setInputFiles('#songPicker', files)` simulates
+  picking songs.
 - The Playwright test Chromium can't play AAC (`.m4a`). To test music
   headless, copy an Ogg/Opus version over the file in `build/site` only
   (ffmpeg is installed). Safari plays AAC fine.

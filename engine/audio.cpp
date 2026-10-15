@@ -14,6 +14,26 @@ void setListener(Vec3 p, Vec3 f, Vec3 u) {
          p.x, p.y, p.z, f.x, f.y, f.z, u.x, u.y, u.z);
 }
 
+void setSongPickerRect(float x, float y, float w, float h) {
+  EM_ASM({ window['bar3dAudio']['setSongPickerRect']($0, $1, $2, $3); }, x, y, w, h);
+}
+
+int userSongCount() { return EM_ASM_INT({ return window['bar3dAudio']['userSongCount'](); }); }
+
+namespace {
+std::string userSongString(int index, bool url) {
+  char buffer[1024];
+  EM_ASM({
+    var a = window['bar3dAudio'];
+    stringToUTF8($1 ? a['userSongUrl']($0) : a['userSongName']($0), $2, $3);
+  }, index, url, buffer, sizeof(buffer));
+  return buffer;
+}
+}  // namespace
+
+std::string userSongName(int index) { return userSongString(index, false); }
+std::string userSongUrl(int index) { return userSongString(index, true); }
+
 }  // namespace audio
 
 void MusicSource::init(float refDistance) {

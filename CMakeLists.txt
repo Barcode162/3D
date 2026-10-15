@@ -24,6 +24,8 @@ target_link_options(app PRIVATE
   -sALLOW_MEMORY_GROWTH=1
   -sENVIRONMENT=web
   -sEXPORTED_RUNTIME_METHODS=[]
+  # Used from EM_ASM blocks (engine/audio.cpp).
+  "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$stringToUTF8"
 )
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   target_link_options(app PRIVATE -O3 --closure=1)

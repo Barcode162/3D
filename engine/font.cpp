@@ -112,9 +112,10 @@ constexpr GlyphArt kGlyphs[] = {
   {'|',  {"..#..", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."}},
   {'}',  {".#...", "..#..", "..#..", "...#.", "..#..", "..#..", ".#..."}},
   {'~',  {".....", ".....", ".#...", "#.#.#", "...#.", ".....", "....."}},
+  {font::kSolid, {"#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####", "#####"}},
 };
 // clang-format on
-static_assert(std::size(kGlyphs) == font::kGlyphCount, "one entry per printable ASCII character");
+static_assert(std::size(kGlyphs) == font::kGlyphCount, "one entry per printable ASCII character, plus the solid block");
 
 // Distance from point (px, py) to the unit square with top-left corner (sx, sy).
 float distanceToSquare(float px, float py, float sx, float sy) {

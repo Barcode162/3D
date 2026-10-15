@@ -36,6 +36,14 @@ that keeps getting upgraded:
    there can play on the jukebox. The DSP could later become a real **VST
    plugin** on desktop (iPlug2/JUCE).
 
+## Mirrors and avatar (user's wishes, 2026-10-15)
+- Two mirrors like VRChat's: one that reflects everything (a real
+  mirror) and one that shows just the avatars / 3D models.
+- An avatar with bones, body shapes and textures, then animations, so the
+  bar feels real.
+- The jukebox works like a real one: pick a song from its menu. Songs the
+  user downloads can be loaded for testing.
+
 ## Later (explicitly NOT now)
 - Importing 3D models (GLB/glTF loader written from scratch) and custom
   avatars (VRM).

@@ -20,7 +20,8 @@ constexpr int kCellH = kGlyphH + 2 * kPad;
 constexpr int kTexelsPerPixel = 8;  // atlas resolution per font pixel
 constexpr int kColumns = 16;
 constexpr char kFirstChar = 32;  // ' '
-constexpr char kLastChar = 126;  // '~'
+constexpr char kLastChar = 127;  // '~' plus one solid block (see kSolid)
+constexpr char kSolid = 127;     // fully filled glyph, used to draw rectangles
 constexpr int kGlyphCount = kLastChar - kFirstChar + 1;
 constexpr int kRows = (kGlyphCount + kColumns - 1) / kColumns;
 // The distance field covers +-kSdfRange font pixels around each edge.

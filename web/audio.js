@@ -93,6 +93,29 @@ window.bar3dAudio = (function () {
     window.addEventListener(type, unlock, true);
   });
 
+  // Your own songs, picked from the Files app. They stay on the phone: the
+  // browser only gives us a local link to each file (lost on reload).
+  // iOS opens the picker only from a real tap on a real element, so an
+  // invisible <label> is placed over the "Load song" button that C++ draws.
+  var userSongs = [];
+  var picker = document.createElement('input');
+  picker.type = 'file';
+  picker.accept = 'audio/*';
+  picker.multiple = true;
+  picker.id = 'songPicker';
+  picker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+  picker.addEventListener('change', function () {
+    Array.prototype.forEach.call(picker.files, function (file) {
+      userSongs.push({ name: file.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(file) });
+    });
+    picker.value = '';
+  });
+  var pickerButton = document.createElement('label');
+  pickerButton.htmlFor = 'songPicker';
+  pickerButton.style.cssText = 'position:fixed;display:none;z-index:5;-webkit-tap-highlight-color:transparent;';
+  document.body.appendChild(picker);
+  document.body.appendChild(pickerButton);
+
   return {
     ready: function () { return !!ctx && ctx.state === 'running'; },
 
@@ -119,6 +142,15 @@ window.bar3dAudio = (function () {
     playing: function (id) { var el = sources[id].el; return !el.paused && !el.ended && !el.error; },
     finished: function (id) { return sources[id].el.ended; },
     setPosition: function (id, x, y, z) { var s = sources[id]; s.pos = [x, y, z]; applyPosition(s); },
+    // Rectangle in CSS pixels; w = 0 hides the button.
+    setSongPickerRect: function (x, y, w, h) {
+      var st = pickerButton.style;
+      st.display = w > 0 ? 'block' : 'none';
+      st.left = x + 'px'; st.top = y + 'px'; st.width = w + 'px'; st.height = h + 'px';
+    },
+    userSongCount: function () { return userSongs.length; },
+    userSongName: function (i) { return userSongs[i].name; },
+    userSongUrl: function (i) { return userSongs[i].url; },
     setListener: function (px, py, pz, fx, fy, fz, ux, uy, uz) {
       listener = [px, py, pz, fx, fy, fz, ux, uy, uz];
       applyListener();

@@ -1,18 +1,25 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage 3 interaction + Stage 4 audio (jukebox works; next: more things to use)
+**Current focus:** Stage 5, mirrors + avatar (the user's chosen order, 2026-10-15)
 
 ## Next up (start here in a new session)
-1. **Wait for the user's answers** to the "what do we build ourselves" list
-   (given in chat on 2026-10-15; summary in `docs/DECISIONS.md` → "Build
-   ourselves vs. use the platform"). Their answers may reorder this list.
-2. **Load your own songs into the jukebox** from the iPhone Files app
-   (an `<input type=file>` bridge; local only, never uploaded).
-3. **More things to use**: light switches (dim/brighten the lamps), the
-   door, glasses on the bar. Each is an `Interactable` in `bar_scene.cpp`
-   plus an `Action`.
-4. Small polish noticed on iPhone: the candle spheres on the tables look
+The user's chosen order (2026-10-15): jukebox menu (done) → mirrors →
+avatar → animation → physics.
+1. **Two mirrors, like VRChat's mirror options**: (a) a full mirror that
+   reflects the whole room like a real mirror (render the scene from the
+   camera reflected across the mirror plane into a texture, with a clip
+   plane), and (b) a "lite" mirror that shows only avatars / 3D models
+   (cheaper; VRChat's players-only mirror). There's one mirror frame on
+   the right wall now; add a second, or a toggle between the two modes.
+2. **Avatar body**: procedural humanoid with a skeleton (bones), body
+   shapes, and textures. It stands where the camera is and shows in the mirror.
+3. **Animation**: idle and walk cycles on the skeleton, driven by
+   movement, so the bar feels alive.
+4. **Physics**: pick up / throw glasses, darts, pool.
+5. **More things to use**: light switches, the door, glasses. Each is an
+   `Interactable` in `bar_scene.cpp` plus an `Action`.
+6. Small polish noticed on iPhone: the candle spheres on the tables look
    like white balls (make them real little candles with a flame glow), and
    the stools look plain.
 
@@ -53,8 +60,8 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 ### Stage 4: Audio
 - [x] C++ audio through Web Audio (`engine/audio.*` + thin bridge `web/audio.js`; unlocks on first tap)
 - [x] Jukebox plays the smooth-jazz playlist (`app/jukebox.*`), 3D-positioned (HRTF), tap = next song, after the last song tap = off
-- [ ] Jukebox "load song" button: play the user's own songs from the iPhone
-      Files app (local only, never uploaded)
+- [x] Jukebox menu (`JukeboxMenu` in `app/jukebox.*`): song list with codes A1, A2…, pages, Load song / Stop / Close
+- [x] "Load song": the user's own songs from the iPhone Files app (local only, never uploaded; gone after reload)
 - [x] In-game credits for the CC BY tracks ("Now playing" banner with the credit)
 - [ ] Generated sound effects (glass clink, footsteps, switches)
 
@@ -68,7 +75,8 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] Later: export the same DSP code as a real VST plugin (desktop)
 
 ### Stage 5: Avatar + mirror
-- [ ] Mirror: render the scene from a reflected camera
+- [ ] Mirror 1: full reflection (render the scene from a reflected camera)
+- [ ] Mirror 2: "lite" mirror that shows only avatars/models (VRChat style)
 - [ ] Procedural humanoid avatar with skeleton + walk/idle animation
 - [ ] Avatar follows your movement; visible in the mirror
 - [ ] Later: load your own avatar model (GLB/VRM)
@@ -112,3 +120,6 @@ A small DAW inside the bar, all DSP written in C++:
   glow, Web Audio bridge with iOS unlock, 3D-positioned music, "Now
   playing" banner with the CC BY credit. Tested headless with an Ogg
   stand-in (test Chromium can't decode AAC).
+- **2026-10-15:** User answered the build-ourselves list (see
+  `docs/DECISIONS.md`). Jukebox menu: tap the jukebox → song list with
+  jukebox codes, paging, Load song (Files app), Stop, Close.

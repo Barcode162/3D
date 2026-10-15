@@ -13,6 +13,14 @@ namespace audio {
 bool ready();
 // Where your "ears" are: call every frame with the camera.
 void setListener(Vec3 position, Vec3 forward, Vec3 up);
+
+// Songs the user picked from their phone (Files app). Local only.
+// Places the invisible native "pick a file" button over a drawn button
+// (CSS pixels); pass w = 0 to hide it.
+void setSongPickerRect(float x, float y, float w, float h);
+int userSongCount();
+std::string userSongName(int index);
+std::string userSongUrl(int index);
 }  // namespace audio
 
 // Long music placed in 3D space: you hear it from its position, louder when

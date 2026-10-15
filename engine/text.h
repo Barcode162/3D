@@ -40,6 +40,9 @@ class TextRenderer {
   void addWorld(std::string_view text, Vec3 center, Vec3 right, Vec3 up, float capHeight,
                 const TextStyle& style);
 
+  // A filled rectangle on the screen (device pixels), e.g. for menu panels.
+  void addRect(float x, float y, float w, float h, Vec4 color);
+
   // Width of the widest line and the total height, in font pixels.
   static void measure(std::string_view text, float& width, float& height);
 

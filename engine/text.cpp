@@ -242,6 +242,34 @@ void TextRenderer::addWorld(std::string_view text, Vec3 center, Vec3 right, Vec3
   });
 }
 
+void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
+  using namespace font;
+  if (vertices_.size() >= kMaxGlyphs * 4) return;
+  // Every corner samples the middle of the solid glyph, which is "inside"
+  // at every mip level.
+  int col, row;
+  fontCell(kSolid, col, row);
+  const float u = (static_cast<float>(col * kCellW) + kCellW * 0.5f) / static_cast<float>(kColumns * kCellW);
+  const float v = (static_cast<float>(row * kCellH) + kCellH * 0.5f) / static_cast<float>(kRows * kCellH);
+  const float corners[4][2] = {{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}};
+  for (const auto& c : corners) {
+    Vertex vert;
+    vert.clip[0] = c[0] / screenW_ * 2.0f - 1.0f;
+    vert.clip[1] = 1.0f - c[1] / screenH_ * 2.0f;
+    vert.clip[2] = 0;
+    vert.clip[3] = 1;
+    vert.uv[0] = u;
+    vert.uv[1] = v;
+    vert.outlineWidth = 0;
+    vert.color[0] = toByte(color.x);
+    vert.color[1] = toByte(color.y);
+    vert.color[2] = toByte(color.z);
+    vert.color[3] = toByte(color.w);
+    vert.outline[0] = vert.outline[1] = vert.outline[2] = vert.outline[3] = 0;
+    vertices_.push_back(vert);
+  }
+}
+
 void TextRenderer::upload(const wgpu::Queue& queue) {
   if (vertices_.empty()) return;
   queue.WriteBuffer(vertexBuffer_, 0, vertices_.data(), vertices_.size() * sizeof(Vertex));
