@@ -6,37 +6,33 @@
 
 #include "engine/math.h"
 #include "engine/mesh.h"
+#include "app/materials.h"
 #include "engine/procedural.h"
 
 namespace app {
 
-// Surface textures, one layer each in the GPU texture array (same order as
-// buildBarMaterials()).
-enum Material : int {
-  kNoTexture = -1,
-  kTexWoodPlanks,
-  kTexWoodGrain,
-  kTexBrick,
-  kTexLeather,
-  kTexPlaster,
-  kTexFabric,  // avatar shirt and socks
-  kTexDenim,   // avatar jeans
-  kMaterialCount,
-};
-
+// A placed object. Its material says what it's made of (look, feel, sound);
+// color, glow and texture scale start from the material and can be changed
+// per object (bottles come in many colors, neon glows pink or cyan).
 struct SceneObject {
   engine::MeshData mesh;
   engine::Vec3 position;
   engine::Quat rotation;
+  MaterialId material;
   engine::Vec3 color;
-  float emissive = 0;   // glows by itself (neon, bulbs)
-  float shininess = 0;  // 0 = matte, 1 = glossy
-  Material texture = kNoTexture;
-  float textureScale = 1;  // repeats per meter
+  float emissive = 0;      // glows by itself (neon, bulbs)
+  float textureScale = 1;  // texture repeats per meter
 
-  SceneObject& textured(Material m, float scale) {
-    texture = m;
-    textureScale = scale;
+  SceneObject& tint(engine::Vec3 c) {
+    color = c;
+    return *this;
+  }
+  SceneObject& glow(float e) {
+    emissive = e;
+    return *this;
+  }
+  SceneObject& scale(float repeatsPerMeter) {
+    textureScale = repeatsPerMeter;
     return *this;
   }
 };
@@ -46,6 +42,7 @@ struct PointLight {
   engine::Vec3 color;
   float intensity;
   float range;
+  float radius = 0.1f;  // size of the glowing part: bigger = softer, wider shine
 };
 
 // Axis-aligned rectangle on the floor (x/z) that blocks walking.
@@ -96,8 +93,8 @@ struct BarScene {
 
 BarScene buildBarScene();
 
-// Generates the surface textures (one per Material, in order).
-std::vector<engine::MaterialImages> buildBarMaterials();
+// Generates the surface textures (one per TextureLayer, in order).
+std::vector<engine::MaterialImages> buildBarTextures();
 
 // Moves a walker (circle of `radius` on the floor) out of any blocker.
 engine::Vec3 resolveCollisions(const BarScene& scene, engine::Vec3 position, float radius);

@@ -20,6 +20,8 @@ future session re-litigates or repeats it.
 | Audio | Browser Web Audio for output; C++ decides what plays and where (thin JS bridge `web/audio.js`). Music streams through an `<audio>` element → `PannerNode` (HRTF) | Like WebGPU for graphics: the platform API is the "driver". Streaming avoids decoding 3-minute songs into ~60 MB of memory each |
 | Mirrors | Planar reflection: scene rendered with `viewProj * reflection` into a screen-sized texture, scissored to the mirror's screen rectangle; glass reads it 1:1 with `textureLoad` | Exact, simple, and cost scales with how much of the screen the mirror covers. Avatars-only mode skips the room (VRChat's cheap mirror) |
 | Avatar | Procedural skinned mesh: rings (tubes) along the limbs and torso + ellipsoids for the head, each vertex weighted to 2 bones, blended near joints; per-vertex color/gloss/texture layer | No model files needed; one continuous mesh bends cleanly at elbows/knees. A GLB/VRM loader can feed the same skinning path later |
+| Materials | `engine::Material` (look + physics + sound) in `engine/material.h`; the bar's library in `app/materials.cpp`, objects reference a `MaterialId` and may override color/glow/texture scale | One definition per kind of stuff feeds every engine (see World-simulation principles) |
+| Shading | PBR metal/roughness: GGX + Smith + Schlick, Karis sphere-light widening (`PointLight::radius`), Karis env-BRDF approximation against a fake "room glow" (`roomGlow` in `scene.wgsl`) | Same model as glTF, so loaded assets look right. Diffuse leaves out 1/pi (keeps the old light tuning), so specular is scaled by pi |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Hosting and deploy (important, it took several tries)
@@ -91,6 +93,10 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   the player.
 
 ## Gotchas hit so far
+- PBR metals (chrome, brass) have no diffuse color, so without real
+  reflections they only show what `roomGlow` and the light highlights give
+  them. Chrome looks darker than the old Phong version; environment maps
+  (reflection probes) are the real fix, planned with Stage 6.
 - Avatar rotation signs (avatar faces -Z, +X is its right side): rotating
   a limb by a positive angle about +X swings it forward; knees bend with a
   negative angle; a positive angle about +Z moves the right arm outward.

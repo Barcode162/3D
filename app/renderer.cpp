@@ -98,10 +98,11 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     const SceneObject& o = objects[i];
     ObjectUniforms u = {};
     u.model = Mat4::transform(o.position, o.rotation);
-    setVec4(u.color, o.color, 1);
+    const engine::Material& m = material(o.material);
+    setVec4(u.color, o.color, m.metallic);
     u.material[0] = o.emissive;
-    u.material[1] = o.shininess;
-    u.material[2] = static_cast<float>(o.texture);
+    u.material[1] = m.roughness;
+    u.material[2] = static_cast<float>(m.texture);
     u.material[3] = o.textureScale;
     std::memcpy(objectData.data() + i * kObjectStride, &u, sizeof(u));
     objectUniforms_.push_back(u);
@@ -109,7 +110,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   }
   {
     ObjectUniforms u = {};
-    setVec4(u.color, {1, 1, 1}, 1);  // colors come from the mesh itself
+    setVec4(u.color, {1, 1, 1}, 0);  // colors come from the mesh itself
     u.material[3] = kAvatarTextureScale;
     avatarOffset_ = static_cast<uint32_t>(objects.size() * kObjectStride);
     std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
@@ -129,6 +130,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     const PointLight& l = scene.lights[i];
     setVec4(frame_.lights[i].position, l.position, l.range);
     setVec4(frame_.lights[i].color, l.color, l.intensity);
+    frame_.lights[i].params[0] = l.radius;
   }
   setVec4(frame_.ambient, scene.ambient, 0);
   setVec4(frame_.fog, scene.fogColor, scene.fogDensity);
@@ -285,7 +287,7 @@ void SceneRenderer::createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureV
                                     wgpu::Sampler& sampler) {
   const double start = emscripten_get_now();
   std::vector<engine::Image> colors, bumps;
-  for (engine::MaterialImages& m : buildBarMaterials()) {
+  for (engine::MaterialImages& m : buildBarTextures()) {
     colors.push_back(std::move(m.color));
     bumps.push_back(std::move(m.bump));
   }

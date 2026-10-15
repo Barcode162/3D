@@ -44,6 +44,7 @@ class SceneRenderer {
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
+    float params[4];    // x = radius of the glowing part
   };
   // Mirrors the WGSL structs in shaders/scene.wgsl byte for byte.
   struct FrameUniforms {
@@ -57,8 +58,8 @@ class SceneRenderer {
   };
   struct ObjectUniforms {
     engine::Mat4 model;
-    float color[4];
-    float material[4];  // emissive, shininess, texture layer, texture scale
+    float color[4];     // rgb = base color, a = metallic
+    float material[4];  // emissive, roughness, texture layer, texture scale
   };
   // Mirrors `struct Mirror` in shaders/mirror.wgsl.
   struct GlassUniforms {

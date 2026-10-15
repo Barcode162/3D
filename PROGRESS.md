@@ -8,19 +8,16 @@ New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
 push after each, tell the user what to look at.
-1. **W1 Material system + PBR shading**: one `Material` record (look +
-   physics + sound fields), PBR lighting (roughness/metalness/normal maps)
-   in the lit shader. Existing scene switches to it with no visual loss.
-2. **W2 GLB loader** (from scratch): meshes, UVs, normals, tangents, PBR
+1. **W2 GLB loader** (from scratch): meshes, UVs, normals, tangents, PBR
    textures; assets streamed from `assets/models/`.
-3. **W3 First real asset: the bar counter**, replacing the blockout one.
+2. **W3 First real asset: the bar counter**, replacing the blockout one.
    Set up the asset tool pipeline (try headless Blender in the container;
    CC0 textures from Poly Haven/ambientCG with credits).
-4. **W4 Rigid-body physics** using the material's physics fields: pick up,
+3. **W4 Rigid-body physics** using the material's physics fields: pick up,
    throw, stack glasses (was "Physics" before).
-5. **W5 Physical sound**: impact sounds synthesized from collisions and
+4. **W5 Physical sound**: impact sounds synthesized from collisions and
    materials; room echo from room size and materials.
-6. Then continue the art upgrade piece by piece (walls/floor → stools →
+5. Then continue the art upgrade piece by piece (walls/floor → stools →
    back bar → tables/booth → jukebox → props), alternating with sim
    engines (shadows/bloom, heat/flames, liquids, smell field, day/night).
 - Still open: ask the user how the first-person body looks on the iPhone
@@ -44,7 +41,7 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - [x] 1.2 Math library: vectors, matrices, quaternions (`engine/math.h`)
 - [x] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres (`engine/mesh.*`)
 - [x] 1.4 First-person camera + touch controls (left stick move, right drag look; WASD + mouse on a computer)
-- [ ] 1.5 Lighting: 8 warm point lights + emissive + haze + tone mapping done; still to do: real PBR materials
+- [x] 1.5 Lighting: 8 warm point lights + emissive + haze + tone mapping + PBR materials (W1)
 - [x] 1.6 Text rendering in-engine (`engine/font.*`, `engine/text.*`, `shaders/text.wgsl`): hand-drawn 5x7 pixel font → SDF atlas with mipmaps, outlines, screen + 3D world text, one draw call
 
 ### Stage 2: The bar room
@@ -95,7 +92,7 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] GLB model loader (moved up: it's W2 in Stage W)
 
 ### Stage W: World simulation (new north star, 2026-10-15)
-- [ ] W1 Material system (look + physics + sound in one record) + PBR shading
+- [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
 - [ ] W2 GLB loader + asset pipeline
 - [ ] W3 Real assets, one piece at a time (bar counter first)
 - [ ] W4 Rigid-body physics driven by materials
@@ -153,3 +150,8 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-15:** New north star from the user: a world simulation where
   engines stack and cover every sense, highest quality, real assets.
   Claude decides details, user reviews. Roadmap reordered (Stage W).
+- **2026-10-15:** W1 done. Every object is now made of a named material
+  (oak floor, varnished wood, brick, leather, chrome, brass, bottle glass...)
+  that also carries physics and sound values for later engines. The shader
+  is physically based (GGX). Chrome now looks darker: it reflects the dark
+  room; real reflections come with environment maps later.

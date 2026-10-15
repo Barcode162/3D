@@ -1,6 +1,6 @@
-// Main scene shader: lit, solid-colored meshes with several point lights,
-// emissive surfaces (neon, lamp bulbs), procedural textures, distance haze
-// and tone mapping.
+// Main scene shader: physically based lighting (metal/roughness, like glTF)
+// from several point lights, emissive surfaces (neon, lamp bulbs),
+// procedural textures, distance haze and tone mapping.
 //
 // Textures: meshes have no texture coordinates, so textures are projected
 // "triplanar": along the object's own x, y and z axes, blended by which way
@@ -11,6 +11,7 @@ const kMaxLights = 8u;
 struct Light {
   position: vec4f,   // xyz = position, w = range in meters
   color: vec4f,      // rgb = color, w = intensity
+  params: vec4f,     // x = radius of the glowing part
 };
 
 struct Frame {
@@ -27,8 +28,8 @@ struct Frame {
 
 struct Object {
   model: mat4x4f,
-  color: vec4f,       // rgb = base color
-  material: vec4f,    // x = emissive strength, y = shininess (0..1),
+  color: vec4f,       // rgb = base color, a = metallic (0..1)
+  material: vec4f,    // x = emissive strength, y = roughness (0..1),
                       // z = texture layer (< 0 = none), w = texture repeats per meter
 };
 
@@ -109,7 +110,7 @@ fn tonemap(x: vec3f) -> vec3f {
 
 struct Surface {
   color: vec3f,
-  gloss: f32,       // multiplier for shininess
+  gloss: f32,       // gloss multiplier (1 = unchanged, lower = rougher)
   normal: vec3f,    // object space
 };
 
@@ -148,15 +149,16 @@ fn fs_main(in: VsOut) -> @location(0) vec4f {
     discard;
   }
   var base = object.color.rgb;
-  var shininess = object.material.y;
+  var roughness = object.material.y;
   var n = normalize(in.normal);
   if (object.material.z >= 0.0) {
     let s = texturedSurface(in.localPos, in.localNormal);
     base = base * s.color;
-    shininess = clamp(shininess * s.gloss, 0.0, 1.0);
+    // Gloss above 1 smooths, below 1 roughens (plank gaps, mortar).
+    roughness = 1.0 - (1.0 - roughness) * s.gloss;
     n = normalize((object.model * vec4f(s.normal, 0.0)).xyz);
   }
-  return shade(in.worldPos, n, base, shininess, object.material.x);
+  return shade(in.worldPos, n, base, roughness, object.color.a, object.material.x);
 }
 
 // Skinned meshes: color and gloss come from each vertex; parts marked with a
@@ -175,19 +177,69 @@ fn fs_skinned(in: VsOut) -> @location(0) vec4f {
   let layer = max(in.layer, 0);
   let c = sampleColor(q.zy, layer) * w.x + sampleColor(q.xz, layer) * w.y + sampleColor(q.xy, layer) * w.z;
   var base = object.color.rgb * in.paint.rgb;
-  var shininess = in.paint.a;
+  var gloss = in.paint.a;
   if (in.layer >= 0) {
     base = base * c.rgb;
-    shininess = clamp(shininess * c.a, 0.0, 1.0);
+    gloss = gloss * c.a;
   }
-  return shade(in.worldPos, normalize(in.normal), base, shininess, object.material.x);
+  // Vertex gloss (0..1) maps to roughness: skin and cloth stay soft.
+  let roughness = mix(0.9, 0.25, clamp(gloss, 0.0, 1.0));
+  return shade(in.worldPos, normalize(in.normal), base, roughness, 0.0, object.material.x);
 }
 
-// Lighting shared by every mesh: point lights, ambient, haze, tone mapping.
-fn shade(worldPos: vec3f, n: vec3f, base: vec3f, shininess: f32, emissive: f32) -> vec4f {
-  let toEye = normalize(frame.cameraPos.xyz - worldPos);
+const kPi = 3.14159265;
 
-  var light = frame.ambient.rgb * (0.6 + 0.4 * n.y);  // a little brighter on top
+// GGX microfacet distribution: how many tiny surface facets face `h`.
+fn distributionGgx(nh: f32, a: f32) -> f32 {
+  let a2 = a * a;
+  let d = nh * nh * (a2 - 1.0) + 1.0;
+  return a2 / (kPi * d * d);
+}
+
+// Smith visibility (Schlick-GGX): facets shadowing each other. Includes the
+// 1 / (4 n.l n.v) of the microfacet formula.
+fn visibilitySmith(nv: f32, nl: f32, roughness: f32) -> f32 {
+  let k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+  return 0.25 / ((nv * (1.0 - k) + k) * (nl * (1.0 - k) + k));
+}
+
+// Fresnel (Schlick): surfaces reflect more at grazing angles.
+fn fresnel(f0: vec3f, vh: f32) -> vec3f {
+  return f0 + (vec3f(1.0) - f0) * pow(1.0 - vh, 5.0);
+}
+
+// How much of the surroundings a surface reflects, averaged over its
+// roughness (Karis' mobile approximation of the split-sum lookup table).
+fn environmentBrdf(f0: vec3f, roughness: f32, nv: f32) -> vec3f {
+  let c0 = vec4f(-1.0, -0.0275, -0.572, 0.022);
+  let c1 = vec4f(1.0, 0.0425, 1.04, -0.04);
+  let r = roughness * c0 + c1;
+  let a004 = min(r.x * r.x, exp2(-9.28 * nv)) * r.x + r.y;
+  let ab = vec2f(-1.04, 1.04) * a004 + r.zw;
+  return f0 * ab.x + ab.y;
+}
+
+// What the room around a surface looks like in direction `r`, very roughly:
+// the warm, lamp-lit upper half is brighter than the dark floor. Stands in
+// for real reflections until the engine has environment maps.
+fn roomGlow(r: vec3f) -> vec3f {
+  return frame.ambient.rgb * (2.0 + 5.0 * clamp(r.y, -0.3, 1.0));
+}
+
+// Lighting shared by every mesh: physically based point lights, ambient,
+// haze, tone mapping. Light units: diffuse leaves out the 1/pi, so the
+// specular term is multiplied by pi to match.
+fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32, emissive: f32) -> vec4f {
+  let v = normalize(frame.cameraPos.xyz - worldPos);
+  let roughness = clamp(roughnessIn, 0.04, 1.0);
+  let a = roughness * roughness;
+  let nv = max(dot(n, v), 1e-4);
+  // Metals have no diffuse color; their base color tints the reflection.
+  // Non-metals reflect about 4% head-on, untinted.
+  let diffuseColor = base * (1.0 - metallic);
+  let f0 = mix(vec3f(0.04), base, metallic);
+
+  var diffuse = frame.ambient.rgb * (0.6 + 0.4 * n.y);  // a little brighter on top
   var specular = vec3f(0.0);
   for (var i = 0u; i < frame.lightCount.x; i++) {
     let l = frame.lights[i];
@@ -198,13 +250,23 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, shininess: f32, emissive: f32) 
     let window = clamp(1.0 - pow(dist / l.position.w, 4.0), 0.0, 1.0);
     let atten = window * window / (dist * dist + 0.25);
     let radiance = l.color.rgb * l.color.w * atten;
-    light += radiance * max(dot(n, dir), 0.0);
-    let h = normalize(dir + toEye);
-    let power = mix(8.0, 128.0, shininess);
-    specular += radiance * pow(max(dot(n, h), 0.0), power) * shininess;
-  }
+    let nl = max(dot(n, dir), 0.0);
+    diffuse += radiance * nl;
 
-  var color = base * light + specular + base * emissive;
+    // Bulbs aren't points: a bigger glowing part makes a wider, softer
+    // highlight (Karis' sphere-light trick), keeping the same total energy.
+    let aLight = clamp(a + l.params.x / (2.0 * dist), 0.0, 1.0);
+    let h = normalize(dir + v);
+    let nh = max(dot(n, h), 0.0);
+    let vh = max(dot(v, h), 0.0);
+    let d = distributionGgx(nh, aLight) * (a * a) / (aLight * aLight);
+    let spec = d * visibilitySmith(nv, nl, roughness) * fresnel(f0, vh);
+    specular += radiance * spec * (nl * kPi);
+  }
+  let r = reflect(-v, n);
+  specular += roomGlow(r) * environmentBrdf(f0, roughness, nv);
+
+  var color = diffuseColor * diffuse + specular + base * emissive;
 
   let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);
