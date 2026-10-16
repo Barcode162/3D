@@ -1,9 +1,17 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** Stage W, the world-simulation foundation (materials for every sense, PBR, GLB loader), then real assets one piece at a time
+**Current focus:** The big bar upgrade (`docs/BAR_REDESIGN.md`): a new, bigger room full of real clutter, game corners, a grand piano, a giant 2-in-1 mirror, and a loading screen
 
 ## Next up (start here in a new session)
+**2026-10-16, new top priority: the big bar upgrade.** The user asked for
+a completely new bar (new shape, packed with real-bar clutter), 3 rooms
+(the other two taped off as "under construction"), one giant 2-in-1
+mirror, darts / racing sims / 4K rhythm machine / grand piano with real
+strings, and a loading screen. **The full plan and checklist is
+`docs/BAR_REDESIGN.md`**: work down its unchecked items. Everything below
+this paragraph is the older plan and waits until the upgrade is done.
+
 New direction (2026-10-15): the goal is now a **world simulation** where
 engines stack (see `docs/VISION.md` → North star). The user lets Claude
 decide the details and only reviews/critiques. Work one step at a time,
