@@ -42,7 +42,7 @@ struct Loading {
 }  // namespace
 
 wgpu::BindGroupLayout GpuModel::createLayout(const wgpu::Device& device) {
-  wgpu::BindGroupLayoutEntry e[6];
+  wgpu::BindGroupLayoutEntry e[7];
   e[0].binding = 1;
   e[0].visibility = wgpu::ShaderStage::Fragment;
   e[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -56,8 +56,12 @@ wgpu::BindGroupLayout GpuModel::createLayout(const wgpu::Device& device) {
   e[5].binding = 6;
   e[5].visibility = wgpu::ShaderStage::Fragment;
   e[5].sampler.type = wgpu::SamplerBindingType::Filtering;
+  e[6].binding = 7;
+  e[6].visibility = wgpu::ShaderStage::Fragment;
+  e[6].texture.sampleType = wgpu::TextureSampleType::Float;
+  e[6].texture.viewDimension = wgpu::TextureViewDimension::e2D;
   wgpu::BindGroupLayoutDescriptor desc;
-  desc.entryCount = 6;
+  desc.entryCount = 7;
   desc.entries = e;
   return device.CreateBindGroupLayout(&desc);
 }
@@ -114,7 +118,7 @@ void finish(const std::shared_ptr<Loading>& l) {
     u.emissive[0] = m.emissive.x;
     u.emissive[1] = m.emissive.y;
     u.emissive[2] = m.emissive.z;
-    wgpu::BindGroupEntry e[6];
+    wgpu::BindGroupEntry e[7];
     e[0].binding = 1;
     e[0].buffer = makeBuffer(device, &u, sizeof(u), wgpu::BufferUsage::Uniform);
     e[0].size = sizeof(u);
@@ -128,9 +132,11 @@ void finish(const std::shared_ptr<Loading>& l) {
     e[4].textureView = view(m.occlusionImage, false, whiteLinear);
     e[5].binding = 6;
     e[5].sampler = l->sampler;
+    e[6].binding = 7;
+    e[6].textureView = view(m.emissiveImage, true, white);
     wgpu::BindGroupDescriptor desc;
     desc.layout = l->layout;
-    desc.entryCount = 6;
+    desc.entryCount = 7;
     desc.entries = e;
     model->bindGroups.push_back(device.CreateBindGroup(&desc));
   }

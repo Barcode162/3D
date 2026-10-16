@@ -211,6 +211,7 @@ struct ModelMaterial {
 @group(2) @binding(4) var normalMap: texture_2d<f32>;
 @group(2) @binding(5) var occlusionMap: texture_2d<f32>;    // r = occlusion
 @group(2) @binding(6) var modelSampler: sampler;
+@group(2) @binding(7) var emissiveMap: texture_2d<f32>;  // glow pattern (white = plain glow)
 
 struct ModelIn {
   @location(0) position: vec3f,
@@ -247,6 +248,7 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let mr = textureSample(metalRoughMap, modelSampler, in.uv);
   let nt = textureSample(normalMap, modelSampler, in.uv).xyz * 2.0 - 1.0;
   let occlusion = textureSample(occlusionMap, modelSampler, in.uv).r;
+  let glowPattern = textureSample(emissiveMap, modelSampler, in.uv).rgb;
 
   let alpha = baseSample.a * m.baseColor.a;
   var base = baseSample.rgb * m.baseColor.rgb;
@@ -262,7 +264,7 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let n = normalize(t * (nt.x * m.params.z) + b * (nt.y * m.params.z) + n0 * nt.z);
   let ao = mix(1.0, occlusion, m.params.w);
   // object.material.x = highlight glow when you stand at something.
-  let emission = m.emissive.rgb + base * object.material.x;
+  let emission = m.emissive.rgb * glowPattern + base * object.material.x;
   let lit = shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
   return vec4f(lit.rgb, alpha);
 }

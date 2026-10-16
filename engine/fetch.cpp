@@ -2,6 +2,7 @@
 
 #include <emscripten/emscripten.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <map>
 
@@ -12,39 +13,89 @@ namespace {
 
 using FetchDone = std::function<void(bool, std::vector<uint8_t>)>;
 using FetchProgress = std::function<void(float)>;
+using DecodeDone = std::function<void(bool, Rgba8Image)>;
 
 struct Download {
   FetchDone done;
   FetchProgress progress;
 };
-using DecodeDone = std::function<void(bool, Rgba8Image)>;
+
+std::map<int, Download>& pendingDownloads() {
+  static std::map<int, Download> pending;
+  return pending;
+}
 
 std::map<int, DecodeDone>& pendingDecodes() {
   static std::map<int, DecodeDone> pending;
   return pending;
 }
 
-void onFetchLoad(unsigned, void* arg, void* data, unsigned size) {
-  auto* d = static_cast<Download*>(arg);
-  const auto* bytes = static_cast<const uint8_t*>(data);
-  if (d->progress) d->progress(1.0f);
-  d->done(true, std::vector<uint8_t>(bytes, bytes + size));
-  delete d;
-}
-
-void onFetchError(unsigned, void* arg, int status, const char*) {
-  auto* d = static_cast<Download*>(arg);
-  LOG_ERROR("Download failed (HTTP %d).", status);
-  d->done(false, {});
-  delete d;
-}
-
-void onFetchProgress(unsigned, void* arg, int loaded, int total) {
-  auto* d = static_cast<Download*>(arg);
-  if (d->progress && total > 0) d->progress(static_cast<float>(loaded) / static_cast<float>(total));
-}
-
 }  // namespace
+
+// Called from JavaScript as a download comes in (fraction 0..1).
+extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchProgress(int id, float fraction) {
+  auto& pending = pendingDownloads();
+  const auto it = pending.find(id);
+  if (it != pending.end() && it->second.progress) it->second.progress(std::min(fraction, 1.0f));
+}
+
+// Called from JavaScript when a download has finished (size < 0 = failed).
+extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchDone(int id, uint8_t* data, int size) {
+  auto& pending = pendingDownloads();
+  const auto it = pending.find(id);
+  if (it == pending.end()) return;
+  Download d = std::move(it->second);
+  pending.erase(it);
+  if (size < 0) {
+    d.done(false, {});
+    return;
+  }
+  std::vector<uint8_t> bytes(data, data + size);
+  free(data);
+  if (d.progress) d.progress(1.0f);
+  d.done(true, std::move(bytes));
+}
+
+// fetch() with progress. Files that are gzipped (they start with 1f 8b) are
+// unpacked with the browser's DecompressionStream; if the server already
+// unpacked them (Content-Encoding: gzip), they arrive ready to use.
+EM_JS(void, js_fetch, (int id, const char* urlPtr), {
+  var url = UTF8ToString(urlPtr);
+  fetch(url).then(function(resp) {
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var total = +(resp.headers.get('Content-Length') || 0);
+    var reader = resp.body.getReader();
+    var chunks = [];
+    var got = 0;
+    function pump() {
+      return reader.read().then(function(r) {
+        if (r.done) return;
+        chunks.push(r.value);
+        got += r.value.length;
+        if (total > 0) _engine_fetchProgress(id, got / total);
+        return pump();
+      });
+    }
+    return pump().then(function() {
+      var bytes = new Uint8Array(got);
+      var o = 0;
+      for (var i = 0; i < chunks.length; i++) { bytes.set(chunks[i], o); o += chunks[i].length; }
+      if (bytes.length > 2 && bytes[0] == 0x1f && bytes[1] == 0x8b) {
+        var ds = new window['DecompressionStream']('gzip');
+        var stream = new Blob([bytes])['stream']()['pipeThrough'](ds);
+        return new Response(stream).arrayBuffer().then(function(b) { return new Uint8Array(b); });
+      }
+      return bytes;
+    });
+  }).then(function(bytes) {
+    var ptr = _malloc(Math.max(bytes.length, 1));
+    HEAPU8.set(bytes, ptr);
+    _engine_fetchDone(id, ptr, bytes.length);
+  }).catch(function(e) {
+    err('Download failed: ' + url + ' (' + e + ')');
+    _engine_fetchDone(id, 0, -1);
+  });
+});
 
 // Called from JavaScript when an image has been decoded (pixels = 0 on failure).
 extern "C" EMSCRIPTEN_KEEPALIVE void engine_imageDecoded(int id, uint8_t* pixels, int width, int height) {
@@ -86,8 +137,10 @@ EM_JS(void, js_decodeImage, (int id, const uint8_t* data, int size, const char* 
 });
 
 void fetchFile(const std::string& url, FetchDone done, FetchProgress progress) {
-  auto* d = new Download{std::move(done), std::move(progress)};
-  emscripten_async_wget2_data(url.c_str(), "GET", "", d, true, onFetchLoad, onFetchError, onFetchProgress);
+  static int nextId = 1;
+  const int id = nextId++;
+  pendingDownloads()[id] = {std::move(done), std::move(progress)};
+  js_fetch(id, url.c_str());
 }
 
 void decodeImage(const std::vector<uint8_t>& bytes, const std::string& mimeType, DecodeDone done) {

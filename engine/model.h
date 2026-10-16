@@ -31,7 +31,8 @@ class GpuModel {
 
   // The bind group layout models are drawn with (group 2 of the model
   // pipeline): binding 1 = material uniforms, 2..5 = base color,
-  // metal/roughness, normal, occlusion textures, 6 = sampler.
+  // metal/roughness, normal, occlusion textures, 6 = sampler, 7 = emissive
+  // texture.
   static wgpu::BindGroupLayout createLayout(const wgpu::Device& device);
   static wgpu::VertexBufferLayout vertexLayout();
 

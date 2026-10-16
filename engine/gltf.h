@@ -38,6 +38,7 @@ struct ModelMaterial {
   Vec3 emissive;
   float normalScale = 1, occlusionStrength = 1;
   int baseColorImage = -1, metalRoughImage = -1, normalImage = -1, occlusionImage = -1;
+  int emissiveImage = -1;  // glow pattern (screens, lit windows), times `emissive`
   bool blend = false;  // see-through (glTF alphaMode BLEND), e.g. glass
 };
 

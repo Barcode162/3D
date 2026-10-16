@@ -67,6 +67,7 @@ struct App {
   int held = -1;                 // body in your hand
   int aimed = -1;                // body in the middle of the screen, within reach
 
+  float eyeHeight = 1.65f;  // eyes above the floor you stand on
   int focused = -1;      // interactable you're standing at and facing
   int highlighted = -1;  // interactable currently drawn glowing
   int bannerSong = 0;
@@ -99,7 +100,11 @@ void updateCamera(float dt) {
   p += g_app.camera.flatForward() * (move.y * kWalkSpeed * dt);
   p += g_app.camera.flatRight() * (move.x * kWalkSpeed * dt);
   const Vec3 before = g_app.camera.position;
-  g_app.camera.position = app::resolveCollisions(g_app.scene, p, kBodyRadius);
+  p = app::resolveCollisions(g_app.scene, p, kBodyRadius);
+  // Step up onto (or down from) raised floors smoothly.
+  const float targetY = app::groundHeight(g_app.scene, p) + g_app.eyeHeight;
+  p.y += (targetY - p.y) * std::min(1.0f, dt * 12.0f);
+  g_app.camera.position = p;
   // Drive the walk animation by how far you actually moved (walls stop it).
   const Vec3 moved = g_app.camera.position - before;
   app::advanceWalk(g_app.avatarMotion, engine::dot(moved, g_app.camera.flatForward()),
@@ -125,8 +130,13 @@ std::string promptFor(const app::Interactable& it) {
   if (it.action == app::Action::kJukebox) return g_app.jukebox.prompt();
   if (it.action == app::Action::kMirror) {
     const app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
-    const char* kind = m.mode == app::MirrorMode::kFull ? "Mirror" : "Avatar mirror";
-    return std::string(kind) + (m.on ? "\nTap to turn off" : "\nTap to turn on");
+    if (!m.on) return "Mirror: off\nTap: full mirror";
+    if (m.mode == app::MirrorMode::kFull) return "Mirror: full\nTap: avatars only";
+    return "Mirror: avatars only\nTap: turn off";
+  }
+  if (it.action == app::Action::kMirrorMode) {
+    static const char* kNames[3] = {"Full mirror", "Avatars-only mirror", "Mirror off"};
+    return std::string(kNames[it.value]) + "\nTap to choose";
   }
   return it.prompt;
 }
@@ -248,10 +258,31 @@ Vec3 screenRay(engine::Vec2 tap) {
 
 void use(const app::Interactable& it) {
   if (it.action == app::Action::kJukebox) g_app.jukeboxMenu.open();
-  if (it.action == app::Action::kMirror) {
+  if (it.action == app::Action::kMirror || it.action == app::Action::kMirrorMode) {
     app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
-    m.on = !m.on;
-    g_app.shared.mirrorToggled(it.mirror, m.on);
+    // Tapping the glass steps through full -> avatars only -> off -> full;
+    // the panel's buttons pick one directly.
+    int mode = !m.on ? 2 : m.mode == app::MirrorMode::kFull ? 0 : 1;
+    mode = it.action == app::Action::kMirror ? (mode + 1) % 3 : it.value;
+    m.on = mode != 2;
+    if (mode != 2) m.mode = mode == 0 ? app::MirrorMode::kFull : app::MirrorMode::kAvatarsOnly;
+    g_app.shared.mirrorChanged(it.mirror, m.on, mode == 1);
+  }
+}
+
+// Lights the button for each mirror's current mode (also after another
+// player changes it).
+void updateMirrorButtons() {
+  static std::vector<int> shown;
+  shown.resize(g_app.scene.mirrors.size(), -1);
+  for (size_t i = 0; i < g_app.scene.mirrors.size(); ++i) {
+    const app::Mirror& m = g_app.scene.mirrors[i];
+    const int mode = !m.on ? 2 : m.mode == app::MirrorMode::kFull ? 0 : 1;
+    if (shown[i] == mode) continue;
+    shown[i] = mode;
+    for (int b = 0; b < 3; ++b) {
+      if (m.buttonModels[b] >= 0) g_app.renderer.setModelBaseGlow(static_cast<size_t>(m.buttonModels[b]), b == mode ? 1.6f : 0.05f);
+    }
   }
 }
 
@@ -394,6 +425,7 @@ void updateInteraction(double nowMs) {
     if (hit >= 0) use(items[static_cast<size_t>(hit)]);
   }
 
+  updateMirrorButtons();
   g_app.jukebox.update();
   if (g_app.jukebox.songsStarted() != g_app.bannerSong) {
     g_app.bannerSong = g_app.jukebox.songsStarted();
@@ -495,6 +527,8 @@ void onGpuReady(bool ok) {
   g_app.camera.position = g_app.scene.spawnPosition;
   g_app.camera.yaw = g_app.scene.spawnYaw;
   applyTestCamera();
+  // Keep the start height above the floor (test cameras may start higher).
+  g_app.eyeHeight = g_app.camera.position.y - app::groundHeight(g_app.scene, g_app.camera.position);
   g_app.input.attach("#canvas");
   g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
   g_app.others.start();

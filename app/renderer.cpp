@@ -419,12 +419,23 @@ void SceneRenderer::setGlow(const Interactable& it, float glow) {
     u.material[0] += glow;
     gpu_->queue.WriteBuffer(objectBuffer_, i * kObjectStride, &u, sizeof(u));
   }
-  // Models: only the glow (material.x) changes; their other values are zero.
   for (size_t i = it.firstModel; i < it.firstModel + it.modelCount && i < models_.size(); ++i) {
-    const float material[4] = {glow, 0, 0, 0};
-    gpu_->queue.WriteBuffer(objectBuffer_, models_[i].uniformOffset + offsetof(ObjectUniforms, material), material,
-                            sizeof(material));
+    modelHighlight_[i] = glow;
+    writeModelGlow(i);
   }
+}
+
+void SceneRenderer::setModelBaseGlow(size_t model, float glow) {
+  if (model >= models_.size()) return;
+  modelBaseGlow_[model] = glow;
+  writeModelGlow(model);
+}
+
+// Models: only the glow (material.x) changes; their other values are zero.
+void SceneRenderer::writeModelGlow(size_t i) {
+  const float material[4] = {modelBaseGlow_[i] + modelHighlight_[i], 0, 0, 0};
+  gpu_->queue.WriteBuffer(objectBuffer_, models_[i].uniformOffset + offsetof(ObjectUniforms, material), material,
+                          sizeof(material));
 }
 
 // Reflection textures match the screen, so the glass can read them 1:1.
@@ -487,12 +498,14 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
     }
   }
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
+  modelBaseGlow_.assign(models_.size(), 0.0f);
+  modelHighlight_.assign(models_.size(), 0.0f);
   // Files are requested in placement order, so the room shell (placed
   // first) arrives first.
   fileProgress_.assign(files.size(), 0.0f);
   for (size_t f = 0; f < files.size(); ++f) {
     engine::GpuModel::load(
-        gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f],
+        gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f] + ".gz",
         [this, f, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
           fileProgress_[f] = 1.0f;
           ++filesDone_;

@@ -52,10 +52,10 @@ void SharedWorld::pickedUp(int body) {
   g.lastSentMs = -1e9;  // send right away
 }
 
-void SharedWorld::mirrorToggled(int mirror, bool on) {
+void SharedWorld::mirrorChanged(int mirror, bool on, bool avatarsOnly) {
   if (!on_) return;
-  const double v = on ? 1 : 0;
-  engine::net::setWorld("m" + std::to_string(mirror), &v, 1);
+  const double v[2] = {on ? 1.0 : 0.0, avatarsOnly ? 1.0 : 0.0};
+  engine::net::setWorld("m" + std::to_string(mirror), v, 2);
 }
 
 void SharedWorld::sendGlass(int index, const engine::Body& b, int state) {
@@ -91,6 +91,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       Mirror& m = scene.mirrors[static_cast<size_t>(i)];
       if (m.on != (v[0] != 0)) LOG_INFO("Multiplayer: mirror %d turned %s by another player.", i, v[0] != 0 ? "on" : "off");
       m.on = v[0] != 0;
+      if (v.size() >= 2) m.mode = v[1] != 0 ? MirrorMode::kAvatarsOnly : MirrorMode::kFull;
     } else if (e.key == "jb" && v.size() >= 2) {
       const int song = static_cast<int>(v[0]);
       const int count = static_cast<int>(jukebox.songs().size());

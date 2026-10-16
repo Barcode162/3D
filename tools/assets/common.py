@@ -228,7 +228,8 @@ def cylinder(name, center, radius, depth, axis, mat, segments=24, bevel=0.002):
     bmesh.ops.transform(bm, matrix=Matrix.Translation(center) @ rot, verts=bm.verts)
     obj = _new_object(name, bm, mat)
     obj["smooth"] = True
-    _bevel(obj, min(bevel, radius / 3), 2)
+    if radius >= 0.025:  # tiny parts (keys, caps, pins) don't need rounded edges
+        _bevel(obj, min(bevel, radius / 3), 2)
     return obj
 
 
@@ -499,3 +500,166 @@ def draw_text(px, text, x, y_top, scale, color, center=False):
                 if x0 < 0 or y1 - scale < 0 or x0 + scale > px.shape[1] or y1 > px.shape[0]:
                     continue
                 px[y1 - scale:y1, x0:x0 + scale, :3] = color
+
+
+# ---- More shapes (2026-10-16, the big bar upgrade) ----
+
+def glow_image_material(name, pixels, strength=1.0, base_scale=0.15, roughness=0.3):
+    """A material whose image glows (screens, lit windows, printed neon):
+    `pixels` (h, w, 3) linear, row 0 at the bottom. The same image, dimmed by
+    `base_scale`, is the surface color, so it still looks right when lit."""
+    h, w = pixels.shape[:2]
+    px = np.ones((h, w, 4), dtype=np.float32)
+    px[..., :3] = np.clip(pixels[..., :3], 0, 1)
+    glow = _save_image(f"{name} glow", w, h, px, color=True)
+    dim = px.copy()
+    dim[..., :3] *= base_scale
+    base = _save_image(f"{name} color", w, h, dim, color=True)
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    t_base = nt.nodes.new("ShaderNodeTexImage")
+    t_base.image = base
+    nt.links.new(t_base.outputs["Color"], bsdf.inputs["Base Color"])
+    t_glow = nt.nodes.new("ShaderNodeTexImage")
+    t_glow.image = glow
+    nt.links.new(t_glow.outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = strength
+    bsdf.inputs["Metallic"].default_value = 0.0
+    bsdf.inputs["Roughness"].default_value = roughness
+    mat["grain"] = "u"
+    return mat
+
+
+def quad(name, corners, mat, uvs=((0, 0), (1, 0), (1, 1), (0, 1))):
+    """A flat 4-cornered face (counter-clockwise seen from its front) with its
+    own UVs, e.g. a screen or a printed sign."""
+    bm = bmesh.new()
+    vs = [bm.verts.new(c) for c in corners]
+    f = bm.faces.new(vs)
+    uv = bm.loops.layers.uv.verify()
+    for loop, t in zip(f.loops, uvs):
+        loop[uv].uv = t
+    obj = _new_object(name, bm, mat)
+    obj["keep_uv"] = True
+    return obj
+
+
+def panel(name, center, right, up, w, h, mat, uvs=((0, 0), (1, 0), (1, 1), (0, 1))):
+    """A rectangle `w` x `h` centered at `center`, spanned by unit vectors
+    `right` and `up` (it faces right x up)."""
+    c, r, u = Vector(center), Vector(right) * (w / 2), Vector(up) * (h / 2)
+    return quad(name, [c - r - u, c + r - u, c + r + u, c - r + u], mat, uvs)
+
+
+def prism(name, outline, y0, y1, mat, bevel=0.0, segments=2):
+    """Extrudes a floor outline [(x, z), ...] (any winding) from y0 up to y1."""
+    bm = bmesh.new()
+    pts = list(outline)
+    area = sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1]
+               for i in range(len(pts)))
+    if area > 0:
+        pts.reverse()
+    bottom = [bm.verts.new((x, y0, z)) for (x, z) in pts]
+    top = [bm.verts.new((x, y1, z)) for (x, z) in pts]
+    n = len(pts)
+    bm.faces.new(bottom)
+    bm.faces.new(list(reversed(top)))
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new([bottom[i], top[i], top[j], bottom[j]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    obj = _new_object(name, bm, mat)
+    _bevel(obj, bevel, segments)
+    return obj
+
+
+def obox(name, center, size, yaw, mat, bevel=0.004, segments=2):
+    """A box of `size` (x, y, z) turned by `yaw` radians around +y (same
+    sense as the engine's turnY), centered at `center`."""
+    hx, hy, hz = size[0] / 2, size[1] / 2, size[2] / 2
+    obj = box(name, (-hx, -hy, -hz), (hx, hy, hz), mat, bevel, segments)
+    obj.data.transform(Matrix.Translation(Vector(center)) @ Matrix.Rotation(yaw, 4, "Y"))
+    return obj
+
+
+def path_frames(path):
+    """For a floor path [(x, z), ...]: per point (position, tangent, normal),
+    where normal = tangent turned 90 degrees to the right (+z when going +x)."""
+    out = []
+    n = len(path)
+    for i in range(n):
+        a = Vector((*path[max(i - 1, 0)], 0))
+        b = Vector((*path[min(i + 1, n - 1)], 0))
+        t = (b - a).normalized()
+        out.append((path[i], (t.x, t.y), (-t.y, t.x)))
+    return out
+
+
+def sweep(name, path, profile, mat, caps=True, smooth=False):
+    """Sweeps a cross-section along a floor path. `path` is [(x, z), ...];
+    `profile` is [(s, y), ...] going around the section, where s is the
+    sideways offset along the path's right-hand normal (see path_frames)."""
+    bm = bmesh.new()
+    rings = []
+    for (p, t, nrm) in path_frames(path):
+        rings.append([bm.verts.new((p[0] + s * nrm[0], y, p[1] + s * nrm[1])) for (s, y) in profile])
+    m = len(profile)
+    for i in range(len(rings) - 1):
+        ra, rb = rings[i], rings[i + 1]
+        for j in range(m):
+            k = (j + 1) % m
+            bm.faces.new([ra[j], ra[k], rb[k], rb[j]])
+    if caps:
+        bm.faces.new(list(reversed(rings[0])))
+        bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return mesh_object(name, bm, mat, smooth)
+
+
+def resample(path, step):
+    """Evenly spaced points along a polyline [(x, z), ...]."""
+    pts = [Vector(p) for p in path]
+    out = [pts[0]]
+    carry = 0.0
+    for a, b in zip(pts, pts[1:]):
+        seg = (b - a).length
+        d = step - carry
+        while d <= seg:
+            out.append(a + (b - a) * (d / seg))
+            d += step
+        carry = seg - (d - step)
+    if (out[-1] - pts[-1]).length > 1e-4:
+        out.append(pts[-1])
+    return [(p.x, p.y) for p in out]
+
+
+def noise2d(h, w, scale, seed=0, octaves=4):
+    """Smooth value noise in 0..1, (h, w)."""
+    rng = np.random.default_rng(seed)
+    out = np.zeros((h, w), dtype=np.float32)
+    amp, total = 1.0, 0.0
+    for o in range(octaves):
+        cells = max(2, int(scale * (2 ** o)))
+        grid = rng.random((cells + 1, cells + 1)).astype(np.float32)
+        ys = np.linspace(0, cells, h, endpoint=False)
+        xs = np.linspace(0, cells, w, endpoint=False)
+        y0, x0 = ys.astype(int), xs.astype(int)
+        fy, fx = ys - y0, xs - x0
+        fy, fx = fy * fy * (3 - 2 * fy), fx * fx * (3 - 2 * fx)
+        a = grid[y0][:, x0]
+        b = grid[y0][:, x0 + 1]
+        c = grid[y0 + 1][:, x0]
+        d = grid[y0 + 1][:, x0 + 1]
+        top = a + (b - a) * fx[None, :]
+        bot = c + (d - c) * fx[None, :]
+        out += amp * (top + (bot - top) * fy[:, None])
+        total += amp
+        amp *= 0.5
+    return out / total
+
+
+def srgb(c):
+    """sRGB 0..1 color (like a color picker) to the linear values images use."""
+    return tuple(((v + 0.055) / 1.055) ** 2.4 if v > 0.04045 else v / 12.92 for v in c)

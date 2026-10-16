@@ -21,7 +21,7 @@ class SharedWorld {
 
   // Local actions to share.
   void pickedUp(int body);
-  void mirrorToggled(int mirror, bool on);
+  void mirrorChanged(int mirror, bool on, bool avatarsOnly);
   // False if someone else is holding it right now.
   bool canPickUp(int body) const;
 

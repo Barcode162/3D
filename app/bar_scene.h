@@ -74,9 +74,16 @@ struct Blocker {
   float minX, minZ, maxX, maxZ;
 };
 
+// A raised floor you can walk onto (a stage, a step): inside the rectangle
+// the ground is `height` meters up.
+struct FloorArea {
+  float minX, minZ, maxX, maxZ;
+  float height;
+};
+
 // Something you can use. It has a floating name tag; walking close and
 // looking at it highlights it and shows a prompt; tapping it runs `action`.
-enum class Action { kNone, kJukebox, kMirror };
+enum class Action { kNone, kJukebox, kMirror, kMirrorMode };
 
 struct Interactable {
   std::string name;               // floating name tag
@@ -86,7 +93,8 @@ struct Interactable {
   size_t firstObject = 0, objectCount = 0;  // parts that light up when focused
   size_t firstModel = 0, modelCount = 0;    // models (BarScene::models) that light up
   Action action = Action::kNone;
-  int mirror = -1;  // for Action::kMirror: index into BarScene::mirrors
+  int mirror = -1;  // for Action::kMirror(Mode): index into BarScene::mirrors
+  int value = 0;    // for Action::kMirrorMode: 0 = full, 1 = avatars only, 2 = off
 };
 
 // A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole
@@ -100,6 +108,9 @@ struct Mirror {
   float halfWidth, halfHeight;
   MirrorMode mode;
   bool on = true;
+  // The lit buttons that show the mode (BarScene::models; -1 = none):
+  // full, avatars only, off.
+  int buttonModels[3] = {-1, -1, -1};
 };
 
 struct BarScene {
@@ -108,6 +119,7 @@ struct BarScene {
   std::vector<Collider> colliders;
   std::vector<PointLight> lights;
   std::vector<Blocker> blockers;
+  std::vector<FloorArea> floors;
   std::vector<Interactable> interactables;
   std::vector<Mirror> mirrors;
   engine::Vec3 lightGridMin, lightGridMax;  // floor area the light grid covers (x, z)
@@ -126,5 +138,8 @@ std::vector<engine::MaterialImages> buildBarTextures();
 
 // Moves a walker (circle of `radius` on the floor) out of any blocker.
 engine::Vec3 resolveCollisions(const BarScene& scene, engine::Vec3 position, float radius);
+
+// How high the floor is under a point (0, or a raised FloorArea).
+float groundHeight(const BarScene& scene, engine::Vec3 position);
 
 }  // namespace app

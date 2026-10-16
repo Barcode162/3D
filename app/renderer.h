@@ -29,6 +29,8 @@ class SceneRenderer {
 
   // Extra glow on an interactable's parts (0 = normal).
   void setGlow(const Interactable& it, float glow);
+  // A model's own glow, kept under any highlight (e.g. a lit button).
+  void setModelBaseGlow(size_t model, float glow);
 
   // Renders one frame to `target`. `avatar` places the avatar in the world;
   // `avatarBones` are its skinning matrices (see Avatar::pose) for mirrors,
@@ -147,12 +149,14 @@ class SceneRenderer {
   std::vector<ModelDraw> models_;
   size_t modelsLoaded_ = 0;
   std::vector<float> fileProgress_;  // per model file, 0..1
+  std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
   size_t filesDone_ = 0;
   wgpu::TextureView colorMaps_, bumpMaps_;
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i
   wgpu::Buffer lightingBuffer_;
   void buildLighting(const BarScene& scene);
+  void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;
   std::vector<DrawItem> sceneDraws_;
