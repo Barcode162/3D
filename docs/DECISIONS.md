@@ -397,6 +397,21 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
 ## Gotchas hit so far
+- **Loading stutter (fixed 2026-10-16):** model textures used to be
+  decoded to pixels on the main thread (getImageData), converted to float
+  with `pow()` per channel and mipmapped on the CPU, all in the frame the
+  model arrived (the hall has 48 textures: seconds of freeze). Now
+  `engine/gpu_upload.*`: createImageBitmap (off the main thread) →
+  `copyExternalImageToTexture` → mipmaps drawn on the GPU, and every GPU
+  setup step is a job run with a per-frame budget (`runJobs`, 8 ms on the
+  loading screen, 3 ms after). Same pixels as before (diffed).
+- JS inside `EM_JS` is closure-compiled: write WebGPU / DOM property names
+  quoted (`dev['queue']['copyExternalImageToTexture']`, `{'source': b}`),
+  or they get renamed and silently do nothing. `WebGPU.getJsObject(ptr)`
+  turns a C++ handle into the JS object (needs `EM_JS_DEPS(x, "$WebGPU")`).
+- Never capture `std::vector<bool>` elements with `[x = v[i]]` in a lambda:
+  that copies a proxy that points into the vector (dangling later). Use
+  `static_cast<bool>(v[i])`.
 - Files in `web/` are copied by the `site_assets` target on every build
   (before, only when app.js relinked, so a JS-only change could test stale).
 - Physics in the headless test runs at ~2 fps, so the world moves in slow

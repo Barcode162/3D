@@ -122,3 +122,15 @@ The user wants an avatar that really looks like them: realistic, Blender-quality
 - Everything that looks usable should be usable. First everything in "very
   low format" (working, not pretty), then a remaster pass
   (`docs/REMASTER.md`).
+
+## Racing sim (2026-10-16)
+A genuine racing sim on the two rigs, alone or two players (left and right
+rig), with bots you can bump into like Need for Speed, physics like
+Assetto Corsa, amazing looks in the end. Start with the best possible shell
+and structure (driving feel first), then polish. Touch controls must feel
+buttery smooth with big steering travel; also keyboard, mouse and real sim
+controls (wheels, gamepads). Sitting down dives you in: the whole screen
+is the game (sideways); spectators see the race on the rig's three
+monitors. Every mini game should become a really powerful game in its own
+right. Also: a real realtime sync server (not phones connecting to each
+other). Plan: `docs/RACING.md`.

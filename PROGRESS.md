@@ -1,9 +1,17 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** The big bar upgrade (`docs/BAR_REDESIGN.md`): a new, bigger room full of real clutter, game corners, a grand piano, a giant 2-in-1 mirror, and a loading screen
+**Current focus:** The **racing sim** (`docs/RACING.md`): a real driving sim on the two rigs (1-2 players + bots, real physics, full-screen game, race on the rigs' monitors for everyone), then a realtime sync server
 
 ## Next up (start here in a new session)
+**2026-10-16, NEW TOP PRIORITY: the racing sim. The plan and checklist
+is `docs/RACING.md`; work through its "Steps" in order.** Step 1 (the
+loading stutter) is done: textures go from the file straight to the GPU
+(browser decode + copyExternalImageToTexture + GPU mipmaps) and loading
+work runs a few ms per frame (`engine/gpu_upload.*`). Open question for
+the user: the realtime server needs a Cloudflare account (see
+`docs/RACING.md` → Multiplayer). Everything below waits.
+
 **2026-10-16, "make everything work" pass: built and deployed.** Voice
 chat (WebRTC), menu (emotes, avatars, profile, voice, settings, piano,
 bartender), seats for everyone, piano with 10 classical MIDI songs + MIDI
@@ -314,3 +322,9 @@ A small DAW inside the bar, all DSP written in C++:
   corner, fireplace lounge, string lights, neon, gallery and collector
   walls. Shared helpers: `tools/assets/layout.py` (floor plan),
   `tools/assets/props_lib.py` (bottles, glasses, tools, books, plants...).
+- **2026-10-16:** User asked for a genuine racing sim (Assetto-like
+  physics, NFS-style bots and contact, 1-2 players, smooth touch + keyboard
+  / mouse / wheel controls, full-screen game, race on the rigs' monitors
+  for spectators), a fix for the loading stutter, and a real realtime
+  server. Plan written: `docs/RACING.md`. Loading stutter fixed: all
+  texture work moved to the GPU and spread over frames.

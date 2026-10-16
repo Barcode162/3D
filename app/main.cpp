@@ -21,6 +21,7 @@
 #include "app/renderer.h"
 #include "app/rhythm.h"
 #include "app/shared_world.h"
+#include "engine/gpu_upload.h"
 #include "engine/audio.h"
 #include "engine/billboard.h"
 #include "engine/camera.h"
@@ -1230,6 +1231,9 @@ void frame() {
   g_app.lastFrameMs = nowMs;
 
   g_app.gpu.resizeIfNeeded();
+  // Loading work (textures, model buffers) gets a slice of each frame: more
+  // while the loading screen is up, little once you walk around.
+  engine::runJobs(g_app.entered ? 3.0 : 8.0);
   updateFps(nowMs);
   handleCommands();
   updateCamera(dt);

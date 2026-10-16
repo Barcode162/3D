@@ -5,6 +5,7 @@
 #include <cstddef>
 
 #include "engine/fetch.h"
+#include "engine/gpu_upload.h"
 #include "engine/log.h"
 #include "engine/texture.h"
 
@@ -32,8 +33,9 @@ struct Loading {
   wgpu::Sampler sampler;
   std::string url;
   ModelData data;
-  std::vector<Rgba8Image> images;
-  std::vector<bool> imageOk;
+  // Per image: its texture as color (sRGB) and as data (linear), made
+  // only for the uses the materials have.
+  std::vector<wgpu::Texture> srgbTextures, linearTextures;
   size_t pendingImages = 0;
   double startMs = 0;
   std::function<void(std::shared_ptr<GpuModel>)> done;
@@ -90,16 +92,15 @@ void finish(const std::shared_ptr<Loading>& l) {
 
   // Textures, created once per image and shared by materials. Color images
   // are sRGB; data images (roughness, normals) are linear.
-  std::vector<wgpu::TextureView> srgbViews(l->images.size()), linearViews(l->images.size());
+  std::vector<wgpu::TextureView> srgbViews(l->srgbTextures.size()), linearViews(l->linearTextures.size());
   const auto view = [&](int image, bool srgb, const wgpu::TextureView& fallback) {
-    if (image < 0 || static_cast<size_t>(image) >= l->images.size() || !l->imageOk[static_cast<size_t>(image)]) {
+    auto& textures = srgb ? l->srgbTextures : l->linearTextures;
+    auto& views = srgb ? srgbViews : linearViews;
+    if (image < 0 || static_cast<size_t>(image) >= textures.size() || !textures[static_cast<size_t>(image)]) {
       return fallback;
     }
-    auto& slot = srgb ? srgbViews[static_cast<size_t>(image)] : linearViews[static_cast<size_t>(image)];
-    if (!slot) {
-      const Rgba8Image& img = l->images[static_cast<size_t>(image)];
-      slot = createTexture2D(device, img.width, img.height, img.pixels.data(), srgb, l->url.c_str()).CreateView();
-    }
+    auto& slot = views[static_cast<size_t>(image)];
+    if (!slot) slot = textures[static_cast<size_t>(image)].CreateView();
     return slot;
   };
   const wgpu::TextureView white = solidTexture(device, 255, 255, 255, true);
@@ -157,7 +158,7 @@ void finish(const std::shared_ptr<Loading>& l) {
     model->parts.push_back(part);
   }
   LOG_INFO("Model %s: %zu parts, %zu triangles, %zu textures, %.0f ms.", l->url.c_str(), model->parts.size(),
-           triangles, l->images.size(), emscripten_get_now() - l->startMs);
+           triangles, l->data.images.size(), emscripten_get_now() - l->startMs);
   l->done(model);
 }
 
@@ -185,26 +186,43 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
       l->done(nullptr);
       return;
     }
+    // Which images are colors and which are data (both is possible).
     const size_t count = l->data.images.size();
-    l->images.resize(count);
-    l->imageOk.assign(count, false);
-    l->pendingImages = count;
-    if (count == 0) {
-      finish(l);
+    std::vector<bool> asSrgb(count, false), asLinear(count, false);
+    const auto use = [&](int image, bool srgb) {
+      if (image >= 0 && static_cast<size_t>(image) < count) (srgb ? asSrgb : asLinear)[static_cast<size_t>(image)] = true;
+    };
+    for (const ModelMaterial& m : l->data.materials) {
+      use(m.baseColorImage, true);
+      use(m.emissiveImage, true);
+      use(m.metalRoughImage, false);
+      use(m.normalImage, false);
+      use(m.occlusionImage, false);
+    }
+    l->srgbTextures.resize(count);
+    l->linearTextures.resize(count);
+    l->pendingImages = 0;
+    for (size_t i = 0; i < count; ++i) l->pendingImages += asSrgb[i] || asLinear[i] ? 1 : 0;
+    if (l->pendingImages == 0) {
+      queueJob([l] { finish(l); });
       return;
     }
     for (size_t i = 0; i < count; ++i) {
+      if (!asSrgb[i] && !asLinear[i]) continue;
+      std::vector<wgpu::TextureFormat> formats;
+      if (asSrgb[i]) formats.push_back(wgpu::TextureFormat::RGBA8UnormSrgb);
+      if (asLinear[i]) formats.push_back(wgpu::TextureFormat::RGBA8Unorm);
       ModelImage& img = l->data.images[i];
-      decodeImage(img.bytes, img.mimeType, [l, i](bool decoded, Rgba8Image image) {
-        if (!decoded) LOG_ERROR("Model %s: texture %zu could not be decoded.", l->url.c_str(), i);
-        l->imageOk[i] = decoded;
-        l->images[i] = std::move(image);
-        if (--l->pendingImages == 0) {
-          for (ModelImage& m : l->data.images) std::vector<uint8_t>().swap(m.bytes);  // free the files
-          finish(l);
-        }
+      loadImageTexture(l->device, img.bytes, img.mimeType, formats, l->url.c_str(),
+                       [l, i, srgb = static_cast<bool>(asSrgb[i])](std::vector<wgpu::Texture> textures) {
+        if (textures.empty()) LOG_ERROR("Model %s: texture %zu could not be loaded.", l->url.c_str(), i);
+        size_t k = 0;
+        if (srgb && k < textures.size()) l->srgbTextures[i] = textures[k++];
+        if (k < textures.size()) l->linearTextures[i] = textures[k];
+        if (--l->pendingImages == 0) queueJob([l] { finish(l); });
       });
     }
+    for (ModelImage& m : l->data.images) std::vector<uint8_t>().swap(m.bytes);  // the browser has its own copy
   }, std::move(progress));
 }
 
