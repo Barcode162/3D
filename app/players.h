@@ -16,6 +16,9 @@ namespace app {
 struct OtherPlayer {
   int id = 0;
   std::string name;
+  std::string account;  // "" = a guest
+  int avatarRev = 0;     // profile picture revision (0 = none)
+  double infoMs = -1e9;  // when name/account were last read
   engine::Vec3 eye;  // where their eyes are (their camera)
   float yaw = 0, pitch = 0;
   AvatarMotion motion;

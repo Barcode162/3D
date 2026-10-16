@@ -1,2 +1,5 @@
 # The room files are private (relay.php reads them directly).
 RedirectMatch 403 ^.*/rooms/
+# Accounts (passwords as hashes, tokens, profiles) are private too;
+# account.php serves what may be public.
+RedirectMatch 403 ^.*/accounts/

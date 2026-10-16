@@ -62,6 +62,8 @@ window.bar3dNet = (function () {
     if (inFlight || !state) return;
     inFlight = true;
     var body = { room: room, id: id, name: name, t: stateTime, s: state, since: since };
+    var acct = window.bar3dAccount;
+    if (acct && acct.token()) body.tok = acct.token();  // the relay shows your account's name and picture
     var sending = worldOut;
     worldOut = {};
     if (Object.keys(sending).length) body.w = sending;
@@ -99,6 +101,8 @@ window.bar3dNet = (function () {
           info('Multiplayer: ' + p.name + ' joined.');
         }
         known.name = p.name;
+        known.acct = p.acct || '';
+        known.av = p.av || 0;
         if (lastSent[p.id] === p.t) return;
         lastSent[p.id] = p.t;
         packets.push({ index: known.index, t: p.t, s: p.s });
@@ -155,6 +159,16 @@ window.bar3dNet = (function () {
       for (var pid in players) if (players[pid].index === index) return players[pid].name;
       return '';
     },
+    // Their account id ('' = guest) and profile picture revision (0 = none).
+    account: function (index) {
+      for (var pid in players) if (players[pid].index === index) return players[pid].acct || '';
+      return '';
+    },
+    avatarRev: function (index) {
+      for (var pid in players) if (players[pid].index === index) return players[pid].av || 0;
+      return 0;
+    },
+    serverUrl: function () { return server; },
     count: function () { return Object.keys(players).length; },
     // Shared world: queue a change to `key` (sent on the next tick).
     setWorld: function (key, values) {

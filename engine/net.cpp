@@ -53,6 +53,34 @@ std::string playerName(int player) {
   return buffer;
 }
 
+std::string playerAccount(int player) {
+  char buffer[32];
+  EM_ASM({ stringToUTF8(window['bar3dNet']['account']($0), $1, $2); }, player, buffer, sizeof(buffer));
+  return buffer;
+}
+
+int playerAvatarRev(int player) { return EM_ASM_INT({ return window['bar3dNet']['avatarRev']($0); }, player); }
+
+std::string avatarUrl(const std::string& account, int revision) {
+  char buffer[512];
+  EM_ASM({
+    var a = window['bar3dAccount'];
+    stringToUTF8(a ? a['avatarUrl'](UTF8ToString($0), $1) : '', $2, $3);
+  }, account.c_str(), revision, buffer, sizeof(buffer));
+  return buffer;
+}
+
+void showCard(const std::string& account, const std::string& name) {
+  EM_ASM({
+    var a = window['bar3dAccount'];
+    if (a) a['showCard'](UTF8ToString($0), UTF8ToString($1));
+  }, account.c_str(), name.c_str());
+}
+
+bool panelOpen() {
+  return EM_ASM_INT({ var a = window['bar3dAccount']; return a && a['isOpen']() ? 1 : 0; }) != 0;
+}
+
 void setWorld(const std::string& key, const double* values, int count) {
   EM_ASM({
     var v = [];

@@ -16,6 +16,10 @@
 // "rev", "now" (server clock, seconds) and "world":[[key, byId, [..]], ...]
 // with every entry changed after `since` by someone else (since = 0: all).
 // The world is forgotten once the room has been empty for WORLD_KEEP_S.
+// Accounts: a logged-in player adds "tok" (their login token, see
+// account.php). The relay checks it once per player and then shows their
+// account's display name, and "acct" (account id) and "av" (picture
+// revision) to the others, so nobody can wear someone else's name.
 // GET relay.php -> {"ok":1,"relay":"bar3d"} (health check)
 
 header('Access-Control-Allow-Origin: *');
@@ -58,6 +62,8 @@ if (!$leaving) {
   $player = ['name' => $name === '' ? 'Guest' : $name, 't' => is_numeric($t) ? (float)$t : 0.0,
              's' => array_values($s)];
 }
+$tok = $in['tok'] ?? null;
+if (!is_string($tok) || !preg_match('/^[0-9a-f]{48}$/', $tok)) $tok = null;
 $changes = [];
 if (!$leaving && isset($in['w'])) {
   if (!is_array($in['w']) || count($in['w']) > MAX_KEYS) reply(['ok' => 0, 'error' => 'bad world'], 400);
@@ -94,6 +100,23 @@ if ($leaving) {
   unset($players[$id]);
 } elseif (isset($players[$id]) || count($players) < MAX_PLAYERS) {
   $player['seen'] = $now;
+  $old = $players[$id] ?? [];
+  // Account: verified when the token first shows up (or changes), then
+  // refreshed now and then so a new name or picture reaches the others.
+  if ($tok !== null) {
+    $th = hash('sha256', $tok);
+    if (($old['th'] ?? '') === $th && $now - ($old['checked'] ?? 0) < 20) {
+      foreach (['th', 'checked', 'acct', 'av', 'acctName'] as $k) $player[$k] = $old[$k];
+    } else {
+      $t = json_decode((string)@file_get_contents(__DIR__ . "/accounts/tokens/$th.json"), true);
+      $u = is_array($t) ? json_decode((string)@file_get_contents(__DIR__ . "/accounts/users/{$t['id']}.json"), true) : null;
+      if (is_array($u)) {
+        $player += ['th' => $th, 'checked' => $now, 'acct' => $u['id'], 'av' => (int)($u['avatar'] ?? 0),
+                    'acctName' => substr((string)$u['name'], 0, 40)];
+      }
+    }
+    if (isset($player['acctName'])) $player['name'] = $player['acctName'];
+  }
   $players[$id] = $player;
 }
 ftruncate($file, 0);
@@ -106,8 +129,13 @@ fclose($file);
 $others = [];
 foreach ($players as $pid => $p) {
   if ((string)$pid === $id) continue;
-  $others[] = ['id' => (string)$pid, 'name' => $p['name'], 't' => $p['t'], 's' => $p['s'],
-               'age' => (int)round(($now - $p['seen']) * 1000)];
+  $o = ['id' => (string)$pid, 'name' => $p['name'], 't' => $p['t'], 's' => $p['s'],
+        'age' => (int)round(($now - $p['seen']) * 1000)];
+  if (isset($p['acct'])) {
+    $o['acct'] = $p['acct'];
+    $o['av'] = $p['av'];
+  }
+  $others[] = $o;
 }
 $out = ['ok' => 1, 'players' => $others];
 if ($since >= 0) {

@@ -95,6 +95,35 @@ future session re-litigates or repeats it.
   (puts Ogg copies of the songs into build/site, opens
   `?skipintro&rhythm=song,diff&autoplay`, screenshots `build/rhythm-*.png`).
 
+## Accounts (2026-10-16)
+- User asked for sign up / log in, a profile picture, a bio and a
+  "person's card", and seeing name + picture over people's heads.
+- **Server:** `server/account.php` next to `relay.php` on IONOS (the
+  deploy uploads both). No database: JSON files in `accounts/` (private,
+  `.htaccess` → 403): `users/<id>.json` (bcrypt password hash, profile),
+  `names.json` (username → id, flock'd), `tokens/<sha256>.json` (login
+  sessions, newest 10 per user), `avatars/<id>.jpg` (served by
+  `account.php?avatar=<id>&v=<rev>` with CORS, so github.io can use them).
+  Failed logins wait 0.4 s (slows guessing).
+- **Profile fields:** display name (20), bio (240), favorite drink and
+  song (40 each), card color (8 choices), picture (256 px JPEG, cropped to
+  a square in the browser before upload), join date.
+- **Client:** `web/account.js`, plain HTML forms over the game (the
+  phone keyboard and photo picker need real form fields; the 3D world is
+  still all ours). Token in localStorage; the loading screen shows who's
+  signed in (or Log in / Sign up), the HUD has a name/"log in" button.
+- **Relay:** a logged-in player sends `tok`; the relay checks it (then
+  every 20 s), uses the account's display name and passes `acct` and `av`
+  (picture revision) to the others, so names can't be faked.
+- **In the world:** `engine/billboard.*` draws round pictures facing you
+  (texture array, 8 slots, colored rim) over other players within 7 m,
+  above their name. Tapping a player opens their card
+  (`bar3dAccount.showCard`). Guests get a simple card.
+- Gotcha: the game's key handler must ignore keys while a text field has
+  focus, or W/A/S/D can't be typed (`onKey` checks document.activeElement).
+- Test: `NODE_PATH=$(npm root -g) node tools/account_test.mjs` (two
+  players, local PHP; screenshots `build/acct-*.png`).
+
 ## Hosting and deploy (important, it took several tries)
 - The site is served by **GitHub Pages: "Deploy from a branch" → `gh-pages` / root**.
 - `.github/workflows/deploy.yml` builds on every push to `main` and

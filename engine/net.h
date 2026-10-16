@@ -34,6 +34,15 @@ void receive(std::vector<Packet>& out);
 
 bool present(int player);  // still in the room?
 std::string playerName(int player);
+// Their account id ("" = a guest) and profile picture revision (0 = none).
+std::string playerAccount(int player);
+int playerAvatarRev(int player);
+// Where a profile picture is downloaded from ("" = no accounts here).
+std::string avatarUrl(const std::string& account, int revision);
+// Opens the person card for a player (an HTML panel over the game).
+void showCard(const std::string& account, const std::string& name);
+// True while an account panel (login, card...) covers the game.
+bool panelOpen();
 
 // Shared world: short named entries (key = 1-8 lowercase letters/digits)
 // of up to kMaxValues numbers that everyone in the room sees the same. The

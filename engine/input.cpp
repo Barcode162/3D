@@ -154,6 +154,13 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   const bool down = type == EMSCRIPTEN_EVENT_KEYDOWN;
   const char* c = e->code;
+  // Typing in a form (the account screens): leave the keys alone.
+  if (EM_ASM_INT({
+        var a = document.activeElement;
+        return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') ? 1 : 0;
+      })) {
+    return false;
+  }
   if (in.capture) {
     static const char* kLaneKeys[5] = {"KeyD", "KeyF", "KeyJ", "KeyK", "Escape"};
     for (int k = 0; k < 5; ++k) {

@@ -668,7 +668,8 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
                            const std::vector<Mat4>& avatarBones, const std::vector<Mat4>& firstPersonBones,
-                           const std::vector<Mirror>& mirrors, const engine::TextRenderer& text) {
+                           const std::vector<Mirror>& mirrors, const engine::TextRenderer& text,
+                           const engine::PictureBillboards& pictures) {
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
 
@@ -730,6 +731,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     pass.Draw(6);
   }
 
+  pictures.draw(pass);  // profile pictures over heads
   text.draw(pass);  // after the scene: text is see-through and on top
   pass.End();
   wgpu::CommandBuffer commands = encoder.Finish();

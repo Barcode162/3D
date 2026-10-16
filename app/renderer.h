@@ -14,6 +14,7 @@
 
 #include "app/avatar.h"
 #include "app/bar_scene.h"
+#include "engine/billboard.h"
 #include "engine/gpu.h"
 #include "engine/math.h"
 #include "engine/mesh.h"
@@ -38,7 +39,7 @@ class SceneRenderer {
   void render(const wgpu::TextureView& target, const engine::Mat4& viewProj, engine::Vec3 eye,
               const engine::Mat4& avatar, const std::vector<engine::Mat4>& avatarBones,
               const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,
-              const engine::TextRenderer& text);
+              const engine::TextRenderer& text, const engine::PictureBillboards& pictures);
 
   // Other players' avatars this frame (multiplayer): where each one stands
   // (avatarTransform) and its full pose. At most kMaxOthers are drawn.

@@ -60,6 +60,12 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
   // Gone players disappear; the rest are played back a little in the past.
   std::erase_if(players_, [](const OtherPlayer& o) { return !engine::net::present(o.id); });
   for (OtherPlayer& o : players_) {
+    if (nowMs - o.infoMs > 1000) {  // names and pictures can change (accounts)
+      o.infoMs = nowMs;
+      o.name = engine::net::playerName(o.id);
+      o.account = engine::net::playerAccount(o.id);
+      o.avatarRev = engine::net::playerAvatarRev(o.id);
+    }
     while (o.samples.size() > 2 && o.samples[1].time < nowMs + o.clockOffset - kKeepMs) o.samples.pop_front();
     if (o.samples.empty()) continue;
     const double t = nowMs + o.clockOffset - kPlaybackDelayMs;

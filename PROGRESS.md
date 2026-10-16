@@ -14,6 +14,9 @@ new room shell, curved bar, tall back bar, piano, big mirror, both
 construction doorways, 2 sim rigs, rhythm cabinet, darts zone, lounge
 with fireplace, decor pass, loading screen. User checked it: looks
 great; rug fixed; the rhythm machine is now playable (circle skin).
+Then accounts (sign up, log in, profile picture, bio, person cards,
+pictures over heads) were added. Ideas the user mentioned for later: a
+racing game for the sims.
 **Next:** ask the user how it
 looks and runs on the iPhone (fps with Low Power Mode off, load time,
 anything that looks wrong), fix that first; then the open items in
@@ -269,6 +272,10 @@ A small DAW inside the bar, all DSP written in C++:
   checks glass, late join, mirror and jukebox sync.
 - **2026-10-16:** Session closed with M2 deployed (`355fed6`), not yet
   checked on phones.
+- **2026-10-16:** User wrapped up the mini games for now (racing for the
+  sims is a later idea). Built accounts: sign up / log in, profile
+  picture, bio, favorites, card color, person cards, pictures + names
+  over heads (`docs/DECISIONS.md` → Accounts).
 - **2026-10-16:** User: everything great, the rug clipped under the
   couch (fixed: one slab, ends before the sofa). Made the 4K MANIA cabinet
   playable with a circle skin (charts generated from any song).

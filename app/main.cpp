@@ -17,6 +17,9 @@
 #include "app/shared_world.h"
 #include "app/renderer.h"
 #include "engine/audio.h"
+#include "engine/billboard.h"
+#include "engine/fetch.h"
+#include "engine/net.h"
 #include "engine/camera.h"
 #include "engine/file.h"
 #include "engine/gpu.h"
@@ -62,6 +65,14 @@ struct App {
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   engine::TextRenderer text;
+  engine::PictureBillboards pictures;  // profile pictures over other players' heads
+  struct PictureSlot {
+    std::string account;
+    int rev = 0;
+    bool ready = false;
+    double usedMs = 0;
+  };
+  PictureSlot pictureSlots[engine::PictureBillboards::kSlots];
   engine::PhysicsWorld physics;
   std::vector<int> bodyOfModel;  // physics body per BarScene::models entry
   std::vector<engine::Vec3> shownPosition;  // per body, where its model was last drawn
@@ -143,6 +154,36 @@ std::string promptFor(const app::Interactable& it) {
   return it.prompt;
 }
 
+// The picture slot showing this player's profile picture, or -1 (a guest,
+// no picture, or still downloading). Starts the download when needed.
+int pictureSlotFor(const app::OtherPlayer& o, double nowMs) {
+  if (o.account.empty() || o.avatarRev <= 0) return -1;
+  auto& slots = g_app.pictureSlots;
+  int found = -1, oldest = 0;
+  for (int i = 0; i < static_cast<int>(engine::PictureBillboards::kSlots); ++i) {
+    if (slots[i].account == o.account) found = i;
+    if (slots[i].usedMs < slots[oldest].usedMs) oldest = i;
+  }
+  if (found < 0 || slots[found].rev != o.avatarRev) {
+    const int i = found >= 0 ? found : oldest;
+    slots[i] = {o.account, o.avatarRev, false, nowMs};
+    const std::string url = engine::net::avatarUrl(o.account, o.avatarRev);
+    if (url.empty()) return -1;
+    engine::fetchFile(url, [i, account = o.account, rev = o.avatarRev](bool ok, std::vector<uint8_t> bytes) {
+      if (!ok) return;
+      engine::decodeImage(bytes, "image/jpeg", [i, account, rev](bool decoded, engine::Rgba8Image image) {
+        auto& slot = g_app.pictureSlots[i];
+        if (!decoded || slot.account != account || slot.rev != rev) return;
+        g_app.pictures.setPicture(static_cast<uint32_t>(i), image);
+        slot.ready = true;
+      });
+    });
+    return -1;
+  }
+  slots[found].usedMs = nowMs;
+  return slots[found].ready ? found : -1;
+}
+
 // Queues this frame's text: name tags over things in the bar, the prompt
 // for whatever you're standing at, and the intro title.
 void queueText(double nowMs, const Mat4& viewProj) {
@@ -150,6 +191,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
   const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
   const float px = g_app.gpu.pixelRatio;  // device pixels per CSS pixel
   text.begin(viewProj, g_app.gpu.width, g_app.gpu.height);
+  g_app.pictures.begin(viewProj);
   if (g_app.rhythm.isOpen()) {  // the game covers the screen
     g_app.rhythm.draw(text, W, H, px, nowMs);
     text.upload(g_app.gpu.queue);
@@ -175,7 +217,8 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.outlineWidth = 0.8f;
     text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
   }
-  // Other players' names float over their heads.
+  // Other players' names float over their heads, with their profile
+  // picture above when you're close (fading in from 7 m).
   for (const app::OtherPlayer& o : g_app.others.players()) {
     if (!o.placed) continue;
     engine::TextStyle style;
@@ -183,7 +226,14 @@ void queueText(double nowMs, const Mat4& viewProj) {
     style.color = {0.75f, 0.9f, 1.0f, 1.0f};
     style.outlineWidth = 0.8f;
     text.addWorld(o.name, o.eye + Vec3{0, 0.32f, 0}, right, up, 0.07f, style);
+    const float near = engine::clampf((7.0f - engine::length(o.eye - cam.position)) / 1.5f, 0, 1);
+    const int slot = pictureSlotFor(o, nowMs);
+    if (near > 0 && slot >= 0) {
+      g_app.pictures.add(static_cast<uint32_t>(slot), o.eye + Vec3{0, 0.6f, 0}, right, up, 0.16f,
+                         {1.0f, 0.42f, 0.78f}, near);
+    }
   }
+  g_app.pictures.upload(g_app.gpu.queue);
   if (!g_app.jukeboxMenu.isOpen() && (g_app.held >= 0 || g_app.aimed >= 0)) {
     engine::TextStyle style;
     style.align = 0.5f;
@@ -262,6 +312,24 @@ Vec3 screenRay(engine::Vec2 tap) {
   const float tanHalf = std::tan(cam.fovY * 0.5f);
   const float x = (tap.x * 2 - 1) * tanHalf * aspect, y = (1 - tap.y * 2) * tanHalf;
   return engine::normalize(forward + right * x + up * y);
+}
+
+// Tapping another player opens their person card.
+bool tapPerson(Vec3 dir) {
+  const Vec3 eye = g_app.camera.position;
+  const app::OtherPlayer* best = nullptr;
+  float nearest = 6.0f;
+  for (const app::OtherPlayer& o : g_app.others.players()) {
+    if (!o.placed) continue;
+    const float t = rayBoxDistance(eye, dir, o.eye - Vec3{0.3f, 1.7f, 0.3f}, o.eye + Vec3{0.3f, 0.45f, 0.3f});
+    if (t >= 0 && t < nearest) {
+      nearest = t;
+      best = &o;
+    }
+  }
+  if (!best) return false;
+  engine::net::showCard(best->account, best->name);
+  return true;
 }
 
 void use(const app::Interactable& it) {
@@ -432,6 +500,7 @@ void updateInteraction(double nowMs) {
       continue;
     }
     if (tryPickUp(dir)) continue;
+    if (tapPerson(dir)) continue;
     int hit = -1;
     float nearest = kTapReach;
     for (size_t i = 0; i < items.size(); ++i) {
@@ -528,7 +597,7 @@ void frame() {
   g_app.otherBones.resize(g_app.otherTransforms.size());
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones);
   g_app.renderer.render(target, viewProj, cam.position, app::avatarTransform(cam.position, cam.yaw, cam.pitch),
-                        g_app.avatarBones, g_app.firstPersonBones, g_app.scene.mirrors, g_app.text);
+                        g_app.avatarBones, g_app.firstPersonBones, g_app.scene.mirrors, g_app.text, g_app.pictures);
 }
 
 // For testing: "?cam=x,y,z,yaw,pitch" in the page URL starts the camera
@@ -556,7 +625,8 @@ void onGpuReady(bool ok) {
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   g_app.avatar.build();
   if (!g_app.renderer.init(g_app.gpu, g_app.scene, g_app.avatar.mesh()) ||
-      !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
+      !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat) ||
+      !g_app.pictures.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");
     return;
   }
