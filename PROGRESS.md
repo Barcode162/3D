@@ -12,8 +12,8 @@ built: loading stutter fixed (`engine/gpu_upload.*`), real car physics
 "What exists now" in `docs/RACING.md`). **Next:** the user tries it on
 the iPhone (sit in a sim rig); tune the driving feel from their
 feedback; then step 4 (the race on the rigs' three monitors), step 5 (two
-players), step 6 (realtime server: needs the user's Cloudflare account,
-see `docs/RACING.md` → Multiplayer). Everything below waits.
+players), step 6 (realtime server on Cloudflare: decided, waiting for the user's
+account + GitHub secrets, see `docs/DECISIONS.md` → Hosting split). Everything below waits.
 
 **2026-10-16, "make everything work" pass: built and deployed.** Voice
 chat (WebRTC), menu (emotes, avatars, profile, voice, settings, piano,

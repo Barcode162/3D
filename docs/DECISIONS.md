@@ -396,6 +396,25 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   `CAM="x,y,z,yaw,pitch" node tools/smoke.mjs` → `build/smoke-cam.png`
   (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
+## Hosting split: Cloudflare + IONOS (2026-10-16, user said "let's get Cloudflare going")
+- **Cloudflare = everything live:** Workers + Durable Objects (one
+  realtime room per bar over WebSockets, server clock, owns seats /
+  machines / shared world, later runs races and bots with our own C++
+  compiled to WebAssembly), D1 (SQL database: accounts, profiles,
+  friends, lap times, leaderboards), R2 (files: profile pictures,
+  uploads, big assets), maybe Pages for the game itself later (it can send
+  COOP/COEP headers, which unlocks threads / SharedArrayBuffer).
+  Start on the free `*.workers.dev` address (no DNS work); later a
+  subdomain like `bar.joshuavelasco.com`.
+- **IONOS = the "home" side:** domains (joshuavelasco.com / .org), email,
+  the landing page / personal site, and the old PHP relay + accounts as a
+  fallback until they're moved to Cloudflare (accounts move to D1 + R2).
+- The user needs to make: a free Cloudflare account, its Account ID and a
+  custom API token (Workers Scripts, D1, Workers R2 Storage, Workers KV
+  Storage, Cloudflare Pages: Edit), saved as GitHub secrets
+  `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; the deploy then
+  publishes the server with wrangler.
+
 ## Racing sim (2026-10-16)
 - **Own physics, fixed 240 Hz**, substepped from the frame (max 30 steps
   per frame; slower phones slow the race instead of exploding). Tires are
