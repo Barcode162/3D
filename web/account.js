@@ -8,6 +8,18 @@
 // and the avatar URL (avatarUrl) to draw pictures over heads.
 window.bar3dAccount = (function () {
   'use strict';
+  // Extra profile details (server/account.php DETAIL_FIELDS): key, label, placeholder, max length.
+  var DETAILS = [
+    ['status', 'Status', 'e.g. here for the piano', 60], ['pronouns', 'Pronouns', 'e.g. he/him', 20],
+    ['location', 'Where from', 'e.g. Austin, TX', 40], ['birthday', 'Birthday', 'e.g. March 3', 20],
+    ['job', 'What I do', 'e.g. student', 40], ['game', 'Favorite game', 'e.g. darts', 40],
+    ['genre', 'Music I love', 'e.g. jazz, house', 40], ['instrument', 'I play', 'e.g. piano', 40],
+    ['cocktail', 'Signature cocktail', 'e.g. Espresso Martini', 40], ['languages', 'Languages', 'e.g. English, Spanish', 60],
+    ['social', 'Find me at', 'e.g. @josh on Instagram', 60], ['lookingFor', 'Looking for', 'e.g. a darts rival', 60],
+    ['funFact', 'Fun fact', 'Something surprising about you', 120],
+  ];
+  var BADGE_ICONS = { owner: '\u{1F451} Owner', bartender: '\u{1F378} Bartender', dj: '\u{1F3A7} DJ', vip: '\u2B50 VIP',
+                      staff: '\u{1F6E0} Staff' };
   var COLORS = ['#ff5ab4', '#ffb35a', '#5ad1ff', '#7dff8a', '#b38bff', '#ff6b5a', '#f5d9a8', '#5affd2'];
   var server = '';     // account.php URL ('' = no accounts on this page)
   var token = null, me = null;
@@ -170,6 +182,17 @@ window.bar3dAccount = (function () {
     bio.value = me.bio;
     var drink = el('input', { maxlength: '40', value: me.drink, placeholder: 'e.g. Old Fashioned' });
     var song = el('input', { maxlength: '40', value: me.song, placeholder: 'e.g. Bossa Antigua' });
+    var detailInputs = {};
+    var details = me.details || {};
+    var detailEls = [];
+    DETAILS.forEach(function (d) {
+      var input = d[3] > 60 ? el('textarea', { maxlength: String(d[3]), placeholder: d[2] })
+                            : el('input', { maxlength: String(d[3]), placeholder: d[2] });
+      input.value = details[d[0]] || '';
+      if (d[3] > 60) input.style.minHeight = '50px';
+      detailInputs[d[0]] = input;
+      detailEls.push(el('label', { text: d[1] }), input);
+    });
     var swatches = el('div', { class: 'acctSwatches' });
     COLORS.forEach(function (c, i) {
       var s = el('div', { class: 'acctSwatch' + (i === color ? ' on' : ''), style: 'background:' + c });
@@ -183,8 +206,10 @@ window.bar3dAccount = (function () {
     var save = el('button', { class: 'acctBtn', text: 'Save' });
     save.onclick = function () {
       save.disabled = true;
+      var det = {};
+      for (var k in detailInputs) det[k] = detailInputs[k].value;
       call({ a: 'update', token: token, name: name.value, bio: bio.value, drink: drink.value, song: song.value,
-             color: color })
+             color: color, details: det })
         .then(function (r) { setSession(token, r.me); cardScreen(me, true); })
         .catch(function (e) { err.textContent = e.message; save.disabled = false; });
     };
@@ -199,9 +224,11 @@ window.bar3dAccount = (function () {
       el('label', { text: 'Favorite drink' }), drink,
       el('label', { text: 'Favorite song' }), song,
       el('label', { text: 'Card color' }), swatches,
+      el('h2', { text: 'More about you', style: 'margin-top:18px;font-size:18px;' }),
+    ].concat(detailEls).concat([
       err, save,
       el('button', { class: 'acctBtn ghost', text: 'Close', onclick: close }),
-    ]));
+    ])));
   }
 
   // A person's card. `own` adds Edit / Log out.
@@ -210,9 +237,19 @@ window.bar3dAccount = (function () {
     if (p.drink) facts.appendChild(el('div', { text: '\u{1F378}  Favorite drink: ' + p.drink }));
     if (p.song) facts.appendChild(el('div', { text: '\u{1F3B5}  Favorite song: ' + p.song }));
     if (p.joined) facts.appendChild(el('div', { text: '\u{1F4C5}  Regular since ' + p.joined }));
+    var d = p.details || {};
+    DETAILS.forEach(function (x) { if (d[x[0]]) facts.appendChild(el('div', { text: x[1] + ': ' + d[x[0]] })); });
+    var badges = el('div', { style: 'margin:10px 18px 0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;' });
+    (p.badges || []).forEach(function (b) {
+      badges.appendChild(el('span', { text: BADGE_ICONS[b] || b,
+        style: 'font-size:12px;padding:3px 9px;border-radius:12px;background:#2a1f33;border:1px solid #4a3a55;' }));
+    });
     var btns = el('div', { class: 'btns' });
     if (own) {
       btns.appendChild(el('button', { class: 'acctBtn', text: 'Edit card', onclick: function () { editScreen(false); } }));
+      if ((p.badges || []).indexOf('owner') >= 0) {
+        btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Give badges', onclick: badgeScreen }));
+      }
       btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Log out', onclick: logout }));
     }
     btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Close', onclick: close }));
@@ -223,7 +260,33 @@ window.bar3dAccount = (function () {
       el('div', { class: 'nm', text: p.name }),
       el('div', { class: 'un', text: p.user ? '@' + p.user : 'Guest' }),
       p.bio ? el('div', { class: 'bio', text: p.bio }) : null,
-      facts, btns,
+      badges, facts, btns,
+    ]));
+  }
+
+  // Owners: give or take badges (bartender...) by username.
+  function badgeScreen() {
+    var user = el('input', { autocapitalize: 'none', placeholder: 'their username' });
+    var badge = el('select', { style: 'width:100%;font:16px -apple-system,system-ui;padding:10px;border-radius:10px;background:#2a1f33;color:#fff;border:1px solid #4a3a55;' },
+                   ['bartender', 'dj', 'vip', 'staff'].map(function (b) { return el('option', { value: b, text: BADGE_ICONS[b] }); }));
+    var msg = el('div', { class: 'acctErr' });
+    function go(on) {
+      msg.textContent = '';
+      call({ a: 'badge', token: token, user: user.value, badge: badge.value, on: on ? 1 : 0 })
+        .then(function (r) {
+          if (r.me) setSession(token, r.me);
+          msg.style.color = '#7dff8a';
+          msg.textContent = (on ? 'Gave ' : 'Took ') + badge.value + (on ? ' to ' : ' from ') + r.profile.name + '.';
+        })
+        .catch(function (e) { msg.style.color = ''; msg.textContent = e.message; });
+    }
+    open(el('div', { class: 'acctPanel' }, [
+      el('h2', { text: 'Give badges' }),
+      el('div', { class: 'acctSmall', style: 'text-align:left', text: 'Bartenders can work the bar and make drinks. You can give yourself one too.' }),
+      el('label', { text: 'Username' }), user, el('label', { text: 'Badge' }), badge, msg,
+      el('button', { class: 'acctBtn', text: 'Give badge', onclick: function () { go(true); } }),
+      el('button', { class: 'acctBtn ghost', text: 'Take badge away', onclick: function () { go(false); } }),
+      el('button', { class: 'acctBtn ghost', text: 'Back', onclick: function () { cardScreen(me, true); } }),
     ]));
   }
 
@@ -293,6 +356,9 @@ window.bar3dAccount = (function () {
     token: function () { return token; },
     name: function () { return me ? me.name : ''; },
     loggedIn: function () { return !!me; },
+    hasBadge: function (b) { return !!me && !!me.badges && (me.badges.indexOf(b) >= 0 || me.badges.indexOf('owner') >= 0); },
+    // The menu's Profile button: your card (or log in).
+    openProfile: function () { if (!server) { return; } if (me) cardScreen(me, true); else loginScreen(false); },
     avatarUrl: avatarUrl,
     // Shows a person's card (C++ calls this when you tap someone).
     showCard: function (id, name) {

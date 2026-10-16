@@ -20,6 +20,9 @@
 // account.php). The relay checks it once per player and then shows their
 // account's display name, and "acct" (account id) and "av" (picture
 // revision) to the others, so nobody can wear someone else's name.
+// Messages (voice chat handshakes, quick events): "m":[[to, text], ...]
+// with `to` = a player id or "*" (everyone else). They wait in the
+// receiver's inbox and come back to them once as "inbox":[[from, text], ...].
 // GET relay.php -> {"ok":1,"relay":"bar3d"} (health check)
 
 header('Access-Control-Allow-Origin: *');
@@ -30,9 +33,11 @@ header('Content-Type: application/json');
 
 const TIMEOUT_S = 5.0;   // a player who stops sending is gone after this
 const MAX_PLAYERS = 16;  // per room
-const MAX_VALUES = 16;   // numbers in a player's state or a world entry
+const MAX_VALUES = 20;   // numbers in a player's state or a world entry
 const MAX_KEYS = 96;     // world entries per room
 const WORLD_KEEP_S = 1800.0;
+const MAX_MSG = 12000;    // characters per message (an SDP offer is ~3-6k)
+const MAX_INBOX = 120;    // waiting messages per player
 
 function reply($data, $code = 200) {
   http_response_code($code);
@@ -44,7 +49,7 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'OPTIONS') exit;
 if ($method !== 'POST') reply(['ok' => 1, 'relay' => 'bar3d']);
 
-$in = json_decode(file_get_contents('php://input', false, null, 0, 16384), true);
+$in = json_decode(file_get_contents('php://input', false, null, 0, 131072), true);
 if (!is_array($in)) reply(['ok' => 0, 'error' => 'bad json'], 400);
 $room = $in['room'] ?? 'main';
 $id = $in['id'] ?? '';
@@ -75,6 +80,17 @@ if (!$leaving && isset($in['w'])) {
     $changes[(string)$key] = array_values($values);
   }
 }
+$msgs = [];
+if (!$leaving && isset($in['m'])) {
+  if (!is_array($in['m']) || count($in['m']) > 40) reply(['ok' => 0, 'error' => 'bad messages'], 400);
+  foreach ($in['m'] as $m) {
+    if (!is_array($m) || count($m) !== 2 || !is_string($m[0]) || !is_string($m[1]) || strlen($m[1]) > MAX_MSG ||
+        !preg_match('/^(\*|[a-z0-9]{4,16})$/', $m[0])) {
+      reply(['ok' => 0, 'error' => 'bad messages'], 400);
+    }
+    $msgs[] = $m;
+  }
+}
 $since = isset($in['since']) && is_int($in['since']) ? $in['since'] : -1;
 
 $dir = __DIR__ . '/rooms';
@@ -86,6 +102,7 @@ $data = json_decode(stream_get_contents($file), true);
 if (!is_array($data) || !isset($data['players'])) $data = ['players' => [], 'world' => [], 'rev' => 0, 'active' => 0];
 $players = $data['players'];
 $world = $data['world'];
+$inbox = $data['inbox'] ?? [];
 $rev = (int)$data['rev'];
 $now = microtime(true);
 foreach ($players as $pid => $p) {
@@ -96,6 +113,18 @@ foreach ($changes as $key => $values) {
   if (!isset($world[$key]) && count($world) >= MAX_KEYS) continue;
   $world[$key] = ['v' => $values, 'by' => $id, 'r' => ++$rev];
 }
+foreach ($msgs as $m) {
+  $targets = $m[0] === '*' ? array_keys($players) : [$m[0]];
+  foreach ($targets as $to) {
+    $to = (string)$to;
+    if ($to === $id || !isset($players[$to])) continue;
+    if (!isset($inbox[$to])) $inbox[$to] = [];
+    if (count($inbox[$to]) < MAX_INBOX) $inbox[$to][] = [$id, $m[1]];
+  }
+}
+$mine = $inbox[$id] ?? [];
+unset($inbox[$id]);
+foreach ($inbox as $pid => $box) if (!isset($players[$pid])) unset($inbox[$pid]);
 if ($leaving) {
   unset($players[$id]);
 } elseif (isset($players[$id]) || count($players) < MAX_PLAYERS) {
@@ -121,7 +150,8 @@ if ($leaving) {
 }
 ftruncate($file, 0);
 rewind($file);
-fwrite($file, json_encode(['players' => (object)$players, 'world' => (object)$world, 'rev' => $rev, 'active' => $now]));
+fwrite($file, json_encode(['players' => (object)$players, 'world' => (object)$world, 'rev' => $rev, 'active' => $now,
+                          'inbox' => (object)$inbox]));
 fflush($file);
 flock($file, LOCK_UN);
 fclose($file);
@@ -138,6 +168,7 @@ foreach ($players as $pid => $p) {
   $others[] = $o;
 }
 $out = ['ok' => 1, 'players' => $others];
+if (count($mine)) $out['inbox'] = $mine;
 if ($since >= 0) {
   $entries = [];
   foreach ($world as $key => $e) {

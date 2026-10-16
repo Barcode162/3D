@@ -11,6 +11,13 @@
 //   {"a":"avatar","token":"..","image":"data:image/jpeg;base64,..."}  (square JPEG, <= 256 px)
 //   {"a":"logout","token":".."}
 //   {"a":"profile","id":".."}                               -> {"ok":1,"profile":profile}
+//   {"a":"update", ..., "details":{"pronouns":..,"status":..,...}}  (DETAIL_FIELDS)
+//   {"a":"badge","token":"..","user":"josh","badge":"bartender","on":1}  (owners only)
+//
+// Badges ("bartender", "dj", "vip", "staff") unlock things in the bar (the
+// bartender's station). Owners give them; the owners are the usernames in
+// accounts/admins.json, or, while that file doesn't exist, the very first
+// account made (the bar's creator).
 // GET account.php?avatar=<id>   -> the profile picture (JPEG)
 // Errors: {"ok":0,"error":"..."} with a message meant for people.
 //
@@ -27,6 +34,11 @@ const BIO_MAX = 240;
 const FIELD_MAX = 40;
 const AVATAR_MAX_BYTES = 120000;
 const MAX_TOKENS_PER_USER = 10;
+// Extra profile details: field => max length.
+const DETAIL_FIELDS = ['pronouns' => 20, 'status' => 60, 'location' => 40, 'birthday' => 20, 'game' => 40,
+                       'genre' => 40, 'instrument' => 40, 'cocktail' => 40, 'job' => 40, 'languages' => 60,
+                       'social' => 60, 'lookingFor' => 60, 'funFact' => 120];
+const BADGES = ['bartender', 'dj', 'vip', 'staff'];
 
 $base = __DIR__ . '/accounts';
 foreach (['', '/users', '/tokens', '/avatars'] as $d) {
@@ -61,11 +73,23 @@ function write_json($path, $data) {
 
 function user_path($id) { global $base; return "$base/users/$id.json"; }
 
+// Owners can give badges (see the top of this file).
+function is_owner($u) {
+  global $base;
+  $admins = read_json("$base/admins.json");
+  if (is_array($admins)) return in_array($u['user'], $admins, true);
+  $names = read_json("$base/names.json");
+  return is_array($names) && count($names) && array_key_first($names) === $u['user'];
+}
+
 // What others may see.
 function public_profile($u) {
+  $badges = $u['badges'] ?? [];
+  if (is_owner($u)) $badges = array_values(array_unique(array_merge(['owner'], $badges)));
   return ['id' => $u['id'], 'user' => $u['user'], 'name' => $u['name'], 'bio' => $u['bio'],
           'drink' => $u['drink'], 'song' => $u['song'], 'color' => $u['color'],
-          'avatar' => $u['avatar'], 'joined' => $u['joined']];
+          'avatar' => $u['avatar'], 'joined' => $u['joined'], 'details' => (object)($u['details'] ?? []),
+          'badges' => $badges];
 }
 
 function new_token($id) {
@@ -163,6 +187,16 @@ if ($a === 'update') {
   if (isset($in['drink'])) $u['drink'] = clean($in['drink'], FIELD_MAX);
   if (isset($in['song'])) $u['song'] = clean($in['song'], FIELD_MAX);
   if (isset($in['color']) && is_int($in['color'])) $u['color'] = max(0, min(7, $in['color']));
+  if (isset($in['details']) && is_array($in['details'])) {
+    $d = $u['details'] ?? [];
+    foreach (DETAIL_FIELDS as $k => $max) {
+      if (array_key_exists($k, $in['details'])) {
+        $v = clean($in['details'][$k], $max);
+        if ($v === '') unset($d[$k]); else $d[$k] = $v;
+      }
+    }
+    $u['details'] = $d;
+  }
   write_json(user_path($u['id']), $u);
   reply(['ok' => 1, 'me' => public_profile($u)]);
 }
@@ -178,6 +212,23 @@ if ($a === 'avatar') {
   $u['avatar'] = ($u['avatar'] ?? 0) + 1;
   write_json(user_path($u['id']), $u);
   reply(['ok' => 1, 'me' => public_profile($u)]);
+}
+
+if ($a === 'badge') {
+  if (!is_owner($u)) fail('Only the bar\'s owner can give badges.', 403);
+  $who = strtolower(is_string($in['user'] ?? null) ? trim($in['user']) : '');
+  $badge = $in['badge'] ?? '';
+  if (!in_array($badge, BADGES, true)) fail('Unknown badge.');
+  $names = read_json("$base/names.json") ?? [];
+  $id = $names[$who] ?? null;
+  $t = $id ? read_json(user_path($id)) : null;
+  if (!$t) fail('No player with that username.');
+  $list = $t['badges'] ?? [];
+  if (!empty($in['on'])) $list[] = $badge; else $list = array_diff($list, [$badge]);
+  $t['badges'] = array_values(array_unique($list));
+  write_json(user_path($t['id']), $t);
+  if ($t['id'] === $u['id']) $u = $t;
+  reply(['ok' => 1, 'profile' => public_profile($t), 'me' => public_profile($u)]);
 }
 
 if ($a === 'logout') {

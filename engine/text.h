@@ -42,6 +42,11 @@ class TextRenderer {
 
   // A filled rectangle on the screen (device pixels), e.g. for menu panels.
   void addRect(float x, float y, float w, float h, Vec4 color);
+  // Any four-cornered shape on the screen (device pixels, corners in order).
+  void addScreenQuad(const Vec2 corners[4], Vec4 color);
+  // A filled four-cornered shape in the world (e.g. a game drawn on a
+  // screen in the bar). Depth-tested like world text.
+  void addWorldQuad(const Vec3 corners[4], Vec4 color);
 
   // A disc or ring (font::Shape) on the screen, centered at (cx, cy) with
   // outer radius `radius` (device pixels). `outline` (a = opacity) draws a
@@ -67,6 +72,7 @@ class TextRenderer {
 
   // Emits glyph quads; `place` maps font-pixel coordinates (x right, y down,
   // relative to the text block's top-left) to clip space.
+  void addSolid(const Vec4 clip[4], Vec4 color);
   template <typename Place>
   void addGlyphs(std::string_view text, const TextStyle& style, Place place);
 

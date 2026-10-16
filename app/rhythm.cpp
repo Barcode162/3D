@@ -413,4 +413,50 @@ void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, do
   }
 }
 
+void RhythmGame::screenState(float out[5]) const {
+  int judged = 0;
+  for (int c : counts_) judged += c;
+  out[0] = static_cast<float>(combo_);
+  out[1] = judged ? static_cast<float>(points_ / (300.0 * judged)) : 1.0f;
+  int mask = 0;
+  for (int l = 0; l < 4; ++l) mask |= lanePressed_[l] > 0 ? 1 << l : 0;
+  out[2] = static_cast<float>(mask);
+  out[3] = state_ == State::kPlaying ? 1.0f : 0.0f;
+  out[4] = static_cast<float>(songTime_);
+}
+
+void RhythmGame::drawCabinet(engine::TextRenderer& text, const engine::Vec3 c[4], const float state[5], double nowMs) {
+  using engine::Vec3;
+  // A point on the screen: u across (0..1 left to right), v down (0..1).
+  auto at = [&](float u, float v) { return c[3] + (c[2] - c[3]) * u + (c[0] - c[3]) * v; };
+  auto quad = [&](float u0, float v0, float u1, float v1, Vec4 color) {
+    const Vec3 p[4] = {at(u0, v1), at(u1, v1), at(u1, v0), at(u0, v0)};
+    text.addWorldQuad(p, color);
+  };
+  const int mask = static_cast<int>(state[2]);
+  const bool playing = state[3] > 0;
+  for (int l = 0; l < 4; ++l) {
+    const float u0 = 0.1f + 0.2f * static_cast<float>(l);
+    quad(u0, 0.05f, u0 + 0.19f, 0.95f, {0.06f, 0.04f, 0.1f, 1});
+    // Notes falling (a pattern from the song time, not the real chart).
+    if (playing) {
+      for (int k = 0; k < 4; ++k) {
+        const float phase = std::fmod(state[4] * 1.3f + static_cast<float>(k) * 0.25f + static_cast<float>(l) * 0.37f, 1.0f);
+        if ((k + l) % 2 == 0) quad(u0 + 0.03f, phase * 0.8f, u0 + 0.16f, phase * 0.8f + 0.04f, kLaneColor[l]);
+      }
+    }
+    const bool held = (mask >> l) & 1;
+    quad(u0 + 0.01f, 0.84f, u0 + 0.18f, 0.9f, held ? kLaneColor[l] : withAlpha(kLaneColor[l], 0.35f));
+  }
+  if (playing) {
+    char line[48];
+    std::snprintf(line, sizeof(line), "%dx  %.1f%%", static_cast<int>(state[0]), state[1] * 100.0f);
+    engine::TextStyle s;
+    s.align = 0.5f;
+    const Vec3 right = engine::normalize(c[1] - c[0]), up = engine::normalize(c[3] - c[0]);
+    text.addWorld(line, at(0.5f, 0.12f) + engine::cross(right, up) * 0.002f, right, up, 0.025f, s);
+  }
+  (void)nowMs;
+}
+
 }  // namespace app

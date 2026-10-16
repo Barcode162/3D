@@ -4,6 +4,13 @@
 **Current focus:** The big bar upgrade (`docs/BAR_REDESIGN.md`): a new, bigger room full of real clutter, game corners, a grand piano, a giant 2-in-1 mirror, and a loading screen
 
 ## Next up (start here in a new session)
+**2026-10-16, "make everything work" pass (in progress, see `docs/REMASTER.md`):**
+voice chat (WebRTC), menu (emotes, avatars, profile, voice, settings,
+piano, bartender), seats for everyone, piano with 10 classical MIDI songs +
+MIDI keyboards, darts with scoring, racing game on the sims, 4K Mania and
+races shown on the machines' screens, bartender badge + drinks, many small
+interactions. All crude on purpose; everything is listed for a remaster.
+
 **2026-10-16, new top priority: the big bar upgrade.** The user asked for
 a completely new bar (new shape, packed with real-bar clutter), 3 rooms
 (the other two taped off as "under construction"), one giant 2-in-1

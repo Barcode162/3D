@@ -65,6 +65,35 @@ struct Builder {
   void light(Vec3 pos, Vec3 color, float intensity, float range, float radius = 0.1f) {
     scene.lights.push_back({pos, color, intensity, range, radius});
   }
+
+  // A seat: hip point, facing (a direction on the floor), how low it is.
+  Seat& seat(const char* name, Vec3 hip, Vec3 facing, float low, SeatKind kind = SeatKind::kStool, int model = -1) {
+    Seat st;
+    st.name = name;
+    st.hip = hip;
+    st.yaw = std::atan2(facing.x, -facing.z);
+    st.lowSeat = low;
+    st.kind = kind;
+    st.model = model;
+    st.boundsMin = {hip.x - 0.28f, 0, hip.z - 0.28f};
+    st.boundsMax = {hip.x + 0.28f, hip.y + 0.12f, hip.z + 0.28f};
+    scene.seats.push_back(st);
+    return scene.seats.back();
+  }
+
+  // A small thing to use by looking at it or tapping it.
+  Interactable& thing(const char* prompt, Vec3 center, Vec3 half, Action action, int value = 0) {
+    Interactable it;
+    it.prompt = prompt;
+    it.tagPosition = center;
+    it.boundsMin = center - half;
+    it.boundsMax = center + half;
+    it.action = action;
+    it.value = value;
+    it.direct = true;
+    scene.interactables.push_back(it);
+    return scene.interactables.back();
+  }
 };
 
 Quat turnY(float radians) { return Quat::axisAngle({0, 1, 0}, radians); }
@@ -200,15 +229,42 @@ void buildBar(Builder& b) {
   // Bar stools along the curve.
   for (int i = 0; i < 8; ++i) {
     const Vec3 p = frontOfBar(kBarXA + 0.7f + static_cast<float>(i) * 1.05f, 0.5f);
-    b.model("bar_stool.glb", p, kLeather, turnY(0.4f * static_cast<float>(i)));
+    const size_t stool = b.model("bar_stool.glb", p, kLeather, turnY(0.4f * static_cast<float>(i)));
+    const float x = kBarXA + 0.7f + static_cast<float>(i) * 1.05f;
+    b.seat("Bar stool", p + Vec3{0, 0.9f, 0}, frontOfBar(x, -0.3f) - p, 0, SeatKind::kStool, static_cast<int>(stool));
     b.solid({p.x, 0.77f, p.z}, {0.2f, 0.05f, 0.2f}, kLeather);
     b.solid({p.x, 0.37f, p.z}, {0.03f, 0.33f, 0.03f}, kChrome);
     b.solid({p.x, 0.023f, p.z}, {0.2f, 0.023f, 0.2f}, kChrome);
   }
 
+  // Drink spots on the counter (where the bartender serves), and the
+  // bartender's station behind the bar.
+  for (int i = 0; i < 8; ++i) {
+    const float x = kBarXA + 0.7f + static_cast<float>(i) * 1.05f;
+    b.scene.barTopFront[i] = frontOfBar(x, -0.12f) + Vec3{0, kBarTopY, 0};
+    b.thing("Drink", b.scene.barTopFront[i] + Vec3{0, 0.06f, 0}, {0.09f, 0.09f, 0.09f}, Action::kDrinkShelf, i);
+  }
+  {
+    const Vec3 inside = frontOfBar(-3.4f, -1.25f);
+    b.scene.bartenderSpot = inside + Vec3{0, 1.65f, 0};
+    Interactable& st = b.thing("Bartender station\nTap: start a shift", inside + Vec3{0, 1.0f, 0}, {0.6f, 0.5f, 0.4f},
+                               Action::kBartender);
+    st.name = "BARTENDER";
+    st.tagPosition = inside + Vec3{0, 2.1f, 0};
+    st.direct = false;
+    b.thing("Service bell\nTap: ring it", frontOfBar(-2.2f, -0.25f) + Vec3{0, kBarTopY + 0.04f, 0}, {0.12f, 0.1f, 0.12f},
+            Action::kBell);
+    b.thing("Tip jar\nTap: leave a tip", frontOfBar(-1.0f, -0.3f) + Vec3{0, kBarTopY + 0.08f, 0}, {0.12f, 0.12f, 0.12f},
+            Action::kTipJar);
+    b.thing("Beer taps\nTap: pour a beer", frontOfBar(-4.6f, -0.55f) + Vec3{0, kBarTopY + 0.3f, 0},
+            {0.35f, 0.3f, 0.2f}, Action::kTaps);
+    b.thing("Coffee machine\nTap: make a coffee", Vec3{-1.2f, 1.25f, kZ0 + 0.35f}, {0.3f, 0.25f, 0.3f}, Action::kCoffee);
+  }
+
   // Pendant lamps hang from the soffit over the counter.
   for (float x : {-6.6f, -4.3f, -2.0f, 0.2f}) {
     b.model("pendant_lamp.glb", {x, kSoffitY - 0.06f, -4.6f}, kBlackSteel);
+    b.scene.roomLights.push_back(static_cast<int>(b.scene.lights.size()));
     b.light({x, kSoffitY - 0.85f, -4.6f}, kWarmBulb, 2.0f, 5.0f, 0.08f);
   }
   // The back bar, floor to soffit (tools/assets/back_bar_tall.py):
@@ -247,7 +303,8 @@ void buildHall(Builder& b) {
     for (float s : {-1.0f, 1.0f}) {
       const float ang = 0.9f * static_cast<float>(i) + (s > 0 ? 0 : engine::kPi);
       const Vec3 p{c.x + 0.78f * std::cos(ang), 0, c.z + 0.78f * std::sin(ang)};
-      b.model("table_stool.glb", p, kLeather, turnY(ang));
+      const size_t stool = b.model("table_stool.glb", p, kLeather, turnY(ang));
+      b.seat("Stool", p + Vec3{0, 0.62f, 0}, c - p, 0.1f, SeatKind::kStool, static_cast<int>(stool));
       b.solid({p.x, 0.5f, p.z}, {0.18f, 0.04f, 0.18f}, kLeather);
       b.solid({p.x, 0.23f, p.z}, {0.13f, 0.22f, 0.13f}, kBlackSteel);
     }
@@ -260,9 +317,16 @@ void buildHall(Builder& b) {
   b.block({1.95f, 0, kZ1 - 1.25f}, 0.3f, 0.3f);  // chalkboard A-frame
   for (Vec3 p : {Vec3{-1.85f, 0, kZ1 - 0.3f}, Vec3{4.5f, 0, kZ1 - 0.35f}, Vec3{8.55f, 0, 6.6f}}) b.block(p, 0.3f, 0.3f);
   // The string lights' warm glow over the middle of the hall.
+  for (int k = 0; k < 3; ++k) b.scene.roomLights.push_back(static_cast<int>(b.scene.lights.size()) + k);
   b.light({-1.8f, 3.2f, 0.4f}, kWarmBulb, 1.7f, 6.5f, 0.8f);
   b.light({2.8f, 3.2f, 2.2f}, kWarmBulb, 1.6f, 6.5f, 0.8f);
   b.light({-3.0f, 3.2f, 4.6f}, kWarmBulb, 1.2f, 5.0f, 0.8f);
+  // The window seat in the bay, three places looking into the room.
+  for (float x : {-1.4f, -0.2f, 1.0f}) b.seat("Window seat", {x, 0.56f, kZ1 + 0.5f}, {0, 0, -1}, 0.6f, SeatKind::kChair);
+  // The light switch by the street door, the door itself, the TV.
+  b.thing("Light switch\nTap: dim the lights", {kEntryX0 - 0.25f, 1.3f, kZ1 - 0.05f}, {0.08f, 0.1f, 0.08f},
+          Action::kLightSwitch);
+  b.thing("Street door\nTap: knock", {(kEntryX0 + kEntryX1) / 2, 1.1f, kZ1 - 0.05f}, {0.7f, 1.1f, 0.12f}, Action::kDoor);
   // Street light through the bay window and the door.
   b.light({-0.2f, 1.8f, kZ1 + 0.6f}, {0.55f, 0.6f, 0.9f}, 0.6f, 4.0f, 1.0f);
 }
@@ -290,6 +354,14 @@ void buildLounge(Builder& b) {
   b.block({-6.3f, 0, fz + 1.95f}, 0.2f, 0.2f);                   // floor lamp
   b.block({-5.85f, 0, fz + 1.85f}, 0.26f, 0.26f);                // side table
   b.solid({-5.85f, 0.55f, fz + 1.85f}, {0.24f, 0.015f, 0.24f}, kDarkWood);
+  for (float dz : {-0.7f, 0.0f, 0.7f}) b.seat("Sofa", {-5.85f, 0.55f, fz + dz}, {-1, 0, 0}, 1.0f, SeatKind::kSofa);
+  b.seat("Armchair", {-7.25f, 0.55f, fz - 1.3f}, {0, 0, 1}, 0.8f, SeatKind::kChair);
+  b.seat("Armchair", {-7.25f, 0.55f, fz + 1.3f}, {0, 0, -1}, 0.8f, SeatKind::kChair);
+  b.thing("Fireplace\nTap: fire on/off", {kX0 + 0.5f, 0.6f, fz}, {0.4f, 0.5f, 0.8f}, Action::kFireplace);
+  b.thing("Bookshelf\nTap: read a book", {kX0 + 0.2f, 1.2f, (kChimneyZ1 + kStageZ0 - kStepW) / 2}, {0.25f, 1.0f, 0.6f},
+          Action::kBooks);
+  b.thing("Chess game\nTap: make a move", {-6.95f, 0.5f, fz}, {0.3f, 0.12f, 0.3f}, Action::kChess);
+  b.scene.fireLight = static_cast<int>(b.scene.lights.size());
   b.light({kX0 + 0.9f, 0.6f, fz}, kFire, 1.8f, 5.0f, 0.4f);
   b.light({-6.3f, 1.5f, fz + 1.95f}, kWarmBulb, 1.1f, 4.0f, 0.2f);
   // The grand piano on the stage (tools/assets/piano.py), angled so its
@@ -298,6 +370,15 @@ void buildLounge(Builder& b) {
   const Vec3 piano{-8.0f, kStageH, 5.6f};
   const Quat pr = turnY(pianoYaw);
   b.model("piano.glb", piano, kLacquer, pr);
+  b.scene.pianoPosition = piano;
+  b.scene.pianoYaw = pianoYaw;
+  b.seat("Piano bench", piano + pr.rotate({0, 0.6f, -0.62f}), pr.rotate({0, 0, 1}), 0.2f, SeatKind::kPianoBench);
+  {
+    Interactable& songs = b.thing("Sheet music\nTap: pick a song", piano + pr.rotate({0, 1.02f, 0.12f}),
+                                  {0.25f, 0.15f, 0.25f}, Action::kPianoSongs);
+    songs.name = "PIANO";
+    songs.tagPosition = piano + Vec3{0, 1.9f, 0};
+  }
   b.solid(piano + pr.rotate({0, 0.8f, 1.05f}), {0.8f, 0.18f, 1.1f}, kLacquer, pr);   // case
   b.solid(piano + pr.rotate({0, 0.5f, -0.62f}), {0.38f, 0.04f, 0.18f}, kLacquer, pr);  // bench
   b.blockRect(-8.25f, 4.25f, -5.75f, 6.55f);
@@ -309,6 +390,9 @@ void buildLounge(Builder& b) {
   b.block({-6.95f, 0, kZ1 - 0.22f}, 0.32f, 0.2f);  // amp
   b.block({-6.8f, 0, 6.35f}, 0.22f, 0.22f);   // stool
   b.solid({-6.8f, kStageH + 0.74f, 6.35f}, {0.17f, 0.025f, 0.17f}, kLeather);
+  b.seat("Stage stool", {-6.8f, kStageH + 0.84f, 6.35f}, {1, 0, -1}, 0, SeatKind::kStool);
+  b.thing("Guitar\nTap: strum", {-5.72f, 0.9f, 6.62f}, {0.25f, 0.6f, 0.25f}, Action::kGuitar);
+  b.thing("Microphone\nTap: speak to the whole bar", {-6.25f, 1.7f, 6.3f}, {0.12f, 0.2f, 0.12f}, Action::kMic);
   b.solid({-6.95f, kStageH + 0.24f, kZ1 - 0.22f}, {0.3f, 0.24f, 0.13f}, kLeather);
   // Stage light: a warm spot on the piano.
   b.light({-6.4f, 3.4f, 4.6f}, kWarmBulb, 3.2f, 5.5f, 0.15f);
@@ -325,6 +409,15 @@ void buildGames(Builder& b) {
   // Darts in the board, the oche at 2.37 m, the mat, spotlights, neon
   // (tools/assets/darts_zone.py), and a high table for the players' drinks.
   b.model("darts_zone.glb", {0, 0, 0}, kDarkWood);
+  b.scene.dartBoard = {dartX, 1.73f, kZ1 - 0.0402f};
+  b.scene.dartOche = {dartX, 1.65f, kZ1 - 0.04f - 2.37f - 0.15f};
+  {
+    Interactable& darts = b.thing("Darts\nTap: play darts", b.scene.dartOche - Vec3{0, 0.9f, 0}, {0.6f, 0.9f, 0.3f},
+                                  Action::kDarts);
+    darts.name = "DARTS";
+    darts.tagPosition = {dartX, 2.35f, kZ1 - 0.3f};
+    darts.direct = false;
+  }
   b.light({dartX, 3.0f, kZ1 - 1.4f}, kWarmBulb, 1.5f, 4.0f, 0.15f);
   const Vec3 dt{dartX - 1.35f, 0, kZ1 - 2.0f};
   b.model("round_table.glb", dt, kVarnishedWood);
@@ -336,6 +429,10 @@ void buildGames(Builder& b) {
     const Vec3 c{7.75f, 0, z};
     const Quat r = turnY(-engine::kPi / 2);  // the driver faces +x
     b.model("sim_rig.glb", c, kBlackSteel, r);
+    const int rig = z < -2.0f ? 0 : 1;
+    b.scene.simPosition[rig] = c;
+    Seat& st = b.seat("Racing sim", c + Vec3{-0.2f, 0.4f, 0}, {1, 0, 0}, 1.0f, SeatKind::kSim);
+    st.machine = rig;
     b.solid(c + Vec3{-0.3f, 0.35f, 0}, {0.35f, 0.35f, 0.3f}, kLeather);           // seat
     b.solid(c + Vec3{0.45f, 0.42f, 0}, {0.12f, 0.42f, 0.32f}, kBlackSteel);       // wheel deck
     b.solid(c + Vec3{1.15f, 1.08f, 0}, {0.06f, 0.24f, 0.95f}, kBlackSteel);       // screens
@@ -365,6 +462,15 @@ void buildGames(Builder& b) {
       b.block(at(x, 0.28f), 0.38f, 0.38f);
     }
     b.block(at(1.15f, 1.35f), 0.4f, 0.4f);   // beanbag
+    b.seat("Beanbag", at(1.15f, 1.35f) + Vec3{0, 0.35f, 0}, r.rotate({0, 0, 1}), 1.0f, SeatKind::kSofa);
+    {
+      // The cabinet's screen (tools/assets/rhythm.py): a quad on the upper
+      // housing, which is raised 1.02 m, pushed 0.12 m forward and tilted back.
+      const Quat tilt = Quat::axisAngle({1, 0, 0}, -0.12f);
+      const float sw = 0.28f, y0 = 0.12f, y1 = 1.10f, zf = 0.425f;
+      const Vec3 local[4] = {{-sw, y0, zf}, {sw, y0, zf}, {sw, y1, zf}, {-sw, y1, zf}};
+      for (int k = 0; k < 4; ++k) b.scene.rhythmScreen[k] = mid + r.rotate(Vec3{0, 1.02f, 0.12f} + tilt.rotate(local[k]));
+    }
     b.block(at(-1.2f, 1.1f), 0.28f, 0.28f);  // high table
     b.solid(at(-1.2f, 1.1f) + Vec3{0, 1.05f, 0}, {0.25f, 0.015f, 0.25f}, kVarnishedWood);
     b.light(at(0, 1.3f) + Vec3{0, 1.7f, 0}, {0.85f, 0.4f, 1.0f}, 1.2f, 4.0f, 0.5f);

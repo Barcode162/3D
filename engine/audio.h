@@ -25,7 +25,28 @@ std::string userSongUrl(int index);
 
 // Turns all music sources (the jukebox) up or down, 0..1.
 void setMusicGain(float gain);
+
+// The sound clock (seconds), for scheduling notes ahead of time.
+double now();
 }  // namespace audio
+
+// A short sound made in code (engine/synth.h), kept in the browser and
+// played as often as needed. Each play is a "voice" that can be stopped.
+class Sound {
+ public:
+  enum Bus { kEffects, kPiano };
+  void create(const std::vector<float>& samples, float rate);
+  bool valid() const { return id_ >= 0; }
+  // `when` = seconds from now. `where` = place it in 3D (nullptr = everywhere).
+  // Returns a voice id (0 if sound isn't unlocked yet).
+  int play(float gain, const Vec3* where = nullptr, double when = 0, float rate = 1, Bus bus = kEffects,
+           bool loop = false) const;
+  static void stop(int voice, double when = 0, float release = 0.08f);
+  static void set(int voice, float gain, float rate);  // e.g. engine revs
+
+ private:
+  int id_ = -1;
+};
 
 // A whole song decoded into memory, for when timing must be exact (the
 // rhythm game): it plays with sample accuracy and reports where it is.

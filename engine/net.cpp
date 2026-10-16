@@ -102,6 +102,29 @@ void receiveWorld(std::vector<WorldEntry>& out) {
   }
 }
 
+void sendEvent(const std::string& type, const double* values, int count) {
+  EM_ASM({
+    var v = [];
+    for (var i = 0; i < $2; i++) v.push(Math.round(HEAPF64[($1 >> 3) + i] * 1000) / 1000);
+    window['bar3dNet']['sendEvent'](UTF8ToString($0), v);
+  }, type.c_str(), values, count);
+}
+
+void receiveEvents(std::vector<Event>& out) {
+  char* text = static_cast<char*>(EM_ASM_PTR({ return stringToNewUTF8(window['bar3dNet']['takeEvents']()); }));
+  const Json list = Json::parse(text);
+  std::free(text);
+  for (const Json& e : list.items()) {
+    Event ev;
+    ev.player = e[0].integer();
+    ev.type = e[1].string();
+    for (const Json& v : e[2].items()) ev.values.push_back(v.number());
+    out.push_back(std::move(ev));
+  }
+}
+
+bool isLower(int player) { return EM_ASM_INT({ return window['bar3dNet']['isLower']($0) ? 1 : 0; }, player) != 0; }
+
 double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 
 }  // namespace engine::net

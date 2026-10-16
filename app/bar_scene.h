@@ -81,9 +81,30 @@ struct FloorArea {
   float height;
 };
 
+// A place to sit. Anyone can sit on any free seat (one person each).
+enum class SeatKind { kStool, kChair, kSofa, kPianoBench, kSim };
+
+struct Seat {
+  const char* name;      // "Bar stool", "Sofa"...
+  engine::Vec3 hip;      // where the sitter's hip joint goes
+  float yaw = 0;         // which way the sitter faces (camera yaw convention)
+  float lowSeat = 0;     // 0 = stool height, 1 = low sofa (knees bend more)
+  SeatKind kind = SeatKind::kStool;
+  int model = -1;        // BarScene::models entry that lights up, or -1
+  int machine = -1;      // sims: which rig (0, 1)
+  engine::Vec3 boundsMin, boundsMax;  // where taps hit it
+};
+
 // Something you can use. It has a floating name tag; walking close and
 // looking at it highlights it and shows a prompt; tapping it runs `action`.
-enum class Action { kNone, kJukebox, kMirror, kMirrorMode, kRhythm };
+enum class Action {
+  kNone, kJukebox, kMirror, kMirrorMode, kRhythm,
+  kDarts,        // stand at the oche and throw
+  kBartender,    // the bartender's station (badge needed)
+  kDrinkShelf,   // a drink waiting on the counter (value = slot)
+  kBell, kGuitar, kMic, kLightSwitch, kFireplace, kDoor, kTv, kBooks, kChess, kTipJar, kTaps, kCoffee,
+  kPianoSongs,   // the sheet music on the piano: pick a song to play
+};
 
 struct Interactable {
   std::string name;               // floating name tag
@@ -95,6 +116,9 @@ struct Interactable {
   Action action = Action::kNone;
   int mirror = -1;  // for Action::kMirror(Mode): index into BarScene::mirrors
   int value = 0;    // for Action::kMirrorMode: 0 = full, 1 = avatars only, 2 = off
+  // Small things (a bell, a book): only when you look straight at them or
+  // tap them, not just by standing nearby.
+  bool direct = false;
 };
 
 // A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole
@@ -122,6 +146,7 @@ struct BarScene {
   std::vector<FloorArea> floors;
   std::vector<Interactable> interactables;
   std::vector<Mirror> mirrors;
+  std::vector<Seat> seats;
   engine::Vec3 lightGridMin, lightGridMax;  // floor area the light grid covers (x, z)
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
@@ -129,6 +154,18 @@ struct BarScene {
   engine::Vec3 jukeboxSpeaker;  // where the music comes from
   engine::Vec3 spawnPosition;
   float spawnYaw;
+  // Game spots (see app/games.*): the piano, the dartboard, the two sims,
+  // the rhythm cabinet's screen, the bartender's station.
+  engine::Vec3 pianoPosition;
+  float pianoYaw = 0;
+  engine::Vec3 dartBoard;        // center of the board's face
+  engine::Vec3 dartOche;         // where the thrower stands (eyes)
+  engine::Vec3 simPosition[2];   // rig origins (they face +x)
+  engine::Vec3 rhythmScreen[4];  // corners: bottom-left, bottom-right, top-right, top-left
+  engine::Vec3 barTopFront[8];   // drink spots on the counter, customer side
+  engine::Vec3 bartenderSpot;    // standing spot behind the bar (eyes)
+  int fireLight = -1;            // lights index of the fireplace glow
+  std::vector<int> roomLights;   // lights the switch turns down
 };
 
 BarScene buildBarScene();

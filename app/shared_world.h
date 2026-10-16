@@ -11,6 +11,7 @@
 
 #include "app/bar_scene.h"
 #include "app/jukebox.h"
+#include "engine/net.h"
 #include "engine/physics.h"
 
 namespace app {
@@ -28,6 +29,8 @@ class SharedWorld {
   // Call every frame before the physics step. `held` is the body in your
   // hand; it's set to -1 if another player takes it from you.
   void update(double nowMs, float dt, engine::PhysicsWorld& physics, BarScene& scene, Jukebox& jukebox, int& held);
+  // World entries this class doesn't handle itself (piano, lights, drinks).
+  std::vector<engine::net::WorldEntry> takeOther() { return std::move(other_); }
 
  private:
   enum class Mode { kIdle, kMine, kRemote };
@@ -49,6 +52,7 @@ class SharedWorld {
   void applyJukebox(Jukebox& jukebox);
 
   bool on_ = false;
+  std::vector<engine::net::WorldEntry> other_;
   std::vector<Glass> glasses_;
   int jukeboxChanges_ = 0;  // Jukebox::localChanges() already shared
   double songStart_ = 0;    // server time the current song started

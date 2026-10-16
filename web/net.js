@@ -44,6 +44,9 @@ window.bar3dNet = (function () {
   // entries from others not yet taken by C++, the newest revision we have,
   // and the server's clock relative to ours.
   var worldOut = {}, worldIn = [], since = 0;
+  // Messages through the relay (voice chat handshakes, events for players
+  // without a direct connection), and quick events waiting for C++.
+  var msgOut = [], eventsIn = [], signalHandlers = [];
   var clockOffset = null, clockRtt = 1e9;
 
   function info(text) {
@@ -67,12 +70,15 @@ window.bar3dNet = (function () {
     var sending = worldOut;
     worldOut = {};
     if (Object.keys(sending).length) body.w = sending;
+    var sendingMsgs = msgOut.splice(0, 40);
+    if (sendingMsgs.length) body.m = sendingMsgs;
     var sentAt = performance.now();
     post(body, function (reply) {
       inFlight = false;
       if (!reply) {
         // Put unsent changes back, unless a newer one for the same key came.
         for (var k in sending) if (!(k in worldOut)) worldOut[k] = sending[k];
+        msgOut = sendingMsgs.concat(msgOut);
         if (++failures === 5) { status = 3; info('Multiplayer: can\'t reach the server (' + server + ').'); }
         return;
       }
@@ -107,6 +113,7 @@ window.bar3dNet = (function () {
         lastSent[p.id] = p.t;
         packets.push({ index: known.index, t: p.t, s: p.s });
       });
+      (reply.inbox || []).forEach(function (m) { receiveText(m[0], m[1]); });
       Object.keys(players).forEach(function (pid) {
         if (seen[pid]) return;
         info('Multiplayer: ' + players[pid].name + ' left.');
@@ -114,6 +121,22 @@ window.bar3dNet = (function () {
         delete lastSent[pid];
       });
     });
+  }
+
+  // A message from another player: a voice handshake ('v:') or an event ('e:').
+  function receiveText(from, text) {
+    if (text.slice(0, 2) === 'v:') {
+      var data;
+      try { data = JSON.parse(text.slice(2)); } catch (e) { return; }
+      signalHandlers.forEach(function (h) { h(from, data); });
+    } else if (text.slice(0, 2) === 'e:') {
+      var p = players[from];
+      if (!p) return;
+      try {
+        var ev = JSON.parse(text.slice(2));
+        eventsIn.push([p.index, ev[0], ev[1]]);
+      } catch (e) {}
+    }
   }
 
   function leave() {
@@ -169,6 +192,38 @@ window.bar3dNet = (function () {
       return 0;
     },
     serverUrl: function () { return server; },
+    myId: function () { return id; },
+    // Ids of everyone else in the room right now.
+    peers: function () { return Object.keys(players); },
+    idOf: function (index) {
+      for (var pid in players) if (players[pid].index === index) return pid;
+      return '';
+    },
+    indexOf: function (pid) { return players[pid] ? players[pid].index : 0; },
+    // True if that player's id sorts before ours (tie-breaks: who wins a seat).
+    isLower: function (index) {
+      for (var pid in players) if (players[pid].index === index) return pid < id;
+      return false;
+    },
+    // Voice chat handshakes (web/voice.js).
+    sendSignal: function (to, data) { if (server) msgOut.push([to, 'v:' + JSON.stringify(data)]); },
+    onSignal: function (handler) { signalHandlers.push(handler); },
+    // Quick events (piano notes...) to everyone: straight over the voice
+    // chat's data connection where there is one, else through the relay.
+    sendEvent: function (type, values) {
+      var text = 'e:' + JSON.stringify([type, values]);
+      var voice = window.bar3dVoice;
+      for (var pid in players) {
+        if (!(voice && voice.sendData(pid, text))) msgOut.push([pid, text]);
+      }
+    },
+    receiveText: receiveText,
+    // Events from others since the last call, as JSON [[player, type, [values]], ...].
+    takeEvents: function () {
+      var out = JSON.stringify(eventsIn);
+      eventsIn = [];
+      return out;
+    },
     count: function () { return Object.keys(players).length; },
     // Shared world: queue a change to `key` (sent on the next tick).
     setWorld: function (key, values) {

@@ -136,23 +136,16 @@
       locateFile: function (path) { return path + '?v=' + build; },
       onAbort: function (what) { append('Aborted: ' + what, true); },
     };
-    var audio = document.createElement('script');
-    audio.src = 'audio.js?v=' + build;
-    audio.async = false;
-    audio.onerror = function () { append('Failed to load audio.js', true); };
-    document.body.appendChild(audio);
-    var net = document.createElement('script');
-    net.src = 'net.js?v=' + build;
-    net.async = false;
-    net.onerror = function () { append('Failed to load net.js', true); };
-    document.body.appendChild(net);
-    var account = document.createElement('script');
-    account.src = 'account.js?v=' + build;
-    account.async = false;
-    account.onerror = function () { append('Failed to load account.js', true); };
-    document.body.appendChild(account);
+    // The bridges C++ talks to, in order, then the app itself.
+    ['audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
+      var s = document.createElement('script');
+      s.src = name + '?v=' + build;
+      s.async = false;
+      s.onerror = function () { append('Failed to load ' + name, true); };
+      document.body.appendChild(s);
+    });
     var script = document.createElement('script');
-    script.async = false;  // run after audio.js, net.js and account.js
+    script.async = false;  // run after the bridges above
     script.src = 'app.js?v=' + build;
     script.onerror = function () { append('Failed to load app.js', true); };
     document.body.appendChild(script);

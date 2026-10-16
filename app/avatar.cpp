@@ -15,22 +15,14 @@ namespace {
 
 // Sizes in meters for a person about 1.75 m tall, standing at the origin,
 // facing -Z. +X is the avatar's right side.
-// The look is modeled on the user (from a photo): fair, warm skin; dark
+// Look 0 is modeled on the user (from a photo): fair, warm skin; dark
 // brown curly hair with volume on top, over the ears; short stubble;
 // brown eyes and heavy brows; an athletic build with broad shoulders.
-const Paint kSkinPaint{{0.90f, 0.69f, 0.57f}, 0.35f, -1};
-const Paint kShirt{{0.13f, 0.13f, 0.14f}, 0.25f, kTexFabric};  // charcoal tee
-const Paint kJeans{{0.20f, 0.24f, 0.38f}, 0.25f, kTexDenim};   // dark wash
-const Paint kBelt{{0.12f, 0.08f, 0.05f}, 0.7f, -1};
-const Paint kShoes{{0.88f, 0.87f, 0.85f}, 0.45f, -1};  // white sneakers
-const Paint kSole{{0.62f, 0.60f, 0.57f}, 0.3f, -1};
-const Paint kSock{{0.12f, 0.12f, 0.14f}, 0.2f, kTexFabric};
-const Paint kHair{{0.13f, 0.085f, 0.06f}, 0.55f, kTexHair};
-const Paint kStubble{{0.50f, 0.36f, 0.29f}, 0.15f, kTexHair};
+// The other looks change colors, sleeves and hair.
 const Paint kEyeWhite{{0.95f, 0.94f, 0.92f}, 0.8f, -1};
-const Paint kIris{{0.24f, 0.14f, 0.07f}, 0.95f, -1};
-const Paint kBrow{{0.11f, 0.075f, 0.05f}, 0.2f, kTexHair};
 const Paint kLips{{0.74f, 0.47f, 0.43f}, 0.5f, -1};
+const Paint kBelt{{0.12f, 0.08f, 0.05f}, 0.7f, -1};
+const Paint kSock{{0.12f, 0.12f, 0.14f}, 0.2f, kTexFabric};
 
 // Small deterministic random numbers (the same hair every time).
 float hash01(uint32_t n) {
@@ -77,7 +69,39 @@ float limbX(float y, const std::vector<Vec3>& joints) {
 
 }  // namespace
 
-void Avatar::build() {
+const std::vector<AvatarLook>& avatarLooks() {
+  // name, skin, top, pants, shoes, hair color, iris, hair style, long sleeves, stubble
+  static const std::vector<AvatarLook> looks = {
+      {"Josh", {0.90f, 0.69f, 0.57f}, {0.13f, 0.13f, 0.14f}, {0.20f, 0.24f, 0.38f}, {0.88f, 0.87f, 0.85f},
+       {0.13f, 0.085f, 0.06f}, {0.24f, 0.14f, 0.07f}, HairStyle::kCurly, false, true},
+      {"Bartender", {0.78f, 0.56f, 0.42f}, {0.92f, 0.92f, 0.9f}, {0.06f, 0.06f, 0.07f}, {0.05f, 0.05f, 0.05f},
+       {0.08f, 0.06f, 0.05f}, {0.2f, 0.12f, 0.06f}, HairStyle::kShort, true, false},
+      {"Rocker", {0.93f, 0.78f, 0.7f}, {0.05f, 0.05f, 0.05f}, {0.08f, 0.08f, 0.1f}, {0.1f, 0.06f, 0.04f},
+       {0.04f, 0.035f, 0.03f}, {0.25f, 0.4f, 0.5f}, HairStyle::kLong, true, true},
+      {"Sporty", {0.95f, 0.76f, 0.64f}, {0.75f, 0.1f, 0.1f}, {0.4f, 0.4f, 0.42f}, {0.92f, 0.92f, 0.92f},
+       {0.85f, 0.68f, 0.35f}, {0.2f, 0.35f, 0.6f}, HairStyle::kShort, false, false},
+      {"Classy", {0.42f, 0.27f, 0.18f}, {0.08f, 0.1f, 0.22f}, {0.08f, 0.1f, 0.22f}, {0.03f, 0.03f, 0.03f},
+       {0.05f, 0.04f, 0.03f}, {0.12f, 0.07f, 0.03f}, HairStyle::kBun, true, false},
+      {"Neon", {0.85f, 0.62f, 0.48f}, {1.0f, 0.25f, 0.65f}, {0.05f, 0.05f, 0.06f}, {0.95f, 0.95f, 0.95f},
+       {0.1f, 0.85f, 0.95f}, {0.3f, 0.2f, 0.1f}, HairStyle::kCurly, false, false},
+      {"Cozy", {0.88f, 0.66f, 0.52f}, {0.18f, 0.38f, 0.22f}, {0.72f, 0.64f, 0.5f}, {0.35f, 0.2f, 0.1f},
+       {0.45f, 0.18f, 0.08f}, {0.3f, 0.45f, 0.25f}, HairStyle::kLong, true, false},
+      {"Robot", {0.62f, 0.64f, 0.68f}, {0.35f, 0.37f, 0.42f}, {0.25f, 0.27f, 0.3f}, {0.15f, 0.15f, 0.17f},
+       {0.62f, 0.64f, 0.68f}, {0.1f, 0.9f, 1.0f}, HairStyle::kNone, true, false},
+  };
+  return looks;
+}
+
+void Avatar::build(const AvatarLook& look) {
+  const Paint kSkinPaint{look.skin, 0.35f, -1};
+  const Paint kShirt{look.top, 0.25f, kTexFabric};
+  const Paint kJeans{look.pants, 0.25f, kTexDenim};
+  const Paint kShoes{look.shoes, 0.45f, -1};
+  const Paint kSole{look.shoes * 0.7f, 0.3f, -1};
+  const Paint kHair{look.hair, 0.55f, kTexHair};
+  const Paint kStubble{look.skin * 0.55f + look.hair * 0.15f, 0.15f, kTexHair};
+  const Paint kIris{look.iris, 0.95f, -1};
+  const Paint kBrow{look.hair * 0.85f, 0.2f, kTexHair};
   engine::Skeleton& sk = skeleton_;
   Bones b{};
   b.root = sk.add("root", -1, {0, 0, 0});
@@ -158,40 +182,53 @@ void Avatar::build() {
     return p.y < 1.612f && p.z < 0.0f;
   };
   constexpr float kShell = 0.0022f;
+  if (look.stubble) {
   engine::addEllipsoid(m, skull, skullR + Vec3{kShell, kShell, kShell}, head, kStubble, 24, 18, stubble);
   engine::addEllipsoid(m, jaw, jawR + Vec3{kShell, kShell, kShell}, head, kStubble, 18, 12, stubble);
   engine::addEllipsoid(m, {0, 1.548f, -0.052f}, {0.033f, 0.021f, 0.027f}, head, kStubble, 12, 8,
                        [](Vec3 p) { return p.z < -0.04f || p.y < 1.545f; });
   engine::addEllipsoid(m, {0, 1.601f, -0.09f}, {0.025f, 0.0055f, 0.007f}, head, kStubble, 10, 6);
-
-  // Hair: a cap where it grows, then a few hundred curls over it for the
-  // curly volume (more lift on top). Curl shades vary a little for depth.
-  const Vec3 hairCenter{0, 1.655f, 0.004f}, capR{0.092f, 0.116f, 0.106f};
-  engine::addEllipsoid(m, hairCenter, capR, head, kHair, 24, 18, [&](Vec3 p) {
-    const Vec3 d = engine::normalize(Vec3{(p.x - hairCenter.x) / capR.x, (p.y - hairCenter.y) / capR.y,
-                                          (p.z - hairCenter.z) / capR.z});
-    return hairGrows(d + Vec3{0, 0.08f, 0});  // the cap stops a bit inside the curls
-  });
-  constexpr int kCurlDirections = 600;
-  for (int k = 0; k < kCurlDirections; ++k) {
-    // Even directions over the sphere (Fibonacci spiral), jittered.
-    const float y = 1.0f - 2.0f * (k + 0.5f) / kCurlDirections;
-    const float r = std::sqrt(std::max(0.0f, 1.0f - y * y));
-    const float a = k * 2.39996323f + hash01(k * 7u + 1u) * 0.3f;
-    const Vec3 d{r * std::cos(a), y, r * std::sin(a)};
-    if (!hairGrows(d) || hash01(k * 7u + 2u) < 0.35f) continue;
-    const float lift = 1.0f + 0.12f * std::max(0.0f, d.y) + 0.05f * hash01(k * 7u + 3u);
-    const float size = 0.019f + 0.012f * hash01(k * 7u + 4u);
-    const Vec3 c = hairCenter + Vec3{d.x * capR.x, d.y * capR.y, d.z * capR.z} * lift;
-    const float shade = 0.75f + 0.5f * hash01(k * 7u + 5u);
-    Paint curl = kHair;
-    curl.color = kHair.color * shade;
-    engine::addEllipsoid(m, c, {size, size * (0.8f + 0.4f * hash01(k * 7u + 6u)), size}, head, curl, 8, 6);
   }
-  // A few loose curls falling onto the forehead, more on the right side.
-  const Vec3 fringe[] = {{0.035f, 1.735f, -0.088f}, {0.058f, 1.725f, -0.078f}, {0.015f, 1.742f, -0.09f},
-                         {-0.03f, 1.745f, -0.088f}};
-  for (const Vec3& c : fringe) engine::addEllipsoid(m, c, {0.02f, 0.024f, 0.017f}, head, kHair, 8, 6);
+
+  // Hair: a cap where it grows, then (curly) a few hundred curls over it
+  // for the volume, or (long) a fall down the back, or (bun) a knot on top.
+  const Vec3 hairCenter{0, 1.655f, 0.004f}, capR{0.092f, 0.116f, 0.106f};
+  if (look.hairStyle != HairStyle::kNone) {
+    const float grow = look.hairStyle == HairStyle::kCurly ? 0.08f : 0.0f;
+    engine::addEllipsoid(m, hairCenter, capR, head, kHair, 24, 18, [&](Vec3 p) {
+      const Vec3 d = engine::normalize(Vec3{(p.x - hairCenter.x) / capR.x, (p.y - hairCenter.y) / capR.y,
+                                            (p.z - hairCenter.z) / capR.z});
+      return hairGrows(d + Vec3{0, grow, 0});  // the curly cap stops a bit inside the curls
+    });
+  }
+  if (look.hairStyle == HairStyle::kCurly) {
+    constexpr int kCurlDirections = 600;
+    for (int k = 0; k < kCurlDirections; ++k) {
+      // Even directions over the sphere (Fibonacci spiral), jittered.
+      const float y = 1.0f - 2.0f * (k + 0.5f) / kCurlDirections;
+      const float r = std::sqrt(std::max(0.0f, 1.0f - y * y));
+      const float a = k * 2.39996323f + hash01(k * 7u + 1u) * 0.3f;
+      const Vec3 d{r * std::cos(a), y, r * std::sin(a)};
+      if (!hairGrows(d) || hash01(k * 7u + 2u) < 0.35f) continue;
+      const float lift = 1.0f + 0.12f * std::max(0.0f, d.y) + 0.05f * hash01(k * 7u + 3u);
+      const float size = 0.019f + 0.012f * hash01(k * 7u + 4u);
+      const Vec3 c = hairCenter + Vec3{d.x * capR.x, d.y * capR.y, d.z * capR.z} * lift;
+      const float shade = 0.75f + 0.5f * hash01(k * 7u + 5u);
+      Paint curl = kHair;
+      curl.color = kHair.color * shade;
+      engine::addEllipsoid(m, c, {size, size * (0.8f + 0.4f * hash01(k * 7u + 6u)), size}, head, curl, 8, 6);
+    }
+    // A few loose curls falling onto the forehead, more on the right side.
+    const Vec3 fringe[] = {{0.035f, 1.735f, -0.088f}, {0.058f, 1.725f, -0.078f}, {0.015f, 1.742f, -0.09f},
+                           {-0.03f, 1.745f, -0.088f}};
+    for (const Vec3& c : fringe) engine::addEllipsoid(m, c, {0.02f, 0.024f, 0.017f}, head, kHair, 8, 6);
+  } else if (look.hairStyle == HairStyle::kLong) {
+    // Falls from the crown to the shoulders behind the head.
+    engine::addEllipsoid(m, {0, 1.6f, 0.035f}, {0.1f, 0.15f, 0.085f}, head, kHair, 18, 12);
+    engine::addEllipsoid(m, {0, 1.47f, 0.06f}, {0.095f, 0.08f, 0.05f}, Skin{b.neck, b.chest, 0.5f}, kHair, 14, 8);
+  } else if (look.hairStyle == HairStyle::kBun) {
+    engine::addEllipsoid(m, {0, 1.76f, 0.06f}, {0.045f, 0.04f, 0.045f}, head, kHair, 14, 10);
+  }
 
   for (int i = 0; i < 2; ++i) {
     const float s = i == 0 ? -1.0f : 1.0f;
@@ -216,7 +253,12 @@ void Avatar::build() {
       return Skin{b.forearm[i], b.hand[i], smoothstep(0.90f, 0.85f, y)};
     };
     rings.clear();
-    for (const ArmRing& r : arm) rings.push_back({{limbX(r.y, armJoints), r.y, 0}, r.r1, r.r2, armSkin(r.y), *r.paint});
+    for (const ArmRing& r : arm) {
+      // Long sleeves reach the wrist, a little wider than the arm.
+      const bool sleeve = look.longSleeves && r.y > 0.9f;
+      const float grow = sleeve && r.paint == &kSkinPaint ? 0.006f : 0.0f;
+      rings.push_back({{limbX(r.y, armJoints), r.y, 0}, r.r1 + grow, r.r2 + grow, armSkin(r.y), sleeve ? kShirt : *r.paint});
+    }
     engine::addTube(m, rings, side, 14);
     // Rounded shoulder, bridging the torso and the top of the arm.
     engine::addEllipsoid(m, {s * 0.19f, 1.405f, 0.004f}, {0.068f, 0.058f, 0.064f},
@@ -270,12 +312,31 @@ void advanceWalk(AvatarMotion& m, float forward, float sideways, float dt, float
   m.walkAmount += (target - m.walkAmount) * std::min(1.0f, dt * 8.0f);
 }
 
+const char* emoteName(Emote e) {
+  static const char* kNames[] = {"", "Wave", "Dance", "Clap", "Cheer", "Bow", "Point", "Shrug", "Laugh", "Salute",
+                                 "Thumbs up", "Facepalm"};
+  const int i = static_cast<int>(e);
+  return i >= 0 && i < static_cast<int>(Emote::kCount) ? kNames[i] : "";
+}
+
+float emoteLength(Emote e) {
+  switch (e) {
+    case Emote::kDance: return 1e9f;
+    case Emote::kBow: case Emote::kShrug: return 2.0f;
+    case Emote::kWave: case Emote::kSalute: case Emote::kThumbsUp: case Emote::kFacepalm: return 2.5f;
+    default: return 3.0f;
+  }
+}
+
 void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   using engine::Quat;
   using engine::radians;
   std::vector<Quat> rot(skeleton_.bones.size());
   const Vec3 xAxis{1, 0, 0}, yAxis{0, 1, 0}, zAxis{0, 0, 1};
   auto bone = [&](const std::string& name) -> Quat& { return rot[static_cast<size_t>(skeleton_.find(name))]; };
+  auto X = [&](float deg) { return Quat::axisAngle(xAxis, radians(deg)); };
+  auto Y = [&](float deg) { return Quat::axisAngle(yAxis, radians(deg)); };
+  auto Z = [&](float deg) { return Quat::axisAngle(zAxis, radians(deg)); };
 
   const float w = m.walkAmount;
   const float phase = m.walkPhase;
@@ -284,6 +345,7 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   const float idle = 1.0f - w;
   const float breath = std::sin(m.time * 2.0f * engine::kPi / 4.2f);
   const float sway = std::sin(m.time * 2.0f * engine::kPi / 7.0f);
+  float bob = -0.03f * swing * swing * w + 0.004f * breath * idle;
 
   // Body: hips twist with the stride, chest twists back, slight forward lean.
   bone("hips") = Quat::axisAngle(yAxis, radians(6.0f) * swing * w) *
@@ -315,14 +377,182 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
         Quat::axisAngle(xAxis, radians(12.0f) + radians(18.0f) * std::max(0.0f, armSwing) * w);
   }
 
-  // Look up/down: the neck takes some of it, the head the rest.
+  // ---- Activities (crude key poses, see docs/REMASTER.md) ----
+  const float t = m.actionTime;
+  const bool seated = m.activity == Activity::kSit || m.activity == Activity::kDrive || m.activity == Activity::kPiano;
+  if (seated) {
+    // Thighs forward, shins hanging; a low seat bends the knees more.
+    for (const char* n : {".L", ".R"}) {
+      bone(std::string("thigh") + n) = X(85 + 10 * m.lowSeat) * Z(n[1] == 'L' ? 4.0f : -4.0f);
+      bone(std::string("shin") + n) = X(-85 - 15 * m.lowSeat);
+      bone(std::string("foot") + n) = X(5);
+      bone(std::string("upperArm") + n) = Z(n[1] == 'L' ? -8.0f : 8.0f) * X(18);
+      bone(std::string("forearm") + n) = X(45);
+    }
+    bone("hips") = Quat{};
+    bone("spine") = X(2 + 4 * breath);
+    bone("chest") = X(1.0f * breath);
+    bob = 0;
+  }
+  if (m.activity == Activity::kDrive) {
+    // Hands at ten and two on the wheel; the wheel turn swings the arms.
+    const float st = engine::clampf(m.steer, -1, 1) * 25.0f;
+    bone("upperArm.L") = Z(-12 + st * 0.6f) * X(52 - st * 0.4f);
+    bone("upperArm.R") = Z(12 + st * 0.6f) * X(52 + st * 0.4f);
+    bone("forearm.L") = X(38);
+    bone("forearm.R") = X(38);
+    bone("spine") = X(10);  // the bucket seat leans back
+  }
+  if (m.activity == Activity::kPiano) {
+    // Forearms level over the keys; each hand slides to where it plays and
+    // the fingers' work shows as a small bounce.
+    const float hands[2] = {m.handL, m.handR};
+    for (int i = 0; i < 2; ++i) {
+      const float sgn = i == 0 ? -1.0f : 1.0f;
+      const std::string n = i == 0 ? ".L" : ".R";
+      const float reach = engine::clampf(hands[i], -1, 1) * 28.0f;  // degrees outward (+) or inward
+      const float bounce = 4.0f * std::sin(t * 13.0f + static_cast<float>(i) * 1.7f);
+      bone("upperArm" + n) = Z(sgn * (6 + reach * sgn)) * X(32 + bounce * 0.3f);
+      bone("forearm" + n) = X(52 + bounce);
+      bone("hand" + n) = X(-12);
+    }
+    bone("spine") = X(-4);
+  }
+  if (m.activity == Activity::kRhythm) {
+    const float tapL = std::max(0.0f, std::sin(t * 9.0f)), tapR = std::max(0.0f, std::sin(t * 9.0f + 2.1f));
+    bone("upperArm.L") = Z(-10) * X(38 + 8 * tapL);
+    bone("upperArm.R") = Z(10) * X(38 + 8 * tapR);
+    bone("forearm.L") = X(55 - 20 * tapL);
+    bone("forearm.R") = X(55 - 20 * tapR);
+    bone("spine") = X(-6);
+  }
+  if (m.activity == Activity::kDarts) {
+    // Aim with the dart by the eye; a throw (first 0.35 s) snaps the forearm out.
+    const float k = engine::clampf(t / 0.35f, 0, 1);
+    const float flick = t < 0.35f ? std::sin(k * engine::kPi * 0.5f) : 0.0f;
+    bone("upperArm.R") = Z(6) * X(95 - 10 * flick);
+    bone("forearm.R") = X(115 * (1 - flick) + 5);
+    bone("hand.R") = X(-20 + 40 * flick);
+    bone("upperArm.L") = Z(-15) * X(10);
+  }
+  if (m.activity == Activity::kBartend) {
+    // Shaking a cocktail over the shoulder.
+    const float shake = 12.0f * std::sin(t * 22.0f);
+    bone("upperArm.R") = Z(20) * X(110 + shake);
+    bone("forearm.R") = X(70);
+    bone("upperArm.L") = Z(-15) * X(95 + shake);
+    bone("forearm.L") = X(80);
+    bone("chest") = Y(shake * 0.3f);
+  }
+  if (m.activity == Activity::kDrink) {
+    // Glass to the mouth for a sip every few seconds, otherwise held low.
+    const float sip = std::pow(std::max(0.0f, std::sin(t * 1.4f)), 4.0f);
+    bone("upperArm.R") = Z(10) * X(25 + 30 * sip);
+    bone("forearm.R") = X(70 + 65 * sip);
+  }
+  if (m.activity == Activity::kEmote) {
+    // Fade in over 0.25 s and out at the end, so it doesn't snap.
+    const float len = emoteLength(m.emote);
+    const float fade = engine::clampf(std::min(t / 0.25f, (len - t) / 0.3f), 0, 1);
+    auto set = [&](const char* name, Quat q) {
+      Quat& b = bone(name);
+      // Blend from the walking/idle pose toward the emote pose.
+      const float d = b.x * q.x + b.y * q.y + b.z * q.z + b.w * q.w;
+      const float sgn = d < 0 ? -1.0f : 1.0f;
+      Quat r{b.x + (q.x * sgn - b.x) * fade, b.y + (q.y * sgn - b.y) * fade, b.z + (q.z * sgn - b.z) * fade,
+             b.w + (q.w * sgn - b.w) * fade};
+      const float len2 = std::sqrt(r.x * r.x + r.y * r.y + r.z * r.z + r.w * r.w);
+      b = {r.x / len2, r.y / len2, r.z / len2, r.w / len2};
+    };
+    const float osc = std::sin(t * 8.0f);
+    switch (m.emote) {
+      case Emote::kWave:
+        set("upperArm.R", Z(125));
+        set("forearm.R", Z(25 * osc) * X(20));
+        break;
+      case Emote::kDance: {
+        const float beat = std::sin(t * engine::kPi * 2.2f);
+        set("hips", Y(14 * beat) * Z(6 * beat));
+        set("chest", Y(-10 * beat));
+        set("upperArm.L", Z(-60 - 50 * std::max(0.0f, beat)) * X(30));
+        set("upperArm.R", Z(60 + 50 * std::max(0.0f, -beat)) * X(30));
+        set("forearm.L", X(70));
+        set("forearm.R", X(70));
+        set("thigh.L", X(15 * std::max(0.0f, beat)));
+        set("shin.L", X(-30 * std::max(0.0f, beat)));
+        set("thigh.R", X(15 * std::max(0.0f, -beat)));
+        set("shin.R", X(-30 * std::max(0.0f, -beat)));
+        bob += -0.03f * std::fabs(beat) * fade;
+        break;
+      }
+      case Emote::kClap: {
+        const float c = std::fabs(std::sin(t * 7.0f));
+        set("upperArm.L", Z(10 + 12 * c) * X(55));
+        set("upperArm.R", Z(-10 - 12 * c) * X(55));
+        set("forearm.L", X(60) * Y(-20));
+        set("forearm.R", X(60) * Y(20));
+        break;
+      }
+      case Emote::kCheer:
+        set("upperArm.L", Z(-150 + 15 * osc));
+        set("upperArm.R", Z(150 - 15 * osc));
+        set("forearm.L", X(10));
+        set("forearm.R", X(10));
+        bob += 0.03f * std::max(0.0f, osc) * fade;
+        break;
+      case Emote::kBow:
+        set("spine", X(-30));
+        set("chest", X(-20));
+        set("upperArm.R", Z(-10) * X(40));
+        set("forearm.R", X(80));
+        break;
+      case Emote::kPoint:
+        set("upperArm.R", X(85));
+        set("forearm.R", X(5));
+        break;
+      case Emote::kShrug:
+        set("upperArm.L", Z(-25) * X(10));
+        set("upperArm.R", Z(25) * X(10));
+        set("forearm.L", X(75) * Y(30));
+        set("forearm.R", X(75) * Y(-30));
+        set("head", Z(10));
+        break;
+      case Emote::kLaugh: {
+        const float h = std::sin(t * 18.0f);
+        set("chest", X(4 + 4 * h));
+        set("spine", X(-8));
+        set("upperArm.L", Z(-5) * X(20));
+        set("upperArm.R", Z(5) * X(20));
+        set("forearm.L", X(85));
+        set("forearm.R", X(85));
+        break;
+      }
+      case Emote::kSalute:
+        set("upperArm.R", Z(70) * X(35));
+        set("forearm.R", X(135));
+        break;
+      case Emote::kThumbsUp:
+        set("upperArm.R", Z(10) * X(40));
+        set("forearm.R", X(75));
+        break;
+      case Emote::kFacepalm:
+        set("upperArm.R", Z(-5) * X(65));
+        set("forearm.R", X(140));
+        break;
+      default: break;
+    }
+  }
+
+  // Look up/down: the neck takes some of it, the head the rest; turning the
+  // head (while seated, the body stays facing the seat) is split the same way.
   const float look = engine::clampf(m.pitch, radians(-60.0f), radians(60.0f));
-  bone("neck") = Quat::axisAngle(xAxis, look * 0.35f);
-  bone("head") = Quat::axisAngle(xAxis, look * 0.65f);
+  const float turn = engine::clampf(m.headYaw, radians(-75.0f), radians(75.0f));
+  const Quat headExtra = bone("head");  // emotes may tilt the head
+  bone("neck") = Quat::axisAngle(yAxis, -turn * 0.4f) * Quat::axisAngle(xAxis, look * 0.35f);
+  bone("head") = Quat::axisAngle(yAxis, -turn * 0.6f) * Quat::axisAngle(xAxis, look * 0.65f) * headExtra;
   skeleton_.skinMatrices(rot, out);
 
   // Bob: the body is lowest when the legs are spread, highest mid-step.
-  const float bob = -0.03f * swing * swing * w + 0.004f * breath * idle;
   const engine::Mat4 lift = engine::Mat4::translation({0, bob, 0});
   for (engine::Mat4& mat : out) mat = lift * mat;
 }
@@ -355,6 +585,22 @@ engine::Mat4 avatarTransform(Vec3 eye, float yaw, float pitch) {
   const engine::Vec3 back{-std::sin(yaw) * forward, 0, std::cos(yaw) * forward};
   return engine::Mat4::transform({eye.x + back.x, eye.y - kEyeHeight, eye.z + back.z},
                                  engine::Quat::axisAngle({0, 1, 0}, -yaw));
+}
+
+}  // namespace app
+
+namespace app {
+
+engine::Mat4 seatedTransform(Vec3 hip, float bodyYaw) {
+  // The hip joint is 0.95 m above the feet in the rest pose.
+  return engine::Mat4::transform({hip.x, hip.y - 0.95f, hip.z}, engine::Quat::axisAngle({0, 1, 0}, -bodyYaw));
+}
+
+Vec3 seatedEye(Vec3 hip, float bodyYaw, float lowSeat) {
+  // Eyes 0.71 m above the hips, a bit forward (leaning back a little on
+  // low seats).
+  const float forward = 0.09f - 0.05f * lowSeat;
+  return {hip.x + std::sin(bodyYaw) * forward, hip.y + 0.71f, hip.z - std::cos(bodyYaw) * forward};
 }
 
 }  // namespace app

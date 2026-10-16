@@ -73,7 +73,7 @@ window.bar3dAudio = (function () {
     node.connect(s.panner);
     if (!musicGain) {
       musicGain = ctx.createGain();
-      musicGain.gain.value = musicLevel;
+      musicGain.gain.value = musicLevel * busLevel.music;
       musicGain.connect(ctx.destination);
     }
     s.panner.connect(musicGain);
@@ -132,13 +132,101 @@ window.bar3dAudio = (function () {
     return new OAC(1, 1, 44100);
   }
 
+  // ---- Sounds made in C++ (engine/synth.cpp): piano notes, effects ----
+  // Samples arrive once as a Float32Array and become an AudioBuffer when
+  // sound is unlocked. Each plays through a bus (effects or piano) whose
+  // volume follows the settings, optionally placed in 3D.
+  var sounds = [];       // id -> {data, rate, buffer}
+  var voices = {};       // id -> {src, gain}
+  var nextVoice = 1;
+  var buses = {};        // name -> GainNode
+  var busLevel = { sfx: 1, piano: 1, music: 1, voice: 1 };
+  function bus(name) {
+    if (!ctx) return null;
+    if (!buses[name]) {
+      buses[name] = ctx.createGain();
+      buses[name].gain.value = busLevel[name] === undefined ? 1 : busLevel[name];
+      buses[name].connect(ctx.destination);
+    }
+    return buses[name];
+  }
+  function bufferOf(s) {
+    if (!s.buffer && ctx) {
+      s.buffer = ctx.createBuffer(1, s.data.length, s.rate);
+      s.buffer.getChannelData(0).set(s.data);
+    }
+    return s.buffer;
+  }
+
   return {
     ready: function () { return !!ctx && ctx.state === 'running'; },
+
+    // ---- Generated sounds ----
+    soundCreate: function (heap, start, count, rate) {
+      sounds.push({ data: heap.slice(start, start + count), rate: rate, buffer: null });
+      return sounds.length - 1;
+    },
+    // Plays sound `id`; when = seconds from now; placed = use x, y, z.
+    // Returns a voice id (0 = not played).
+    soundPlay: function (id, gain, placed, x, y, z, when, rate, busName, loop) {
+      var s = sounds[id];
+      if (!ctx || ctx.state !== 'running' || !s) return 0;
+      var src = ctx.createBufferSource();
+      src.buffer = bufferOf(s);
+      src.playbackRate.value = rate || 1;
+      src.loop = !!loop;
+      var g = ctx.createGain();
+      g.gain.value = gain;
+      src.connect(g);
+      var out = g;
+      if (placed) {
+        var p = ctx.createPanner();
+        p.panningModel = 'HRTF';
+        p.distanceModel = 'inverse';
+        p.refDistance = 1.2;
+        p.rolloffFactor = 1;
+        if (p.positionX) { p.positionX.value = x; p.positionY.value = y; p.positionZ.value = z; }
+        else p.setPosition(x, y, z);
+        g.connect(p);
+        out = p;
+      }
+      out.connect(bus(busName || 'sfx'));
+      var id2 = nextVoice++;
+      voices[id2] = { src: src, gain: g };
+      src.onended = function () { delete voices[id2]; };
+      src.start(ctx.currentTime + Math.max(0, when || 0));
+      return id2;
+    },
+    // Fades a voice out over `release` seconds, `when` seconds from now.
+    soundStop: function (voice, when, release) {
+      var v = voices[voice];
+      if (!v || !ctx) return;
+      var t = ctx.currentTime + Math.max(0, when || 0);
+      try {
+        v.gain.gain.setTargetAtTime(0, t, Math.max(0.005, release / 3));
+        v.src.stop(t + release + 0.05);
+      } catch (e) {}
+    },
+    soundSet: function (voice, gain, rate) {
+      var v = voices[voice];
+      if (!v || !ctx) return;
+      v.gain.gain.setTargetAtTime(gain, ctx.currentTime, 0.03);
+      v.src.playbackRate.setTargetAtTime(rate, ctx.currentTime, 0.03);
+    },
+    now: function () { return ctx ? ctx.currentTime : 0; },
+    // Volumes from the settings (0..1): sfx, piano, music, voice.
+    setBusVolume: function (name, v) {
+      busLevel[name] = v;
+      if (name === 'music') { this.setMusicGain(musicLevel); return; }
+      if (buses[name] && ctx) buses[name].gain.setTargetAtTime(v, ctx.currentTime, 0.05);
+    },
+    context: function () { return ctx; },
+    bus: function (name) { return bus(name); },
 
     // Turns all music sources (the jukebox) up or down, 0..1.
     setMusicGain: function (g) {
       musicLevel = g;
-      if (musicGain) musicGain.gain.setTargetAtTime(g, ctx.currentTime, 0.15);
+      if (musicGain) musicGain.gain.setTargetAtTime(g * busLevel.music, ctx.currentTime, 0.15);
     },
 
     // ---- The rhythm game's track ----

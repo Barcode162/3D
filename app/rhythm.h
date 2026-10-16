@@ -38,6 +38,13 @@ class RhythmGame {
 
   bool autoplay = false;  // the game plays itself (for tests: ?autoplay)
 
+  // What the cabinet's screen shows others: [combo, accuracy 0..1, lanes
+  // held (bits), playing (1/0), song time].
+  void screenState(float out[5]) const;
+  // Draws a cabinet screen from such a state, on the screen's corners
+  // (bottom-left, bottom-right, top-right, top-left) in the world.
+  static void drawCabinet(engine::TextRenderer& text, const engine::Vec3 corners[4], const float state[5], double nowMs);
+
  private:
   enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults };
   enum Judge { kPerfect, kGreat, kGood, kMiss, kJudgeCount };

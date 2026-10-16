@@ -162,9 +162,11 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
     return false;
   }
   if (in.capture) {
-    static const char* kLaneKeys[5] = {"KeyD", "KeyF", "KeyJ", "KeyK", "Escape"};
-    for (int k = 0; k < 5; ++k) {
-      if (std::strcmp(c, kLaneKeys[k]) != 0) continue;
+    // D F J K (and the arrows left, right, down, up) are keys 0..3, Escape 4.
+    static const char* kLaneKeys[9] = {"KeyD", "KeyF", "KeyJ", "KeyK", "Escape", "ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp"};
+    for (int i = 0; i < 9; ++i) {
+      if (std::strcmp(c, kLaneKeys[i]) != 0) continue;
+      const int k = i < 5 ? i : i - 5;
       if (e->repeat) return true;
       in.rawPresses.push_back({{0.125f + 0.25f * static_cast<float>(std::min(k, 3)), 0.9f}, emscripten_get_now(),
                                -100 - k, down, k});

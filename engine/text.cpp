@@ -270,7 +270,7 @@ void TextRenderer::addShape(int shape, float cx, float cy, float radius, Vec4 co
   }
 }
 
-void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
+void TextRenderer::addSolid(const Vec4 clip[4], Vec4 color) {
   using namespace font;
   if (vertices_.size() >= kMaxGlyphs * 4) return;
   // Every corner samples the middle of the solid glyph, which is "inside"
@@ -279,13 +279,12 @@ void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
   fontCell(kSolid, col, row);
   const float u = (static_cast<float>(col * kCellW) + kCellW * 0.5f) / static_cast<float>(kColumns * kCellW);
   const float v = (static_cast<float>(row * kCellH) + kCellH * 0.5f) / static_cast<float>(kRows * kCellH);
-  const float corners[4][2] = {{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}};
-  for (const auto& c : corners) {
+  for (int i = 0; i < 4; ++i) {
     Vertex vert;
-    vert.clip[0] = c[0] / screenW_ * 2.0f - 1.0f;
-    vert.clip[1] = 1.0f - c[1] / screenH_ * 2.0f;
-    vert.clip[2] = 0;
-    vert.clip[3] = 1;
+    vert.clip[0] = clip[i].x;
+    vert.clip[1] = clip[i].y;
+    vert.clip[2] = clip[i].z;
+    vert.clip[3] = clip[i].w;
     vert.uv[0] = u;
     vert.uv[1] = v;
     vert.outlineWidth = 0;
@@ -296,6 +295,23 @@ void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
     vert.outline[0] = vert.outline[1] = vert.outline[2] = vert.outline[3] = 0;
     vertices_.push_back(vert);
   }
+}
+
+void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
+  const Vec2 p[4] = {{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}};
+  addScreenQuad(p, color);
+}
+
+void TextRenderer::addScreenQuad(const Vec2 p[4], Vec4 color) {
+  Vec4 clip[4];
+  for (int i = 0; i < 4; ++i) clip[i] = {p[i].x / screenW_ * 2.0f - 1.0f, 1.0f - p[i].y / screenH_ * 2.0f, 0, 1};
+  addSolid(clip, color);
+}
+
+void TextRenderer::addWorldQuad(const Vec3 p[4], Vec4 color) {
+  Vec4 clip[4];
+  for (int i = 0; i < 4; ++i) clip[i] = transformPoint(viewProj_, p[i]);
+  addSolid(clip, color);
 }
 
 void TextRenderer::upload(const wgpu::Queue& queue) {

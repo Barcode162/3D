@@ -26,10 +26,11 @@ float angleLerp(float a, float b, float t) {
 
 void OtherPlayers::start() { on_ = engine::net::start(); }
 
-void OtherPlayers::sendSelf(double nowMs, Vec3 eye, float yaw, float pitch) {
+void OtherPlayers::sendSelf(double nowMs, Vec3 eye, float yaw, float pitch, const float* extra) {
   if (!on_) return;
-  const float state[5] = {eye.x, eye.y, eye.z, std::remainder(yaw, 2.0f * engine::kPi), pitch};
-  engine::net::setState(nowMs, state, 5);
+  float state[slot::kCount] = {eye.x, eye.y, eye.z, std::remainder(yaw, 2.0f * engine::kPi), pitch};
+  for (int i = slot::kActivity; i < slot::kCount; ++i) state[i] = extra[i - slot::kActivity];
+  engine::net::setState(nowMs, state, slot::kCount);
 }
 
 void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
@@ -54,6 +55,17 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
     // toward later ones so a changed delay is picked up too.
     o.clockOffset = offset > o.clockOffset ? offset : o.clockOffset + (offset - o.clockOffset) * 0.02;
     if (!o.samples.empty() && p.time <= o.samples.back().time) continue;
+    // What they're doing: taken as it comes (no smoothing).
+    const int oldActivity = static_cast<int>(o.values[slot::kActivity]);
+    const int oldParam = static_cast<int>(o.values[slot::kParam]);
+    for (int k = 0; k < slot::kCount; ++k) o.values[k] = k < p.count ? p.values[k] : 0;
+    o.look = static_cast<int>(o.values[slot::kLook]);
+    const int emoteCount = static_cast<int>(o.values[slot::kEmoteCount]);
+    if (static_cast<int>(o.values[slot::kActivity]) != oldActivity || static_cast<int>(o.values[slot::kParam]) != oldParam ||
+        emoteCount != o.emoteCount) {
+      o.activitySinceMs = nowMs;
+    }
+    o.emoteCount = emoteCount;
     o.samples.push_back({p.time, {p.values[0], p.values[1], p.values[2]}, p.values[3], p.values[4]});
   }
 
@@ -85,6 +97,10 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
     o.yaw = yaw;
     o.pitch = a.pitch + (b.pitch - a.pitch) * f;
     o.motion.pitch = o.pitch;
+    o.motion.activity = static_cast<Activity>(static_cast<int>(o.values[slot::kActivity]));
+    o.motion.emote = static_cast<Emote>(static_cast<int>(o.values[slot::kEmote]));
+    o.motion.actionTime = static_cast<float>((nowMs - o.activitySinceMs) / 1000.0);
+    o.voice += (o.values[slot::kVoice] - o.voice) * std::min(1.0f, dt * 10.0f);
     o.motion.time = static_cast<float>(nowMs / 1000.0) + static_cast<float>(o.id) * 1.7f;  // out of step with you
     o.placed = true;
   }

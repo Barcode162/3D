@@ -38,7 +38,30 @@ std::string userSongUrl(int index) { return userSongString(index, true); }
 
 void setMusicGain(float gain) { EM_ASM({ window['bar3dAudio']['setMusicGain']($0); }, gain); }
 
+double now() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['now'](); }); }
+
 }  // namespace audio
+
+void Sound::create(const std::vector<float>& samples, float rate) {
+  id_ = EM_ASM_INT({ return window['bar3dAudio']['soundCreate'](HEAPF32, $0 >> 2, $1, $2); }, samples.data(),
+                   static_cast<int>(samples.size()), rate);
+}
+
+int Sound::play(float gain, const Vec3* where, double when, float rate, Bus bus, bool loop) const {
+  if (id_ < 0) return 0;
+  const Vec3 p = where ? *where : Vec3{};
+  return EM_ASM_INT({
+    return window['bar3dAudio']['soundPlay']($0, $1, $2, $3, $4, $5, $6, $7, $8 ? 'piano' : 'sfx', $9);
+  }, id_, gain, where != nullptr, p.x, p.y, p.z, when, rate, bus == kPiano, loop);
+}
+
+void Sound::stop(int voice, double when, float release) {
+  if (voice > 0) EM_ASM({ window['bar3dAudio']['soundStop']($0, $1, $2); }, voice, when, release);
+}
+
+void Sound::set(int voice, float gain, float rate) {
+  if (voice > 0) EM_ASM({ window['bar3dAudio']['soundSet']($0, $1, $2); }, voice, gain, rate);
+}
 
 void Track::load(const std::string& url) {
   EM_ASM({ window['bar3dAudio']['trackLoad'](UTF8ToString($0)); }, url.c_str());

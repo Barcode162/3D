@@ -26,7 +26,26 @@ namespace app {
 
 class SceneRenderer {
  public:
-  bool init(engine::Gpu& gpu, const BarScene& scene, const engine::SkinnedMeshData& avatar);
+  // `avatars` = one mesh per avatar look (players pick one).
+  bool init(engine::Gpu& gpu, const BarScene& scene, const std::vector<engine::SkinnedMeshData>& avatars);
+
+  // Simple shapes that change every frame (piano key lights, darts, drinks,
+  // cars...): boxes with a color and glow. At most kMaxBoxes are drawn.
+  struct Box {
+    engine::Vec3 center;
+    engine::Vec3 size{0.1f, 0.1f, 0.1f};
+    engine::Quat rotation;
+    engine::Vec3 color{0.8f, 0.8f, 0.8f};
+    float glow = 0;
+    float roughness = 0.6f;
+    float metallic = 0;
+  };
+  static constexpr size_t kMaxBoxes = 320;
+  void setBoxes(const std::vector<Box>& boxes);
+  // Turns one of the scene's lights up or down (1 = as built, 0 = off).
+  void setLightScale(size_t light, float scale);
+  // Which avatar look you (and each other player, see setOthers) wear.
+  void setSelfAvatar(size_t look) { selfLook_ = look < avatarMeshes_.size() ? look : 0; }
 
   // Extra glow on an interactable's parts (0 = normal).
   void setGlow(const Interactable& it, float glow);
@@ -44,7 +63,8 @@ class SceneRenderer {
   // Other players' avatars this frame (multiplayer): where each one stands
   // (avatarTransform) and its full pose. At most kMaxOthers are drawn.
   static constexpr size_t kMaxOthers = 7;
-  void setOthers(const std::vector<engine::Mat4>& transforms, const std::vector<std::vector<engine::Mat4>>& bones);
+  void setOthers(const std::vector<engine::Mat4>& transforms, const std::vector<std::vector<engine::Mat4>>& bones,
+                 const std::vector<int>& looks);
 
   size_t objectCount() const { return sceneDraws_.size() + modelsLoaded_; }
 
@@ -157,12 +177,19 @@ class SceneRenderer {
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i
   wgpu::Buffer lightingBuffer_;
   void buildLighting(const BarScene& scene);
+  std::vector<float> lightIntensity_;  // as built, per light
   void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;
   std::vector<DrawItem> sceneDraws_;
   std::vector<ObjectUniforms> objectUniforms_;  // CPU copy of the scene objects
-  engine::SkinnedMesh avatarMesh_;
+  std::vector<engine::SkinnedMesh> avatarMeshes_;
+  size_t selfLook_ = 0;
+  engine::Mesh boxMesh_;
+  uint32_t boxOffset_ = 0;  // first box slot in objectBuffer_
+  size_t boxCount_ = 0;
+  void drawBoxes(const wgpu::RenderPassEncoder& pass) const;
+  void drawSkinned(const wgpu::RenderPassEncoder& pass, const engine::SkinnedMesh& mesh) const;
   uint32_t avatarOffset_ = 0;  // the avatar's slot in objectBuffer_
   wgpu::Buffer bonesBuffer_, firstPersonBonesBuffer_;
   wgpu::BindGroup bonesBindGroup_, firstPersonBonesBindGroup_;
@@ -170,6 +197,7 @@ class SceneRenderer {
     uint32_t offset;  // in objectBuffer_
     wgpu::Buffer bonesBuffer;
     wgpu::BindGroup bonesBindGroup;
+    int look = 0;
   };
   std::vector<OtherSlot> others_;
   size_t othersShown_ = 0;

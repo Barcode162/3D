@@ -10,7 +10,7 @@ namespace engine::net {
 
 enum class Status { kOff, kConnecting, kConnected, kFailing };
 
-constexpr int kMaxValues = 16;  // numbers per state or world entry
+constexpr int kMaxValues = 20;  // numbers per state or world entry
 
 // One state received from another player. `time` is that player's clock in
 // milliseconds when they sent it (not comparable with ours directly).
@@ -56,5 +56,17 @@ void setWorld(const std::string& key, const double* values, int count);
 void receiveWorld(std::vector<WorldEntry>& out);
 // The server's clock in seconds (the same for everyone), 0 = not known yet.
 double serverTime();
+
+// Quick one-off events (a piano key, a dart throw) to everyone in the room:
+// over direct connections when voice chat has made them, else the relay.
+struct Event {
+  int player = 0;
+  std::string type;
+  std::vector<double> values;
+};
+void sendEvent(const std::string& type, const double* values, int count);
+void receiveEvents(std::vector<Event>& out);
+// True if that player's id sorts before ours (for fair tie-breaks).
+bool isLower(int player);
 
 }  // namespace engine::net

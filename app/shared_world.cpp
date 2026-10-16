@@ -1,5 +1,6 @@
 #include "app/shared_world.h"
 
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <string>
@@ -85,7 +86,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
   engine::net::receiveWorld(entries);
   for (const engine::net::WorldEntry& e : entries) {
     const std::vector<double>& v = e.values;
-    if (e.key.size() >= 2 && e.key[0] == 'm' && !v.empty()) {
+    if (e.key.size() >= 2 && e.key[0] == 'm' && std::isdigit(static_cast<unsigned char>(e.key[1])) && !v.empty()) {
       const int i = std::atoi(e.key.c_str() + 1);
       if (i < 0 || i >= static_cast<int>(scene.mirrors.size())) continue;
       Mirror& m = scene.mirrors[static_cast<size_t>(i)];
@@ -106,7 +107,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       pendingSong_ = song;
       pendingStart_ = v[1];
       songPending_ = true;
-    } else if (e.key.size() >= 2 && e.key[0] == 'g' && v.size() >= 11) {
+    } else if (e.key.size() >= 2 && e.key[0] == 'g' && std::isdigit(static_cast<unsigned char>(e.key[1])) && v.size() >= 11) {
       const int i = std::atoi(e.key.c_str() + 1);
       if (i < 0 || i >= static_cast<int>(glasses_.size())) continue;
       Glass& g = glasses_[static_cast<size_t>(i)];
@@ -148,6 +149,8 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       g.mode = Mode::kRemote;
       b.kinematic = true;
       b.asleep = false;
+    } else {
+      other_.push_back(e);  // piano, lights, drinks...: handled by their own code
     }
   }
 }

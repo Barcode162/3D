@@ -13,6 +13,24 @@
 
 namespace app {
 
+// What each player sends about 10 times a second (engine/net state): where
+// they are and look, plus what they're doing. Append new slots only.
+namespace slot {
+enum : int {
+  kX, kY, kZ, kYaw, kPitch,  // eyes and look direction
+  kActivity,                 // app::Activity
+  kParam,                    // seat index, machine, drink... (depends on the activity)
+  kLook,                     // avatar look (avatarLooks() index)
+  kVoice,                    // how loud they're talking right now (0..1)
+  kEmote,                    // app::Emote
+  kEmoteCount,               // goes up by one per emote, so a repeat restarts it
+  kData,                     // 5 numbers for the activity (scores, steering...)
+  kHeldDrink = kData + 5,    // drink in hand (drink type + 1, 0 = none)
+  kFlags,                    // bit 0 = bartender on shift, bit 1 = on the stage mic
+  kCount,
+};
+}
+
 struct OtherPlayer {
   int id = 0;
   std::string name;
@@ -22,6 +40,11 @@ struct OtherPlayer {
   engine::Vec3 eye;  // where their eyes are (their camera)
   float yaw = 0, pitch = 0;
   AvatarMotion motion;
+  float values[slot::kCount] = {};  // their newest state
+  int look = 0;
+  float voice = 0;  // talking level (smoothed)
+  int emoteCount = -1;
+  double activitySinceMs = 0;  // when their current activity/emote started (our clock)
 
   // Received states, oldest first, on the sender's clock.
   struct Sample {
@@ -39,7 +62,8 @@ class OtherPlayers {
   void start();
   bool online() const { return on_; }
   // Call every frame with your camera.
-  void sendSelf(double nowMs, engine::Vec3 eye, float yaw, float pitch);
+  // `extra` = the slots after kPitch (activity, look, ...).
+  void sendSelf(double nowMs, engine::Vec3 eye, float yaw, float pitch, const float* extra);
   void update(double nowMs, float dt, float walkSpeed);
   const std::vector<OtherPlayer>& players() const { return players_; }
   // For the status line, e.g. "online: 2"; empty when multiplayer is off.

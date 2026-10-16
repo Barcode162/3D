@@ -59,7 +59,7 @@ void setVec4(float out[4], Vec3 v, float w) {
 
 }  // namespace
 
-bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::SkinnedMeshData& avatar) {
+bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vector<engine::SkinnedMeshData>& avatars) {
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrors.size();
@@ -95,7 +95,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   // (its position is rewritten every frame as you move), the other players'
   // avatars and the models.
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + 1 + kMaxOthers + kMaxModels;
+  const size_t total = objects.size() + 1 + kMaxOthers + kMaxModels + kMaxBoxes;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -129,7 +129,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     u.material[3] = kAvatarTextureScale;
     avatarOffset_ = static_cast<uint32_t>(objects.size() * kObjectStride);
     std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
-    avatarMesh_ = engine::SkinnedMesh::upload(device, avatar);
+    for (const engine::SkinnedMeshData& a : avatars) avatarMeshes_.push_back(engine::SkinnedMesh::upload(device, a));
     for (size_t i = 0; i < kMaxOthers; ++i) {
       OtherSlot slot;
       slot.offset = static_cast<uint32_t>((objects.size() + 1 + i) * kObjectStride);
@@ -138,12 +138,14 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     }
   }
   loadModels(scene, objectData);
+  boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + kMaxOthers + kMaxModels) * kObjectStride);
+  boxMesh_ = engine::Mesh::upload(device, engine::makeBox({1, 1, 1}));
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
   bonesBindGroup_ = makeBonesBindGroup(bonesBuffer_, "avatar bones");
   firstPersonBonesBindGroup_ = makeBonesBindGroup(firstPersonBonesBuffer_, "avatar bones (first person)");
   for (OtherSlot& slot : others_) slot.bonesBindGroup = makeBonesBindGroup(slot.bonesBuffer, "other player bones");
-  LOG_INFO("Avatar: %zu vertices.", avatar.vertices.size());
+  LOG_INFO("Avatars: %zu looks, %zu vertices each.", avatars.size(), avatars.empty() ? 0 : avatars[0].vertices.size());
 
   // Atmosphere doesn't change per frame.
   const size_t lightCount = std::min<size_t>(scene.lights.size(), kMaxLights);
@@ -170,6 +172,7 @@ void SceneRenderer::buildLighting(const BarScene& scene) {
     setVec4(l->lights[i].position, p.position, p.range);
     setVec4(l->lights[i].color, p.color, p.intensity);
     l->lights[i].params[0] = p.radius;
+    lightIntensity_.push_back(p.intensity);
   }
   // Cells cover the walkable area (blockers included) with at most 16 x 16.
   float x0 = scene.lightGridMin.x, z0 = scene.lightGridMin.z;
@@ -425,6 +428,15 @@ void SceneRenderer::setGlow(const Interactable& it, float glow) {
   }
 }
 
+void SceneRenderer::setLightScale(size_t light, float scale) {
+  if (light >= lightIntensity_.size()) return;
+  const float intensity = lightIntensity_[light] * scale;
+  gpu_->queue.WriteBuffer(lightingBuffer_,
+                          offsetof(LightingUniforms, lights) + light * sizeof(GpuLight) + offsetof(GpuLight, color) +
+                              3 * sizeof(float),
+                          &intensity, sizeof(intensity));
+}
+
 void SceneRenderer::setModelBaseGlow(size_t model, float glow) {
   if (model >= models_.size()) return;
   modelBaseGlow_[model] = glow;
@@ -559,30 +571,70 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
   }
 }
 
-void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
-  pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
-  pass.SetBindGroup(2, bones);
-  pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
-  pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
-  pass.DrawIndexed(avatarMesh_.indexCount);
+void SceneRenderer::drawSkinned(const wgpu::RenderPassEncoder& pass, const engine::SkinnedMesh& mesh) const {
+  pass.SetVertexBuffer(0, mesh.vertexBuffer);
+  pass.SetIndexBuffer(mesh.indexBuffer, wgpu::IndexFormat::Uint32);
+  pass.DrawIndexed(mesh.indexCount);
 }
 
-void SceneRenderer::setOthers(const std::vector<Mat4>& transforms, const std::vector<std::vector<Mat4>>& bones) {
+void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
+  if (avatarMeshes_.empty()) return;
+  pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
+  pass.SetBindGroup(2, bones);
+  drawSkinned(pass, avatarMeshes_[selfLook_]);
+}
+
+void SceneRenderer::setOthers(const std::vector<Mat4>& transforms, const std::vector<std::vector<Mat4>>& bones,
+                              const std::vector<int>& looks) {
   othersShown_ = std::min({transforms.size(), bones.size(), others_.size()});
   for (size_t i = 0; i < othersShown_; ++i) {
     gpu_->queue.WriteBuffer(objectBuffer_, others_[i].offset, &transforms[i], sizeof(Mat4));
     const size_t count = std::min<size_t>(bones[i].size(), kMaxBones);
     if (count) gpu_->queue.WriteBuffer(others_[i].bonesBuffer, 0, bones[i].data(), count * sizeof(Mat4));
+    const int look = i < looks.size() ? looks[i] : 0;
+    others_[i].look = look >= 0 && static_cast<size_t>(look) < avatarMeshes_.size() ? look : 0;
   }
 }
 
 void SceneRenderer::drawOthers(const wgpu::RenderPassEncoder& pass) const {
-  for (size_t i = 0; i < othersShown_; ++i) {
+  for (size_t i = 0; i < othersShown_ && !avatarMeshes_.empty(); ++i) {
     pass.SetBindGroup(1, objectBindGroup_, 1, &others_[i].offset);
     pass.SetBindGroup(2, others_[i].bonesBindGroup);
-    pass.SetVertexBuffer(0, avatarMesh_.vertexBuffer);
-    pass.SetIndexBuffer(avatarMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
-    pass.DrawIndexed(avatarMesh_.indexCount);
+    drawSkinned(pass, avatarMeshes_[static_cast<size_t>(others_[i].look)]);
+  }
+}
+
+void SceneRenderer::setBoxes(const std::vector<Box>& boxes) {
+  boxCount_ = std::min(boxes.size(), kMaxBoxes);
+  if (!boxCount_) return;
+  static std::vector<uint8_t> data;
+  data.assign(boxCount_ * kObjectStride, 0);
+  for (size_t i = 0; i < boxCount_; ++i) {
+    const Box& b = boxes[i];
+    ObjectUniforms u = {};
+    u.model = Mat4::transform(b.center, b.rotation);
+    for (int r = 0; r < 3; ++r) {  // scale the unit cube to the box size
+      u.model.at(0, r) *= b.size.x;
+      u.model.at(1, r) *= b.size.y;
+      u.model.at(2, r) *= b.size.z;
+    }
+    setVec4(u.color, b.color, b.metallic);
+    u.material[0] = b.glow;
+    u.material[1] = b.roughness;
+    u.material[2] = -1;
+    u.material[3] = 1;
+    std::memcpy(data.data() + i * kObjectStride, &u, sizeof(u));
+  }
+  gpu_->queue.WriteBuffer(objectBuffer_, boxOffset_, data.data(), data.size());
+}
+
+void SceneRenderer::drawBoxes(const wgpu::RenderPassEncoder& pass) const {
+  pass.SetVertexBuffer(0, boxMesh_.vertexBuffer);
+  pass.SetIndexBuffer(boxMesh_.indexBuffer, wgpu::IndexFormat::Uint32);
+  for (size_t i = 0; i < boxCount_; ++i) {
+    const uint32_t offset = boxOffset_ + static_cast<uint32_t>(i * kObjectStride);
+    pass.SetBindGroup(1, objectBindGroup_, 1, &offset);
+    pass.DrawIndexed(boxMesh_.indexCount);
   }
 }
 
@@ -653,6 +705,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   pass.SetBindGroup(0, view.bindGroup);
   if (full) {
     drawItems(pass, sceneDraws_);
+    drawBoxes(pass);
     pass.SetPipeline(modelMirroredPipeline_);
     drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
   }
@@ -708,6 +761,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
   drawItems(pass, sceneDraws_);
+  drawBoxes(pass);
   pass.SetPipeline(modelPipeline_);
   drawModels(pass, false, eye);
   pass.SetPipeline(skinnedPipeline_);
