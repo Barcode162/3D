@@ -396,6 +396,32 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   `CAM="x,y,z,yaw,pitch" node tools/smoke.mjs` → `build/smoke-cam.png`
   (yaw 0 looks toward -z, degrees; positive pitch looks up).
 
+## Racing sim (2026-10-16)
+- **Own physics, fixed 240 Hz**, substepped from the frame (max 30 steps
+  per frame; slower phones slow the race instead of exploding). Tires are
+  one Magic Formula curve over normalized combined slip with relaxation
+  lengths; wheel spin is solved implicitly against the tire's pull (an
+  explicit step was borderline unstable at 240 Hz). Clutch: lock test
+  each step (can it hold the torque that syncs engine and wheels?).
+- **Auto gearbox decides from wheel speed**, not engine rpm, and blips
+  the engine to the new gear's speed mid-shift. (Without that, a car
+  started at speed with the engine at idle downshifted to 1st at 150 km/h
+  and locked the rear wheels.)
+- **Grid hold** is `CarInput::hold` (clutch out + brakes), not "brake
+  pedal": brake while stopped means "reverse" to the auto gearbox.
+- **Car space is x right, y up, -z forward** like the camera. With +z
+  forward, +x is your LEFT in this right-handed world (caught before it
+  shipped: "steer right" turned left). Heading = atan2(-dir.x, -dir.z).
+- Barrier hits: one impulse per step from the deepest corner, applied at
+  the car's middle height (low contact points flipped cars), hard hits
+  soak up spin, a car through the barrier is put back, flipped cars reset
+  after 1.5 s. Safety caps on spin (10 rad/s) and speed (110 m/s).
+- Racing renders with its own pipeline (`shaders/race.wgsl`, cull none,
+  the shader flips back-face normals). While racing the bar isn't drawn.
+- Native tests: `g++` builds `engine/vehicle.cpp` and `app/race/*.cpp`
+  (except view/game/controls/car_model) without Emscripten; see the
+  commands at the top of `tools/native/*.cpp`.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

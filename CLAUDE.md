@@ -59,21 +59,26 @@ The smoke test prints the on-screen log and saves `build/smoke.png` and
 can be viewed with the Read tool. To look at a specific spot, run with
 `CAM="x,y,z,yaw,pitch"` (degrees) → `build/smoke-cam.png`; the page itself
 accepts `?cam=x,y,z,yaw,pitch` (see `docs/DECISIONS.md` → Gotchas for
-testing music and the song picker). Software WebGPU (SwiftShader) works in this
+testing music and the song picker). `tools/shots.mjs` takes `VIEW=932x430`
+(landscape) and `HOLD=ArrowUp:9000` (hold a key, e.g. to drive); `sit=30`
+sits in a racing rig. Car physics and whole races also run natively
+(no browser): see `tools/native/*.cpp`. Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
 
 ## Layout
 - `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
   (incl. taps), logging, files, text (own pixel font), procedural textures,
-  audio bridge, skeletons and skinned meshes. Later: physics.
+  audio bridge, skeletons and skinned meshes, physics, car physics
+  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`).
 - `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
   `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
   players (multiplayer smoothing, their state slots), `shared_world.cpp`
   the shared glasses, jukebox and mirrors. `piano.cpp`, `darts.cpp`,
-  `racing.cpp`, `rhythm.cpp`, `bartender.cpp` are the games and jobs.
+  `rhythm.cpp`, `bartender.cpp` are the games and jobs; `app/race/` is the
+  racing sim (`docs/RACING.md`: track, world + bots, controls, view, game).
   `main.cpp` is the frame loop, input → interaction (seats, things to
   use), and on-screen text.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.

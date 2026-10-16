@@ -68,14 +68,16 @@ an item when its remaster is done.
 - [ ] The score shows on the HUD; others see it as floating text by the
       chalkboard, not written on the chalkboard.
 
-## Racing (`app/racing.*`)
-- [ ] Retro pseudo-3D (flat colored strips, box cars), one track, 5 AI
-      cars that drive a fixed line. No real 3D race, no car models.
-- [ ] Others see the race on the middle monitor without the AI cars, and
-      the side monitors still show the old picture.
-- [ ] Steering with on-screen buttons only (no tilt steering, no wheel).
-- [ ] Engine sound is one looping hum.
-- [ ] No racing between two players on the two rigs (each races alone).
+## Racing (`app/race/*`, plan in `docs/RACING.md`)
+- [ ] Car model built in code (boxy loft); replace with a Blender car
+      with interior/cockpit.
+- [ ] Track scenery built in code (box grandstand, cone trees, flat
+      tire walls); replace piece by piece with Blender assets.
+- [ ] No sun shadows (soft blobs under cars only), no reflections of
+      the world (sky only), no skid marks, smoke, dust or sparks.
+- [ ] One engine hum (pitch from rpm); no tire squeal, wind, gear
+      whine, crash sounds; other cars are silent.
+- [ ] Spectator monitors show text only (step 4).
 
 ## 4K Mania for others (`app/rhythm.cpp` drawCabinet)
 - [ ] Others see lanes, pressed keys and combo, with a fake note pattern

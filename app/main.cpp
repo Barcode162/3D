@@ -17,7 +17,7 @@
 #include "app/piano.h"
 #include "app/players.h"
 #include "app/props.h"
-#include "app/racing.h"
+#include "app/race/game.h"
 #include "app/renderer.h"
 #include "app/rhythm.h"
 #include "app/shared_world.h"
@@ -82,7 +82,7 @@ struct App {
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   app::Piano piano;
   app::Darts darts;
-  app::Racing racing;
+  app::race::Game race;
   app::Bartender bartender;
   engine::Sound sfx[static_cast<int>(engine::synth::Effect::kCount)];
   engine::Sound guitar[6];
@@ -212,7 +212,7 @@ void standUp() {
   if (g_app.seat < 0) return;
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
   if (s.kind == app::SeatKind::kSim) {
-    g_app.racing.close();
+    g_app.race.close();
     g_app.input.setCapture(false);
   }
   if (s.kind == app::SeatKind::kPianoBench) {
@@ -247,7 +247,7 @@ void sitOn(int index) {
   g_app.camera.pitch = s.kind == app::SeatKind::kPianoBench ? engine::radians(-58.0f) : 0;
   if (s.kind == app::SeatKind::kSim) {
     setActivity(Activity::kDrive);
-    g_app.racing.start();
+    g_app.race.start(std::max(0, s.machine), emscripten_get_now());
     g_app.input.setCapture(true);
   } else if (s.kind == app::SeatKind::kPianoBench) {
     setActivity(Activity::kPiano);
@@ -263,7 +263,7 @@ void sitOn(int index) {
 
 void updateCamera(float dt) {
   const engine::Vec2 look = g_app.input.takeLookDelta();
-  const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.racing.open();
+  const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.race.open();
   const float sens = kLookSensitivity * g_app.lookSpeed;
   if (!menu && !g_app.piano.keyboardOpen()) g_app.camera.look(look.x * sens, -look.y * sens * g_app.invertLook);
   const engine::Vec2 move = g_app.input.move();
@@ -416,15 +416,15 @@ void queueMachineScreens(double nowMs) {
       const int rig = std::max(0, g_app.scene.seats[static_cast<size_t>(seat)].machine);
       Vec3 c[4];
       simMonitor(rig, c);
-      app::Racing::View view{d[0], d[1], d[2]};
-      app::Racing::render(view, 36, 0.72f / 0.42f, [&](const engine::Vec2* q, engine::Vec4 color) {
-        Vec3 p[4];
-        for (int i = 0; i < 4; ++i) {
-          const float u = engine::clampf(q[i].x, 0, 1), v = engine::clampf(q[i].y, 0, 1);
-          p[i] = c[3] + (c[2] - c[3]) * u + (c[0] - c[3]) * v;
-        }
-        text.addWorldQuad(p, color);
-      });
+      // (The live 3D race on the three monitors comes in docs/RACING.md step 4.)
+      text.addWorldQuad(c, {0.02f, 0.03f, 0.06f, 1});
+      engine::TextStyle style;
+      style.align = 0.5f;
+      style.color = {1, 0.85f, 0.3f, 1};
+      char line[64];
+      std::snprintf(line, sizeof(line), "%s IS RACING\n%d KM/H", o.name.c_str(), static_cast<int>(std::fabs(d[3]) * 3.6f));
+      const Vec3 mid = (c[0] + c[1] + c[2] + c[3]) * 0.25f + Vec3{-0.004f, 0.05f, 0};
+      text.addWorld(line, mid, engine::normalize(c[1] - c[0]), {0, 1, 0}, 0.035f, style);
     } else if (act == Activity::kRhythm) {
       Vec3 c[4];
       const Vec3* s = g_app.scene.rhythmScreen;
@@ -456,11 +456,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
     text.upload(g_app.gpu.queue);
     return;
   }
-  if (g_app.racing.open()) {
-    g_app.racing.draw(text, W, H, px, nowMs);
-    text.upload(g_app.gpu.queue);
-    return;
-  }
+  if (g_app.race.open()) return;  // the race queues its own HUD (app/race/game.cpp)
   queueMachineScreens(nowMs);
 
   const engine::FirstPersonCamera& cam = g_app.camera;
@@ -1025,8 +1021,9 @@ void updateInteraction(double nowMs, float dt) {
       g_app.input.setCapture(false);
       setActivity(Activity::kNone);
     }
-  } else if (g_app.racing.open()) {
-    if (g_app.racing.update(nowMs, dt, g_app.input.takeRawPresses(), W, H)) standUp();
+  } else if (g_app.race.open()) {
+    g_app.input.takeRawPresses();  // the race reads fingers and keys directly
+    if (g_app.race.update(nowMs, dt, g_app.input)) standUp();
   } else if (g_app.piano.keyboardOpen()) {
     if (g_app.piano.updateKeyboard(g_app.input.takeRawPresses(), W, H)) standUp();
     if (g_app.piano.takeSongsRequest()) engine::ui::openPanel("piano");
@@ -1118,7 +1115,7 @@ void updateSelfMotion(double nowMs) {
     m.headYaw = std::remainder(g_app.camera.yaw - s.yaw, 2.0f * engine::kPi);
     m.lowSeat = s.lowSeat;
   }
-  m.steer = g_app.racing.steer();
+  m.steer = g_app.race.steer();
   g_app.piano.hands(m.handL, m.handR);
 }
 
@@ -1135,7 +1132,7 @@ void selfState(float extra[kCount - app::slot::kActivity]) {
   e(kEmote) = static_cast<float>(static_cast<int>(g_app.emote));
   e(kEmoteCount) = static_cast<float>(g_app.emoteCount);
   float data[5] = {};
-  if (g_app.racing.open()) g_app.racing.stateFor(data);
+  if (g_app.race.open()) g_app.race.stateFor(data);
   else if (g_app.rhythm.isOpen()) g_app.rhythm.screenState(data);
   else if (g_app.darts.playing()) g_app.darts.stateFor(data);
   for (int i = 0; i < 5; ++i) e(kData + i) = data[i];
@@ -1269,6 +1266,11 @@ void frame() {
 
   wgpu::TextureView target = g_app.gpu.beginFrame();
   if (!target) return;
+  if (g_app.race.open()) {  // you dove into the race: it's the whole screen
+    queueText(nowMs, Mat4{});
+    g_app.race.render(target, g_app.text, nowMs);
+    return;
+  }
 
   const engine::FirstPersonCamera& cam = g_app.camera;
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
@@ -1382,7 +1384,7 @@ void onGpuReady(bool ok) {
   g_app.piano.init(g_app.scene);
   g_app.darts.init(g_app.scene.dartBoard, &g_app.sfx[static_cast<int>(Effect::kThunk)],
                    &g_app.sfx[static_cast<int>(Effect::kWhoosh)], &g_app.sfx[static_cast<int>(Effect::kCheer)]);
-  g_app.racing.init(&g_app.sfx[static_cast<int>(Effect::kEngine)]);
+  g_app.race.init(&g_app.gpu, &g_app.sfx[static_cast<int>(Effect::kEngine)]);
   const engine::Sound* barSounds[app::Bartender::kSfxCount] = {
       &g_app.sfx[static_cast<int>(Effect::kClink)], &g_app.sfx[static_cast<int>(Effect::kPour)],
       &g_app.sfx[static_cast<int>(Effect::kShake)], &g_app.sfx[static_cast<int>(Effect::kClick)]};

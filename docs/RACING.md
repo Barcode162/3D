@@ -123,14 +123,48 @@ app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
 ## Steps (in order)
 - [x] 1. Loading stutter fix: textures upload a little per frame, mipmaps
       made on the GPU, not all at once on the CPU.
-- [ ] 2. Physics core + test track + full-screen race view + touch /
+- [x] 2. Physics core + test track + full-screen race view + touch /
       keyboard / mouse / gamepad controls + chase camera + HUD (drive
-      alone). **The driving feel is tuned here.**
-- [ ] 3. Bots and collisions, the real race (grid, countdown, laps,
-      positions, results).
+      alone). **The driving feel is tuned here** (on the phone, by the
+      user's feedback). Built 2026-10-16.
+- [x] 3. Bots and collisions, the real race (grid, countdown, laps,
+      positions, results). First version built with step 2: 7 bots on
+      a computed racing line, car-car and barrier contact, 5 start
+      lights, 3 laps, standings, results, tap to race again.
 - [ ] 4. The three monitors on each rig show the race for spectators.
 - [ ] 5. Two players (left/right rig) racing each other + bots.
 - [ ] 6. Realtime server (Cloudflare) for the race and the whole bar.
 - [ ] 7. Polish passes: car model and cockpit (Blender), track art,
       shadows, sky, sounds (engine from rpm and load, tires, wind),
       replays, more cars and tracks, settings, wheel calibration.
+
+## What exists now (2026-10-16, first build)
+- `engine/vehicle.*`: the car physics described above. Measured with
+  `tools/native/vehicle_test.cpp` (runs natively with g++, no browser):
+  0-100 km/h 4.2 s, top 276 km/h, 100-0 braking 30.7 m (ABS) / 36.4 m
+  (locked), ~1.1-1.2 g cornering, a parked car doesn't move at all.
+- `app/race/track.*`: "Bar3D Ring", 2.45 km, 27 control points, curbs,
+  gravel traps on slow corners, tire barriers, terrain, ~2000 trees,
+  grandstand, pit building, start gantry. 26 chunks, ~128k triangles.
+- `app/race/world.*`: 8 cars, 240 Hz steps, bots (racing line by
+  smoothing, speed plan from curvature, pure pursuit steering, passing,
+  slide catching, stuck/flip reset), collisions, laps, positions.
+  `tools/native/race_test.cpp` runs a whole bot race in ~1 s.
+- `app/race/controls.*`, `game.*`, `view.*`, `car_model.*`,
+  `shaders/race.wgsl`: as in the architecture above. The car is built in
+  code (body loft with wheel arches, glass, lights, wheels with spokes).
+- Sitting in a sim seat starts a race (left rig grid slot 4, right 5);
+  the page's top bar hides while racing (`body.racing`).
+- Not yet: spectators see only "<name> IS RACING / speed" text on the
+  middle monitor (step 4), no multiplayer race (step 5), one engine hum
+  sound, no tire squeal, no shadows from the sun (only soft blobs under
+  cars), no cockpit view, no wheel calibration screen, no tilt steering,
+  no settings menu for assists (keyboard: manual gears not reachable
+  yet, `manualGears_` in game.h).
+
+## Tuning notes
+- Steering assist (controls.cpp): full input = wheelbase * 1.15 g / v^2 +
+  0.95 * peak slip angle. If touch steering feels too slow/fast, change
+  `kSteerSpan` (0.2 screen widths for full lock) or the 1.35 curve.
+- Bot pace: `World::buildRacingLine` (grip 1.12 g, braking 9 m/s^2,
+  accel 6 m/s^2) and `Racer::skill` (0.9..0.98).

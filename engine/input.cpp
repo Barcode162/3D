@@ -66,6 +66,18 @@ void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
   press->id = Input::kNone;
 }
 
+void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
+  auto it = std::find_if(in.pointers.begin(), in.pointers.end(), [&](const Input::Pointer& p) { return p.id == id; });
+  if (type == EMSCRIPTEN_EVENT_TOUCHSTART || type == EMSCRIPTEN_EVENT_MOUSEDOWN) {
+    if (it == in.pointers.end()) in.pointers.push_back({id, pos, pos, emscripten_get_now(), mouse});
+    else it->pos = pos;
+  } else if (type == EMSCRIPTEN_EVENT_TOUCHMOVE || type == EMSCRIPTEN_EVENT_MOUSEMOVE) {
+    if (it != in.pointers.end()) it->pos = pos;
+  } else if (it != in.pointers.end()) {
+    in.pointers.erase(it);
+  }
+}
+
 bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   double canvasW = 0, canvasH = 0;
@@ -74,7 +86,10 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
     const double now = emscripten_get_now();
     for (int i = 0; i < e->numTouches; ++i) {
       const EmscriptenTouchPoint& t = e->touches[i];
-      if (!t.isChanged || type == EMSCRIPTEN_EVENT_TOUCHMOVE || canvasW <= 0 || canvasH <= 0) continue;
+      if (!t.isChanged || canvasW <= 0 || canvasH <= 0) continue;
+      trackPointer(in, static_cast<int>(t.identifier),
+                   {static_cast<float>(t.targetX / canvasW), static_cast<float>(t.targetY / canvasH)}, type, false);
+      if (type == EMSCRIPTEN_EVENT_TOUCHMOVE) continue;
       in.rawPresses.push_back({{static_cast<float>(t.targetX / canvasW), static_cast<float>(t.targetY / canvasH)}, now,
                                static_cast<int>(t.identifier), type == EMSCRIPTEN_EVENT_TOUCHSTART, -1});
     }
@@ -125,10 +140,22 @@ bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
   if (in.capture) {
-    if (type == EMSCRIPTEN_EVENT_MOUSEMOVE) return true;
     double w = 0, h = 0;
     emscripten_get_element_css_size("#canvas", &w, &h);
-    if (w > 0 && h > 0) {
+    if (w <= 0 || h <= 0) return true;
+    const Vec2 f{static_cast<float>(p.x / w), static_cast<float>(p.y / h)};
+    if (type == EMSCRIPTEN_EVENT_MOUSEMOVE) {
+      if (f.x != in.mousePos.x || f.y != in.mousePos.y) in.mouseMoved = true;
+      in.mousePos = f;
+      if (in.mouseButtons & 1) trackPointer(in, Input::kMouseId, f, type, true);
+      return true;
+    }
+    const int bit = e->button == 0 ? 1 : e->button == 2 ? 2 : 4;
+    if (type == EMSCRIPTEN_EVENT_MOUSEDOWN) in.mouseButtons |= bit;
+    if (type == EMSCRIPTEN_EVENT_MOUSEUP) in.mouseButtons &= ~bit;
+    in.mousePos = f;
+    if (e->button == 0) trackPointer(in, Input::kMouseId, f, type, true);
+    if (e->button == 0) {
       in.rawPresses.push_back({{static_cast<float>(p.x / w), static_cast<float>(p.y / h)}, emscripten_get_now(),
                                Input::kMouseId, type == EMSCRIPTEN_EVENT_MOUSEDOWN, -1});
     }
@@ -162,6 +189,15 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
     return false;
   }
   if (in.capture) {
+    // Every key is tracked (the racing game reads them by name).
+    const std::string code = c;
+    auto held = std::find(in.keysHeld.begin(), in.keysHeld.end(), code);
+    if (down && held == in.keysHeld.end()) {
+      in.keysHeld.push_back(code);
+      in.keyPresses.push_back(code);
+    } else if (!down && held != in.keysHeld.end()) {
+      in.keysHeld.erase(held);
+    }
     // D F J K (and the arrows left, right, down, up) are keys 0..3, Escape 4.
     static const char* kLaneKeys[9] = {"KeyD", "KeyF", "KeyJ", "KeyK", "Escape", "ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp"};
     for (int i = 0; i < 9; ++i) {
@@ -172,7 +208,8 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
                                -100 - k, down, k});
       return true;
     }
-    return false;
+    // Keep game keys from scrolling the page; leave browser shortcuts alone.
+    return !(e->ctrlKey || e->metaKey) && (code == "Space" || code.rfind("Key", 0) == 0 || code.rfind("Shift", 0) == 0);
   }
   if (!std::strcmp(c, "KeyW") || !std::strcmp(c, "ArrowUp")) in.keyForward = down;
   else if (!std::strcmp(c, "KeyS") || !std::strcmp(c, "ArrowDown")) in.keyBack = down;
@@ -185,6 +222,11 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
 }  // namespace
 
 void Input::attach(const char* canvas) {
+  // Right-click is a game button (mouse steering: brake), not a menu.
+  EM_ASM({
+    var c = document.querySelector(UTF8ToString($0));
+    if (c) c.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+  }, canvas);
   emscripten_set_touchstart_callback(canvas, this, true, onTouch);
   emscripten_set_touchmove_callback(canvas, this, true, onTouch);
   emscripten_set_touchend_callback(canvas, this, true, onTouch);
@@ -223,6 +265,11 @@ void Input::setCapture(bool on) {
   for (Press& p : presses) p.id = kNone;
   taps.clear();
   rawPresses.clear();
+  pointers.clear();
+  keysHeld.clear();
+  keyPresses.clear();
+  mouseButtons = 0;
+  mouseMoved = false;
   lookDelta = {};
 }
 
@@ -230,6 +277,19 @@ std::vector<Input::RawPress> Input::takeRawPresses() {
   std::vector<RawPress> r;
   r.swap(rawPresses);
   return r;
+}
+
+bool Input::keyDown(const char* code) const {
+  for (const std::string& k : keysHeld) {
+    if (k == code) return true;
+  }
+  return false;
+}
+
+std::vector<std::string> Input::takeKeyPresses() {
+  std::vector<std::string> k;
+  k.swap(keyPresses);
+  return k;
 }
 
 std::vector<Vec2> Input::takeTaps() {

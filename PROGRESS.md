@@ -5,12 +5,15 @@
 
 ## Next up (start here in a new session)
 **2026-10-16, NEW TOP PRIORITY: the racing sim. The plan and checklist
-is `docs/RACING.md`; work through its "Steps" in order.** Step 1 (the
-loading stutter) is done: textures go from the file straight to the GPU
-(browser decode + copyExternalImageToTexture + GPU mipmaps) and loading
-work runs a few ms per frame (`engine/gpu_upload.*`). Open question for
-the user: the realtime server needs a Cloudflare account (see
-`docs/RACING.md` → Multiplayer). Everything below waits.
+is `docs/RACING.md`; work through its "Steps" in order.** Steps 1-3 are
+built: loading stutter fixed (`engine/gpu_upload.*`), real car physics
+(`engine/vehicle.*`), a 2.45 km circuit, 7 bots, collisions, full-screen
+3D race with touch / keyboard / mouse / gamepad / wheel controls (see
+"What exists now" in `docs/RACING.md`). **Next:** the user tries it on
+the iPhone (sit in a sim rig); tune the driving feel from their
+feedback; then step 4 (the race on the rigs' three monitors), step 5 (two
+players), step 6 (realtime server: needs the user's Cloudflare account,
+see `docs/RACING.md` → Multiplayer). Everything below waits.
 
 **2026-10-16, "make everything work" pass: built and deployed.** Voice
 chat (WebRTC), menu (emotes, avatars, profile, voice, settings, piano,
@@ -328,3 +331,7 @@ A small DAW inside the bar, all DSP written in C++:
   for spectators), a fix for the loading stutter, and a real realtime
   server. Plan written: `docs/RACING.md`. Loading stutter fixed: all
   texture work moved to the GPU and spread over frames.
+- **2026-10-16:** Racing sim steps 2-3 built: car physics (Pacejka tires,
+  suspension, drivetrain), Bar3D Ring track, bots, collisions, race rules,
+  race renderer with sky/sun/PBR/haze, touch/keyboard/mouse/pad controls.
+  Native tests in `tools/native/`.

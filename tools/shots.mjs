@@ -2,7 +2,9 @@
 // headless: node tools/shots.mjs "sit=0" "darts" "pianosong=0&cam=..." ...
 // Each argument is added to the page URL (with ?skipintro); saves
 // build/shot-1.png, ... and prints any errors from the on-screen log.
-// WAIT=ms waits longer after loading (default 2500).
+// WAIT=ms waits longer after loading (default 2500). VIEW=932x430 sets the
+// viewport (default 430x932, an iPhone held upright). HOLD=ArrowUp:9000
+// holds a key that long before the shot (e.g. to drive in the race).
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
@@ -32,18 +34,26 @@ const browser = await playwright.chromium.launch({
 let failed = false;
 const args = process.argv.slice(2);
 for (let i = 0; i < args.length; ++i) {
-  const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  const [vw, vh] = (process.env.VIEW ?? '430x932').split('x').map(Number);
+  const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1 });
   await page.goto(`http://localhost:${port}/?skipintro&server=off&${args[i]}`);
   await page.waitForFunction(() => /Everything loaded|Startup failed/.test(document.getElementById('log').textContent),
                              null, { timeout: 120000 }).catch(() => {});
   // A click unlocks sound (piano notes need it).
   await page.mouse.click(5, 900);
   await page.waitForTimeout(+(process.env.WAIT ?? 2500));
+  if (process.env.HOLD) {
+    const [key, ms] = process.env.HOLD.split(':');
+    await page.keyboard.down(key);
+    await page.waitForTimeout(+ms);
+    await page.screenshot({ path: `build/shot-${i + 1}-held.png` });
+    await page.keyboard.up(key);
+  }
   await page.screenshot({ path: `build/shot-${i + 1}.png` });
   const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
   const log = await page.$eval('#log', (el) => el.textContent);
-  const lines = log.split('[info]').filter((l) => /Piano|Bartender|Darts|Voice|seat|Seats/i.test(l));
-  console.log(`--- shot-${i + 1}: ${args[i]}\n${lines.slice(-4).join('\n')}`);
+  const lines = log.split('[info]').filter((l) => /Piano|Bartender|Darts|Voice|seat|Seats|Race|DBG/i.test(l));
+  console.log(`--- shot-${i + 1}: ${args[i]}\n${lines.slice(-(+(process.env.LINES ?? 4))).join('\n')}`);
   if (errors.length) { failed = true; console.log('ERRORS:\n' + errors.join('\n')); }
   await page.close();
 }

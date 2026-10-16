@@ -5,6 +5,7 @@
 // - Drag on the right half: look around.
 // - Computer: WASD/arrow keys to walk, drag the mouse to look.
 // - A quick tap or click that doesn't move counts as a "tap" (to use things).
+#include <string>
 #include <vector>
 
 #include "engine/math.h"
@@ -41,6 +42,27 @@ class Input {
   void setCapture(bool on);
   bool capturing() const { return capture; }
   std::vector<RawPress> takeRawPresses();
+
+  // Also while capturing: every finger currently down (and the mouse while
+  // a button is held), with where it is now and where it started (screen
+  // fractions), for controls that follow a finger (steering, pedals).
+  struct Pointer {
+    int id = 0;
+    Vec2 pos, start;
+    double startMs = 0;
+    bool mouse = false;
+  };
+  std::vector<Pointer> pointers;
+  // Keys held while capturing, by KeyboardEvent.code ("KeyW", "ArrowUp",
+  // "Space", "ShiftLeft"...), and the ones pressed since the last call.
+  bool keyDown(const char* code) const;
+  std::vector<std::string> takeKeyPresses();
+  std::vector<std::string> keysHeld, keyPresses;
+  // The mouse while capturing: position (screen fractions) and buttons
+  // held (bit 0 = left, bit 1 = right, bit 2 = middle).
+  Vec2 mousePos{0.5f, 0.5f};
+  int mouseButtons = 0;
+  bool mouseMoved = false;  // since capture began (to tell mouse users apart)
 
   // Internal state, updated by the event callbacks in input.cpp.
   bool capture = false;
