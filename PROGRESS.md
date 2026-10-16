@@ -143,6 +143,8 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] Walk/idle animation (`advanceWalk` + `Avatar::pose`): stride driven by distance moved, legs/knees/feet, arm swing, hip/chest twist, bob; idle breathing and sway; head follows where you look
 - [x] First-person body: the avatar is drawn in the main view with the head and neck folded away (`Avatar::hideHead`); looking down tilts the head around the neck, so the body shifts back and you see your feet
 - [x] Avatar follows your movement; visible in the mirror
+- [x] Avatar look modeled on the user's photo (2026-10-16): fair skin, dark curly hair, stubble, brows, athletic build, charcoal tee, dark jeans, white sneakers. Rough first pass (hair reads too afro-like, stubble a bit dark); user said it's good enough for now
+- [ ] Later: realistic Blender-built avatar of the user with a full rig, ideally from a 3D face scan (see `docs/VISION.md`)
 - [ ] Later: load your own avatar model (GLB/VRM)
 
 ### Stage 6: Visual quality

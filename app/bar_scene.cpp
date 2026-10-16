@@ -452,6 +452,7 @@ std::vector<engine::MaterialImages> buildBarTextures() {
   m.push_back(engine::makePlaster(kSize, 53));     // kTexPlaster
   m.push_back(engine::makeFabric(kSize, 61));      // kTexFabric
   m.push_back(engine::makeDenim(kSize, 67));       // kTexDenim
+  m.push_back(engine::makeHair(kSize, 71));        // kTexHair
   return m;
 }
 

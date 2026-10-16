@@ -16,6 +16,7 @@ enum TextureLayer : int {
   kTexPlaster,
   kTexFabric,  // avatar shirt and socks
   kTexDenim,   // avatar jeans
+  kTexHair,    // avatar hair and stubble
   kTextureCount,
 };
 

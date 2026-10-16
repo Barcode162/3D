@@ -220,4 +220,17 @@ MaterialImages makeDenim(int size, uint32_t seed) {
   });
 }
 
+MaterialImages makeHair(int size, uint32_t seed) {
+  return generate(size, 0.8f, [&](float u, float v, float& height) -> Image::Pixel {
+    // Fine speckle (stubble, hair tips) over soft clumps of darker and
+    // lighter strands, so hair and beard don't read as flat paint.
+    const float strand = valueNoise(u, v, 192, 48, seed);
+    const float fine = valueNoise(u, v, 256, 256, seed + 1);
+    const float clump = fbm(u, v, 12, 12, 3, seed + 2);
+    height = 0.5f * strand + 0.5f * fine;
+    const float c = 0.5f * (0.55f + 0.45f * strand + 0.35f * (fine - 0.5f) + 0.4f * (clump - 0.5f));
+    return {c, c, c, 0.5f * (0.6f + 0.4f * strand)};
+  });
+}
+
 }  // namespace engine

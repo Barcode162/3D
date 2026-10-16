@@ -32,6 +32,8 @@ MaterialImages makePlaster(int size, uint32_t seed);
 MaterialImages makeFabric(int size, uint32_t seed);
 // Diagonal twill weave with faded threads (jeans).
 MaterialImages makeDenim(int size, uint32_t seed);
+// Fine strands and speckle (avatar hair and stubble).
+MaterialImages makeHair(int size, uint32_t seed);
 
 // Tileable noise, all returning 0..1. (u, v) are texture coordinates in
 // 0..1; fu/fv is how many noise cells fit across the tile (whole numbers so
