@@ -2,6 +2,8 @@
 
 #include <emscripten/emscripten.h>
 
+#include <algorithm>
+
 namespace engine {
 
 // Quoted property names keep the Closure compiler from renaming them.
@@ -34,7 +36,38 @@ std::string userSongString(int index, bool url) {
 std::string userSongName(int index) { return userSongString(index, false); }
 std::string userSongUrl(int index) { return userSongString(index, true); }
 
+void setMusicGain(float gain) { EM_ASM({ window['bar3dAudio']['setMusicGain']($0); }, gain); }
+
 }  // namespace audio
+
+void Track::load(const std::string& url) {
+  EM_ASM({ window['bar3dAudio']['trackLoad'](UTF8ToString($0)); }, url.c_str());
+}
+
+Track::State Track::state() {
+  return static_cast<State>(EM_ASM_INT({ return window['bar3dAudio']['trackState'](); }));
+}
+
+std::vector<float> Track::takeSamples(float& rate) {
+  const int n = EM_ASM_INT({ return window['bar3dAudio']['trackLength'](); });
+  rate = static_cast<float>(EM_ASM_DOUBLE({ return window['bar3dAudio']['trackRate'](); }));
+  std::vector<float> samples(static_cast<size_t>(std::max(n, 0)));
+  if (n > 0) {
+    EM_ASM({
+      var m = window['bar3dAudio']['trackTakeMono']();
+      if (m) HEAPF32.set(m, $0 >> 2);
+    }, samples.data());
+  }
+  return samples;
+}
+
+bool Track::play(double delaySeconds) {
+  return EM_ASM_INT({ return window['bar3dAudio']['trackPlay']($0) ? 1 : 0; }, delaySeconds) != 0;
+}
+
+double Track::time() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['trackTime'](); }); }
+double Track::duration() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['trackDuration'](); }); }
+void Track::stop() { EM_ASM({ window['bar3dAudio']['trackStop'](); }); }
 
 void MusicSource::init(float refDistance) {
   id_ = EM_ASM_INT({ return window['bar3dAudio']['createSource']($0); }, refDistance);

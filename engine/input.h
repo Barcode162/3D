@@ -26,7 +26,25 @@ class Input {
   // 1,1 = bottom-right). Resets after reading.
   std::vector<Vec2> takeTaps();
 
+  // Game input (the rhythm game): while capturing, touches don't walk, look
+  // or tap. Every finger going down or up is reported instead, with when
+  // it happened (emscripten_get_now ms) and where (screen fractions). On a
+  // computer the keys D F J K act as presses in the four quarters of the
+  // screen (key = 0..3) and Escape as key 4.
+  struct RawPress {
+    Vec2 pos;
+    double ms = 0;
+    int id = 0;     // finger (or key) id, to pair downs with ups
+    bool down = true;
+    int key = -1;   // -1 = a touch or click
+  };
+  void setCapture(bool on);
+  bool capturing() const { return capture; }
+  std::vector<RawPress> takeRawPresses();
+
   // Internal state, updated by the event callbacks in input.cpp.
+  bool capture = false;
+  std::vector<RawPress> rawPresses;
   static constexpr int kNone = -1;
   int stickTouchId = kNone;
   int lookTouchId = kNone;

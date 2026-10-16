@@ -13,6 +13,7 @@
 #include "app/jukebox.h"
 #include "app/players.h"
 #include "app/props.h"
+#include "app/rhythm.h"
 #include "app/shared_world.h"
 #include "app/renderer.h"
 #include "engine/audio.h"
@@ -59,6 +60,7 @@ struct App {
   std::vector<std::vector<Mat4>> otherBones;
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
+  app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   engine::TextRenderer text;
   engine::PhysicsWorld physics;
   std::vector<int> bodyOfModel;  // physics body per BarScene::models entry
@@ -86,7 +88,7 @@ App g_app;
 
 void updateCamera(float dt) {
   const engine::Vec2 look = g_app.input.takeLookDelta();
-  if (g_app.jukeboxMenu.isOpen()) {  // stand still while choosing a song
+  if (g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen()) {  // stand still in menus and games
     app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
     return;
   }
@@ -148,6 +150,11 @@ void queueText(double nowMs, const Mat4& viewProj) {
   const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
   const float px = g_app.gpu.pixelRatio;  // device pixels per CSS pixel
   text.begin(viewProj, g_app.gpu.width, g_app.gpu.height);
+  if (g_app.rhythm.isOpen()) {  // the game covers the screen
+    g_app.rhythm.draw(text, W, H, px, nowMs);
+    text.upload(g_app.gpu.queue);
+    return;
+  }
 
   const engine::FirstPersonCamera& cam = g_app.camera;
   const Vec3 forward = cam.forward();
@@ -259,6 +266,12 @@ Vec3 screenRay(engine::Vec2 tap) {
 
 void use(const app::Interactable& it) {
   if (it.action == app::Action::kJukebox) g_app.jukeboxMenu.open();
+  if (it.action == app::Action::kRhythm) {
+    std::vector<app::RhythmGame::SongChoice> songs;
+    for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
+    g_app.rhythm.open(std::move(songs));
+    g_app.input.setCapture(true);
+  }
   if (it.action == app::Action::kMirror || it.action == app::Action::kMirrorMode) {
     app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
     // Tapping the glass steps through full -> avatars only -> off -> full;
@@ -399,6 +412,12 @@ void updateInteraction(double nowMs) {
     }
   }
 
+  if (g_app.rhythm.isOpen()) {
+    g_app.rhythm.update(nowMs, g_app.input.takeRawPresses(), static_cast<float>(g_app.gpu.width),
+                        static_cast<float>(g_app.gpu.height));
+    if (!g_app.rhythm.isOpen()) g_app.input.setCapture(false);
+  }
+
   // A tap uses what it lands on; tapping anywhere also works while you're
   // standing at something (easier on a small screen).
   for (const engine::Vec2 tap : g_app.input.takeTaps()) {
@@ -451,6 +470,22 @@ void updateLoadingScreen() {
   if (r.modelFilesDone() == r.modelFiles()) {
     g_app.loadReported = true;
     LOG_INFO("Everything loaded (%zu model files).", r.modelFiles());
+    // Tests: ?rhythm=song,difficulty opens the rhythm game on that song;
+    // ?autoplay lets it play itself.
+    int song = -1, difficulty = 1;
+    char param[32] = {};
+    EM_ASM({
+      var m = /[?&]rhythm=([^&]*)/.exec(location.search);
+      stringToUTF8(m ? decodeURIComponent(m[1]) : "", $0, $1);
+    }, param, sizeof(param));
+    g_app.rhythm.autoplay = EM_ASM_INT({ return /[?&]autoplay/.test(location.search) ? 1 : 0; }) != 0;
+    if (std::sscanf(param, "%d,%d", &song, &difficulty) >= 1 && song >= 0) {
+      std::vector<app::RhythmGame::SongChoice> songs;
+      for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
+      g_app.rhythm.open(std::move(songs));
+      g_app.input.setCapture(true);
+      g_app.rhythm.start(song, static_cast<app::Difficulty>(std::clamp(difficulty, 0, 2)));
+    }
     EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
   }
 }

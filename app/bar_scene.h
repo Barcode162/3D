@@ -83,7 +83,7 @@ struct FloorArea {
 
 // Something you can use. It has a floating name tag; walking close and
 // looking at it highlights it and shows a prompt; tapping it runs `action`.
-enum class Action { kNone, kJukebox, kMirror, kMirrorMode };
+enum class Action { kNone, kJukebox, kMirror, kMirrorMode, kRhythm };
 
 struct Interactable {
   std::string name;               // floating name tag

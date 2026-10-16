@@ -23,7 +23,14 @@ constexpr char kFirstChar = 32;  // ' '
 constexpr char kLastChar = 127;  // '~' plus one solid block (see kSolid)
 constexpr char kSolid = 127;     // fully filled glyph, used to draw rectangles
 constexpr int kGlyphCount = kLastChar - kFirstChar + 1;
-constexpr int kRows = (kGlyphCount + kColumns - 1) / kColumns;
+// Two shapes after the letters, for round UI (the rhythm game's notes):
+// a filled disc and a ring, centered in their cell.
+enum Shape { kShapeDisc = 0, kShapeRing = 1 };
+constexpr int kShapeCount = 2;
+constexpr float kShapeCenterX = kCellW * 0.5f, kShapeCenterY = kCellH * 0.5f;  // in cell pixels
+constexpr float kShapeRadius = 3.2f;     // outer radius, font pixels
+constexpr float kRingInner = 2.45f;      // the ring's inner radius
+constexpr int kRows = (kGlyphCount + kShapeCount + kColumns - 1) / kColumns;
 // The distance field covers +-kSdfRange font pixels around each edge.
 constexpr float kSdfRange = 1.0f;
 }  // namespace font
@@ -38,5 +45,7 @@ FontAtlas buildFontAtlas(int mipLevels);
 
 // Atlas cell (column, row) for a character; unknown characters map to '?'.
 void fontCell(char c, int& column, int& row);
+// Atlas cell for a shape (font::Shape).
+void shapeCell(int shape, int& column, int& row);
 
 }  // namespace engine

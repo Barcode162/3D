@@ -12,7 +12,9 @@ strings, and a loading screen. **The full plan and checklist is
 `docs/BAR_REDESIGN.md`.** First pass built and deployed the same day:
 new room shell, curved bar, tall back bar, piano, big mirror, both
 construction doorways, 2 sim rigs, rhythm cabinet, darts zone, lounge
-with fireplace, decor pass, loading screen. **Next:** ask the user how it
+with fireplace, decor pass, loading screen. User checked it: looks
+great; rug fixed; the rhythm machine is now playable (circle skin).
+**Next:** ask the user how it
 looks and runs on the iPhone (fps with Low Power Mode off, load time,
 anything that looks wrong), fix that first; then the open items in
 `docs/BAR_REDESIGN.md` ("Still open"), then interactions (sit, play the
@@ -267,6 +269,9 @@ A small DAW inside the bar, all DSP written in C++:
   checks glass, late join, mirror and jukebox sync.
 - **2026-10-16:** Session closed with M2 deployed (`355fed6`), not yet
   checked on phones.
+- **2026-10-16:** User: everything great, the rug clipped under the
+  couch (fixed: one slab, ends before the sofa). Made the 4K MANIA cabinet
+  playable with a circle skin (charts generated from any song).
 - **2026-10-16:** The big bar upgrade (`docs/BAR_REDESIGN.md`). Loading
   screen with progress and "Tap to enter"; light grid (32 lights); glowing
   image textures; walkable stage; one giant 3-mode mirror with a button

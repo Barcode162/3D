@@ -161,11 +161,12 @@ def build_lounge():
     rug_px[pattern] = rug_px[pattern] * 0.6 + np.array(common.srgb((0.85, 0.7, 0.4))) * 0.4
     rug_px *= (0.85 + 0.15 * common.noise2d(360, 300, 40, 3))[..., None]
     rug = common.image_material("Rug", rug_px, roughness=0.95)
-    RX, RZ = -6.95, FZ
-    q = common.quad("Rug", [(RX - RW / 2, 0.006, RZ + RD / 2), (RX + RW / 2, 0.006, RZ + RD / 2),
-                            (RX + RW / 2, 0.006, RZ - RD / 2), (RX - RW / 2, 0.006, RZ - RD / 2)], rug,
-                    uvs=((0, 1), (1, 1), (1, 0), (0, 0)))
-    common.box("Rug edge", (RX - RW / 2, 0.0, RZ - RD / 2), (RX + RW / 2, 0.006, RZ + RD / 2), rug, 0.002)
+    # One slab (not a picture on top of a slab: those flicker against each
+    # other), ending in front of the sofa.
+    RW, RD = 1.75, 3.3
+    RX, RZ = -7.12, FZ
+    rug_obj = common.box("Rug", (RX - RW / 2, 0.0, RZ - RD / 2), (RX + RW / 2, 0.012, RZ + RD / 2), rug, 0.004)
+    common.set_uvs(rug_obj, lambda co, n: ((co.x - (RX - RW / 2)) / RW, (co.z - (RZ - RD / 2)) / RD))
 
     # ---- Chesterfield sofa (faces the fire, -x) ----
     SX, SZ, SL = -5.75, FZ, 2.1

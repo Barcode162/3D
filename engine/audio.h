@@ -3,6 +3,7 @@
 // web/audio.js). Phones only allow sound after the user's first tap; the
 // bridge handles that automatically.
 #include <string>
+#include <vector>
 
 #include "engine/math.h"
 
@@ -21,7 +22,27 @@ void setSongPickerRect(float x, float y, float w, float h);
 int userSongCount();
 std::string userSongName(int index);
 std::string userSongUrl(int index);
+
+// Turns all music sources (the jukebox) up or down, 0..1.
+void setMusicGain(float gain);
 }  // namespace audio
+
+// A whole song decoded into memory, for when timing must be exact (the
+// rhythm game): it plays with sample accuracy and reports where it is.
+// One at a time; loading a new one replaces the old.
+class Track {
+ public:
+  enum class State { kNone, kLoading, kReady, kFailed };
+  static void load(const std::string& url);
+  static State state();
+  // The song as mono samples (call once when ready; the copy is freed in
+  // the browser afterwards). `rate` = samples per second.
+  static std::vector<float> takeSamples(float& rate);
+  static bool play(double delaySeconds);  // false if sound isn't unlocked yet
+  static double time();       // seconds into the song as heard (< 0 before it starts)
+  static double duration();
+  static void stop();
+};
 
 // Long music placed in 3D space: you hear it from its position, louder when
 // close, panned left/right as you turn. Streams, so songs can be long.

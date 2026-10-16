@@ -70,6 +70,16 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   double canvasW = 0, canvasH = 0;
   emscripten_get_element_css_size("#canvas", &canvasW, &canvasH);
+  if (in.capture) {
+    const double now = emscripten_get_now();
+    for (int i = 0; i < e->numTouches; ++i) {
+      const EmscriptenTouchPoint& t = e->touches[i];
+      if (!t.isChanged || type == EMSCRIPTEN_EVENT_TOUCHMOVE || canvasW <= 0 || canvasH <= 0) continue;
+      in.rawPresses.push_back({{static_cast<float>(t.targetX / canvasW), static_cast<float>(t.targetY / canvasH)}, now,
+                               static_cast<int>(t.identifier), type == EMSCRIPTEN_EVENT_TOUCHSTART, -1});
+    }
+    return true;
+  }
 
   for (int i = 0; i < e->numTouches; ++i) {
     const EmscriptenTouchPoint& t = e->touches[i];
@@ -114,6 +124,16 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
 bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
+  if (in.capture) {
+    if (type == EMSCRIPTEN_EVENT_MOUSEMOVE) return true;
+    double w = 0, h = 0;
+    emscripten_get_element_css_size("#canvas", &w, &h);
+    if (w > 0 && h > 0) {
+      in.rawPresses.push_back({{static_cast<float>(p.x / w), static_cast<float>(p.y / h)}, emscripten_get_now(),
+                               Input::kMouseId, type == EMSCRIPTEN_EVENT_MOUSEDOWN, -1});
+    }
+    return true;
+  }
   if (type == EMSCRIPTEN_EVENT_MOUSEDOWN) {
     in.mouseLooking = true;
     pressStart(in, Input::kMouseId, p);
@@ -134,6 +154,17 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   const bool down = type == EMSCRIPTEN_EVENT_KEYDOWN;
   const char* c = e->code;
+  if (in.capture) {
+    static const char* kLaneKeys[5] = {"KeyD", "KeyF", "KeyJ", "KeyK", "Escape"};
+    for (int k = 0; k < 5; ++k) {
+      if (std::strcmp(c, kLaneKeys[k]) != 0) continue;
+      if (e->repeat) return true;
+      in.rawPresses.push_back({{0.125f + 0.25f * static_cast<float>(std::min(k, 3)), 0.9f}, emscripten_get_now(),
+                               -100 - k, down, k});
+      return true;
+    }
+    return false;
+  }
   if (!std::strcmp(c, "KeyW") || !std::strcmp(c, "ArrowUp")) in.keyForward = down;
   else if (!std::strcmp(c, "KeyS") || !std::strcmp(c, "ArrowDown")) in.keyBack = down;
   else if (!std::strcmp(c, "KeyA") || !std::strcmp(c, "ArrowLeft")) in.keyLeft = down;
@@ -170,6 +201,26 @@ Vec2 Input::move() const {
     m.y /= len;
   }
   return m;
+}
+
+void Input::setCapture(bool on) {
+  if (capture == on) return;
+  capture = on;
+  // Let go of everything the other mode was tracking.
+  stickTouchId = lookTouchId = kNone;
+  showStick(false, {}, {});
+  mouseLooking = false;
+  keyForward = keyBack = keyLeft = keyRight = false;
+  for (Press& p : presses) p.id = kNone;
+  taps.clear();
+  rawPresses.clear();
+  lookDelta = {};
+}
+
+std::vector<Input::RawPress> Input::takeRawPresses() {
+  std::vector<RawPress> r;
+  r.swap(rawPresses);
+  return r;
 }
 
 std::vector<Vec2> Input::takeTaps() {

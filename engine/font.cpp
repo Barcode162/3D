@@ -133,6 +133,12 @@ void fontCell(char c, int& column, int& row) {
   row = index / font::kColumns;
 }
 
+void shapeCell(int shape, int& column, int& row) {
+  const int index = font::kGlyphCount + shape;
+  column = index % font::kColumns;
+  row = index / font::kColumns;
+}
+
 FontAtlas buildFontAtlas(int mipLevels) {
   using namespace font;
   constexpr int S = kTexelsPerPixel;
@@ -171,6 +177,22 @@ FontAtlas buildFontAtlas(int mipLevels) {
         const float v = std::clamp(0.5f + 0.5f * signedDist / kSdfRange, 0.0f, 1.0f);
         base[(row * cellTexH + ty) * atlas.width + col * cellTexW + tx] =
             static_cast<uint8_t>(std::lround(v * 255.0f));
+      }
+    }
+  }
+  // The round shapes, as exact distance fields.
+  for (int shape = 0; shape < kShapeCount; ++shape) {
+    int col, row;
+    shapeCell(shape, col, row);
+    for (int ty = 0; ty < cellTexH; ++ty) {
+      for (int tx = 0; tx < cellTexW; ++tx) {
+        const float px = (static_cast<float>(tx) + 0.5f) / S - kShapeCenterX;
+        const float py = (static_cast<float>(ty) + 0.5f) / S - kShapeCenterY;
+        const float d = std::sqrt(px * px + py * py);
+        float signedDist = kShapeRadius - d;
+        if (shape == kShapeRing) signedDist = std::min(signedDist, d - kRingInner);
+        const float v = std::clamp(0.5f + 0.5f * signedDist / kSdfRange, 0.0f, 1.0f);
+        base[(row * cellTexH + ty) * atlas.width + col * cellTexW + tx] = static_cast<uint8_t>(std::lround(v * 255.0f));
       }
     }
   }

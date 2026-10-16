@@ -235,6 +235,41 @@ void TextRenderer::addWorld(std::string_view text, Vec3 center, Vec3 right, Vec3
   });
 }
 
+void TextRenderer::addShape(int shape, float cx, float cy, float radius, Vec4 color, Vec4 outline,
+                            float outlineWidth) {
+  using namespace font;
+  if (vertices_.size() >= kMaxGlyphs * 4) return;
+  int col, row;
+  shapeCell(shape, col, row);
+  // The quad covers the whole cell; the shape sits in its middle.
+  const float scale = radius / kShapeRadius;  // device pixels per font pixel
+  const float atlasW = static_cast<float>(kColumns * kCellW), atlasH = static_cast<float>(kRows * kCellH);
+  const float hx = kShapeCenterX * scale, hy = kShapeCenterY * scale;
+  const float u0 = static_cast<float>(col * kCellW) / atlasW, u1 = static_cast<float>((col + 1) * kCellW) / atlasW;
+  const float v0 = static_cast<float>(row * kCellH) / atlasH, v1 = static_cast<float>((row + 1) * kCellH) / atlasH;
+  const float corners[4][4] = {{cx - hx, cy - hy, u0, v0}, {cx + hx, cy - hy, u1, v0}, {cx + hx, cy + hy, u1, v1},
+                               {cx - hx, cy + hy, u0, v1}};
+  for (const auto& k : corners) {
+    Vertex vert;
+    vert.clip[0] = k[0] / screenW_ * 2.0f - 1.0f;
+    vert.clip[1] = 1.0f - k[1] / screenH_ * 2.0f;
+    vert.clip[2] = 0;
+    vert.clip[3] = 1;
+    vert.uv[0] = k[2];
+    vert.uv[1] = k[3];
+    vert.outlineWidth = outlineWidth;
+    vert.color[0] = toByte(color.x);
+    vert.color[1] = toByte(color.y);
+    vert.color[2] = toByte(color.z);
+    vert.color[3] = toByte(color.w);
+    vert.outline[0] = toByte(outline.x);
+    vert.outline[1] = toByte(outline.y);
+    vert.outline[2] = toByte(outline.z);
+    vert.outline[3] = toByte(outline.w);
+    vertices_.push_back(vert);
+  }
+}
+
 void TextRenderer::addRect(float x, float y, float w, float h, Vec4 color) {
   using namespace font;
   if (vertices_.size() >= kMaxGlyphs * 4) return;

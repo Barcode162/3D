@@ -179,7 +179,12 @@ Zones:
   truss), shelves with trinkets, EXIT signs at the doorways, a TV over the
   bar end is done on the soffit instead.
 - Interactions: sit on stools/sofa/sim seats, play the piano (88 notes,
-  synthesized), throw darts with scoring, play the rhythm game, race.
+  synthesized), throw darts with scoring, race.
+- [x] **The rhythm game is playable** (2026-10-16, user asked: "circle
+  skin instead of bars"): tap the 4K MANIA cabinet. See `docs/DECISIONS.md`
+  → Rhythm game. Ideas next: hold notes, hit sounds, a timing offset
+  setting, the game shown on the cabinet's screen for others, sharing
+  scores in multiplayer.
 
 ### Budgets (iPhone 15 Pro Max, 60 fps)
 Models total < 25 MB; ~600k triangles in the room; textures 1k only on

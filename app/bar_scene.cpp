@@ -349,7 +349,15 @@ void buildGames(Builder& b) {
     const Vec3 mid{(kChamferAX + kX1) / 2, 0, (kZ0 + kChamferBZ) / 2};
     const Quat r = turnY(-engine::kPi / 4);  // local +z points into the room
     const auto at = [&](float x, float z) { return mid + r.rotate({x, 0, z}); };
-    b.model("rhythm.glb", mid, kLacquer, r);
+    const size_t cabinet = b.model("rhythm.glb", mid, kLacquer, r);
+    Interactable game{"4K MANIA", "4K Mania\nTap to play", at(0, 0.9f) + Vec3{0, 2.75f, 0}};
+    const Vec3 c = at(0, 0.45f);
+    game.boundsMin = c + Vec3{-0.6f, 0, -0.6f};
+    game.boundsMax = c + Vec3{0.6f, 2.5f, 0.6f};
+    game.firstModel = cabinet;
+    game.modelCount = 1;
+    game.action = Action::kRhythm;
+    b.scene.interactables.push_back(game);
     b.solid(at(0, 0.45f) + Vec3{0, 1.1f, 0}, {0.45f, 1.1f, 0.45f}, kLacquer, r);
     b.block(at(0, 0.5f), 0.62f, 0.62f);
     for (float x : {-1.45f, 1.45f}) {

@@ -43,6 +43,12 @@ class TextRenderer {
   // A filled rectangle on the screen (device pixels), e.g. for menu panels.
   void addRect(float x, float y, float w, float h, Vec4 color);
 
+  // A disc or ring (font::Shape) on the screen, centered at (cx, cy) with
+  // outer radius `radius` (device pixels). `outline` (a = opacity) draws a
+  // halo `outlineWidth` font pixels wide around it (0..1).
+  void addShape(int shape, float cx, float cy, float radius, Vec4 color, Vec4 outline = {0, 0, 0, 0},
+                float outlineWidth = 0);
+
   // Width of the widest line and the total height, in font pixels.
   static void measure(std::string_view text, float& width, float& height);
 

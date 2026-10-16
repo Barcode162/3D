@@ -72,6 +72,29 @@ future session re-litigates or repeats it.
   bar tools, garnish, books, frames, plants, candles. Set atlas UVs
   *before* moving a prop into place (`swatch_uvs` reads positions).
 
+## Rhythm game (4K MANIA cabinet, 2026-10-16)
+- Tap the cabinet → `app/rhythm.*` covers the screen (drawn with the text
+  renderer: rects, text, and two new SDF shapes in the font atlas, a disc
+  and a ring: `TextRenderer::addShape`). Circle skin at the user's request.
+- Songs = the jukebox's list (built-in + songs loaded from the phone).
+  Charts are made in C++ from the audio (`app/rhythm_chart.cpp`): own FFT,
+  spectral flux in 4 bands, tempo by autocorrelation (preferring ~120
+  BPM) and beat phase, notes snapped to beats / eighths / sixteenths for
+  Easy / Normal / Hard, lanes from the spectral centroid (quartiles, so
+  all lanes are used), no fast repeats on one key, chords on loud hits.
+- The song is decoded fully (`engine::Track`, `trackLoad` in
+  `web/audio.js`) and played as an AudioBufferSourceNode, so timing is
+  sample-exact: song time = `ctx.currentTime - start - latency`. Touches
+  come from `Input` capture mode with their time (`emscripten_get_now`);
+  a press's song time = now's song time minus how long ago it happened.
+  Windows: perfect 45 ms, great 90, good 135, miss 180. The jukebox is
+  turned down (`setMusicGain`) while the game is open.
+- Lanes are full-height screen columns (easy for thumbs); the X button is
+  top-left. Keyboard: D F J K, Escape.
+- Test: `NODE_PATH=$(npm root -g) node tools/rhythm_test.mjs [song] [diff]`
+  (puts Ogg copies of the songs into build/site, opens
+  `?skipintro&rhythm=song,diff&autoplay`, screenshots `build/rhythm-*.png`).
+
 ## Hosting and deploy (important, it took several tries)
 - The site is served by **GitHub Pages: "Deploy from a branch" → `gh-pages` / root**.
 - `.github/workflows/deploy.yml` builds on every push to `main` and

@@ -12,6 +12,11 @@ window.bar3dAudio = (function () {
   var sources = [];
   var listener = null;  // last listener pose, applied once ctx exists
   var silence = null;
+  var musicGain = null;  // all music sources pass through this (to turn them down)
+  var musicLevel = 1;
+  // The rhythm game's song: decoded fully (so it plays with sample-exact
+  // timing) and played through its own gain, not placed in 3D.
+  var track = { state: 0, buffer: null, mono: null, node: null, start: 0, url: '' };
 
   function report(text) {
     if (window.Module && Module.printErr) Module.printErr('[error] ' + text);
@@ -66,7 +71,12 @@ window.bar3dAudio = (function () {
     s.panner.rolloffFactor = 0.8;
     s.panner.maxDistance = 100;
     node.connect(s.panner);
-    s.panner.connect(ctx.destination);
+    if (!musicGain) {
+      musicGain = ctx.createGain();
+      musicGain.gain.value = musicLevel;
+      musicGain.connect(ctx.destination);
+    }
+    s.panner.connect(musicGain);
     applyPosition(s);
   }
 
@@ -116,8 +126,86 @@ window.bar3dAudio = (function () {
   document.body.appendChild(picker);
   document.body.appendChild(pickerButton);
 
+  function decodeContext() {
+    if (ctx) return ctx;
+    var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return new OAC(1, 1, 44100);
+  }
+
   return {
     ready: function () { return !!ctx && ctx.state === 'running'; },
+
+    // Turns all music sources (the jukebox) up or down, 0..1.
+    setMusicGain: function (g) {
+      musicLevel = g;
+      if (musicGain) musicGain.gain.setTargetAtTime(g, ctx.currentTime, 0.15);
+    },
+
+    // ---- The rhythm game's track ----
+    // state: 0 nothing, 1 loading, 2 ready, 3 failed.
+    trackLoad: function (url) {
+      this.trackStop();
+      track = { state: 1, buffer: null, mono: null, node: null, start: 0, url: url };
+      var t = track;
+      fetch(url).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.arrayBuffer();
+      }).then(function (data) {
+        return new Promise(function (resolve, reject) {
+          var p = decodeContext().decodeAudioData(data, resolve, reject);
+          if (p && p.then) p.then(resolve, reject);
+        });
+      }).then(function (buffer) {
+        if (t !== track) return;
+        var n = buffer.length, mono = new Float32Array(n);
+        for (var c = 0; c < buffer.numberOfChannels; c++) {
+          var d = buffer.getChannelData(c);
+          for (var i = 0; i < n; i++) mono[i] += d[i] / buffer.numberOfChannels;
+        }
+        t.buffer = buffer;
+        t.mono = mono;
+        t.state = 2;
+      }).catch(function (e) {
+        if (t !== track) return;
+        report('Could not load the song for the rhythm game: ' + e);
+        t.state = 3;
+      });
+    },
+    trackState: function () { return track.state; },
+    trackLength: function () { return track.mono ? track.mono.length : 0; },
+    trackRate: function () { return track.buffer ? track.buffer.sampleRate : 44100; },
+    // Hands over the mono samples once (C++ copies them into its memory);
+    // the buffer itself stays for playing.
+    trackTakeMono: function () {
+      var m = track.mono;
+      track.mono = null;
+      return m;
+    },
+    // Starts playing `delay` seconds from now.
+    trackPlay: function (delay) {
+      if (!ctx || !track.buffer) return false;
+      if (ctx.state !== 'running') ctx.resume();
+      var src = ctx.createBufferSource();
+      src.buffer = track.buffer;
+      var g = ctx.createGain();
+      g.gain.value = 0.9;
+      src.connect(g);
+      g.connect(ctx.destination);
+      track.start = ctx.currentTime + delay;
+      src.start(track.start);
+      track.node = src;
+      return true;
+    },
+    // Seconds into the song as you hear it (negative before it starts).
+    trackTime: function () {
+      if (!ctx || !track.node) return -1000;
+      var latency = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
+      return ctx.currentTime - track.start - latency;
+    },
+    trackDuration: function () { return track.buffer ? track.buffer.duration : 0; },
+    trackStop: function () {
+      if (track.node) { try { track.node.stop(); } catch (e) {} track.node = null; }
+    },
 
     // A streaming music source (HTML audio element, so long songs don't
     // have to be decoded into memory). Returns its id.
