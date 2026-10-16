@@ -5,7 +5,8 @@
 // along the bar and turns the full mirror off; Bob must see both, and Carol
 // (rejoining) must find the glass where she left it. Needs `php` installed.
 // Usage: NODE_PATH=$(npm root -g) node tools/mp_test.mjs
-// RELAY=https://joshuavelasco.com/bar/relay.php tests through the live relay.
+// RELAY=https://joshuavelasco.com/bar/relay.php tests through the live relay;
+// CLOUD=ws://127.0.0.1:8787 through the Cloudflare room server (cloud/).
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
@@ -43,7 +44,8 @@ const browser = await playwright.chromium.launch({
 });
 async function open(name, cam) {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-  await page.goto(`http://localhost:${port}/?skipintro&room=test&name=${name}&server=${encodeURIComponent(relay)}` +
+  const via = process.env.CLOUD ? `cloud=${encodeURIComponent(process.env.CLOUD)}` : `server=${encodeURIComponent(relay)}`;
+  await page.goto(`http://localhost:${port}/?skipintro&room=test&name=${name}&${via}` +
                   `&cam=${encodeURIComponent(cam)}`);
   return page;
 }
@@ -105,7 +107,15 @@ await waitLog(bob, /Everything loaded/, 180000);
 // Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
 // tap (phones only play sound after one), must start the same song.
 await bob.mouse.click(215, 300);
-await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], w: { jb: [1, Date.now() / 1000] } }) });
+if (process.env.CLOUD) {
+  const probe = new WebSocket(`${process.env.CLOUD}/room/test?id=probe`);
+  await new Promise((r) => (probe.onopen = r));
+  probe.send(JSON.stringify({ hello: 1, name: 'Probe', t: 1, s: [0], w: { jb: [1, Date.now() / 1000] } }));
+  await new Promise((r) => setTimeout(r, 500));
+  probe.close();
+} else {
+  await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], w: { jb: [1, Date.now() / 1000] } }) });
+}
 await waitLog(bob, /Bossa Antigua" \(chosen by another player\)/, 20000);
 await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
 const log = await logOf(bob);

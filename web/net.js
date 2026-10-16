@@ -1,10 +1,16 @@
-// Thin bridge from the C++ multiplayer code (engine/net.cpp) to the relay
-// server (server/relay.php on the IONOS web hosting). About 10 times a
-// second it sends your latest state and receives everyone else's. What the
-// numbers mean, smoothing and drawing are all decided in C++.
+// Thin bridge from the C++ multiplayer code (engine/net.cpp) to the
+// multiplayer server. Two ways to reach it:
+// - Cloudflare (cloud/worker.js), the main one: one live WebSocket; your
+//   state goes out up to 20 times a second (only when it changed) and
+//   others' states arrive the moment they're sent. Its address comes from
+//   cloud.json, written by the deploy.
+// - The PHP relay on IONOS (server/relay.php), the fallback: polled about
+//   10 times a second. Used when Cloudflare can't be reached.
+// What the numbers mean, smoothing and drawing are all decided in C++.
 //
 // Page options: ?room=name (default "main"), ?name=Josh (your name tag,
-// remembered), ?server=https://.../relay.php, ?server=off.
+// remembered), ?server=https://.../relay.php (force the relay),
+// ?cloud=wss://... (force a Cloudflare address), ?cloud=off, ?server=off.
 window.bar3dNet = (function () {
   'use strict';
   // Where the relay lives when the game is served from GitHub Pages. When
@@ -21,6 +27,7 @@ window.bar3dNet = (function () {
     return null;
   }
 
+  var forcedRelay = param('server') !== null;
   var server = param('server');
   if (server === null) {
     var host = location.hostname;
@@ -48,6 +55,126 @@ window.bar3dNet = (function () {
   // without a direct connection), and quick events waiting for C++.
   var msgOut = [], eventsIn = [], signalHandlers = [];
   var clockOffset = null, clockRtt = 1e9;
+
+  // --- Cloudflare (WebSocket) mode.
+  var cloudUrl = null, ws = null, wsOpen = false, wsFails = 0, mode = 'relay';
+  var lastStateText = '', lastStateSent = 0, pingAt = 0, helloTok = '';
+  var CLOUD_SEND_MS = 50;
+
+  function wsSend(obj) {
+    if (ws && wsOpen) { try { ws.send(JSON.stringify(obj)); return true; } catch (e) {} }
+    return false;
+  }
+  function addPlayer(p) {
+    var known = players[p.id];
+    if (!known) {
+      known = players[p.id] = { index: nextIndex++, name: p.name };
+      info('Multiplayer: ' + p.name + ' joined.');
+    }
+    known.name = p.name;
+    known.acct = p.acct || '';
+    known.av = p.av || 0;
+    if (p.s && p.s.length && lastSent[p.id] !== p.t) {
+      lastSent[p.id] = p.t;
+      packets.push({ index: known.index, t: p.t, s: p.s });
+    }
+  }
+  function dropPlayer(pid) {
+    if (!players[pid]) return;
+    info('Multiplayer: ' + players[pid].name + ' left.');
+    delete players[pid];
+    delete lastSent[pid];
+  }
+  function connectCloud() {
+    var url = cloudUrl.replace(/\/$/, '') + '/room/' + room + '?id=' + id;
+    try { ws = new WebSocket(url); } catch (e) { ws = null; cloudFailed(); return; }
+    ws.onopen = function () {
+      wsOpen = true;
+      wsFails = 0;
+      var hello = { hello: 1, name: name, ping: performance.now() };
+      var acct = window.bar3dAccount;
+      helloTok = acct && acct.token() ? acct.token() : '';
+      if (helloTok) hello.tok = helloTok;
+      pingAt = performance.now();
+      ws.send(JSON.stringify(hello));
+      lastStateText = '';
+    };
+    ws.onmessage = function (e) {
+      var msg;
+      try { msg = JSON.parse(e.data); } catch (err) { return; }
+      if (msg.welcome) {
+        if (status !== 2) info('Multiplayer: connected to room "' + room + '" as ' + (msg.name || name) + ' (Cloudflare).');
+        status = 2;
+        // Anyone we knew who isn't in the room any more has left.
+        var here = {};
+        msg.players.forEach(function (p) { here[p.id] = true; });
+        Object.keys(players).forEach(function (pid) { if (!here[pid]) dropPlayer(pid); });
+        msg.players.forEach(addPlayer);
+        msg.world.forEach(function (w) { worldIn.push([w[0], w[1] < id ? 1 : 0, w[2]]); });
+      }
+      if ('pong' in msg) {
+        var rtt = performance.now() - msg.pong;
+        clockRtt *= 1.01;
+        if (rtt < clockRtt) {
+          clockRtt = rtt;
+          clockOffset = msg.now - (msg.pong + rtt / 2) / 1000;
+        }
+      }
+      if (msg.p) addPlayer(msg.p);
+      if (msg.left) dropPlayer(msg.left);
+      if (msg.w) msg.w.forEach(function (w) { worldIn.push([w[0], w[1] < id ? 1 : 0, w[2]]); });
+      if (msg.m) receiveText(msg.m[0], msg.m[1]);
+    };
+    ws.onclose = function () {
+      var was = wsOpen;
+      wsOpen = false;
+      ws = null;
+      if (was) info('Multiplayer: connection lost, reconnecting...');
+      cloudFailed();
+    };
+  }
+  function cloudFailed() {
+    if (++wsFails >= 3 && status !== 2 && server) {
+      // Never got through: use the relay on IONOS instead.
+      info('Multiplayer: Cloudflare unreachable, using the IONOS relay.');
+      mode = 'relay';
+      setInterval(tick, SEND_INTERVAL_MS);
+      return;
+    }
+    if (wsFails >= 3) status = 3;
+    setTimeout(connectCloud, Math.min(8000, 500 * Math.pow(2, wsFails)));
+  }
+  function cloudTick() {
+    if (!wsOpen) return;
+    // Logged in or out since connecting: reconnect so the room knows.
+    var acct = window.bar3dAccount;
+    if ((acct && acct.token() ? acct.token() : '') !== helloTok) { try { ws.close(); } catch (e) {} return; }
+    var now = performance.now();
+    var out = {};
+    if (state) {
+      var text = JSON.stringify(state);
+      // Only when it changed (or now and then, so others know you're here).
+      if (text !== lastStateText || now - lastStateSent > 2000) {
+        out.t = stateTime;
+        out.s = state;
+        lastStateText = text;
+        lastStateSent = now;
+      }
+    }
+    if (Object.keys(worldOut).length) {
+      out.w = worldOut;
+      worldOut = {};
+    }
+    var msgs = msgOut.splice(0, 40);
+    if (msgs.length) out.m = msgs;
+    if (now - pingAt > 2000) {
+      out.ping = now;
+      pingAt = now;
+    }
+    if (Object.keys(out).length && !wsSend(out)) {
+      msgOut = msgs.concat(msgOut);
+    }
+  }
 
   function info(text) {
     if (window.Module && Module.print) Module.print('[info] ' + text);
@@ -140,6 +267,7 @@ window.bar3dNet = (function () {
   }
 
   function leave() {
+    if (mode === 'cloud') { if (ws) try { ws.close(); } catch (e) {} return; }
     if (!server || !started) return;
     try {
       navigator.sendBeacon(server, JSON.stringify({ room: room, id: id, leave: 1 }));
@@ -149,10 +277,33 @@ window.bar3dNet = (function () {
   return {
     // Starts sending/receiving. Returns false when multiplayer is off.
     start: function () {
-      if (!server || started) return !!server;
+      if (started) return !!(server || cloudUrl !== 'off');
+      var cloudParam = param('cloud');
+      if (param('server') === 'off') return false;
       started = true;
-      setInterval(tick, SEND_INTERVAL_MS);
       window.addEventListener('pagehide', leave);
+      // Cloudflare first (unless the relay was asked for), else the relay.
+      var useRelay = function () {
+        if (!server) { status = 0; return; }
+        mode = 'relay';
+        setInterval(tick, SEND_INTERVAL_MS);
+      };
+      var useCloud = function (url) {
+        cloudUrl = url;
+        mode = 'cloud';
+        status = 1;
+        connectCloud();
+        setInterval(cloudTick, CLOUD_SEND_MS);
+      };
+      if (cloudParam === 'off' || forcedRelay) {
+        useRelay();
+      } else if (cloudParam) {
+        useCloud(cloudParam);
+      } else {
+        fetch('cloud.json', { cache: 'no-store' }).then(function (r) { return r.json(); })
+          .then(function (c) { if (c && c.ws) useCloud(c.ws); else useRelay(); })
+          .catch(useRelay);
+      }
       return true;
     },
     status: function () { return status; },
@@ -206,7 +357,7 @@ window.bar3dNet = (function () {
       return false;
     },
     // Voice chat handshakes (web/voice.js).
-    sendSignal: function (to, data) { if (server) msgOut.push([to, 'v:' + JSON.stringify(data)]); },
+    sendSignal: function (to, data) { if (server || mode === 'cloud') msgOut.push([to, 'v:' + JSON.stringify(data)]); },
     onSignal: function (handler) { signalHandlers.push(handler); },
     // Quick events (piano notes...) to everyone: straight over the voice
     // chat's data connection where there is one, else through the relay.

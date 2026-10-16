@@ -335,3 +335,12 @@ A small DAW inside the bar, all DSP written in C++:
   suspension, drivetrain), Bar3D Ring track, bots, collisions, race rules,
   race renderer with sky/sun/PBR/haze, touch/keyboard/mouse/pad controls.
   Native tests in `tools/native/`.
+- **2026-10-16:** Cloudflare realtime server written (`cloud/worker.js`,
+  one Durable Object room per bar, WebSockets, asks IONOS to verify
+  logins); `web/net.js` uses it when `cloud.json` gives its address, else
+  the IONOS relay. Tested locally (`tools/cloud_test.mjs`, `CLOUD=` in
+  `tools/mp_test.mjs`). **Not deployed yet:** next is the deploy step
+  (wrangler with the `CLOUDFLARE_*` secrets, which the user has added, and
+  writing `cloud.json`). User's plan: Cloudflare = live backend, IONOS =
+  accounts and other sensitive/permanent data (move accounts from JSON
+  files into IONOS MySQL later).
