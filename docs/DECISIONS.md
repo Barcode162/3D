@@ -306,4 +306,6 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - `mp_test.mjs` runs at ~2 fps per page, and background tabs barely tick,
   so it waits on log lines/relay state rather than fixed times, and closes
   Alice before Carol joins.
+  Against the live relay (`RELAY=...`) single checks can flake from the
+  slowness; locally all 5 pass. Rerun before suspecting a bug.
 - Auto mode blocks `git push -f` from the session. CI does the force-push to `gh-pages` instead.

@@ -17,6 +17,10 @@ looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
    song (joins mid-song) and mirrors on/off are the same for everyone (see
    `docs/DECISIONS.md` → Shared world). Ask the user to try it with their
    brother. Then M3 = smoother movement with WebRTC, voice chat.
+   **Status at session end (2026-10-16):** build `355fed6` is live on both
+   sites; the user hasn't tested it on phones yet and will report failures
+   later. Assume it works until they say otherwise. Then ask which comes
+   next: the performance pass (2) or glass-clink sounds (W5, item 3).
 2. **Performance pass (no longer urgent).** Re-measure with Low Power Mode
    off first. Goal: 60 fps on the iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
    textures (all RGBA, uncompressed), and the full mirror draws the whole
@@ -245,3 +249,5 @@ A small DAW inside the bar, all DSP written in C++:
   numbers; whoever moves a glass sends it, others follow it smoothly (a
   "kinematic" body that still knocks their glasses). `mp_test.mjs` now
   checks glass, late join, mirror and jukebox sync.
+- **2026-10-16:** Session closed with M2 deployed (`355fed6`), not yet
+  checked on phones.
