@@ -77,7 +77,7 @@ await carol.waitForTimeout(3000);
 const vw = 430, vh = 932;
 await carol.mouse.click(vw / 2, vh / 2);
 await carol.waitForTimeout(2500);
-await carol.mouse.click(vw * 0.8, vh * 0.62);
+await carol.mouse.click(vw * 0.75, vh * 0.45);  // onto the bar top, past the arm rest
 await waitLog(carol, /Put down at/);
 await carol.waitForTimeout(1000);
 const carolLog = await logOf(carol);

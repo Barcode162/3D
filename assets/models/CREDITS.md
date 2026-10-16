@@ -18,6 +18,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `bar_counter_l.glb` (curved counter, underbar, bar-top clutter) | `bar_counter_l.py` + `props_lib.py` | Wood Table 001, Dark Wood, Leather Red 02 |
 | `back_bar_tall.glb` | `back_bar_tall.py` + `props_lib.py` | Dark Wood, Marble 01, Wood Table 001 |
 | `piano.glb` | `piano.py` | Wood Table 001, Fabric Leather 02 |
+| `stage.glb` (mic, guitar, amp, lights) | `stage.py` | Fabric Pattern 07, Leather Red 02, Wood Table 001, Dark Wood |
 | `big_mirror.glb`, `mirror_button.glb` | `big_mirror.py` | none |
 | `construction.glb` | `construction.py` | Plywood, Fabric Pattern 07 |
 | `sim_rig.glb` | `sim_rig.py` | Fabric Leather 02 |

@@ -302,6 +302,14 @@ void buildLounge(Builder& b) {
   b.solid(piano + pr.rotate({0, 0.5f, -0.62f}), {0.38f, 0.04f, 0.18f}, kLacquer, pr);  // bench
   b.blockRect(-8.25f, 4.25f, -5.75f, 6.55f);
   b.block(piano + pr.rotate({0, 0, -0.62f}), 0.25f, 0.4f);
+  // Mic, guitar, amp, stool, the lighting bar (tools/assets/stage.py).
+  b.model("stage.glb", {0, 0, 0}, kBlackSteel);
+  b.block({-6.25f, 0, 6.3f}, 0.25f, 0.25f);   // mic stand
+  b.block({-5.72f, 0, 6.62f}, 0.25f, 0.3f);   // guitar
+  b.block({-6.95f, 0, kZ1 - 0.22f}, 0.32f, 0.2f);  // amp
+  b.block({-6.8f, 0, 6.35f}, 0.22f, 0.22f);   // stool
+  b.solid({-6.8f, kStageH + 0.74f, 6.35f}, {0.17f, 0.025f, 0.17f}, kLeather);
+  b.solid({-6.95f, kStageH + 0.24f, kZ1 - 0.22f}, {0.3f, 0.24f, 0.13f}, kLeather);
   // Stage light: a warm spot on the piano.
   b.light({-6.4f, 3.4f, 4.6f}, kWarmBulb, 3.2f, 5.5f, 0.15f);
   b.light({-7.8f, 3.2f, 6.4f}, {1.0f, 0.8f, 0.6f}, 1.6f, 4.0f, 0.15f);

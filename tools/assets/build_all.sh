@@ -18,6 +18,7 @@ run hall.py "$tex" $out/hall.glb
 run bar_counter_l.py "$tex" $out/bar_counter_l.glb
 run back_bar_tall.py "$tex" $out/back_bar_tall.glb
 run piano.py "$tex" $out/piano.glb
+run stage.py "$tex" $out/stage.glb
 run big_mirror.py "$tex" $out
 run construction.py "$tex" $out/construction.glb
 run sim_rig.py "$tex" $out/sim_rig.glb

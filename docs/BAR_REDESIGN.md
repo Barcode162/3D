@@ -175,7 +175,7 @@ Zones:
 - [x] Control panel with three lit buttons: FULL, AVATARS, OFF
 
 ### Still open in this list
-- Stage props (mic stand, amp, guitar, wedge monitor, stage spots on a
+- Stage props: mic, amp, guitar, stool, lighting bar done (`stage.py`); wedge monitor and a
   truss), shelves with trinkets, EXIT signs at the doorways, a TV over the
   bar end is done on the soffit instead.
 - Interactions: sit on stools/sofa/sim seats, play the piano (88 notes,
