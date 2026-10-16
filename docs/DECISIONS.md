@@ -46,6 +46,32 @@ future session re-litigates or repeats it.
   (then the faintest are dropped there, which can show as a seam: shrink
   ranges). Model placement limit raised to 512.
 
+- **Gzipped models**: the build (`site_assets` in CMakeLists) gzips every
+  `.glb` (`gzip -9 -n`), the engine asks for `<file>.glb.gz` and unpacks it
+  with the browser's `DecompressionStream` (`engine/fetch.cpp`, a `fetch()`
+  with progress). Files starting with 1f 8b are unpacked; anything else is
+  used as is, so a server that adds `Content-Encoding: gzip` (Apache on
+  IONOS might) still works. Geometry-heavy models shrink to ~40-55%.
+- **Glowing images** (screens, lit windows, signs): glTF `emissiveTexture`
+  is read (`ModelMaterial::emissiveImage`, binding 7); `common.glow_image_material`.
+  See-through glow (flames, `common.glow_cutout_material`, exported as PNG
+  with `image_format="AUTO"`) is multiplied by alpha in `litModel`.
+- **Floors**: `BarScene::floors` (raised rectangles, the stage and its
+  step); the eye height follows `groundHeight` smoothly.
+- **Mirror modes**: one mirror, tap the glass to step full → avatars only
+  → off, or press a panel button (`Action::kMirrorMode`, buttons are
+  separate models lit with `setModelBaseGlow`). Shared as `m<i>` =
+  [on, avatarsOnly].
+- **Zone models in world space**: each zone script builds its model
+  where it stands in the room (model space = world space, placed at the
+  origin), using `tools/assets/layout.py` for the shared floor plan
+  (`app/bar_scene.cpp` repeats the numbers). The piano, sim rig and
+  rhythm corner are built locally and placed/turned by the app.
+- **Clutter**: `tools/assets/props_lib.py` builds bottles (11 shapes,
+  16 glass colors and 16 labels through atlases), glassware with drinks,
+  bar tools, garnish, books, frames, plants, candles. Set atlas UVs
+  *before* moving a prop into place (`swatch_uvs` reads positions).
+
 ## Hosting and deploy (important, it took several tries)
 - The site is served by **GitHub Pages: "Deploy from a branch" → `gh-pages` / root**.
 - `.github/workflows/deploy.yml` builds on every push to `main` and
@@ -326,4 +352,11 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   Alice before Carol joins.
   Against the live relay (`RELAY=...`) single checks can flake from the
   slowness; locally all 5 pass. Rerun before suspecting a bug.
+- Blender gotchas (2026-10-16): `common.cylinder` skips the bevel below
+  2.5 cm radius (bevels on pins/keys/caps tripled their triangles). A
+  quad's front face is `right × up` (`common.panel`): for a sign on a wall
+  facing -x use right = +z. The voussoir trick: build a box with local
+  axes (radial, tangent, wall normal) via `Matrix((d, t, n)).transposed()`.
+- A solid block in the shell hides anything built "inside" it (the
+  fireplace needed an opening cut into the chimney breast).
 - Auto mode blocks `git push -f` from the session. CI does the force-push to `gh-pages` instead.

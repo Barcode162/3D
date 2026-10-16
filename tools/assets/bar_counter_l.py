@@ -39,7 +39,7 @@ UNDER_S = (-0.29, -0.80)
 mahogany = common.pbr_material("Bar top mahogany", tex_dir, "wood_table_001", tint=(0.62, 0.30, 0.20),
                                roughness_scale=0.35, roughness_bias=0.02, grain="v")
 body_wood = common.pbr_material("Counter mahogany", tex_dir, "dark_wood", tint=(0.55, 0.33, 0.26),
-                                roughness_scale=0.6)
+                                roughness_scale=0.6, size=512)
 leather = common.pbr_material("Arm rest leather", tex_dir, "leather_red_02", tint=(0.32, 0.12, 0.08),
                               roughness_scale=0.7, size=512)
 brass = P.mat("brass")
@@ -416,7 +416,7 @@ for (uu, kind, drink) in drinks:
     pos = world(uu, 0.14, TOP_Y)
     P.glass(*pos, kind=kind, drink=drink, ice=kind in ("rocks", "highball"))
 peanut = common.plain_material("Peanuts", (0.62, 0.42, 0.22), 0.0, 0.7)
-for uu in (1.95, 4.2, 6.15):
+for uu in (1.95, 3.75, 6.15):
     c = world(uu, 0.06, TOP_Y)
     common.lathe("Peanut bowl", [(0, 0), (0.04, 0), (0.07, 0.04), (0.068, 0.045), (0.036, 0.008), (0, 0.008)],
                  P.mat("dark_wood"), 18).data.transform(Matrix.Translation(c))

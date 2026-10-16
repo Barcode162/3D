@@ -252,9 +252,17 @@ void buildHall(Builder& b) {
       b.solid({p.x, 0.23f, p.z}, {0.13f, 0.22f, 0.13f}, kBlackSteel);
     }
   }
-  // Warm light over the middle (string lights come with the decor pass).
-  b.light({-1.5f, 3.3f, 0.2f}, kWarmBulb, 1.6f, 6.5f, 0.6f);
-  b.light({2.6f, 3.3f, 1.6f}, kWarmBulb, 1.4f, 6.0f, 0.6f);
+  // The decor (tools/assets/decor_walls.py): string lights, neon signs,
+  // frames, the collector wall, the clock and TV, plants, speakers,
+  // sconces, coats, crates and a keg, the bay window table.
+  b.model("decor_walls.glb", {0, 0, 0}, kDarkWood);
+  b.blockRect(4.7f, kZ0, 5.95f, kZ0 + 1.0f);  // crates and the keg
+  b.block({1.95f, 0, kZ1 - 1.25f}, 0.3f, 0.3f);  // chalkboard A-frame
+  for (Vec3 p : {Vec3{-1.85f, 0, kZ1 - 0.3f}, Vec3{4.5f, 0, kZ1 - 0.35f}, Vec3{8.55f, 0, 6.6f}}) b.block(p, 0.3f, 0.3f);
+  // The string lights' warm glow over the middle of the hall.
+  b.light({-1.8f, 3.2f, 0.4f}, kWarmBulb, 1.7f, 6.5f, 0.8f);
+  b.light({2.8f, 3.2f, 2.2f}, kWarmBulb, 1.6f, 6.5f, 0.8f);
+  b.light({-3.0f, 3.2f, 4.6f}, kWarmBulb, 1.2f, 5.0f, 0.8f);
   // Street light through the bay window and the door.
   b.light({-0.2f, 1.8f, kZ1 + 0.6f}, {0.55f, 0.6f, 0.9f}, 0.6f, 4.0f, 1.0f);
 }
@@ -262,10 +270,41 @@ void buildHall(Builder& b) {
 void buildLounge(Builder& b) {
   // Fire glow in front of the chimney breast (the fireplace model comes with
   // the lounge pass), and a reading lamp.
-  b.light({kX0 + 0.9f, 0.6f, (kChimneyZ0 + kChimneyZ1) / 2}, kFire, 1.6f, 5.0f, 0.4f);
-  b.light({-6.0f, 1.6f, -1.2f}, kWarmBulb, 1.0f, 4.0f, 0.2f);
-  // Stage: a warm spot on the piano.
-  b.light({-7.0f, 3.5f, 5.2f}, kWarmBulb, 2.0f, 5.0f, 0.15f);
+  // The lounge (tools/assets/lounge.py): fireplace, Chesterfield sofa, two
+  // wingback armchairs, coffee table with a chess game, rug, bookshelf,
+  // floor lamp. The flames are see-through glowing cards.
+  const float fz = (kChimneyZ0 + kChimneyZ1) / 2;
+  b.model("lounge.glb", {0, 0, 0}, kLeather);
+  b.model("fire_flames.glb", {0, 0, 0}, kGlowGlass);
+  b.blockRect(kX0, fz - 1.15f, -8.05f, fz + 1.15f);               // hearth
+  b.blockRect(-6.25f, fz - 1.2f, -5.25f, fz + 1.2f);              // sofa
+  b.solid({-5.75f, 0.27f, fz}, {0.45f, 0.27f, 1.2f}, kLeather);
+  b.solid({-5.4f, 0.45f, fz}, {0.1f, 0.33f, 1.2f}, kLeather);
+  b.blockRect(-7.35f, fz - 0.62f, -6.55f, fz + 0.62f);            // coffee table
+  b.solid({-6.95f, 0.43f, fz}, {0.38f, 0.02f, 0.6f}, kDarkWood);
+  for (float dz : {-1.3f, 1.3f}) {
+    b.block({-7.25f, 0, fz + dz}, 0.45f, 0.45f);                   // armchairs
+    b.solid({-7.25f, 0.3f, fz + dz}, {0.4f, 0.3f, 0.4f}, kLeather);
+  }
+  b.blockRect(kX0, kChimneyZ1 + 0.1f, kX0 + 0.36f, kStageZ0 - kStepW - 0.1f);  // bookshelf
+  b.block({-6.3f, 0, fz + 1.95f}, 0.2f, 0.2f);                   // floor lamp
+  b.block({-5.85f, 0, fz + 1.85f}, 0.26f, 0.26f);                // side table
+  b.solid({-5.85f, 0.55f, fz + 1.85f}, {0.24f, 0.015f, 0.24f}, kDarkWood);
+  b.light({kX0 + 0.9f, 0.6f, fz}, kFire, 1.8f, 5.0f, 0.4f);
+  b.light({-6.3f, 1.5f, fz + 1.95f}, kWarmBulb, 1.1f, 4.0f, 0.2f);
+  // The grand piano on the stage (tools/assets/piano.py), angled so its
+  // open lid faces the room; the pianist faces the hall.
+  const float pianoYaw = engine::kPi / 2 + 0.26f;
+  const Vec3 piano{-8.0f, kStageH, 5.6f};
+  const Quat pr = turnY(pianoYaw);
+  b.model("piano.glb", piano, kLacquer, pr);
+  b.solid(piano + pr.rotate({0, 0.8f, 1.05f}), {0.8f, 0.18f, 1.1f}, kLacquer, pr);   // case
+  b.solid(piano + pr.rotate({0, 0.5f, -0.62f}), {0.38f, 0.04f, 0.18f}, kLacquer, pr);  // bench
+  b.blockRect(-8.25f, 4.25f, -5.75f, 6.55f);
+  b.block(piano + pr.rotate({0, 0, -0.62f}), 0.25f, 0.4f);
+  // Stage light: a warm spot on the piano.
+  b.light({-6.4f, 3.4f, 4.6f}, kWarmBulb, 3.2f, 5.5f, 0.15f);
+  b.light({-7.8f, 3.2f, 6.4f}, {1.0f, 0.8f, 0.6f}, 1.6f, 4.0f, 0.15f);
 }
 
 void buildGames(Builder& b) {
@@ -275,11 +314,46 @@ void buildGames(Builder& b) {
   b.model("dartboard.glb", {dartX, 1.73f, kZ1}, kDarkWood, turnY(engine::kPi));
   b.solid({dartX, 1.73f, kZ1 - 0.04f}, {0.66f, 0.32f, 0.04f}, kDarkWood);
   b.model("chalkboard.glb", {dartX + 1.7f, 1.6f, kZ1}, kDarkWood, turnY(engine::kPi));
-  b.light({dartX, 3.0f, kZ1 - 1.4f}, kWarmBulb, 1.3f, 4.0f, 0.15f);
-  // Racing sims (right wall) and the rhythm corner (diagonal wall): screen
-  // glow until their models land.
-  b.light({8.0f, 1.3f, -1.6f}, {0.4f, 0.6f, 1.0f}, 0.8f, 3.5f, 0.5f);
-  b.light({7.0f, 1.9f, -5.4f}, {0.8f, 0.3f, 1.0f}, 1.0f, 4.0f, 0.5f);
+  // Darts in the board, the oche at 2.37 m, the mat, spotlights, neon
+  // (tools/assets/darts_zone.py), and a high table for the players' drinks.
+  b.model("darts_zone.glb", {0, 0, 0}, kDarkWood);
+  b.light({dartX, 3.0f, kZ1 - 1.4f}, kWarmBulb, 1.5f, 4.0f, 0.15f);
+  const Vec3 dt{dartX - 1.35f, 0, kZ1 - 2.0f};
+  b.model("round_table.glb", dt, kVarnishedWood);
+  b.solid({dt.x, 0.7625f, dt.z}, {0.45f, 0.0225f, 0.45f}, kVarnishedWood);
+  b.block(dt, 0.5f, 0.5f);
+  b.model("pint_glass.glb", dt + Vec3{0.15f, 0.785f, 0.1f}, kBottleGlass, {}, Prop::kPintGlass);
+  // Two racing sim rigs facing the right wall (tools/assets/sim_rig.py).
+  for (float z : {-3.0f, -1.0f}) {
+    const Vec3 c{7.75f, 0, z};
+    const Quat r = turnY(-engine::kPi / 2);  // the driver faces +x
+    b.model("sim_rig.glb", c, kBlackSteel, r);
+    b.solid(c + Vec3{-0.3f, 0.35f, 0}, {0.35f, 0.35f, 0.3f}, kLeather);           // seat
+    b.solid(c + Vec3{0.45f, 0.42f, 0}, {0.12f, 0.42f, 0.32f}, kBlackSteel);       // wheel deck
+    b.solid(c + Vec3{1.15f, 1.08f, 0}, {0.06f, 0.24f, 0.95f}, kBlackSteel);       // screens
+    b.blockRect(c.x - 0.6f, z - 0.5f, kX1, z + 0.5f);
+    b.blockRect(c.x + 0.9f, z - 0.98f, kX1, z + 0.98f);
+  }
+  b.light({8.3f, 1.3f, -2.0f}, {0.5f, 0.6f, 1.0f}, 0.9f, 3.5f, 0.5f);
+  // The rhythm corner on the diagonal wall (tools/assets/rhythm.py): the
+  // 4-key cabinet, neon, speaker stacks, a beanbag, a high table.
+  {
+    const Vec3 mid{(kChamferAX + kX1) / 2, 0, (kZ0 + kChamferBZ) / 2};
+    const Quat r = turnY(-engine::kPi / 4);  // local +z points into the room
+    const auto at = [&](float x, float z) { return mid + r.rotate({x, 0, z}); };
+    b.model("rhythm.glb", mid, kLacquer, r);
+    b.solid(at(0, 0.45f) + Vec3{0, 1.1f, 0}, {0.45f, 1.1f, 0.45f}, kLacquer, r);
+    b.block(at(0, 0.5f), 0.62f, 0.62f);
+    for (float x : {-1.45f, 1.45f}) {
+      b.solid(at(x, 0.28f) + Vec3{0, 0.58f, 0}, {0.28f, 0.58f, 0.23f}, kLacquer, r);
+      b.block(at(x, 0.28f), 0.38f, 0.38f);
+    }
+    b.block(at(1.15f, 1.35f), 0.4f, 0.4f);   // beanbag
+    b.block(at(-1.2f, 1.1f), 0.28f, 0.28f);  // high table
+    b.solid(at(-1.2f, 1.1f) + Vec3{0, 1.05f, 0}, {0.25f, 0.015f, 0.25f}, kVarnishedWood);
+    b.light(at(0, 1.3f) + Vec3{0, 1.7f, 0}, {0.85f, 0.4f, 1.0f}, 1.2f, 4.0f, 0.5f);
+    b.light(at(0, 0.6f) + Vec3{0, 3.0f, 0}, {1.0f, 0.3f, 0.7f}, 0.8f, 3.0f, 0.4f);
+  }
   // Jukebox against the front wall, between the stage and the bay window.
   const Vec3 j{-3.8f, 0, kZ1 - 0.45f};
   const size_t jukebox = b.model("jukebox.glb", j, kLacquer, turnY(engine::kPi));
@@ -294,22 +368,60 @@ void buildGames(Builder& b) {
   b.scene.jukeboxSpeaker = {j.x, 0.6f, j.z - 0.3f};
 }
 
+// The two doorways to the rooms still being built: taped off, with
+// barricades, cones, a sign, and a work light inside
+// (tools/assets/construction.py).
+void buildConstruction(Builder& b) {
+  b.model("construction.glb", {0, 0, 0}, kDoorWood);
+  const float ax = (kDoorAX0 + kDoorAX1) / 2, bz = (kDoorBZ0 + kDoorBZ1) / 2;
+  b.blockRect(kDoorAX0 - 1.3f, kZ0 - 1, kDoorAX1 + 1.0f, kZ0 + 1.15f);  // barricades in front of room 2
+  b.blockRect(kX0 - 1, kDoorBZ0 - 1.0f, kX0 + 1.15f, kDoorBZ1 + 1.3f);  // and room 3
+  b.solid({ax + 0.1f, 0.5f, kZ0 + 0.7f}, {1.1f, 0.5f, 0.15f}, kDoorWood);
+  b.solid({kX0 + 0.7f, 0.5f, bz - 0.1f}, {0.15f, 0.5f, 1.1f}, kDoorWood);
+  // Work lights inside the unfinished rooms, and the barricades' amber lamps.
+  b.light({ax + 0.6f, 1.8f, kZ0 - 1.8f}, {1.0f, 0.92f, 0.75f}, 1.6f, 4.0f, 0.1f);
+  b.light({kX0 - 1.8f, 1.8f, bz - 0.6f}, {1.0f, 0.92f, 0.75f}, 1.6f, 4.0f, 0.1f);
+}
+
 // The giant 2-in-1 mirror on the right wall, from just above the floor to
-// near the ceiling. Tap it to step through full -> avatars only -> off.
+// near the ceiling (tools/assets/big_mirror.py). Tap the glass to step
+// through full -> avatars only -> off, or press a button on its panel.
 void buildMirror(Builder& b) {
   const float zc = 3.6f, halfW = 2.2f, y0 = 0.14f, y1 = 3.62f;
+  const size_t frame = b.model("big_mirror.glb", {0, 0, 0}, kBlackSteel);
+  b.solid({kX1 - 0.04f, (y0 + y1) / 2, zc}, {0.04f, (y1 - y0) / 2 + 0.08f, halfW + 0.08f}, kBlackSteel);
   Mirror m{{kX1 - 0.03f, (y0 + y1) / 2, zc}, {-1, 0, 0}, {0, 0, -1}, {0, 1, 0}, halfW, (y1 - y0) / 2,
            MirrorMode::kFull};
+  const int index = static_cast<int>(b.scene.mirrors.size());
+  // The panel's three buttons: full, avatars only, off.
+  const float panelZ = zc - halfW - 0.42f, panelY = 1.3f;
+  for (int i = 0; i < 3; ++i) {
+    const Vec3 p{kX1 - 0.012f, panelY + 0.09f - 0.09f * static_cast<float>(i), panelZ - 0.09f};
+    m.buttonModels[i] = static_cast<int>(b.model("mirror_button.glb", p, kBrass));
+    Interactable it;
+    it.tagPosition = p;
+    it.boundsMin = p - Vec3{0.06f, 0.04f, 0.05f};
+    it.boundsMax = p + Vec3{0.01f, 0.04f, 0.05f};
+    it.firstModel = static_cast<size_t>(m.buttonModels[i]);
+    it.modelCount = 1;
+    it.action = Action::kMirrorMode;
+    it.mirror = index;
+    it.value = i;
+    b.scene.interactables.push_back(it);
+  }
   b.scene.mirrors.push_back(m);
   Interactable it;
   it.name = "MIRROR";
-  it.tagPosition = {kX1 - 0.4f, 2.4f, zc};
+  it.tagPosition = {kX1 - 0.4f, 3.95f, zc};
   it.boundsMin = {kX1 - 0.15f, y0, zc - halfW};
   it.boundsMax = {kX1, y1, zc + halfW};
+  it.firstModel = frame;
+  it.modelCount = 1;
   it.action = Action::kMirror;
-  it.mirror = 0;
+  it.mirror = index;
   b.scene.interactables.push_back(it);
-  b.light({kX1 - 2.2f, 3.3f, zc}, kWarmBulb, 1.2f, 5.0f, 0.4f);
+  // The vanity bulbs light whoever stands in front.
+  b.light({kX1 - 1.2f, 3.6f, zc}, kWarmBulb, 1.6f, 5.5f, 0.6f);
 }
 
 }  // namespace
@@ -344,6 +456,7 @@ BarScene buildBarScene() {
   buildLounge(b);
   buildGames(b);
   buildMirror(b);
+  buildConstruction(b);
   return scene;
 }
 

@@ -264,7 +264,11 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let n = normalize(t * (nt.x * m.params.z) + b * (nt.y * m.params.z) + n0 * nt.z);
   let ao = mix(1.0, occlusion, m.params.w);
   // object.material.x = highlight glow when you stand at something.
-  let emission = m.emissive.rgb * glowPattern + base * object.material.x;
+  var emission = m.emissive.rgb * glowPattern + base * object.material.x;
+  // See-through glow (flames) only shines where the image is opaque.
+  if (seeThrough) {
+    emission = emission * alpha;
+  }
   let lit = shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
   return vec4f(lit.rgb, alpha);
 }

@@ -9,7 +9,14 @@ a completely new bar (new shape, packed with real-bar clutter), 3 rooms
 (the other two taped off as "under construction"), one giant 2-in-1
 mirror, darts / racing sims / 4K rhythm machine / grand piano with real
 strings, and a loading screen. **The full plan and checklist is
-`docs/BAR_REDESIGN.md`**: work down its unchecked items. Everything below
+`docs/BAR_REDESIGN.md`.** First pass built and deployed the same day:
+new room shell, curved bar, tall back bar, piano, big mirror, both
+construction doorways, 2 sim rigs, rhythm cabinet, darts zone, lounge
+with fireplace, decor pass, loading screen. **Next:** ask the user how it
+looks and runs on the iPhone (fps with Low Power Mode off, load time,
+anything that looks wrong), fix that first; then the open items in
+`docs/BAR_REDESIGN.md` ("Still open"), then interactions (sit, play the
+piano, darts scoring, the rhythm game). Everything below
 this paragraph is the older plan and waits until the upgrade is done.
 
 New direction (2026-10-15): the goal is now a **world simulation** where
@@ -62,8 +69,9 @@ looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
    its physics shape).
 4. Check: build, smoke test, `CAM="a;b;c"` close-ups (several in one run);
    after the deploy, `node tools/check_live.mjs`.
-Budget: textures 1k for big surfaces, 512/256 for props; the whole room
-should stay under ~20 MB of models (now 8.3 MB).
+Budget: textures 1k for big surfaces, 512/256 for props; check with
+`python3 tools/assets/glb_report.py` (download size, triangles, texture
+memory).
 
 - Asset follow-ups: bottles as physics bodies (knock them off shelves),
   darts game on the dartboard, jukebox buttons, door that opens.
@@ -259,3 +267,13 @@ A small DAW inside the bar, all DSP written in C++:
   checks glass, late join, mirror and jukebox sync.
 - **2026-10-16:** Session closed with M2 deployed (`355fed6`), not yet
   checked on phones.
+- **2026-10-16:** The big bar upgrade (`docs/BAR_REDESIGN.md`). Loading
+  screen with progress and "Tap to enter"; light grid (32 lights); glowing
+  image textures; walkable stage; one giant 3-mode mirror with a button
+  panel; models served gzipped. New 18 x 14 m room: curved counter with a
+  full underbar and 8-tap tower, floor-to-soffit back bar (~300 bottles,
+  onyx bay, library ladder), grand piano with 236 strings, two taped-off
+  doorways to future rooms, two racing sims, a 4K rhythm cabinet, darts
+  corner, fireplace lounge, string lights, neon, gallery and collector
+  walls. Shared helpers: `tools/assets/layout.py` (floor plan),
+  `tools/assets/props_lib.py` (bottles, glasses, tools, books, plants...).

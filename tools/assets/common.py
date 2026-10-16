@@ -32,8 +32,8 @@ def _load_pixels(path, size=None):
     return w, h, px.reshape(h, w, 4)
 
 
-def _save_image(name, w, h, px, color):
-    img = bpy.data.images.new(name, w, h, alpha=False)
+def _save_image(name, w, h, px, color, alpha=False):
+    img = bpy.data.images.new(name, w, h, alpha=alpha)
     img.colorspace_settings.name = "sRGB" if color else "Non-Color"
     img.pixels.foreach_set(px.astype(np.float32).ravel())
     path = os.path.join(_tmp, name.replace(" ", "_") + ".png")
@@ -422,7 +422,7 @@ def _join_by_material():
     bpy.ops.object.select_all(action="DESELECT")
 
 
-def finish_and_export(out_path, uv_scale):
+def finish_and_export(out_path, uv_scale, image_format="JPEG"):
     """Applies modifiers, adds UVs and smooth shading, and writes the .glb."""
     view_layer = bpy.context.view_layer
     for obj in list(bpy.context.scene.objects):
@@ -448,7 +448,7 @@ def finish_and_export(out_path, uv_scale):
         export_format="GLB",
         export_yup=False,  # built y-up already
         export_apply=True,
-        export_image_format="JPEG",
+        export_image_format=image_format,  # "AUTO" keeps PNG (needed for alpha)
         export_jpeg_quality=88,
         export_texcoords=True,
         export_normals=True,
@@ -663,3 +663,27 @@ def noise2d(h, w, scale, seed=0, octaves=4):
 def srgb(c):
     """sRGB 0..1 color (like a color picker) to the linear values images use."""
     return tuple(((v + 0.055) / 1.055) ** 2.4 if v > 0.04045 else v / 12.92 for v in c)
+
+
+def glow_cutout_material(name, rgba, strength=4.0):
+    """A see-through glowing image (flames, sparks): `rgba` (h, w, 4) linear
+    with alpha, row 0 at the bottom. Drawn blended, glowing where opaque."""
+    h, w = rgba.shape[:2]
+    img = _save_image(f"{name} color", w, h, np.clip(rgba, 0, 1).astype(np.float32), color=True, alpha=True)
+    img.alpha_mode = "STRAIGHT"
+    mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = img
+    nt.links.new(t.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(t.outputs["Color"], bsdf.inputs["Emission Color"])
+    nt.links.new(t.outputs["Alpha"], bsdf.inputs["Alpha"])
+    bsdf.inputs["Emission Strength"].default_value = strength
+    if hasattr(mat, "surface_render_method"):
+        mat.surface_render_method = "BLENDED"
+    if hasattr(mat, "blend_method"):
+        mat.blend_method = "BLEND"
+    mat["grain"] = "u"
+    return mat

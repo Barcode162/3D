@@ -26,18 +26,17 @@ parquet = common.pbr_material("Parquet", tex_dir, "herringbone_parquet", tint=(0
                               roughness_scale=0.75)
 brick = common.pbr_material("Brick", tex_dir, "red_brick_03", tint=(0.85, 0.76, 0.72), normal_strength=1.4)
 brick2 = common.pbr_material("Dark brick", tex_dir, "brick_wall_006", tint=(0.62, 0.55, 0.55),
-                             normal_strength=1.3)
-arch_brick = common.pbr_material("Arch brick", tex_dir, "red_brick_03", tint=(0.55, 0.42, 0.38), size=512,
-                                 normal_strength=1.4)
+                             normal_strength=1.3, size=512)
+arch_brick = common.plain_material("Arch brick", (0.32, 0.11, 0.07), 0.0, 0.85)
 green = common.pbr_material("Green plaster", tex_dir, "painted_plaster_wall", tint=(0.16, 0.30, 0.22),
-                            roughness_scale=0.9, saturation=0.4)
+                            roughness_scale=0.9, saturation=0.4, size=512)
 ceiling = common.pbr_material("Ceiling", tex_dir, "plastered_wall_02", tint=(0.13, 0.12, 0.12), size=512)
 oak = common.pbr_material("Wainscot oak", tex_dir, "dark_wood", tint=(0.55, 0.42, 0.36), roughness_scale=0.6,
                           size=512)
 slats = common.pbr_material("Soffit wood", tex_dir, "wood_table_001", tint=(0.62, 0.45, 0.33),
                             roughness_scale=0.7, size=512)
 stage_wood = common.pbr_material("Stage boards", tex_dir, "black_painted_planks", tint=(0.55, 0.5, 0.48),
-                                 roughness_scale=0.9)
+                                 roughness_scale=0.9, size=512)
 door_wood = common.pbr_material("Door wood", tex_dir, "wood_table_001", tint=(0.42, 0.3, 0.24),
                                 roughness_scale=0.6, grain="v", size=512)
 concrete = common.pbr_material("Concrete", tex_dir, "concrete_floor_worn_001", tint=(0.6, 0.6, 0.6), size=512)
@@ -147,14 +146,15 @@ def voussoirs(center, r, along, normal, mat):
     from mathutils import Matrix
     c, a, n = Vector(center), Vector(along), Vector(normal)
     up = Vector((0, 1, 0))
-    count = 23
+    count = 21
     for k in range(count):
         ang = math.pi * (k + 0.5) / count
         d = a * math.cos(ang) + up * math.sin(ang)  # outward, in the wall plane
         t = n.cross(d)
         # Radial 0.22 m, along the arch ~0.11 m, 0.02 m proud of the wall.
         mid = c + d * (r + 0.11) + n * (-0.14)
-        obj = common.box("Voussoir", (-0.11, -0.052, -0.16), (0.11, 0.052, 0.16), mat, 0.008)
+        half_t = math.pi * (r + 0.11) / count / 2 - 0.005
+        obj = common.box("Voussoir", (-0.11, -half_t, -0.16), (0.11, half_t, 0.16), mat, 0.008)
         rot = Matrix((d, t, n)).transposed().to_4x4()  # local x = d, y = t, z = n
         obj.data.transform(Matrix.Translation(mid) @ rot)
         obj["grain_axis"] = "x"
@@ -209,7 +209,11 @@ top_b = arch_spandrels(DOOR_B_Z0, DOOR_B_Z1, lambda n, p, m: zy_slab(n, p, X0 - 
 box("Left wall", (X0 - T, top_b, DOOR_B_Z0), (X0, H, DOOR_B_Z1), green, 0, grain_axis="z")
 voussoirs((X0, ARCH_SPRING, (DOOR_B_Z0 + DOOR_B_Z1) / 2), (DOOR_B_Z1 - DOOR_B_Z0) / 2, (0, 0, 1), (1, 0, 0),
           arch_brick)
-box("Chimney breast", (X0, 0, CHIMNEY_Z0), (X0 + CHIMNEY_D, H, CHIMNEY_Z1), brick, 0.01, grain_axis="z")
+# Chimney breast, with the firebox opening (lounge.py builds the fireplace).
+FB_Z0, FB_Z1, FB_H = (CHIMNEY_Z0 + CHIMNEY_Z1) / 2 - 0.45, (CHIMNEY_Z0 + CHIMNEY_Z1) / 2 + 0.45, 0.78
+box("Chimney breast", (X0, 0, CHIMNEY_Z0), (X0 + CHIMNEY_D, H, FB_Z0), brick, 0.01, grain_axis="z")
+box("Chimney breast", (X0, 0, FB_Z1), (X0 + CHIMNEY_D, H, CHIMNEY_Z1), brick, 0.01, grain_axis="z")
+box("Chimney breast", (X0, FB_H, FB_Z0), (X0 + CHIMNEY_D, H, FB_Z1), brick, 0.0, grain_axis="z")
 
 # ---- Wainscot on the plaster walls ----
 PANEL_H = 1.1
@@ -453,6 +457,6 @@ for x in np.arange(BACK_BAR_X0 + 0.2, BACK_BAR_X1 - 0.6, 1.25):
     box("Bar mat", (x, 0.0, Z0 + 0.62), (x + 1.2, 0.016, Z0 + 1.42), rubber, 0.006)
 
 common.finish_and_export(out_path, uv_scale={
-    "Parquet": 0.45, "Brick": 0.75, "Dark brick": 0.6, "Arch brick": 2.5, "Green plaster": 0.35, "Ceiling": 0.25,
+    "Parquet": 0.45, "Brick": 0.75, "Dark brick": 0.6, "Green plaster": 0.35, "Ceiling": 0.25,
     "Wainscot oak": 1.0, "Soffit wood": 1.0, "Stage boards": 0.5, "Door wood": 1.0, "Concrete": 0.4,
     "Pine studs": 1.0, "Rubber mat": 1.2, "Seat velvet": 1.5, "Pillow fabric": 2.0})

@@ -157,6 +157,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
     if (g_app.jukeboxMenu.isOpen()) break;  // keep the menu uncluttered
     if (static_cast<int>(i) == g_app.focused) continue;  // its prompt says what it is
     const app::Interactable& it = g_app.scene.interactables[i];
+    if (it.name.empty()) continue;  // e.g. buttons: their prompt is enough
     const float dist = engine::length(it.tagPosition - cam.position);
     if (dist > kLabelShowDistance) continue;
     // Fade in as you approach; the tag always turns to face you.

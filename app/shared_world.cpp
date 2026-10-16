@@ -89,9 +89,14 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       const int i = std::atoi(e.key.c_str() + 1);
       if (i < 0 || i >= static_cast<int>(scene.mirrors.size())) continue;
       Mirror& m = scene.mirrors[static_cast<size_t>(i)];
-      if (m.on != (v[0] != 0)) LOG_INFO("Multiplayer: mirror %d turned %s by another player.", i, v[0] != 0 ? "on" : "off");
-      m.on = v[0] != 0;
-      if (v.size() >= 2) m.mode = v[1] != 0 ? MirrorMode::kAvatarsOnly : MirrorMode::kFull;
+      const bool on = v[0] != 0;
+      const MirrorMode mode = v.size() >= 2 && v[1] != 0 ? MirrorMode::kAvatarsOnly : MirrorMode::kFull;
+      if (m.on != on || (on && m.mode != mode)) {
+        LOG_INFO("Multiplayer: mirror %d set to %s by another player.", i,
+                 !on ? "off" : mode == MirrorMode::kFull ? "full" : "avatars only");
+      }
+      m.on = on;
+      m.mode = mode;
     } else if (e.key == "jb" && v.size() >= 2) {
       const int song = static_cast<int>(v[0]);
       const int count = static_cast<int>(jukebox.songs().size());

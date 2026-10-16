@@ -63,15 +63,16 @@ const status = await bob.$eval('#status', (el) => el.textContent);
 await bob.screenshot({ path: 'build/mp-bob.png' });
 console.log('Bob status:', status);
 
-// Shared world. Carol stands at the bar looking down at glass 1 (x = -0.4),
+// Shared world. Carol stands at the bar looking down at glass 1 (x = -3.7),
 // picks it up (tap in the middle), puts it down to the right. Alice leaves
 // first so three software-rendered pages don't crawl.
 await alice.close();
 const waitLog = (page, re, ms = 60000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent), re.source,
                        { timeout: ms, polling: 250 }).catch(() => console.log('timed out waiting for ' + re));
-const carol = await open('Carol', '-0.4,1.66,-2.4,0,-34');
+const carol = await open('Carol', '-3.7,1.66,-3.41,0,-34');
 await waitLog(carol, /connected to room/);
+await waitLog(carol, /Everything loaded/, 180000);  // the loading screen covers the canvas until then
 await carol.waitForTimeout(3000);
 const vw = 430, vh = 932;
 await carol.mouse.click(vw / 2, vh / 2);
@@ -89,16 +90,18 @@ for (let i = 0; i < 60; i++) {
   await carol.waitForTimeout(1000);
 }
 await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
-// Then rejoins at the full mirror and taps it off.
-await carol.goto(carol.url().replace(/cam=[^&]*/, 'cam=' + encodeURIComponent('5.0,1.66,-2.2,90,0')));
+// Then rejoins at the big mirror and taps it (full -> avatars only).
+await carol.goto(carol.url().replace(/cam=[^&]*/, 'cam=' + encodeURIComponent('6.6,1.66,3.6,90,0')));
 await waitLog(carol, /glass 1 is at/);
+await waitLog(carol, /Everything loaded/, 180000);
 await carol.waitForTimeout(2000);
 const carolLog2 = await logOf(carol);
 await carol.screenshot({ path: 'build/mp-carol.png' });
 await carol.mouse.click(vw / 2, vh / 2);
 await carol.waitForTimeout(2500);
 await bob.bringToFront();
-await waitLog(bob, /mirror 0 turned off/, 20000);
+await waitLog(bob, /mirror 0 set to avatars only/, 20000);
+await waitLog(bob, /Everything loaded/, 180000);
 // Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
 // tap (phones only play sound after one), must start the same song.
 await bob.mouse.click(215, 300);
@@ -120,7 +123,7 @@ const checks = {
   'Bob sees Alice': /online: 2/.test(status) && /Alice joined/.test(log),
   'Bob sees the glass land where Carol put it': near(rested),
   'Carol finds the glass there after rejoining': near(rejoined),
-  'Bob sees the mirror turn off': /mirror 0 turned off/.test(log),
+  'Bob sees the mirror switch to avatars only': /mirror 0 set to avatars only/.test(log),
   'Bob plays the song another player picked': /Bossa Antigua" \(chosen by another player\)/.test(log),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);

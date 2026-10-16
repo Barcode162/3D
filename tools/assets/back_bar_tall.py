@@ -41,7 +41,8 @@ CENTER_BAY = 4             # the onyx bay
 WINE_BAY = 0
 STEM_BAY = 6
 
-wood = common.pbr_material("Back bar wood", tex_dir, "dark_wood", tint=(0.5, 0.32, 0.26), roughness_scale=0.55)
+wood = common.pbr_material("Back bar wood", tex_dir, "dark_wood", tint=(0.5, 0.32, 0.26), roughness_scale=0.55,
+                            size=512)
 marble = common.pbr_material("Marble top", tex_dir, "marble_01", tint=(0.9, 0.88, 0.85), roughness_scale=0.3,
                              grain="u", size=512)
 mirror = common.plain_material("Smoked mirror", (0.30, 0.24, 0.19), 1.0, 0.06)
