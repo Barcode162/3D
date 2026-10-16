@@ -3,7 +3,9 @@
 #include <emscripten/emscripten.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
+#include <memory>
 
 #include "engine/file.h"
 #include "engine/log.h"
@@ -64,10 +66,11 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   if (!createScenePipelines() || !createGlassPipeline()) return false;
 
   createMaterials(colorMaps_, bumpMaps_, sampler_);
+  buildLighting(scene);
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) {
     View v;
     v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), "frame uniforms");
-    wgpu::BindGroupEntry entries[4];
+    wgpu::BindGroupEntry entries[5];
     entries[0].binding = 0;
     entries[0].buffer = v.buffer;
     entries[0].size = sizeof(FrameUniforms);
@@ -77,9 +80,12 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
     entries[2].textureView = bumpMaps_;
     entries[3].binding = 3;
     entries[3].sampler = sampler_;
+    entries[4].binding = 4;
+    entries[4].buffer = lightingBuffer_;
+    entries[4].size = sizeof(LightingUniforms);
     wgpu::BindGroupDescriptor desc;
     desc.layout = frameLayout_;
-    desc.entryCount = 4;
+    desc.entryCount = 5;
     desc.entries = entries;
     v.bindGroup = device.CreateBindGroup(&desc);
     views_.push_back(v);
@@ -139,16 +145,8 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   for (OtherSlot& slot : others_) slot.bonesBindGroup = makeBonesBindGroup(slot.bonesBuffer, "other player bones");
   LOG_INFO("Avatar: %zu vertices.", avatar.vertices.size());
 
-  // Lights and atmosphere don't change per frame.
-  const auto lightCount = std::min<size_t>(scene.lights.size(), kMaxLights);
-  if (scene.lights.size() > kMaxLights) LOG_ERROR("Too many lights; only %u used", kMaxLights);
-  frame_.lightCount[0] = static_cast<uint32_t>(lightCount);
-  for (size_t i = 0; i < lightCount; ++i) {
-    const PointLight& l = scene.lights[i];
-    setVec4(frame_.lights[i].position, l.position, l.range);
-    setVec4(frame_.lights[i].color, l.color, l.intensity);
-    frame_.lights[i].params[0] = l.radius;
-  }
+  // Atmosphere doesn't change per frame.
+  const size_t lightCount = std::min<size_t>(scene.lights.size(), kMaxLights);
   setVec4(frame_.ambient, scene.ambient, 0);
   setVec4(frame_.fog, scene.fogColor, scene.fogDensity);
 
@@ -156,6 +154,59 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const engine::
   for (MirrorTarget& m : mirrorTargets_) m.glassBuffer = makeUniformBuffer(device, sizeof(GlassUniforms), "glass");
   LOG_INFO("Scene: %zu objects, %zu lights, %zu mirrors.", objects.size(), lightCount, mirrorCount_);
   return true;
+}
+
+// Fills the light list and the light grid (see LightingUniforms). A light
+// reaches a cell if its range touches the cell's square; when more than 8
+// do, the 8 brightest there win (logged, so the layout can be tuned).
+void SceneRenderer::buildLighting(const BarScene& scene) {
+  auto l = std::make_unique<LightingUniforms>();
+  std::memset(l.get(), 0, sizeof(LightingUniforms));
+  const size_t count = std::min<size_t>(scene.lights.size(), kMaxLights);
+  if (scene.lights.size() > kMaxLights) LOG_ERROR("Too many lights; only %u used", kMaxLights);
+  l->lightCount[0] = static_cast<uint32_t>(count);
+  for (size_t i = 0; i < count; ++i) {
+    const PointLight& p = scene.lights[i];
+    setVec4(l->lights[i].position, p.position, p.range);
+    setVec4(l->lights[i].color, p.color, p.intensity);
+    l->lights[i].params[0] = p.radius;
+  }
+  // Cells cover the walkable area (blockers included) with at most 16 x 16.
+  float x0 = scene.lightGridMin.x, z0 = scene.lightGridMin.z;
+  const float spanX = scene.lightGridMax.x - x0, spanZ = scene.lightGridMax.z - z0;
+  const float cell = std::max({spanX, spanZ, 1.0f}) / 16.0f;
+  const auto nx = static_cast<uint32_t>(std::ceil(spanX / cell)), nz = static_cast<uint32_t>(std::ceil(spanZ / cell));
+  l->grid[0] = x0;
+  l->grid[1] = z0;
+  l->grid[2] = 1.0f / cell;
+  l->gridSize[0] = nx;
+  l->gridSize[1] = nz;
+  int crowded = 0;
+  for (uint32_t cz = 0; cz < nz; ++cz) {
+    for (uint32_t cx = 0; cx < nx; ++cx) {
+      const float minX = x0 + cx * cell, minZ = z0 + cz * cell;
+      std::vector<std::pair<float, uint32_t>> reach;  // (strength here, light)
+      for (size_t i = 0; i < count; ++i) {
+        const PointLight& p = scene.lights[i];
+        const float dx = p.position.x - std::clamp(p.position.x, minX, minX + cell);
+        const float dz = p.position.z - std::clamp(p.position.z, minZ, minZ + cell);
+        const float d2 = dx * dx + dz * dz;
+        if (d2 >= p.range * p.range) continue;
+        reach.push_back({p.intensity / (d2 + 1.0f), static_cast<uint32_t>(i)});
+      }
+      std::sort(reach.begin(), reach.end(), [](auto a, auto b) { return a.first > b.first; });
+      if (reach.size() > kLightsPerCell) ++crowded;
+      const size_t n = std::min<size_t>(reach.size(), kLightsPerCell);
+      uint32_t* c = l->cells[cz * nx + cx];
+      for (size_t k = 0; k < n; ++k) c[k / 4] |= reach[k].second << (8 * (k % 4));
+      c[2] = static_cast<uint32_t>(n);
+    }
+  }
+  lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
+  gpu_->queue.WriteBuffer(lightingBuffer_, 0, l.get(), sizeof(LightingUniforms));
+  LOG_INFO("Lights: %zu in a %ux%u grid of %.2f m cells%s.", count, nx, nz, cell,
+           crowded ? " (some cells have more than 8; the faintest are left out)" : "");
+  if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
 }
 
 wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const char* label) {
@@ -177,7 +228,7 @@ bool SceneRenderer::createScenePipelines() {
   if (!module) return false;
 
   // Group 0: frame uniforms + material textures. Group 1: per-object uniforms.
-  wgpu::BindGroupLayoutEntry frameEntries[4];
+  wgpu::BindGroupLayoutEntry frameEntries[5];
   frameEntries[0].binding = 0;
   frameEntries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
   frameEntries[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -191,8 +242,12 @@ bool SceneRenderer::createScenePipelines() {
   frameEntries[3].binding = 3;
   frameEntries[3].visibility = wgpu::ShaderStage::Fragment;
   frameEntries[3].sampler.type = wgpu::SamplerBindingType::Filtering;
+  frameEntries[4].binding = 4;
+  frameEntries[4].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[4].buffer.type = wgpu::BufferBindingType::Uniform;
+  frameEntries[4].buffer.minBindingSize = sizeof(LightingUniforms);
   wgpu::BindGroupLayoutDescriptor frameDesc;
-  frameDesc.entryCount = 4;
+  frameDesc.entryCount = 5;
   frameDesc.entries = frameEntries;
   frameLayout_ = device.CreateBindGroupLayout(&frameDesc);
 
@@ -432,14 +487,29 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
     }
   }
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
+  // Files are requested in placement order, so the room shell (placed
+  // first) arrives first.
+  fileProgress_.assign(files.size(), 0.0f);
   for (size_t f = 0; f < files.size(); ++f) {
-    engine::GpuModel::load(gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f],
-                           [this, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
-                             if (!model) return;
-                             for (size_t i : placements) models_[i].gpu = model;
-                             modelsLoaded_ += placements.size();
-                           });
+    engine::GpuModel::load(
+        gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f],
+        [this, f, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
+          fileProgress_[f] = 1.0f;
+          ++filesDone_;
+          if (!model) return;
+          for (size_t i : placements) models_[i].gpu = model;
+          modelsLoaded_ += placements.size();
+        },
+        // Downloading is most of the wait; decoding textures is the rest.
+        [this, f](float fraction) { fileProgress_[f] = std::max(fileProgress_[f], 0.85f * fraction); });
   }
+}
+
+float SceneRenderer::loadProgress() const {
+  if (fileProgress_.empty()) return 1.0f;
+  float sum = 0;
+  for (float p : fileProgress_) sum += p;
+  return sum / static_cast<float>(fileProgress_.size());
 }
 
 void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat rotation) {

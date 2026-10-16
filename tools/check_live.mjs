@@ -12,8 +12,11 @@ const browser = await chromium.launch({
          '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 });
 const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
-await page.goto(url);
-await page.waitForTimeout(12000);
+// ?skipintro closes the loading screen by itself once everything is in.
+await page.goto(url + (url.includes('?') ? '&' : '?') + 'skipintro');
+await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                           { timeout: 120000 }).catch(() => console.log('(still loading after 120 s)'));
+await page.waitForTimeout(2000);
 console.log('build', await page.$eval('#build', (e) => e.textContent));
 console.log(await page.$eval('#log', (e) => e.textContent.replace(/\[(info|error)\]/g, '\n[$1]')));
 await page.screenshot({ path: shot });

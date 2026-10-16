@@ -10,8 +10,10 @@
 namespace engine {
 
 // Downloads `url` (relative to the page). `done` gets the bytes, or
-// ok = false if the download failed.
-void fetchFile(const std::string& url, std::function<void(bool ok, std::vector<uint8_t> bytes)> done);
+// ok = false if the download failed. `progress` (optional) hears how far
+// along it is, 0..1, while it downloads (only if the server says the size).
+void fetchFile(const std::string& url, std::function<void(bool ok, std::vector<uint8_t> bytes)> done,
+               std::function<void(float fraction)> progress = nullptr);
 
 // An 8-bit RGBA image, rows top to bottom.
 struct Rgba8Image {

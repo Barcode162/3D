@@ -36,8 +36,11 @@ const browser = await playwright.chromium.launch({
          '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 });
 const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-await page.goto(`http://localhost:${port}/`);
-await page.waitForTimeout(4000);
+// ?skipintro closes the loading screen by itself once everything is in.
+await page.goto(`http://localhost:${port}/?skipintro`);
+await page.waitForFunction(() => /Everything loaded|Startup failed/.test(document.getElementById('log').textContent),
+                           null, { timeout: 120000 }).catch(() => console.log('(models still loading after 120 s)'));
+await page.waitForTimeout(1500);
 
 const log = await page.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
 const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
@@ -70,8 +73,10 @@ if (process.env.CAM) {
   const cams = process.env.CAM.split(';').map((c) => c.trim()).filter(Boolean);
   for (let i = 0; i < cams.length; ++i) {
     const camPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-    await camPage.goto(`http://localhost:${port}/?cam=${encodeURIComponent(cams[i])}`);
-    await camPage.waitForTimeout(6000);
+    await camPage.goto(`http://localhost:${port}/?skipintro&cam=${encodeURIComponent(cams[i])}`);
+    await camPage.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                                  { timeout: 120000 }).catch(() => {});
+    await camPage.waitForTimeout(1500);
     const suffix = cams.length === 1 ? '-cam.png' : `-cam-${i + 1}.png`;
     await camPage.screenshot({ path: shotPath.replace(/\.png$/, suffix) });
     await camPage.close();

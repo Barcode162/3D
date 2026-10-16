@@ -6,7 +6,8 @@
 // "triplanar": along the object's own x, y and z axes, blended by which way
 // the surface faces. Boxes get one clean projection per side.
 
-const kMaxLights = 8u;
+const kMaxLights = 32u;
+const kMaxGridCells = 256u;
 
 struct Light {
   position: vec4f,   // xyz = position, w = range in meters
@@ -19,11 +20,19 @@ struct Frame {
   cameraPos: vec4f,
   ambient: vec4f,     // rgb = ambient light color
   fog: vec4f,         // rgb = haze color, w = density
-  lightCount: vec4u,  // x = number of active lights
-  lights: array<Light, kMaxLights>,
   // Mirror views: drop anything behind the glass (dot(xyz, p) + w < 0).
   // The normal view uses (0, 0, 0, 1), which keeps everything.
   clipPlane: vec4f,
+};
+
+// All the lights, and a grid over the floor: each cell lists the (at most
+// 8) lights that reach it, so a pixel only adds up the lights near it.
+struct Lighting {
+  lightCount: vec4u,  // x = number of lights
+  grid: vec4f,        // x, y = where cell (0, 0) starts (world x, z), z = 1 / cell size
+  gridSize: vec4u,    // x, y = cells along x and z
+  lights: array<Light, kMaxLights>,
+  cells: array<vec4u, kMaxGridCells>,  // x, y = 8 light indices (one per byte), z = count
 };
 
 struct Object {
@@ -37,6 +46,7 @@ struct Object {
 @group(0) @binding(1) var colorMaps: texture_2d_array<f32>;
 @group(0) @binding(2) var bumpMaps: texture_2d_array<f32>;
 @group(0) @binding(3) var mapSampler: sampler;
+@group(0) @binding(4) var<uniform> lighting: Lighting;
 @group(1) @binding(0) var<uniform> object: Object;
 
 // Skinned meshes (the avatar): one matrix per bone, set every frame.
@@ -337,8 +347,14 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
 
   var diffuse = frame.ambient.rgb * (0.6 + 0.4 * n.y) * ao;  // a little brighter on top
   var specular = vec3f(0.0);
-  for (var i = 0u; i < frame.lightCount.x; i++) {
-    let l = frame.lights[i];
+  // This pixel's cell in the light grid.
+  let g = lighting.grid;
+  let cx = u32(clamp(floor((worldPos.x - g.x) * g.z), 0.0, f32(lighting.gridSize.x - 1u)));
+  let cz = u32(clamp(floor((worldPos.z - g.y) * g.z), 0.0, f32(lighting.gridSize.y - 1u)));
+  let cell = lighting.cells[cz * lighting.gridSize.x + cx];
+  for (var k = 0u; k < cell.z; k++) {
+    let packed = select(cell.y, cell.x, k < 4u);
+    let l = lighting.lights[(packed >> (8u * (k % 4u))) & 0xffu];
     let toLight = l.position.xyz - worldPos;
     let dist = length(toLight);
     let dir = toLight / dist;

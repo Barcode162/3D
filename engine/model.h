@@ -36,9 +36,11 @@ class GpuModel {
   static wgpu::VertexBufferLayout vertexLayout();
 
   // Starts loading `url`. `done` gets the model, or nullptr on failure
-  // (the reason is logged).
+  // (the reason is logged). `progress` (optional) hears the download
+  // progress, 0..1.
   static void load(const wgpu::Device& device, const wgpu::BindGroupLayout& layout, const wgpu::Sampler& sampler,
-                   const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done);
+                   const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done,
+                   std::function<void(float)> progress = nullptr);
 
   std::vector<Part> parts;
   bool hasBlend = false;

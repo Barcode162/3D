@@ -11,6 +11,12 @@ namespace engine {
 namespace {
 
 using FetchDone = std::function<void(bool, std::vector<uint8_t>)>;
+using FetchProgress = std::function<void(float)>;
+
+struct Download {
+  FetchDone done;
+  FetchProgress progress;
+};
 using DecodeDone = std::function<void(bool, Rgba8Image)>;
 
 std::map<int, DecodeDone>& pendingDecodes() {
@@ -18,17 +24,24 @@ std::map<int, DecodeDone>& pendingDecodes() {
   return pending;
 }
 
-void onFetchLoad(void* arg, void* data, int size) {
-  auto* done = static_cast<FetchDone*>(arg);
+void onFetchLoad(unsigned, void* arg, void* data, unsigned size) {
+  auto* d = static_cast<Download*>(arg);
   const auto* bytes = static_cast<const uint8_t*>(data);
-  (*done)(true, std::vector<uint8_t>(bytes, bytes + size));
-  delete done;
+  if (d->progress) d->progress(1.0f);
+  d->done(true, std::vector<uint8_t>(bytes, bytes + size));
+  delete d;
 }
 
-void onFetchError(void* arg) {
-  auto* done = static_cast<FetchDone*>(arg);
-  (*done)(false, {});
-  delete done;
+void onFetchError(unsigned, void* arg, int status, const char*) {
+  auto* d = static_cast<Download*>(arg);
+  LOG_ERROR("Download failed (HTTP %d).", status);
+  d->done(false, {});
+  delete d;
+}
+
+void onFetchProgress(unsigned, void* arg, int loaded, int total) {
+  auto* d = static_cast<Download*>(arg);
+  if (d->progress && total > 0) d->progress(static_cast<float>(loaded) / static_cast<float>(total));
 }
 
 }  // namespace
@@ -72,8 +85,9 @@ EM_JS(void, js_decodeImage, (int id, const uint8_t* data, int size, const char* 
   });
 });
 
-void fetchFile(const std::string& url, FetchDone done) {
-  emscripten_async_wget_data(url.c_str(), new FetchDone(std::move(done)), onFetchLoad, onFetchError);
+void fetchFile(const std::string& url, FetchDone done, FetchProgress progress) {
+  auto* d = new Download{std::move(done), std::move(progress)};
+  emscripten_async_wget2_data(url.c_str(), "GET", "", d, true, onFetchLoad, onFetchError, onFetchProgress);
 }
 
 void decodeImage(const std::vector<uint8_t>& bytes, const std::string& mimeType, DecodeDone done) {

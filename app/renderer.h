@@ -45,14 +45,22 @@ class SceneRenderer {
 
   size_t objectCount() const { return sceneDraws_.size() + modelsLoaded_; }
 
+  // Model loading, for the loading screen: files finished (loaded or
+  // failed), files in total, and overall progress 0..1 (downloads included).
+  size_t modelFilesDone() const { return filesDone_; }
+  size_t modelFiles() const { return fileProgress_.size(); }
+  float loadProgress() const;
+
   // Moves placed model `index` (BarScene::models order), e.g. a glass that
   // physics is moving.
   void setModelTransform(size_t index, engine::Vec3 position, engine::Quat rotation);
 
  private:
-  static constexpr uint32_t kMaxLights = 8;
-  static constexpr uint32_t kMaxBones = 32;  // matches shaders/scene.wgsl
-  static constexpr size_t kMaxModels = 128;
+  static constexpr uint32_t kMaxLights = 32;       // matches shaders/scene.wgsl
+  static constexpr uint32_t kLightsPerCell = 8;    // ...and so on
+  static constexpr uint32_t kMaxGridCells = 256;
+  static constexpr uint32_t kMaxBones = 32;
+  static constexpr size_t kMaxModels = 512;
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
@@ -64,9 +72,17 @@ class SceneRenderer {
     float cameraPos[4];
     float ambient[4];
     float fog[4];
-    uint32_t lightCount[4];
-    GpuLight lights[kMaxLights];
     float clipPlane[4];
+  };
+  // The lights and the light grid: the floor is cut into square cells, and
+  // each cell lists the (at most 8) lights that reach it, so a pixel only
+  // adds up the lights near it. Written once.
+  struct LightingUniforms {
+    uint32_t lightCount[4];
+    float grid[4];  // x0, z0, 1 / cell size, cells along x
+    uint32_t gridSize[4];  // cells along x, cells along z
+    GpuLight lights[kMaxLights];
+    uint32_t cells[kMaxGridCells][4];  // x, y = 8 light indices (bytes), z = count
   };
   struct ObjectUniforms {
     engine::Mat4 model;
@@ -130,9 +146,13 @@ class SceneRenderer {
   wgpu::Sampler modelSampler_;
   std::vector<ModelDraw> models_;
   size_t modelsLoaded_ = 0;
+  std::vector<float> fileProgress_;  // per model file, 0..1
+  size_t filesDone_ = 0;
   wgpu::TextureView colorMaps_, bumpMaps_;
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i
+  wgpu::Buffer lightingBuffer_;
+  void buildLighting(const BarScene& scene);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;
   std::vector<DrawItem> sceneDraws_;

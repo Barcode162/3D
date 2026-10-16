@@ -110,6 +110,7 @@ struct BarScene {
   std::vector<Blocker> blockers;
   std::vector<Interactable> interactables;
   std::vector<Mirror> mirrors;
+  engine::Vec3 lightGridMin, lightGridMax;  // floor area the light grid covers (x, z)
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
   float fogDensity;

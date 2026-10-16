@@ -43,7 +43,7 @@ const browser = await playwright.chromium.launch({
 });
 async function open(name, cam) {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-  await page.goto(`http://localhost:${port}/?room=test&name=${name}&server=${encodeURIComponent(relay)}` +
+  await page.goto(`http://localhost:${port}/?skipintro&room=test&name=${name}&server=${encodeURIComponent(relay)}` +
                   `&cam=${encodeURIComponent(cam)}`);
   return page;
 }

@@ -73,6 +73,9 @@ struct App {
   double bannerEndMs = 0;
 
   double introEndMs = 0;
+  bool entered = false;        // the loading screen has been closed
+  bool loadReported = false;   // the loading screen has been told everything is ready
+  float shownProgress = -1;    // last progress sent to the loading screen
   double lastFrameMs = 0;
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
@@ -90,7 +93,7 @@ void updateCamera(float dt) {
 
   const engine::Vec2 move = g_app.input.move();
   if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
-    g_app.introEndMs = std::min(g_app.introEndMs, emscripten_get_now() + kIntroAfterInputMs);
+    if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, emscripten_get_now() + kIntroAfterInputMs);
   }
   Vec3 p = g_app.camera.position;
   p += g_app.camera.flatForward() * (move.y * kWalkSpeed * dt);
@@ -367,7 +370,7 @@ void updateInteraction(double nowMs) {
   // A tap uses what it lands on; tapping anywhere also works while you're
   // standing at something (easier on a small screen).
   for (const engine::Vec2 tap : g_app.input.takeTaps()) {
-    g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
+    if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
     if (g_app.jukeboxMenu.isOpen()) {
       g_app.jukeboxMenu.tap(tap, g_app.jukebox);
       continue;
@@ -401,8 +404,27 @@ void updateInteraction(double nowMs) {
   engine::audio::setListener(cam.position, forward, engine::cross(right, forward));
 }
 
+// Keeps the loading screen (web/index.html) up to date until every model
+// has arrived; then it offers "Tap to enter".
+void updateLoadingScreen() {
+  if (g_app.loadReported) return;
+  const app::SceneRenderer& r = g_app.renderer;
+  const float progress = r.loadProgress();
+  if (progress != g_app.shownProgress) {
+    g_app.shownProgress = progress;
+    EM_ASM({ if (window['barLoading']) window['barLoading']['set']($0, $1, $2); }, static_cast<int>(r.modelFilesDone()),
+           static_cast<int>(r.modelFiles()), progress);
+  }
+  if (r.modelFilesDone() == r.modelFiles()) {
+    g_app.loadReported = true;
+    LOG_INFO("Everything loaded (%zu model files).", r.modelFiles());
+    EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
+  }
+}
+
 void frame() {
   const double nowMs = emscripten_get_now();
+  updateLoadingScreen();
   // Clamp the time step so a stall (e.g. switching apps) doesn't teleport you.
   const float dt = std::min(static_cast<float>((nowMs - g_app.lastFrameMs) / 1000.0), 0.1f);
   g_app.lastFrameMs = nowMs;
@@ -480,12 +502,21 @@ void onGpuReady(bool ok) {
   g_app.shownPosition.assign(g_app.physics.bodyCount(), engine::Vec3{1e9f, 0, 0});
   g_app.shownRotation.assign(g_app.physics.bodyCount(), engine::Quat{});
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
-  g_app.introEndMs = g_app.lastFrameMs + kIntroMaxMs;
+  // The intro starts when you tap "enter" on the loading screen (app_enter).
+  g_app.introEndMs = g_app.entered ? g_app.lastFrameMs + kIntroMaxMs : 1e300;
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");
   emscripten_set_main_loop(frame, 0, false);
 }
 
 }  // namespace
+
+// Called by the loading screen when you tap "enter": the intro title and
+// controls hint start now, not while you were waiting.
+extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
+  if (g_app.entered) return;
+  g_app.entered = true;
+  g_app.introEndMs = emscripten_get_now() + kIntroMaxMs;
+}
 
 int main() {
   LOG_INFO("Bar3D starting (C++ / WebAssembly).");

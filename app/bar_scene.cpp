@@ -246,6 +246,8 @@ BarScene buildBarScene() {
   scene.fogDensity = 0.015f;
   scene.spawnPosition = {0, 1.65f, 3.6f};
   scene.spawnYaw = 0;
+  scene.lightGridMin = {-kRoomHalfX - 1, 0, -kRoomHalfZ - 1};
+  scene.lightGridMax = {kRoomHalfX + 1, 0, kRoomHalfZ + 1};
 
   Builder b{scene};
   buildRoom(b);

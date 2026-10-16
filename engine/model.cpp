@@ -158,7 +158,8 @@ void finish(const std::shared_ptr<Loading>& l) {
 }  // namespace
 
 void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& layout, const wgpu::Sampler& sampler,
-                    const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done) {
+                    const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done,
+                    std::function<void(float)> progress) {
   auto l = std::make_shared<Loading>();
   l->device = device;
   l->layout = layout;
@@ -198,7 +199,7 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
         }
       });
     }
-  });
+  }, std::move(progress));
 }
 
 }  // namespace engine

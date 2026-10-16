@@ -28,6 +28,24 @@ future session re-litigates or repeats it.
 | Glass | glTF `alphaMode: BLEND` → see-through pipeline: premultiplied alpha, no depth write, sorted back to front, opacity rises at grazing angles (Fresnel) | Real glass look without refraction cost |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
+## Big bar upgrade engine pieces (2026-10-16)
+- **Loading screen** (`#loading` in `web/index.html`): covers the room until
+  every model file is in. C++ (`updateLoadingScreen` in `app/main.cpp`)
+  reports progress through `window['barLoading']` (downloads via
+  `emscripten_async_wget2_data` progress, 85%; texture decoding the rest),
+  then the page shows "Tap to enter" (that tap also unlocks sound) and
+  calls `_app_enter`, which starts the intro text. `?skipintro` enters by
+  itself; the test scripts use it and wait for the log line
+  "Everything loaded".
+- **Gotcha:** EM_ASM code goes through the JS minifier, which renames
+  `window.foo.bar`. Always write `window['foo']['bar']` there.
+- **Light grid**: up to 32 lights (`Lighting` uniform, group 0 binding 4,
+  written once). The floor is split into ≤ 16 x 16 cells over
+  `BarScene::lightGridMin/Max`; each cell lists the ≤ 8 lights whose range
+  reaches it, brightest first. The log says if any cell had more than 8
+  (then the faintest are dropped there, which can show as a seam: shrink
+  ranges). Model placement limit raised to 512.
+
 ## Hosting and deploy (important, it took several tries)
 - The site is served by **GitHub Pages: "Deploy from a branch" → `gh-pages` / root**.
 - `.github/workflows/deploy.yml` builds on every push to `main` and

@@ -62,12 +62,12 @@ Zones:
 
 ## The complete item list
 ### Engine work
-- [ ] **Loading screen**: title, progress bar (models loaded / total), the
+- [x] **Loading screen**: title, progress bar (models loaded / total), the
       room fades in only when everything is ready; "Tap to enter" (also
       unlocks sound). The room shell is requested first.
-- [ ] **More lights**: up to 32 lights with a light grid (each floor cell
+- [x] **More lights**: up to 32 lights with a light grid (each floor cell
       lists the ≤ 8 lights that reach it), instead of 8 for the whole room.
-- [ ] **More models**: raise the placement limit (128 → 512).
+- [x] **More models**: raise the placement limit (128 → 512).
 - [ ] **Floor heights**: walkable platforms (the stage, its step).
 - [ ] **2-in-1 mirror**: one mirror with three modes, a wall panel with
       three buttons (FULL / AVATARS / OFF), shared in multiplayer.
