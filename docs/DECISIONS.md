@@ -124,6 +124,79 @@ future session re-litigates or repeats it.
 - Test: `NODE_PATH=$(npm root -g) node tools/account_test.mjs` (two
   players, local PHP; screenshots `build/acct-*.png`).
 
+## The "make everything work" pass (2026-10-16)
+The user asked for voice chat, a settings menu, emotes, avatar switching,
+detailed profiles, MIDI piano with 10 classical songs, usable seats for
+everyone, darts, a racing game on the sims, 4K Mania visible to others,
+one player per machine, a bartender badge and drinks, "everything
+interactable", all crude but working, with a remaster list
+(`docs/REMASTER.md`).
+- **Menus are HTML** (`web/menu.js`), like the account screens: sliders,
+  toggles and file pickers need real form controls on the phone. They
+  queue commands for C++ (`bar3dUi.take`, read in `engine/ui.*`), and C++
+  tells them the state as JSON (`bar3dUi.setInfo`). Settings live in
+  localStorage (`bar3dSettings`); C++ re-reads them when `version()` changes.
+- **Player state grew to 18 numbers** (`app/players.h` `slot::`): activity,
+  its parameter (seat, machine), avatar look, talking level, emote +
+  counter, 5 activity numbers (race position/steer, darts, rhythm screen),
+  held drink, flags (bartender, on the mic). The relay's MAX_VALUES is 20.
+  Append new slots at the end only.
+- **Who uses what** is read from the others' states (no locks): a seat or
+  machine is busy if another player's activity says so. If two take the
+  same seat at once, the lower relay id keeps it.
+- **Seats** (`BarScene::seats`): hip point, facing, how low; the body is
+  placed by `seatedTransform`, the eyes by `seatedEye`. While seated the
+  head turns at most ~110 degrees from the seat's facing.
+- **Small interactables** have `direct = true`: they only count when the
+  middle of the screen points at them (or you tap them), so walking past
+  doesn't keep popping prompts.
+- **Moving boxes** (`SceneRenderer::setBoxes`, up to 320, one draw each):
+  piano key lights and strings, darts, drinks. **World quads**
+  (`TextRenderer::addWorldQuad`) draw games onto screens in the room.
+- **Sounds made in C++** (`engine/synth.*`): piano notes (additive,
+  inharmonic partials, 3 detuned strings, made lazily per key at 22 kHz),
+  Karplus-Strong guitar, bell, dart thunk, clink, pour, shaker, click,
+  engine hum (loops), knock, cheer. Played through `engine::Sound`
+  (`soundPlay` in `web/audio.js`), on buses (effects, piano, music, voice)
+  whose volumes follow the settings.
+- **MIDI**: own parser (`engine/midi.*`: formats 0/1, tempo map, sustain
+  pedal, drums skipped). Songs from the Mutopia Project (public domain or
+  CC BY-SA, `assets/midi/CREDITS.md`). Playback is scheduled ahead on the
+  audio clock (lookahead grows when frames are slow, or notes would be
+  skipped); a song is shared as world entry `pso` = [song, server start
+  time] so everyone hears the same bar. Live notes are events `pk`
+  [key, velocity, on]. Web MIDI keyboards: `navigator.requestMIDIAccess`
+  (not on iPhone Safari).
+- **Events** (`engine::net::sendEvent`): quick one-offs (piano keys, a bell
+  ring) go over the WebRTC data channel when there is one, else through
+  the relay's new message inbox (`"m"` in, `"inbox"` out).
+- **Voice chat** (`web/voice.js`): one RTCPeerConnection per pair of
+  players (the lower id calls), audio transceiver + data channel from the
+  start, mic attached later with `replaceTrack` (no renegotiation). The
+  handshake is "vanilla ICE": wait for candidate gathering (max 2.5 s),
+  then send one offer/answer through the relay (`v:` messages). Opus asked
+  for 510 kbps, FEC, no DTX (SDP fmtp + `maxBitrate`). Mic chain: source →
+  gain (Mic boost) → analyser + gate gain → MediaStreamDestination. The gate
+  opens above the threshold and holds for 15 checks. Remote voices: muted
+  `<audio>` element (keeps the stream flowing) + MediaStreamSource →
+  HRTF panner at their head → "voice" bus; "3D voices" off = plain element.
+  Stage mic flag = refDistance 25 (heard everywhere).
+- **Badges** (`server/account.php`): `badges` per user; owners (first
+  account, or `accounts/admins.json`) give them in the profile. The client
+  checks `bar3dAccount.hasBadge`.
+- **Shared world keys added**: `pso` piano song, `lt` [lights dim, fire
+  on], `dk0`..`dk7` drinks on the counter (type + 1, 0 = empty).
+- Tests: `tools/voice_test.mjs` (two players through a local relay, fake
+  mic: WebRTC connects, voice level arrives, data channel open, Bob seen
+  sitting), `tools/shots.mjs "sit=0" "darts" ...` (screenshots with page
+  options: `?sit=n`, `?emote=n`, `?pianosong=n`, `?darts`, `?shift` with
+  `?badge=bartender` on localhost only).
+- **Gotcha:** inside EM_ASM, `\.` and `\d` in regexes are eaten (the code
+  becomes a C string). Write `[.]` and `[0-9]`.
+- **Gotcha:** headless pages run at ~1-2 fps and background tabs slow
+  their timers; anything timed in JS (the noise gate) must count ticks,
+  not milliseconds.
+
 ## Hosting and deploy (important, it took several tries)
 - The site is served by **GitHub Pages: "Deploy from a branch" → `gh-pages` / root**.
 - `.github/workflows/deploy.yml` builds on every push to `main` and

@@ -89,7 +89,9 @@ void Bartender::make(int type) {
 }
 
 int Bartender::freeSlot() const {
-  for (int i = 0; i < 8; ++i) {
+  // Middle of the counter first (closest to the station), then outward.
+  static const int kOrder[8] = {4, 3, 5, 2, 6, 1, 7, 0};
+  for (int i : kOrder) {
     if (!slots_[i]) return i;
   }
   return -1;

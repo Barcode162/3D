@@ -106,3 +106,19 @@ visuals tied to the jukebox, and a day/night view through a window.
 
 ## Your own avatar (2026-10-16)
 The user wants an avatar that really looks like them: realistic, Blender-quality modeling with a full bone rig, ideally built from a 3D scan of their face (e.g. an iPhone face-scan app exported to GLB/OBJ) so it's accurate. A rough procedural version based on their photo is in `app/avatar.cpp` for now. Note: everyone currently shares the same avatar body.
+
+## Added 2026-10-16 (the "make everything work" request)
+- Voice chat with WebRTC, as close to lossless as possible; voice settings:
+  a threshold (noise gate), playback to test your mic.
+- A settings menu with personal settings; an interactive menu for emotes,
+  switching avatars and editing a profile "with lots of details".
+- MIDI support for the piano; the top 10 classical songs preloaded; the
+  keys and the strings must match what's being played.
+- Sit on every chair (everyone can), an animation for every action.
+- Darts must work; the racing game must work with the character visibly
+  driving and others seeing the driver's screen; same for 4K Mania; one
+  person per machine.
+- A badge that lets people become bartenders and make drinks.
+- Everything that looks usable should be usable. First everything in "very
+  low format" (working, not pretty), then a remaster pass
+  (`docs/REMASTER.md`).

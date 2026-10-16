@@ -4,12 +4,15 @@
 **Current focus:** The big bar upgrade (`docs/BAR_REDESIGN.md`): a new, bigger room full of real clutter, game corners, a grand piano, a giant 2-in-1 mirror, and a loading screen
 
 ## Next up (start here in a new session)
-**2026-10-16, "make everything work" pass (in progress, see `docs/REMASTER.md`):**
-voice chat (WebRTC), menu (emotes, avatars, profile, voice, settings,
-piano, bartender), seats for everyone, piano with 10 classical MIDI songs +
-MIDI keyboards, darts with scoring, racing game on the sims, 4K Mania and
-races shown on the machines' screens, bartender badge + drinks, many small
-interactions. All crude on purpose; everything is listed for a remaster.
+**2026-10-16, "make everything work" pass: built and deployed.** Voice
+chat (WebRTC), menu (emotes, avatars, profile, voice, settings, piano,
+bartender), seats for everyone, piano with 10 classical MIDI songs + MIDI
+keyboards, darts with scoring, racing game on the sims, 4K Mania and races
+shown on the machines' screens, bartender badge + drinks, many small
+interactions. All crude on purpose; every crude part is on the remaster
+list, `docs/REMASTER.md`. **Next:** the user tests it on the iPhone (with
+their brother for voice); fix what breaks, then remaster items in the order
+the user picks.
 
 **2026-10-16, new top priority: the big bar upgrade.** The user asked for
 a completely new bar (new shape, packed with real-bar clutter), 3 rooms
@@ -123,8 +126,10 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 ### Stage 3: Interaction ("everything is interactable")
 - [x] Tap-to-use (ray from the tap point, `Interactable` boxes in `bar_scene`), glow highlight + prompt when you stand at something
 - [x] Pick up / put down / throw objects (W4)
-- [ ] Light switches, doors, taps, jukebox buttons
-- [ ] Bar games: darts, pool table
+- [x] Light switch, door, taps, bell, guitar, mic, fireplace, books, chess, tip jar (crude, 2026-10-16)
+- [x] Darts (301 with real scoring), racing sims, piano, bartending (crude, 2026-10-16)
+- [x] Sit on every seat (everyone, one per seat)
+- [ ] Pool table
 
 ### Stage 4: Audio
 - [x] C++ audio through Web Audio (`engine/audio.*` + thin bridge `web/audio.js`; unlocks on first tap)
@@ -152,6 +157,8 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] Avatar follows your movement; visible in the mirror
 - [x] Avatar look modeled on the user's photo (2026-10-16): fair skin, dark curly hair, stubble, brows, athletic build, charcoal tee, dark jeans, white sneakers. Rough first pass (hair reads too afro-like, stubble a bit dark); user said it's good enough for now
 - [ ] Later: realistic Blender-built avatar of the user with a full rig, ideally from a 3D face scan (see `docs/VISION.md`)
+- [x] 8 avatar looks to switch between in the menu (2026-10-16, crude: color/hair variations)
+- [x] Emotes (11) and activity animations (sit, drive, piano, darts, bartend, drink), crude key poses
 - [ ] Later: load your own avatar model (GLB/VRM)
 
 ### Stage 6: Visual quality
@@ -167,7 +174,7 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] IONOS upload + domain joshuavelasco.org (game + relay live over http)
 - [x] Domain moved to joshuavelasco.com (HTTPS on), landing page + game at `/bar/`
 - [x] M2 Shared world (`app/shared_world.*`): held/thrown/knocked glasses, jukebox song (late joiners hear the same part), mirrors on/off; world entries with revisions in the relay. Test: `tools/mp_test.mjs` (5 checks)
-- [ ] M3 WebRTC phone-to-phone for smoother movement; voice chat
+- [x] M3 (part) WebRTC phone-to-phone: voice chat + data channel for quick events (2026-10-16). Movement still goes through the relay
 
 ### Stage W: World simulation (new north star, 2026-10-15)
 - [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
@@ -178,6 +185,15 @@ A small DAW inside the bar, all DSP written in C++:
 - [ ] W6 Heat and fire (candle flames, steam, melting ice)
 - [ ] W7 Liquids (pour and mix drinks)
 - [ ] W8 Smell/air field (spreading haze), day/night and weather outside
+
+## Log of the "make everything work" pass
+- **2026-10-16:** User asked for voice chat, settings, emotes, avatar
+  switching, detailed profiles, MIDI piano with 10 classical songs, seats,
+  darts, racing, 4K Mania for others, one player per machine, bartender
+  badge and drinks, everything interactable, all crude, plus a remaster
+  list. All built in one go (build `790cfbe` and after); details in
+  `docs/DECISIONS.md` → "make everything work", crude parts in
+  `docs/REMASTER.md`.
 
 ## Decisions
 - **Music:** (1) CC BY smooth-jazz tracks by Kevin MacLeod as the bar's

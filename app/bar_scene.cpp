@@ -245,7 +245,7 @@ void buildBar(Builder& b) {
     b.thing("Drink", b.scene.barTopFront[i] + Vec3{0, 0.06f, 0}, {0.09f, 0.09f, 0.09f}, Action::kDrinkShelf, i);
   }
   {
-    const Vec3 inside = frontOfBar(-3.4f, -1.25f);
+    const Vec3 inside = frontOfBar(-2.6f, -1.25f);  // behind the bar, clear of the tap tower
     b.scene.bartenderSpot = inside + Vec3{0, 1.65f, 0};
     Interactable& st = b.thing("Bartender station\nTap: start a shift", inside + Vec3{0, 1.0f, 0}, {0.6f, 0.5f, 0.4f},
                                Action::kBartender);

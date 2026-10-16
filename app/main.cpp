@@ -254,7 +254,7 @@ void sitOn(int index) {
     g_app.input.setCapture(true);
   } else {
     setActivity(Activity::kSit);
-    showToast(std::string("Sitting on the ") + s.name + ". Move the joystick to stand up.");
+    showToast(std::string(s.name) + "\nMove the joystick to stand up");
   }
 }
 
@@ -1208,6 +1208,11 @@ void updateLoadingScreen() {
     if (emote > 0 && emote < static_cast<int>(Emote::kCount)) startEmote(static_cast<Emote>(emote));
     const int pianoSong = EM_ASM_INT({ var m = /[?&]pianosong=([0-9]+)/.exec(location.search); return m ? +m[1] : -1; });
     if (pianoSong >= 0) g_app.piano.playSong(pianoSong);
+    if (EM_ASM_INT({ return /[?&]shift/.test(location.search) ? 1 : 0; })) {
+      for (const app::Interactable& it : g_app.scene.interactables) {
+        if (it.action == app::Action::kBartender) use(it);
+      }
+    }
     if (EM_ASM_INT({ return /[?&]darts/.test(location.search) ? 1 : 0; })) {
       for (const app::Interactable& it : g_app.scene.interactables) {
         if (it.action == app::Action::kDarts) use(it);

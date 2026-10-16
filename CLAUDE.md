@@ -71,9 +71,11 @@ judged on the user's phone.
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
   `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
-  players (multiplayer smoothing), `shared_world.cpp` the shared glasses,
-  jukebox and mirrors. `main.cpp` is the frame loop,
-  input → interaction, and on-screen text.
+  players (multiplayer smoothing, their state slots), `shared_world.cpp`
+  the shared glasses, jukebox and mirrors. `piano.cpp`, `darts.cpp`,
+  `racing.cpp`, `rhythm.cpp`, `bartender.cpp` are the games and jobs.
+  `main.cpp` is the frame loop, input → interaction (seats, things to
+  use), and on-screen text.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
   third-party asset needs a license and credit entry (see
@@ -81,12 +83,16 @@ judged on the user's phone.
 - `web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
   automatically. `web/audio.js` is the thin Web Audio + song-picker bridge, `web/net.js`
-  the multiplayer bridge.
+  the multiplayer bridge, `web/voice.js` WebRTC voice chat, `web/menu.js`
+  the HTML menus and settings, `web/account.js` accounts and profiles.
+- `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
+- `docs/REMASTER.md` lists every crude first version to redo properly.
 - `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
   web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
   `check_live.mjs` (loads the deployed site headlessly), `mp_test.mjs`
-  (two players through a local PHP relay).
+  (two players through a local PHP relay), `voice_test.mjs` (WebRTC voice
+  between two players), `shots.mjs` (screenshots with page options).
   `tools/assets/` builds the 3D models in headless Blender (see
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes
