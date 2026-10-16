@@ -13,6 +13,7 @@
 #include "app/jukebox.h"
 #include "app/players.h"
 #include "app/props.h"
+#include "app/shared_world.h"
 #include "app/renderer.h"
 #include "engine/audio.h"
 #include "engine/camera.h"
@@ -53,6 +54,7 @@ struct App {
   app::AvatarMotion avatarMotion;
   std::vector<Mat4> avatarBones, firstPersonBones;
   app::OtherPlayers others;  // multiplayer
+  app::SharedWorld shared;   // glasses, jukebox and mirrors, the same for everyone
   std::vector<Mat4> otherTransforms;
   std::vector<std::vector<Mat4>> otherBones;
   app::Jukebox jukebox;
@@ -60,6 +62,8 @@ struct App {
   engine::TextRenderer text;
   engine::PhysicsWorld physics;
   std::vector<int> bodyOfModel;  // physics body per BarScene::models entry
+  std::vector<engine::Vec3> shownPosition;  // per body, where its model was last drawn
+  std::vector<engine::Quat> shownRotation;
   int held = -1;                 // body in your hand
   int aimed = -1;                // body in the middle of the screen, within reach
 
@@ -244,6 +248,7 @@ void use(const app::Interactable& it) {
   if (it.action == app::Action::kMirror) {
     app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
     m.on = !m.on;
+    g_app.shared.mirrorToggled(it.mirror, m.on);
   }
 }
 
@@ -281,10 +286,13 @@ bool tryPickUp(Vec3 dir) {
   if (body < 0) return false;
   float wallDist;
   if (g_app.physics.raycastStatic(eye, dir, dist, &wallDist, nullptr)) return false;
+  if (!g_app.shared.canPickUp(body)) return false;  // in someone else's hand
   engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
   b.held = true;
+  b.kinematic = false;
   b.asleep = false;
   g_app.held = body;
+  g_app.shared.pickedUp(body);
   return true;
 }
 
@@ -297,12 +305,22 @@ void updatePhysics(float dt) {
     g_app.physics.body(static_cast<size_t>(g_app.held)).holdTarget =
         cam.position + cam.forward() * 0.5f + right * 0.12f + Vec3{0, -0.28f, 0};
   }
+  g_app.shared.update(emscripten_get_now(), dt, g_app.physics, g_app.scene, g_app.jukebox, g_app.held);
   g_app.physics.step(dt);
   g_app.physics.takeImpacts();  // sounds come later (W5)
   for (size_t i = 0; i < g_app.bodyOfModel.size(); ++i) {
-    if (g_app.bodyOfModel[i] < 0) continue;
-    const engine::Body& b = g_app.physics.body(static_cast<size_t>(g_app.bodyOfModel[i]));
-    if (!b.asleep) g_app.renderer.setModelTransform(i, b.position, b.rotation);
+    const int body = g_app.bodyOfModel[i];
+    if (body < 0) continue;
+    const engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
+    engine::Vec3& shownP = g_app.shownPosition[static_cast<size_t>(body)];
+    engine::Quat& shownQ = g_app.shownRotation[static_cast<size_t>(body)];
+    if (shownP.x == b.position.x && shownP.y == b.position.y && shownP.z == b.position.z && shownQ.x == b.rotation.x && shownQ.y == b.rotation.y && shownQ.z == b.rotation.z &&
+        shownQ.w == b.rotation.w) {
+      continue;
+    }
+    shownP = b.position;
+    shownQ = b.rotation;
+    g_app.renderer.setModelTransform(i, b.position, b.rotation);
   }
 }
 
@@ -458,6 +476,9 @@ void onGpuReady(bool ok) {
   g_app.input.attach("#canvas");
   g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
   g_app.others.start();
+  g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
+  g_app.shownPosition.assign(g_app.physics.bodyCount(), engine::Vec3{1e9f, 0, 0});
+  g_app.shownRotation.assign(g_app.physics.bodyCount(), engine::Quat{});
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
   g_app.introEndMs = g_app.lastFrameMs + kIntroMaxMs;
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");

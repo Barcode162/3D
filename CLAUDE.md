@@ -71,7 +71,8 @@ judged on the user's phone.
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
   `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
-  players (multiplayer smoothing). `main.cpp` is the frame loop,
+  players (multiplayer smoothing), `shared_world.cpp` the shared glasses,
+  jukebox and mirrors. `main.cpp` is the frame loop,
   input → interaction, and on-screen text.
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every

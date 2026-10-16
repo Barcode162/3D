@@ -34,6 +34,7 @@ struct OtherPlayer {
 class OtherPlayers {
  public:
   void start();
+  bool online() const { return on_; }
   // Call every frame with your camera.
   void sendSelf(double nowMs, engine::Vec3 eye, float yaw, float pitch);
   void update(double nowMs, float dt, float walkSpeed);

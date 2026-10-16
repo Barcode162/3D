@@ -2,6 +2,10 @@
 
 #include <emscripten/emscripten.h>
 
+#include <cstdlib>
+
+#include "engine/json.h"
+
 namespace engine::net {
 
 // Quoted property names keep the Closure compiler from renaming them.
@@ -48,5 +52,28 @@ std::string playerName(int player) {
   EM_ASM({ stringToUTF8(window['bar3dNet']['name']($0), $1, $2); }, player, buffer, sizeof(buffer));
   return buffer;
 }
+
+void setWorld(const std::string& key, const double* values, int count) {
+  EM_ASM({
+    var v = [];
+    for (var i = 0; i < $2; i++) v.push(HEAPF64[($1 >> 3) + i]);
+    window['bar3dNet']['setWorld'](UTF8ToString($0), v);
+  }, key.c_str(), values, count);
+}
+
+void receiveWorld(std::vector<WorldEntry>& out) {
+  char* text = static_cast<char*>(EM_ASM_PTR({ return stringToNewUTF8(window['bar3dNet']['takeWorld']()); }));
+  const Json list = Json::parse(text);
+  std::free(text);
+  for (const Json& e : list.items()) {
+    WorldEntry entry;
+    entry.key = e[0].string();
+    entry.fromLowerId = e[1].integer() != 0;
+    for (const Json& v : e[2].items()) entry.values.push_back(v.number());
+    out.push_back(std::move(entry));
+  }
+}
+
+double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 
 }  // namespace engine::net

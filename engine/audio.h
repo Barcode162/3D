@@ -29,7 +29,8 @@ class MusicSource {
  public:
   // refDistance: within this many meters it plays at full volume.
   void init(float refDistance);
-  void play(const std::string& url);
+  // Starts `url`, `offsetSeconds` into it.
+  void play(const std::string& url, double offsetSeconds = 0);
   void pause();
   void resume();
   bool playing() const;

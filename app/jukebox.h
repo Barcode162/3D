@@ -21,8 +21,11 @@ struct Song {
 class Jukebox {
  public:
   void init(engine::Vec3 speakerPosition);
-  void play(int index);
-  void stop();
+  // `offsetSeconds` starts partway into the song (to match other players).
+  // `fromNetwork` = another player chose it, so don't count it as a local
+  // change to share.
+  void play(int index, double offsetSeconds = 0, bool fromNetwork = false);
+  void stop(bool fromNetwork = false);
   // Call every frame: moves to the next song at the end of one, and picks
   // up songs the user just loaded.
   void update();
@@ -32,6 +35,8 @@ class Jukebox {
   const Song* currentSong() const { return current_ >= 0 ? &songs_[static_cast<size_t>(current_)] : nullptr; }
   // Changes every time a new song starts (for the "now playing" banner).
   int songsStarted() const { return songsStarted_; }
+  // Changes whenever you (not another player) start or stop a song.
+  int localChanges() const { return localChanges_; }
   std::string prompt() const;  // shown when you stand at the jukebox
 
  private:
@@ -40,6 +45,7 @@ class Jukebox {
   int userSongsSeen_ = 0;
   int current_ = -1;
   int songsStarted_ = 0;
+  int localChanges_ = 0;
 };
 
 // The on-screen jukebox menu: song list with jukebox-style codes (A1, A2...),

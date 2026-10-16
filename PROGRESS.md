@@ -11,20 +11,12 @@ push after each, tell the user what to look at.
 **Asset pass done and verified on iPhone (build `964adfe`):** every piece
 looks as it should. The 30 fps the user saw was **iOS Low Power Mode**
 (it caps Safari at 30 fps), not the engine. Next:
-1. **Multiplayer (user asked 2026-10-15).** The user has **IONOS Web
-   Hosting Plus** (1 year): PHP + SFTP, no live server process. M1 is built
-   (see `docs/DECISIONS.md` → Multiplayer): `server/relay.php` passes
-   positions between phones ~10x/s, others show as avatars with name tags.
-   Secrets are set and the upload works. The domain is now
-   **joshuavelasco.com** (HTTPS works), pointing at webspace `home/`: a
-   landing page (`homepage/index.php`, one "Projects" dropdown) and one
-   subfolder per project. The game + relay deploy to `home/bar/` →
-   https://joshuavelasco.com/bar/. After the first deploy there, check
-   `https://joshuavelasco.com/bar/relay.php` answers
-   `{"ok":1,"relay":"bar3d"}` and run
-   `RELAY=https://joshuavelasco.com/bar/relay.php node tools/mp_test.mjs`.
-   After that: M2 = see each other pick up/throw glasses, shared jukebox;
-   M3 = smoother movement with WebRTC (phone to phone), voice chat.
+1. **Multiplayer M2 is built (2026-10-16), check it on two phones.** The
+   relay at https://joshuavelasco.com/bar/relay.php works (live test with
+   two headless players passed). M2 = shared world: glasses, the jukebox
+   song (joins mid-song) and mirrors on/off are the same for everyone (see
+   `docs/DECISIONS.md` → Shared world). Ask the user to try it with their
+   brother. Then M3 = smoother movement with WebRTC, voice chat.
 2. **Performance pass (no longer urgent).** Re-measure with Low Power Mode
    off first. Goal: 60 fps on the iPhone 15 Pro Max. Room is ~170k triangles, ~200 draw calls, ~80
    textures (all RGBA, uncompressed), and the full mirror draws the whole
@@ -140,7 +132,7 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] M1 See each other: PHP relay on IONOS (`server/relay.php`), bridge `web/net.js` + `engine/net.*`, smoothing + walk animation `app/players.*`, up to 7 other avatars with name tags, in mirrors too. `?room=`, `?name=`. Test: `tools/mp_test.mjs`
 - [x] IONOS upload + domain joshuavelasco.org (game + relay live over http)
 - [x] Domain moved to joshuavelasco.com (HTTPS on), landing page + game at `/bar/`
-- [ ] M2 Shared world: held/thrown glasses, jukebox song, mirrors on/off
+- [x] M2 Shared world (`app/shared_world.*`): held/thrown/knocked glasses, jukebox song (late joiners hear the same part), mirrors on/off; world entries with revisions in the relay. Test: `tools/mp_test.mjs` (5 checks)
 - [ ] M3 WebRTC phone-to-phone for smoother movement; voice chat
 
 ### Stage W: World simulation (new north star, 2026-10-15)
@@ -247,3 +239,9 @@ A small DAW inside the bar, all DSP written in C++:
   `home/`) to host several projects. Added the landing page
   (`homepage/index.php`): one "Projects" button, dropdown lists every
   subfolder with a `project.json`. The bar now deploys to `home/bar/`.
+- **2026-10-16:** Live relay on joshuavelasco.com checked (two headless
+  players OK). M2 shared world built: the relay keeps small "world
+  entries" (glass poses, jukebox song + start time, mirrors) with revision
+  numbers; whoever moves a glass sends it, others follow it smoothly (a
+  "kinematic" body that still knocks their glasses). `mp_test.mjs` now
+  checks glass, late join, mirror and jukebox sync.

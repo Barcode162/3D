@@ -1,7 +1,9 @@
 // Multiplayer test: runs server/relay.php with PHP's built-in web server,
 // opens the game twice (players "Alice" and "Bob") in headless Chromium,
 // lets Alice walk while Bob looks at her, and saves Bob's view to
-// build/mp-bob.png. Needs `php` installed.
+// build/mp-bob.png. Then the shared world (M2): Carol joins, moves a glass
+// along the bar and turns the full mirror off; Bob must see both, and Carol
+// (rejoining) must find the glass where she left it. Needs `php` installed.
 // Usage: NODE_PATH=$(npm root -g) node tools/mp_test.mjs
 // RELAY=https://joshuavelasco.com/bar/relay.php tests through the live relay.
 import { createServer } from 'node:http';
@@ -55,14 +57,73 @@ await alice.keyboard.up('KeyD');
 await bob.bringToFront();
 await bob.waitForTimeout(2500);
 
-const log = await bob.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
+const logOf = (page) => page.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
+const show = (who, log) => console.log(`--- ${who}\n` + log.split('\n').filter((l) => /Multiplayer|Put down|Jukebox|error/i.test(l)).join('\n'));
 const status = await bob.$eval('#status', (el) => el.textContent);
 await bob.screenshot({ path: 'build/mp-bob.png' });
-console.log(log.split('\n').filter((l) => /Multiplayer|error/i.test(l)).join('\n'));
 console.log('Bob status:', status);
+
+// Shared world. Carol stands at the bar looking down at glass 1 (x = -0.4),
+// picks it up (tap in the middle), puts it down to the right. Alice leaves
+// first so three software-rendered pages don't crawl.
+await alice.close();
+const waitLog = (page, re, ms = 60000) =>
+  page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent), re.source,
+                       { timeout: ms, polling: 250 }).catch(() => console.log('timed out waiting for ' + re));
+const carol = await open('Carol', '-0.4,1.66,-2.4,0,-34');
+await waitLog(carol, /connected to room/);
+await carol.waitForTimeout(3000);
+const vw = 430, vh = 932;
+await carol.mouse.click(vw / 2, vh / 2);
+await carol.waitForTimeout(2500);
+await carol.mouse.click(vw * 0.8, vh * 0.62);
+await waitLog(carol, /Put down at/);
+await carol.waitForTimeout(1000);
+const carolLog = await logOf(carol);
+// Wait (up to 60 s, the headless world runs in slow motion) until the relay
+// says the glass has come to rest.
+for (let i = 0; i < 60; i++) {
+  const r = await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], since: 0 }) });
+  const g1 = (await r.json()).world.find((e) => e[0] === 'g1');
+  if (g1 && g1[2][10] === 2) break;
+  await carol.waitForTimeout(1000);
+}
+await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
+// Then rejoins at the full mirror and taps it off.
+await carol.goto(carol.url().replace(/cam=[^&]*/, 'cam=' + encodeURIComponent('5.0,1.66,-2.2,90,0')));
+await waitLog(carol, /glass 1 is at/);
+await carol.waitForTimeout(2000);
+const carolLog2 = await logOf(carol);
+await carol.screenshot({ path: 'build/mp-carol.png' });
+await carol.mouse.click(vw / 2, vh / 2);
+await carol.waitForTimeout(2500);
+await bob.bringToFront();
+await waitLog(bob, /mirror 0 turned off/, 20000);
+// Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
+// tap (phones only play sound after one), must start the same song.
+await bob.mouse.click(215, 300);
+await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], w: { jb: [1, Date.now() / 1000] } }) });
+await waitLog(bob, /Bossa Antigua" \(chosen by another player\)/, 20000);
+await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
+const log = await logOf(bob);
+show('Bob', log);
+show('Carol', carolLog);
+show('Carol again', carolLog2);
 await browser.close();
 php.kill();
 site.close();
-const ok = /online: 2/.test(status) && /Alice joined/.test(log);
+const putDown = /Put down at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(carolLog);
+const rested = /glass 1 came to rest at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(log);
+const rejoined = /glass 1 is at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(carolLog2);
+const near = (m) => m && putDown && Math.abs(+m[1] - +putDown[1]) < 0.05 && Math.abs(+m[3] - +putDown[3]) < 0.05;
+const checks = {
+  'Bob sees Alice': /online: 2/.test(status) && /Alice joined/.test(log),
+  'Bob sees the glass land where Carol put it': near(rested),
+  'Carol finds the glass there after rejoining': near(rejoined),
+  'Bob sees the mirror turn off': /mirror 0 turned off/.test(log),
+  'Bob plays the song another player picked': /Bossa Antigua" \(chosen by another player\)/.test(log),
+};
+for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);
+const ok = Object.values(checks).every(Boolean);
 console.log(ok ? 'MULTIPLAYER TEST PASSED' : 'MULTIPLAYER TEST FAILED');
 process.exit(ok ? 0 : 1);

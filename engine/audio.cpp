@@ -40,8 +40,8 @@ void MusicSource::init(float refDistance) {
   id_ = EM_ASM_INT({ return window['bar3dAudio']['createSource']($0); }, refDistance);
 }
 
-void MusicSource::play(const std::string& url) {
-  EM_ASM({ window['bar3dAudio']['play']($0, UTF8ToString($1)); }, id_, url.c_str());
+void MusicSource::play(const std::string& url, double offsetSeconds) {
+  EM_ASM({ window['bar3dAudio']['play']($0, UTF8ToString($1), $2); }, id_, url.c_str(), offsetSeconds);
 }
 
 void MusicSource::pause() { EM_ASM({ window['bar3dAudio']['pause']($0); }, id_); }

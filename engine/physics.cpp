@@ -38,6 +38,7 @@ Vec3 velocityAt(const Body& b, Vec3 point) {
 }
 
 void applyImpulse(Body& b, Vec3 point, Vec3 impulse) {
+  if (b.kinematic) return;
   if (b.held) {
     // A held body is moved by the hand; contacts only nudge it a little.
     impulse = impulse * 0.3f;
@@ -48,6 +49,7 @@ void applyImpulse(Body& b, Vec3 point, Vec3 impulse) {
 
 // How much a unit impulse along `n` at `point` changes the speed there.
 float impulseResponse(const Body& b, Vec3 point, Vec3 n) {
+  if (b.kinematic) return 0;
   const Vec3 r = point - b.worldCenter();
   return b.inverseMass + dot(n, cross(applyInverseInertia(b, cross(r, n)), r));
 }
@@ -110,7 +112,7 @@ void PhysicsWorld::step(float dt) {
 
 void PhysicsWorld::substep(float h) {
   for (Body& b : bodies_) {
-    if (b.asleep) continue;
+    if (b.asleep || b.kinematic) continue;
     if (b.held) {
       // Chase the hand: velocity toward the target, rotation toward upright.
       Vec3 v = (b.holdTarget - b.position) * kHoldStiffness;
@@ -128,12 +130,13 @@ void PhysicsWorld::substep(float h) {
 
   // Contacts: against the fixed world, then between bodies.
   for (Body& b : bodies_) {
-    if (!b.asleep) collideStatic(b, h);
+    if (!b.asleep && !b.kinematic) collideStatic(b, h);
   }
   for (size_t i = 0; i < bodies_.size(); ++i) {
     for (size_t j = i + 1; j < bodies_.size(); ++j) {
       Body &a = bodies_[i], &b = bodies_[j];
       if (a.asleep && b.asleep) continue;
+      if (a.kinematic && b.kinematic) continue;
       const Vec3 d = a.worldCenter() - b.worldCenter();
       const float r = a.boundRadius + b.boundRadius;
       if (dot(d, d) < r * r) collidePair(a, b);
@@ -143,6 +146,10 @@ void PhysicsWorld::substep(float h) {
   // Integrate.
   for (Body& b : bodies_) {
     if (b.asleep) continue;
+    if (b.kinematic) {
+      b.position += b.velocity * h;
+      continue;
+    }
     const float spin = length(b.angularVelocity);
     if (spin > kMaxAngularSpeed) b.angularVelocity = b.angularVelocity * (kMaxAngularSpeed / spin);
     // Rotate around the center of mass, not the origin.
@@ -228,6 +235,7 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
       impacts_.push_back({point, -vn, a.material, otherMaterial});
     }
     const float k = impulseResponse(a, point, normal) + (b ? impulseResponse(*b, point, normal) : 0);
+    if (k <= 1e-9f) return;
     const float bounce = -vn > kBounceThreshold ? combinedBounce(a.material, otherMaterial) : 0;
     const float jn = -(1 + bounce) * vn / k;
     applyImpulse(a, point, normal * jn);
@@ -239,7 +247,7 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
     const float slide = length(tangent);
     if (slide > 1e-6f) {
       tangent = tangent * (1.0f / slide);
-      const float kt = impulseResponse(a, point, tangent) + (b ? impulseResponse(*b, point, tangent) : 0);
+      const float kt = std::max(impulseResponse(a, point, tangent) + (b ? impulseResponse(*b, point, tangent) : 0), 1e-9f);
       const float limit = combinedFriction(a.material, otherMaterial) * jn;
       const float jt = std::min(slide / kt, limit);
       applyImpulse(a, point, tangent * -jt);
@@ -253,7 +261,8 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
   // Push apart (split by mass) so shapes don't sink into each other.
   const float push = std::max(0.0f, depth - kSlop) * kPushFraction;
   if (push <= 0) return;
-  const float wa = a.held ? 0.0f : a.inverseMass, wb = b && !b->held ? b->inverseMass : 0.0f;
+  const float wa = a.held || a.kinematic ? 0.0f : a.inverseMass;
+  const float wb = b && !b->held && !b->kinematic ? b->inverseMass : 0.0f;
   if (!b) {
     a.position += normal * push;
     return;
@@ -265,7 +274,7 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
 }
 
 void PhysicsWorld::updateSleep(Body& b, float dt) {
-  if (b.asleep) return;
+  if (b.asleep || b.kinematic) return;
   if (b.held || length(b.velocity) > kSleepLinear || length(b.angularVelocity) > kSleepAngular) {
     b.sleepTimer = 0;
     return;

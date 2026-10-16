@@ -40,6 +40,11 @@ window.bar3dNet = (function () {
   var lastSent = {};                // id -> t, to forward only new states
   var status = server ? 1 : 0;      // 0 off, 1 connecting, 2 connected, 3 failing
   var inFlight = false, failures = 0, started = false;
+  // Shared world (see server/relay.php): our changes waiting to be sent,
+  // entries from others not yet taken by C++, the newest revision we have,
+  // and the server's clock relative to ours.
+  var worldOut = {}, worldIn = [], since = 0;
+  var clockOffset = null, clockRtt = 1e9;
 
   function info(text) {
     if (window.Module && Module.print) Module.print('[info] ' + text);
@@ -56,11 +61,30 @@ window.bar3dNet = (function () {
   function tick() {
     if (inFlight || !state) return;
     inFlight = true;
-    post({ room: room, id: id, name: name, t: stateTime, s: state }, function (reply) {
+    var body = { room: room, id: id, name: name, t: stateTime, s: state, since: since };
+    var sending = worldOut;
+    worldOut = {};
+    if (Object.keys(sending).length) body.w = sending;
+    var sentAt = performance.now();
+    post(body, function (reply) {
       inFlight = false;
       if (!reply) {
+        // Put unsent changes back, unless a newer one for the same key came.
+        for (var k in sending) if (!(k in worldOut)) worldOut[k] = sending[k];
         if (++failures === 5) { status = 3; info('Multiplayer: can\'t reach the server (' + server + ').'); }
         return;
+      }
+      if (typeof reply.rev === 'number') {
+        // The fastest round trip tells the server's clock best; slowly
+        // forget old samples so a changed network is picked up.
+        var rtt = performance.now() - sentAt;
+        clockRtt *= 1.01;
+        if (rtt < clockRtt) {
+          clockRtt = rtt;
+          clockOffset = reply.now - (sentAt + rtt / 2) / 1000;
+        }
+        since = reply.rev;
+        reply.world.forEach(function (e) { worldIn.push([e[0], e[1] < id ? 1 : 0, e[2]]); });
       }
       if (status !== 2) info('Multiplayer: connected to room "' + room + '" as ' + name + '.');
       if (status === 3) info('Multiplayer: server reachable again.');
@@ -132,5 +156,20 @@ window.bar3dNet = (function () {
       return '';
     },
     count: function () { return Object.keys(players).length; },
+    // Shared world: queue a change to `key` (sent on the next tick).
+    setWorld: function (key, values) {
+      worldOut[key] = values.map(function (v) { return Math.round(v * 10000) / 10000; });
+    },
+    // Changes from others since the last call, as JSON:
+    // [[key, writerIdIsLowerThanOurs, [values...]], ...]
+    takeWorld: function () {
+      var out = JSON.stringify(worldIn);
+      worldIn = [];
+      return out;
+    },
+    // The server's clock in seconds (shared by everyone), 0 if not known yet.
+    serverTime: function () {
+      return clockOffset === null ? 0 : performance.now() / 1000 + clockOffset;
+    },
   };
 })();

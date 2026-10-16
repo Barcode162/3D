@@ -25,7 +25,7 @@ target_link_options(app PRIVATE
   -sENVIRONMENT=web
   -sEXPORTED_RUNTIME_METHODS=[]
   # Used from EM_ASM blocks (engine/audio.cpp, engine/net.cpp).
-  "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$stringToUTF8,$UTF8ToString"
+  "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$stringToUTF8,$UTF8ToString,$stringToNewUTF8"
   # Used by the image decoder (engine/fetch.cpp).
   "-sEXPORTED_FUNCTIONS=_main,_malloc,_free"
 )

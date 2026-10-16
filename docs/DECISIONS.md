@@ -137,6 +137,31 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   sending on `document.hidden`; headless background tabs count as hidden
   (and iOS pauses timers in the background anyway).
 
+## Shared world (M2, 2026-10-16)
+- The relay keeps a **world** per room next to the players: entries with a
+  short key and up to 16 numbers, each with the writer's id and a
+  revision number. A client sends its changes (`w`) and the newest
+  revision it has (`since`); the reply carries only entries changed since
+  then by others, plus the server clock (`now`). Last write wins. The world
+  is forgotten after the room has been empty for 30 minutes.
+- Keys: `g<body>` = glass [x,y,z, quat, velocity, state 0 moving / 1 held /
+  2 resting]; `jb` = [song index or -1, server time it started]; `m<i>` =
+  mirror on/off.
+- Glasses (`app/shared_world.cpp`): the player moving one (holding it, or it
+  is flying/sliding after their throw or knock) owns it and sends ~10x/s;
+  on rest the final pose is sent once and nobody owns it. Others drive it
+  as a **kinematic** body (`Body::kinematic`: no gravity, moved along its
+  velocity, immovable to contacts), so it still knocks their own glasses.
+  If two players claim the same glass: holding beats flying, else the
+  lower player id wins. A glass only gets claimed after it has come to rest
+  once since page load (so the start-up settle doesn't overwrite the
+  shared positions) and not within 1.5 s of the network placing it.
+- Jukebox: only built-in songs are shared (your own files stay on your
+  phone). A late joiner seeks to `server now - start` (set on
+  `loadedmetadata` in `web/audio.js`). A remote song waits for the first
+  tap (sound unlock). When a song ends, everyone advances and writes the
+  next song; starts within 2 s count as the same, so nobody restarts.
+
 ## One domain, many projects (2026-10-15)
 - joshuavelasco.com → IONOS webspace `home/`. Each project is a subfolder
   (`home/bar/` = https://joshuavelasco.com/bar/), deployed by **that
@@ -278,4 +303,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - The on-screen log panel covers the bottom of the screen and takes touches.
   It's hidden by default and opens automatically on errors.
 - Safari "Request Desktop Website" mode makes the user agent look like a Mac. Use mobile mode.
+- `mp_test.mjs` runs at ~2 fps per page, and background tabs barely tick,
+  so it waits on log lines/relay state rather than fixed times, and closes
+  Alice before Carol joins.
 - Auto mode blocks `git push -f` from the session. CI does the force-push to `gh-pages` instead.

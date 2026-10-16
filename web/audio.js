@@ -132,10 +132,23 @@ window.bar3dAudio = (function () {
       if (ctx) connect(s);
       return sources.length - 1;
     },
-    play: function (id, url) {
-      var s = sources[id];
-      s.el.src = url;
-      s.el.play().catch(function (e) { report('Music did not start: ' + e.message); });
+    // offset: seconds into the song (to join other players mid-song).
+    play: function (id, url, offset) {
+      var s = sources[id], el = s.el;
+      el.src = url;
+      if (offset > 0.5) {
+        // The position can only be set once the file's length is known;
+        // add the time spent loading so it still lines up.
+        var asked = performance.now();
+        var seek = function () {
+          el.removeEventListener('loadedmetadata', seek);
+          var at = offset + (performance.now() - asked) / 1000;
+          if (isFinite(el.duration) && at >= el.duration) at = Math.max(el.duration - 0.1, 0);
+          try { el.currentTime = at; } catch (e) {}
+        };
+        el.addEventListener('loadedmetadata', seek);
+      }
+      el.play().catch(function (e) { report('Music did not start: ' + e.message); });
     },
     pause: function (id) { sources[id].el.pause(); },
     resume: function (id) { sources[id].el.play().catch(function () {}); },

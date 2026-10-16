@@ -10,7 +10,7 @@ namespace engine::net {
 
 enum class Status { kOff, kConnecting, kConnected, kFailing };
 
-constexpr int kMaxValues = 8;  // numbers per state
+constexpr int kMaxValues = 16;  // numbers per state or world entry
 
 // One state received from another player. `time` is that player's clock in
 // milliseconds when they sent it (not comparable with ours directly).
@@ -34,5 +34,18 @@ void receive(std::vector<Packet>& out);
 
 bool present(int player);  // still in the room?
 std::string playerName(int player);
+
+// Shared world: short named entries (key = 1-8 lowercase letters/digits)
+// of up to kMaxValues numbers that everyone in the room sees the same. The
+// last change wins. You don't get your own changes back.
+struct WorldEntry {
+  std::string key;
+  bool fromLowerId = false;  // writer's id sorts before ours (for tie-breaks)
+  std::vector<double> values;
+};
+void setWorld(const std::string& key, const double* values, int count);
+void receiveWorld(std::vector<WorldEntry>& out);
+// The server's clock in seconds (the same for everyone), 0 = not known yet.
+double serverTime();
 
 }  // namespace engine::net

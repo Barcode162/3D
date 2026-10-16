@@ -47,19 +47,21 @@ void Jukebox::init(engine::Vec3 speakerPosition) {
   source_.setPosition(speakerPosition);
 }
 
-void Jukebox::play(int index) {
+void Jukebox::play(int index, double offsetSeconds, bool fromNetwork) {
   if (songs_.empty()) return;
   current_ = index % static_cast<int>(songs_.size());
   ++songsStarted_;
+  if (!fromNetwork) ++localChanges_;
   const Song& song = songs_[static_cast<size_t>(current_)];
-  source_.play(song.url);
-  LOG_INFO("Jukebox: playing \"%s\".", song.title.c_str());
+  source_.play(song.url, offsetSeconds);
+  LOG_INFO("Jukebox: playing \"%s\"%s.", song.title.c_str(), fromNetwork ? " (chosen by another player)" : "");
 }
 
-void Jukebox::stop() {
+void Jukebox::stop(bool fromNetwork) {
   if (current_ < 0) return;
   source_.pause();
   current_ = -1;
+  if (!fromNetwork) ++localChanges_;
   LOG_INFO("Jukebox: stopped.");
 }
 

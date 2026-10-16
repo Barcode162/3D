@@ -50,6 +50,11 @@ struct Body {
   bool held = false;
   Vec3 holdTarget;
 
+  // Moved from outside (e.g. by another player's phone): no gravity, no
+  // contacts push it, it just glides along `velocity`. Other bodies still
+  // bump into it as if it were very heavy.
+  bool kinematic = false;
+
   float sleepTimer = 0;
   Vec3 worldCenter() const { return position + rotation.rotate(centerOfMass); }
 };

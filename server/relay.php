@@ -8,6 +8,14 @@
 //   {"room":"main","id":"k3j9x2a1","name":"Josh","t":12345.6,"s":[x,y,z,yaw,pitch]}
 //   {"room":"main","id":"k3j9x2a1","leave":1}       (closing the page)
 // Reply: {"ok":1,"players":[{"id":..,"name":..,"t":..,"s":[..],"age":ms}, ...]}
+//
+// Shared world (M2): things everyone sees the same, e.g. a glass's position,
+// the jukebox song, mirrors on/off. Each is a short key with a few numbers.
+// A request may add "w":{"g3":[...],"jb":[...]} (changes by this player)
+// and "since":rev (the newest world revision it has). The reply then adds
+// "rev", "now" (server clock, seconds) and "world":[[key, byId, [..]], ...]
+// with every entry changed after `since` by someone else (since = 0: all).
+// The world is forgotten once the room has been empty for WORLD_KEEP_S.
 // GET relay.php -> {"ok":1,"relay":"bar3d"} (health check)
 
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +26,9 @@ header('Content-Type: application/json');
 
 const TIMEOUT_S = 5.0;   // a player who stops sending is gone after this
 const MAX_PLAYERS = 16;  // per room
-const MAX_VALUES = 16;   // numbers in a player's state
+const MAX_VALUES = 16;   // numbers in a player's state or a world entry
+const MAX_KEYS = 96;     // world entries per room
+const WORLD_KEEP_S = 1800.0;
 
 function reply($data, $code = 200) {
   http_response_code($code);
@@ -30,7 +40,7 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'OPTIONS') exit;
 if ($method !== 'POST') reply(['ok' => 1, 'relay' => 'bar3d']);
 
-$in = json_decode(file_get_contents('php://input', false, null, 0, 4096), true);
+$in = json_decode(file_get_contents('php://input', false, null, 0, 16384), true);
 if (!is_array($in)) reply(['ok' => 0, 'error' => 'bad json'], 400);
 $room = $in['room'] ?? 'main';
 $id = $in['id'] ?? '';
@@ -48,17 +58,37 @@ if (!$leaving) {
   $player = ['name' => $name === '' ? 'Guest' : $name, 't' => is_numeric($t) ? (float)$t : 0.0,
              's' => array_values($s)];
 }
+$changes = [];
+if (!$leaving && isset($in['w'])) {
+  if (!is_array($in['w']) || count($in['w']) > MAX_KEYS) reply(['ok' => 0, 'error' => 'bad world'], 400);
+  foreach ($in['w'] as $key => $values) {
+    if (!preg_match('/^[a-z0-9]{1,8}$/', (string)$key) || !is_array($values) || count($values) > MAX_VALUES) {
+      reply(['ok' => 0, 'error' => 'bad world'], 400);
+    }
+    foreach ($values as $v) if (!is_int($v) && !is_float($v)) reply(['ok' => 0, 'error' => 'bad world'], 400);
+    $changes[(string)$key] = array_values($values);
+  }
+}
+$since = isset($in['since']) && is_int($in['since']) ? $in['since'] : -1;
 
 $dir = __DIR__ . '/rooms';
 if (!is_dir($dir)) @mkdir($dir, 0755);
 $file = fopen("$dir/$room.json", 'c+');
 if (!$file) reply(['ok' => 0, 'error' => 'storage'], 500);
 flock($file, LOCK_EX);
-$players = json_decode(stream_get_contents($file), true);
-if (!is_array($players)) $players = [];
+$data = json_decode(stream_get_contents($file), true);
+if (!is_array($data) || !isset($data['players'])) $data = ['players' => [], 'world' => [], 'rev' => 0, 'active' => 0];
+$players = $data['players'];
+$world = $data['world'];
+$rev = (int)$data['rev'];
 $now = microtime(true);
 foreach ($players as $pid => $p) {
   if ($now - ($p['seen'] ?? 0) > TIMEOUT_S) unset($players[$pid]);
+}
+if (count($players) === 0 && $now - (float)$data['active'] > WORLD_KEEP_S) $world = [];
+foreach ($changes as $key => $values) {
+  if (!isset($world[$key]) && count($world) >= MAX_KEYS) continue;
+  $world[$key] = ['v' => $values, 'by' => $id, 'r' => ++$rev];
 }
 if ($leaving) {
   unset($players[$id]);
@@ -68,7 +98,7 @@ if ($leaving) {
 }
 ftruncate($file, 0);
 rewind($file);
-fwrite($file, json_encode($players));
+fwrite($file, json_encode(['players' => (object)$players, 'world' => (object)$world, 'rev' => $rev, 'active' => $now]));
 fflush($file);
 flock($file, LOCK_UN);
 fclose($file);
@@ -79,4 +109,14 @@ foreach ($players as $pid => $p) {
   $others[] = ['id' => (string)$pid, 'name' => $p['name'], 't' => $p['t'], 's' => $p['s'],
                'age' => (int)round(($now - $p['seen']) * 1000)];
 }
-reply(['ok' => 1, 'players' => $others]);
+$out = ['ok' => 1, 'players' => $others];
+if ($since >= 0) {
+  $entries = [];
+  foreach ($world as $key => $e) {
+    if ($e['r'] > $since && $e['by'] !== $id) $entries[] = [(string)$key, $e['by'], $e['v']];
+  }
+  $out['rev'] = $rev;
+  $out['now'] = round($now, 3);
+  $out['world'] = $entries;
+}
+reply($out);
