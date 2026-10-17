@@ -7,26 +7,56 @@
 // game at a time (bar3dModal, web/bridge.js).
 window.bar3dSettings = (function () {
   'use strict';
-  var DEFAULTS = {
-    look: 0, lookSpeed: 1, invertLook: false, showNames: true,
-    musicVol: 0.8, sfxVol: 0.9, pianoVol: 0.9, voiceVol: 1,
+  // Every setting: [default, min, max] for numbers, the default alone for
+  // on/off. Saved in localStorage 'bar3dSettings'; anything there that
+  // doesn't fit (wrong type, out of range, broken JSON) falls back to the
+  // default with one warning in the log.
+  var SCHEMA = {
+    look: [0, 0, 7], lookSpeed: [1, 0.3, 2.5], invertLook: false, showNames: true,
+    musicVol: [0.8, 0, 1], sfxVol: [0.9, 0, 1], pianoVol: [0.9, 0, 1], voiceVol: [1, 0, 2],
     // Voice: the mic only sends when you're louder than micGate (dB);
     // micGain boosts a quiet mic.
-    micGate: -50, micGain: 1, pushToTalk: false,
+    micGate: [-50, -80, -10], micGain: [1, 0.5, 4], pushToTalk: false,
     echoCancel: true, noiseSuppress: true, autoGain: false,
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (engine/profiler)
   };
-  var values = {}, version = 1, listeners = [];
-  try { values = JSON.parse(localStorage.getItem('bar3dSettings') || '{}') || {}; } catch (e) { values = {}; }
+  function defaultOf(k) { var d = SCHEMA[k]; return Array.isArray(d) ? d[0] : d; }
+  // The value if it fits the schema, else undefined.
+  function check(k, v) {
+    var d = SCHEMA[k];
+    if (d === undefined) return undefined;
+    if (Array.isArray(d)) return typeof v === 'number' && isFinite(v) ? Math.min(d[2], Math.max(d[1], v)) : undefined;
+    return typeof v === 'boolean' ? v : undefined;
+  }
+  var values = {}, version = 1, listeners = [], problems = [];
+  try {
+    var saved = JSON.parse(localStorage.getItem('bar3dSettings') || '{}');
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) throw new Error('not an object');
+    for (var k in saved) {
+      var v = check(k, saved[k]);
+      if (v === undefined) problems.push(k);
+      else values[k] = v;
+    }
+  } catch (e) {
+    values = {};
+    problems.push('all (' + e.message + ')');
+  }
   function save() { try { localStorage.setItem('bar3dSettings', JSON.stringify(values)); } catch (e) {} }
+  if (problems.length) {
+    var msg = 'Settings: reset to defaults: ' + problems.join(', ') + '.';
+    if (window.bar3dLog) bar3dLog.add('warn', msg); else console.warn(msg);
+    save();
+  }
   return {
-    get: function (k) { return k in values ? values[k] : DEFAULTS[k]; },
+    get: function (k) { return k in values ? values[k] : defaultOf(k); },
     set: function (k, v) {
-      values[k] = v;
+      var ok = check(k, v);
+      if (ok === undefined) return;
+      values[k] = ok;
       version++;
       save();
-      listeners.forEach(function (l) { l(k, v); });
+      listeners.forEach(function (l) { l(k, ok); });
     },
     reset: function () { values = {}; version++; save(); listeners.forEach(function (l) { l('*'); }); },
     version: function () { return version; },

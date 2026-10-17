@@ -57,6 +57,20 @@ await page.waitForTimeout(1500);
 await page.screenshot({ path: 'build/menu-emote.png' });
 check(!(await page.evaluate(() => bar3dModal.isOpen())), 'the menu closed after the emote');
 
+// Broken saved settings: defaults and one warning, the good values kept.
+for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
+                               ['{"lookSpeed":"fast","musicVol":0.5,"micGate":-999}', { lookSpeed: 1, musicVol: 0.5, micGate: -80 }]]) {
+  const p2 = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  await p2.addInitScript((v) => { try { localStorage.setItem('bar3dSettings', v); } catch (e) {} }, saved);
+  await p2.goto(`${site.url}?skipintro&server=off`);
+  await p2.waitForFunction(() => window.bar3dSettings, null, { timeout: 30000 });
+  const got = await p2.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, bar3dSettings.get(k)])), Object.keys(expect));
+  const warns = await p2.evaluate(() => [...document.querySelectorAll('#log div')].filter((d) => /Settings: reset/.test(d.textContent)).length);
+  check(JSON.stringify(got) === JSON.stringify(expect) && warns === 1,
+        `saved settings ${saved} → ${JSON.stringify(got)}, ${warns} warning(s)`);
+  await p2.close();
+}
+
 const errors = await logErrors(page);
 check(errors.length === 0, 'no errors in the log' + (errors.length ? ':\n' + errors.join('\n') : ''));
 await browser.close();

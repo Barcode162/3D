@@ -769,7 +769,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** God object `g_app`; any function changes anything (`main.cpp:66-142`; `use()` `:650-773` teleports, opens panels, toggles lights, plays sfx, sends net) → Game + systems + event bus. *[4.1a, 4.1b]*
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
-- [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]* (2.1a part done: page calls per frame ~24 → ~3)
+- [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]* (2.1a-c parts done: page calls per frame ~24 → ~3, JSON menus/roster only on change; net send on the tick is 3.4a)
 - [x] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
 - [x] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
 - [ ] **M** Every remote avatar posed/skinned even off-screen (`main.cpp:1303-1317`) → pose only visible ones. *[6.5]*
@@ -928,7 +928,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Game events over the data channel bypass the server (`voice.js:211-214`) → room path only. *[5.6]*
 - [ ] **L** Only `failed` handled; non-callers never retry (`voice.js:194-198,309`) → `restartIce` either side. *[5.10]*
 - [ ] **M** *(review)* A public TURN-credential endpoint would let anyone relay traffic on the user's TURN allowance → credentials only as a message on an open HELLO'd socket, TTL ≤ 10 min, ≤ 1/min per slot. *[5.10]*
-- [ ] **L** Voice level and panner placement via EM_ASM per player per frame, each an O(N) id lookup (`main.cpp:486-489,1130,1163-1170`; `voice.js:355-368`) → one batch at 20 Hz through the mailbox. *[2.1c]*
+- [x] **L** Voice level and panner placement via EM_ASM per player per frame, each an O(N) id lookup (`main.cpp:486-489,1130,1163-1170`; `voice.js:355-368`) → one batch at 20 Hz through the mailbox. *[2.1c]*
 
 **G. Games and audio**
 - [x] **C** Piano synthesizes notes inside the frame: 16.7 ms average, 30.6 ms middle C (wasm; native g++ -O2 15.7-20 ms middle C, 9.1 ms average); 3 per frame, budget up to 40 after a slow frame (`piano.cpp:21,259-267`; also in `keyDown` `:181`) → optimized synth, every 3rd key + playbackRate, prepare in jobs, skip not-ready notes. *[1.2a, 1.2b]*
@@ -1514,6 +1514,13 @@ errors (so smoke/mp_test fail on them).
   `tools/voice_test.mjs` passes; a corrupted `bar3dSettings` value → defaults + one warning.
 - **Phone:** voice with your brother still works and comes from his direction; your
   settings are still there after a reload.
+- **Done (2026-10-17):** log lines and voice levels/positions went through the mailbox in 2.1a;
+  here the per-player `present`/`name`/`account`/`avatarRev`/`isLower` page calls became a
+  roster in the mailbox, sent only when `web/net.js` bumps `rosterVersion` (a player newer
+  than the last roster counts as present, so a first packet isn't dropped). Settings: a schema
+  in `web/menu.js` (`[default, min, max]` or a boolean) checks saved values; broken ones →
+  defaults + one warning (`tools/menu_test.mjs`). `grep -c EM_ASM app/main.cpp` = 2; page calls
+  per frame 2.8 (Debug smoke).
 
 #### 2.2 FrameTime from rAF and the page lifecycle
 - **Files:** new `engine/frame_time.h`; `app/main.cpp` (`emscripten_request_animation_frame_loop`;

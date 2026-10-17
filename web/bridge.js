@@ -16,6 +16,7 @@ window.bar3dBridge = (function () {
   var encoder = new TextEncoder();
   var pulls = 0;  // = game frames (tests use it)
   var commands = [];       // menu commands since the last pull: [name, a, b, text, text2]
+  var rosterSent = -1;     // the roster version the game has
 
   function measure() {
     if (!canvas) return;
@@ -126,16 +127,27 @@ window.bar3dBridge = (function () {
       f64[h + 17] = nv;
       var vb = h + HEADER + MAX_TOUCHES * 5;
       for (var k = 0; k < nv; k++) { f64[vb + k * 2] = lv[k][0]; f64[vb + k * 2 + 1] = lv[k][1]; }
+      // The text area: menu commands in the first half, the roster in the second.
+      var half = textCap >> 1;
       // Menu commands, as JSON text (nothing at all when there are none).
       if (commands.length) {
         var json = JSON.stringify(commands);
-        if (json.length * 3 < textCap) { commands = []; f64[h + 18] = writeText(u8, text, textCap, json); }
-        else { f64[h + 18] = writeText(u8, text, textCap, JSON.stringify(commands.splice(0, 1))); }
+        if (json.length * 3 < half) { commands = []; f64[h + 18] = writeText(u8, text, half, json); }
+        else { f64[h + 18] = writeText(u8, text, half, JSON.stringify(commands.splice(0, 1))); }
       } else {
         f64[h + 18] = 0;
       }
       f64[h + 19] = lastTouch;
       f64[h + 20] = A && A['userSongCount'] ? A['userSongCount']() : 0;
+      // Who's in the room, only when it changed (-1 = same as before).
+      var N = window.bar3dNet;
+      var rv = N && N['rosterVersion'] ? N['rosterVersion']() : 0;
+      if (rv !== rosterSent && N && N['rosterJson']) {
+        rosterSent = rv;
+        f64[h + 21] = writeText(u8, text + half, half, N['rosterJson']());
+      } else {
+        f64[h + 21] = -1;
+      }
       return 1;
     },
     // Page work the game asked for this frame, as JSON: [[op, ...args], ...].

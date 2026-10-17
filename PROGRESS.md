@@ -14,8 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) and 2.1a (2026-10-17). Next: 2.1b, 2.1c**
-(batch them). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) and 2.1a-c (2026-10-17). Next: 2.2, 2.3a, 2.3b**
+(batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
 skip anything that changes car/track models or visuals (the user will
@@ -491,3 +491,7 @@ A small DAW inside the bar, all DSP written in C++:
   commands pushed into the mailbox, menu info only when it changes, one
   panel at a time (menu vs account card), no blur behind panels, no
   looking/walking while a panel is open. New test: `tools/menu_test.mjs`.
+- **2026-10-17:** Restructure 2.1c done: who's in the room reaches the
+  game through the mailbox only when it changes (no page call per player
+  per frame), saved settings are checked against a schema (a broken one
+  → defaults + one warning). Page calls per frame: 2.8.

@@ -101,15 +101,25 @@ window.bar3dNet = (function () {
     if (ws && wsOpen) { try { ws.send(JSON.stringify(obj)); return true; } catch (e) {} }
     return false;
   }
-  function addPlayer(p) {
+  // Who's here, for the game: changes rosterVer, and the page mailbox sends
+  // the list (rosterJson) to the game only then (web/bridge.js).
+  var rosterVer = 0;
+  function rememberPlayer(p) {
     var known = players[p.id];
     if (!known) {
       known = players[p.id] = { index: nextIndex++, name: p.name };
       info('Multiplayer: ' + p.name + ' joined.');
+      rosterVer++;
     }
+    var acct = p.acct || '', av = p.av || 0;
+    if (known.name !== p.name || known.acct !== acct || known.av !== av) rosterVer++;
     known.name = p.name;
-    known.acct = p.acct || '';
-    known.av = p.av || 0;
+    known.acct = acct;
+    known.av = av;
+    return known;
+  }
+  function addPlayer(p) {
+    var known = rememberPlayer(p);
     if (p.s && p.s.length && lastSent[p.id] !== p.t) {
       lastSent[p.id] = p.t;
       packets.push({ index: known.index, t: p.t, s: p.s });
@@ -120,6 +130,7 @@ window.bar3dNet = (function () {
     info('Multiplayer: ' + players[pid].name + ' left.');
     delete players[pid];
     delete lastSent[pid];
+    rosterVer++;
   }
   function connectCloud() {
     var url = cloudUrl.replace(/\/$/, '') + '/room/' + room + '?id=' + id;
@@ -264,25 +275,13 @@ window.bar3dNet = (function () {
       var seen = {};
       reply.players.forEach(function (p) {
         seen[p.id] = true;
-        var known = players[p.id];
-        if (!known) {
-          known = players[p.id] = { index: nextIndex++, name: p.name };
-          info('Multiplayer: ' + p.name + ' joined.');
-        }
-        known.name = p.name;
-        known.acct = p.acct || '';
-        known.av = p.av || 0;
+        var known = rememberPlayer(p);
         if (lastSent[p.id] === p.t) return;
         lastSent[p.id] = p.t;
         packets.push({ index: known.index, t: p.t, s: p.s });
       });
       (reply.inbox || []).forEach(function (m) { receiveText(m[0], m[1]); });
-      Object.keys(players).forEach(function (pid) {
-        if (seen[pid]) return;
-        info('Multiplayer: ' + players[pid].name + ' left.');
-        delete players[pid];
-        delete lastSent[pid];
-      });
+      Object.keys(players).forEach(function (pid) { if (!seen[pid]) dropPlayer(pid); });
     });
   }
 
@@ -360,6 +359,15 @@ window.bar3dNet = (function () {
         n++;
       }
       return n;
+    },
+    // Everyone else in the room, for the game (through the page mailbox):
+    // [[index, name, account, picture revision, sorts before me], ...].
+    rosterVersion: function () { return rosterVer; },
+    rosterJson: function () {
+      return JSON.stringify(Object.keys(players).map(function (pid) {
+        var p = players[pid];
+        return [p.index, p.name || '', p.acct || '', p.av || 0, pid < id ? 1 : 0];
+      }));
     },
     // Index of each player currently in the room (others only).
     present: function (index) {

@@ -512,6 +512,19 @@ was answered by the user on 2026-10-17.
 - **Piano samples (step 1.2b):** 30 synthesized samples, the keys between
   play them at ±1 semitone (playbackRate). Built in background jobs after
   you enter.
+- **Page mailbox (steps 2.1a-c):** game ↔ page goes through
+  `engine/bridge.*` + `web/bridge.js`: one `pull()` at frame start, one
+  `flush()` at frame end. Don't add EM_ASM calls in the frame; add a
+  header slot or an op instead. Input is read once per frame as a
+  read-only `InputFrame` (`Input::poll()`). Menu commands are pushed with
+  `bar3dBridge.command(name, a, b, text, text2)`; the game tells the menu
+  things with `ui::setInfo(JsonWriter object)`, only on change. Build JSON
+  only with `engine::JsonWriter` / `jsonQuote` (escaping). Panels that
+  cover the game register with `bar3dModal` (one at a time). Who's in the
+  room is `bridge::roster()`, re-sent only when `web/net.js` bumps
+  `rosterVersion`; a player index above the last roster counts as present
+  (their first packet can arrive a frame before the roster lists them).
+  New saved settings need an entry in the `SCHEMA` in `web/menu.js`.
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 
+#include "engine/bridge.h"
 #include "engine/json.h"
 
 namespace engine::net {
@@ -45,21 +46,27 @@ void receive(std::vector<Packet>& out) {
   }
 }
 
-bool present(int player) { return EM_ASM_INT({ return window['bar3dNet']['present']($0) ? 1 : 0; }, player); }
+// Who's here comes with the page mailbox (engine/bridge.h), not a call each.
+bool present(int player) {
+  // A player newer than the last roster joined this frame (their first
+  // movement can arrive before the roster that lists them).
+  return bridge::rosterFind(player) || player > bridge::rosterMaxIndex();
+}
 
 std::string playerName(int player) {
-  char buffer[64];
-  EM_ASM({ stringToUTF8(window['bar3dNet']['name']($0), $1, $2); }, player, buffer, sizeof(buffer));
-  return buffer;
+  const bridge::RosterEntry* e = bridge::rosterFind(player);
+  return e ? e->name : std::string();
 }
 
 std::string playerAccount(int player) {
-  char buffer[32];
-  EM_ASM({ stringToUTF8(window['bar3dNet']['account']($0), $1, $2); }, player, buffer, sizeof(buffer));
-  return buffer;
+  const bridge::RosterEntry* e = bridge::rosterFind(player);
+  return e ? e->account : std::string();
 }
 
-int playerAvatarRev(int player) { return EM_ASM_INT({ return window['bar3dNet']['avatarRev']($0); }, player); }
+int playerAvatarRev(int player) {
+  const bridge::RosterEntry* e = bridge::rosterFind(player);
+  return e ? e->avatarRev : 0;
+}
 
 std::string avatarUrl(const std::string& account, int revision) {
   char buffer[512];
@@ -119,7 +126,10 @@ void receiveEvents(std::vector<Event>& out) {
   }
 }
 
-bool isLower(int player) { return EM_ASM_INT({ return window['bar3dNet']['isLower']($0) ? 1 : 0; }, player) != 0; }
+bool isLower(int player) {
+  const bridge::RosterEntry* e = bridge::rosterFind(player);
+  return e && e->lowerId;
+}
 
 double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 

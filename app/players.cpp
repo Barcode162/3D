@@ -1,8 +1,11 @@
 #include "app/players.h"
 
+#include "engine/bridge.h"
+
 #include <algorithm>
 #include <cmath>
 
+#include "engine/bridge.h"
 #include "engine/net.h"
 
 namespace app {
@@ -72,11 +75,11 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
   // Gone players disappear; the rest are played back a little in the past.
   std::erase_if(players_, [](const OtherPlayer& o) { return !engine::net::present(o.id); });
   for (OtherPlayer& o : players_) {
-    if (nowMs - o.infoMs > 1000) {  // names and pictures can change (accounts)
-      o.infoMs = nowMs;
-      o.name = engine::net::playerName(o.id);
-      o.account = engine::net::playerAccount(o.id);
-      o.avatarRev = engine::net::playerAvatarRev(o.id);
+    // Names and pictures can change (accounts); the roster is in memory.
+    if (const engine::bridge::RosterEntry* e = engine::bridge::rosterFind(o.id)) {
+      o.name = e->name;
+      o.account = e->account;
+      o.avatarRev = e->avatarRev;
     }
     while (o.samples.size() > 2 && o.samples[1].time < nowMs + o.clockOffset - kKeepMs) o.samples.pop_front();
     if (o.samples.empty()) continue;

@@ -6,6 +6,7 @@
 #include <cstdio>
 
 #include "engine/json.h"
+#include "engine/log.h"
 
 namespace engine::bridge {
 namespace {
@@ -19,7 +20,9 @@ char g_text[kTextCap];
 Frame g_frame;
 std::vector<Touch> g_touches;
 std::vector<std::pair<int, float>> g_voices;
-std::string g_ui = "[]";
+std::string g_ui;
+std::vector<RosterEntry> g_roster;
+int g_rosterMax = 0;  // the highest player index the roster ever had
 std::string g_out;  // queued ops, comma-separated
 bool g_attached = false;
 
@@ -70,8 +73,24 @@ void pull() {
     const double* v = h + kHeader + kMaxTouches * 5 + i * 2;
     g_voices.emplace_back(static_cast<int>(v[0]), static_cast<float>(v[1]));
   }
+  constexpr int kHalf = kTextCap / 2;  // commands in the first half, the roster in the second
   const int textLen = static_cast<int>(h[18]);
-  g_ui.assign(g_text, static_cast<size_t>(std::max(0, std::min(textLen, kTextCap - 1))));
+  g_ui.assign(g_text, static_cast<size_t>(std::max(0, std::min(textLen, kHalf - 1))));
+  const int rosterLen = static_cast<int>(h[21]);
+  if (rosterLen >= 0) {
+    const std::string_view text(g_text + kHalf, static_cast<size_t>(std::min(rosterLen, kHalf - 1)));
+    std::string error;
+    const Json list = Json::parse(text, &error);
+    if (!error.empty()) {
+      LOG_ERROR("Bridge: bad roster (%s).", error.c_str());
+    } else {
+      g_roster.clear();
+      for (const Json& p : list.items()) {
+        g_roster.push_back({p[0].integer(), p[1].string(), p[2].string(), p[3].integer(), p[4].integer() != 0});
+        g_rosterMax = std::max(g_rosterMax, g_roster.back().index);
+      }
+    }
+  }
 }
 
 const Frame& frame() { return g_frame; }
@@ -90,6 +109,17 @@ float voiceLevel(int player) {
 }
 
 const std::string& uiCommandsJson() { return g_ui; }
+
+const std::vector<RosterEntry>& roster() { return g_roster; }
+
+int rosterMaxIndex() { return g_rosterMax; }
+
+const RosterEntry* rosterFind(int index) {
+  for (const RosterEntry& e : g_roster) {
+    if (e.index == index) return &e;
+  }
+  return nullptr;
+}
 
 void op(std::string jsonArray) {
   if (!g_out.empty()) g_out += ',';

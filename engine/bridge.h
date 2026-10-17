@@ -43,8 +43,21 @@ const Frame& frame();
 std::vector<Touch> takeTouches();
 // Another player's voice level 0..1 (by player index), as of the last pull.
 float voiceLevel(int player);
-// The menu commands since the last pull, as JSON text ([[name, a, b, text], ...]).
+// The menu commands since the last pull, as JSON text ([[name, a, b, text, text2], ...]).
 const std::string& uiCommandsJson();
+
+// The other players in the room (web/net.js), updated when it changes.
+struct RosterEntry {
+  int index = 0;           // the player's number in this session
+  std::string name;
+  std::string account;     // "" = guest
+  int avatarRev = 0;       // profile picture revision (0 = none)
+  bool lowerId = false;    // their id sorts before ours (tie-breaks)
+};
+const std::vector<RosterEntry>& roster();
+const RosterEntry* rosterFind(int index);
+// Players get rising indexes, so one above this joined after the last roster.
+int rosterMaxIndex();
 
 // Queues one page operation: a JSON array like ["status", "60 fps"]. Run in
 // order at flush().
