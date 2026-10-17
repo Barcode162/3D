@@ -1289,7 +1289,7 @@ void frame(double rafMs) {
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.input.poll();  // what the player did since last frame (read-only from here on)
   ProfiledFrame profiled(engine::clockMs());
-  if (ft.resumed) LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
+  if (ft.resumed && ft.gapMs > 1000) LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
   updateLoadingScreen();
 
   g_app.gpu.resizeIfNeeded();
