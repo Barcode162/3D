@@ -145,11 +145,45 @@ bool World::allFinished() const {
   return true;
 }
 
+bool World::requestReset(int index) {
+  const Racer& r = racers_[static_cast<size_t>(index)];
+  if (r.lastResetTick > 0 && tick_ - r.lastResetTick < ticks(4000)) return false;
+  resetCar(index);
+  return true;
+}
+
 void World::resetCar(int index) {
   Racer& r = racers_[static_cast<size_t>(index)];
+  // A free spot: here or a little further back, across the road, at least
+  // 6 m from every other car (else here, and the ghost time sorts it out).
   const auto c = track_.at(r.s);
-  const float lat = engine::clampf(r.lateral, -c.halfWidth + 1.5f, c.halfWidth - 1.5f);
-  r.car.place(track_.surfacePoint(r.s, lat), engine::Vehicle::headingOf(c.tangent));
+  float bestS = r.s, bestLat = engine::clampf(r.lateral, -c.halfWidth + 1.5f, c.halfWidth - 1.5f);
+  bool found = false;
+  for (float back : {0.0f, 8.0f, 16.0f}) {
+    const float s = std::fmod(r.s - back + track_.length(), track_.length());
+    const auto here = track_.at(s);
+    const float limit = here.halfWidth - 1.5f;
+    for (float lat : {r.lateral, 0.0f, -3.0f, 3.0f, -5.0f, 5.0f}) {
+      lat = engine::clampf(lat, -limit, limit);
+      const Vec3 p = track_.surfacePoint(s, lat);
+      bool clear = true;
+      for (size_t j = 0; j < racers_.size() && clear; ++j) {
+        if (static_cast<int>(j) == index) continue;
+        const Vec3 d = racers_[j].car.position - p;
+        clear = d.x * d.x + d.z * d.z > 36;
+      }
+      if (clear) {
+        bestS = s;
+        bestLat = lat;
+        found = true;
+        break;
+      }
+    }
+    if (found) break;
+  }
+  r.car.place(track_.surfacePoint(bestS, bestLat), engine::Vehicle::headingOf(track_.at(bestS).tangent));
+  r.ghostUntil = tick_ + ticks(2000);
+  r.lastResetTick = std::max(tick_, 1u);
   r.prevPosition = r.car.position;  // no streak in the drawing
   r.prevRotation = r.car.rotation;
   r.stuckTime = r.flipTime = 0;
@@ -325,6 +359,7 @@ void World::collideWalls(Racer& r) {
 }
 
 void World::collideCars(Racer& A, Racer& B) {
+  if (A.ghost(tick_) || B.ghost(tick_)) return;  // just reset: passes through
   engine::Vehicle& a = A.car;
   engine::Vehicle& b = B.car;
   const Vec3 d = b.position - a.position;

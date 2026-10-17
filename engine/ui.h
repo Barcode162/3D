@@ -24,6 +24,11 @@ void setInfo(const std::string& jsonObject);
 void toast(const std::string& text);
 // Opens a menu panel by name ("emotes", "piano", "bartender"...).
 void openPanel(const std::string& name);
+// Adds or removes a class on the page's <body> (e.g. "racing" hides the
+// top bar during a race).
+void setBodyClass(const std::string& name, bool on);
+// The build code shown on the page ("build 1a2b3c4").
+std::string buildLabel();
 
 }  // namespace engine::ui
 

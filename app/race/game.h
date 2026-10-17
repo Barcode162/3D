@@ -25,8 +25,16 @@ class Game {
   }
   bool open() const { return open_; }
   bool pipelinesReady() const { return view_.pipelinesReady(); }
-  // Sit down in rig 0 (left) or 1 (right).
-  void start(int rig, double nowMs);
+  // Builds the track and its meshes in background jobs (call after you
+  // enter the bar, so sitting in a rig later doesn't freeze the game).
+  void prepare();
+  bool built() const { return ready_; }
+  // Sit down in rig 0 (left) or 1 (right). Returns false while the track is
+  // still being built: the race then starts by itself once it's ready
+  // (pending() until then; call tryPending each frame).
+  bool start(int rig, double nowMs);
+  bool pending() const { return pendingRig_ >= 0; }
+  bool tryPending(double nowMs);
   void close();
   // Returns true when you chose to leave.
   bool update(double nowMs, float dt, const engine::InputFrame& input);
@@ -45,7 +53,8 @@ class Game {
   engine::Gpu* gpu_ = nullptr;
   const engine::Sound* hum_ = nullptr;
   int humVoice_ = 0;
-  bool ready_ = false, open_ = false;
+  bool ready_ = false, open_ = false, prepared_ = false;
+  int pendingRig_ = -1;
   World world_;
   View view_;
   Controls controls_;

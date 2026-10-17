@@ -179,6 +179,7 @@ window.bar3dBridge = (function () {
             case 'listener': { var A2 = window.bar3dAudio; if (A2) A2['setListener'].apply(A2, op.slice(1)); break; }
             case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
             case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
+            case 'bodyClass': document.body.classList.toggle(op[1], !!op[2]); break;
             case 'panel': { var U4 = window.bar3dUi; if (U4) U4['open'](op[1]); break; }
           }
         } catch (e) {

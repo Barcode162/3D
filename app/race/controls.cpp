@@ -15,6 +15,7 @@ float curve(float x, float power) { return std::copysign(std::pow(std::fabs(x), 
 float deadzone(float x, float dz) { return std::fabs(x) < dz ? 0 : std::copysign((std::fabs(x) - dz) / (1 - dz), x); }
 
 constexpr float kSteerSpan = 0.2f;  // screen widths of slide for full lock
+constexpr float kSteerSmoothing = 0.025f;  // seconds (touch and gamepad)
 
 }  // namespace
 
@@ -29,20 +30,20 @@ void Controls::reset() {
 
 Controls::Rect Controls::brakePedal(float aspect) const {
   const float w = std::min(0.15f, 0.36f / aspect);
-  return {0.80f - w - 0.015f, 0.42f, w, 0.55f};
+  return {0.80f - w - 0.015f - safeR_, 0.42f, w, 0.55f - safeB_};
 }
 Controls::Rect Controls::gasPedal(float aspect) const {
   const float w = std::min(0.17f, 0.4f / aspect);
-  return {0.985f - w, 0.32f, w, 0.65f};
+  return {0.985f - w - safeR_, 0.32f, w, 0.65f - safeB_};
 }
 
 Controls::Rect Controls::buttonRect(Button b, float aspect, bool manual) const {
   const float bw = std::min(0.1f, 0.22f / aspect), bh = 0.11f;
   switch (b) {
-    case kLeave: return {0.012f, 0.02f, bw, bh};
-    case kCamera: return {0.988f - 2 * bw - 0.01f, 0.02f, bw, bh};
-    case kReset: return {0.988f - bw, 0.02f, bw, bh};
-    case kLookBack: return {0.988f - 3 * bw - 0.02f, 0.02f, bw, bh};
+    case kLeave: return {0.012f + safeL_, 0.02f, bw, bh};
+    case kCamera: return {0.988f - 2 * bw - 0.01f - safeR_, 0.02f, bw, bh};
+    case kReset: return {0.988f - bw - safeR_, 0.02f, bw, bh};
+    case kLookBack: return {0.988f - 3 * bw - 0.02f - safeR_, 0.02f, bw, bh};
     case kHandbrake: {
       const Rect brake = brakePedal(aspect);
       return {brake.x, brake.y - 0.15f, brake.w, 0.12f};
@@ -185,7 +186,6 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
   switch (source) {
     case Source::kTouch:
       steerTarget = steerAlive ? targetSteer_ : 0;
-      steerRateUp = steerRateDown = 18;  // smooth, still quick
       gasTarget = touchGas ? gasTarget : 0;
       brakeTarget = touchBrake ? brakeTarget : 0;
       break;
@@ -213,6 +213,8 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
       break;
   }
   if (source == Source::kTouch || source == Source::kKeyboard) {
+    // A brake press bites at once (to 40% of the press), then ramps in.
+    if (brakeTarget > 0 && brake_ < 0.4f * brakeTarget) brake_ = 0.4f * brakeTarget;
     gas_ = approach(gas_, gasTarget, 7, 12, dt);
     brake_ = approach(brake_, brakeTarget, 8, 14, dt);
   } else {
@@ -222,8 +224,9 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
   if (source == Source::kWheel) {
     steer_ = steerTarget;
   } else if (source == Source::kTouch || source == Source::kGamepad) {
-    // A light filter: removes thumb jitter without feeling laggy.
-    steer_ += (steerTarget - steer_) * std::min(1.0f, dt * steerRateUp);
+    // A light filter (25 ms): removes thumb jitter without feeling laggy,
+    // the same at any frame rate.
+    steer_ += (steerTarget - steer_) * (1.0f - std::exp(-dt / kSteerSmoothing));
   } else {
     steer_ = std::fabs(steerTarget) > std::fabs(steer_) && steerTarget * steer_ >= 0
                  ? approach(steer_, steerTarget, steerRateUp, steerRateUp, dt)

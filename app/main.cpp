@@ -263,8 +263,11 @@ void sitOn(int index) {
   g_app.camera.pitch = s.kind == app::SeatKind::kPianoBench ? engine::radians(-58.0f) : 0;
   if (s.kind == app::SeatKind::kSim) {
     setActivity(Activity::kDrive);
-    g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs);
-    g_app.input.setCapture(true);
+    if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs)) {
+      g_app.input.setCapture(true);
+    } else {
+      showToast("Warming up the race...");  // it starts by itself in a moment
+    }
   } else if (s.kind == app::SeatKind::kPianoBench) {
     setActivity(Activity::kPiano);
     g_app.piano.openKeyboard();
@@ -1055,6 +1058,8 @@ void updateInteraction(double nowMs, float dt) {
       g_app.input.setCapture(false);
       setActivity(Activity::kNone);
     }
+  } else if (g_app.race.pending()) {
+    if (g_app.race.tryPending(nowMs)) g_app.input.setCapture(true);
   } else if (g_app.race.open()) {
     if (g_app.race.update(nowMs, dt, g_app.input.frame())) standUp();
   } else if (g_app.piano.keyboardOpen()) {
@@ -1543,6 +1548,7 @@ void joinRoom() {
   g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
   EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
   g_app.piano.prepareSamples();  // note samples in background jobs
+  g_app.race.prepare();          // the race track, so sitting in a rig is instant
 }
 
 // Called by the loading screen when you tap "enter": the intro title and

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 using engine::Vec3;
 
@@ -57,9 +58,33 @@ const engine::Surface kCurbSurface{0.95f, 0.014f, 0, 0.004f};
 const engine::Surface kGrassSurface{0.55f, 0.05f, 0.05f, 0.01f};
 const engine::Surface kGravelSurface{0.45f, 0.12f, 0.35f, 0.012f};
 
-float hash(float x, float y) {
+// 0..1, for placing scenery only (trees, shading): kept as it was so the
+// look doesn't change. Physics uses hash() below.
+float sceneryHash(float x, float y) {
   const float h = std::sin(x * 127.1f + y * 311.7f) * 43758.5453f;
   return h - std::floor(h);
+}
+
+// 0..1 from two whole numbers (an integer hash: the same on every machine,
+// unlike sin()).
+float hash(int x, int y) {
+  uint32_t h = static_cast<uint32_t>(x) * 0x8da6b343u ^ static_cast<uint32_t>(y) * 0xd8163841u;
+  h ^= h >> 15;
+  h *= 0x2c1b3c6du;
+  h ^= h >> 12;
+  h *= 0x297a2d39u;
+  h ^= h >> 15;
+  return static_cast<float>(h & 0xffffffu) / 16777215.0f;
+}
+
+// Smooth bumps: random heights on a grid, blended between (no steps for the
+// dampers to hit).
+float valueNoise(float x, float y) {
+  const float fx = std::floor(x), fy = std::floor(y);
+  const int ix = static_cast<int>(fx), iy = static_cast<int>(fy);
+  const float tx = engine::smoothstep(0, 1, x - fx), ty = engine::smoothstep(0, 1, y - fy);
+  const float a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+  return engine::lerpf(engine::lerpf(a, b, tx), engine::lerpf(c, d, tx), ty);
 }
 
 }  // namespace
@@ -259,8 +284,7 @@ Vec3 Track::surfacePoint(float s, float lateral, Vec3* normal, engine::Surface* 
     }
   }
   if (surf.bumps > 0) {
-    const float q = std::floor(s * 1.7f), w = std::floor(lateral * 1.7f);
-    h += (hash(q, w) - 0.5f) * surf.bumps;
+    h += (valueNoise(s * 1.7f, lateral * 1.7f) - 0.5f) * surf.bumps;
   }
   if (normal) *normal = n;
   if (surface) *surface = surf;
@@ -471,7 +495,7 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
       for (int xi = 0; xi < nx; ++xi) {
         const Vec3 p{lo.x - margin + static_cast<float>(xi) * cell, H(xi, zi), lo.z - margin + static_cast<float>(zi) * cell};
         const Vec3 nn = engine::normalize({H(xi - 1, zi) - H(xi + 1, zi), 2 * cell, H(xi, zi - 1) - H(xi, zi + 1)});
-        const float shade = 0.85f + 0.3f * hash(static_cast<float>(xi), static_cast<float>(zi));
+        const float shade = 0.85f + 0.3f * sceneryHash(static_cast<float>(xi), static_cast<float>(zi));
         m.vertex(p, nn, kGrassColor * shade, kGrass);
       }
     }
@@ -485,8 +509,8 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
     // nearest track chunk so they're culled with it.
     hint = -1;
     for (int k = 0; k < 2600; ++k) {
-      const float x = lo.x - 250 + hash(static_cast<float>(k), 1.7f) * (hi.x - lo.x + 500);
-      const float z = lo.z - 250 + hash(static_cast<float>(k), 9.3f) * (hi.z - lo.z + 500);
+      const float x = lo.x - 250 + sceneryHash(static_cast<float>(k), 1.7f) * (hi.x - lo.x + 500);
+      const float z = lo.z - 250 + sceneryHash(static_cast<float>(k), 9.3f) * (hi.z - lo.z + 500);
       float s, lat;
       locate({x, 0, z}, s, lat, hint);
       const Sample c = at(s);
@@ -497,12 +521,12 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
       const float fx = (x - (lo.x - margin)) / cell - static_cast<float>(xi), fz = (z - (lo.z - margin)) / cell - static_cast<float>(zi);
       const float y = H(xi, zi) * (1 - fx) * (1 - fz) + H(xi + 1, zi) * fx * (1 - fz) + H(xi, zi + 1) * (1 - fx) * fz +
                       H(xi + 1, zi + 1) * fx * fz;
-      const float size = 0.7f + 0.7f * hash(static_cast<float>(k), 4.1f);
+      const float size = 0.7f + 0.7f * sceneryHash(static_cast<float>(k), 4.1f);
       const Vec3 base{x, y - 0.2f, z};
       const int idx = std::min(static_cast<int>(s / step), n - 1) / kChunk;
       MeshBuilder& tm = d < 120 ? chunks[static_cast<size_t>(idx)].mesh : terrain.mesh;
       tm.box(base + Vec3{0, 1.2f * size, 0}, {0.25f * size, 1.2f * size, 0.25f * size}, {0.18f, 0.11f, 0.06f}, kPlain);
-      const Vec3 leaf = Vec3{0.05f, 0.13f, 0.04f} * (0.7f + 0.6f * hash(static_cast<float>(k), 2.2f));
+      const Vec3 leaf = Vec3{0.05f, 0.13f, 0.04f} * (0.7f + 0.6f * sceneryHash(static_cast<float>(k), 2.2f));
       tm.cone(base + Vec3{0, 1.6f * size, 0}, 2.6f * size, 5.5f * size, 7, leaf, kFoliage);
       tm.cone(base + Vec3{0, 4.2f * size, 0}, 1.9f * size, 4.2f * size, 7, leaf * 1.15f, kFoliage);
     }

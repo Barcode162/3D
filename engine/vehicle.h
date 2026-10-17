@@ -182,10 +182,14 @@ class Vehicle {
   float gearRatio() const;  // signed, including the final drive; 0 = neutral
   float shaftRpm(int gear) const;  // engine rpm the driven wheels ask for in `gear`
   void autoShift(const CarInput& input);
+  // At rest with the wheels' springs settled under the car's weight; every
+  // moving part zeroed (used by setup and place).
+  void resetState();
   void tireForce(const Wheel& w, float slipRatio, float tanSlip, float& fx, float& fy) const;
 
   CarSpec spec_;
   float shapeB_ = 1.8f;
+  float tanPeakSlip_ = 0.13f;  // tan(tire.peakSlipAngle), worked out once
   float engineSpeed_ = 94;  // rad/s
   float reverseHold_ = 0;
   int pendingGear_ = 1;

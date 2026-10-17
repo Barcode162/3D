@@ -7,7 +7,10 @@
 #include <cstdio>
 #include <string>
 
+#include "engine/bridge.h"
 #include "engine/frame_time.h"
+#include "engine/jobs.h"
+#include "engine/ui.h"
 #include "engine/log.h"
 #include "engine/profiler.h"
 
@@ -34,14 +37,40 @@ using engine::wrapAngle;
 
 }  // namespace
 
-void Game::start(int rig, double nowMs) {
-  if (!ready_) {
+void Game::prepare() {
+  if (prepared_) return;
+  prepared_ = true;
+  // Track and racing line first, then the meshes (once the race's shaders
+  // have compiled; the job waits a frame and tries again until then).
+  engine::queueJob([this] {
     const double t0 = engine::clockMs();
     world_.init();
-    ready_ = view_.init(*gpu_, world_.track(), sportsCar());
-    LOG_INFO("Race track ready in %.0f ms.", engine::clockMs() - t0);
-    if (!ready_) return;
+    LOG_INFO("Race track built in %.0f ms.", engine::clockMs() - t0);
+  }, engine::JobLane::kNormal, "race-track");
+  struct Upload {
+    static void queue(Game* g) {
+      engine::queueJob([g] {
+        if (!g->view_.pipelinesReady()) {
+          queue(g);  // try again later
+          return;
+        }
+        const double t0 = engine::clockMs();
+        g->ready_ = g->view_.init(*g->gpu_, g->world_.track(), sportsCar());
+        LOG_INFO("Race track ready in %.0f ms.", engine::clockMs() - t0);
+      }, engine::JobLane::kNormal, "race-meshes");
+    }
+  };
+  Upload::queue(this);
+}
+
+bool Game::start(int rig, double nowMs) {
+  if (!ready_) {
+    prepare();  // (normally already done after you entered)
+    pendingRig_ = rig;
+    LOG_INFO("Race: warming up.");
+    return false;
   }
+  pendingRig_ = -1;
   rig_ = rig;
   open_ = true;
   startMs_ = nowMs;
@@ -54,18 +83,20 @@ void Game::start(int rig, double nowMs) {
   camPos_ = me.car.position;
   if (hum_ && !humVoice_) humVoice_ = hum_->play(0.0f, nullptr, 0, 0.6f, engine::Sound::kEffects, true);
   // The page's top bar (menu, mic, log) would sit on the race buttons.
-  char build[32] = {};
-  EM_ASM({
-    document.body.classList.add('racing');
-    var b = document.getElementById('build');
-    stringToUTF8(b ? b.textContent : "", $0, $1);
-  }, build, sizeof(build));
-  build_ = build;
+  engine::ui::setBodyClass("racing", true);
+  build_ = engine::ui::buildLabel();
+  return true;
+}
+
+bool Game::tryPending(double nowMs) {
+  return pendingRig_ >= 0 && ready_ && start(pendingRig_, nowMs);
 }
 
 void Game::close() {
+  pendingRig_ = -1;
+  if (!open_) return;
   open_ = false;
-  EM_ASM({ document.body.classList.remove('racing'); });
+  engine::ui::setBodyClass("racing", false);
   engine::Sound::stop(humVoice_, 0, 0.3f);
   humVoice_ = 0;
 }
@@ -74,18 +105,24 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
   if (!open_) return false;
   Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
   const float W = static_cast<float>(gpu_->width), H = static_cast<float>(gpu_->height);
+  const engine::bridge::Frame& page = engine::bridge::frame();
+  if (page.cssW > 0 && page.cssH > 0) {
+    controls_.setSafeArea(page.safe[0] / static_cast<float>(page.cssW), page.safe[2] / static_cast<float>(page.cssW),
+                          page.safe[3] / static_cast<float>(page.cssH));
+  }
   controls_.update(dt, input, me.car.speed(), me.car.spec(), manualGears_, W / std::max(H, 1.0f));
   const bool* pressed = controls_.pressed;
   if (pressed[Controls::kLeave]) return true;
   if (pressed[Controls::kCamera]) cameraMode_ = (cameraMode_ + 1) % 4;
-  if (pressed[Controls::kReset] && world_.started()) world_.resetCar(world_.you());
+  if (pressed[Controls::kReset] && world_.started()) world_.requestReset(world_.you());
   me.input = controls_.car;
   me.assists.autoGears = !manualGears_;
   // After the finish: tap anywhere on the results to race again.
   if (me.finished && resultsMs_ == 0) resultsMs_ = nowMs;
   if (resultsMs_ > 0 && nowMs - resultsMs_ > 1500) {
-    for (const engine::Pointer& p : input.pointers) {
-      if (p.pos.x > 0.3f && p.pos.x < 0.7f && p.pos.y > 0.3f && p.pos.y < 0.8f && nowMs - p.startMs < 100) {
+    // (Pointers: the race captures input, so a tap shows up as a press.)
+    for (const engine::RawPress& p : input.presses) {
+      if (p.down && p.key < 0 && p.pos.x > 0.3f && p.pos.x < 0.7f && p.pos.y > 0.3f && p.pos.y < 0.8f) {
         start(rig_, nowMs);
         return false;
       }
@@ -154,7 +191,8 @@ void Game::render(const wgpu::TextureView& target, engine::TextRenderer& text, d
 
 float Game::steer() const {
   if (!open_) return 0;
-  return world_.racers()[static_cast<size_t>(world_.you())].car.wheels[0].steer / 0.5f;
+  const engine::Vehicle& car = world_.racers()[static_cast<size_t>(world_.you())].car;
+  return car.wheels[0].steer / car.spec().maxSteer;
 }
 
 void Game::stateFor(float out[5]) const {

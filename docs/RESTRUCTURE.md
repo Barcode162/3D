@@ -781,7 +781,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Shared facts duplicated and polled (`updateMirrorButtons` `main.cpp:777-789`; `setLights` from two places) → RoomState + change events. *[5.3]*
 - [ ] **L** Sound handles are raw pointers into `g_app.sfx` (`main.cpp:1385-1391`) → AudioMixer sound ids. *[2.5]*
 - [ ] **L** Test hooks are regexes inside startup (`main.cpp:1186-1218`) → TestHooks parsed once. *[1.8]*
-- [ ] **L** *(review)* E-7 has no global check; `app/race/game.cpp` keeps 2 `EM_ASM` (the `racing` body class) that no step removed → moved behind an engine call; `grep -rn "EM_ASM\|EM_JS" app` → 0. *[2.4b, 4.1c]*
+- [ ] **L** *(review)* E-7 has no global check; `app/race/game.cpp` keeps 2 `EM_ASM` (the `racing` body class) that no step removed → moved behind an engine call; `grep -rn "EM_ASM\|EM_JS" app` → 0. *[2.4b, 4.1c]* (2.4b part done: `grep EM_ASM app/race` → 0; `ui::setBodyClass`, `ui::buildLabel`)
 
 **B. Activities, seats, interaction, HUD**
 - [ ] **H** Seats: "lower id wins" after both sat; a newcomer who hasn't placed others yet can steal a seat (`main.cpp:1253-1265`, `:182`, `:235`) → server claims + pending sit animation. *[5.2]*
@@ -807,7 +807,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
 - [x] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
 - [x] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
-- [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]* (1.3 part done)
+- [x] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]* (1.3 part done)
 - [x] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
 - [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]* (1.1 part done)
 - [x] **M** Failed downloads count as done, no retry, no fail state (`model.cpp` done(nullptr), `renderer.cpp:523`, `index.html:116-128`) → retry ×3, fail UI with Retry. *[1.4]*
@@ -983,38 +983,38 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** Race renderer: no LOD, no distance or backface culling; terrain chunk never culled (`view.h:20` zFar 2500; `view.cpp:218,394-396`; `track.cpp:441-510`) → LOD chunks, tiles, far cull, culling. *[7.6]*
 - [ ] **M** No VehicleState save/restore; private fields; CarSpec with vectors copied per car (`vehicle.h:87-93,187-191`) → POD state + `const CarSpec*`. *[7.1]*
 - [ ] **M** Determinism only for identical wasm; native ≠ wasm; `sin` in the surface hash (`track.cpp:60-63`) → document, em++ tests, integer hash, build hash in race join. *[0.1, 2.4a, 2.4b, 7.3]* (0.1 part done: documented in DECISIONS → Restructure)
-- [ ] **M** Resets ignore other cars, no cooldown (`world.cpp:137-143,180,250`; `game.cpp:140`) → free slot, 2 s ghost, cooldown. *[2.4b]*
+- [x] **M** Resets ignore other cars, no cooldown (`world.cpp:137-143,180,250`; `game.cpp:140`) → free slot, 2 s ghost, cooldown. *[2.4b]*
 - [ ] **M** Start time local and pseudo-random (`world.cpp:115`) → server goAt. *[7.2]*
 - [ ] **M** Positions and finish computed locally (`world.cpp:155-163,408-411`) → server results. *[7.2]*
 - [ ] **M** Contact solver: no slop or iterations, jitter in sustained contact (`world.cpp:286,366-367`) → Baumgarte 0.2-0.4, 1-2 cm slop, 2 iterations. *[7.3]*
 - [ ] **M** No track LOD; ≈ 18 quads per metre, unshared vertices (`track.cpp:321-380`) → LOD chunks, shared strips. *[7.6]*
-- [ ] **M** Surface bumps stepwise every 0.59 m → damper spikes (`track.cpp:261-264`) → smooth value noise. *[2.4b]*
+- [x] **M** Surface bumps stepwise every 0.59 m → damper spikes (`track.cpp:261-264`) → smooth value noise. *[2.4b]*
 - [ ] **M** Curbs/lines z-fight beyond ≈ 50 m (Depth24Plus, near 0.1) → reverse-Z Depth32Float. *[7.6]*
 - [ ] **M** Procedural shading sparkles, no anti-aliasing (`race.wgsl:135,149`; `view.cpp:208-219`) → fade octaves by distance, MSAA 4× option. *[7.6]*
 - [ ] **M** Wasted fragment work: car-shadow loop with sin/cos per pixel; sky drawn first (`race.wgsl:96-113`; `view.cpp:225-228,389-391`) → CPU sin/cos; sky last. *[7.6]*
 - [ ] **M** 40 B vertices + Uint32 indices, 11.4 MB kept all session (`mesh.h:29-34`; `view.cpp:306`) → 20 B + Uint16, chunked builds. *[7.6]*
 - [ ] **M** Car drawing needs a full Vehicle; single-instance uniforms (`view.cpp:283-300,344,371`) → CarVisual + per-view uniform ring. *[7.5]*
-- [ ] **M** Steering/pedal latency longer than needed (`controls.cpp:255,283-284,293`) → steer τ ≈ 25 ms, brake jump to 0.4. *[2.4b]*
+- [x] **M** Steering/pedal latency longer than needed (`controls.cpp:255,283-284,293`) → steer τ ≈ 25 ms, brake jump to 0.4. *[2.4b]*
 - [ ] **M** Wheel pedals read 50% until touched; source switching on absolute values (`controls.cpp:217-241`) → per-axis "moved" flag, switch on deltas. *[7.6]*
-- [ ] **M** Touch zones ignore safe areas and edge gestures (`controls.h:47`; `controls.cpp:103-112`) → safe-area insets via the mailbox. *[2.1a, 2.4b]* (2.1a part done: insets in the mailbox)
+- [x] **M** Touch zones ignore safe areas and edge gestures (`controls.h:47`; `controls.cpp:103-112`) → safe-area insets via the mailbox. *[2.1a, 2.4b]* (2.1a part done: insets in the mailbox)
 - [ ] **M** Mesh builders peak at 15 MB of vector capacity (`mesh.h:40-49`) → reserve, strips, chunk by chunk. *[7.6]*
 - [ ] **M** Bot traffic ignores cars alongside; passes in braking zones (`world.cpp:222-234`) → lateral clearance, commit side, no passes when braking. *[7.4]*
 - [ ] **M** RACING.md:47-48 and DECISIONS "max 30 steps" (`DECISIONS.md:419`; really 24) are false; RACING.md:116-121 describes the broken infinite-mass model → correct now; rewrite netcode section. *[0.1, 7.3]* (0.1 part done: both corrected, caveat added)
 - [ ] **M** Monitors: RACING says 3 per rig, the scene has 1 quad (`main.cpp:395-403`) → decide (Q10); new monitor quads in `tools/assets/sim_rig.py` + `bar_scene.cpp`. *[7.5]*
-- [ ] **L** `place()` leaves stale state and a different sag (`vehicle.cpp:46-60`) → one `resetState()`. *[2.4b]*
+- [x] **L** `place()` leaves stale state and a different sag (`vehicle.cpp:46-60`) → one `resetState()`. *[2.4b]*
 - [ ] **L** Gear presses during a shift are dropped (`vehicle.cpp:176-189`) → shift queue. *[7.1]*
-- [ ] **L** `tan()` recomputed in the hot tire path (`vehicle.cpp:95,248,400`) → precompute. *[2.4b]*
+- [x] **L** `tan()` recomputed in the hot tire path (`vehicle.cpp:95,248,400`) → precompute. *[2.4b]*
 - [ ] **L** Safety clamps hide bugs (`vehicle.cpp:438-442`) → count hits in telemetry. *[7.1]*
 - [ ] **L** `cast()` samples at the origin; `locate()` repeated ≈ 9× per car-step (`track.cpp:211-222,273-288`) → cache per car per step. *[7.6]*
-- [ ] **L** Frame-rate dependent smoothing (`controls.cpp:293`) → `1 - exp(-dt/τ)`. *[2.4b]*
+- [x] **L** Frame-rate dependent smoothing (`controls.cpp:293`) → `1 - exp(-dt/τ)`. *[2.4b]*
 - [ ] **L** Only the first gamepad is read (`gamepad.cpp:13-23`) → all pads by role. *[7.6]*
 - [ ] **L** Inputs not tick-stamped (`controls.h:39`) → InputFrame per tick. *[7.1]*
 - [x] **L** Lap-0 dead code; car B uses car A's extents (`world.cpp:315,326,398-414`) → fix. *[2.4a]*
-- [ ] **L** Racing line rebuilt every init (`world.cpp:48-62`) → part of TrackData built once. *[2.4b]*
+- [x] **L** Racing line rebuilt every init (`world.cpp:48-62`) → part of TrackData built once. *[2.4b]*
 - [ ] **L** AI mixed into `world.cpp` → `app/race/ai.*`. *[7.4]*
 - [ ] **L** Degenerate quads and dead code in the car body (`car_model.cpp:102,110,139-140`); no car LOD → fix; LOD1. *[7.5, 7.6]*
 - [ ] **L** Race resources never released; other cars silent (`game.cpp:97,125-130,157-158`) → pooled engine voices for the nearest 2-3 cars. *[7.6]*
-- [ ] **L** Magic numbers, fragile restart tap (`game.cpp:147,215`) → `spec.maxSteer`, Input taps. *[2.4b]*
+- [x] **L** Magic numbers, fragile restart tap (`game.cpp:147,215`) → `spec.maxSteer`, Input taps. *[2.4b]*
 - [ ] **L** Car spec duplicated (`vehicle_test.cpp:23-32`; `world.cpp:21-30`) → one source. *[7.1]*
 
 **I. World simulation**
@@ -1620,6 +1620,17 @@ errors (so smoke/mp_test fail on them).
   vehicle_test unchanged; `grep -n "EM_ASM" app/race/*.cpp` → none.
 - **Phone:** wait 10 s after entering, sit in a rig: no freeze. Steering feels a bit quicker;
   after a crash, the reset puts you on a free spot.
+- **Done (2026-10-17):** `Game::prepare()` (called on enter) builds the track, racing line and
+  meshes in normal-lane jobs (meshes wait for the race pipelines); sitting before that gives
+  "Warming up the race..." and the race starts by itself (`pending()`/`tryPending()`). Reset:
+  free spot (here or 8/16 m back, 6 lateral options, ≥ 6 m from others), 2 s ghost (no car-car
+  contact), 4 s between button resets (`requestReset`). `Vehicle::resetState()` (setup + place,
+  same sag), `tanPeakSlip_` precomputed: vehicle_test byte-identical. Road bumps: smooth value
+  noise on an integer hash (scenery placement keeps the old `sceneryHash`, so the look is
+  unchanged). Controls: 25 ms exponential steer filter, brake bites to 40% at once, safe-area
+  insets from the mailbox, steering pad clear of the left edge; restart tap via presses;
+  `steer()` uses `spec.maxSteer`. Racing line was already built once (init runs once). Note:
+  `?sit=` applies at "ready", before enter, so it shows the warming path.
 
 #### 2.5 AudioMixer: emitters, voice pool, buses, one command list
 - **Files:** `engine/audio.{h,cpp}` → AudioMixer (named sound ids, buses, persistent emitters,

@@ -40,6 +40,10 @@ struct Racer {
   float skill = 1;          // 1 = at the limit
   float stuckTime = 0;
   float flipTime = 0;      // seconds upside down / on the side
+  // Resets: the car passes through others for a moment after one (ghost),
+  // and you can't ask for another right away.
+  uint32_t ghostUntil = 0, lastResetTick = 0;
+  bool ghost(uint32_t tick) const { return tick < ghostUntil; }
 };
 
 class World {
@@ -61,8 +65,11 @@ class World {
   // racer's car posed there (for drawing and the camera).
   float alpha() const { return alpha_; }
   engine::Vehicle shownCar(const Racer& r) const;
-  // Puts a racer back on the track, facing the right way, stopped.
+  // Puts a racer back on the track, facing the right way, stopped, on a
+  // spot away from other cars, as a ghost for 2 s.
   void resetCar(int index);
+  // The reset button: refused within 4 s of the last reset. True if done.
+  bool requestReset(int index);
 
   std::vector<Racer>& racers() { return racers_; }
   const std::vector<Racer>& racers() const { return racers_; }

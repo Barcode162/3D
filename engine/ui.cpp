@@ -32,6 +32,23 @@ void toast(const std::string& text) { bridge::op("[\"toast\"," + jsonQuote(text)
 
 void openPanel(const std::string& name) { bridge::op("[\"panel\"," + jsonQuote(name) + "]"); }
 
+void setBodyClass(const std::string& name, bool on) {
+  bridge::op("[\"bodyClass\"," + jsonQuote(name) + "," + (on ? "1" : "0") + "]");
+}
+
+std::string buildLabel() {
+  static std::string label;  // read once
+  if (label.empty()) {
+    char buffer[64] = {};
+    EM_ASM({
+      var b = document.getElementById('build');
+      stringToUTF8(b ? b.textContent : "", $0, $1);
+    }, buffer, sizeof(buffer));
+    label = buffer;
+  }
+  return label;
+}
+
 }  // namespace engine::ui
 
 namespace engine::settings {

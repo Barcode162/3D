@@ -44,7 +44,15 @@ class Controls {
 
   // For drawing the touch controls.
   Rect buttonRect(Button b, float aspect, bool manualGears) const;
-  Rect steerZone() const { return {0, 0.16f, 0.5f, 0.84f}; }
+  // The notch and home bar (screen fractions, from the page's safe area):
+  // nothing to press goes under them. The steering pad also keeps clear of
+  // the screen's left edge (Safari's back swipe).
+  void setSafeArea(float left, float right, float bottom) {
+    safeL_ = left;
+    safeR_ = right;
+    safeB_ = bottom;
+  }
+  Rect steerZone() const { return {safeL_ + 0.02f, 0.16f, 0.48f - safeL_, 0.84f - safeB_}; }
   Rect brakePedal(float aspect) const;
   Rect gasPedal(float aspect) const;
   bool steering() const { return steerFinger_ >= 0; }
@@ -59,6 +67,7 @@ class Controls {
   float steer_ = 0, targetSteer_ = 0, gas_ = 0, brake_ = 0;
   int steerFinger_ = -1, gasFinger_ = -1, brakeFinger_ = -1;
   float anchorX_ = 0;
+  float safeL_ = 0, safeR_ = 0, safeB_ = 0;
   bool held_[kButtonCount] = {};
   bool padWas_[20] = {};
   std::string deviceName_;

@@ -23,6 +23,7 @@ void Vehicle::setup(const CarSpec& spec) {
   // Magic Formula B so the curve peaks exactly at normalized slip 1
   // (with E = 0: C * atan(B) = pi / 2).
   shapeB_ = std::tan(kPi / (2.0f * spec_.tire.shapeC));
+  tanPeakSlip_ = std::tan(spec_.tire.peakSlipAngle);
   const float frontShare = -spec_.rear.z / (spec_.front.z - spec_.rear.z);
   for (int i = 0; i < 4; ++i) {
     Wheel& w = wheels[static_cast<size_t>(i)];
@@ -34,24 +35,33 @@ void Vehicle::setup(const CarSpec& spec) {
     const float sag = corner / a.spring;
     const float wheelY = -spec_.cgHeight + spec_.tire.radius;
     w.mount = {w.left ? -a.halfTrack : a.halfTrack, wheelY + a.restLength - sag, -a.z};
-    w.compression = sag;
   }
+  resetState();
+}
+
+void Vehicle::resetState() {
+  const float frontShare = -spec_.rear.z / (spec_.front.z - spec_.rear.z);
+  velocity = angularVelocity = {};
+  for (Wheel& w : wheels) {
+    const AxleSpec& a = w.front ? spec_.front : spec_.rear;
+    Wheel fresh;
+    fresh.mount = w.mount;
+    fresh.front = w.front;
+    fresh.left = w.left;
+    w = fresh;
+    // The same sag the mounts were set up with (the car's weight split by axle).
+    w.compression = spec_.mass * kGravity * (w.front ? frontShare : 1 - frontShare) * 0.5f / a.spring;
+  }
+  engineSpeed_ = spec_.idleRpm / kRadToRpm;
+  rpm = spec_.idleRpm;
+  gear = pendingGear_ = 1;
+  shiftTimer = clutchEngage = throttleUsed = brakeUsed = reverseHold_ = 0;
 }
 
 void Vehicle::place(Vec3 ground, float heading) {
   rotation = Quat::axisAngle({0, 1, 0}, heading);
   position = ground + Vec3{0, spec_.cgHeight, 0};
-  velocity = angularVelocity = {};
-  for (Wheel& w : wheels) {
-    const AxleSpec& a = w.front ? spec_.front : spec_.rear;
-    w.compression = spec_.mass * kGravity * 0.25f / a.spring;
-    w.compressionSpeed = w.spin = w.slipRatio = w.slipAngle = w.fx = w.fy = 0;
-    w.groundHint = -1;
-  }
-  engineSpeed_ = spec_.idleRpm / kRadToRpm;
-  rpm = spec_.idleRpm;
-  gear = pendingGear_ = 1;
-  shiftTimer = 0;
+  resetState();
 }
 
 float Vehicle::engineTorque(float r, float throttle) const {
@@ -87,7 +97,7 @@ void Vehicle::tireForce(const Wheel& w, float slipRatio, float tanSlip, float& f
   const float axleGrip = (w.front ? spec_.front : spec_.rear).grip;
   const float mu = t.mu * axleGrip * w.surface.grip * std::max(0.4f, loadFactor);
   const float sx = slipRatio / t.peakSlipRatio;
-  const float sy = tanSlip / std::tan(t.peakSlipAngle);
+  const float sy = tanSlip / tanPeakSlip_;
   const float rho = std::sqrt(sx * sx + sy * sy);
   if (rho < 1e-6f) return;
   const float f = mu * w.load * std::sin(t.shapeC * std::atan(shapeB_ * rho));
@@ -392,7 +402,7 @@ void Vehicle::step(float dt, const CarInput& input, const CarAssists& assists, c
     }
     w.fx = fx;
     w.fy = fy;
-    const float sx = w.slipRatio / tire.peakSlipRatio, sy = w.slipAngle / std::tan(tire.peakSlipAngle);
+    const float sx = w.slipRatio / tire.peakSlipRatio, sy = w.slipAngle / tanPeakSlip_;
     w.slide = std::sqrt(sx * sx + sy * sy);
     const Vec3 lift = up * a.rollCenter;
     addForce(fwd * fx + side * fy, at + lift);
