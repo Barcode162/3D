@@ -12,6 +12,8 @@
 // Note: Safari rounds performance.now() to about 1 ms (no cross-origin
 // isolation), so a single phase's time is coarse; averages over many frames
 // are still right.
+#include <webgpu/webgpu_cpp.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -63,12 +65,14 @@ class Profiler {
     uint16_t jobsRun = 0, jobsPending = 0;
     float maxJobMs = 0;
     uint16_t heapMB = 0;
-    uint8_t touches = 0;  // touch / mouse events handled during this frame
+    uint8_t touches = 0;  // touch / mouse presses since the previous frame
+    float gpuMs = 0;      // newest submit-to-done time (see trackGpu)
   };
   struct Stats {
     int frames = 0;
     float avg = 0, p95 = 0, worst = 0;  // frame interval, ms
     float cpuAvg = 0, cpuWorst = 0;
+    float gpuAvg = 0, gpuWorst = 0;
     float phaseAvg[static_cast<int>(Phase::kCount)] = {};
     int hitches = 0;
   };
@@ -77,7 +81,8 @@ class Profiler {
     float intervalMs, cpuMs;
     Phase phase;  // the phase that took longest in that frame
     float phaseMs;
-    int touches;  // touch events in that frame (to spot tap stutters)
+    int touches;  // touch presses just before that frame (to spot tap stutters)
+    float gpuMs;
   };
 
   void beginFrame(double nowMs);
@@ -85,7 +90,11 @@ class Profiler {
   void add(Phase phase, double ms) { current_.phaseMs[static_cast<int>(phase)] += static_cast<float>(ms); }
   void jobs(int ran, size_t pending, double maxJobMs);
   // A touch or mouse event arrived (engine/input.cpp).
-  void touch() { if (current_.touches < 255) ++current_.touches; }
+  // Events arrive between frames, so they're held until the next one starts.
+  void touch() { if (pendingTouches_ < 255) ++pendingTouches_; }
+  // Call right after a Submit: measures until the GPU has finished that work
+  // (an upper bound on GPU time per frame; one measurement in flight).
+  void trackGpu(const wgpu::Queue& queue);
 
   // A start-up milestone ("gpu", "scene", "model:piano"...), in ms since the
   // page started loading. Logged too.
@@ -113,6 +122,10 @@ class Profiler {
   Frame current_;
   double frameStartMs_ = 0, lastStartMs_ = 0;
   bool published_ = false;
+  uint8_t pendingTouches_ = 0;
+  bool gpuInFlight_ = false;
+  float lastGpuMs_ = 0;
+  int pauses_ = 0;  // gaps over 1 s (app in the background): not counted as hitches
   std::vector<std::pair<std::string, double>> stages_;
   std::vector<Hitch> hitches_;  // newest last, at most 32
   int hitchesTotal_ = 0, hitchesAfterEnter_ = 0;

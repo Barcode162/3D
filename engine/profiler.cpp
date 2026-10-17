@@ -41,6 +41,10 @@ void Profiler::beginFrame(double nowMs) {
   if (count_ > 0 && lastStartMs_ > 0) {
     Frame& last = frames_[(head_ + kFrames - 1) % kFrames];
     last.intervalMs = static_cast<float>(nowMs - lastStartMs_);
+    if (last.intervalMs > 1000) {  // the app was in the background, not a hitch
+      last.intervalMs = 0;
+      ++pauses_;
+    }
     const bool afterEnter = enteredMs_ > 0 && lastStartMs_ >= enteredMs_;
     if (afterEnter && lastStartMs_ - enteredMs_ < 10000) worstAfterEnter_ = std::max(worstAfterEnter_, last.intervalMs);
     if (last.intervalMs > kHitchMs) {
@@ -52,11 +56,14 @@ void Profiler::beginFrame(double nowMs) {
       if (afterEnter) ++hitchesAfterEnter_;
       if (hitches_.size() == kMaxHitches) hitches_.erase(hitches_.begin());
       hitches_.push_back(
-          {lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top], last.touches});
+          {lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top], last.touches,
+           last.gpuMs});
     }
   }
   lastStartMs_ = frameStartMs_ = nowMs;
   current_ = Frame{};
+  current_.touches = pendingTouches_;
+  pendingTouches_ = 0;
   for (int p = 0; p < prof::kPassCount; ++p) {
     prof::gDraws[p] = 0;
     prof::gTris[p] = 0;
@@ -77,6 +84,7 @@ void Profiler::endFrame(double nowMs) {
     current_.tris[p] = static_cast<uint32_t>(std::min<uint64_t>(prof::gTris[p], 0xffffffffu));
   }
   current_.heapMB = static_cast<uint16_t>(emscripten_get_heap_size() >> 20);
+  current_.gpuMs = lastGpuMs_;
   Frame& slot = frames_[head_];
   slot = current_;
   head_ = (head_ + 1) % kFrames;
@@ -100,6 +108,8 @@ Profiler::Stats Profiler::stats(int count) const {
     const Frame& f = frame(i);
     s.cpuAvg += f.cpuMs;
     s.cpuWorst = std::max(s.cpuWorst, f.cpuMs);
+    s.gpuAvg += f.gpuMs;
+    s.gpuWorst = std::max(s.gpuWorst, f.gpuMs);
     for (int p = 0; p < kPhases; ++p) s.phaseAvg[p] += f.phaseMs[p];
     ++s.frames;
     if (f.intervalMs <= 0) continue;  // the newest frame isn't finished timing
@@ -110,6 +120,7 @@ Profiler::Stats Profiler::stats(int count) const {
   }
   if (s.frames) {
     s.cpuAvg /= static_cast<float>(s.frames);
+    s.gpuAvg /= static_cast<float>(s.frames);
     for (float& p : s.phaseAvg) p /= static_cast<float>(s.frames);
   }
   if (n) {
@@ -119,6 +130,17 @@ Profiler::Stats Profiler::stats(int count) const {
     s.p95 = intervals[k];
   }
   return s;
+}
+
+void Profiler::trackGpu(const wgpu::Queue& queue) {
+  if (gpuInFlight_) return;
+  gpuInFlight_ = true;
+  const double start = emscripten_get_now();
+  queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
+                            [this, start](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
+                              lastGpuMs_ = static_cast<float>(emscripten_get_now() - start);
+                              gpuInFlight_ = false;
+                            });
 }
 
 void Profiler::stage(const std::string& name, bool log) {
@@ -153,9 +175,9 @@ std::string Profiler::json() const {
   j.reserve(2048);
   char b[512];
   std::snprintf(b, sizeof(b),
-                "{\"t\":%.0f,\"frames\":%d,\"avg\":%.2f,\"p95\":%.2f,\"worst\":%.2f,\"cpu\":%.2f,\"cpuWorst\":%.2f,"
+                "{\"t\":%.0f,\"frames\":%d,\"avg\":%.2f,\"p95\":%.2f,\"worst\":%.2f,\"cpu\":%.2f,\"cpuWorst\":%.2f,\"gpu\":%.2f,\"gpuWorst\":%.2f,\"pauses\":%d,"
                 "\"hitches\":%d,\"hitchesTotal\":%d,\"hitchesAfterEnter\":%d,\"worstAfterEnter\":%.1f,",
-                nowMs, s.frames, s.avg, s.p95, s.worst, s.cpuAvg, s.cpuWorst, s.hitches, hitchesTotal_,
+                nowMs, s.frames, s.avg, s.p95, s.worst, s.cpuAvg, s.cpuWorst, s.gpuAvg, s.gpuWorst, pauses_, s.hitches, hitchesTotal_,
                 hitchesAfterEnter_, worstAfterEnter_);
   j += b;
   j += "\"phases\":{";
@@ -170,8 +192,8 @@ std::string Profiler::json() const {
   j += b;
   for (size_t i = 0; i < hitches_.size(); ++i) {
     const Hitch& h = hitches_[i];
-    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f,\"touches\":%d}",
-                  i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches);
+    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f,\"touches\":%d,\"gpu\":%.1f}",
+                  i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches, h.gpuMs);
     j += b;
   }
   j += "],\"stages\":{";
@@ -218,7 +240,8 @@ void Profiler::drawOverlay(TextRenderer& text, float W, float H, float px) {
   TextStyle st;
   st.outlineWidth = 0.5f;
   float y = y0 + graphH + 4 * u;
-  std::snprintf(line, sizeof(line), "frame %.1f  p95 %.1f  worst %.0f ms  cpu %.1f", s.avg, s.p95, s.worst, s.cpuAvg);
+  std::snprintf(line, sizeof(line), "frame %.1f  p95 %.1f  worst %.0f  cpu %.1f  gpu %.1f", s.avg, s.p95, s.worst,
+                s.cpuAvg, s.gpuAvg);
   text.addScreen(line, x0 + 4 * u, y, 7 * u, st);
   y += 11 * u;
   std::snprintf(line, sizeof(line), "%s %.2f  %s %.2f  %s %.2f", kPhaseNames[order[0]], s.phaseAvg[order[0]],

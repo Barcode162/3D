@@ -23,6 +23,13 @@ window.bar3dAudio = (function () {
     if (window.bar3dLog) bar3dLog.add('warn', 'Audio: ' + text);
   }
 
+  // Glides a parameter to a new value, dropping any older scheduled changes
+  // (holding the value it has right now).
+  function retarget(param, value, t) {
+    if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(t); else param.cancelScheduledValues(t);
+    param.setTargetAtTime(value, t, 0.03);
+  }
+
   // A 0.05 s silent WAV, used to unlock <audio> elements on iOS.
   function silentWav() {
     var samples = 2205, bytes = new Uint8Array(44 + samples * 2), v = new DataView(bytes.buffer);
@@ -208,11 +215,21 @@ window.bar3dAudio = (function () {
         v.src.stop(t + release + 0.05);
       } catch (e) {}
     },
+    // Called every frame for engine sounds: only changes of 1% or more are
+    // sent, and old scheduled changes are cleared first, so Safari's list of
+    // pending changes can't grow (it lagged the race while revving).
     soundSet: function (voice, gain, rate) {
       var v = voices[voice];
       if (!v || !ctx) return;
-      v.gain.gain.setTargetAtTime(gain, ctx.currentTime, 0.03);
-      v.src.playbackRate.setTargetAtTime(rate, ctx.currentTime, 0.03);
+      var t = ctx.currentTime;
+      if (v.lastGain === undefined || Math.abs(gain - v.lastGain) > 0.01 * Math.max(v.lastGain, 0.05)) {
+        v.lastGain = gain;
+        retarget(v.gain.gain, gain, t);
+      }
+      if (v.lastRate === undefined || Math.abs(rate - v.lastRate) > 0.01 * v.lastRate) {
+        v.lastRate = rate;
+        retarget(v.src.playbackRate, rate, t);
+      }
     },
     now: function () { return ctx ? ctx.currentTime : 0; },
     // Volumes from the settings (0..1): sfx, piano, music, voice.

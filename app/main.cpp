@@ -1310,6 +1310,7 @@ void frame() {
     PROFILE(Phase::kRace);
     queueText(nowMs, Mat4{});
     g_app.race.render(target, g_app.text, nowMs);
+    engine::profiler().trackGpu(g_app.gpu.queue);
     return;
   }
   // Scene prep is split around queueText, so it's timed by hand.
@@ -1375,6 +1376,7 @@ void frame() {
   PROFILE(Phase::kRender);
   g_app.renderer.render(target, viewProj, cam.position, self, g_app.avatarBones, g_app.firstPersonBones,
                         g_app.scene.mirrors, g_app.text, g_app.pictures);
+  engine::profiler().trackGpu(g_app.gpu.queue);
 }
 
 // For testing: "?cam=x,y,z,yaw,pitch" in the page URL starts the camera

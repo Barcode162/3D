@@ -467,6 +467,12 @@ was answered by the user on 2026-10-17.
   players' names and long hex strings; the server refuses any 48-hex string.
   `?testerror` logs a test error. Test tools read log lines from the
   panel's child elements (lines no longer start with `[info]`).
+- **Profiler `gpu` number:** time from Submit to `OnSubmittedWorkDone`
+  (one in flight). It's an upper bound (includes waiting in the queue), but
+  the only GPU timing that works without the timestamp-query feature.
+- **Web Audio on Safari:** never call `setTargetAtTime` every frame without
+  clearing old events; `soundSet` (web/audio.js) sends only 1% changes and
+  uses `cancelAndHoldAtTime` first.
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

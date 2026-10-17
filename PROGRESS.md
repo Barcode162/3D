@@ -382,3 +382,14 @@ A small DAW inside the bar, all DSP written in C++:
   Menu → Settings → Send report gives a 6-letter code (`server/report.php`).
   User's first overlay check (build da02dee, iPhone): 60 fps at the door,
   CPU ~1 ms, 531 + 529 draws; a yellow bar (20-34 ms frame) on every tap.
+- **2026-10-17:** First phone report `VH3WMR` (build 13be3f2, at the bar):
+  avg 16.7 ms, p95 18, game CPU 0.8 ms (worst 3 ms), 529 + 527 draws,
+  ~1.3M triangles per frame, start-up: GPU ready 0.8 s, everything loaded
+  2.7 s. Every hitch had CPU ≤ 2 ms, so stutters come from the GPU or
+  Safari, not our code; the GPU is likely near its limit (Phase 6 draw
+  cuts and 1.7 half-resolution mirror should fix it). Fixes: tap counts
+  were lost (events arrive between frames), gaps > 1 s (app in background)
+  no longer count as hitches, new `gpu` number (submit → done time) in
+  the overlay and reports, race engine sound no longer reschedules Web
+  Audio values every frame (the user saw lag only while pressing gas).
+  Note: the race sim is timed under "interaction" (race.update runs there).
