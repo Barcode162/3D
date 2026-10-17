@@ -14,8 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1-0.4, 1.1-1.5 (2026-10-17). Next: 1.6, 1.7, 1.8** (textures
-at export, cheap GPU wins, loader tidy-up). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
+last section). **Done: Phase 0 and Phase 1 (0.1-1.8, 2026-10-17). Next: 2.1a, 2.1b, 2.1c**
+(one mailbox between C++ and the page, UI commands, voice/log/settings). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
 skip anything that changes car/track models or visuals (the user will
@@ -445,3 +445,8 @@ A small DAW inside the bar, all DSP written in C++:
   CPU 1.2 ms, no input stutter, driving perfect. So the tap stutter is an
   iPhone Safari quirk; dropped (don't chase it unless phone reports show it
   getting worse).
+- **2026-10-17:** Restructure 1.6 + 1.7 + 1.8 done, Phase 1 complete:
+  identical textures shared between models (237 → 159, 132 MB), mirror at
+  half resolution with an oblique near plane (no `discard` anywhere),
+  named loading stages, test options in `app/test_hooks.*`, version check
+  before loading the game, a security policy on the page.

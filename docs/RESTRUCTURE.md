@@ -1444,6 +1444,12 @@ checked, no leaks. Not done: per-viewer mirror mode (Q3, not asked).
   appear in the mirror.
 
 #### 1.8 Loader state machine, page shell, test hooks
+Done 2026-10-17. `app/loader.*` (stages models → finishing → shaders → warm-up → steady →
+ready/failed, named on the loading screen, profiler stages `load:*`), `app/test_hooks.*` (all
+C++ `?` options parsed once, applied at Ready). Page: version check before the scripts load
+(1.5 s timeout), wasm preload, progress bar via `scaleX`, overlay removed on `transitionend`,
+HUD buttons hidden until enter, CSP meta (with localhost for tests), CSP violations logged as
+errors (so smoke/mp_test fail on them).
 - **Files:** new `app/loader.{h,cpp}` (stages of §2.7, progress + names to `barLoading.stage()`),
   new `app/test_hooks.{h,cpp}` (all `?` params parsed once into a struct; applied as normal
   commands after Ready), `app/main.cpp`, `web/index.html` (preloads; version check before injecting

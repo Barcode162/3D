@@ -18,7 +18,9 @@
 #include "app/players.h"
 #include "app/props.h"
 #include "app/race/game.h"
+#include "app/loader.h"
 #include "app/renderer.h"
+#include "app/test_hooks.h"
 #include "app/rhythm.h"
 #include "app/shared_world.h"
 #include "engine/gpu_upload.h"
@@ -122,16 +124,11 @@ struct App {
 
   // Settings (web/menu.js).
   int settingsVersion = -1;
-  bool perfParam = false;  // ?perf=1 forces the performance overlay on
-  // ?still (tests): no intro text, no idle motion, so two screenshots of the
-  // same spot match (tools/imgdiff.mjs). Temporary; moves to TestHooks in 1.8.
-  bool still = false;
-  bool warmedUp = false;  // the one full frame drawn behind the loading screen
-  bool warmGpuDone = false;  // ...and the GPU has finished it
+  app::TestHooks hooks;  // ?cam, ?still, ?perf, ?sit... (app/test_hooks.h)
+  app::Loader loader;    // the loading screen's stages (app/loader.h)
+  bool warmGpuDone = false;  // the warm-up frame has finished on the GPU
   bool warmUpFrame = false;  // this frame is the warm-up frame
-  bool readyReported = false, pipelinesLogged = false, racePipelinesLogged = false;
-  double warmDoneMs = 0, prevFrameMs = 0;
-  int steadyFrames = 0;
+  bool pipelinesLogged = false, racePipelinesLogged = false;
   bool sceneReady = false;  // onGpuReady finished
   bool joined = false;      // in the multiplayer room
   float lookSpeed = 1, invertLook = 1;
@@ -149,8 +146,6 @@ struct App {
 
   double introEndMs = 0;
   bool entered = false;        // the loading screen has been closed
-  bool loadReported = false;   // the loading screen has been told everything is ready
-  float shownProgress = -1;    // last progress sent to the loading screen
   double lastFrameMs = 0;
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
@@ -563,7 +558,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
                    H * 0.11f + 22 * px, 9 * px, style);
   }
 
-  if (nowMs < g_app.introEndMs && !g_app.still) {
+  if (nowMs < g_app.introEndMs && !g_app.hooks.still) {
     const float fade = engine::clampf(static_cast<float>((g_app.introEndMs - nowMs) / 1000.0), 0, 1);
     engine::TextStyle title;
     title.align = 0.5f;
@@ -926,7 +921,7 @@ void handleCommands() {
     g_app.lookSpeed = static_cast<float>(engine::settings::number("lookSpeed", 1));
     g_app.invertLook = engine::settings::number("invertLook", 0) != 0 ? -1.0f : 1.0f;
     g_app.showNames = engine::settings::number("showNames", 1) != 0;
-    engine::profiler().overlay = g_app.perfParam || engine::settings::number("perf", 0) != 0;
+    engine::profiler().overlay = g_app.hooks.perf || engine::settings::number("perf", 0) != 0;
     const int look = static_cast<int>(engine::settings::number("look", g_app.look));
     if (look != g_app.look && look >= 0 && look < static_cast<int>(app::avatarLooks().size())) {
       g_app.look = look;
@@ -1190,11 +1185,28 @@ void updateVoice() {
 
 // Keeps the loading screen (web/index.html) up to date until every model
 // has arrived; then it offers "Tap to enter".
-// After every file is in, the bar warms up before "Tap to enter": background
-// jobs finish, every pipeline compiles, one full frame is drawn behind the
-// loading screen and finishes on the GPU, then frames must be steady (30 in
-// a row under 20 ms, or 2 s at most).
-void updateWarmUp() {
+// Test options (?sit=, ?rhythm=, ...), applied once the bar is ready, as if
+// you had done them yourself.
+void applyTestHooks() {
+  const app::TestHooks& h = g_app.hooks;
+  g_app.rhythm.autoplay = h.autoplay;
+  if (h.rhythmSong >= 0) {
+    std::vector<app::RhythmGame::SongChoice> songs;
+    for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
+    g_app.rhythm.open(std::move(songs));
+    g_app.input.setCapture(true);
+    g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, 2)));
+    setActivity(Activity::kRhythm);
+  }
+  if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);
+  if (h.emote > 0 && h.emote < static_cast<int>(Emote::kCount)) startEmote(static_cast<Emote>(h.emote));
+  if (h.pianoSong >= 0) g_app.piano.playSong(h.pianoSong);
+  for (const app::Interactable& it : g_app.scene.interactables) {
+    if ((h.shift && it.action == app::Action::kBartender) || (h.darts && it.action == app::Action::kDarts)) use(it);
+  }
+}
+
+void updateLoadingScreen() {
   const double now = emscripten_get_now();
   if (!g_app.pipelinesLogged && engine::pipelines::created() > 0 && engine::pipelines::pending() == 0) {
     g_app.pipelinesLogged = true;
@@ -1204,77 +1216,20 @@ void updateWarmUp() {
     g_app.racePipelinesLogged = true;
     LOG_INFO("Race pipelines ready.");
   }
-  if (g_app.readyReported || !g_app.loadReported || !g_app.warmGpuDone) return;
-  if (g_app.warmDoneMs == 0) g_app.warmDoneMs = now;
-  g_app.steadyFrames = now - g_app.prevFrameMs < 20 ? g_app.steadyFrames + 1 : 0;
-  g_app.prevFrameMs = now;
-  if (g_app.steadyFrames < 30 && now - g_app.warmDoneMs < 2000) return;
-  g_app.readyReported = true;
-  LOG_INFO("Warm-up done (%s).", g_app.steadyFrames >= 30 ? "30 steady frames" : "2 s");
-  engine::profiler().stage("ready");
   const app::SceneRenderer& r = g_app.renderer;
-  if (r.modelFilesFailed() > 0) {
-    // Show what's missing with a Retry; you can still enter unless the room
-    // itself is missing.
-    const size_t n = r.modelFilesFailed();
-    LOG_ERROR("Loading: %zu part%s of the bar failed to download.", n, n == 1 ? "" : "s");
-    EM_ASM({ if (window['barLoading'] && window['barLoading']['fail'])
-               window['barLoading']['fail'](UTF8ToString($0), $1); },
-           (std::to_string(n) + (n == 1 ? " part failed" : " parts failed")).c_str(), r.criticalFileFailed() ? 1 : 0);
-    if (r.criticalFileFailed()) return;
-  }
-  EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
-}
-
-void updateLoadingScreen() {
-  updateWarmUp();
-  if (g_app.loadReported) return;
-  const app::SceneRenderer& r = g_app.renderer;
-  const float progress = r.loadProgress();
-  if (progress != g_app.shownProgress) {
-    g_app.shownProgress = progress;
-    EM_ASM({ if (window['barLoading']) window['barLoading']['set']($0, $1, $2); }, static_cast<int>(r.modelFilesDone()),
-           static_cast<int>(r.modelFiles()), progress);
-  }
-  if (r.modelFilesDone() == r.modelFiles()) {
-    g_app.loadReported = true;
-    LOG_INFO("Everything loaded (%zu model files).", r.modelFiles());
+  const bool wasLoading = !g_app.loader.filesDone();
+  app::LoaderInputs in;
+  in.files = r.modelFiles();
+  in.filesDone = r.modelFilesDone();
+  in.filesFailed = r.modelFilesFailed();
+  in.criticalFailed = r.criticalFileFailed();
+  in.progress = r.loadProgress();
+  in.jobsPending = engine::pendingJobs();
+  in.pipelinesPending = engine::pipelines::pending() + (r.ready() ? 0 : 1);
+  in.warmUpDone = g_app.warmGpuDone;
+  if (g_app.loader.update(in, now)) applyTestHooks();
+  if (wasLoading && g_app.loader.filesDone()) {
     LOG_INFO("Textures: %d images on the GPU, %.0f MB.", engine::imageTextureCount(), engine::imageTextureMB());
-    engine::profiler().stage("loaded");
-    // Tests: ?rhythm=song,difficulty opens the rhythm game on that song;
-    // ?autoplay lets it play itself. ?sit=seat sits down; ?emote=n waves...
-    int song = -1, difficulty = 1;
-    char param[32] = {};
-    EM_ASM({
-      var m = /[?&]rhythm=([^&]*)/.exec(location.search);
-      stringToUTF8(m ? decodeURIComponent(m[1]) : "", $0, $1);
-    }, param, sizeof(param));
-    g_app.rhythm.autoplay = EM_ASM_INT({ return /[?&]autoplay/.test(location.search) ? 1 : 0; }) != 0;
-    if (std::sscanf(param, "%d,%d", &song, &difficulty) >= 1 && song >= 0) {
-      std::vector<app::RhythmGame::SongChoice> songs;
-      for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
-      g_app.rhythm.open(std::move(songs));
-      g_app.input.setCapture(true);
-      g_app.rhythm.start(song, static_cast<app::Difficulty>(std::clamp(difficulty, 0, 2)));
-      setActivity(Activity::kRhythm);
-    }
-    const int sit = EM_ASM_INT({ var m = /[?&]sit=([0-9]+)/.exec(location.search); return m ? +m[1] : -1; });
-    if (sit >= 0 && sit < static_cast<int>(g_app.scene.seats.size())) sitOn(sit);
-    const int emote = EM_ASM_INT({ var m = /[?&]emote=([0-9]+)/.exec(location.search); return m ? +m[1] : -1; });
-    if (emote > 0 && emote < static_cast<int>(Emote::kCount)) startEmote(static_cast<Emote>(emote));
-    const int pianoSong = EM_ASM_INT({ var m = /[?&]pianosong=([0-9]+)/.exec(location.search); return m ? +m[1] : -1; });
-    if (pianoSong >= 0) g_app.piano.playSong(pianoSong);
-    if (EM_ASM_INT({ return /[?&]shift/.test(location.search) ? 1 : 0; })) {
-      for (const app::Interactable& it : g_app.scene.interactables) {
-        if (it.action == app::Action::kBartender) use(it);
-      }
-    }
-    if (EM_ASM_INT({ return /[?&]darts/.test(location.search) ? 1 : 0; })) {
-      for (const app::Interactable& it : g_app.scene.interactables) {
-        if (it.action == app::Action::kDarts) use(it);
-      }
-    }
-    EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage']('Warming up…'); });
   }
 }
 
@@ -1380,8 +1335,7 @@ void frame() {
   // Hidden bar: behind the loading screen (except one warm-up frame once
   // everything is in, so the GPU has seen every pipeline before you enter)
   // and under 4K Mania. Draw only the text layer.
-  const bool warmUp = !g_app.entered && g_app.loadReported && !g_app.warmedUp && g_app.renderer.ready() &&
-                      engine::pendingJobs() == 0 && engine::pipelines::pending() == 0;
+  const bool warmUp = !g_app.entered && g_app.loader.wantsWarmUpFrame() && g_app.renderer.ready();
   if ((!g_app.entered && !warmUp) || g_app.rhythm.isOpen() || !g_app.renderer.ready()) {
     PROFILE(Phase::kText);
     queueText(nowMs, Mat4{});
@@ -1390,7 +1344,7 @@ void frame() {
     return;
   }
   if (warmUp) {
-    g_app.warmedUp = true;
+    g_app.loader.warmUpFrameDrawn();
     g_app.warmUpFrame = true;  // reported to the GPU queue after this frame's submit (below)
   }
 
@@ -1419,7 +1373,7 @@ void frame() {
   sceneStart = emscripten_get_now();
 
   g_app.avatarMotion.pitch = cam.pitch;
-  g_app.avatarMotion.time = g_app.still ? 0.0f : static_cast<float>(nowMs / 1000.0);
+  g_app.avatarMotion.time = g_app.hooks.still ? 0.0f : static_cast<float>(nowMs / 1000.0);
   const app::Avatar& body = g_app.avatars[0];  // the skeleton is the same for every look
   body.pose(g_app.avatarMotion, g_app.avatarBones);
   body.hideHead(g_app.avatarBones, g_app.firstPersonBones);
@@ -1465,13 +1419,9 @@ void frame() {
 // For testing: "?cam=x,y,z,yaw,pitch" in the page URL starts the camera
 // there (yaw/pitch in degrees), so any spot can be screenshotted.
 void applyTestCamera() {
-  char buffer[128] = {};
-  EM_ASM({
-    var m = /[?&]cam=([^&]*)/.exec(location.search);
-    stringToUTF8(m ? decodeURIComponent(m[1]) : "", $0, $1);
-  }, buffer, sizeof(buffer));
-  float x, y, z, yaw, pitch;
-  if (std::sscanf(buffer, "%f,%f,%f,%f,%f", &x, &y, &z, &yaw, &pitch) != 5) return;
+  if (!g_app.hooks.hasCam) return;
+  const float* c = g_app.hooks.cam;
+  const float x = c[0], y = c[1], z = c[2], yaw = c[3], pitch = c[4];
   g_app.camera.position = {x, y, z};
   g_app.camera.yaw = engine::radians(yaw);
   g_app.camera.pitch = engine::radians(pitch);
@@ -1495,8 +1445,7 @@ void onGpuReady(bool ok) {
     return;
   }
   engine::profiler().stage("gpu");
-  g_app.perfParam = EM_ASM_INT({ return /[?&]perf=1/.test(location.search) ? 1 : 0; }) != 0;
-  g_app.still = EM_ASM_INT({ return /[?&]still/.test(location.search) ? 1 : 0; }) != 0;
+  g_app.hooks = app::TestHooks::parse();
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   g_app.scene = app::buildBarScene();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);

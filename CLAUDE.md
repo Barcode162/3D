@@ -93,7 +93,8 @@ judged on the user's phone.
   `rhythm.cpp`, `bartender.cpp` are the games and jobs; `app/race/` is the
   racing sim (`docs/RACING.md`: track, world + bots, controls, view, game).
   `main.cpp` is the frame loop, input → interaction (seats, things to
-  use), and on-screen text.
+  use), and on-screen text. `loader.*` is the loading screen's stages,
+  `test_hooks.*` the test page options (`?cam`, `?still`, `?sit`...).
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
   third-party asset needs a license and credit entry (see

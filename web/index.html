@@ -9,6 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Bar3D">
 <meta name="theme-color" content="#0b0710">
 <title>Bar3D</title>
+<!-- Which servers the page may talk to and load pictures from (defence in
+     depth; the real gate is web/net.js's host allowlist). localhost is for
+     the headless tests. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data: https://joshuavelasco.com https://*.workers.dev wss://*.workers.dev http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; img-src 'self' https://joshuavelasco.com data: blob:">
+<link rel="preload" href="app.wasm?v=__BUILD__" as="fetch" crossorigin>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0710; overflow: hidden;
                overscroll-behavior: none; -webkit-user-select: none; user-select: none;
@@ -53,13 +58,16 @@
              color: #f5d9a8; font: 13px/1.4 ui-monospace, Menlo, monospace; text-align: center;
              transition: opacity 0.7s ease; }
   #loading.gone { opacity: 0; pointer-events: none; }
+  #loading { will-change: opacity; }
+  /* The HUD buttons appear once you're in (the error badge always can). */
+  body:not(.entered) #hud button:not(#errBadge) { visibility: hidden; }
   #loading .title { font-size: 44px; letter-spacing: 6px; color: #ff5ab4; font-weight: bold;
                     text-shadow: 0 0 12px #ff2d95, 0 0 32px #ff2d9588; }
   #loading .sub { color: #f5d9a8aa; margin-top: -10px; }
   #loadBar { width: min(70vw, 320px); height: 10px; border-radius: 5px; background: #ffffff14;
              border: 1px solid #f5d9a844; overflow: hidden; }
-  #loadFill { width: 0%; height: 100%; background: linear-gradient(90deg, #ffb35a, #ff5ab4);
-              transition: width 0.25s ease; }
+  #loadFill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffb35a, #ff5ab4);
+              transform: scaleX(0); transform-origin: left; transition: transform 0.25s ease; }
   #enter { font: inherit; font-size: 17px; color: #0b0710; background: #f5d9a8; border: 0;
            border-radius: 22px; padding: 12px 34px; box-shadow: 0 0 22px #ffb35a88; }
   #enter[hidden] { display: none; }
@@ -179,6 +187,9 @@
     }
 
     window.addEventListener('error', function (e) { append('JS error: ' + e.message, true); });
+    document.addEventListener('securitypolicyviolation', function (e) {
+      append('Blocked by the page\'s security policy: ' + e.blockedURI + ' (' + e.violatedDirective + ')', true);
+    });
     window.addEventListener('unhandledrejection', function (e) { append('Promise error: ' + e.reason, true); });
 
     // Reports (Menu → Settings → Send report, and automatically on a fatal
@@ -252,8 +263,12 @@
 
     // GitHub Pages lets browsers reuse a saved copy of this page for up to
     // 10 minutes, so a phone can show an old build. version.txt is never
-    // cached: if it names a newer build, reload from a fresh URL.
-    if (build.indexOf('__') < 0) {
+    // cached: if it names a newer build, reload from a fresh URL. The game's
+    // code is only loaded once this check is done (or 1.5 s passed), so an
+    // old build doesn't start downloading for nothing.
+    var versionChecked = new Promise(function (resolve) {
+      if (build.indexOf('__') >= 0) { resolve(); return; }  // a local build
+      setTimeout(resolve, 1500);
       fetch('version.txt', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; })
         .then(function (latest) {
           latest = latest.trim();
@@ -261,9 +276,11 @@
             // Keep the other options (?cam=, ?room=, ...) across the reload.
             var rest = location.search.replace(/^\?/, '').replace(/(^|&)b=[^&]*/g, '');
             location.replace(location.pathname + '?b=' + latest + (rest ? '&' + rest.replace(/^&/, '') : ''));
+            return;  // don't resolve: the page is going away
           }
-        }).catch(function () {});
-    }
+          resolve();
+        }).catch(resolve);
+    });
 
     // Loading screen. C++ reports progress (barLoading.set) and calls
     // barLoading.ready() once every model is in; then "Tap to enter" (that
@@ -271,14 +288,18 @@
     var loadingEl = document.getElementById('loading');
     var enterBtn = document.getElementById('enter');
     function enter() {
+      document.body.classList.add('entered');
       loadingEl.classList.add('gone');
-      setTimeout(function () { loadingEl.style.display = 'none'; }, 800);
+      var removed = false;
+      var remove = function () { if (!removed) { removed = true; loadingEl.style.display = 'none'; } };
+      loadingEl.addEventListener('transitionend', remove);
+      setTimeout(remove, 1000);  // in case the transition never ends (hidden tab)
       if (window.Module && Module._app_enter) Module._app_enter();
     }
     enterBtn.onclick = enter;
     window.barLoading = {
       set: function (done, total, progress) {
-        document.getElementById('loadFill').style.width = Math.round(progress * 100) + '%';
+        document.getElementById('loadFill').style.transform = 'scaleX(' + Math.min(1, Math.max(0, progress)) + ')';
         document.getElementById('loadText').textContent =
           'Building the bar… ' + done + ' / ' + total + ' pieces';
       },
@@ -295,7 +316,7 @@
         t.appendChild(retry);
       },
       ready: function () {
-        document.getElementById('loadFill').style.width = '100%';
+        document.getElementById('loadFill').style.transform = 'scaleX(1)';
         var lt = document.getElementById('loadText');
         if (!lt.querySelector('button')) lt.textContent = 'Everything is ready.';
         if (/[?&]skipintro/.test(location.search)) { enter(); return; }
@@ -315,18 +336,20 @@
       onAbort: function (what) { bar3dLog.add('fatal', 'Aborted: ' + what); },
     };
     // The bridges C++ talks to, in order, then the app itself.
-    ['audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
-      var s = document.createElement('script');
-      s.src = name + '?v=' + build;
-      s.async = false;
-      s.onerror = function () { append('Failed to load ' + name, true); };
-      document.body.appendChild(s);
+    versionChecked.then(function () {
+      ['audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
+        var s = document.createElement('script');
+        s.src = name + '?v=' + build;
+        s.async = false;
+        s.onerror = function () { append('Failed to load ' + name, true); };
+        document.body.appendChild(s);
+      });
+      var script = document.createElement('script');
+      script.async = false;  // run after the bridges above
+      script.src = 'app.js?v=' + build;
+      script.onerror = function () { append('Failed to load app.js', true); };
+      document.body.appendChild(script);
     });
-    var script = document.createElement('script');
-    script.async = false;  // run after the bridges above
-    script.src = 'app.js?v=' + build;
-    script.onerror = function () { append('Failed to load app.js', true); };
-    document.body.appendChild(script);
   })();
 </script>
 </body>
