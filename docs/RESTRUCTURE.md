@@ -1160,6 +1160,7 @@ settings again. Your own songs and MIDI files stay local.
 ### Phase 0: Safety net and eyes on the phone (no outside setup)
 
 #### 0.1 Repo hygiene, honest docs, close the token leak
+Done in `de05ef9` (2026-10-17).
 - **Files:** `.gitignore`, `cloud/.wrangler/` (remove from git), `web/net.js`, `web/account.js`,
   `docs/RACING.md`, `docs/DECISIONS.md`, `.github/workflows/deploy.yml`.
 - **Build:** `git rm -r --cached cloud/.wrangler` + `.wrangler/` in `.gitignore`. In `net.js`
