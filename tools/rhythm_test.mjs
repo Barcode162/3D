@@ -36,7 +36,7 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
 await page.goto(`http://localhost:${server.address().port}/?skipintro&rhythm=${song},${difficulty}&autoplay`);
-const logText = () => page.$eval('#log', (e) => e.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
+const logText = () => page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n'));
 const waitLog = (re, ms) => page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent),
                                                  re.source, { timeout: ms, polling: 250 }).catch(() => console.log('timed out: ' + re));
 await waitLog(/Rhythm chart:/, 180000);

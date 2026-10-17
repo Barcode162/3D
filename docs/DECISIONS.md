@@ -454,6 +454,20 @@ was answered by the user on 2026-10-17.
   phase times are coarse; trust averages. A hitch (> 20 ms between frames)
   is blamed on the previous frame's longest phase.
 
+- **Logs and reports (step 0.3):** `LOG_INFO/WARN/ERROR/FATAL` (engine/log.h)
+  call `bar3dLog.add` in `web/index.html` directly (no printf). Ring of 300
+  lines, drawn once per frame. Errors show a red badge (tap = log); only
+  fatal opens the panel, behind "Something broke - tap to rejoin" (reload,
+  keeps the URL options), and sends a report by itself. Audio problems are
+  warnings. Reports: Menu → Settings → Send report → POST to
+  `report.php` next to the relay → a 6-letter code; read it with
+  `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`. Files go
+  to `<SFTP root>/private/bar/reports/` (web root is `<SFTP root>/home`),
+  10 per hour per IP, 500 max, 30 days. The page removes your name, other
+  players' names and long hex strings; the server refuses any 48-hex string.
+  `?testerror` logs a test error. Test tools read log lines from the
+  panel's child elements (lines no longer start with `[info]`).
+
 ## Racing sim (2026-10-16)
 - **Own physics, fixed 240 Hz**, substepped from the frame (the code's cap
   is 30 steps, but the frame dt cap of 0.1 s means really 24; slower phones

@@ -18,6 +18,6 @@ await page.waitForFunction(() => /Everything loaded/.test(document.getElementByI
                            { timeout: 120000 }).catch(() => console.log('(still loading after 120 s)'));
 await page.waitForTimeout(2000);
 console.log('build', await page.$eval('#build', (e) => e.textContent));
-console.log(await page.$eval('#log', (e) => e.textContent.replace(/\[(info|error)\]/g, '\n[$1]')));
+console.log(await page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n')));
 await page.screenshot({ path: shot });
 await browser.close();

@@ -167,6 +167,27 @@ window.bar3dUi = (function () {
     else toast('Profiles need the multiplayer server.');
   }
 
+  // Send report: the log and performance numbers go to the server; the code
+  // it answers with is what you paste in the chat (index.html bar3dReport).
+  function reportBox() {
+    var out = el('div', { class: 'mReport' });
+    out.style.cssText = 'font-size:22px;letter-spacing:3px;margin:6px 0;-webkit-user-select:text;user-select:text;';
+    var btn = el('button', { class: 'mBtn', text: 'Send report', onclick: function () {
+      if (!window.bar3dReport) return;
+      btn.disabled = true;
+      out.textContent = 'Sending…';
+      bar3dReport.send(false).then(function (code) {
+        out.textContent = 'Code: ' + code;
+      }).catch(function (e) {
+        out.textContent = 'Could not send: ' + e.message;
+      }).then(function () { btn.disabled = false; });
+    } });
+    var box = el('div', {});
+    box.appendChild(btn);
+    box.appendChild(out);
+    return box;
+  }
+
   function settingsPanel() {
     show('Settings', [
       el('h3', { text: 'Controls' }),
@@ -180,6 +201,8 @@ window.bar3dUi = (function () {
       slider('Effects', 'sfxVol', 0, 1, 0.05, pct),
       slider('Piano', 'pianoVol', 0, 1, 0.05, pct),
       slider('Voices', 'voiceVol', 0, 2, 0.05, pct),
+      el('h3', { text: 'Help Claude fix lag and bugs' }),
+      reportBox(),
       el('button', { class: 'mBtn ghost', text: 'Reset all settings', onclick: function () { S.reset(); settingsPanel(); } }),
     ]);
     current = 'settings';

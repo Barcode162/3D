@@ -59,7 +59,7 @@ await alice.keyboard.up('KeyD');
 await bob.bringToFront();
 await bob.waitForTimeout(2500);
 
-const logOf = (page) => page.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
+const logOf = (page) => page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n'));
 const show = (who, log) => console.log(`--- ${who}\n` + log.split('\n').filter((l) => /Multiplayer|Put down|Jukebox|error/i.test(l)).join('\n'));
 const status = await bob.$eval('#status', (el) => el.textContent);
 await bob.screenshot({ path: 'build/mp-bob.png' });

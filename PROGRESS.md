@@ -14,8 +14,11 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1, 0.2 (2026-10-17). Next: 0.3** (logs and
-reports that leave the phone).
+last section). **Done: 0.1, 0.2, 0.3 (2026-10-17). Next: 0.4** (tests gate
+every deploy). Waiting on the user: 3 reports for the G4 baseline (after
+"Tap to enter", at the big mirror, after 2 minutes walking), and the tap
+stutter (yellow bar on every tap, seen 2026-10-17): read `recentHitches`
+(`touches`, `phase`) in their reports.
 The racing plan below waits, except small driving-feel tweaks the user asks for.
 
 **2026-10-16, previous top priority: the racing sim. The plan and checklist
@@ -373,3 +376,9 @@ A small DAW inside the bar, all DSP written in C++:
   a `perf:` line from `window.bar3dPerf`. First finding: at the door the
   bar draws ~527 objects plus ~525 more for the mirror each frame (target
   ≤ 150 + 60, Phase 6).
+- **2026-10-17:** Restructure step 0.3 done. Logs have levels and times
+  and can't flood; errors show a red badge instead of opening the log;
+  fatal errors show "Something broke - tap to rejoin" and send a report.
+  Menu → Settings → Send report gives a 6-letter code (`server/report.php`).
+  User's first overlay check (build da02dee, iPhone): 60 fps at the door,
+  CPU ~1 ms, 531 + 529 draws; a yellow bar (20-34 ms frame) on every tap.

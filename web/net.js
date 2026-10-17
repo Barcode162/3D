@@ -380,6 +380,8 @@ window.bar3dNet = (function () {
       return 0;
     },
     serverUrl: function () { return server; },
+    // Names of the other players (reports remove them).
+    names: function () { return Object.keys(players).map(function (k) { return players[k].name; }); },
     // Whether a login token may be sent to this URL (same origin or allowlisted).
     tokenOk: tokenOk,
     myId: function () { return id; },

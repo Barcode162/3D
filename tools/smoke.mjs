@@ -42,7 +42,7 @@ await page.waitForFunction(() => /Everything loaded|Startup failed/.test(documen
                            null, { timeout: 120000 }).catch(() => console.log('(models still loading after 120 s)'));
 await page.waitForTimeout(1500);
 
-const log = await page.$eval('#log', (el) => el.textContent.replace(/\[(info|error)\]/g, '\n[$1]'));
+const log = await page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n'));
 const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
 const status = await page.$eval('#status', (el) => el.textContent);
 await page.screenshot({ path: shotPath });

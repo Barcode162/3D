@@ -7,6 +7,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "engine/profiler.h"
+
 namespace engine {
 namespace {
 
@@ -80,6 +82,7 @@ void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
 
 bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
+  if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
   double canvasW = 0, canvasH = 0;
   emscripten_get_element_css_size("#canvas", &canvasW, &canvasH);
   if (in.capture) {
@@ -138,6 +141,7 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
 
 bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
+  if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();
   const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
   if (in.capture) {
     double w = 0, h = 0;

@@ -63,6 +63,7 @@ class Profiler {
     uint16_t jobsRun = 0, jobsPending = 0;
     float maxJobMs = 0;
     uint16_t heapMB = 0;
+    uint8_t touches = 0;  // touch / mouse events handled during this frame
   };
   struct Stats {
     int frames = 0;
@@ -76,12 +77,15 @@ class Profiler {
     float intervalMs, cpuMs;
     Phase phase;  // the phase that took longest in that frame
     float phaseMs;
+    int touches;  // touch events in that frame (to spot tap stutters)
   };
 
   void beginFrame(double nowMs);
   void endFrame(double nowMs);
   void add(Phase phase, double ms) { current_.phaseMs[static_cast<int>(phase)] += static_cast<float>(ms); }
   void jobs(int ran, size_t pending, double maxJobMs);
+  // A touch or mouse event arrived (engine/input.cpp).
+  void touch() { if (current_.touches < 255) ++current_.touches; }
 
   // A start-up milestone ("gpu", "scene", "model:piano"...), in ms since the
   // page started loading. Logged too.

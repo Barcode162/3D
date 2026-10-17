@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
+#include <string>
 #include <string_view>
 
 #include "engine/log.h"
@@ -64,13 +66,22 @@ void Gpu::onAdapter(wgpu::Adapter adapter) {
   desc.label = "main device";
   desc.SetUncapturedErrorCallback(
       [](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) {
-        LOG_ERROR("GPU error (%d): %s", static_cast<int>(type), toString(message).c_str());
+        // The same error often repeats every frame: log each one 3 times,
+        // then every 100th time with a count, so the log can't flood.
+        static std::map<std::string, int> seen;
+        const std::string text = toString(message);
+        int& count = seen[text.substr(0, 200)];
+        ++count;
+        if (count <= 3 || count % 100 == 0) {
+          LOG_ERROR("GPU error (%d)%s: %s", static_cast<int>(type),
+                    count > 3 ? (" x" + std::to_string(count)).c_str() : "", text.c_str());
+        }
       });
   desc.SetDeviceLostCallback(
       wgpu::CallbackMode::AllowSpontaneous,
       [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView message) {
         if (reason == wgpu::DeviceLostReason::Destroyed) return;
-        LOG_ERROR("GPU device lost (%d): %s", static_cast<int>(reason), toString(message).c_str());
+        LOG_FATAL("GPU device lost (%d): %s", static_cast<int>(reason), toString(message).c_str());
       });
 
   adapter_.RequestDevice(

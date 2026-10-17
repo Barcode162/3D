@@ -95,6 +95,8 @@ judged on the user's phone.
   the HTML menus and settings, `web/account.js` accounts and profiles.
 - `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
 - `docs/REMASTER.md` lists every crude first version to redo properly.
+- `server/report.php` stores phone reports (Menu → Settings → Send report gives
+  a code; read it with `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`).
 - `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
   web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),

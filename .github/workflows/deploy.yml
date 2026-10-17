@@ -93,7 +93,7 @@ jobs:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
           sudo apt-get install -y lftp >/dev/null
-          cp server/relay.php server/account.php server/.htaccess build/site/
+          cp server/relay.php server/account.php server/report.php server/.htaccess build/site/
           cd build/site
           lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<EOF
           set cmd:fail-exit yes
@@ -101,11 +101,12 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           mkdir -p -f $IONOS_DIR
+          mkdir -p -f private/bar/reports
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/index.php
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/.htaccess
           mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
-          mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php .htaccess
+          mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php report.php .htaccess
           cls -l
           bye
           EOF

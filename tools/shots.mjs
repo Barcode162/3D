@@ -57,8 +57,8 @@ for (let i = 0; i < args.length; ++i) {
   }
   await page.screenshot({ path: `build/shot-${i + 1}.png` });
   const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
-  const log = await page.$eval('#log', (el) => el.textContent);
-  const lines = log.split('[info]').filter((l) => /Piano|Bartender|Darts|Voice|seat|Seats|Race|Multiplayer|DBG/i.test(l));
+  const log = await page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n'));
+  const lines = log.split('\n').filter((l) => /Piano|Bartender|Darts|Voice|seat|Seats|Race|Multiplayer|DBG/i.test(l));
   console.log(`--- shot-${i + 1}: ${args[i]}\n${lines.slice(-(+(process.env.LINES ?? 4))).join('\n')}`);
   if (process.env.REQUESTS) console.log('requests outside: ' + (outside.length ? [...new Set(outside)].join(' ') : 'none'));
   if (errors.length) { failed = true; console.log('ERRORS:\n' + errors.join('\n')); }

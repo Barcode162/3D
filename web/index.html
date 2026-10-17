@@ -28,6 +28,17 @@
          touch-action: pan-y; z-index: 7; }
   #log.hidden { display: none; }
   #log .err { color: #ff7a7a; }
+  #log .warn { color: #ffd27a; }
+  #errBadge { color: #fff !important; background: #c0222a !important; border-color: #ff8080 !important; }
+  #errBadge[hidden] { display: none; }
+  /* Fatal error: the game can't go on. */
+  #fatal { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column; align-items: center;
+           justify-content: center; gap: 14px; padding: 24px; background: #0b0710ee; color: #f5d9a8;
+           font: 14px/1.4 ui-monospace, Menlo, monospace; text-align: center; }
+  #fatal.on { display: flex; }
+  #fatal .big { font-size: 20px; color: #ff7a7a; }
+  #fatal .small { color: #f5d9a8aa; font-size: 12px; max-width: 90vw; word-break: break-word;
+                  -webkit-user-select: text; user-select: text; }
   /* Virtual joystick, positioned by engine/input.cpp. */
   #stickBase, #stickKnob { position: fixed; left: 0; top: 0; display: none; pointer-events: none;
                            border-radius: 50%; }
@@ -57,7 +68,7 @@
 <canvas id="canvas"></canvas>
 <div id="hud">
   <span id="status">loading…</span>
-  <span>build <span id="build">__BUILD__</span> <button id="logToggle">log</button></span>
+  <span>build <span id="build">__BUILD__</span> <button id="errBadge" hidden></button> <button id="logToggle">log</button></span>
 </div>
 <div id="loading">
   <div class="title">BAR3D</div>
@@ -69,23 +80,174 @@
 <div id="stickBase"></div>
 <div id="stickKnob"></div>
 <pre id="log" class="hidden"></pre>
+<div id="fatal"><div class="big">Something broke - tap to rejoin</div>
+  <div class="small" id="fatalText"></div><div id="fatalCode"></div></div>
 <script>
-  // On-screen log: everything C++ prints, plus any JavaScript/WebAssembly
-  // errors, so problems can be read (and screenshotted) on a phone.
+  // The log: everything C++ and the bridges print (engine/log.h), plus any
+  // JavaScript/WebAssembly errors. A ring of the last 300 lines, drawn into
+  // the panel once per animation frame. Errors count on a red badge; only a
+  // fatal error opens the panel (behind "Something broke - tap to rejoin").
   (function () {
     var logEl = document.getElementById('log');
+    var badge = document.getElementById('errBadge');
     var build = document.getElementById('build').textContent;
-    document.getElementById('logToggle').onclick = function () { logEl.classList.toggle('hidden'); };
+    var RING = 300;
+    var ring = [], pending = [], errors = 0, flushQueued = false, fatalShown = false;
+    var repeats = {};  // rate limit: text (digits removed) -> {start, n, hidden, text, level}
+    function toggleLog() { logEl.classList.toggle('hidden'); if (!logEl.classList.contains('hidden')) logEl.scrollTop = logEl.scrollHeight; }
+    document.getElementById('logToggle').onclick = toggleLog;
+    badge.onclick = toggleLog;
 
-    function append(text, isError) {
-      var line = document.createElement('div');
-      if (isError) { line.className = 'err'; logEl.classList.remove('hidden'); }
-      line.textContent = text;
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
+    function flush() {
+      flushQueued = false;
+      var now = performance.now();
+      for (var k in repeats) {  // "×N" for repeats hidden in the last second
+        var r = repeats[k];
+        if (now - r.start < 1000) continue;
+        if (r.hidden) store(r.level, '(x' + r.hidden + ' more in 1 s) ' + r.text);
+        delete repeats[k];
+      }
+      if (!pending.length) return;
+      var frag = document.createDocumentFragment();
+      pending.forEach(function (e) {
+        var line = document.createElement('div');
+        if (e.l === 'error' || e.l === 'fatal') line.className = 'err';
+        else if (e.l === 'warn') line.className = 'warn';
+        line.textContent = (e.t / 1000).toFixed(1) + ' ' + e.m;
+        frag.appendChild(line);
+      });
+      pending = [];
+      logEl.appendChild(frag);
+      while (logEl.childNodes.length > RING) logEl.removeChild(logEl.firstChild);
+      if (!logEl.classList.contains('hidden')) logEl.scrollTop = logEl.scrollHeight;
+      if (errors) { badge.hidden = false; badge.textContent = '\u26A0 ' + errors; }
     }
+    function queueFlush() {
+      if (flushQueued) return;
+      flushQueued = true;
+      requestAnimationFrame(flush);
+      setTimeout(function () { if (flushQueued) flush(); }, 250);  // rAF pauses in background tabs
+    }
+    function store(level, text) {
+      var cat = /^([A-Z][A-Za-z ]{1,20}):/.exec(text);
+      var e = { t: Math.round(performance.now()), l: level, c: cat ? cat[1] : '', m: text };
+      ring.push(e);
+      if (ring.length > RING) ring.shift();
+      pending.push(e);
+      if (level === 'error' || level === 'fatal') errors++;
+      queueFlush();
+    }
+    window.bar3dLog = {
+      add: function (level, text) {
+        text = String(text);
+        if (level !== 'fatal') {
+          var key = text.replace(/[0-9.]+/g, '#').slice(0, 120);
+          var now = performance.now(), r = repeats[key];
+          if (!r || now - r.start >= 1000) {
+            if (r && r.hidden) store(r.level, '(x' + r.hidden + ' more in 1 s) ' + r.text);
+            r = repeats[key] = { start: now, n: 0, hidden: 0, text: text, level: level };
+          }
+          if (++r.n > 3) { r.hidden++; r.text = text; queueFlush(); return; }
+        }
+        store(level, text);
+        if (level === 'fatal') showFatal(text);
+      },
+      ring: function () { return ring.slice(); },
+      errors: function () { return errors; },
+    };
+    function append(text, isError) { bar3dLog.add(isError ? 'error' : 'info', text); }
+    // Lines printed with a "[level] " prefix (the bridges) keep that level.
+    function printed(text, fallback) {
+      var m = /^\[(info|warn|error|fatal)\] ?/.exec(text);
+      bar3dLog.add(m ? m[1] : fallback, m ? text.slice(m[0].length) : text);
+    }
+
+    function showFatal(text) {
+      if (fatalShown) return;
+      fatalShown = true;
+      var el = document.getElementById('fatal');
+      document.getElementById('fatalText').textContent = text;
+      el.classList.add('on');
+      el.onclick = function () { location.reload(); };  // keeps ?room and the other options
+      logEl.classList.remove('hidden');
+      if (window.bar3dReport) {
+        bar3dReport.send(true).then(function (code) {
+          document.getElementById('fatalCode').textContent = 'Report sent: ' + code;
+        }).catch(function () {});
+      }
+    }
+
     window.addEventListener('error', function (e) { append('JS error: ' + e.message, true); });
     window.addEventListener('unhandledrejection', function (e) { append('Promise error: ' + e.reason, true); });
+
+    // Reports (Menu → Settings → Send report, and automatically on a fatal
+    // error): the log, performance numbers and device facts go to
+    // report.php next to the relay, which answers with a 6-letter code.
+    // Reports can be read by anyone with the code, so names and tokens are
+    // removed here first.
+    window.bar3dReport = {
+      url: function () {
+        var relay = window.bar3dNet && bar3dNet.serverUrl ? bar3dNet.serverUrl() : '';
+        return relay ? relay.replace(/relay\.php(\?.*)?$/, 'report.php') : '';
+      },
+      payload: function (fatal) {
+        var settings = {};
+        try { settings = JSON.parse(localStorage.getItem('bar3dSettings') || '{}'); } catch (e) {}
+        var net = window.bar3dNet;
+        var p = {
+          v: 1, build: build, at: new Date().toISOString(), fatal: !!fatal,
+          ua: navigator.userAgent, dpr: window.devicePixelRatio, screen: [screen.width, screen.height],
+          view: [innerWidth, innerHeight], params: location.search.replace(/([?&]name=)[^&]*/g, '$1-'),
+          settings: settings, room: net && net.room ? net.room() : '',
+          online: net && net.status ? net.status() : 0, players: net && net.names ? net.names().length : 0,
+          errors: errors, perf: window.bar3dPerf || null, log: ring,
+        };
+        var names = [];
+        try {
+          names.push(localStorage.getItem('bar3dName'));
+          var me = JSON.parse(localStorage.getItem('bar3dProfile') || 'null');
+          if (me) names.push(me.name, me.username, me.user);
+        } catch (e) {}
+        if (net && net.names) names = names.concat(net.names());
+        var patterns = names.filter(function (n) { return n && String(n).length >= 2; }).map(function (n) {
+          return new RegExp(String(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        });
+        // Only string values are cleaned (a short name could match a key).
+        function clean(v) {
+          if (typeof v === 'string') {
+            patterns.forEach(function (re) { v = v.replace(re, '<name>'); });
+            return v.replace(/[0-9a-fA-F]{48,}/g, '<hex>');
+          }
+          if (Array.isArray(v)) return v.map(clean);
+          if (v && typeof v === 'object') {
+            var o = {};
+            for (var k in v) o[k] = clean(v[k]);
+            return o;
+          }
+          return v;
+        }
+        return JSON.stringify(clean(p));
+      },
+      sent: null,
+      send: function (fatal) {
+        var url = this.url();
+        if (!url) return Promise.reject(new Error('Reports need the multiplayer server.'));
+        if (fatal && this.sent) return this.sent;
+        var self = this;
+        var req = fetch(url, { method: 'POST', body: this.payload(fatal), cache: 'no-store',
+                               headers: { 'Content-Type': 'text/plain' } })
+          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            if (!r || !r.code) throw new Error(r && r.error ? r.error : 'no code');
+            bar3dLog.add('info', 'Report: sent, code ' + r.code + '.');
+            return r.code;
+          });
+        if (fatal) self.sent = req;
+        return req;
+      },
+    };
+    // Test hook (restructure 0.3): ?testerror logs an error after start.
+    if (/[?&]testerror/.test(location.search)) setTimeout(function () { append('Test error (from ?testerror).', true); }, 500);
 
     // GitHub Pages lets browsers reuse a saved copy of this page for up to
     // 10 minutes, so a phone can show an old build. version.txt is never
@@ -127,15 +289,15 @@
       },
     };
 
-    if (!navigator.gpu) append('This browser has no WebGPU. Use Safari on iOS 26+.', true);
     append(navigator.userAgent);
+    if (!navigator.gpu) bar3dLog.add('fatal', 'This browser has no WebGPU. Use Safari on iOS 26+.');
 
     window.Module = {
-      print: function (t) { append(t, false); },
-      printErr: function (t) { append(t, true); },
+      print: function (t) { printed(t, 'info'); },
+      printErr: function (t) { printed(t, 'error'); },
       // Cache-bust per build so Safari never runs a stale .wasm.
       locateFile: function (path) { return path + '?v=' + build; },
-      onAbort: function (what) { append('Aborted: ' + what, true); },
+      onAbort: function (what) { bar3dLog.add('fatal', 'Aborted: ' + what); },
     };
     // The bridges C++ talks to, in order, then the app itself.
     ['audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {

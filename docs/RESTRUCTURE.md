@@ -764,7 +764,7 @@ Tags name sub-steps where a step was split (e.g. 3.2a); a tag without a letter o
 step means all its parts. Items marked *(review)* were added on 2026-10-17.
 
 **A. Frame loop and app core**
-- [ ] **H** No per-phase timing; the start-up lag can't be attributed (`main.cpp:312-324` updateFps only) → FrameProfiler + phone report. *[0.2, 0.3]* (0.2 part done: profiler + overlay)
+- [x] **H** No per-phase timing; the start-up lag can't be attributed (`main.cpp:312-324` updateFps only) → FrameProfiler + phone report. *[0.2, 0.3]* (0.2 part done: profiler + overlay)
 - [ ] **H** God object `g_app`; any function changes anything (`main.cpp:66-142`; `use()` `:650-773` teleports, opens panels, toggles lights, plays sfx, sends net) → Game + systems + event bus. *[4.1a, 4.1b]*
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
@@ -772,7 +772,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
 - [ ] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
 - [ ] **M** Every remote avatar posed/skinned even off-screen (`main.cpp:1303-1317`) → pose only visible ones. *[6.5]*
-- [ ] **M** Abort or device loss freezes the game forever (`index.html` onAbort; `gpu.cpp:69-74`) → fatal overlay, rejoin, auto report. *[0.3]*
+- [x] **M** Abort or device loss freezes the game forever (`index.html` onAbort; `gpu.cpp:69-74`) → fatal overlay, rejoin, auto report. *[0.3]*
 - [ ] **M** 16 MB default heap grows repeatedly while loading (`CMakeLists.txt` only `ALLOW_MEMORY_GROWTH`) → `INITIAL_MEMORY`. *[1.5]*
 - [ ] **M** Function-local statics survive room changes (`main.cpp:749,778`; `players.cpp:38`; `shared_world.cpp:84`) → members + `reset()`. *[4.1b]*
 - [ ] **M** No visibility/pagehide handling: others see a frozen you, keys stick, catch-up burst on return → lifecycle §2.5.8. *[2.2]*
@@ -818,8 +818,8 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** HUD buttons work before the world exists (`#hud` z-index 6 over `#loading`) → hidden until enter. *[1.8]*
 
 **D. Engine plumbing (input, GPU device, jobs, logs, bridge, build)**
-- [ ] **H** Device loss only logged (`gpu.cpp:69-74`) → recovery overlay + report. *[0.3]*
-- [ ] **H** Repeating GPU errors flood the DOM log and cause lag (`gpu.cpp:65-68`, `index.html:80-86`) → dedupe, rate-limit. *[0.3]*
+- [x] **H** Device loss only logged (`gpu.cpp:69-74`) → recovery overlay + report. *[0.3]*
+- [x] **H** Repeating GPU errors flood the DOM log and cause lag (`gpu.cpp:65-68`, `index.html:80-86`) → dedupe, rate-limit. *[0.3]*
 - [ ] **M** Canvas size read through layout every frame and in touch handlers, interleaved with DOM writes (`gpu.cpp:101-114`; `input.cpp:63,84,144`; `showStick` `input.cpp:14-23,121`) → ResizeObserver + batched DOM. *[2.1a]*
 - [ ] **M** Raw presses use handler time, not `event.timeStamp` (`input.cpp:86,93,159`) → event timestamps. *[2.1a]*
 - [ ] **M** Input internals public; race reads them (`input.h:55-91`) → immutable InputFrame. *[2.1a]*
@@ -830,10 +830,10 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
 - [ ] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]*
 - [ ] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
-- [ ] **M** Log panel unbounded, forced layout per line (`index.html:80-86`) → ring + rAF batch. *[0.3]*
-- [ ] **M** Any error auto-opens the log over ≈ 40% of the screen and swallows taps (`index.html:82`; `audio.js:22,305,327`) → badge; warn level for audio. *[0.3]*
-- [ ] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
-- [ ] **L** No levels, timestamps or categories in logs → add. *[0.3]*
+- [x] **M** Log panel unbounded, forced layout per line (`index.html:80-86`) → ring + rAF batch. *[0.3]*
+- [x] **M** Any error auto-opens the log over ≈ 40% of the screen and swallows taps (`index.html:82`; `audio.js:22,305,327`) → badge; warn level for audio. *[0.3]*
+- [x] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
+- [x] **L** No levels, timestamps or categories in logs → add. *[0.3]*
 - [ ] **M** `setInfo` JSON hand-built without escaping; a `\` in a MIDI file name silently freezes menu info (`main.cpp:923-937`, `menu.js:378`) → JSON writer + log parse failures. *[2.1b]*
 - [ ] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]*
 - [ ] **L** UI command poll stringifies `[]` every frame (`ui.cpp:11-19`) → push model. *[2.1b]*
@@ -1062,7 +1062,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** *(review)* Ed25519 keypair "created on first use" races (two first requests each write one); public key pinned by hand; REAUTH could switch identity mid-session → create-if-absent under `flock`, deploy passes `ACCOUNT_PUBKEY`, REAUTH keeps `sub`. *[5.1c]*
 - [ ] **L** *(review)* `login_attempts(key, …)`: `KEY` is reserved in MySQL, and PDO-SQLite tests wouldn't catch it → `attempt_key`; reserved-word check in account_test. *[5.1a]*
 - [ ] **L** No Content-Security-Policy (`index.html:3-11`) → meta CSP that still allows the local test servers and `https://*.workers.dev`. *[1.8]*
-- [ ] **M** *(review)* The planned `report.php` stores into the docroot (`.htaccess` only, the weakness 5.1 removes), has no global cap or retention, a public GET, and no CORS for the github.io page → private folder, cap 500, 30-day expiry, no secrets in payloads, allowlisted CORS, `?env=1` IONOS facts for 5.1. *[0.3]*
+- [x] **M** *(review)* The planned `report.php` stores into the docroot (`.htaccess` only, the weakness 5.1 removes), has no global cap or retention, a public GET, and no CORS for the github.io page → private folder, cap 500, 30-day expiry, no secrets in payloads, allowlisted CORS, `?env=1` IONOS facts for 5.1. *[0.3]*
 - [ ] **M** IONOS upload not atomic; a newer push can cancel it halfway (`deploy.yml:16-18,104-106`) → own concurrency group; upload index last / versioned folder. *[8.2]*
 - [x] **M** IONOS `mput` list misses `menu.js`, `voice.js`; `mirror --ignore-time` skips same-size edits (`deploy.yml:104,106`) → generated list, no `--ignore-time`. *[0.1]*
 - [ ] **M** No tests before publishing (`deploy.yml`) → test job. *[0.4]*
@@ -1212,6 +1212,11 @@ mirror, so the mirror pass runs at spawn; budget is ≤ 150 / ≤ 60 (Phase 6).
   graph is mostly green; at the big mirror note the ms number; screenshot both. Fail = no overlay.
 
 #### 0.3 Logs and reports that leave the phone
+Done 2026-10-17. Differences from the text below: the log ring and the report payload live
+in `web/index.html` (`bar3dLog`, `bar3dReport`), because every log line (C++ and the JS
+bridges) ends there; C++ contributes `window.bar3dPerf`. Categories are the leading
+"Word:" of a line. Rate limiting is in the page (3 per second per message, digits ignored,
+then "(xN more in 1 s)"). Hitches also record `touches` (taps in that frame).
 - **Files:** `engine/log.{h,cpp}` (levels, timestamps, categories, ring of 300, rate limit:
   first 3 repeats then "×N" per second); `web/index.html` (ring + rAF-batched DOM, red error
   badge, panel opens only on fatal; fatal overlay "Something broke - tap to rejoin" keeping

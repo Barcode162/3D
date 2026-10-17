@@ -1406,6 +1406,7 @@ void makeSounds() {
 void onGpuReady(bool ok) {
   if (!ok) {
     engine::setStatus("Startup failed - see log");
+    LOG_FATAL("Startup failed: no GPU.");
     return;
   }
   engine::profiler().stage("gpu");
@@ -1424,6 +1425,7 @@ void onGpuReady(bool ok) {
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat) ||
       !g_app.pictures.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");
+    LOG_FATAL("Startup failed: the renderer could not be set up.");
     return;
   }
   engine::profiler().stage("renderer");

@@ -18,8 +18,9 @@ window.bar3dAudio = (function () {
   // timing) and played through its own gain, not placed in 3D.
   var track = { state: 0, buffer: null, mono: null, node: null, start: 0, url: '' };
 
+  // Sound problems never stop the game: logged as warnings (no badge).
   function report(text) {
-    if (window.Module && Module.printErr) Module.printErr('[error] ' + text);
+    if (window.bar3dLog) bar3dLog.add('warn', 'Audio: ' + text);
   }
 
   // A 0.05 s silent WAV, used to unlock <audio> elements on iOS.

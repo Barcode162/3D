@@ -51,7 +51,8 @@ void Profiler::beginFrame(double nowMs) {
       ++hitchesTotal_;
       if (afterEnter) ++hitchesAfterEnter_;
       if (hitches_.size() == kMaxHitches) hitches_.erase(hitches_.begin());
-      hitches_.push_back({lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top]});
+      hitches_.push_back(
+          {lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top], last.touches});
     }
   }
   lastStartMs_ = frameStartMs_ = nowMs;
@@ -169,8 +170,8 @@ std::string Profiler::json() const {
   j += b;
   for (size_t i = 0; i < hitches_.size(); ++i) {
     const Hitch& h = hitches_[i];
-    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f}", i ? "," : "",
-                  h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs);
+    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f,\"touches\":%d}",
+                  i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches);
     j += b;
   }
   j += "],\"stages\":{";
