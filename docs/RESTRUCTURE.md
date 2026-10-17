@@ -853,7 +853,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 **E. Rendering**
 - [ ] **C** ≈ 1,060 draws / 4,200 encoder calls per frame with the full mirror; no batching or instancing (`drawModels` `renderer.cpp:551-569`, 524 primitives) → clusters + instancing (≤ 150 / ≤ 60). *[6.2d, 6.2e]*
 - [ ] **C** No frustum culling; model bounds never read (`drawModels`; `model.h` bounds; race already has `visible()`) → engine culling + clusters. *[6.1, 6.2d]*
-- [ ] **H** `discard` in every opaque fragment entry point kills Apple hidden-surface removal (`scene.wgsl:159,179,279,290`) → variants without clip + oblique mirror projection. *[1.7]*
+- [x] **H** `discard` in every opaque fragment entry point kills Apple hidden-surface removal (`scene.wgsl:159,179,279,290`) → variants without clip + oblique mirror projection. *[1.7]*
 - [ ] **H** Full mirror redraws the whole scene at full resolution with the full shader (`renderMirror`, `resizeMirrorTargets`, `mirror.wgsl` 1:1 `textureLoad`) → half-res, cheap variant, own cull list. *[1.7, 6.3]*
 - [ ] **H** Mirror visibility test weak: any corner behind the camera → full-screen reflection; walls never occlude it (`renderMirror` scissor fallback) → near-plane clip, frustum skip, occlusion query, zone gate. *[1.7, 6.3]*
 - [ ] **H** All textures uncompressed RGBA8: 231.6 MB models, ≈ 320 MB GPU total (`glb_report.py`) → export budget, then ASTC. *[1.6, 6.8]*
@@ -1425,6 +1425,12 @@ pixels differ (threshold 4).
   enough? Report anything blurry.
 
 #### 1.7 Cheap GPU wins: no discard, half-resolution mirror, tight scissor
+Done 2026-10-17. No `discard` left in `scene.wgsl`: mirror views use an oblique near plane
+(`obliqueNearPlane` in renderer.cpp, Lengyel, depth 0..1, computed on the full world→clip
+matrix). Reflection + its own depth buffer at half resolution, sampled with a linear sampler
+(`params.yz` = 1/screen). Scissor from the glass quad clipped against the near plane (a mirror
+behind you is skipped). Mirror spot 4.87% differing pixels (softer), others 0%; grazing views
+checked, no leaks. Not done: per-viewer mirror mode (Q3, not asked).
 - **Files:** `shaders/scene.wgsl` (main-view entry points without the clip test, via an override
   constant), `app/renderer.cpp` (mirror: oblique near-plane projection so the mirror view needs no
   `discard`; half-resolution target; tight scissor from the glass quad clipped against the near

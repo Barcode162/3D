@@ -22,7 +22,7 @@ struct Frame {
   fog: vec4f,         // rgb = haze color, w = density
   // Mirror views: drop anything behind the glass (dot(xyz, p) + w < 0).
   // The normal view uses (0, 0, 0, 1), which keeps everything.
-  clipPlane: vec4f,
+  clipPlane: vec4f,  // unused: mirrors cut with an oblique near plane instead (no discard, keeps Apple GPUs fast)
 };
 
 // All the lights, and a grid over the floor: each cell lists the (at most
@@ -155,9 +155,6 @@ fn texturedSurface(p: vec3f, n0: vec3f) -> Surface {
 
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f {
-  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
-    discard;
-  }
   var base = object.color.rgb;
   var roughness = object.material.y;
   var n = normalize(in.normal);
@@ -175,9 +172,6 @@ fn fs_main(in: VsOut) -> @location(0) vec4f {
 // texture layer (clothes) get that texture's pattern.
 @fragment
 fn fs_skinned(in: VsOut) -> @location(0) vec4f {
-  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
-    discard;
-  }
   // Always sample (texture reads must not sit behind per-pixel branches),
   // then only use the result where the vertex asks for a texture.
   let n0 = normalize(in.localNormal);
@@ -275,9 +269,6 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
 
 @fragment
 fn fs_model(in: ModelOut) -> @location(0) vec4f {
-  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
-    discard;
-  }
   return vec4f(litModel(in, false).rgb, 1.0);
 }
 
@@ -286,9 +277,6 @@ fn fs_model(in: ModelOut) -> @location(0) vec4f {
 // which is what makes its edges visible.
 @fragment
 fn fs_model_blend(in: ModelOut) -> @location(0) vec4f {
-  if (dot(frame.clipPlane.xyz, in.worldPos) + frame.clipPlane.w < 0.0) {
-    discard;
-  }
   let c = litModel(in, true);
   let v = normalize(frame.cameraPos.xyz - in.worldPos);
   let edge = pow(1.0 - abs(dot(normalize(in.normal), v)), 5.0);

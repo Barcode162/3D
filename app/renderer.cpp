@@ -20,6 +20,63 @@ using engine::Vec4;
 namespace app {
 namespace {
 
+// General 4x4 inverse (Gauss-Jordan in double precision).
+Mat4 inverse(const Mat4& m) {
+  double a[4][8];
+  for (int r = 0; r < 4; ++r) {
+    for (int c = 0; c < 4; ++c) {
+      a[r][c] = m.at(c, r);
+      a[r][c + 4] = r == c ? 1.0 : 0.0;
+    }
+  }
+  for (int col = 0; col < 4; ++col) {
+    int pivot = col;
+    for (int r = col + 1; r < 4; ++r) {
+      if (std::fabs(a[r][col]) > std::fabs(a[pivot][col])) pivot = r;
+    }
+    for (int c = 0; c < 8; ++c) std::swap(a[col][c], a[pivot][c]);
+    const double p = a[col][col];
+    if (std::fabs(p) < 1e-12) return Mat4{};
+    for (int c = 0; c < 8; ++c) a[col][c] /= p;
+    for (int r = 0; r < 4; ++r) {
+      if (r == col) continue;
+      const double f = a[r][col];
+      for (int c = 0; c < 8; ++c) a[r][c] -= f * a[col][c];
+    }
+  }
+  Mat4 out;
+  for (int r = 0; r < 4; ++r) {
+    for (int c = 0; c < 4; ++c) out.at(c, r) = static_cast<float>(a[r][c + 4]);
+  }
+  return out;
+}
+
+// Tilts the near plane of world->clip matrix `m` (depth 0..1) onto `plane`
+// (world space, a·x + b·y + c·z + d >= 0 is kept), so the GPU clips away
+// everything on the other side (Lengyel's oblique near plane). Used for
+// mirrors instead of a discard in the shader.
+Mat4 obliqueNearPlane(const Mat4& m, const float plane[4]) {
+  const Mat4 inv = inverse(m);
+  // The plane in clip space (its x and y signs pick the far corner below).
+  float clip[4];
+  for (int j = 0; j < 4; ++j) {
+    clip[j] = 0;
+    for (int i = 0; i < 4; ++i) clip[j] += plane[i] * inv.at(j, i);
+  }
+  // The far corner of the view on the kept side, back in world space.
+  const float corner[4] = {clip[0] >= 0 ? 1.0f : -1.0f, clip[1] >= 0 ? 1.0f : -1.0f, 1.0f, 1.0f};
+  float q[4];
+  for (int r = 0; r < 4; ++r) {
+    q[r] = 0;
+    for (int c = 0; c < 4; ++c) q[r] += inv.at(c, r) * corner[c];
+  }
+  const float s = plane[0] * q[0] + plane[1] * q[1] + plane[2] * q[2] + plane[3] * q[3];
+  if (std::fabs(s) < 1e-12f) return m;
+  Mat4 out = m;
+  for (int c = 0; c < 4; ++c) out.at(c, 2) = plane[c] / s;  // the depth row
+  return out;
+}
+
 // WebGPU requires dynamic uniform offsets to be multiples of 256 bytes.
 constexpr uint64_t kObjectStride = 256;
 constexpr wgpu::Color kClearColor{0.02, 0.015, 0.015, 1.0};
@@ -387,7 +444,25 @@ bool SceneRenderer::createGlassPipeline() {
   depth.depthCompare = wgpu::CompareFunction::Less;
   wgpu::RenderPipelineDescriptor desc;
   desc.label = "mirror glass";
-  glassLayout_ = engine::pipelines::uniformTextureLayout(device);
+  {  // uniform + reflection texture + a filtering sampler (the texture is half size)
+    wgpu::BindGroupLayoutEntry e[3];
+    e[0].binding = 0;
+    e[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+    e[0].buffer.type = wgpu::BufferBindingType::Uniform;
+    e[1].binding = 1;
+    e[1].visibility = wgpu::ShaderStage::Fragment;
+    e[1].texture.sampleType = wgpu::TextureSampleType::Float;
+    e[2].binding = 2;
+    e[2].visibility = wgpu::ShaderStage::Fragment;
+    e[2].sampler.type = wgpu::SamplerBindingType::Filtering;
+    wgpu::BindGroupLayoutDescriptor ld;
+    ld.entryCount = 3;
+    ld.entries = e;
+    glassLayout_ = device.CreateBindGroupLayout(&ld);
+    wgpu::SamplerDescriptor sd;
+    sd.magFilter = sd.minFilter = wgpu::FilterMode::Linear;
+    mirrorSampler_ = device.CreateSampler(&sd);
+  }
   desc.layout = engine::pipelines::pipelineLayout(device, glassLayout_);
   desc.vertex.module = module;
   desc.vertex.entryPoint = "vs_main";
@@ -458,27 +533,42 @@ void SceneRenderer::writeModelGlow(size_t i) {
 }
 
 // Reflection textures match the screen, so the glass can read them 1:1.
+// Reflections render at half the screen's resolution (a quarter of the
+// pixels); the glass shows them filtered.
 void SceneRenderer::resizeMirrorTargets() {
   if (targetW_ == gpu_->width && targetH_ == gpu_->height) return;
   targetW_ = gpu_->width;
   targetH_ = gpu_->height;
+  mirrorW_ = std::max(1u, (targetW_ + 1) / 2);
+  mirrorH_ = std::max(1u, (targetH_ + 1) / 2);
+  {
+    wgpu::TextureDescriptor dd;
+    dd.label = "mirror depth";
+    dd.size = {mirrorW_, mirrorH_, 1};
+    dd.format = engine::Gpu::kDepthFormat;
+    dd.usage = wgpu::TextureUsage::RenderAttachment;
+    mirrorDepth_ = gpu_->device.CreateTexture(&dd);
+    mirrorDepthView_ = mirrorDepth_.CreateView();
+  }
   for (MirrorTarget& m : mirrorTargets_) {
     wgpu::TextureDescriptor desc;
     desc.label = "mirror reflection";
-    desc.size = {targetW_, targetH_, 1};
+    desc.size = {mirrorW_, mirrorH_, 1};
     desc.format = gpu_->surfaceFormat;
     desc.usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding;
     m.texture = gpu_->device.CreateTexture(&desc);
     m.view = m.texture.CreateView();
-    wgpu::BindGroupEntry entries[2];
+    wgpu::BindGroupEntry entries[3];
     entries[0].binding = 0;
     entries[0].buffer = m.glassBuffer;
     entries[0].size = sizeof(GlassUniforms);
     entries[1].binding = 1;
     entries[1].textureView = m.view;
+    entries[2].binding = 2;
+    entries[2].sampler = mirrorSampler_;
     wgpu::BindGroupDescriptor bg;
     bg.layout = glassLayout_;
-    bg.entryCount = 2;
+    bg.entryCount = 3;
     bg.entries = entries;
     m.glassBindGroup = gpu_->device.CreateBindGroup(&bg);
   }
@@ -659,28 +749,37 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
                                  const Mat4& viewProj, Vec3 eye) {
   // Only when you're in front of the glass and it's on screen.
   if (!mirror.on || engine::dot(mirror.normal, eye - mirror.center) <= 0.01f) return;
-  const float W = static_cast<float>(targetW_), H = static_cast<float>(targetH_);
-  float minX = W, minY = H, maxX = 0, maxY = 0;
-  bool behindCamera = false;
-  for (float sx : {-1.0f, 1.0f}) {
-    for (float sy : {-1.0f, 1.0f}) {
-      const Vec3 corner = mirror.center + mirror.right * (sx * mirror.halfWidth) + mirror.up * (sy * mirror.halfHeight);
-      const Vec4 c = engine::transformPoint(viewProj, corner);
-      if (c.w <= 0.01f) {
-        behindCamera = true;
-        continue;
+  // The glass on screen: its corners clipped against the near plane (so a
+  // mirror partly behind you still gets a tight box), in half-res pixels.
+  const float W = static_cast<float>(mirrorW_), H = static_cast<float>(mirrorH_);
+  Vec4 poly[8];
+  int count = 0;
+  {
+    Vec4 quad[4];
+    const float sx[4] = {-1, 1, 1, -1}, sy[4] = {-1, -1, 1, 1};
+    for (int k = 0; k < 4; ++k) {
+      quad[k] = engine::transformPoint(
+          viewProj, mirror.center + mirror.right * (sx[k] * mirror.halfWidth) + mirror.up * (sy[k] * mirror.halfHeight));
+    }
+    constexpr float kNearW = 0.01f;
+    for (int k = 0; k < 4; ++k) {
+      const Vec4 a = quad[k], b = quad[(k + 1) % 4];
+      const bool ina = a.w > kNearW, inb = b.w > kNearW;
+      if (ina) poly[count++] = a;
+      if (ina != inb) {
+        const float t = (kNearW - a.w) / (b.w - a.w);
+        poly[count++] = {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, kNearW};
       }
-      const float px = (c.x / c.w * 0.5f + 0.5f) * W, py = (0.5f - c.y / c.w * 0.5f) * H;
-      minX = std::min(minX, px);
-      maxX = std::max(maxX, px);
-      minY = std::min(minY, py);
-      maxY = std::max(maxY, py);
     }
   }
-  if (behindCamera) {  // partly behind you: just use the whole screen
-    minX = minY = 0;
-    maxX = W;
-    maxY = H;
+  if (count == 0) return;  // entirely behind you
+  float minX = W, minY = H, maxX = 0, maxY = 0;
+  for (int k = 0; k < count; ++k) {
+    const float px = (poly[k].x / poly[k].w * 0.5f + 0.5f) * W, py = (0.5f - poly[k].y / poly[k].w * 0.5f) * H;
+    minX = std::min(minX, px);
+    maxX = std::max(maxX, px);
+    minY = std::min(minY, py);
+    maxY = std::max(maxY, py);
   }
   const auto x0 = static_cast<uint32_t>(std::clamp(std::floor(minX), 0.0f, W));
   const auto y0 = static_cast<uint32_t>(std::clamp(std::floor(minY), 0.0f, H));
@@ -690,7 +789,11 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
 
   // The reflected camera: the world mirrored across the glass, viewed by you.
   FrameUniforms f = frame_;
-  f.viewProj = viewProj * Mat4::reflection(mirror.normal, mirror.center);
+  // The near plane is tilted onto the glass, so the GPU itself cuts away
+  // everything behind the mirror (no per-pixel test in the shader).
+  const float glassPlane[4] = {mirror.normal.x, mirror.normal.y, mirror.normal.z,
+                               -engine::dot(mirror.normal, mirror.center)};
+  f.viewProj = obliqueNearPlane(viewProj * Mat4::reflection(mirror.normal, mirror.center), glassPlane);
   const Vec4 mirroredEye = engine::transformPoint(Mat4::reflection(mirror.normal, mirror.center), eye);
   setVec4(f.cameraPos, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, 1);
   setVec4(f.clipPlane, mirror.normal, -engine::dot(mirror.normal, mirror.center));
@@ -708,7 +811,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   color.storeOp = wgpu::StoreOp::Store;
   color.clearValue = full ? kClearColor : kAvatarBackdrop;
   wgpu::RenderPassDepthStencilAttachment depth;
-  depth.view = gpu_->depthView;
+  depth.view = mirrorDepthView_;  // half resolution, like the reflection
   depth.depthLoadOp = wgpu::LoadOp::Clear;
   depth.depthStoreOp = wgpu::StoreOp::Discard;
   depth.depthClearValue = 1.0f;
@@ -822,6 +925,8 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     setVec4(g.right, m.right * m.halfWidth, 0);
     setVec4(g.up, m.up * m.halfHeight, 0);
     g.params[0] = m.on ? 1.0f : 0.0f;
+    g.params[1] = 1.0f / static_cast<float>(targetW_);
+    g.params[2] = 1.0f / static_cast<float>(targetH_);
     queue.WriteBuffer(mirrorTargets_[i].glassBuffer, 0, &g, sizeof(g));
     pass.SetBindGroup(0, mirrorTargets_[i].glassBindGroup);
     pass.Draw(6);

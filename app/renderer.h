@@ -153,6 +153,10 @@ class SceneRenderer {
     wgpu::Buffer glassBuffer;
     wgpu::BindGroup glassBindGroup;
   };
+  wgpu::Texture mirrorDepth_;  // half resolution, shared by the mirrors
+  wgpu::TextureView mirrorDepthView_;
+  wgpu::Sampler mirrorSampler_;
+  uint32_t mirrorW_ = 0, mirrorH_ = 0;
 
   bool createScenePipelines();
   bool createGlassPipeline();
