@@ -10,6 +10,7 @@ declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
   [race_test]="tools/native/race_test.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
+  [math_test]="tools/native/math_test.cpp"
 )
 for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"

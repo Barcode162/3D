@@ -44,10 +44,6 @@ bool hairGrows(Vec3 d) {
   return d.y > -0.62f;                                          // back of the head
 }
 
-float smoothstep(float e0, float e1, float x) {
-  const float t = std::clamp((x - e0) / (e1 - e0), 0.0f, 1.0f);
-  return t * t * (3 - 2 * t);
-}
 
 // Bone indices (filled in by build()).
 struct Bones {
@@ -127,8 +123,8 @@ void Avatar::build(const AvatarLook& look) {
 
   // --- Torso: elliptical cross-sections from the hips to the shoulders.
   auto torsoSkin = [&](float y) {
-    return y < 1.13f ? Skin{b.hips, b.spine, smoothstep(0.98f, 1.12f, y)}
-                     : Skin{b.spine, b.chest, smoothstep(1.16f, 1.30f, y)};
+    return y < 1.13f ? Skin{b.hips, b.spine, engine::smoothstep(0.98f, 1.12f, y)}
+                     : Skin{b.spine, b.chest, engine::smoothstep(1.16f, 1.30f, y)};
   };
   struct Section {
     float y, rx, rz;
@@ -148,8 +144,8 @@ void Avatar::build(const AvatarLook& look) {
   // --- Neck.
   rings.clear();
   for (float y : {1.42f, 1.48f, 1.53f, 1.58f}) {
-    const Skin skin = y < 1.5f ? Skin{b.chest, b.neck, smoothstep(1.43f, 1.48f, y)}
-                               : Skin{b.neck, b.head, smoothstep(1.51f, 1.56f, y)};
+    const Skin skin = y < 1.5f ? Skin{b.chest, b.neck, engine::smoothstep(1.43f, 1.48f, y)}
+                               : Skin{b.neck, b.head, engine::smoothstep(1.51f, 1.56f, y)};
     rings.push_back({{0, y, 0.01f}, 0.057f, 0.054f, skin, kSkinPaint});
   }
   engine::addTube(m, rings, side, 14);
@@ -248,9 +244,9 @@ void Avatar::build(const AvatarLook& look) {
         {0.74f, 0.018f, 0.036f, &kSkinPaint}, {0.715f, 0.012f, 0.02f, &kSkinPaint},
     };
     auto armSkin = [&](float y) {
-      if (y > 1.3f) return Skin{b.chest, b.upperArm[i], smoothstep(1.47f, 1.38f, y)};
-      if (y > 1.0f) return Skin{b.upperArm[i], b.forearm[i], smoothstep(1.17f, 1.09f, y)};
-      return Skin{b.forearm[i], b.hand[i], smoothstep(0.90f, 0.85f, y)};
+      if (y > 1.3f) return Skin{b.chest, b.upperArm[i], engine::smoothstep(1.47f, 1.38f, y)};
+      if (y > 1.0f) return Skin{b.upperArm[i], b.forearm[i], engine::smoothstep(1.17f, 1.09f, y)};
+      return Skin{b.forearm[i], b.hand[i], engine::smoothstep(0.90f, 0.85f, y)};
     };
     rings.clear();
     for (const ArmRing& r : arm) {
@@ -277,9 +273,9 @@ void Avatar::build(const AvatarLook& look) {
         {0.06f, 0.036f, &kSock},
     };
     auto legSkin = [&](float y) {
-      if (y > 0.8f) return Skin{b.hips, b.thigh[i], smoothstep(1.0f, 0.88f, y)};
-      if (y > 0.25f) return Skin{b.thigh[i], b.shin[i], smoothstep(0.56f, 0.44f, y)};
-      return Skin{b.shin[i], b.foot[i], smoothstep(0.11f, 0.07f, y)};
+      if (y > 0.8f) return Skin{b.hips, b.thigh[i], engine::smoothstep(1.0f, 0.88f, y)};
+      if (y > 0.25f) return Skin{b.thigh[i], b.shin[i], engine::smoothstep(0.56f, 0.44f, y)};
+      return Skin{b.shin[i], b.foot[i], engine::smoothstep(0.11f, 0.07f, y)};
     };
     rings.clear();
     for (const LegRing& r : leg) rings.push_back({{limbX(r.y, legJoints), r.y, 0}, r.r, r.r, legSkin(r.y), *r.paint});

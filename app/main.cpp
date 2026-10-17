@@ -291,7 +291,7 @@ void updateCamera(float dt) {
   if (g_app.seat >= 0) {
     // Seated: the eyes stay put; the head turns only so far.
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
-    const float turn = std::remainder(g_app.camera.yaw - s.yaw, 2.0f * engine::kPi);
+    const float turn = engine::wrapAngle(g_app.camera.yaw - s.yaw);
     g_app.camera.yaw = s.yaw + engine::clampf(turn, -kSeatTurn, kSeatTurn);
     g_app.camera.position = app::seatedEye(s.hip, s.yaw, s.lowSeat);
     app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
@@ -1149,7 +1149,7 @@ void updateSelfMotion(double nowMs) {
   m.lowSeat = 0;
   if (g_app.seat >= 0) {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
-    m.headYaw = std::remainder(g_app.camera.yaw - s.yaw, 2.0f * engine::kPi);
+    m.headYaw = engine::wrapAngle(g_app.camera.yaw - s.yaw);
     m.lowSeat = s.lowSeat;
   }
   m.steer = g_app.race.steer();
@@ -1184,7 +1184,7 @@ Mat4 otherTransform(const app::OtherPlayer& o, app::AvatarMotion& motion) {
   const bool seated = act == Activity::kSit || act == Activity::kDrive || act == Activity::kPiano;
   if (seated && seat >= 0 && seat < static_cast<int>(g_app.scene.seats.size())) {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(seat)];
-    motion.headYaw = std::remainder(o.yaw - s.yaw, 2.0f * engine::kPi);
+    motion.headYaw = engine::wrapAngle(o.yaw - s.yaw);
     motion.lowSeat = s.lowSeat;
     motion.steer = o.values[app::slot::kData + 4];
     if (act == Activity::kPiano) g_app.piano.hands(motion.handL, motion.handR);

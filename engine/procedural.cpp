@@ -26,7 +26,6 @@ float random01(int x, int y, uint32_t seed) { return static_cast<float>(hash(x, 
 int wrap(int i, int n) { return ((i % n) + n) % n; }
 float smooth(float t) { return t * t * (3.0f - 2.0f * t); }
 float mix(float a, float b, float t) { return a + (b - a) * t; }
-float smoothstep(float e0, float e1, float x) { return smooth(std::clamp((x - e0) / (e1 - e0), 0.0f, 1.0f)); }
 float fract(float x) { return x - std::floor(x); }
 
 // Height map → slope image (central differences, wrapping at the edges).

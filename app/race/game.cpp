@@ -30,7 +30,7 @@ std::string timeText(double ms) {
   return b;
 }
 
-float wrapAngle(float a) { return std::remainder(a, 2 * engine::kPi); }
+using engine::wrapAngle;
 
 }  // namespace
 

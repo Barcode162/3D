@@ -17,12 +17,6 @@ constexpr double kPlaybackDelayMs = 250;  // behind their newest state, to smoot
 constexpr double kKeepMs = 2000;          // older samples are dropped
 
 // Shortest way from angle a to b (radians), so turning across ±180° doesn't spin.
-float angleLerp(float a, float b, float t) {
-  float d = std::fmod(b - a, 2.0f * engine::kPi);
-  if (d > engine::kPi) d -= 2.0f * engine::kPi;
-  if (d < -engine::kPi) d += 2.0f * engine::kPi;
-  return a + d * t;
-}
 
 }  // namespace
 
@@ -33,7 +27,7 @@ void OtherPlayers::start() {
 
 void OtherPlayers::sendSelf(double nowMs, Vec3 eye, float yaw, float pitch, const float* extra) {
   if (!on_) return;
-  float state[slot::kCount] = {eye.x, eye.y, eye.z, std::remainder(yaw, 2.0f * engine::kPi), pitch};
+  float state[slot::kCount] = {eye.x, eye.y, eye.z, engine::wrapAngle(yaw), pitch};
   for (int i = slot::kActivity; i < slot::kCount; ++i) state[i] = extra[i - slot::kActivity];
   engine::net::setState(nowMs, state, slot::kCount);
 }
@@ -97,7 +91,7 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
     const OtherPlayer::Sample& b = o.samples[std::min(i + 1, o.samples.size() - 1)];
     const float f = b.time > a.time ? engine::clampf(static_cast<float>((t - a.time) / (b.time - a.time)), 0, 1) : 0;
     const Vec3 eye = a.eye + (b.eye - a.eye) * f;
-    const float yaw = angleLerp(a.yaw, b.yaw, f);
+    const float yaw = engine::angleLerp(a.yaw, b.yaw, f);
     if (o.placed) {
       const Vec3 moved = eye - o.eye;
       const Vec3 forward{std::sin(yaw), 0, -std::cos(yaw)}, right{std::cos(yaw), 0, std::sin(yaw)};

@@ -18,15 +18,6 @@ constexpr float kHoldStiffness = 14.0f;    // how hard a held body chases its ta
 constexpr float kHoldMaxSpeed = 6.0f;
 constexpr float kMaxAngularSpeed = 40.0f;
 
-Quat conjugate(Quat q) { return {-q.x, -q.y, -q.z, q.w}; }
-
-Quat normalized(Quat q) {
-  const float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-  return {q.x / len, q.y / len, q.z / len, q.w / len};
-}
-
-Vec3 mulComponents(Vec3 a, Vec3 b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }
-
 // Applies the world-space inverse inertia: rotate into body space, scale,
 // rotate back.
 Vec3 applyInverseInertia(const Body& b, Vec3 v) {

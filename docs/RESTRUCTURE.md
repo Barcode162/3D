@@ -1550,6 +1550,12 @@ errors (so smoke/mp_test fail on them).
 - **Accept:** math_test (g++) passes; vehicle_test targets unchanged (0-100 ≈ 4.2 s, braking
   ≈ 31 m); race_test output identical to before the change; STD.
 - **Phone:** nothing changes.
+- **Done (2026-10-17):** `engine/math.h` gained `dot/conjugate/normalized/nlerp/slerp/isFinite`
+  for Quat, `wrapAngle/angleLerp/smoothstep/lerpf/signf`, Vec3 `/ -= *= ==`, `float * Vec3`,
+  `lerp/lengthSq/distance/mulComponents/min/maxComponents/isFinite`, `Aabb`; `axisAngle` with a
+  zero axis = no turn. Copies deleted (physics, vehicle, shared_world, players, avatar,
+  procedural, race `wrapAngle`, `std::remainder` angle wraps in main). race_test and
+  vehicle_test output byte-identical; `tools/native/math_test.cpp` (g++ + em++).
 
 #### 2.3b Physics: no jiggle, no judder, no NaN
 - **Files:** `engine/physics.{h,cpp}` (per-sphere contact dedupe by normal; drift-based sleep;

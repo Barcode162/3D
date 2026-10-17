@@ -23,12 +23,6 @@ constexpr double kQuietMs = 1500;       // after a glass is placed by the networ
 constexpr float kFollow = 14.0f;        // how fast a remote glass catches up (per second)
 constexpr double kSongSlack = 2.0;      // seconds; closer song starts count as the same
 
-Quat nlerp(Quat a, Quat b, float t) {
-  if (a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w < 0) b = {-b.x, -b.y, -b.z, -b.w};
-  Quat q{a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t};
-  const float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-  return {q.x / len, q.y / len, q.z / len, q.w / len};
-}
 
 std::string glassKey(int index) { return "g" + std::to_string(index); }
 

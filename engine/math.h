@@ -10,6 +10,17 @@ constexpr float kPi = 3.14159265358979f;
 
 inline float radians(float degrees) { return degrees * kPi / 180.0f; }
 inline float clampf(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
+inline float lerpf(float a, float b, float t) { return a + (b - a) * t; }
+inline float signf(float v) { return v < 0 ? -1.0f : 1.0f; }
+// 0 below e0, 1 above e1, a smooth S-curve between.
+inline float smoothstep(float e0, float e1, float x) {
+  const float t = clampf((x - e0) / (e1 - e0), 0.0f, 1.0f);
+  return t * t * (3 - 2 * t);
+}
+// An angle moved into -pi..pi.
+inline float wrapAngle(float a) { return std::remainder(a, 2.0f * kPi); }
+// From angle a toward b the short way round (t = 0..1).
+inline float angleLerp(float a, float b, float t) { return a + wrapAngle(b - a) * t; }
 
 struct Vec2 {
   float x = 0, y = 0;
@@ -21,19 +32,51 @@ struct Vec3 {
   Vec3 operator+(Vec3 o) const { return {x + o.x, y + o.y, z + o.z}; }
   Vec3 operator-(Vec3 o) const { return {x - o.x, y - o.y, z - o.z}; }
   Vec3 operator*(float s) const { return {x * s, y * s, z * s}; }
+  Vec3 operator/(float s) const { return {x / s, y / s, z / s}; }
   Vec3 operator-() const { return {-x, -y, -z}; }
   Vec3& operator+=(Vec3 o) { return *this = *this + o; }
+  Vec3& operator-=(Vec3 o) { return *this = *this - o; }
+  Vec3& operator*=(float s) { return *this = *this * s; }
+  bool operator==(const Vec3&) const = default;
 };
+inline Vec3 operator*(float s, Vec3 v) { return v * s; }
 
 inline float dot(Vec3 a, Vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 inline Vec3 cross(Vec3 a, Vec3 b) {
   return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 inline float length(Vec3 v) { return std::sqrt(dot(v, v)); }
+inline float lengthSq(Vec3 v) { return dot(v, v); }
+inline float distance(Vec3 a, Vec3 b) { return length(a - b); }
 inline Vec3 normalize(Vec3 v) {
   const float len = length(v);
   return len > 0 ? v * (1.0f / len) : v;
 }
+inline Vec3 lerp(Vec3 a, Vec3 b, float t) { return a + (b - a) * t; }
+inline Vec3 mulComponents(Vec3 a, Vec3 b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }
+inline Vec3 minComponents(Vec3 a, Vec3 b) { return {std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z)}; }
+inline Vec3 maxComponents(Vec3 a, Vec3 b) { return {std::fmax(a.x, b.x), std::fmax(a.y, b.y), std::fmax(a.z, b.z)}; }
+inline bool isFinite(Vec3 v) { return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z); }
+
+// An axis-aligned box.
+struct Aabb {
+  Vec3 min, max;
+  bool contains(Vec3 p) const {
+    return p.x >= min.x && p.x <= max.x && p.y >= min.y && p.y <= max.y && p.z >= min.z && p.z <= max.z;
+  }
+  bool overlaps(const Aabb& o) const {
+    return min.x <= o.max.x && max.x >= o.min.x && min.y <= o.max.y && max.y >= o.min.y && min.z <= o.max.z &&
+           max.z >= o.min.z;
+  }
+  Vec3 center() const { return (min + max) * 0.5f; }
+  Vec3 size() const { return max - min; }
+  // Grown to hold p.
+  void add(Vec3 p) {
+    min = minComponents(min, p);
+    max = maxComponents(max, p);
+  }
+  static Aabb empty() { return {{1e30f, 1e30f, 1e30f}, {-1e30f, -1e30f, -1e30f}}; }
+};
 
 struct Vec4 {
   float x = 0, y = 0, z = 0, w = 0;
@@ -42,7 +85,9 @@ struct Vec4 {
 struct Quat {
   float x = 0, y = 0, z = 0, w = 1;
 
+  // A turn by angle (radians) around axis. A zero axis gives no turn.
   static Quat axisAngle(Vec3 axis, float angle) {
+    if (dot(axis, axis) <= 0) return {};
     const Vec3 a = normalize(axis) * std::sin(angle * 0.5f);
     return {a.x, a.y, a.z, std::cos(angle * 0.5f)};
   }
@@ -56,6 +101,34 @@ struct Quat {
     return v + t * w + cross(q, t);
   }
 };
+
+inline float dot(Quat a, Quat b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
+// The opposite turn (for a unit quaternion).
+inline Quat conjugate(Quat q) { return {-q.x, -q.y, -q.z, q.w}; }
+// Length 1 again (rounding drifts it); a zero quaternion gives no turn.
+inline Quat normalized(Quat q) {
+  const float n = std::sqrt(dot(q, q));
+  return n > 0 ? Quat{q.x / n, q.y / n, q.z / n, q.w / n} : Quat{};
+}
+inline bool isFinite(Quat q) { return std::isfinite(q.x) && std::isfinite(q.y) && std::isfinite(q.z) && std::isfinite(q.w); }
+// Between two turns, the short way round: fast and good for small steps.
+inline Quat nlerp(Quat a, Quat b, float t) {
+  if (dot(a, b) < 0) b = {-b.x, -b.y, -b.z, -b.w};
+  return normalized({a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t});
+}
+// Between two turns at an even speed (for big differences).
+inline Quat slerp(Quat a, Quat b, float t) {
+  float d = dot(a, b);
+  if (d < 0) {
+    b = {-b.x, -b.y, -b.z, -b.w};
+    d = -d;
+  }
+  if (d > 0.9995f) return nlerp(a, b, t);
+  const float theta = std::acos(clampf(d, -1, 1));
+  const float s = std::sin(theta);
+  const float wa = std::sin((1 - t) * theta) / s, wb = std::sin(t * theta) / s;
+  return {a.x * wa + b.x * wb, a.y * wa + b.y * wb, a.z * wa + b.z * wb, a.w * wa + b.w * wb};
+}
 
 struct Mat4 {
   float m[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};

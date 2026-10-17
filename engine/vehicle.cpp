@@ -10,12 +10,7 @@ constexpr float kGravity = 9.81f;
 constexpr float kAirDensity = 1.2f;
 constexpr float kRadToRpm = 60.0f / (2.0f * kPi);
 
-Quat conjugate(Quat q) { return {-q.x, -q.y, -q.z, q.w}; }
-Quat normalized(Quat q) {
-  const float n = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-  return n > 0 ? Quat{q.x / n, q.y / n, q.z / n, q.w / n} : Quat{};
-}
-float sign(float v) { return v < 0 ? -1.0f : 1.0f; }
+float sign(float v) { return signf(v); }
 float smooth01(float t) {
   t = clampf(t, 0, 1);
   return t * t * (3 - 2 * t);
