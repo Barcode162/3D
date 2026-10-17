@@ -26,10 +26,13 @@ enum : int {
   kEmoteCount,               // goes up by one per emote, so a repeat restarts it
   kData,                     // 5 numbers for the activity (scores, steering...)
   kHeldDrink = kData + 5,    // drink in hand (drink type + 1, 0 = none)
-  kFlags,                    // bit 0 = bartender on shift, bit 1 = on the stage mic
+  kFlags,                    // bit 0 = bartender on shift, bit 1 = on the stage mic, bit 2 = away (kFlagAway)
   kCount,
 };
 }
+
+// Set by the page (web/net.js) while that player's game is in the background.
+constexpr int kFlagAway = 4;
 
 struct OtherPlayer {
   int id = 0;
@@ -43,6 +46,7 @@ struct OtherPlayer {
   int look = 0;
   float voice = 0;  // talking level (smoothed)
   int emoteCount = -1;
+  bool away = false;  // their game is in the background (kFlagAway)
   double activitySinceMs = 0;  // when their current activity/emote started (our clock)
 
   // Received states, oldest first, on the sender's clock.

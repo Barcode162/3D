@@ -28,6 +28,9 @@ std::string room();
 
 // Your latest state (sent on the next tick). `timeMs` = your clock now.
 void setState(double timeMs, const float* values, int count);
+// Which state value carries the "away" bit: the page sets it in your last
+// state when it goes to the background (web/net.js). Call once.
+void setAwayFlag(int slot, int bit);
 
 // New states since the last call, oldest first.
 void receive(std::vector<Packet>& out);

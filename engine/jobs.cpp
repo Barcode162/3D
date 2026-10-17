@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 
+#include "engine/bridge.h"
 #include "engine/log.h"
 #include "engine/profiler.h"
 
@@ -44,6 +45,7 @@ size_t pendingJobs() {
 void setJobGate(std::function<bool()> gate) { g_gate = std::move(gate); }
 
 void runJobs(double deadlineMs) {
+  if (bridge::frame().hidden) return;  // paused while the page is in the background
   int ran = 0;
   double maxJob = 0;
   if (!g_gate || g_gate()) {

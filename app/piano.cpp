@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "engine/frame_time.h"
 #include "engine/fetch.h"
 #include "engine/jobs.h"
 #include "engine/log.h"
@@ -222,7 +223,7 @@ void Piano::keyDown(int key, float velocity, bool share, int player) {
   if (i < 0 || i >= 88) return;
   ensureSample(i);  // only if its background job hasn't made it yet
   Hands& h = hands_[player];
-  h.lastMs = emscripten_get_now();
+  h.lastMs = engine::frameTime().nowMs;
   if (h.voice[i] > 0) engine::Sound::stop(h.voice[i], 0, 0.05f);
   h.voice[i] = playKey(i, 0.25f + 0.75f * velocity, 0);
   h.start[i] = engine::audio::now();
@@ -238,7 +239,7 @@ void Piano::keyUp(int key, bool share, int player) {
   const auto it = hands_.find(player);
   if (i < 0 || i >= 88 || it == hands_.end() || it->second.voice[i] == 0) return;
   Hands& h = it->second;
-  h.lastMs = emscripten_get_now();
+  h.lastMs = engine::frameTime().nowMs;
   if (h.pedal) {
     h.pedalHeld.push_back(i);
   } else {
@@ -253,7 +254,7 @@ void Piano::keyUp(int key, bool share, int player) {
 
 void Piano::setPedal(bool down, bool share, int player) {
   Hands& h = hands_[player];
-  h.lastMs = emscripten_get_now();
+  h.lastMs = engine::frameTime().nowMs;
   if (h.pedal == down) return;
   h.pedal = down;
   if (!down) {

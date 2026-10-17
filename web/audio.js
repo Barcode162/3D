@@ -103,6 +103,7 @@ window.bar3dAudio = (function () {
       if (!AC) { report('This browser has no Web Audio.'); return; }
       ctx = new AC();
       applyListener();
+      watchState();
     }
     if (ctx.state !== 'running') ctx.resume();
     sources.forEach(function (s) { connect(s); bless(s); });
@@ -110,6 +111,39 @@ window.bar3dAudio = (function () {
   ['touchend', 'mousedown', 'keydown'].forEach(function (type) {
     window.addEventListener(type, unlock, true);
   });
+
+  // In the background the sound is paused (and its clock stops, so songs
+  // pick up where they were). Back on the page it resumes; if iOS won't let
+  // it (it was interrupted, e.g. by a call), a banner asks for a tap.
+  var resumeBanner = null;
+  function showResume(show) {
+    if (show && !resumeBanner) {
+      resumeBanner = document.createElement('div');
+      resumeBanner.id = 'tapResume';
+      resumeBanner.textContent = '\u{1F50A} Tap to resume sound';
+      resumeBanner.style.cssText = 'position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));' +
+        'transform:translateX(-50%);z-index:9;background:#1a1220ee;color:#f5ecf8;padding:10px 16px;' +
+        'border-radius:16px;font:600 15px -apple-system,system-ui,sans-serif;pointer-events:auto;';
+      resumeBanner.addEventListener('click', unlock);
+      document.body.appendChild(resumeBanner);
+    }
+    if (resumeBanner) resumeBanner.style.display = show ? 'block' : 'none';
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!ctx) return;
+    if (document.hidden) {
+      if (ctx.state === 'running') ctx.suspend().catch(function () {});
+      return;
+    }
+    ctx.resume().catch(function () {});
+    setTimeout(function () { if (ctx.state !== 'running' && !document.hidden) showResume(true); }, 600);
+  });
+  function watchState() {
+    ctx.addEventListener('statechange', function () {
+      if (ctx.state === 'running') showResume(false);
+      else if (!document.hidden && ctx.state === 'interrupted') showResume(true);
+    });
+  }
 
   // Your own songs, picked from the Files app. They stay on the phone: the
   // browser only gives us a local link to each file (lost on reload).

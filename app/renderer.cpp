@@ -7,6 +7,7 @@
 #include <cstring>
 #include <memory>
 
+#include "engine/frame_time.h"
 #include "engine/file.h"
 #include "engine/log.h"
 #include "engine/pipeline_cache.h"
@@ -478,7 +479,7 @@ bool SceneRenderer::createGlassPipeline() {
 // arrays (colors, bumps).
 void SceneRenderer::createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps,
                                     wgpu::Sampler& sampler) {
-  const double start = emscripten_get_now();
+  const double start = engine::clockMs();
   std::vector<engine::Image> colors, bumps;
   for (engine::MaterialImages& m : buildBarTextures()) {
     colors.push_back(std::move(m.color));
@@ -495,7 +496,7 @@ void SceneRenderer::createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureV
   samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
   samplerDesc.maxAnisotropy = 4;  // keeps the floor sharp at shallow angles
   sampler = gpu_->device.CreateSampler(&samplerDesc);
-  LOG_INFO("Textures: %zu materials generated in %.0f ms.", colors.size(), emscripten_get_now() - start);
+  LOG_INFO("Textures: %zu materials generated in %.0f ms.", colors.size(), engine::clockMs() - start);
 }
 
 void SceneRenderer::setGlow(const Interactable& it, float glow) {

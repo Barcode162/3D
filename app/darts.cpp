@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "engine/frame_time.h"
+
 using engine::Vec3;
 using engine::Vec4;
 
@@ -103,7 +105,7 @@ void Darts::start() {
   playing_ = true;
   if (scoreLeft_ <= 0) scoreLeft_ = 301;
   message_ = "301: tap the board to throw";
-  messageMs_ = emscripten_get_now();
+  messageMs_ = engine::frameTime().nowMs;
 }
 
 void Darts::throwAt(Vec3 eye, Vec3 dir, double nowMs) {

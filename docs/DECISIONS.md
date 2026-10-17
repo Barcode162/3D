@@ -525,6 +525,12 @@ was answered by the user on 2026-10-17.
   `rosterVersion`; a player index above the last roster counts as present
   (their first packet can arrive a frame before the roster lists them).
   New saved settings need an entry in the `SCHEMA` in `web/menu.js`.
+- **Time (step 2.2):** game code reads `engine::frameTime().nowMs` / `.dt`
+  (one time per frame, from the browser's animation frame); use
+  `engine::clockMs()` only to measure how long something took. No
+  `emscripten_get_now()` in `app/`. Test "page hidden" headless by
+  redefining `document.hidden` and dispatching `visibilitychange`
+  (`tools/mp_test.mjs` `setHidden`).
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

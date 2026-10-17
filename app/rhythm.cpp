@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "engine/frame_time.h"
 #include "engine/audio.h"
 #include "engine/font.h"
 #include "engine/log.h"
@@ -178,9 +179,9 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
     }
     float rate = 44100;
     std::vector<float> samples = engine::Track::takeSamples(rate);
-    const double t0 = emscripten_get_now();
+    const double t0 = engine::clockMs();
     const Chart chart = makeChart(samples.data(), samples.size(), rate, difficulty_);
-    LOG_INFO("Chart made in %.0f ms.", emscripten_get_now() - t0);
+    LOG_INFO("Chart made in %.0f ms.", engine::clockMs() - t0);
     notes_.clear();
     for (const ChartNote& n : chart.notes) notes_.push_back({n.time, n.lane});
     duration_ = chart.length;

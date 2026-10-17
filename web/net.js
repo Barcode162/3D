@@ -77,6 +77,23 @@ window.bar3dNet = (function () {
   var id = 'p' + Math.random().toString(36).slice(2, 10);
 
   var state = null, stateTime = 0;  // latest from C++
+  // While the page is hidden (another app, locked phone) the game stops, so
+  // the others get one last state with the "away" bit set in it (C++ says
+  // which slot and bit, awayFlag) and nothing new until you're back.
+  var awaySlot = -1, awayBit = 0, away = false;
+  function sendNow() { if (!started) return; if (mode === 'cloud') cloudTick(); else if (!inFlight) tick(); }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && !away && state && awaySlot >= 0 && awaySlot < state.length) {
+      away = true;
+      state = state.slice();
+      state[awaySlot] = state[awaySlot] | awayBit;
+      stateTime = performance.now();
+      sendNow();
+    } else if (!document.hidden && away) {
+      away = false;  // the game sends a fresh state on its next frame
+      pingAt = 0;    // and the clock is checked again at once
+    }
+  });
   var players = {};                 // id -> {index, name}
   var nextIndex = 1;
   var packets = [];                 // new states not yet taken by C++
@@ -346,7 +363,9 @@ window.bar3dNet = (function () {
     room: function () { return room; },
     // Your latest state; t is your clock in ms (sent along so the others
     // can play your movement back smoothly).
-    setState: function (t, values) { stateTime = t; state = values; },
+    setState: function (t, values) { if (away) return; stateTime = t; state = values; },
+    // Which state number carries the "away" bit (set once by C++).
+    awayFlag: function (slot, bit) { awaySlot = slot; awayBit = bit; },
     // Moves new states to C++: each packet is [player, t, count, values...]
     // as doubles. Returns how many packets were written.
     take: function (heap, start, capacity, maxValues) {

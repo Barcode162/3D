@@ -72,6 +72,23 @@ const status = await bob.$eval('#status', (el) => el.textContent);
 await bob.screenshot({ path: 'build/mp-bob.png' });
 console.log('Bob status:', status);
 
+// Alice switches to another app (the page is hidden): Bob must see her as
+// away quickly, and back when she returns.
+const setHidden = (page, hidden) => page.evaluate((h) => {
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
+  document.dispatchEvent(new Event('visibilitychange'));
+}, hidden);
+const hiddenAt = Date.now();
+await setHidden(alice, true);
+const awayOk = await bob.waitForFunction(() => /Alice is away/.test(document.getElementById('log').textContent), null,
+                                         { timeout: 10000, polling: 100 }).then(() => true).catch(() => false);
+const awayMs = Date.now() - hiddenAt;
+await setHidden(alice, false);
+const backOk = await bob.waitForFunction(() => /Alice is back/.test(document.getElementById('log').textContent), null,
+                                         { timeout: 20000, polling: 250 }).then(() => true).catch(() => false);
+console.log(`Bob saw Alice away after ${awayMs} ms (headless Bob runs at a few fps)`);
+
 // Shared world. Carol stands at the bar looking down at glass 1 (x = -3.7),
 // picks it up (tap in the middle), puts it down to the right. Alice leaves
 // first so three software-rendered pages don't crawl.
@@ -138,6 +155,7 @@ const rejoined = /glass 1 is at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(c
 const near = (m) => m && putDown && Math.abs(+m[1] - +putDown[1]) < 0.05 && Math.abs(+m[3] - +putDown[3]) < 0.05;
 const checks = {
   'Bob sees Alice': /online: 2/.test(status) && /Alice joined/.test(log),
+  'Bob sees Alice away when her page is hidden, and back after': awayOk && backOk && awayMs < 2000,
   'Bob sees the glass land where Carol put it': near(rested),
   'Carol finds the glass there after rejoining': near(rejoined),
   'Bob sees the mirror switch to avatars only': /mirror 0 set to avatars only/.test(log),

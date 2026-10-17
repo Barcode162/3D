@@ -29,6 +29,10 @@ void setState(double timeMs, const float* values, int count) {
   }, timeMs, values, count);
 }
 
+void setAwayFlag(int slot, int bit) {
+  EM_ASM({ var n = window['bar3dNet']; if (n && n['awayFlag']) n['awayFlag']($0, $1); }, slot, bit);
+}
+
 void receive(std::vector<Packet>& out) {
   constexpr int kStride = 3 + kMaxValues;
   constexpr int kCapacity = 64;

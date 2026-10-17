@@ -768,7 +768,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **H** No per-phase timing; the start-up lag can't be attributed (`main.cpp:312-324` updateFps only) → FrameProfiler + phone report. *[0.2, 0.3]* (0.2 part done: profiler + overlay)
 - [ ] **H** God object `g_app`; any function changes anything (`main.cpp:66-142`; `use()` `:650-773` teleports, opens panels, toggles lights, plays sfx, sends net) → Game + systems + event bus. *[4.1a, 4.1b]*
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
-- [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
+- [x] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
 - [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]* (2.1a-c parts done: page calls per frame ~24 → ~3, JSON menus/roster only on change; net send on the tick is 3.4a)
 - [x] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
 - [x] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
@@ -776,7 +776,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** Abort or device loss freezes the game forever (`index.html` onAbort; `gpu.cpp:69-74`) → fatal overlay, rejoin, auto report. *[0.3]*
 - [x] **M** 16 MB default heap grows repeatedly while loading (`CMakeLists.txt` only `ALLOW_MEMORY_GROWTH`) → `INITIAL_MEMORY`. *[1.5]*
 - [ ] **M** Function-local statics survive room changes (`main.cpp:749,778`; `players.cpp:38`; `shared_world.cpp:84`) → members + `reset()`. *[4.1b]*
-- [ ] **M** No visibility/pagehide handling: others see a frozen you, keys stick, catch-up burst on return → lifecycle §2.5.8. *[2.2]*
+- [x] **M** No visibility/pagehide handling: others see a frozen you, keys stick, catch-up burst on return → lifecycle §2.5.8. *[2.2]*
 - [ ] **L** Per-frame heap churn (`main.cpp:876,1239-1240,494,518`; `drawModels` sort vectors) → persistent buffers. *[4.1b, 6.1]*
 - [ ] **L** Shared facts duplicated and polled (`updateMirrorButtons` `main.cpp:777-789`; `setLights` from two places) → RoomState + change events. *[5.3]*
 - [ ] **L** Sound handles are raw pointers into `g_app.sfx` (`main.cpp:1385-1391`) → AudioMixer sound ids. *[2.5]*
@@ -1534,6 +1534,13 @@ errors (so smoke/mp_test fail on them).
   "away" over B within 1 s; STD.
 - **Phone:** switch to another app for 10 s and back: no fast-forward jump, sound comes back.
   Your brother sees "away" over you while you're gone.
+- **Done (2026-10-17):** `engine/frame_time.*` (`beginFrameTime(rafMs)`, `frameTime()` with
+  `nowMs`, `dt` ≤ 0.1 s, `resumed`, `gapMs`; `clockMs()` only for measuring), the loop is
+  `emscripten_request_animation_frame_loop`; no `emscripten_get_now` left in `app/`. Jobs pause
+  while hidden. Away: C++ names the slot/bit once (`net::setAwayFlag(kFlags, 4)`); on hide
+  `web/net.js` sends one last state with the bit set and freezes it; others log "X is away/back"
+  and show "(away)" under the name. Sound suspends on hide, resumes on show, "Tap to resume
+  sound" if iOS refuses. mp_test: away seen after ~0.6 s headless.
 
 #### 2.3a One `math.h`
 - **Files:** `engine/math.h` (quat conjugate/normalize/nlerp/slerp, angle wrap/lerp, Vec3 ops,

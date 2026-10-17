@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <string>
 
+#include "engine/frame_time.h"
 #include "engine/log.h"
 #include "engine/profiler.h"
 
@@ -35,10 +36,10 @@ float wrapAngle(float a) { return std::remainder(a, 2 * engine::kPi); }
 
 void Game::start(int rig, double nowMs) {
   if (!ready_) {
-    const double t0 = emscripten_get_now();
+    const double t0 = engine::clockMs();
     world_.init();
     ready_ = view_.init(*gpu_, world_.track(), sportsCar());
-    LOG_INFO("Race track ready in %.0f ms.", emscripten_get_now() - t0);
+    LOG_INFO("Race track ready in %.0f ms.", engine::clockMs() - t0);
     if (!ready_) return;
   }
   rig_ = rig;

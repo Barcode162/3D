@@ -1,11 +1,10 @@
 #include "app/players.h"
 
-#include "engine/bridge.h"
-
 #include <algorithm>
 #include <cmath>
 
 #include "engine/bridge.h"
+#include "engine/log.h"
 #include "engine/net.h"
 
 namespace app {
@@ -27,7 +26,10 @@ float angleLerp(float a, float b, float t) {
 
 }  // namespace
 
-void OtherPlayers::start() { on_ = engine::net::start(); }
+void OtherPlayers::start() {
+  on_ = engine::net::start();
+  engine::net::setAwayFlag(slot::kFlags, kFlagAway);
+}
 
 void OtherPlayers::sendSelf(double nowMs, Vec3 eye, float yaw, float pitch, const float* extra) {
   if (!on_) return;
@@ -69,6 +71,11 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
       o.activitySinceMs = nowMs;
     }
     o.emoteCount = emoteCount;
+    const bool away = (static_cast<int>(o.values[slot::kFlags]) & kFlagAway) != 0;
+    if (away != o.away) {
+      o.away = away;
+      LOG_INFO("Multiplayer: %s is %s.", o.name.empty() ? "a player" : o.name.c_str(), away ? "away" : "back");
+    }
     o.samples.push_back({p.time, {p.values[0], p.values[1], p.values[2]}, p.values[3], p.values[4]});
   }
 
