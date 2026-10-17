@@ -1237,6 +1237,10 @@ struct ProfiledFrame {
 
 void frame() {
   using engine::Phase;
+  // Touches queued since the last frame are read first, so the profiler
+  // counts them for the frame they arrived in.
+  g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
+  g_app.input.pollTouches();
   const double nowMs = emscripten_get_now();
   ProfiledFrame profiled(nowMs);
   updateLoadingScreen();
@@ -1245,7 +1249,6 @@ void frame() {
   g_app.lastFrameMs = nowMs;
 
   g_app.gpu.resizeIfNeeded();
-  g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   // Loading work (textures, model buffers) gets a slice of each frame: more
   // while the loading screen is up, little once you walk around.
   {

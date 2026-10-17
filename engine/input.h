@@ -45,6 +45,9 @@ class Input {
   double canvasW = 0, canvasH = 0;
   // Moves the joystick rings on the page, if they changed (once per frame).
   void flushStick();
+  // Handles the touches queued since the last frame (call once per frame,
+  // before reading input).
+  void pollTouches();
   bool stickVisible = false, stickDirty = false;
   Vec2 stickShownOrigin, stickShownKnob;
   void setCapture(bool on);

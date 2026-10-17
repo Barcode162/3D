@@ -41,6 +41,10 @@ void Profiler::beginFrame(double nowMs) {
   if (count_ > 0 && lastStartMs_ > 0) {
     Frame& last = frames_[(head_ + kFrames - 1) % kFrames];
     last.intervalMs = static_cast<float>(nowMs - lastStartMs_);
+    // Touches queued during that interval (read just before this call).
+    last.touches = pendingTouches_;
+    last.moves = pendingMoves_;
+    last.phaseMs[static_cast<int>(Phase::kEvents)] = static_cast<float>(pendingEventsMs_);
     if (last.intervalMs > 1000) {  // the app was in the background, not a hitch
       last.intervalMs = 0;
       ++pauses_;
@@ -63,9 +67,6 @@ void Profiler::beginFrame(double nowMs) {
   }
   lastStartMs_ = frameStartMs_ = nowMs;
   current_ = Frame{};
-  current_.touches = pendingTouches_;
-  current_.moves = pendingMoves_;
-  current_.phaseMs[static_cast<int>(Phase::kEvents)] = static_cast<float>(pendingEventsMs_);
   pendingTouches_ = 0;
   pendingMoves_ = 0;
   pendingEventsMs_ = 0;

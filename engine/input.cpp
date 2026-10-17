@@ -46,6 +46,11 @@ Vec2 clampToStick(Vec2 origin, Vec2 p) {
   return {origin.x + d.x, origin.y + d.y};
 }
 
+// The time of the touch being handled (its event time, from the queue), or
+// now for events handled the moment they arrive (mouse, keys).
+double g_eventMs = 0;
+double eventNow() { return g_eventMs > 0 ? g_eventMs : emscripten_get_now(); }
+
 constexpr double kTapMaxMs = 350;
 constexpr float kTapMaxMove = 12;  // CSS pixels
 
@@ -58,7 +63,7 @@ Input::Press* findPress(Input& in, int id) {
 
 void pressStart(Input& in, int id, Vec2 p) {
   Input::Press* slot = findPress(in, Input::kNone);
-  if (slot) *slot = {id, p, emscripten_get_now(), 0};
+  if (slot) *slot = {id, p, eventNow(), 0};
 }
 
 void pressMove(Input& in, int id, Vec2 p) {
@@ -72,7 +77,7 @@ void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
   Input::Press* press = findPress(in, id);
   if (!press) return;
   pressMove(in, id, p);
-  if (!cancelled && press->moved < kTapMaxMove && emscripten_get_now() - press->startMs < kTapMaxMs) {
+  if (!cancelled && press->moved < kTapMaxMove && eventNow() - press->startMs < kTapMaxMs) {
     const double w = in.canvasW, h = in.canvasH;
     if (w > 0 && h > 0) in.taps.push_back({static_cast<float>(p.x / w), static_cast<float>(p.y / h)});
   }
@@ -82,7 +87,7 @@ void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
 void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
   auto it = std::find_if(in.pointers.begin(), in.pointers.end(), [&](const Input::Pointer& p) { return p.id == id; });
   if (type == EMSCRIPTEN_EVENT_TOUCHSTART || type == EMSCRIPTEN_EVENT_MOUSEDOWN) {
-    if (it == in.pointers.end()) in.pointers.push_back({id, pos, pos, emscripten_get_now(), mouse});
+    if (it == in.pointers.end()) in.pointers.push_back({id, pos, pos, eventNow(), mouse});
     else it->pos = pos;
   } else if (type == EMSCRIPTEN_EVENT_TOUCHMOVE || type == EMSCRIPTEN_EVENT_MOUSEMOVE) {
     if (it != in.pointers.end()) it->pos = pos;
@@ -95,7 +100,7 @@ bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
   const double canvasW = in.canvasW, canvasH = in.canvasH;
   if (in.capture) {
-    const double now = emscripten_get_now();
+    const double now = eventNow();
     for (int i = 0; i < e->numTouches; ++i) {
       const EmscriptenTouchPoint& t = e->touches[i];
       if (!t.isChanged || canvasW <= 0 || canvasH <= 0) continue;
@@ -232,17 +237,46 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
 
 }  // namespace
 
-// Every touch / mouse event is timed for the profiler (Phase::kEvents).
-static bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
+// Touches arrive through passive listeners (web side, installed in attach)
+// that only queue them; pollTouches() handles the queue once per frame.
+// Listeners that could cancel the touch (what emscripten's are) make Safari
+// wait for the page's code before it can draw, which cost a frame per tap.
+void Input::pollTouches() {
   const double start = emscripten_get_now();
-  if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
-  const bool r = handleTouch(type, e, user);
-  profiler().event(emscripten_get_now() - start, type == EMSCRIPTEN_EVENT_TOUCHMOVE);
-  return r;
+  constexpr int kMax = 128;
+  static double buf[kMax * 5];  // type, id, x, y, time (ms, full precision for the rhythm game)
+  const int n = EM_ASM_INT({
+    var q = window['bar3dTouchQueue'];
+    if (!q || !q.length) return 0;
+    var n = Math.min(q.length / 5, $1);
+    HEAPF64.set(q.slice(0, n * 5), $0 >> 3);
+    q.splice(0, n * 5);
+    return n;
+  }, buf, kMax);
+  static const int kTypes[4] = {EMSCRIPTEN_EVENT_TOUCHSTART, EMSCRIPTEN_EVENT_TOUCHMOVE, EMSCRIPTEN_EVENT_TOUCHEND,
+                                EMSCRIPTEN_EVENT_TOUCHCANCEL};
+  for (int i = 0; i < n; ++i) {
+    const double* t = buf + i * 5;
+    const int type = kTypes[std::clamp(static_cast<int>(t[0]), 0, 3)];
+    EmscriptenTouchEvent e{};
+    e.numTouches = 1;
+    e.touches[0].identifier = static_cast<int>(t[1]);
+    e.touches[0].isChanged = 1;
+    e.touches[0].targetX = e.touches[0].clientX = static_cast<int>(t[2]);
+    e.touches[0].targetY = e.touches[0].clientY = static_cast<int>(t[3]);
+    g_eventMs = t[4];
+    if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
+    handleTouch(type, &e, this);
+  }
+  g_eventMs = 0;
+  if (n) profiler().event(emscripten_get_now() - start, false);
 }
 
 static bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   const double start = emscripten_get_now();
+  // After a tap the phone also sends pretend mouse events (the touch
+  // listeners are passive, so they can't cancel them): ignore those.
+  if (start - EM_ASM_DOUBLE({ return window['bar3dLastTouch'] || -1e9; }) < 1000) return false;
   if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();
   const bool r = handleMouse(type, e, user);
   profiler().event(emscripten_get_now() - start, type == EMSCRIPTEN_EVENT_MOUSEMOVE);
@@ -262,10 +296,24 @@ void Input::attach(const char* canvas) {
     var c = document.querySelector(UTF8ToString($0));
     if (c) c.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   }, canvas);
-  emscripten_set_touchstart_callback(canvas, this, true, onTouch);
-  emscripten_set_touchmove_callback(canvas, this, true, onTouch);
-  emscripten_set_touchend_callback(canvas, this, true, onTouch);
-  emscripten_set_touchcancel_callback(canvas, this, true, onTouch);
+  // Passive: they never block Safari's drawing. Scrolling and zooming are
+  // already off for the page (touch-action: none in web/index.html).
+  EM_ASM({
+    var c = document.querySelector(UTF8ToString($0));
+    if (!c) return;
+    var q = window['bar3dTouchQueue'] = [];
+    'touchstart touchmove touchend touchcancel'.split(' ').forEach(function (type, code) {
+      c.addEventListener(type, function (e) {
+        if (q.length > 2000) return;  // nobody is reading (e.g. a stalled frame loop)
+        var now = performance.now();  // the game's clock (event.timeStamp may not be)
+        for (var i = 0; i < e.changedTouches.length; i++) {
+          var t = e.changedTouches[i];
+          q.push(code, t.identifier, t.clientX, t.clientY, now);
+        }
+        window['bar3dLastTouch'] = now;
+      }, {'passive': true});
+    });
+  }, canvas);
   emscripten_set_mousedown_callback(canvas, this, true, onMouse);
   emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);
   emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);

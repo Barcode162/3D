@@ -488,6 +488,14 @@ was answered by the user on 2026-10-17.
   120+ times a second on iPhone. The canvas size is measured once per frame
   (`Gpu::cssWidth`) and the joystick drawn once per frame
   (`Input::flushStick`).
+- **Touches are passive (2026-10-17):** listeners only queue touches
+  (`{passive: true}`, `touch-action: none` on the page stops scrolling and
+  zoom); C++ reads the queue once per frame. Non-passive listeners (what
+  `emscripten_set_touch*_callback` uses) cost a late frame per tap on
+  iPhone. Because nothing cancels the touch, Safari also sends mouse events
+  after a tap: mouse input within 1 s of a touch is ignored. Headless tests:
+  CDP touch events arrive slowly at 2 fps (a tap looks like a long press),
+  so send TouchEvents from inside the page.
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

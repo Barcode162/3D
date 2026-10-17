@@ -408,3 +408,12 @@ A small DAW inside the bar, all DSP written in C++:
   times input handlers (`events` phase; hitches show `moves`, `eventsMs`).
   If `eventsMs` stays small in the next report, pull the input mailbox of
   step 2.1a forward (JS collects touches, C++ reads them once per frame).
+- **2026-10-17:** Report `7XCVUN` (user was tapping the gas over and
+  over): one late frame (25-40 ms) per tap, with our touch handlers taking
+  ~0 ms. Cause: emscripten's touch listeners can cancel the touch, so
+  Safari waits for the page's code before drawing. Pulled the touch part of
+  step 2.1a forward: passive listeners queue touches
+  (`window.bar3dTouchQueue`), `Input::pollTouches()` handles them once per
+  frame (with their arrival times); the phone's pretend mouse clicks after
+  a tap are ignored. Profiler: touches now count for the frame they
+  arrived in.
