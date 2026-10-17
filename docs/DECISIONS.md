@@ -531,6 +531,12 @@ was answered by the user on 2026-10-17.
   `emscripten_get_now()` in `app/`. Test "page hidden" headless by
   redefining `document.hidden` and dispatching `visibilitychange`
   (`tools/mp_test.mjs` `setHidden`).
+- **Physics (step 2.3b):** draw bodies at `Body::shownPosition` /
+  `shownRotation` (between steps), never `position`. Move a body
+  instantly only with `PhysicsWorld::teleport`. Move a remote/kinematic
+  body by setting `target`/`targetRotation`, not velocity. Headers that
+  native tests include must stay GPU-free (`engine/mesh_data.h`,
+  `engine/image.h`; `mesh.h`/`texture.h` add the upload code).
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

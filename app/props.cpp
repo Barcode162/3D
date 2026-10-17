@@ -54,6 +54,25 @@ void buildPhysics(const BarScene& scene, engine::PhysicsWorld& world, std::vecto
   for (const Collider& c : scene.colliders) {
     world.addStaticBox({c.center, c.half, c.rotation, &material(c.material)});
   }
+  // The room: everything fixed, plus a margin. A body outside it (or NaN)
+  // is put back where it last was fine.
+  engine::Aabb room = engine::Aabb::empty();
+  const auto addCorners = [&](Vec3 center, Vec3 half, engine::Quat rot) {
+    for (int k = 0; k < 8; ++k) {
+      const Vec3 corner{k & 1 ? half.x : -half.x, k & 2 ? half.y : -half.y, k & 4 ? half.z : -half.z};
+      room.add(center + rot.rotate(corner));
+    }
+  };
+  for (const SceneObject& o : scene.objects) {
+    if (o.mesh.vertices.empty()) continue;
+    const engine::StaticBox b = boxFor(o);
+    addCorners(b.center, b.half, b.rotation);
+  }
+  for (const Collider& c : scene.colliders) addCorners(c.center, c.half, c.rotation);
+  room.min -= Vec3{0.5f, 0.2f, 0.5f};
+  room.min.y = -0.05f;  // the floor is at y = 0: below it means it fell through
+  room.max += Vec3{0.5f, 0.5f, 0.5f};
+  world.setBounds(room);
   bodyOfModel.assign(scene.models.size(), -1);
   for (size_t i = 0; i < scene.models.size(); ++i) {
     const ModelPlacement& m = scene.models[i];

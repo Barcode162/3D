@@ -14,9 +14,16 @@ constexpr float kImpactThreshold = 0.25f;  // slower impacts make no sound (m/s)
 constexpr float kSleepLinear = 0.1f;       // m/s
 constexpr float kSleepAngular = 0.4f;      // rad/s
 constexpr float kSleepTime = 0.5f;         // seconds of stillness before sleeping
+// Jiggling in place (tiny contact buzz) also counts as still: the body may
+// wobble this much around where it started settling.
+constexpr float kSleepDrift = 0.002f;      // m
+constexpr float kSleepDriftAngle = 0.03f;  // rad (about 1.7 degrees)
+constexpr float kJiggleLinear = 0.3f;      // faster than this is real motion
+constexpr float kJiggleAngular = 3.0f;
 constexpr float kHoldStiffness = 14.0f;    // how hard a held body chases its target
 constexpr float kHoldMaxSpeed = 6.0f;
 constexpr float kMaxAngularSpeed = 40.0f;
+constexpr float kMaxSpeed = 15.0f;         // m/s; faster would pass through walls between substeps
 
 // Applies the world-space inverse inertia: rotate into body space, scale,
 // rotate back.
@@ -88,25 +95,167 @@ size_t PhysicsWorld::addBody(Vec3 position, Quat rotation, std::vector<BodySpher
     b.boundRadius = std::max(b.boundRadius, length(d) + s.radius);
   }
   b.inverseInertia = {1.0f / inertia.x, 1.0f / inertia.y, 1.0f / inertia.z};
+  b.prevPosition = b.shownPosition = b.lastGoodPosition = b.sleepAnchor = b.target = position;
+  b.prevRotation = b.shownRotation = b.lastGoodRotation = b.sleepAnchorRotation = b.targetRotation = rotation;
   bodies_.push_back(std::move(b));
   return bodies_.size() - 1;
 }
 
-void PhysicsWorld::step(float dt) {
-  pending_ = std::min(pending_ + std::max(dt, 0.0f), kStep * kMaxStepsPerFrame);
-  while (pending_ >= kStep) {
-    pending_ -= kStep;
-    for (int i = 0; i < kSubsteps; ++i) substep(kStep / kSubsteps);
-    for (Body& b : bodies_) updateSleep(b, kStep);
+void PhysicsWorld::addStaticBox(const StaticBox& box) {
+  statics_.push_back(box);
+  staticReach_.push_back(length(box.half));
+  gridDirty_ = true;
+}
+
+void PhysicsWorld::buildGrid() {
+  gridDirty_ = false;
+  grid_.clear();
+  huge_.clear();
+  Aabb all = Aabb::empty();
+  std::vector<Aabb> boxes;
+  for (size_t i = 0; i < statics_.size(); ++i) {
+    const float r = staticReach_[i];
+    const Vec3 c = statics_[i].center;
+    boxes.push_back({c - Vec3{r, r, r}, c + Vec3{r, r, r}});
+    all.add(boxes.back().min);
+    all.add(boxes.back().max);
+  }
+  if (statics_.empty()) return;
+  gridMin_ = all.min;
+  gridW_ = std::max(1, static_cast<int>(std::ceil((all.max.x - all.min.x) / kCell)));
+  gridD_ = std::max(1, static_cast<int>(std::ceil((all.max.z - all.min.z) / kCell)));
+  grid_.assign(static_cast<size_t>(gridW_) * gridD_, {});
+  for (size_t i = 0; i < statics_.size(); ++i) {
+    const int x0 = static_cast<int>((boxes[i].min.x - gridMin_.x) / kCell);
+    const int x1 = std::min(gridW_ - 1, static_cast<int>((boxes[i].max.x - gridMin_.x) / kCell));
+    const int z0 = static_cast<int>((boxes[i].min.z - gridMin_.z) / kCell);
+    const int z1 = std::min(gridD_ - 1, static_cast<int>((boxes[i].max.z - gridMin_.z) / kCell));
+    if ((x1 - x0 + 1) * (z1 - z0 + 1) > 64) {  // the floor, long walls: always checked
+      huge_.push_back(static_cast<int>(i));
+      continue;
+    }
+    for (int z = z0; z <= z1; ++z) {
+      for (int x = x0; x <= x1; ++x) grid_[static_cast<size_t>(z) * gridW_ + x].push_back(static_cast<int>(i));
+    }
+  }
+  seen_.assign(statics_.size(), 0);
+}
+
+void PhysicsWorld::staticsNear(Vec3 center, float radius, std::vector<int>& out) const {
+  out.clear();
+  out.insert(out.end(), huge_.begin(), huge_.end());
+  if (grid_.empty()) return;
+  if (++stamp_ == 0) {
+    std::fill(seen_.begin(), seen_.end(), 0);
+    stamp_ = 1;
+  }
+  const int x0 = std::max(0, static_cast<int>(std::floor((center.x - radius - gridMin_.x) / kCell)));
+  const int x1 = std::min(gridW_ - 1, static_cast<int>(std::floor((center.x + radius - gridMin_.x) / kCell)));
+  const int z0 = std::max(0, static_cast<int>(std::floor((center.z - radius - gridMin_.z) / kCell)));
+  const int z1 = std::min(gridD_ - 1, static_cast<int>(std::floor((center.z + radius - gridMin_.z) / kCell)));
+  for (int z = z0; z <= z1; ++z) {
+    for (int x = x0; x <= x1; ++x) {
+      for (int i : grid_[static_cast<size_t>(z) * gridW_ + x]) {
+        if (seen_[static_cast<size_t>(i)] == stamp_) continue;
+        seen_[static_cast<size_t>(i)] = stamp_;
+        out.push_back(i);
+      }
+    }
   }
 }
 
-void PhysicsWorld::substep(float h) {
+void PhysicsWorld::step(float dt) {
+  if (gridDirty_) buildGrid();
+  pending_ += std::clamp(dt, 0.0f, 1.0f);
+  int steps = static_cast<int>(pending_ / kStep);
+  if (steps > kMaxStepsPerFrame) {  // a long stall: drop the rest instead of a burst of work
+    dropped_ += static_cast<uint64_t>(steps - kMaxStepsPerFrame);
+    pending_ -= static_cast<float>(steps - kMaxStepsPerFrame) * kStep;
+    steps = kMaxStepsPerFrame;
+  }
+  for (int i = 0; i < steps; ++i) {
+    pending_ -= kStep;
+    fixedStep();
+  }
+  pending_ = std::max(pending_, 0.0f);
+  // Draw each body between its last two steps (how far into the next step
+  // this frame is), so motion is smooth whatever the frame rate.
+  const float alpha = clampf(pending_ / kStep, 0, 1);
+  for (Body& b : bodies_) {
+    if (b.asleep) {
+      b.shownPosition = b.position;
+      b.shownRotation = b.rotation;
+      continue;
+    }
+    b.shownPosition = lerp(b.prevPosition, b.position, alpha);
+    b.shownRotation = nlerp(b.prevRotation, b.rotation, alpha);
+  }
+}
+
+void PhysicsWorld::teleport(size_t i, Vec3 position, Quat rotation) {
+  Body& b = bodies_[i];
+  b.position = b.prevPosition = b.shownPosition = b.lastGoodPosition = b.target = b.sleepAnchor = position;
+  b.rotation = b.prevRotation = b.shownRotation = b.lastGoodRotation = b.targetRotation = b.sleepAnchorRotation =
+      rotation;
+  b.sleepTimer = 0;
+}
+
+void PhysicsWorld::fixedStep() {
+  ++ticks_;
+  for (Body& b : bodies_) {
+    b.prevPosition = b.position;
+    b.prevRotation = b.rotation;
+    if (b.kinematic) {
+      // Glide to the target over this step (the velocity lets it knock others).
+      b.velocity = (b.target - b.position) * (1.0f / kStep);
+      b.angularVelocity = {};
+    }
+  }
+  for (int i = 0; i < kSubsteps; ++i) substep(kStep / kSubsteps, static_cast<float>(i + 1) / kSubsteps);
+  for (Body& b : bodies_) {
+    if (b.kinematic) {
+      b.position = b.target;
+      b.rotation = normalized(b.targetRotation);
+    }
+    guard(b);
+    updateSleep(b, kStep);
+  }
+}
+
+// NaN or outside the room: back to the last good pose, at rest.
+void PhysicsWorld::guard(Body& b) {
+  const bool ok = isFinite(b.position) && isFinite(b.rotation) && isFinite(b.velocity) &&
+                  isFinite(b.angularVelocity) && bounds_.contains(b.position);
+  if (ok) {
+    b.lastGoodPosition = b.position;
+    b.lastGoodRotation = b.rotation;
+    return;
+  }
+  ++resets_;
+  b.position = b.prevPosition = b.target = b.lastGoodPosition;
+  b.rotation = b.prevRotation = b.targetRotation = b.lastGoodRotation;
+  b.velocity = b.angularVelocity = {};
+  b.sleepTimer = 0;
+}
+
+// Where a held body may go: toward the hand, but not into a wall.
+Vec3 PhysicsWorld::sweptHoldTarget(const Body& b) const {
+  const Vec3 from = b.worldCenter();
+  const Vec3 move = b.holdTarget - b.position;
+  const float len = length(move);
+  if (len < 1e-5f) return b.holdTarget;
+  const Vec3 dir = move * (1.0f / len);
+  float hit;
+  if (!raycastStatic(from, dir, len + b.boundRadius, &hit, nullptr)) return b.holdTarget;
+  return b.position + dir * std::max(0.0f, hit - b.boundRadius);
+}
+
+void PhysicsWorld::substep(float h, float /*fraction*/) {
   for (Body& b : bodies_) {
     if (b.asleep || b.kinematic) continue;
     if (b.held) {
       // Chase the hand: velocity toward the target, rotation toward upright.
-      Vec3 v = (b.holdTarget - b.position) * kHoldStiffness;
+      Vec3 v = (sweptHoldTarget(b) - b.position) * kHoldStiffness;
       const float speed = length(v);
       if (speed > kHoldMaxSpeed) v = v * (kHoldMaxSpeed / speed);
       b.velocity = v;
@@ -121,7 +270,7 @@ void PhysicsWorld::substep(float h) {
 
   // Contacts: against the fixed world, then between bodies.
   for (Body& b : bodies_) {
-    if (!b.asleep && !b.kinematic) collideStatic(b, h);
+    if (!b.asleep && !b.kinematic) collideStatic(b);
   }
   for (size_t i = 0; i < bodies_.size(); ++i) {
     for (size_t j = i + 1; j < bodies_.size(); ++j) {
@@ -141,29 +290,43 @@ void PhysicsWorld::substep(float h) {
       b.position += b.velocity * h;
       continue;
     }
+    const float speed = length(b.velocity);
+    if (speed > kMaxSpeed) b.velocity = b.velocity * (kMaxSpeed / speed);
     const float spin = length(b.angularVelocity);
     if (spin > kMaxAngularSpeed) b.angularVelocity = b.angularVelocity * (kMaxAngularSpeed / spin);
     // Rotate around the center of mass, not the origin.
     const Vec3 comBefore = b.worldCenter();
     if (spin > 1e-6f) {
-      const Quat dq = Quat::axisAngle(b.angularVelocity * (1.0f / spin), spin * h);
+      const float s = std::min(spin, kMaxAngularSpeed);
+      const Quat dq = Quat::axisAngle(b.angularVelocity * (1.0f / spin), s * h);
       b.rotation = normalized(dq * b.rotation);
     }
     b.position = b.position + (comBefore - b.worldCenter()) + b.velocity * h;
   }
 }
 
-void PhysicsWorld::collideStatic(Body& b, float /*h*/) {
+void PhysicsWorld::collideStatic(Body& b) {
   const Vec3 center = b.worldCenter();
-  for (const StaticBox& box : statics_) {
-    // Quick reject: bounding sphere vs the box's bounding sphere.
-    const Vec3 toBox = center - box.center;
-    const float reach = b.boundRadius + length(box.half);
-    if (dot(toBox, toBox) > reach * reach) continue;
-    const Quat inv = conjugate(box.rotation);
-    for (const BodySphere& s : b.spheres) {
-      const Vec3 world = b.position + b.rotation.rotate(s.center);
-      const Vec3 local = inv.rotate(world - box.center);
+  staticsNear(center, b.boundRadius, near_);
+  // One contact per sphere and surface direction: where fixed boxes overlap
+  // side by side (the counter top is several), the sphere touches both tops
+  // with the same normal; pushing twice made glasses jiggle forever.
+  struct Hit {
+    Vec3 normal, contact;
+    float depth;
+    const Material* material;
+  };
+  Hit hits[8];
+  for (const BodySphere& s : b.spheres) {
+    const Vec3 world = b.position + b.rotation.rotate(s.center);
+    int count = 0;
+    for (int bi : near_) {
+      const StaticBox& box = statics_[static_cast<size_t>(bi)];
+      // Quick reject: the sphere vs the box's bounding sphere.
+      const Vec3 toBox = world - box.center;
+      const float reach = s.radius + staticReach_[static_cast<size_t>(bi)];
+      if (dot(toBox, toBox) > reach * reach) continue;
+      const Vec3 local = conjugate(box.rotation).rotate(toBox);
       const Vec3 clamped{std::clamp(local.x, -box.half.x, box.half.x), std::clamp(local.y, -box.half.y, box.half.y),
                          std::clamp(local.z, -box.half.z, box.half.z)};
       const Vec3 diff = local - clamped;
@@ -191,9 +354,18 @@ void PhysicsWorld::collideStatic(Body& b, float /*h*/) {
         }
       }
       const Vec3 normal = box.rotation.rotate(normalLocal);
-      const Vec3 contact = world - normal * s.radius;
-      applyContact(b, nullptr, contact, normal, depth, box.material);
+      const Hit hit{normal, world - normal * s.radius, depth, box.material};
+      int same = -1;
+      for (int k = 0; k < count; ++k) {
+        if (dot(hits[k].normal, normal) > 0.95f) same = k;
+      }
+      if (same >= 0) {
+        if (depth > hits[same].depth) hits[same] = hit;  // keep the deeper one
+      } else if (count < 8) {
+        hits[count++] = hit;
+      }
     }
+    for (int k = 0; k < count; ++k) applyContact(b, nullptr, hits[k].contact, hits[k].normal, hits[k].depth, hits[k].material);
   }
 }
 
@@ -222,7 +394,7 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
   const Vec3 rel = velocityAt(a, point) - (b ? velocityAt(*b, point) : Vec3{});
   const float vn = dot(rel, normal);
   if (vn < 0) {
-    if (-vn > kImpactThreshold && !a.held && impacts_.size() < 256) {
+    if (collectImpacts_ && -vn > kImpactThreshold && !a.held && impacts_.size() < 256) {
       impacts_.push_back({point, -vn, a.material, otherMaterial});
     }
     const float k = impulseResponse(a, point, normal) + (b ? impulseResponse(*b, point, normal) : 0);
@@ -266,8 +438,17 @@ void PhysicsWorld::applyContact(Body& a, Body* b, Vec3 point, Vec3 normal, float
 
 void PhysicsWorld::updateSleep(Body& b, float dt) {
   if (b.asleep || b.kinematic) return;
-  if (b.held || length(b.velocity) > kSleepLinear || length(b.angularVelocity) > kSleepAngular) {
+  const float v = length(b.velocity), w = length(b.angularVelocity);
+  const bool still = v <= kSleepLinear && w <= kSleepAngular;
+  // Buzzing in place counts as still: it hasn't drifted from where it began
+  // settling (a wobble that never stops would keep it awake forever).
+  const bool jiggling = v <= kJiggleLinear && w <= kJiggleAngular &&
+                        length(b.position - b.sleepAnchor) <= kSleepDrift &&
+                        std::fabs(dot(b.rotation, b.sleepAnchorRotation)) >= std::cos(kSleepDriftAngle * 0.5f);
+  if (b.held || !(still || jiggling)) {
     b.sleepTimer = 0;
+    b.sleepAnchor = b.position;
+    b.sleepAnchorRotation = b.rotation;
     return;
   }
   b.sleepTimer += dt;

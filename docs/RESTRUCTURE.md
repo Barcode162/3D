@@ -1018,14 +1018,14 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Car spec duplicated (`vehicle_test.cpp:23-32`; `world.cpp:21-30`) → one source. *[7.1]*
 
 **I. World simulation**
-- [ ] **H** Overlapping coplanar counter colliders: the pint at x = -3.7 jiggles ≈ 60 s after load, just under the 0.05 m/s claim threshold (`physics.cpp:167-205`; `bar_scene.cpp:206`) → contact dedupe, non-overlapping segments, drift-based sleep. *[2.3b]*
-- [ ] **H** Kinematic remote bodies move by step count, velocity from frame dt; no render interpolation (`shared_world.cpp:212`; `physics.cpp:104-109,149-151`; `main.cpp:847-859`) → kinematic targets per step + interpolation. *[2.3b]*
-- [ ] **M** No broadphase; all statics per substep + O(n²) pairs (`physics.cpp:136,167-170`) → static grid. *[2.3b]*
-- [ ] **M** Up to 64 substeps in a hitch frame; dropped time not tracked (`physics.h:74-75`) → 4 substeps, ≤ 4 catch-up steps, tick counter. *[2.3b]*
-- [ ] **M** No NaN guard; a bad pose would be broadcast (`physics.cpp:23-26`; `shared_world.cpp:62-66`) → finite + bounds checks both ways. *[2.3b]*
-- [ ] **L** Held glass grinds into walls (`physics.cpp:42-45,116-133`) → sweep the hold target. *[2.3b]*
-- [ ] **L** Impacts collected then discarded every frame (`physics.cpp:348-352`; `main.cpp:846`) → ring buffer, off until sounds use it. *[2.3b]*
-- [ ] **M** *(review)* `bar_scene.h` includes `engine/mesh.h`, which includes `<webgpu/webgpu_cpp.h>`, so no native g++ test can include the layout (the planned physics/entity/activity/interaction tests) → CPU part split into `engine/mesh_data.h`. *[2.3b]*
+- [x] **H** Overlapping coplanar counter colliders: the pint at x = -3.7 jiggles ≈ 60 s after load, just under the 0.05 m/s claim threshold (`physics.cpp:167-205`; `bar_scene.cpp:206`) → contact dedupe, non-overlapping segments, drift-based sleep. *[2.3b]*
+- [x] **H** Kinematic remote bodies move by step count, velocity from frame dt; no render interpolation (`shared_world.cpp:212`; `physics.cpp:104-109,149-151`; `main.cpp:847-859`) → kinematic targets per step + interpolation. *[2.3b]*
+- [x] **M** No broadphase; all statics per substep + O(n²) pairs (`physics.cpp:136,167-170`) → static grid. *[2.3b]*
+- [x] **M** Up to 64 substeps in a hitch frame; dropped time not tracked (`physics.h:74-75`) → 4 substeps, ≤ 4 catch-up steps, tick counter. *[2.3b]*
+- [x] **M** No NaN guard; a bad pose would be broadcast (`physics.cpp:23-26`; `shared_world.cpp:62-66`) → finite + bounds checks both ways. *[2.3b]*
+- [x] **L** Held glass grinds into walls (`physics.cpp:42-45,116-133`) → sweep the hold target. *[2.3b]*
+- [x] **L** Impacts collected then discarded every frame (`physics.cpp:348-352`; `main.cpp:846`) → ring buffer, off until sounds use it. *[2.3b]*
+- [x] **M** *(review)* `bar_scene.h` includes `engine/mesh.h`, which includes `<webgpu/webgpu_cpp.h>`, so no native g++ test can include the layout (the planned physics/entity/activity/interaction tests) → CPU part split into `engine/mesh_data.h`. *[2.3b]*
 - [ ] **L** Body identity is a vector index, fields written from 3 places → BodyId + modes. *[5.4]*
 - [ ] **M** Runtime state stored in the "static" layout (`bar_scene.h:133-134` mirror on/mode) → Layout const + RoomState/local. *[5.3]*
 - [ ] **M** Indices as network identities (seat index in kParam `main.cpp:1128`, `m<i>`, `firstModel`) → stable ids. *[4.2]*
@@ -1575,6 +1575,18 @@ errors (so smoke/mp_test fail on them).
   impulses", worst step time; STD; `tools/mp_test.mjs` glass scenario passes.
 - **Phone:** the pint near the left end of the bar no longer wobbles after loading; throw a
   glass: smooth flight, no stutter.
+- **Done (2026-10-17):** per-sphere static contacts deduped by normal (dot > 0.95, deeper wins),
+  sleep also when buzzing in place (≤ 2 mm / 1.7° drift from where it began settling), 4 substeps,
+  ≤ 4 steps per frame (the rest counted in `droppedSteps()`), `ticks()`, a 1 m static grid
+  (boxes covering > 64 cells always checked), `prev*`/`shown*` pose interpolated by `alpha`,
+  kinematic `target`/`targetRotation` reached each step (shared_world eases the target),
+  `teleport()`, finite + room-bounds guard (bounds from the layout's box corners, floor at
+  y = -0.05) back to the last good pose, speed cap 15 m/s, hold target swept against walls,
+  impacts collected only after `collectImpacts(true)`. `engine/mesh_data.*` and `engine/image.h`
+  split off so `app/bar_scene.h` builds with g++. `tools/native/physics_test.cpp`: all 10 glasses
+  asleep by 0.5 s (the pint at x = -3.7 never slept before), no NaN / all in the room after 10k
+  knocks. Smoke physics phase 0.37 → 0.10 ms. The counter segments still overlap (needed to
+  close the gaps on the outside of the curve); the contact dedupe makes that harmless.
 
 #### 2.4a Race: tick clock, interpolation, frame-rate independent results
 - **Files:** `app/race/world.{h,cpp}` (uint32 tick, goTick, lap/finish in ticks; never reads

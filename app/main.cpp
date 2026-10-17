@@ -820,9 +820,8 @@ void putDownOrThrow(Vec3 dir) {
   b.asleep = false;
   b.sleepTimer = 0;
   if (g_app.physics.raycastStatic(eye, dir, kPlaceReach, &dist, &normal) && normal.y > 0.7f) {
-    // Stand it upright on the spot, facing the same way.
-    b.position = eye + dir * dist + Vec3{0, 0.002f, 0};
-    b.rotation = {};
+    // Stand it upright on the spot.
+    g_app.physics.teleport(static_cast<size_t>(g_app.held), eye + dir * dist + Vec3{0, 0.002f, 0}, {});
     b.velocity = {};
     b.angularVelocity = {};
     LOG_INFO("Put down at %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
@@ -864,20 +863,19 @@ void updatePhysics(float dt) {
   }
   g_app.shared.update(engine::frameTime().nowMs, dt, g_app.physics, g_app.scene, g_app.jukebox, g_app.held);
   g_app.physics.step(dt);
-  g_app.physics.takeImpacts();  // sounds come later (W5)
+  // Each model is drawn where its body is this frame (between the last two
+  // physics steps), and only re-sent to the renderer when that changed.
   for (size_t i = 0; i < g_app.bodyOfModel.size(); ++i) {
     const int body = g_app.bodyOfModel[i];
     if (body < 0) continue;
     const engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
     engine::Vec3& shownP = g_app.shownPosition[static_cast<size_t>(body)];
     engine::Quat& shownQ = g_app.shownRotation[static_cast<size_t>(body)];
-    if (shownP.x == b.position.x && shownP.y == b.position.y && shownP.z == b.position.z && shownQ.x == b.rotation.x && shownQ.y == b.rotation.y && shownQ.z == b.rotation.z &&
-        shownQ.w == b.rotation.w) {
-      continue;
-    }
-    shownP = b.position;
-    shownQ = b.rotation;
-    g_app.renderer.setModelTransform(i, b.position, b.rotation);
+    const engine::Quat& q = b.shownRotation;
+    if (shownP == b.shownPosition && shownQ.x == q.x && shownQ.y == q.y && shownQ.z == q.z && shownQ.w == q.w) continue;
+    shownP = b.shownPosition;
+    shownQ = q;
+    g_app.renderer.setModelTransform(i, shownP, shownQ);
   }
 }
 

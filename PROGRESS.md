@@ -14,7 +14,7 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2 and 2.3a (2026-10-17). Next: 2.3b, 2.4a**
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a and 2.3b (2026-10-17). Next: 2.4a, 2.4b, 2.5**
 (batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
@@ -511,3 +511,8 @@ A small DAW inside the bar, all DSP written in C++:
   iOS blocks it), others see "(away)" under your name while you're gone.
 - **2026-10-17:** Restructure 2.3a done: one shared maths file (copies
   removed, new math_test); race and car results unchanged to the byte.
+- **2026-10-17:** Restructure 2.3b done: glasses settle in half a second
+  (the pint at the left end of the bar used to wobble forever), smooth
+  drawing between physics steps, others' glasses glide instead of judder,
+  a broken or escaped glass goes back where it was, physics 0.37 → 0.10
+  ms per frame. New native physics_test.

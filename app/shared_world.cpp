@@ -54,6 +54,7 @@ void SharedWorld::mirrorChanged(int mirror, bool on, bool avatarsOnly) {
 }
 
 void SharedWorld::sendGlass(int index, const engine::Body& b, int state) {
+  if (!engine::isFinite(b.position) || !engine::isFinite(b.rotation) || !engine::isFinite(b.velocity)) return;
   const double v[11] = {b.position.x, b.position.y, b.position.z, b.rotation.x, b.rotation.y, b.rotation.z,
                         b.rotation.w, b.velocity.x, b.velocity.y, b.velocity.z, static_cast<double>(state)};
   engine::net::setWorld(glassKey(index), v, 11);
@@ -106,6 +107,9 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       if (i < 0 || i >= static_cast<int>(glasses_.size())) continue;
       Glass& g = glasses_[static_cast<size_t>(i)];
       engine::Body& b = physics.body(static_cast<size_t>(i));
+      bool finite = true;
+      for (size_t k = 0; k < 11; ++k) finite = finite && std::isfinite(v[k]);
+      if (!finite) continue;  // a broken message: ignore it
       const int state = static_cast<int>(v[10]);
       if (g.mode == Mode::kMine) {
         // Both of us are moving it. Someone holding it beats a glass that's
@@ -130,8 +134,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
         if (engine::length(g.position - b.position) > 0.01f) {
           LOG_INFO("Multiplayer: glass %d is at %.2f, %.2f, %.2f.", i, g.position.x, g.position.y, g.position.z);
         }
-        b.position = g.position;
-        b.rotation = g.rotation;
+        physics.teleport(static_cast<size_t>(i), g.position, g.rotation);
         b.velocity = b.angularVelocity = {};
         b.kinematic = false;
         b.asleep = true;
@@ -139,6 +142,10 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
         g.settled = true;
         g.quietUntilMs = nowMs + kQuietMs;
         continue;
+      }
+      if (g.mode != Mode::kRemote) {
+        b.target = b.position;  // glides from here
+        b.targetRotation = b.rotation;
       }
       g.mode = Mode::kRemote;
       b.kinematic = true;
@@ -201,17 +208,16 @@ void SharedWorld::update(double nowMs, float dt, engine::PhysicsWorld& physics, 
         }
         Vec3 target = g.position;
         if (g.state == kMoving) target += g.velocity * static_cast<float>(std::min(age, kExtrapolateMs) / 1000.0);
+        // Ease the physics target toward where they say it is; the physics
+        // step moves the glass there (and knocks others on the way).
         const float f = 1.0f - std::exp(-kFollow * dt);
-        const Vec3 next = b.position + (target - b.position) * f;
-        b.velocity = dt > 0 ? (next - b.position) * (1.0f / dt) : Vec3{};  // physics moves it there
-        b.angularVelocity = {};
-        b.rotation = nlerp(b.rotation, g.rotation, f);
+        b.target = b.target + (target - b.target) * f;
+        b.targetRotation = nlerp(b.targetRotation, g.rotation, f);
         b.asleep = false;
         if (g.state == kResting && (engine::length(target - b.position) < 0.002f || age > 600)) {
           LOG_INFO("Multiplayer: glass %d came to rest at %.2f, %.2f, %.2f.", index, g.position.x, g.position.y,
                    g.position.z);
-          b.position = g.position;
-          b.rotation = g.rotation;
+          physics.teleport(i, g.position, g.rotation);
           b.velocity = {};
           b.kinematic = false;
           b.asleep = true;

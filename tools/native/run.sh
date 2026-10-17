@@ -11,6 +11,7 @@ declare -A TESTS=(
   [race_test]="tools/native/race_test.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
+  [physics_test]="tools/native/physics_test.cpp engine/physics.cpp engine/mesh_data.cpp app/props.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp"
 )
 for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"

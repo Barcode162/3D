@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "engine/math.h"
-#include "engine/mesh.h"
+#include "engine/mesh_data.h"
 #include "app/materials.h"
 #include "engine/procedural.h"
 

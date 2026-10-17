@@ -8,7 +8,7 @@
 // - bump:  rg = surface slope along u and v (0.5 = flat), from a height map.
 #include <cstdint>
 
-#include "engine/texture.h"
+#include "engine/image.h"
 
 namespace engine {
 

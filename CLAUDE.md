@@ -52,7 +52,7 @@ source /opt/emsdk/emsdk_env.sh
 emcmake cmake -B build -G Ninja      # once
 cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
-bash tools/native/run.sh             # car + race tests, g++ and em++ (node)
+bash tools/native/run.sh             # car, race, JSON, math, physics tests (g++ and em++ + node)
 node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
