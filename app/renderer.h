@@ -55,6 +55,9 @@ class SceneRenderer {
   // Renders one frame to `target`. `avatar` places the avatar in the world;
   // `avatarBones` are its skinning matrices (see Avatar::pose) for mirrors,
   // `firstPersonBones` the same pose without the head (Avatar::hideHead).
+  // Only the text layer on a plain background: for when the bar is hidden
+  // (loading screen, 4K Mania), so nothing invisible gets drawn.
+  void renderOverlay(const wgpu::TextureView& target, const engine::TextRenderer& text);
   void render(const wgpu::TextureView& target, const engine::Mat4& viewProj, engine::Vec3 eye,
               const engine::Mat4& avatar, const std::vector<engine::Mat4>& avatarBones,
               const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,

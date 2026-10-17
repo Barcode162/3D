@@ -51,7 +51,14 @@ async function open(name, cam) {
 }
 const alice = await open('Alice', process.env.ALICE ?? '0,1.66,-0.5,0,0');
 const bob = await open('Bob', process.env.BOB ?? '0,1.66,2.5,0,0');
-await bob.waitForTimeout(7000);
+// Players join the room when they enter (after loading), so wait for both.
+for (const p of [alice, bob]) {
+  await p.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                          { timeout: 180000, polling: 250 }).catch(() => console.log('timed out loading'));
+}
+await bob.waitForFunction(() => /Alice joined/.test(document.getElementById('log').textContent), null,
+                          { timeout: 30000, polling: 250 }).catch(() => console.log('timed out waiting for Alice'));
+await bob.waitForTimeout(1000);
 await alice.bringToFront();
 await alice.keyboard.down('KeyD');  // Alice side-steps (walk animation)
 await alice.waitForTimeout(1500);

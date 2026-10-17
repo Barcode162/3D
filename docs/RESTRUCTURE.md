@@ -771,7 +771,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
 - [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]*
 - [ ] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
-- [ ] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
+- [x] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
 - [ ] **M** Every remote avatar posed/skinned even off-screen (`main.cpp:1303-1317`) → pose only visible ones. *[6.5]*
 - [x] **M** Abort or device loss freezes the game forever (`index.html` onAbort; `gpu.cpp:69-74`) → fatal overlay, rejoin, auto report. *[0.3]*
 - [ ] **M** 16 MB default heap grows repeatedly while loading (`CMakeLists.txt` only `ALLOW_MEMORY_GROWTH`) → `INITIAL_MEMORY`. *[1.5]*
@@ -803,13 +803,13 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 
 **C. Start-up and loading**
 - [ ] **H** `onGpuReady` does everything synchronously: scene, physics, 8 avatar looks (`avatar.cpp:74`), CPU textures, sounds and 11 sync pipelines (renderer ×9 `renderer.cpp:312-391`, `text.cpp:107`, `billboard.cpp:74`); the mip pipeline(s) are created lazily per format mid-load (`gpu_upload.cpp:74-96`) and the 2 race pipelines on the first sit (`view.cpp:142,159`): 14 call sites (`main.cpp:1356-1400`) → staged loader + async pipelines + jobs. *[1.1, 1.3, 1.8]*
-- [ ] **H** Procedural textures ≈ 410 ms (8 layers), 5 unused (≈ 245 ms), run before any download starts (`bar_scene.cpp:551-563`, `renderer.cpp` createMaterials) → keep 3 layers, fetch first. *[1.1]*
+- [x] **H** Procedural textures ≈ 410 ms (8 layers), 5 unused (≈ 245 ms), run before any download starts (`bar_scene.cpp:551-563`, `renderer.cpp` createMaterials) → keep 3 layers, fetch first. *[1.1]*
 - [ ] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
 - [ ] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
 - [ ] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
 - [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]*
-- [ ] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
-- [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]*
+- [x] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
+- [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]* (1.1 part done)
 - [ ] **M** Failed downloads count as done, no retry, no fail state (`model.cpp` done(nullptr), `renderer.cpp:523`, `index.html:116-128`) → retry ×3, fail UI with Retry. *[1.4]*
 - [ ] **M** `version.txt` reload races the app start, errors swallowed (`index.html:93-103`) → check first (1.5 s timeout), later no-cache index. *[1.8, 8.1]*
 - [ ] **M** No preload of wasm or models (`index.html:141-152`) → `<link rel=preload>`. *[1.8]*
@@ -868,7 +868,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Floor plan duplicated in `tools/assets/layout.py` and `bar_scene.cpp`; three collision descriptions (physics boxes, walk rects, GLBs) → one `layout.json`. *[6.2a, 6.2b]*
 - [ ] **M** Curly-hair looks 20.9k verts / 31k tris, × up to 16 draws, no LOD or culling (`avatar.cpp:205-219`) → ≈ 2k-vert hair, LOD, cull. *[6.5]*
 - [ ] **M** First-person body skins the collapsed head (≈ 15k wasted verts) (`avatar.cpp:560-573`, `drawSkinned`) → index ranges. *[6.5]*
-- [ ] **M** CPU texture arrays: `pow()` per channel per texel, 4 MB copies (`texture.cpp:93-116`) → LUT, only tiny images, in jobs. *[1.1]*
+- [ ] **M** CPU texture arrays: `pow()` per channel per texel, 4 MB copies (`texture.cpp:93-116`) → LUT, only tiny images, in jobs. *[1.1]* (LUT + no copies done; jobs in 1.4)
 - [ ] **L** Manual gamma; tonemap duplicated (`scene.wgsl:394`, `race.wgsl`) → sRGB view + shared include. *[6.4]*
 - [ ] **L** Skinned path samples the texture array 3× (`scene.wgsl:183-194`) → fewer samples. *[6.5]*
 - [ ] **L** Boxes: one draw + 256 B slot each, both passes (`setBoxes`/`drawBoxes` `renderer.cpp:607-638`) → one instanced draw. *[6.1]*
@@ -954,7 +954,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Darts position encoding overflows off-board (`darts.cpp:30-31,112`) → clamp ±0.499. *[5.8]*
 - [ ] **L** Darts: leaving mid-turn leaves ghost darts locally (`darts.h:23`) → `leave()` clears. *[5.8]*
 - [ ] **L** Darts: no turns, score not saved → session turn queue; stats saved locally, uploaded to D1 in 7.2. *[5.8, 7.2]*
-- [ ] **H** 4K Mania renders the whole bar under its overlay (`main.cpp:454-458` vs `:1326`) → Overlay view mode. *[1.1]*
+- [x] **H** 4K Mania renders the whole bar under its overlay (`main.cpp:454-458` vs `:1326`) → Overlay view mode. *[1.1]*
 - [ ] **H** Chart analysis 0.7 s on the main thread, redone with re-download on every Retry (`rhythm.cpp:89,131,180-182`) → prebaked built-in charts, cache, keep buffer while open. *[5.9a, 5.9b]*
 - [ ] **H** Charts differ by device sample rate (44.1 vs 48 kHz: Easy 242 vs 288 notes, 15 match) (`rhythm_chart.cpp:58` `lround(rate/11025)` gives 11,025 Hz at 44.1 kHz but 12,000 Hz at 48 kHz) → fixed 11,025 Hz, hop in seconds. *[5.9a]*
 - [ ] **M** Tempo quantized to frames, notes on grid not onsets (`rhythm_chart.cpp:135,177,208-210`) → parabolic lag refine, snap to onset (verify by listening). *[5.9a]*
@@ -1283,6 +1283,12 @@ The native tests got basic pass/fail checks (they only printed before).
 ### Phase 1: Kill the start-up lag (local only)
 
 #### 1.1 Stop invisible and useless work
+Done 2026-10-17: 3 texture layers (avatar fabric, denim, hair; the room ones map to no
+texture), sRGB table, models requested before textures, loading screen and 4K Mania draw
+only the text layer (one warm-up frame of the full bar once loaded), the room is joined
+and voice starts on enter (one new peer per 400 ms). Headless: textures 1250 → 300-530 ms,
+everything loaded 9.5 → 5.2 s, heap 84 → 48 MB, 4K Mania 1 draw. The 5 standard spots are
+pixel-identical.
 - **Files:** `app/bar_scene.cpp` (`buildBarTextures`: only fabric, denim, hair), `engine/texture.cpp`
   (sRGB LUT instead of `pow`, no layer copies), `app/renderer.cpp` (start `loadModels` before
   generating textures), `app/main.cpp` (until entered: clear only, except the one warm-up frame;

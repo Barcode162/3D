@@ -295,9 +295,14 @@ window.bar3dVoice = (function () {
 
   // Keeps a connection to everyone in the room: the player with the lower
   // id calls; a call that hasn't connected in 20 s is tried again.
+  // Voice starts once you've entered the bar (C++ calls entered()), and
+  // connects to at most one new player per check, so joining a busy room
+  // doesn't start every connection at once.
+  var hasEntered = false;
   function maintain() {
     var n = net();
-    if (!n || !window.RTCPeerConnection || !n.myId) return;
+    if (!hasEntered || !n || !window.RTCPeerConnection || !n.myId) return;
+    var made = false;
     if (!started) {
       started = true;
       n.onSignal(onSignal);
@@ -307,11 +312,11 @@ window.bar3dVoice = (function () {
       present[id] = true;
       var p = peers[id];
       if (p && p.state !== 'connected' && performance.now() - p.created > 20000 && p.initiator) { drop(id); p = null; }
-      if (!p && me < id) makePeer(id, true);
+      if (!p && me < id && !made) { makePeer(id, true); made = true; }
     });
     for (var id in peers) if (!present[id]) drop(id);
   }
-  setInterval(maintain, 1000);
+  setInterval(maintain, 400);
 
   S.onChange(function (k) {
     if (k === 'voiceVol' || k === '*') {
@@ -329,6 +334,7 @@ window.bar3dVoice = (function () {
   }
 
   return {
+    entered: function () { hasEntered = true; maintain(); },
     micStart: micStart,
     micOff: micOff,
     micOn: function () { return !!mic; },

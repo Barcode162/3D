@@ -41,6 +41,8 @@
 using engine::Mat4;
 using engine::Vec3;
 
+void joinRoom();  // below: joins the multiplayer room once you've entered
+
 namespace {
 
 constexpr float kWalkSpeed = 2.2f;           // meters per second
@@ -123,6 +125,9 @@ struct App {
   // ?still (tests): no intro text, no idle motion, so two screenshots of the
   // same spot match (tools/imgdiff.mjs). Temporary; moves to TestHooks in 1.8.
   bool still = false;
+  bool warmedUp = false;
+  bool sceneReady = false;  // onGpuReady finished
+  bool joined = false;      // in the multiplayer room  // the one full frame drawn behind the loading screen
   float lookSpeed = 1, invertLook = 1;
   bool showNames = true;
 
@@ -1324,6 +1329,19 @@ void frame() {
   // Scene prep is split around queueText, so it's timed by hand.
   double sceneStart = emscripten_get_now();
 
+  // Hidden bar: behind the loading screen (except one warm-up frame once
+  // everything is in, so the GPU has seen every pipeline before you enter)
+  // and under 4K Mania. Draw only the text layer.
+  const bool warmUp = !g_app.entered && g_app.loadReported && !g_app.warmedUp;
+  if ((!g_app.entered && !warmUp) || g_app.rhythm.isOpen()) {
+    PROFILE(Phase::kText);
+    queueText(nowMs, Mat4{});
+    g_app.renderer.renderOverlay(target, g_app.text);
+    engine::profiler().trackGpu(g_app.gpu.queue);
+    return;
+  }
+  if (warmUp) g_app.warmedUp = true;
+
   const engine::FirstPersonCamera& cam = g_app.camera;
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
   const Mat4 viewProj = cam.projection(aspect) * cam.view();
@@ -1458,8 +1476,7 @@ void onGpuReady(bool ok) {
       &g_app.sfx[static_cast<int>(Effect::kClink)], &g_app.sfx[static_cast<int>(Effect::kPour)],
       &g_app.sfx[static_cast<int>(Effect::kShake)], &g_app.sfx[static_cast<int>(Effect::kClick)]};
   g_app.bartender.init(g_app.scene.barTopFront, barSounds);
-  g_app.others.start();
-  g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
+  g_app.sceneReady = true;  // multiplayer starts when you enter (app_enter)
   g_app.shownPosition.assign(g_app.physics.bodyCount(), engine::Vec3{1e9f, 0, 0});
   g_app.shownRotation.assign(g_app.physics.bodyCount(), engine::Quat{});
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
@@ -1473,6 +1490,16 @@ void onGpuReady(bool ok) {
 
 }  // namespace
 
+// Joins the multiplayer room: only once you've entered, so others don't
+// see you standing at the door while your bar is still loading.
+void joinRoom() {
+  if (g_app.joined || !g_app.sceneReady) return;
+  g_app.joined = true;
+  g_app.others.start();
+  g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
+  EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
+}
+
 // Called by the loading screen when you tap "enter": the intro title and
 // controls hint start now, not while you were waiting.
 extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
@@ -1480,6 +1507,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
   g_app.entered = true;
   g_app.introEndMs = emscripten_get_now() + kIntroMaxMs;
   engine::profiler().entered(emscripten_get_now());
+  joinRoom();
 }
 
 int main() {

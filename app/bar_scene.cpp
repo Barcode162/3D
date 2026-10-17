@@ -551,11 +551,6 @@ void buildMirror(Builder& b) {
 std::vector<engine::MaterialImages> buildBarTextures() {
   constexpr int kSize = 512;
   std::vector<engine::MaterialImages> m;
-  m.push_back(engine::makeWoodPlanks(kSize, 11));  // kTexWoodPlanks
-  m.push_back(engine::makeWoodGrain(kSize, 23));   // kTexWoodGrain
-  m.push_back(engine::makeBrick(kSize, 37));       // kTexBrick
-  m.push_back(engine::makeLeather(kSize, 41));     // kTexLeather
-  m.push_back(engine::makePlaster(kSize, 53));     // kTexPlaster
   m.push_back(engine::makeFabric(kSize, 61));      // kTexFabric
   m.push_back(engine::makeDenim(kSize, 67));       // kTexDenim
   m.push_back(engine::makeHair(kSize, 71));        // kTexHair

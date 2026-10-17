@@ -67,33 +67,6 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
   if (!createScenePipelines() || !createGlassPipeline()) return false;
   engine::profiler().stage("pipelines");
 
-  createMaterials(colorMaps_, bumpMaps_, sampler_);
-  engine::profiler().stage("textures");
-  buildLighting(scene);
-  for (size_t i = 0; i < 1 + mirrorCount_; ++i) {
-    View v;
-    v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), "frame uniforms");
-    wgpu::BindGroupEntry entries[5];
-    entries[0].binding = 0;
-    entries[0].buffer = v.buffer;
-    entries[0].size = sizeof(FrameUniforms);
-    entries[1].binding = 1;
-    entries[1].textureView = colorMaps_;
-    entries[2].binding = 2;
-    entries[2].textureView = bumpMaps_;
-    entries[3].binding = 3;
-    entries[3].sampler = sampler_;
-    entries[4].binding = 4;
-    entries[4].buffer = lightingBuffer_;
-    entries[4].size = sizeof(LightingUniforms);
-    wgpu::BindGroupDescriptor desc;
-    desc.layout = frameLayout_;
-    desc.entryCount = 5;
-    desc.entries = entries;
-    v.bindGroup = device.CreateBindGroup(&desc);
-    views_.push_back(v);
-  }
-
   // Object uniforms: the scene objects (written once) followed by the avatar
   // (its position is rewritten every frame as you move), the other players'
   // avatars and the models.
@@ -141,6 +114,34 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
     }
   }
   loadModels(scene, objectData);
+  // The model downloads are on their way; make the avatar textures meanwhile.
+  createMaterials(colorMaps_, bumpMaps_, sampler_);
+  engine::profiler().stage("textures");
+  buildLighting(scene);
+  for (size_t i = 0; i < 1 + mirrorCount_; ++i) {
+    View v;
+    v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), "frame uniforms");
+    wgpu::BindGroupEntry entries[5];
+    entries[0].binding = 0;
+    entries[0].buffer = v.buffer;
+    entries[0].size = sizeof(FrameUniforms);
+    entries[1].binding = 1;
+    entries[1].textureView = colorMaps_;
+    entries[2].binding = 2;
+    entries[2].textureView = bumpMaps_;
+    entries[3].binding = 3;
+    entries[3].sampler = sampler_;
+    entries[4].binding = 4;
+    entries[4].buffer = lightingBuffer_;
+    entries[4].size = sizeof(LightingUniforms);
+    wgpu::BindGroupDescriptor desc;
+    desc.layout = frameLayout_;
+    desc.entryCount = 5;
+    desc.entries = entries;
+    v.bindGroup = device.CreateBindGroup(&desc);
+    views_.push_back(v);
+  }
+
   boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + kMaxOthers + kMaxModels) * kObjectStride);
   boxMesh_ = engine::Mesh::upload(device, engine::makeBox({1, 1, 1}));
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
@@ -726,6 +727,29 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   }
   pass.End();
   engine::prof::setPass(engine::prof::kMain);
+}
+
+void SceneRenderer::renderOverlay(const wgpu::TextureView& target, const engine::TextRenderer& text) {
+  wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
+  wgpu::RenderPassColorAttachment color;
+  color.view = target;
+  color.loadOp = wgpu::LoadOp::Clear;
+  color.storeOp = wgpu::StoreOp::Store;
+  color.clearValue = kClearColor;
+  wgpu::RenderPassDepthStencilAttachment depth;  // the text pipeline has a depth state
+  depth.view = gpu_->depthView;
+  depth.depthLoadOp = wgpu::LoadOp::Clear;
+  depth.depthStoreOp = wgpu::StoreOp::Discard;
+  depth.depthClearValue = 1.0f;
+  wgpu::RenderPassDescriptor passDesc;
+  passDesc.colorAttachmentCount = 1;
+  passDesc.colorAttachments = &color;
+  passDesc.depthStencilAttachment = &depth;
+  wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
+  text.draw(pass);
+  pass.End();
+  wgpu::CommandBuffer commands = encoder.Finish();
+  gpu_->queue.Submit(1, &commands);
 }
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,

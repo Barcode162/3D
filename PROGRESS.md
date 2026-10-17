@@ -14,8 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1-0.4 (2026-10-17). Next: 1.1** (stop invisible and
-useless work). Waiting on the user: 3 reports for the G4 baseline (after
+last section). **Done: 0.1-0.4, 1.1 (2026-10-17). Next: 1.2a** (cheaper synth
+and the stale piano song). Waiting on the user: 3 reports for the G4 baseline (after
 "Tap to enter", at the big mirror, after 2 minutes walking), and the tap
 stutter (yellow bar on every tap, seen 2026-10-17): read `recentHitches`
 (`touches`, `phase`) in their reports.
@@ -417,3 +417,11 @@ A small DAW inside the bar, all DSP written in C++:
   frame (with their arrival times); the phone's pretend mouse clicks after
   a tap are ignored. Profiler: touches now count for the frame they
   arrived in.
+- **2026-10-17:** The tap stutter is still there after the passive touch
+  change (user, build b059f86). Parked by the user ("not causing issues");
+  look again later with phone reports (2.1a/2.2 may help).
+- **2026-10-17:** Restructure step 1.1 done: only the 3 avatar textures are
+  generated, models download while they're made, nothing is drawn behind
+  the loading screen or 4K Mania (1 draw there instead of ~1,050), you join
+  the room and voice when you enter. Headless: everything loaded 9.5 → 5.2
+  s, heap 84 → 48 MB. mp_test now waits for both players to load.

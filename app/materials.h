@@ -6,18 +6,20 @@
 namespace app {
 
 // Surface textures, one layer each in the GPU texture array (same order as
-// buildBarTextures()).
+// buildBarTextures()). Only the avatars use generated textures now; the room
+// is Blender models with their own textures, so the old room surfaces map to
+// no texture (generating them cost ~250 ms at start-up for nothing).
 enum TextureLayer : int {
   kNoTexture = -1,
-  kTexWoodPlanks,
-  kTexWoodGrain,
-  kTexBrick,
-  kTexLeather,
-  kTexPlaster,
   kTexFabric,  // avatar shirt and socks
   kTexDenim,   // avatar jeans
   kTexHair,    // avatar hair and stubble
   kTextureCount,
+  kTexWoodPlanks = kNoTexture,
+  kTexWoodGrain = kNoTexture,
+  kTexBrick = kNoTexture,
+  kTexLeather = kNoTexture,
+  kTexPlaster = kNoTexture,
 };
 
 enum MaterialId : int {

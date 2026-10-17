@@ -4,6 +4,7 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <vector>
 
 #include "engine/log.h"
 
@@ -15,6 +16,18 @@ uint8_t toUnorm(float v) { return static_cast<uint8_t>(std::lround(std::clamp(v,
 float linearToSrgb(float v) {
   v = std::clamp(v, 0.0f, 1.0f);
   return v <= 0.0031308f ? v * 12.92f : 1.055f * std::pow(v, 1.0f / 2.4f) - 0.055f;
+}
+
+// Linear 0..1 to an sRGB byte through a table (pow() per channel per texel
+// was most of the texture time).
+uint8_t linearToSrgbByte(float v) {
+  constexpr int kSteps = 4096;
+  static const auto table = [] {
+    std::vector<uint8_t> t(kSteps + 1);
+    for (int i = 0; i <= kSteps; ++i) t[i] = toUnorm(linearToSrgb(static_cast<float>(i) / kSteps));
+    return t;
+  }();
+  return table[static_cast<size_t>(std::clamp(v, 0.0f, 1.0f) * kSteps + 0.5f)];
 }
 
 Image halve(const Image& src) {
@@ -56,15 +69,17 @@ wgpu::Texture createTextureArray(const wgpu::Device& device, const std::vector<I
 
   std::vector<uint8_t> bytes;
   for (size_t layer = 0; layer < layers.size(); ++layer) {
-    Image level = layers[layer];
+    // Level 0 is read in place; only the smaller levels are new images.
+    const Image* level = &layers[layer];
+    Image smaller[2];
     for (uint32_t mip = 0; mip < mipCount; ++mip) {
       // Averaging happens in linear space; encoding to bytes happens last.
-      bytes.resize(static_cast<size_t>(level.size) * level.size * 4);
-      for (size_t i = 0; i < level.pixels.size(); ++i) {
-        const Image::Pixel& p = level.pixels[i];
-        bytes[i * 4 + 0] = toUnorm(srgb ? linearToSrgb(p.r) : p.r);
-        bytes[i * 4 + 1] = toUnorm(srgb ? linearToSrgb(p.g) : p.g);
-        bytes[i * 4 + 2] = toUnorm(srgb ? linearToSrgb(p.b) : p.b);
+      bytes.resize(static_cast<size_t>(level->size) * level->size * 4);
+      for (size_t i = 0; i < level->pixels.size(); ++i) {
+        const Image::Pixel& p = level->pixels[i];
+        bytes[i * 4 + 0] = srgb ? linearToSrgbByte(p.r) : toUnorm(p.r);
+        bytes[i * 4 + 1] = srgb ? linearToSrgbByte(p.g) : toUnorm(p.g);
+        bytes[i * 4 + 2] = srgb ? linearToSrgbByte(p.b) : toUnorm(p.b);
         bytes[i * 4 + 3] = toUnorm(p.a);
       }
       wgpu::TexelCopyTextureInfo dst;
@@ -72,11 +87,15 @@ wgpu::Texture createTextureArray(const wgpu::Device& device, const std::vector<I
       dst.mipLevel = mip;
       dst.origin = {0, 0, static_cast<uint32_t>(layer)};
       wgpu::TexelCopyBufferLayout layout;
-      layout.bytesPerRow = static_cast<uint32_t>(level.size) * 4;
-      layout.rowsPerImage = static_cast<uint32_t>(level.size);
-      const wgpu::Extent3D extent{static_cast<uint32_t>(level.size), static_cast<uint32_t>(level.size), 1};
+      layout.bytesPerRow = static_cast<uint32_t>(level->size) * 4;
+      layout.rowsPerImage = static_cast<uint32_t>(level->size);
+      const wgpu::Extent3D extent{static_cast<uint32_t>(level->size), static_cast<uint32_t>(level->size), 1};
       queue.WriteTexture(&dst, bytes.data(), bytes.size(), &layout, &extent);
-      if (level.size > 1) level = halve(level);
+      if (level->size > 1) {
+        Image& next = smaller[mip % 2];
+        next = halve(*level);
+        level = &next;
+      }
     }
   }
   return texture;
@@ -111,7 +130,7 @@ wgpu::Texture createTexture2D(const wgpu::Device& device, int width, int height,
   for (uint32_t mip = 0; mip < mipCount; ++mip) {
     bytes.resize(static_cast<size_t>(w) * h * 4);
     for (size_t i = 0; i < bytes.size(); ++i) {
-      bytes[i] = toUnorm(srgb && i % 4 != 3 ? linearToSrgb(level[i]) : level[i]);
+      bytes[i] = srgb && i % 4 != 3 ? linearToSrgbByte(level[i]) : toUnorm(level[i]);
     }
     wgpu::TexelCopyTextureInfo dst;
     dst.texture = texture;
