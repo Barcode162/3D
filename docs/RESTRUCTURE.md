@@ -971,9 +971,9 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 
 **H. Racing**
 - [ ] **C** No race protocol or channel: 5 floats in the generic slots (`game.cpp:157-166` `stateFor`; packed at `main.cpp:1134-1138`; `worker.js:29` MAX_VALUES 20) → race sub-protocol. *[7.2, 7.3]*
-- [ ] **H** Results depend on frame rate (`world.cpp:150` `stepPhysics(kStep, std::min(simMs_, nowMs))`; race_test with all bots at 30/60/120 fps gives different winners and times, e.g. 60 fps: Mika 226.4 s vs Lena 227.9 s) → tick-based sim. *[2.4a]*
-- [ ] **H** Sim clock drifts from wall clock after every hitch (kMaxSteps = 30 at `world.cpp:12` is unreachable: the dt cap of 0.1 s at `main.cpp:1227` allows at most 24 steps); HUD lap time uses wall `nowMs` (`game.cpp:190`), start lights `world_.lightsOn(nowMs)` (`game.cpp:148`); race clock set at `world.cpp:114-116`, steps at `:145-154` → ticks; server epoch later. *[2.4a, 7.2]*
-- [ ] **H** No render interpolation: 3/4/5 steps per frame = 0.75-1.25 m judder at 60 m/s; render draws the current car state (`game.cpp:93` update, `:146-148` carDraw) → prev/cur lerp. *[2.4a]*
+- [x] **H** Results depend on frame rate (`world.cpp:150` `stepPhysics(kStep, std::min(simMs_, nowMs))`; race_test with all bots at 30/60/120 fps gives different winners and times, e.g. 60 fps: Mika 226.4 s vs Lena 227.9 s) → tick-based sim. *[2.4a]*
+- [x] **H** Sim clock drifts from wall clock after every hitch (kMaxSteps = 30 at `world.cpp:12` is unreachable: the dt cap of 0.1 s at `main.cpp:1227` allows at most 24 steps); HUD lap time uses wall `nowMs` (`game.cpp:190`), start lights `world_.lightsOn(nowMs)` (`game.cpp:148`); race clock set at `world.cpp:114-116`, steps at `:145-154` → ticks; server epoch later. *[2.4a, 7.2]*
+- [x] **H** No render interpolation: 3/4/5 steps per frame = 0.75-1.25 m judder at 60 m/s; render draws the current car state (`game.cpp:93` update, `:146-148` carDraw) → prev/cur lerp. *[2.4a]*
 - [ ] **H** Remote cars: infinite mass on both phones, double impulse, never exercised (`world.cpp:365-376`; `Racer::remote` is never set true) → proxies, finite mass, impulse on own car only, ContactEvents. *[7.3]*
 - [ ] **H** Each racing phone runs its own 7 bots; races are chaotic (`kBots` `game.cpp:19`, used at `:48`; bots driven at `world.cpp:171`) → one bot authority. *[7.4]*
 - [ ] **H** Rigs claimed client-side after the fact (`main.cpp:1252-1263`) → claims. *[5.2]*
@@ -1009,7 +1009,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Frame-rate dependent smoothing (`controls.cpp:293`) → `1 - exp(-dt/τ)`. *[2.4b]*
 - [ ] **L** Only the first gamepad is read (`gamepad.cpp:13-23`) → all pads by role. *[7.6]*
 - [ ] **L** Inputs not tick-stamped (`controls.h:39`) → InputFrame per tick. *[7.1]*
-- [ ] **L** Lap-0 dead code; car B uses car A's extents (`world.cpp:315,326,398-414`) → fix. *[2.4a]*
+- [x] **L** Lap-0 dead code; car B uses car A's extents (`world.cpp:315,326,398-414`) → fix. *[2.4a]*
 - [ ] **L** Racing line rebuilt every init (`world.cpp:48-62`) → part of TrackData built once. *[2.4b]*
 - [ ] **L** AI mixed into `world.cpp` → `app/race/ai.*`. *[7.4]*
 - [ ] **L** Degenerate quads and dead code in the car body (`car_model.cpp:102,110,139-140`); no car LOD → fix; LOD1. *[7.5, 7.6]*
@@ -1599,6 +1599,12 @@ errors (so smoke/mp_test fail on them).
   ≈ 31 m); STD with `?sit=30`.
 - **Phone:** sit in a rig: at full speed the car and scenery move smoothly; the lap timer
   matches a stopwatch.
+- **Done (2026-10-17):** `World` runs on `tick_` (240/s): `start(slot, bots, laps, seed)`,
+  `update(dt)`, `lightsOn()`, `started()`, `clockMs()`; lap/finish times are race-clock ms
+  from ticks; `prevPosition/prevRotation` per racer + `alpha()` → `shownCar()` for drawing and
+  the camera; each car its own extents in car-car contact; lap 1 timed from go (set in
+  `start`). race_test runs the race at 60, 30, 57.3 and 120 fps: identical results (g++ and
+  em++). Hidden page: the frame clock already caps the step (2.2).
 
 #### 2.4b Race: background build, controls feel, resets
 - **Files:** `app/race/world.{h,cpp}` (reset service: free slot, 2 s ghost, 4 s cooldown;

@@ -47,7 +47,7 @@ void Game::start(int rig, double nowMs) {
   startMs_ = nowMs;
   resultsMs_ = 0;
   // Left rig starts 4th, right rig 5th (side by side when two play).
-  world_.start(3 + (rig & 1), kBots, kLaps, nowMs);
+  world_.start(3 + (rig & 1), kBots, kLaps, static_cast<uint32_t>(nowMs));  // the lights' hold varies
   controls_.reset();
   const Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
   camYaw_ = engine::Vehicle::headingOf(me.car.forward());
@@ -78,7 +78,7 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
   const bool* pressed = controls_.pressed;
   if (pressed[Controls::kLeave]) return true;
   if (pressed[Controls::kCamera]) cameraMode_ = (cameraMode_ + 1) % 4;
-  if (pressed[Controls::kReset] && world_.started(nowMs)) world_.resetCar(world_.you());
+  if (pressed[Controls::kReset] && world_.started()) world_.resetCar(world_.you());
   me.input = controls_.car;
   me.assists.autoGears = !manualGears_;
   // After the finish: tap anywhere on the results to race again.
@@ -92,7 +92,7 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
     }
     if (input.keyDown("Enter")) start(rig_, nowMs);
   }
-  world_.update(nowMs, dt);
+  world_.update(dt);
   updateCamera(dt);
   // Engine sound from the revs and the throttle.
   const float revs = (me.car.rpm - 900) / 6600;
@@ -102,7 +102,7 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
 
 void Game::updateCamera(float dt) {
   const Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
-  const engine::Vehicle& car = me.car;
+  const engine::Vehicle car = world_.shownCar(me);  // between physics steps: no judder at speed
   const float speed = car.speed();
   const float aspect = static_cast<float>(gpu_->width) / std::max(static_cast<float>(gpu_->height), 1.0f);
   // About 90 degrees across in landscape; a bit wider at speed.
@@ -147,8 +147,8 @@ void Game::render(const wgpu::TextureView& target, engine::TextRenderer& text, d
   engine::profiler().drawOverlay(text, W, H, gpu_->pixelRatio);
   text.upload(gpu_->queue);
   std::vector<CarDraw> cars;
-  for (const Racer& r : world_.racers()) cars.push_back(View::carDraw(r.car, r.paint, r.car.brakeUsed));
-  view_.render(target, gpu_->depthView, gpu_->width, gpu_->height, camera_, cars, world_.lightsOn(nowMs),
+  for (const Racer& r : world_.racers()) cars.push_back(View::carDraw(world_.shownCar(r), r.paint, r.car.brakeUsed));
+  view_.render(target, gpu_->depthView, gpu_->width, gpu_->height, camera_, cars, world_.lightsOn(),
                static_cast<float>(nowMs / 1000), &text);
 }
 
@@ -190,7 +190,8 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
                 std::min(me.lap + 1, world_.laps()), world_.laps());
   text.addRect(W * 0.5f - 95 * u, 6 * u, 190 * u, 40 * u, {0, 0, 0, 0.45f});
   text.addScreen(line, W * 0.5f, 11 * u, 13 * u, st);
-  const double lapMs = world_.started(nowMs) && !me.finished && me.lapStartMs > 0 ? nowMs - me.lapStartMs : 0;
+  // Lap time on the race clock (physics steps), not the wall clock.
+  const double lapMs = world_.started() && !me.finished ? world_.clockMs() - me.lapStartMs : 0;
   std::snprintf(line, sizeof(line), "%s   BEST %s", timeText(lapMs).c_str(), timeText(me.bestLapMs).c_str());
   st.color = {1, 0.9f, 0.6f, 1};
   text.addScreen(line, W * 0.5f, 30 * u, 8 * u, st);
@@ -232,16 +233,16 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
   }
 
   // Start: lights are on the gantry; a big GO when they go out.
-  const double go = world_.goMs();
-  if (nowMs < go) {
-    const int lit = world_.lightsOn(nowMs);
+  const double go = world_.goMs(), raceNow = world_.clockMs();
+  if (raceNow < go) {
+    const int lit = world_.lightsOn();
     for (int k = 0; k < 5; ++k) {
       text.addShape(0, W * 0.5f + (static_cast<float>(k) - 2) * 26 * u, H * 0.3f, 10 * u,
                     k < lit ? Vec4{1, 0.05f, 0.03f, 1} : Vec4{0.15f, 0.02f, 0.02f, 0.9f}, {0, 0, 0, 1}, 2 * u);
     }
     st.color = {1, 1, 1, 0.9f};
-    text.addScreen(world_.lightsOn(nowMs) == 0 ? "GET READY" : "", W * 0.5f, H * 0.36f, 12 * u, st);
-  } else if (nowMs < go + 1200) {
+    text.addScreen(lit == 0 ? "GET READY" : "", W * 0.5f, H * 0.36f, 12 * u, st);
+  } else if (raceNow < go + 1200) {
     st.color = {0.3f, 1, 0.3f, 1};
     text.addScreen("GO!", W * 0.5f, H * 0.28f, 40 * u, st);
   }

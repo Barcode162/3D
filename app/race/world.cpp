@@ -8,8 +8,9 @@ using engine::Vec3;
 namespace app::race {
 namespace {
 
-constexpr float kStep = 1.0f / 240;
+constexpr float kStep = 1.0f / World::kTicksPerSecond;
 constexpr int kMaxSteps = 30;  // per frame (0.125 s); beyond that the race slows down
+constexpr uint32_t ticks(double ms) { return static_cast<uint32_t>(ms * World::kTicksPerSecond / 1000.0 + 0.5); }
 
 const Vec3 kPaints[] = {{0.75f, 0.02f, 0.02f}, {0.02f, 0.15f, 0.7f}, {0.9f, 0.55f, 0.02f}, {0.04f, 0.4f, 0.1f},
                         {0.8f, 0.8f, 0.82f},   {0.02f, 0.02f, 0.02f}, {0.45f, 0.05f, 0.55f}, {0.0f, 0.5f, 0.6f},
@@ -88,7 +89,7 @@ void World::buildRacingLine() {
   }
 }
 
-void World::start(int yourSlot, int bots, int laps, double nowMs) {
+void World::start(int yourSlot, int bots, int laps, uint32_t seed) {
   racers_.clear();
   laps_ = laps;
   const int total = bots + 1;
@@ -109,22 +110,32 @@ void World::start(int yourSlot, int bots, int laps, double nowMs) {
     // Front-runners are a little quicker, like a real grid.
     r.skill = 0.9f + 0.08f * static_cast<float>(total - k) / static_cast<float>(total);
     r.car.wheels[0].groundHint = -1;
+    r.prevPosition = r.car.position;
+    r.prevRotation = r.car.rotation;
     racers_.push_back(r);
   }
-  lightsMs_ = nowMs + 1500;
-  goMs_ = lightsMs_ + 5 * 900 + 400 + std::fmod(nowMs, 700.0);  // lights out after a random hold
-  simMs_ = nowMs;
+  tick_ = 0;
+  lightsTick_ = ticks(1500);
+  goTick_ = lightsTick_ + ticks(5 * 900 + 400 + seed % 700);  // lights out after a random hold
   accumulator_ = 0;
+  alpha_ = 0;
   for (Racer& r : racers_) {
     track_.locate(r.car.position, r.s, r.lateral, r.hint);
     r.distance = r.s - track_.length();  // behind the line: negative
+    r.lapStartMs = ticksToMs(goTick_);
   }
 }
 
-int World::lightsOn(double nowMs) const {
-  if (nowMs >= goMs_) return 0;
-  if (nowMs < lightsMs_) return 0;
-  return std::min(5, static_cast<int>((nowMs - lightsMs_) / 900) + 1);
+int World::lightsOn() const {
+  if (tick_ >= goTick_ || tick_ < lightsTick_) return 0;
+  return std::min(5, static_cast<int>((tick_ - lightsTick_) / ticks(900)) + 1);
+}
+
+engine::Vehicle World::shownCar(const Racer& r) const {
+  engine::Vehicle v = r.car;
+  v.position = engine::lerp(r.prevPosition, r.car.position, alpha_);
+  v.rotation = engine::nlerp(r.prevRotation, r.car.rotation, alpha_);
+  return v;
 }
 
 bool World::allFinished() const {
@@ -139,19 +150,21 @@ void World::resetCar(int index) {
   const auto c = track_.at(r.s);
   const float lat = engine::clampf(r.lateral, -c.halfWidth + 1.5f, c.halfWidth - 1.5f);
   r.car.place(track_.surfacePoint(r.s, lat), engine::Vehicle::headingOf(c.tangent));
+  r.prevPosition = r.car.position;  // no streak in the drawing
+  r.prevRotation = r.car.rotation;
   r.stuckTime = r.flipTime = 0;
 }
 
-void World::update(double nowMs, float dt) {
-  accumulator_ += dt;
+void World::update(float dt) {
+  accumulator_ += std::max(dt, 0.0f);
   int steps = 0;
   while (accumulator_ >= kStep && steps < kMaxSteps) {
-    simMs_ += kStep * 1000.0;
-    stepPhysics(kStep, std::min(simMs_, nowMs));
+    stepPhysics(kStep);
     accumulator_ -= kStep;
     ++steps;
   }
   if (steps == kMaxSteps) accumulator_ = 0;  // too slow: let the race run slower instead of spiraling
+  alpha_ = static_cast<float>(std::clamp(accumulator_ / kStep, 0.0, 1.0));
   // Positions: by laps and distance.
   std::vector<Racer*> order;
   for (Racer& r : racers_) order.push_back(&r);
@@ -163,8 +176,13 @@ void World::update(double nowMs, float dt) {
   for (size_t i = 0; i < order.size(); ++i) order[i]->place = static_cast<int>(i) + 1;
 }
 
-void World::stepPhysics(float dt, double nowMs) {
-  const bool go = nowMs >= goMs_;
+void World::stepPhysics(float dt) {
+  ++tick_;
+  const bool go = tick_ >= goTick_;
+  for (Racer& r : racers_) {
+    r.prevPosition = r.car.position;
+    r.prevRotation = r.car.rotation;
+  }
   for (size_t i = 0; i < racers_.size(); ++i) {
     Racer& r = racers_[i];
     if (r.remote) continue;
@@ -183,7 +201,7 @@ void World::stepPhysics(float dt, double nowMs) {
     collideWalls(racers_[i]);
     for (size_t j = i + 1; j < racers_.size(); ++j) collideCars(racers_[i], racers_[j]);
   }
-  for (Racer& r : racers_) updateProgress(r, nowMs);
+  for (Racer& r : racers_) updateProgress(r);
 }
 
 void World::driveBot(Racer& r, int index) {
@@ -246,7 +264,7 @@ void World::driveBot(Racer& r, int index) {
   r.input.brake = brake;
   r.input.handbrake = 0;
   // Stuck (in a wall, spun in gravel): back on the track after a moment.
-  r.stuckTime = v < 2 && simMs_ > goMs_ + 3000 ? r.stuckTime + kStep : 0;
+  r.stuckTime = v < 2 && tick_ > goTick_ + ticks(3000) ? r.stuckTime + kStep : 0;
   if (r.stuckTime > 3.5f) resetCar(index);
 }
 
@@ -312,7 +330,6 @@ void World::collideCars(Racer& A, Racer& B) {
   const Vec3 d = b.position - a.position;
   if (engine::dot(d, d) > 36 || std::fabs(d.y) > 1.5f) return;
   // Top-down boxes; separating axis test on the four edge directions.
-  const Vec3 h = a.spec().halfExtents;
   struct Box {
     Vec3 c, ax, az;
     float hx, hz;
@@ -323,6 +340,7 @@ void World::collideCars(Racer& A, Racer& B) {
     fx = engine::normalize(fx);
     fz = engine::normalize(fz);
     const Vec3 c = v.worldPoint(v.spec().boxOffset);
+    const Vec3 h = v.spec().halfExtents;  // each car its own size
     return Box{{c.x, 0, c.z}, fx, fz, h.x, h.z};
   };
   const Box ba = boxOf(a), bb = boxOf(b);
@@ -387,17 +405,17 @@ void World::collideCars(Racer& A, Racer& B) {
   }
 }
 
-void World::updateProgress(Racer& r, double nowMs) {
+void World::updateProgress(Racer& r) {
+  const double nowMs = clockMs();
   const float before = r.s;
   track_.locate(r.car.position, r.s, r.lateral, r.hint);
   const float L = track_.length();
   if (r.s > L * 0.4f && r.s < L * 0.6f) r.halfway = true;
   const bool crossed = before > L - 60 && r.s < 60;
   const bool backwards = before < 60 && r.s > L - 60;
-  if (crossed && nowMs >= goMs_) {
-    if (r.lap == 0 && r.lapStartMs == 0) {
-      r.lapStartMs = goMs_;  // the line is just ahead of the grid
-    }
+  if (crossed && tick_ >= goTick_) {
+    // (Lap 1 is timed from go: lapStartMs is set in start(). The line is
+    // just ahead of the grid, so the first crossing restarts it below.)
     if (r.halfway) {
       const double lapMs = nowMs - r.lapStartMs;
       r.lastLapMs = lapMs;
@@ -407,7 +425,7 @@ void World::updateProgress(Racer& r, double nowMs) {
       r.halfway = false;
       if (r.lap >= laps_ && !r.finished) {
         r.finished = true;
-        r.finishMs = nowMs - goMs_;
+        r.finishMs = nowMs - goMs();
       }
     } else if (r.lap == 0) {
       r.lapStartMs = nowMs;
