@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 
+#include "engine/bridge.h"
 #include "engine/log.h"
 
 namespace engine {
@@ -110,14 +111,34 @@ void Gpu::onDevice(wgpu::Device dev) {
 }
 
 void Gpu::resizeIfNeeded() {
-  double cssW = 0, cssH = 0;
-  emscripten_get_element_css_size(canvasSelector_.c_str(), &cssW, &cssH);
+  // The size comes from the page mailbox (a ResizeObserver; nothing is
+  // measured in the frame). Before the mailbox exists (start-up), measure once.
+  const bridge::Frame& f = bridge::frame();
+  double cssW = f.cssW, cssH = f.cssH, dpr = f.dpr;
+  if (cssW <= 0 || cssH <= 0) {
+    emscripten_get_element_css_size(canvasSelector_.c_str(), &cssW, &cssH);
+    dpr = emscripten_get_device_pixel_ratio();
+  }
   cssWidth = cssW;
   cssHeight = cssH;
-  const double ratio = std::min(emscripten_get_device_pixel_ratio(), kMaxPixelRatio);
+  const double ratio = std::min(dpr, kMaxPixelRatio);
   const auto w = static_cast<uint32_t>(std::max(1.0, std::round(cssW * ratio)));
   const auto h = static_cast<uint32_t>(std::max(1.0, std::round(cssH * ratio)));
-  if (w == width && h == height) return;
+  if (w == width && h == height) {
+    pendingW_ = 0;
+    return;
+  }
+  // While the phone rotates the size changes several times: wait until it
+  // has been the same for 120 ms, then reconfigure once (the first time at once).
+  const double now = emscripten_get_now();
+  if (width != 0 && (w != pendingW_ || h != pendingH_)) {
+    pendingW_ = w;
+    pendingH_ = h;
+    pendingSinceMs_ = now;
+    return;
+  }
+  if (width != 0 && now - pendingSinceMs_ < 120) return;
+  pendingW_ = 0;
 
   width = w;
   height = h;
@@ -147,6 +168,11 @@ void Gpu::configureSurface() {
 wgpu::TextureView Gpu::beginFrame() {
   wgpu::SurfaceTexture surfaceTexture;
   surface_.GetCurrentTexture(&surfaceTexture);
+  if (surfaceTexture.status == wgpu::SurfaceGetCurrentTextureStatus::Outdated ||
+      surfaceTexture.status == wgpu::SurfaceGetCurrentTextureStatus::Lost) {
+    configureSurface();  // e.g. after the page was in the background: try again next frame
+    return nullptr;
+  }
   if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
       surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     return nullptr;

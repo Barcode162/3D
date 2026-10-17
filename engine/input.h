@@ -48,6 +48,9 @@ class Input {
   // Handles the touches queued since the last frame (call once per frame,
   // before reading input).
   void pollTouches();
+  // Lets go of every held key, finger and button (focus lost).
+  void releaseAll();
+  int lastBlurs_ = 0;
   bool stickVisible = false, stickDirty = false;
   Vec2 stickShownOrigin, stickShownKnob;
   void setCapture(bool on);

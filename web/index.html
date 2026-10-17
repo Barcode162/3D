@@ -335,9 +335,41 @@
       locateFile: function (path) { return path + '?v=' + build; },
       onAbort: function (what) { bar3dLog.add('fatal', 'Aborted: ' + what); },
     };
+    // ?crossings (tests): count every call from the game into JavaScript, by
+    // name, so a test can report "crossings per frame" (window.bar3dCrossings).
+    if (/[?&]crossings/.test(location.search)) {
+      var counts = { total: 0, frames: 0, byName: {} };
+      window.bar3dCrossings = counts;
+      (function tick() { counts.frames++; requestAnimationFrame(tick); })();
+      Module.instantiateWasm = function (imports, done) {
+        var wrapped = [];
+        Object.keys(imports).forEach(function (mod) {
+          var table = imports[mod];
+          if (wrapped.indexOf(table) >= 0) return;  // the same table can appear under two names
+          wrapped.push(table);
+          Object.keys(table).forEach(function (name) {
+            var f = table[name];
+            if (typeof f !== 'function') return;
+            table[name] = function () {
+              counts.total++;
+              counts.byName[name] = (counts.byName[name] || 0) + 1;
+              if (/^emscripten_asm_const/.test(name)) {  // which EM_ASM block (Debug builds)
+                var k = name + '#' + arguments[0];
+                counts.byName[k] = (counts.byName[k] || 0) + 1;
+              }
+              return f.apply(this, arguments);
+            };
+          });
+        });
+        WebAssembly.instantiateStreaming(fetch(Module.locateFile('app.wasm')), imports)
+          .then(function (r) { done(r.instance, r.module); })
+          .catch(function (e) { bar3dLog.add('fatal', 'wasm: ' + e); });
+        return {};
+      };
+    }
     // The bridges C++ talks to, in order, then the app itself.
     versionChecked.then(function () {
-      ['audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
+      ['bridge.js', 'audio.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
         var s = document.createElement('script');
         s.src = name + '?v=' + build;
         s.async = false;

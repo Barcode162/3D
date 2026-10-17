@@ -55,6 +55,33 @@ await page.mouse.up();
 await page.waitForTimeout(500);
 await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
 
+// Calls from the game into JavaScript per frame (?crossings counts them).
+{
+  const cp = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  await openBar(cp, site.url, 'skipintro&crossings&server=off');
+  await cp.waitForTimeout(1000);
+  const a = await cp.evaluate(() => ({ ...JSON.parse(JSON.stringify(window.bar3dCrossings)), pulls: bar3dBridge.pulls() }));
+  await cp.waitForTimeout(3000);
+  const b = await cp.evaluate(() => ({ ...JSON.parse(JSON.stringify(window.bar3dCrossings)), pulls: bar3dBridge.pulls() }));
+  const frames = Math.max(1, b.pulls - a.pulls);  // game frames (one mailbox pull each)
+  const per = (b.total - a.total) / frames;
+  const rows = Object.keys(b.byName).map((k) => [k, ((b.byName[k] || 0) - (a.byName[k] || 0)) / frames])
+    .filter(([, v]) => v > 0.05).sort((x, y) => y[1] - x[1]);
+  // With real names (a Debug build) split them: graphics API, clock, page.
+  if (rows.some(([k]) => k.length > 3)) {
+    const sum = (f) => rows.filter(([k]) => f(k)).reduce((t, [, v]) => t + v, 0);
+    const gpu = (k) => /^e?m?wgpu|^emwgpu/.test(k), clock = (k) => k === 'emscripten_get_now';
+    const detail = rows.filter(([k]) => k.includes('#')).map(([k, v]) => `${k} ${v.toFixed(1)}`).join(', ');
+    const page = rows.filter(([k]) => !gpu(k) && !clock(k) && !k.includes('#')).map(([k, v]) => `${k} ${v.toFixed(1)}`).join(', ');
+    console.log(`JS crossings per frame: ${per.toFixed(1)} = graphics ${sum(gpu).toFixed(1)} + clock ` +
+                `${sum(clock).toFixed(1)} + page ${sum((k) => !gpu(k) && !clock(k) && !k.includes('#')).toFixed(1)} (${page})` +
+                (detail ? `\n  EM_ASM blocks: ${detail}` : ''));
+  } else {
+    console.log(`JS crossings per frame: ${per.toFixed(1)} (names are minified; use a Debug build to split them)`);
+  }
+  await cp.close();
+}
+
 // FAIL_MODEL=name: that model's download is blocked (every retry too); the
 // loading screen must say "1 part failed - Retry" and still let you in.
 if (process.env.FAIL_MODEL) {

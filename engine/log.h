@@ -16,6 +16,8 @@ void logLine(LogLevel level, const char* format, ...) __attribute__((format(prin
 
 // Sets the one-line status text (FPS, resolution) at the top of the screen.
 void setStatus(const char* text);
+// Lines go out with the frame's mailbox flush (engine/bridge.h) while on.
+void batchLogs(bool on);
 }  // namespace engine
 
 #define LOG_INFO(...) engine::logLine(engine::LogLevel::kInfo, __VA_ARGS__)

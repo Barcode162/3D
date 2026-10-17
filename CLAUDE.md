@@ -104,6 +104,9 @@ judged on the user's phone.
   automatically. `web/audio.js` is the thin Web Audio + song-picker bridge, `web/net.js`
   the multiplayer bridge, `web/voice.js` WebRTC voice chat, `web/menu.js`
   the HTML menus and settings, `web/account.js` accounts and profiles.
+  `web/bridge.js` (with `engine/bridge.*`) is the per-frame mailbox: one
+  pull at frame start, one flush at frame end; prefer it over new EM_ASM
+  calls in the frame.
 - `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
 - `docs/REMASTER.md` lists every crude first version to redo properly.
 - `server/report.php` stores phone reports (Menu → Settings → Send report gives

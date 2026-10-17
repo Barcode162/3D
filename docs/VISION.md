@@ -134,3 +134,7 @@ is the game (sideways); spectators see the race on the rig's three
 monitors. Every mini game should become a really powerful game in its own
 right. Also: a real realtime sync server (not phones connecting to each
 other). Plan: `docs/RACING.md`.
+
+- **Mirror quality (2026-10-17):** your character in the mirror always looks
+  full quality, and so does everything near you; only far-away things in the
+  reflection may be lower quality (planned in RESTRUCTURE 6.3).

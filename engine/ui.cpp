@@ -4,23 +4,20 @@
 
 #include <cstdlib>
 
+#include "engine/bridge.h"
 #include "engine/json.h"
 
 namespace engine::ui {
 
 void takeCommands(std::vector<Command>& out) {
-  char* text = static_cast<char*>(EM_ASM_PTR({
-    var u = window['bar3dUi'];
-    return stringToNewUTF8(u ? u['take']() : '[]');
-  }));
+  // Collected by the page mailbox at the start of the frame (engine/bridge.h).
+  const std::string& text = bridge::uiCommandsJson();
+  if (text.size() <= 2) return;  // "[]"
   const Json list = Json::parse(text);
-  std::free(text);
   for (const Json& c : list.items()) out.push_back({c[0].string(), c[1].number(), c[2].number(), c[3].string()});
 }
 
-void setInfo(const std::string& json) {
-  EM_ASM({ var u = window['bar3dUi']; if (u) u['setInfo'](UTF8ToString($0)); }, json.c_str());
-}
+void setInfo(const std::string& json) { bridge::op("[\"info\"," + bridge::quote(json) + "]"); }
 
 void toast(const std::string& text) {
   EM_ASM({ var u = window['bar3dUi']; if (u) u['toast'](UTF8ToString($0)); }, text.c_str());
@@ -34,7 +31,10 @@ void openPanel(const std::string& name) {
 
 namespace engine::settings {
 
-int version() { return EM_ASM_INT({ var s = window['bar3dSettings']; return s ? s['version']() : 0; }); }
+int version() {
+  if (bridge::frame().pulledMs > 0) return bridge::frame().settingsVersion;  // from the mailbox
+  return EM_ASM_INT({ var s = window['bar3dSettings']; return s ? s['version']() : 0; });
+}
 
 double number(const char* key, double fallback) {
   return EM_ASM_DOUBLE({

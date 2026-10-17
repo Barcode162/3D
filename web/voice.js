@@ -367,6 +367,19 @@ window.bar3dVoice = (function () {
       p.boost = !!boost;
       place3d(p);
     },
+    // Every connected player's level: [[index, level 0..1], ...] (read once
+    // per frame by web/bridge.js).
+    levels: function () {
+      var n = net(), out = [];
+      if (!n) return out;
+      for (var id in peers) {
+        var p = peers[id];
+        if (!p.analyser) continue;
+        var idx = n.indexOf(id);
+        if (idx >= 0) out.push([idx, level(p.analyser, p.buf)]);
+      }
+      return out;
+    },
     peerLevel: function (index) {
       var n = net();
       var p = n && peers[n.idOf(index)];

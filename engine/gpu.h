@@ -31,7 +31,9 @@ class Gpu {
   uint32_t width = 0;
   uint32_t height = 0;
   float pixelRatio = 1.0f;
-  double cssWidth = 0, cssHeight = 0;  // the canvas in CSS pixels (measured once per frame)
+  double cssWidth = 0, cssHeight = 0;
+  uint32_t pendingW_ = 0, pendingH_ = 0;  // a new size waiting to settle
+  double pendingSinceMs_ = 0;  // the canvas in CSS pixels (measured once per frame)
 
  private:
   void onAdapter(wgpu::Adapter adapter);

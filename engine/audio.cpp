@@ -3,24 +3,36 @@
 #include <emscripten/emscripten.h>
 
 #include <algorithm>
+#include <cstdio>
+
+#include "engine/bridge.h"
 
 namespace engine {
 
 // Quoted property names keep the Closure compiler from renaming them.
 namespace audio {
 
-bool ready() { return EM_ASM_INT({ return window['bar3dAudio']['ready']() ? 1 : 0; }); }
+bool ready() {
+  if (bridge::frame().pulledMs > 0) return bridge::frame().audioRunning;  // from the page mailbox
+  return EM_ASM_INT({ return window['bar3dAudio']['ready']() ? 1 : 0; });
+}
 
+// Where your ears are: sent with the frame's mailbox flush.
 void setListener(Vec3 p, Vec3 f, Vec3 u) {
-  EM_ASM({ window['bar3dAudio']['setListener']($0, $1, $2, $3, $4, $5, $6, $7, $8); },
-         p.x, p.y, p.z, f.x, f.y, f.z, u.x, u.y, u.z);
+  char op[256];
+  std::snprintf(op, sizeof(op), "[\"listener\",%.3f,%.3f,%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f]", p.x, p.y, p.z, f.x,
+                f.y, f.z, u.x, u.y, u.z);
+  bridge::op(op);
 }
 
 void setSongPickerRect(float x, float y, float w, float h) {
   EM_ASM({ window['bar3dAudio']['setSongPickerRect']($0, $1, $2, $3); }, x, y, w, h);
 }
 
-int userSongCount() { return EM_ASM_INT({ return window['bar3dAudio']['userSongCount'](); }); }
+int userSongCount() {
+  if (bridge::frame().pulledMs > 0) return bridge::frame().userSongCount;  // from the page mailbox
+  return EM_ASM_INT({ return window['bar3dAudio']['userSongCount'](); });
+}
 
 namespace {
 std::string userSongString(int index, bool url) {
@@ -38,7 +50,14 @@ std::string userSongUrl(int index) { return userSongString(index, true); }
 
 void setMusicGain(float gain) { EM_ASM({ window['bar3dAudio']['setMusicGain']($0); }, gain); }
 
-double now() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['now'](); }); }
+// The sound clock: read once per frame by the page mailbox, plus the time
+// since then (so it's one call per frame however often it's asked).
+double now() {
+  const bridge::Frame& f = bridge::frame();
+  if (f.pulledMs <= 0) return EM_ASM_DOUBLE({ return window['bar3dAudio']['now'](); });
+  if (f.audioTime <= 0) return 0;  // not unlocked yet
+  return f.audioTime + (emscripten_get_now() - f.pulledMs) / 1000.0;
+}
 
 }  // namespace audio
 

@@ -5,25 +5,22 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 
+#include "engine/bridge.h"
 #include "engine/profiler.h"
 
 namespace engine {
 namespace {
 
-// Shows the joystick rings (HTML elements in web/index.html) at the touch spot.
-// Called once per frame at most (Input::flushStick): moving page elements
-// inside every touch event made Safari redo its layout many times a frame.
+// Shows the joystick rings (HTML elements in web/index.html) at the touch
+// spot, through the page mailbox (once per frame at most, in Input::flushStick).
 void applyStick(bool visible, Vec2 origin, Vec2 knob) {
-  EM_ASM({
-    var base = document.getElementById('stickBase');
-    var knob = document.getElementById('stickKnob');
-    if (!base || !knob) return;
-    base.style.display = knob.style.display = $0 ? 'block' : 'none';
-    base.style.transform = 'translate(' + $1 + 'px,' + $2 + 'px)';
-    knob.style.transform = 'translate(' + $3 + 'px,' + $4 + 'px)';
-  }, visible, origin.x, origin.y, knob.x, knob.y);
+  char op[160];
+  std::snprintf(op, sizeof(op), "[\"stick\",%d,%.1f,%.1f,%.1f,%.1f]", visible ? 1 : 0, origin.x, origin.y, knob.x,
+                knob.y);
+  bridge::op(op);
 }
 
 // Remembers how the joystick should look; drawn by Input::flushStick.
@@ -198,12 +195,7 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
   const bool down = type == EMSCRIPTEN_EVENT_KEYDOWN;
   const char* c = e->code;
   // Typing in a form (the account screens): leave the keys alone.
-  if (EM_ASM_INT({
-        var a = document.activeElement;
-        return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') ? 1 : 0;
-      })) {
-    return false;
-  }
+  if (bridge::frame().fieldFocused) return false;
   if (in.capture) {
     // Every key is tracked (the racing game reads them by name).
     const std::string code = c;
@@ -243,40 +235,51 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
 // wait for the page's code before it can draw, which cost a frame per tap.
 void Input::pollTouches() {
   const double start = emscripten_get_now();
-  constexpr int kMax = 128;
-  static double buf[kMax * 5];  // type, id, x, y, time (ms, full precision for the rhythm game)
-  const int n = EM_ASM_INT({
-    var q = window['bar3dTouchQueue'];
-    if (!q || !q.length) return 0;
-    var n = Math.min(q.length / 5, $1);
-    HEAPF64.set(q.slice(0, n * 5), $0 >> 3);
-    q.splice(0, n * 5);
-    return n;
-  }, buf, kMax);
+  // The page lost focus or went to the background: let go of everything
+  // (otherwise a key or finger lifted elsewhere stays "held").
+  const int blurs = bridge::frame().blurs;
+  if (blurs != lastBlurs_) {
+    lastBlurs_ = blurs;
+    releaseAll();
+  }
+  const std::vector<bridge::Touch> touches = bridge::takeTouches();
   static const int kTypes[4] = {EMSCRIPTEN_EVENT_TOUCHSTART, EMSCRIPTEN_EVENT_TOUCHMOVE, EMSCRIPTEN_EVENT_TOUCHEND,
                                 EMSCRIPTEN_EVENT_TOUCHCANCEL};
-  for (int i = 0; i < n; ++i) {
-    const double* t = buf + i * 5;
-    const int type = kTypes[std::clamp(static_cast<int>(t[0]), 0, 3)];
+  for (const bridge::Touch& t : touches) {
+    const int type = kTypes[std::clamp(t.type, 0, 3)];
     EmscriptenTouchEvent e{};
     e.numTouches = 1;
-    e.touches[0].identifier = static_cast<int>(t[1]);
+    e.touches[0].identifier = t.id;
     e.touches[0].isChanged = 1;
-    e.touches[0].targetX = e.touches[0].clientX = static_cast<int>(t[2]);
-    e.touches[0].targetY = e.touches[0].clientY = static_cast<int>(t[3]);
-    g_eventMs = t[4];
+    e.touches[0].targetX = e.touches[0].clientX = static_cast<int>(t.x);
+    e.touches[0].targetY = e.touches[0].clientY = static_cast<int>(t.y);
+    g_eventMs = t.timeMs;
     if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
     handleTouch(type, &e, this);
   }
   g_eventMs = 0;
-  if (n) profiler().event(emscripten_get_now() - start, false);
+  if (!touches.empty()) profiler().event(emscripten_get_now() - start, false);
+}
+
+void Input::releaseAll() {
+  stickTouchId = lookTouchId = kNone;
+  showStick(false, {}, {});
+  mouseLooking = false;
+  keyForward = keyBack = keyLeft = keyRight = false;
+  for (Press& p : presses) p.id = kNone;
+  pointers.clear();
+  keysHeld.clear();
+  mouseButtons = 0;
 }
 
 static bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   const double start = emscripten_get_now();
   // After a tap the phone also sends pretend mouse events (the touch
   // listeners are passive, so they can't cancel them): ignore those.
-  if (start - EM_ASM_DOUBLE({ return window['bar3dLastTouch'] || -1e9; }) < 1000) return false;
+  if (type != EMSCRIPTEN_EVENT_MOUSEMOVE &&
+      start - EM_ASM_DOUBLE({ var b = window['bar3dBridge']; return b ? b['lastTouch']() : -1e9; }) < 1000) {
+    return false;
+  }
   if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();
   const bool r = handleMouse(type, e, user);
   profiler().event(emscripten_get_now() - start, type == EMSCRIPTEN_EVENT_MOUSEMOVE);
@@ -296,24 +299,9 @@ void Input::attach(const char* canvas) {
     var c = document.querySelector(UTF8ToString($0));
     if (c) c.addEventListener('contextmenu', function(e) { e.preventDefault(); });
   }, canvas);
-  // Passive: they never block Safari's drawing. Scrolling and zooming are
-  // already off for the page (touch-action: none in web/index.html).
-  EM_ASM({
-    var c = document.querySelector(UTF8ToString($0));
-    if (!c) return;
-    var q = window['bar3dTouchQueue'] = [];
-    'touchstart touchmove touchend touchcancel'.split(' ').forEach(function (type, code) {
-      c.addEventListener(type, function (e) {
-        if (q.length > 2000) return;  // nobody is reading (e.g. a stalled frame loop)
-        var now = performance.now();  // the game's clock (event.timeStamp may not be)
-        for (var i = 0; i < e.changedTouches.length; i++) {
-          var t = e.changedTouches[i];
-          q.push(code, t.identifier, t.clientX, t.clientY, now);
-        }
-        window['bar3dLastTouch'] = now;
-      }, {'passive': true});
-    });
-  }, canvas);
+  // Touches arrive through the page mailbox (web/bridge.js: passive
+  // listeners that only queue them), read once per frame in pollTouches().
+  bridge::attach(canvas);
   emscripten_set_mousedown_callback(canvas, this, true, onMouse);
   emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);
   emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);

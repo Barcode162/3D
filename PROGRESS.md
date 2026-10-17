@@ -14,8 +14,9 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0 and Phase 1 (0.1-1.8, 2026-10-17). Next: 2.1a, 2.1b, 2.1c**
-(one mailbox between C++ and the page, UI commands, voice/log/settings). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
+last section). **Done: Phase 0 and Phase 1 (0.1-1.8, 2026-10-17). In progress: 2.1a**
+(most of it is built and pushed, see the handoff note at the end of the Log).
+Then 2.1b, 2.1c (batch them). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
 skip anything that changes car/track models or visuals (the user will
@@ -450,3 +451,34 @@ A small DAW inside the bar, all DSP written in C++:
   half resolution with an oblique near plane (no `discard` anywhere),
   named loading stages, test options in `app/test_hooks.*`, version check
   before loading the game, a security policy on the page.
+- **2026-10-17, HANDOFF (chat ended mid-batch):** step 2.1a is mostly done
+  and pushed: `engine/bridge.*` + `web/bridge.js` (one `pull()` at frame
+  start: canvas size from a ResizeObserver, dpr, safe area, hidden/blur
+  count, text-field focus, modal open, audio running + sound clock,
+  settings version, your voice level, touches, other players' voice levels,
+  menu commands JSON, user song count; one `flush()` at frame end: JSON ops
+  `status`, `stick`, `log`, `voicePlace` (20 Hz batch), `listener`, `info`).
+  Gpu size settles 120 ms before reconfiguring; Outdated/Lost surface →
+  reconfigure. Input: touches from the bridge, focus flag instead of the
+  per-key `activeElement` call, `releaseAll()` on blur. Logs go through
+  the flush once the frame loop runs (`engine::batchLogs`; fatal goes at
+  once). Page calls per game frame: ~24 → ~3 (pull, flush, net status at
+  times). Bonus: the mirror pass is skipped when the glass isn't on screen
+  (at the door: ~525 fewer draws).
+  **Left to do for 2.1a:** (1) `web/index.html` `?crossings` counter wraps
+  the same import table twice (it's under two names), so it counts every
+  call double: skip a table already wrapped (keep a list). (2) Check
+  rotation (`VIEW=932x430` then `430x932` → one resize each) and
+  `HOLD=ArrowUp:3000` still walks, `tools/mp_test.mjs` and
+  `tools/voice_test.mjs` (voice positions/levels moved to the bridge). (3)
+  Tick the 2.1a boxes in RESTRUCTURE §3.2 and write "Done" under 2.1a.
+  Measuring page calls by name needs a Debug build:
+  `emcmake cmake -B build-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug &&
+  cmake --build build-debug`, then
+  `node tools/smoke.mjs build-debug/site build/smoke-dbg.png` (prints
+  graphics / clock / page calls and which EM_ASM blocks; look a block up
+  with `grep -o "<number>: [^;]\{0,140\}" build-debug/site/app.js`).
+  User wishes recorded this chat: mirror keeps avatars and nearby things
+  full quality, only far things lower (RESTRUCTURE 6.3, VISION). Pace: Claude
+  batches ~3 related steps per message; racing steps stay but don't change
+  car/track models or visuals.

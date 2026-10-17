@@ -26,6 +26,7 @@
 #include "engine/gpu_upload.h"
 #include "engine/audio.h"
 #include "engine/billboard.h"
+#include "engine/bridge.h"
 #include "engine/camera.h"
 #include "engine/fetch.h"
 #include "engine/file.h"
@@ -118,6 +119,7 @@ struct App {
   int emoteCount = 0;
   bool onMic = false;
   float voiceLevel = 0;
+  double lastVoicePlaceMs = 0;
 
   // The room.
   bool lightsDim = false, fireOn = true;
@@ -495,10 +497,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
   for (const app::OtherPlayer& o : g_app.others.players()) {
     if (!o.placed) continue;
     const int flags = static_cast<int>(o.values[app::slot::kFlags]);
-    const float talk = std::max(o.voice, engine::clampf(static_cast<float>(EM_ASM_DOUBLE({
-      var v = window['bar3dVoice'];
-      return v ? v['peerLevel']($0) : 0;
-    }, o.id)), 0, 1));
+    const float talk = std::max(o.voice, engine::clampf(engine::bridge::voiceLevel(o.id), 0, 1));
     engine::TextStyle style;
     style.align = 0.5f;
     style.color = talk > 0.08f ? engine::Vec4{0.45f, 1.0f, 0.55f, 1.0f} : engine::Vec4{0.75f, 0.9f, 1.0f, 1.0f};
@@ -1141,7 +1140,7 @@ void selfState(float extra[kCount - app::slot::kActivity]) {
   e(kActivity) = static_cast<float>(static_cast<int>(m.activity));
   e(kParam) = g_app.seat >= 0 ? static_cast<float>(g_app.seat) : 0;
   e(kLook) = static_cast<float>(g_app.look);
-  g_app.voiceLevel = static_cast<float>(EM_ASM_DOUBLE({ var v = window['bar3dVoice']; return v ? v['myLevel']() : 0; }));
+  g_app.voiceLevel = engine::bridge::frame().myVoiceLevel;
   e(kVoice) = std::round(g_app.voiceLevel * 20) / 20;
   e(kEmote) = static_cast<float>(static_cast<int>(g_app.emote));
   e(kEmoteCount) = static_cast<float>(g_app.emoteCount);
@@ -1173,14 +1172,20 @@ Mat4 otherTransform(const app::OtherPlayer& o, app::AvatarMotion& motion) {
 
 // Talks to the voice chat (web/voice.js): where each player's voice comes
 // from, who's on the mic.
-void updateVoice() {
+// Where each other player's voice comes from: one batch, 20 times a second,
+// with the frame's mailbox flush.
+void updateVoice(double nowMs) {
+  if (nowMs - g_app.lastVoicePlaceMs < 50 || g_app.others.players().empty()) return;
+  g_app.lastVoicePlaceMs = nowMs;
+  std::string list;
   for (const app::OtherPlayer& o : g_app.others.players()) {
     const int flags = static_cast<int>(o.values[app::slot::kFlags]);
-    EM_ASM({
-      var v = window['bar3dVoice'];
-      if (v) v['place']($0, $1, $2, $3, $4);
-    }, o.id, o.eye.x, o.eye.y - 0.05f, o.eye.z, (flags & 2) ? 1 : 0);
+    char item[96];
+    std::snprintf(item, sizeof(item), "%s[%d,%.2f,%.2f,%.2f,%d]", list.empty() ? "" : ",", o.id, o.eye.x,
+                  o.eye.y - 0.05f, o.eye.z, (flags & 2) ? 1 : 0);
+    list += item;
   }
+  engine::bridge::op("[\"voicePlace\",[" + list + "]]");
 }
 
 // Keeps the loading screen (web/index.html) up to date until every model
@@ -1243,6 +1248,7 @@ struct ProfiledFrame {
       PROFILE(engine::Phase::kJobs);
       engine::runJobs(emscripten_get_now() + (g_app.entered ? 3.0 : 8.0));
     }
+    engine::bridge::flush();  // everything for the page from this frame, in one call
     engine::profiler().endFrame(emscripten_get_now());
   }
 };
@@ -1251,6 +1257,7 @@ void frame() {
   using engine::Phase;
   // Touches queued since the last frame are read first, so the profiler
   // counts them for the frame they arrived in.
+  engine::bridge::pull();  // everything the page collected since last frame, in one call
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.input.pollTouches();
   const double nowMs = emscripten_get_now();
@@ -1298,7 +1305,7 @@ void frame() {
     selfState(extra);
     g_app.others.sendSelf(nowMs, g_app.camera.position, g_app.camera.yaw, g_app.camera.pitch, extra);
     g_app.others.update(nowMs, dt, kWalkSpeed);
-    updateVoice();
+    updateVoice(nowMs);
     sendInfo(nowMs);
   }
 
@@ -1492,6 +1499,7 @@ void onGpuReady(bool ok) {
   engine::profiler().stage("running");
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");
   LOG_INFO("Seats: %zu. Things to use: %zu.", g_app.scene.seats.size(), g_app.scene.interactables.size());
+  engine::batchLogs(true);  // from here on, log lines go out with each frame's flush
   emscripten_set_main_loop(frame, 0, false);
 }
 

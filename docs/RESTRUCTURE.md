@@ -2057,6 +2057,10 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** same look; report at the mirror.
 
 #### 6.3 The mirror as a proper view
+- **User wish (2026-10-17):** in the mirror, avatars always full quality and everything within a
+  radius of the mirror/viewer full quality; only things farther away in the reflection drop to low
+  quality (LOD / cheaper shader). The half-resolution reflection from 1.7 should become sharp for
+  that near zone too (e.g. full-res near layer or a higher-res target when close).
 - **Files:** `app/renderer.cpp` (own cull list through the glass, small props excluded, LOD1,
   cheap shader variant, occlusion query on the glass quad (last frame's result), zone gate,
   30 Hz when still, quality tiers full / avatars-only / off).
