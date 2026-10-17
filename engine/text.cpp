@@ -6,6 +6,7 @@
 #include "engine/file.h"
 #include "engine/font.h"
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 
 namespace engine {
@@ -97,6 +98,8 @@ bool TextRenderer::init(const wgpu::Device& device, wgpu::TextureFormat colorFor
 
   wgpu::RenderPipelineDescriptor desc;
   desc.label = "text";
+  bindLayout_ = pipelines::textureSamplerLayout(device, wgpu::TextureViewDimension::e2D);
+  desc.layout = pipelines::pipelineLayout(device, bindLayout_);
   desc.vertex.module = module;
   desc.vertex.entryPoint = "vs_main";
   desc.vertex.bufferCount = 1;
@@ -105,7 +108,7 @@ bool TextRenderer::init(const wgpu::Device& device, wgpu::TextureFormat colorFor
   desc.depthStencil = &depth;
   desc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
   desc.primitive.cullMode = wgpu::CullMode::None;  // world text is visible from both sides
-  pipeline_ = device.CreateRenderPipeline(&desc);
+  pipelines::create(device, desc, &pipeline_);
 
   wgpu::BindGroupEntry entries[2];
   entries[0].binding = 0;
@@ -113,7 +116,7 @@ bool TextRenderer::init(const wgpu::Device& device, wgpu::TextureFormat colorFor
   entries[1].binding = 1;
   entries[1].sampler = sampler;
   wgpu::BindGroupDescriptor bindDesc;
-  bindDesc.layout = pipeline_.GetBindGroupLayout(0);
+  bindDesc.layout = bindLayout_;
   bindDesc.entryCount = 2;
   bindDesc.entries = entries;
   bindGroup_ = device.CreateBindGroup(&bindDesc);
@@ -321,7 +324,7 @@ void TextRenderer::upload(const wgpu::Queue& queue) {
 }
 
 void TextRenderer::draw(const wgpu::RenderPassEncoder& pass) const {
-  if (vertices_.empty()) return;
+  if (vertices_.empty() || !pipeline_) return;  // pipeline_ fills in once compiled
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, bindGroup_);
   pass.SetVertexBuffer(0, vertexBuffer_, 0, vertices_.size() * sizeof(Vertex));

@@ -14,8 +14,9 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1-0.4, 1.1, 1.2a (2026-10-17). Next: 1.3** (async
-pipelines, warm-up, an honest "ready"). Waiting on the user: 3 reports for the G4 baseline (after
+last section). **Done: 0.1-0.4, 1.1, 1.2a, 1.3 (2026-10-17). Next: 1.4** (job
+scheduler and sliced model loading). User's pace: in order, 2-3 steps per
+message. Waiting on the user: 3 reports for the G4 baseline (after
 "Tap to enter", at the big mirror, after 2 minutes walking), and the tap
 stutter (yellow bar on every tap, seen 2026-10-17): read `recentHitches`
 (`touches`, `phase`) in their reports.
@@ -428,3 +429,6 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-17:** Restructure step 1.2a done: piano notes are made about
   15x faster (middle C 24 → 1.7 ms), bass notes ring up to 6 s, and a
   finished piano song no longer makes people who join later prepare it.
+- **2026-10-17:** Restructure step 1.3 done: shaders compile in the
+  background, and "Tap to enter" waits until a warm-up frame has finished
+  on the GPU (loading text shows "Warming up…").

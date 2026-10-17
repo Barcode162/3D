@@ -496,6 +496,11 @@ was answered by the user on 2026-10-17.
   after a tap: mouse input within 1 s of a touch is ignored. Headless tests:
   CDP touch events arrive slowly at 2 fps (a tap looks like a long press),
   so send TouchEvents from inside the page.
+- **Pipelines are async (step 1.3):** create them only through
+  `engine::pipelines::create` (CreateRenderPipelineAsync); the slot stays
+  empty until compiled, so draw code must check. Never use
+  `GetBindGroupLayout` on a pipeline (it may not exist yet): give the
+  pipeline an explicit layout (`pipelines::pipelineLayout`).
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

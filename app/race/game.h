@@ -21,8 +21,10 @@ class Game {
   void init(engine::Gpu* gpu, const engine::Sound* engineHum) {
     gpu_ = gpu;
     hum_ = engineHum;
+    view_.preparePipelines(*gpu);  // compile them while the bar loads
   }
   bool open() const { return open_; }
+  bool pipelinesReady() const { return view_.pipelinesReady(); }
   // Sit down in rig 0 (left) or 1 (right).
   void start(int rig, double nowMs);
   void close();

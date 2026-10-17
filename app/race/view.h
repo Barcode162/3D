@@ -29,7 +29,9 @@ struct CarDraw {
 
 class View {
  public:
+  bool preparePipelines(engine::Gpu& gpu);  // early, while the bar loads
   bool init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spec);
+  bool pipelinesReady() const { return pipeline_ && skyPipeline_; }
   // Where a car's parts are this frame.
   static CarDraw carDraw(const engine::Vehicle& car, engine::Vec3 paint, float brake);
   // Draws one frame into `target` (with `depth`, both width x height). Lights:
@@ -64,6 +66,7 @@ class View {
 
   engine::Gpu* gpu_ = nullptr;
   wgpu::RenderPipeline pipeline_, skyPipeline_;
+  bool prepared_ = false;
   wgpu::BindGroupLayout frameLayout_, objectLayout_;
   wgpu::Buffer frameBuffer_, objectBuffer_;
   wgpu::BindGroup frameGroup_, objectGroup_;

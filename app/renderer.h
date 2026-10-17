@@ -58,6 +58,11 @@ class SceneRenderer {
   // Only the text layer on a plain background: for when the bar is hidden
   // (loading screen, 4K Mania), so nothing invisible gets drawn.
   void renderOverlay(const wgpu::TextureView& target, const engine::TextRenderer& text);
+  // All of the bar's pipelines have compiled (they compile in the background).
+  bool ready() const {
+    return pipeline_ && mirroredPipeline_ && skinnedPipeline_ && skinnedMirroredPipeline_ && modelPipeline_ &&
+           modelMirroredPipeline_ && modelBlendPipeline_ && modelBlendMirroredPipeline_ && glassPipeline_;
+  }
   void render(const wgpu::TextureView& target, const engine::Mat4& viewProj, engine::Vec3 eye,
               const engine::Mat4& avatar, const std::vector<engine::Mat4>& avatarBones,
               const std::vector<engine::Mat4>& firstPersonBones, const std::vector<Mirror>& mirrors,
@@ -168,6 +173,7 @@ class SceneRenderer {
   wgpu::RenderPipeline modelPipeline_, modelMirroredPipeline_;  // loaded .glb models
   wgpu::RenderPipeline modelBlendPipeline_, modelBlendMirroredPipeline_;  // their see-through parts
   wgpu::RenderPipeline glassPipeline_;
+  wgpu::BindGroupLayout glassLayout_;
   wgpu::BindGroupLayout frameLayout_, objectLayout_, bonesLayout_, modelLayout_;
   wgpu::Sampler modelSampler_;
   std::vector<ModelDraw> models_;

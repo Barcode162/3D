@@ -4,6 +4,7 @@
 
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 
 namespace engine {
@@ -65,6 +66,8 @@ bool PictureBillboards::init(const wgpu::Device& device, wgpu::TextureFormat col
   depth.depthCompare = wgpu::CompareFunction::Less;
   wgpu::RenderPipelineDescriptor desc;
   desc.label = "pictures";
+  bindLayout_ = pipelines::textureSamplerLayout(device, wgpu::TextureViewDimension::e2DArray);
+  desc.layout = pipelines::pipelineLayout(device, bindLayout_);
   desc.vertex.module = module;
   desc.vertex.entryPoint = "vs_main";
   desc.vertex.bufferCount = 1;
@@ -72,10 +75,10 @@ bool PictureBillboards::init(const wgpu::Device& device, wgpu::TextureFormat col
   desc.fragment = &fragment;
   desc.depthStencil = &depth;
   desc.primitive.cullMode = wgpu::CullMode::None;
-  pipeline_ = device.CreateRenderPipeline(&desc);
+  pipelines::create(device, desc, &pipeline_);
 
   wgpu::BindGroupDescriptor bg;
-  bg.layout = pipeline_.GetBindGroupLayout(0);
+  bg.layout = bindLayout_;
   bg.entryCount = 2;
   bg.entries = entries;
   bindGroup_ = device.CreateBindGroup(&bg);
@@ -167,7 +170,7 @@ void PictureBillboards::upload(const wgpu::Queue& queue) {
 }
 
 void PictureBillboards::draw(const wgpu::RenderPassEncoder& pass) const {
-  if (vertices_.empty()) return;
+  if (vertices_.empty() || !pipeline_) return;  // pipeline_ fills in once compiled
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, bindGroup_);
   pass.SetVertexBuffer(0, vertexBuffer_);

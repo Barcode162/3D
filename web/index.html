@@ -282,6 +282,7 @@
         document.getElementById('loadText').textContent =
           'Building the bar… ' + done + ' / ' + total + ' pieces';
       },
+      stage: function (text) { document.getElementById('loadText').textContent = text; },
       ready: function () {
         document.getElementById('loadFill').style.width = '100%';
         document.getElementById('loadText').textContent = 'Everything is ready.';

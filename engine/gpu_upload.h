@@ -22,6 +22,9 @@ void queueJob(std::function<void()> job);
 // Runs queued jobs until `budgetMs` has passed (always at least one).
 void runJobs(double budgetMs);
 size_t pendingJobs();
+// Starts compiling the mipmap pipelines (call once at start-up; texture jobs
+// wait for them).
+void prepareMipmaps(const wgpu::Device& device);
 
 // Decodes PNG/JPEG bytes and creates a mipmapped texture from them, once
 // for each format in `formats` (RGBA8Unorm for data like normal maps,

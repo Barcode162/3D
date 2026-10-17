@@ -9,6 +9,7 @@
 #include <map>
 
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 
 namespace engine {
@@ -72,9 +73,11 @@ MipKit& mipKit(const wgpu::Device& device) {
   return kit;
 }
 
+// Starts compiling the mip pipeline for a format (once); empty until ready.
 wgpu::RenderPipeline mipPipeline(MipKit& kit, wgpu::TextureFormat format) {
   auto it = kit.pipelines.find(format);
   if (it != kit.pipelines.end()) return it->second;
+  kit.pipelines[format] = nullptr;
   wgpu::PipelineLayoutDescriptor pl;
   pl.bindGroupLayoutCount = 1;
   pl.bindGroupLayouts = &kit.layout;
@@ -91,9 +94,8 @@ wgpu::RenderPipeline mipPipeline(MipKit& kit, wgpu::TextureFormat format) {
   rp.vertex.module = kit.module;
   rp.vertex.entryPoint = "vs";
   rp.fragment = &fs;
-  wgpu::RenderPipeline pipeline = kit.device.CreateRenderPipeline(&rp);
-  kit.pipelines[format] = pipeline;
-  return pipeline;
+  pipelines::create(kit.device, rp, &kit.pipelines[format]);
+  return nullptr;
 }
 
 // --- Image decoding in the browser, kept as ImageBitmaps until a job
@@ -150,9 +152,29 @@ void queueJob(std::function<void()> job) { jobs().push_back(std::move(job)); }
 
 size_t pendingJobs() { return jobs().size(); }
 
+namespace {
+const wgpu::Device* g_mipDevice = nullptr;
+}  // namespace
+
+void prepareMipmaps(const wgpu::Device& device) {
+  g_mipDevice = &device;
+  MipKit& kit = mipKit(device);
+  mipPipeline(kit, wgpu::TextureFormat::RGBA8Unorm);
+  mipPipeline(kit, wgpu::TextureFormat::RGBA8UnormSrgb);
+}
+
 void runJobs(double budgetMs) {
   const double start = emscripten_get_now();
   auto& q = jobs();
+  // Texture jobs make mipmaps: wait until both mip pipelines have compiled
+  // (a few ms after start-up) rather than compile one mid-load.
+  if (g_mipDevice) {
+    MipKit& kit = mipKit(*g_mipDevice);
+    if (!kit.pipelines[wgpu::TextureFormat::RGBA8Unorm] || !kit.pipelines[wgpu::TextureFormat::RGBA8UnormSrgb]) {
+      profiler().jobs(0, q.size(), 0);
+      return;
+    }
+  }
   int ran = 0;
   double maxJob = 0, before = start;
   while (!q.empty()) {

@@ -802,12 +802,12 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Billboard slots by player index (`billboard.h` kSlots 8, `main.cpp:383`) → keyed by slot/id + LRU. *[6.6]*
 
 **C. Start-up and loading**
-- [ ] **H** `onGpuReady` does everything synchronously: scene, physics, 8 avatar looks (`avatar.cpp:74`), CPU textures, sounds and 11 sync pipelines (renderer ×9 `renderer.cpp:312-391`, `text.cpp:107`, `billboard.cpp:74`); the mip pipeline(s) are created lazily per format mid-load (`gpu_upload.cpp:74-96`) and the 2 race pipelines on the first sit (`view.cpp:142,159`): 14 call sites (`main.cpp:1356-1400`) → staged loader + async pipelines + jobs. *[1.1, 1.3, 1.8]*
+- [ ] **H** `onGpuReady` does everything synchronously: scene, physics, 8 avatar looks (`avatar.cpp:74`), CPU textures, sounds and 11 sync pipelines (renderer ×9 `renderer.cpp:312-391`, `text.cpp:107`, `billboard.cpp:74`); the mip pipeline(s) are created lazily per format mid-load (`gpu_upload.cpp:74-96`) and the 2 race pipelines on the first sit (`view.cpp:142,159`): 14 call sites (`main.cpp:1356-1400`) → staged loader + async pipelines + jobs. *[1.1, 1.3, 1.8]* (1.1 + 1.3 parts done: textures cut, pipelines async)
 - [x] **H** Procedural textures ≈ 410 ms (8 layers), 5 unused (≈ 245 ms), run before any download starts (`bar_scene.cpp:551-563`, `renderer.cpp` createMaterials) → keep 3 layers, fetch first. *[1.1]*
-- [ ] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
+- [x] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
 - [ ] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
 - [x] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
-- [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]*
+- [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]* (1.3 part done)
 - [x] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
 - [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]* (1.1 part done)
 - [ ] **M** Failed downloads count as done, no retry, no fail state (`model.cpp` done(nullptr), `renderer.cpp:523`, `index.html:116-128`) → retry ×3, fail UI with Retry. *[1.4]*
@@ -828,7 +828,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** `document.activeElement` EM_ASM on every key (`input.cpp:185-190`) → focus flag in mailbox. *[2.1a]*
 - [ ] **L** `beginFrame` skips Outdated/Lost forever (`gpu.cpp:134-142`) → reconfigure + count. *[2.1a]*
 - [ ] **L** Canvas follows Safari's toolbar, reallocating targets (`index.html:16`) → debounced size / `100lvh`. *[2.1a]*
-- [ ] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
+- [x] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
 - [ ] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]*
 - [ ] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
 - [x] **M** Log panel unbounded, forced layout per line (`index.html:80-86`) → ring + rAF batch. *[0.3]*
@@ -1327,6 +1327,13 @@ your own .mid clears `pso` for the others. `synth_bench` runs in `tools/native/r
   stutter after entering.
 
 #### 1.3 Async pipelines, warm-up, an honest "ready"
+Done 2026-10-17. `engine/pipeline_cache.*`: every pipeline compiles async (13 gated + the 2 race
+ones, prepared at start-up); text, pictures and mirror glass got explicit bind group layouts
+(they used `GetBindGroupLayout`, which needs the finished pipeline); the bar draws only the
+text layer until its 9 pipelines exist; texture jobs wait for the 2 mip pipelines. Warm-up is
+the one full frame behind the loading screen (from 1.1, now after jobs and pipelines are done)
+instead of a separate 64×64 offscreen render, then `OnSubmittedWorkDone`, then 30 steady
+frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the last file.
 - **Files:** new `engine/pipeline_cache.{h,cpp}` (`CreateRenderPipelineAsync` with
   `CallbackMode::AllowSpontaneous`, pending count, failure log); `app/renderer.cpp`,
   `engine/text.cpp`, `engine/billboard.cpp`, `engine/gpu_upload.cpp` (both mip pipelines at

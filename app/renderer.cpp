@@ -9,6 +9,7 @@
 
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 #include "engine/texture.h"
 
@@ -313,11 +314,11 @@ bool SceneRenderer::createScenePipelines() {
   desc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
   desc.primitive.frontFace = wgpu::FrontFace::CCW;
   desc.primitive.cullMode = wgpu::CullMode::Back;
-  pipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &pipeline_);
   // A mirror flips the world inside out, so front faces wind the other way.
   desc.label = "scene (mirrored)";
   desc.primitive.frontFace = wgpu::FrontFace::CW;
-  mirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &mirroredPipeline_);
 
   // The avatar: skinned vertices, in mirrors and in first person.
   const wgpu::VertexBufferLayout skinnedVertexLayout = engine::SkinnedMesh::vertexLayout();
@@ -326,10 +327,10 @@ bool SceneRenderer::createScenePipelines() {
   desc.vertex.entryPoint = "vs_skinned";
   desc.vertex.buffers = &skinnedVertexLayout;
   fragment.entryPoint = "fs_skinned";
-  skinnedMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &skinnedMirroredPipeline_);
   desc.label = "skinned";
   desc.primitive.frontFace = wgpu::FrontFace::CCW;
-  skinnedPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &skinnedPipeline_);
 
   // Loaded .glb models: textured with UVs; group 2 holds the material.
   modelLayout_ = engine::GpuModel::createLayout(device);
@@ -341,10 +342,10 @@ bool SceneRenderer::createScenePipelines() {
   desc.vertex.entryPoint = "vs_model";
   desc.vertex.buffers = &modelVertexLayout;
   fragment.entryPoint = "fs_model";
-  modelPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &modelPipeline_);
   desc.label = "model (mirrored)";
   desc.primitive.frontFace = wgpu::FrontFace::CW;
-  modelMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &modelMirroredPipeline_);
 
   // See-through parts (glass): premultiplied alpha blending, tested against
   // the depth buffer but not written to it, drawn back to front.
@@ -355,10 +356,10 @@ bool SceneRenderer::createScenePipelines() {
   depth.depthWriteEnabled = false;
   fragment.entryPoint = "fs_model_blend";
   desc.label = "model see-through (mirrored)";
-  modelBlendMirroredPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &modelBlendMirroredPipeline_);
   desc.label = "model see-through";
   desc.primitive.frontFace = wgpu::FrontFace::CCW;
-  modelBlendPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &modelBlendPipeline_);
 
   wgpu::SamplerDescriptor samplerDesc;
   samplerDesc.addressModeU = samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
@@ -386,13 +387,15 @@ bool SceneRenderer::createGlassPipeline() {
   depth.depthCompare = wgpu::CompareFunction::Less;
   wgpu::RenderPipelineDescriptor desc;
   desc.label = "mirror glass";
+  glassLayout_ = engine::pipelines::uniformTextureLayout(device);
+  desc.layout = engine::pipelines::pipelineLayout(device, glassLayout_);
   desc.vertex.module = module;
   desc.vertex.entryPoint = "vs_main";
   desc.fragment = &fragment;
   desc.depthStencil = &depth;
   desc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
   desc.primitive.cullMode = wgpu::CullMode::None;
-  glassPipeline_ = device.CreateRenderPipeline(&desc);
+  engine::pipelines::create(device, desc, &glassPipeline_);
   return true;
 }
 
@@ -474,7 +477,7 @@ void SceneRenderer::resizeMirrorTargets() {
     entries[1].binding = 1;
     entries[1].textureView = m.view;
     wgpu::BindGroupDescriptor bg;
-    bg.layout = glassPipeline_.GetBindGroupLayout(0);
+    bg.layout = glassLayout_;
     bg.entryCount = 2;
     bg.entries = entries;
     m.glassBindGroup = gpu_->device.CreateBindGroup(&bg);

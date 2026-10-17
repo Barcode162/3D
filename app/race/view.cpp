@@ -8,6 +8,7 @@
 #include "app/race/car_model.h"
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 
 using engine::Mat4;
@@ -68,7 +69,10 @@ View::Part View::upload(const MeshBuilder& mesh) {
   return p;
 }
 
-bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spec) {
+// Shaders, layouts and the two pipelines (compiled in the background while
+// the bar loads, so the first sit doesn't wait for them).
+bool View::preparePipelines(engine::Gpu& gpu) {
+  if (prepared_) return true;
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
   auto source = engine::readTextFile("/shaders/race.wgsl");
@@ -140,7 +144,7 @@ bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spe
   pd.depthStencil = &depth;
   pd.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
   pd.primitive.cullMode = wgpu::CullMode::None;  // the shader lights both sides
-  pipeline_ = device.CreateRenderPipeline(&pd);
+  engine::pipelines::create(device, pd, &pipeline_, false);
 
   wgpu::PipelineLayoutDescriptor skyLayoutDesc;
   skyLayoutDesc.bindGroupLayoutCount = 1;
@@ -157,7 +161,14 @@ bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spe
   sd.vertex.entryPoint = "vs_sky";
   sd.fragment = &frag;
   sd.depthStencil = &skyDepth;
-  skyPipeline_ = device.CreateRenderPipeline(&sd);
+  engine::pipelines::create(device, sd, &skyPipeline_, false);
+  prepared_ = true;
+  return true;
+}
+
+bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spec) {
+  if (!preparePipelines(gpu)) return false;
+  const wgpu::Device& device = gpu.device;
 
   wgpu::BufferDescriptor fb;
   fb.size = sizeof(FrameUniforms);
@@ -201,7 +212,7 @@ bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spe
   lightsRight_ = start.side;
   lightsHeading_ = engine::Vehicle::headingOf(start.tangent);
   LOG_INFO("Race world: %zu chunks, %zu triangles.", chunks_.size(), triangles);
-  return pipeline_ && skyPipeline_;
+  return true;  // the pipelines may still be compiling: render() waits for them
 }
 
 CarDraw View::carDraw(const engine::Vehicle& car, Vec3 paint, float brake) {
@@ -312,6 +323,13 @@ void View::render(const wgpu::TextureView& target, const wgpu::TextureView& dept
   rp.depthStencilAttachment = &depth;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&rp);
   engine::prof::setPass(engine::prof::kRacePass);
+  if (!pipelinesReady()) {  // still compiling (only possible right after loading): just clear
+    if (text) text->draw(pass);
+    pass.End();
+    wgpu::CommandBuffer commands = encoder.Finish();
+    gpu_->queue.Submit(1, &commands);
+    return;
+  }
   pass.SetPipeline(skyPipeline_);
   pass.SetBindGroup(0, frameGroup_);
   pass.Draw(3);

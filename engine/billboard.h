@@ -46,6 +46,7 @@ class PictureBillboards {
   wgpu::Device device_;
   wgpu::Texture texture_;
   wgpu::RenderPipeline pipeline_;
+  wgpu::BindGroupLayout bindLayout_;
   wgpu::BindGroup bindGroup_;
   wgpu::Buffer vertexBuffer_, indexBuffer_;
   std::vector<Vertex> vertices_;

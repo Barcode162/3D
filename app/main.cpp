@@ -30,6 +30,7 @@
 #include "engine/gpu.h"
 #include "engine/input.h"
 #include "engine/log.h"
+#include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
 #include "engine/mesh.h"
 #include "engine/net.h"
@@ -125,9 +126,14 @@ struct App {
   // ?still (tests): no intro text, no idle motion, so two screenshots of the
   // same spot match (tools/imgdiff.mjs). Temporary; moves to TestHooks in 1.8.
   bool still = false;
-  bool warmedUp = false;
+  bool warmedUp = false;  // the one full frame drawn behind the loading screen
+  bool warmGpuDone = false;  // ...and the GPU has finished it
+  bool warmUpFrame = false;  // this frame is the warm-up frame
+  bool readyReported = false, pipelinesLogged = false, racePipelinesLogged = false;
+  double warmDoneMs = 0, prevFrameMs = 0;
+  int steadyFrames = 0;
   bool sceneReady = false;  // onGpuReady finished
-  bool joined = false;      // in the multiplayer room  // the one full frame drawn behind the loading screen
+  bool joined = false;      // in the multiplayer room
   float lookSpeed = 1, invertLook = 1;
   bool showNames = true;
 
@@ -1184,7 +1190,33 @@ void updateVoice() {
 
 // Keeps the loading screen (web/index.html) up to date until every model
 // has arrived; then it offers "Tap to enter".
+// After every file is in, the bar warms up before "Tap to enter": background
+// jobs finish, every pipeline compiles, one full frame is drawn behind the
+// loading screen and finishes on the GPU, then frames must be steady (30 in
+// a row under 20 ms, or 2 s at most).
+void updateWarmUp() {
+  const double now = emscripten_get_now();
+  if (!g_app.pipelinesLogged && engine::pipelines::created() > 0 && engine::pipelines::pending() == 0) {
+    g_app.pipelinesLogged = true;
+    LOG_INFO("Pipelines ready in %.0f ms (%d).", now - engine::pipelines::firstStartMs(), engine::pipelines::created());
+  }
+  if (!g_app.racePipelinesLogged && g_app.race.pipelinesReady()) {
+    g_app.racePipelinesLogged = true;
+    LOG_INFO("Race pipelines ready.");
+  }
+  if (g_app.readyReported || !g_app.loadReported || !g_app.warmGpuDone) return;
+  if (g_app.warmDoneMs == 0) g_app.warmDoneMs = now;
+  g_app.steadyFrames = now - g_app.prevFrameMs < 20 ? g_app.steadyFrames + 1 : 0;
+  g_app.prevFrameMs = now;
+  if (g_app.steadyFrames < 30 && now - g_app.warmDoneMs < 2000) return;
+  g_app.readyReported = true;
+  LOG_INFO("Warm-up done (%s).", g_app.steadyFrames >= 30 ? "30 steady frames" : "2 s");
+  engine::profiler().stage("ready");
+  EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
+}
+
 void updateLoadingScreen() {
+  updateWarmUp();
   if (g_app.loadReported) return;
   const app::SceneRenderer& r = g_app.renderer;
   const float progress = r.loadProgress();
@@ -1230,7 +1262,7 @@ void updateLoadingScreen() {
         if (it.action == app::Action::kDarts) use(it);
       }
     }
-    EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
+    EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage']('Warming up…'); });
   }
 }
 
@@ -1332,15 +1364,19 @@ void frame() {
   // Hidden bar: behind the loading screen (except one warm-up frame once
   // everything is in, so the GPU has seen every pipeline before you enter)
   // and under 4K Mania. Draw only the text layer.
-  const bool warmUp = !g_app.entered && g_app.loadReported && !g_app.warmedUp;
-  if ((!g_app.entered && !warmUp) || g_app.rhythm.isOpen()) {
+  const bool warmUp = !g_app.entered && g_app.loadReported && !g_app.warmedUp && g_app.renderer.ready() &&
+                      engine::pendingJobs() == 0 && engine::pipelines::pending() == 0;
+  if ((!g_app.entered && !warmUp) || g_app.rhythm.isOpen() || !g_app.renderer.ready()) {
     PROFILE(Phase::kText);
     queueText(nowMs, Mat4{});
     g_app.renderer.renderOverlay(target, g_app.text);
     engine::profiler().trackGpu(g_app.gpu.queue);
     return;
   }
-  if (warmUp) g_app.warmedUp = true;
+  if (warmUp) {
+    g_app.warmedUp = true;
+    g_app.warmUpFrame = true;  // reported to the GPU queue after this frame's submit (below)
+  }
 
   const engine::FirstPersonCamera& cam = g_app.camera;
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
@@ -1403,6 +1439,11 @@ void frame() {
   g_app.renderer.render(target, viewProj, cam.position, self, g_app.avatarBones, g_app.firstPersonBones,
                         g_app.scene.mirrors, g_app.text, g_app.pictures);
   engine::profiler().trackGpu(g_app.gpu.queue);
+  if (g_app.warmUpFrame) {
+    g_app.warmUpFrame = false;
+    g_app.gpu.queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
+                                        [](wgpu::QueueWorkDoneStatus, wgpu::StringView) { g_app.warmGpuDone = true; });
+  }
 }
 
 // For testing: "?cam=x,y,z,yaw,pitch" in the page URL starts the camera
@@ -1440,6 +1481,7 @@ void onGpuReady(bool ok) {
   engine::profiler().stage("gpu");
   g_app.perfParam = EM_ASM_INT({ return /[?&]perf=1/.test(location.search) ? 1 : 0; }) != 0;
   g_app.still = EM_ASM_INT({ return /[?&]still/.test(location.search) ? 1 : 0; }) != 0;
+  engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   g_app.scene = app::buildBarScene();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   engine::profiler().stage("scene");

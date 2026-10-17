@@ -79,6 +79,7 @@ class TextRenderer {
   static constexpr uint32_t kMaxGlyphs = 4096;
 
   wgpu::RenderPipeline pipeline_;
+  wgpu::BindGroupLayout bindLayout_;
   wgpu::BindGroup bindGroup_;
   wgpu::Buffer vertexBuffer_;
   wgpu::Buffer indexBuffer_;
