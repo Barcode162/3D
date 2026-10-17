@@ -110,22 +110,36 @@ std::map<int, PendingImage>& pendingImages() {
 // At most kMaxDecodes images decode at once (each decoded bitmap holds its
 // full pixels in memory until its job copies it); the rest wait here.
 constexpr int kMaxDecodes = 4;
+int g_textureCount = 0;
+double g_textureBytes = 0;
 int g_decoding = 0;
 struct WaitingDecode {
   int id;
   std::vector<uint8_t> bytes;
   std::string mime;
+  int maxSize;
 };
 std::deque<WaitingDecode>& waitingDecodes() {
   static std::deque<WaitingDecode> w;
   return w;
 }
 
-EM_JS(void, js_decodeBitmap, (int id, const uint8_t* data, int size, const char* mime), {
+// Decodes in the browser; images larger than maxSize are scaled down (the
+// browser does it off the main thread, high quality).
+EM_JS(void, js_decodeBitmap, (int id, const uint8_t* data, int size, const char* mime, int maxSize), {
   var bytes = HEAPU8.slice(data, data + size);
   var blob = new Blob([bytes], {type: UTF8ToString(mime)});
   var store = Module['bitmaps'] || (Module['bitmaps'] = {});
-  createImageBitmap(blob, {'colorSpaceConversion': 'none', 'premultiplyAlpha': 'none'}).then(function(bitmap) {
+  var opts = {'colorSpaceConversion': 'none', 'premultiplyAlpha': 'none'};
+  createImageBitmap(blob, opts).then(function(bitmap) {
+    var big = Math.max(bitmap['width'], bitmap['height']);
+    if (big <= maxSize) return bitmap;
+    var s = maxSize / big;
+    var small = {'colorSpaceConversion': 'none', 'premultiplyAlpha': 'none', 'resizeQuality': 'high',
+                 'resizeWidth': Math.max(1, Math.round(bitmap['width'] * s)),
+                 'resizeHeight': Math.max(1, Math.round(bitmap['height'] * s))};
+    return createImageBitmap(bitmap, small).then(function(b) { bitmap['close'](); return b; });
+  }).then(function(bitmap) {
     store[id] = bitmap;
     _engine_bitmapDecoded(id, bitmap['width'], bitmap['height']);
   }).catch(function(e) {
@@ -161,6 +175,9 @@ EM_JS(void, js_dropBitmap, (int id), {
 namespace {
 const wgpu::Device* g_mipDevice = nullptr;
 }  // namespace
+
+int imageTextureCount() { return g_textureCount; }
+double imageTextureMB() { return g_textureBytes / (1024.0 * 1024.0); }
 
 void prepareMipmaps(const wgpu::Device& device) {
   g_mipDevice = &device;
@@ -226,17 +243,17 @@ void startDecodes() {
     WaitingDecode w = std::move(waiting.front());
     waiting.pop_front();
     ++g_decoding;
-    js_decodeBitmap(w.id, w.bytes.data(), static_cast<int>(w.bytes.size()), w.mime.c_str());
+    js_decodeBitmap(w.id, w.bytes.data(), static_cast<int>(w.bytes.size()), w.mime.c_str(), w.maxSize);
   }
 }
 
 void loadImageTexture(const wgpu::Device& device, std::vector<uint8_t> bytes, const std::string& mimeType,
                       std::vector<wgpu::TextureFormat> formats, const char* label,
-                      std::function<void(std::vector<wgpu::Texture>)> done) {
+                      std::function<void(std::vector<wgpu::Texture>)> done, int maxSize) {
   static int nextId = 1;
   const int id = nextId++;
   pendingImages()[id] = {std::move(formats), label ? label : "", device, std::move(done)};
-  waitingDecodes().push_back({id, std::move(bytes), mimeType});
+  waitingDecodes().push_back({id, std::move(bytes), mimeType, maxSize});
   startDecodes();
 }
 
@@ -269,6 +286,8 @@ extern "C" EMSCRIPTEN_KEEPALIVE void engine_bitmapDecoded(int id, int width, int
         desc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst |
                      wgpu::TextureUsage::RenderAttachment;
         wgpu::Texture texture = p.device.CreateTexture(&desc);
+        ++g_textureCount;
+        g_textureBytes += static_cast<double>(width) * height * 4 * 4 / 3;  // with mipmaps
         if (!js_copyBitmap(id, p.device.Get(), texture.Get())) {
           textures.clear();
           break;

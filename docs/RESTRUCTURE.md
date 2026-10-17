@@ -829,7 +829,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** `beginFrame` skips Outdated/Lost forever (`gpu.cpp:134-142`) → reconfigure + count. *[2.1a]*
 - [ ] **L** Canvas follows Safari's toolbar, reallocating targets (`index.html:16`) → debounced size / `100lvh`. *[2.1a]*
 - [x] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
-- [ ] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]*
+- [x] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]* (resize cap + dedupe done; export budget later)
 - [x] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
 - [x] **M** Log panel unbounded, forced layout per line (`index.html:80-86`) → ring + rAF batch. *[0.3]*
 - [x] **M** Any error auto-opens the log over ≈ 40% of the screen and swallows taps (`index.html:82`; `audio.js:22,305,327`) → badge; warn level for audio. *[0.3]*
@@ -1408,6 +1408,12 @@ profiler counts heap growth after start ("grew 0 times").
 - **Phone:** nothing visible; send one report after entering (heap number).
 
 #### 1.6 Texture budget at export (no new tools)
+Done 2026-10-17 differently (the user asked not to change the models): no re-export. At load,
+identical images in different models are decoded and uploaded once (237 → 159), roughness and
+occlusion maps are scaled to ≤ 256 and everything else to ≤ 1024 (createImageBitmap resize).
+Log "Textures: 159 images on the GPU, 132 MB" (the plan's estimate for before: 231.6). Download
+size unchanged; the export caps can still be done when models are rebuilt. Spots: ≤ 0.04% of
+pixels differ (threshold 4).
 - **Files:** `tools/assets/common.py` (max size per role: 1024 floor/brick/counter top, 512
   default, 256 props), rebuilt `assets/models/*.glb` via `bash tools/assets/build_all.sh <scratch>`,
   `engine/gpu_upload.cpp` (`createImageBitmap` resize cap 1024 as a safety net).

@@ -441,3 +441,7 @@ A small DAW inside the bar, all DSP written in C++:
   "parts failed - Retry" message, piano notes from 30 samples made in the
   background, each player's piano keys/pedal kept apart, MIDI pedal
   shared, memory starts at 80 MB (no growth while playing).
+- **2026-10-17:** User tested build d4097e2 on a PC: 280 fps (1920x1080),
+  CPU 1.2 ms, no input stutter, driving perfect. So the tap stutter is an
+  iPhone Safari quirk; dropped (don't chase it unless phone reports show it
+  getting worse).

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <map>
 
 #include "engine/fetch.h"
 #include "engine/gpu_upload.h"
@@ -228,19 +229,42 @@ void finish(const std::shared_ptr<Loading>& l) {
 }  // namespace
 
 // After parsing: start the image decodes; finish() runs when they're in.
+// Images used by several models (the same bytes) are decoded and uploaded
+// once and shared.
+struct SharedImage {
+  bool ready = false;
+  std::vector<wgpu::Texture> textures;
+  std::vector<std::function<void(std::vector<wgpu::Texture>)>> waiting;
+};
+std::map<uint64_t, std::shared_ptr<SharedImage>>& sharedImages() {
+  static std::map<uint64_t, std::shared_ptr<SharedImage>> m;
+  return m;
+}
+uint64_t imageKey(const std::vector<uint8_t>& bytes, bool srgb, bool linear, int maxSize) {
+  uint64_t h = 1469598103934665603ull;  // FNV-1a
+  for (uint8_t b : bytes) h = (h ^ b) * 1099511628211ull;
+  return h ^ (static_cast<uint64_t>(srgb) << 1) ^ (static_cast<uint64_t>(linear) << 2) ^
+         (static_cast<uint64_t>(maxSize) << 3);
+}
+
 static void afterParse(const std::shared_ptr<Loading>& l) {
   // Which images are colors and which are data (both is possible).
   const size_t count = l->data.images.size();
   std::vector<bool> asSrgb(count, false), asLinear(count, false);
-  const auto use = [&](int image, bool srgb) {
-    if (image >= 0 && static_cast<size_t>(image) < count) (srgb ? asSrgb : asLinear)[static_cast<size_t>(image)] = true;
+  // Largest size kept per image: colors and normals up to 1024, roughness
+  // and shadow (occlusion) maps 256 (they change slowly across a surface).
+  std::vector<int> maxSize(count, 0);
+  const auto use = [&](int image, bool srgb, int cap) {
+    if (image < 0 || static_cast<size_t>(image) >= count) return;
+    (srgb ? asSrgb : asLinear)[static_cast<size_t>(image)] = true;
+    maxSize[static_cast<size_t>(image)] = std::max(maxSize[static_cast<size_t>(image)], cap);
   };
   for (const ModelMaterial& m : l->data.materials) {
-    use(m.baseColorImage, true);
-    use(m.emissiveImage, true);
-    use(m.metalRoughImage, false);
-    use(m.normalImage, false);
-    use(m.occlusionImage, false);
+    use(m.baseColorImage, true, 1024);
+    use(m.emissiveImage, true, 1024);
+    use(m.metalRoughImage, false, 256);
+    use(m.normalImage, false, 1024);
+    use(m.occlusionImage, false, 256);
   }
   l->srgbTextures.resize(count);
   l->linearTextures.resize(count);
@@ -256,14 +280,33 @@ static void afterParse(const std::shared_ptr<Loading>& l) {
     if (asSrgb[i]) formats.push_back(wgpu::TextureFormat::RGBA8UnormSrgb);
     if (asLinear[i]) formats.push_back(wgpu::TextureFormat::RGBA8Unorm);
     ModelImage& img = l->data.images[i];
-    loadImageTexture(l->device, std::move(img.bytes), img.mimeType, formats, l->url.c_str(),
-                     [l, i, srgb = static_cast<bool>(asSrgb[i])](std::vector<wgpu::Texture> textures) {
+    auto use = [l, i, srgb = static_cast<bool>(asSrgb[i])](std::vector<wgpu::Texture> textures) {
       if (textures.empty()) LOG_ERROR("Model %s: texture %zu could not be loaded.", l->url.c_str(), i);
       size_t k = 0;
       if (srgb && k < textures.size()) l->srgbTextures[i] = textures[k++];
       if (k < textures.size()) l->linearTextures[i] = textures[k];
       if (--l->pendingImages == 0) finish(l);
-    });
+    };
+    const uint64_t key = imageKey(img.bytes, asSrgb[i], asLinear[i], maxSize[i]);
+    auto& entry = sharedImages()[key];
+    if (entry) {  // another model has (or is loading) the same image
+      if (entry->ready) {
+        queueJob([use, textures = entry->textures] { use(textures); }, JobLane::kNormal, "texture-shared");
+      } else {
+        entry->waiting.push_back(use);
+      }
+      std::vector<uint8_t>().swap(img.bytes);
+      continue;
+    }
+    entry = std::make_shared<SharedImage>();
+    entry->waiting.push_back(use);
+    loadImageTexture(l->device, std::move(img.bytes), img.mimeType, formats, l->url.c_str(),
+                     [entry](std::vector<wgpu::Texture> textures) {
+      entry->ready = true;
+      entry->textures = textures;
+      for (auto& w : entry->waiting) w(textures);
+      entry->waiting.clear();
+    }, maxSize[i]);
   }
 }
 

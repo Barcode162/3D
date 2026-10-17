@@ -1239,6 +1239,7 @@ void updateLoadingScreen() {
   if (r.modelFilesDone() == r.modelFiles()) {
     g_app.loadReported = true;
     LOG_INFO("Everything loaded (%zu model files).", r.modelFiles());
+    LOG_INFO("Textures: %d images on the GPU, %.0f MB.", engine::imageTextureCount(), engine::imageTextureMB());
     engine::profiler().stage("loaded");
     // Tests: ?rhythm=song,difficulty opens the rhythm game on that song;
     // ?autoplay lets it play itself. ?sit=seat sits down; ?emote=n waves...

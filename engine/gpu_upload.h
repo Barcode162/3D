@@ -22,14 +22,18 @@ namespace engine {
 // Starts compiling the mipmap pipelines (call once at start-up; texture jobs
 // wait for them).
 void prepareMipmaps(const wgpu::Device& device);
+// Image textures made so far, and their GPU memory (MB, with mipmaps).
+int imageTextureCount();
+double imageTextureMB();
 
 // Decodes PNG/JPEG bytes and creates a mipmapped texture from them, once
 // for each format in `formats` (RGBA8Unorm for data like normal maps,
 // RGBA8UnormSrgb for colors). Colors are taken exactly as stored. `done`
-// runs from the job queue with the textures (empty on failure).
+// runs from the job queue with the textures (empty on failure). Images
+// bigger than maxSize (either side) are scaled down while decoding.
 void loadImageTexture(const wgpu::Device& device, std::vector<uint8_t> bytes, const std::string& mimeType,
                       std::vector<wgpu::TextureFormat> formats, const char* label,
-                      std::function<void(std::vector<wgpu::Texture> textures)> done);
+                      std::function<void(std::vector<wgpu::Texture> textures)> done, int maxSize = 1024);
 
 // Fills mip levels 1.. of `texture` from level 0 (each level averages the
 // one above, in linear light for sRGB formats). The texture needs

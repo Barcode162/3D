@@ -470,6 +470,8 @@ was answered by the user on 2026-10-17.
 - **Profiler `gpu` number:** time from Submit to `OnSubmittedWorkDone`
   (one in flight). It's an upper bound (includes waiting in the queue), but
   the only GPU timing that works without the timestamp-query feature.
+  At high frame rates (PC, 280 fps) it reads ~10 ms because it includes
+  waiting behind earlier frames: only meaningful when frames are slow.
 - **Web Audio on Safari:** never call `setTargetAtTime` every frame without
   clearing old events; `soundSet` (web/audio.js) sends only 1% changes and
   uses `cancelAndHoldAtTime` first.
