@@ -140,6 +140,7 @@ void Gpu::resizeIfNeeded() {
   if (width != 0 && now - pendingSinceMs_ < 120) return;
   pendingW_ = 0;
 
+  if (width != 0) LOG_INFO("Canvas resized to %ux%u.", w, h);
   width = w;
   height = h;
   pixelRatio = static_cast<float>(ratio);

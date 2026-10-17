@@ -33,7 +33,7 @@ class Controls {
 
   void reset();
   // speed in m/s; `aspect` = width / height of the screen.
-  void update(float dt, engine::Input& input, float speed, const engine::CarSpec& spec, bool manualGears,
+  void update(float dt, const engine::InputFrame& input, float speed, const engine::CarSpec& spec, bool manualGears,
               float aspect);
 
   engine::CarInput car;          // what goes to the car this frame

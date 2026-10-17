@@ -14,9 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0 and Phase 1 (0.1-1.8, 2026-10-17). In progress: 2.1a**
-(most of it is built and pushed, see the handoff note at the end of the Log).
-Then 2.1b, 2.1c (batch them). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) and 2.1a (2026-10-17). Next: 2.1b, 2.1c**
+(batch them). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
 skip anything that changes car/track models or visuals (the user will
@@ -482,3 +481,7 @@ A small DAW inside the bar, all DSP written in C++:
   full quality, only far things lower (RESTRUCTURE 6.3, VISION). Pace: Claude
   batches ~3 related steps per message; racing steps stay but don't change
   car/track models or visuals.
+- **2026-10-17:** Restructure 2.1a done: one mailbox call each way per
+  frame (page calls ~24 → ~3), canvas size from a ResizeObserver (one
+  resize per rotation, checked in smoke), input read once per frame as a
+  read-only `InputFrame`, presses timed by the browser's event time.

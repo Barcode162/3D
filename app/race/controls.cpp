@@ -57,7 +57,7 @@ Controls::Rect Controls::buttonRect(Button b, float aspect, bool manual) const {
   }
 }
 
-void Controls::update(float dt, engine::Input& input, float speed, const engine::CarSpec& spec, bool manual,
+void Controls::update(float dt, const engine::InputFrame& input, float speed, const engine::CarSpec& spec, bool manual,
                       float aspect) {
   for (bool& p : pressed) p = false;
   bool wasHeld[kButtonCount];
@@ -69,7 +69,7 @@ void Controls::update(float dt, engine::Input& input, float speed, const engine:
   float gasTarget = 0, brakeTarget = 0;
   bool steerAlive = false, gasAlive = false, brakeAlive = false;
   const Rect gasR = gasPedal(aspect), brakeR = brakePedal(aspect);
-  for (const engine::Input::Pointer& p : input.pointers) {
+  for (const engine::Pointer& p : input.pointers) {
     if (p.mouse && mouseSteering) continue;
     // Buttons (by where the finger is now).
     bool onButton = false;
@@ -118,7 +118,7 @@ void Controls::update(float dt, engine::Input& input, float speed, const engine:
   const auto key = [&](const char* a, const char* b = nullptr) { return input.keyDown(a) || (b && input.keyDown(b)); };
   const bool kLeft = key("ArrowLeft", "KeyA"), kRight = key("ArrowRight", "KeyD");
   const bool kGas = key("ArrowUp", "KeyW"), kBrake = key("ArrowDown", "KeyS");
-  for (const std::string& k : input.takeKeyPresses()) {
+  for (const std::string& k : input.keyPresses) {
     if (k == "KeyM") mouseSteering = !mouseSteering;
     if (k == "KeyC") pressed[kCamera] = true;
     if (k == "KeyR") pressed[kReset] = true;

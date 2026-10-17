@@ -14,6 +14,8 @@
 namespace engine {
 namespace {
 
+using State = detail::InputState;
+
 // Shows the joystick rings (HTML elements in web/index.html) at the touch
 // spot, through the page mailbox (once per frame at most, in Input::flushStick).
 void applyStick(bool visible, Vec2 origin, Vec2 knob) {
@@ -24,7 +26,7 @@ void applyStick(bool visible, Vec2 origin, Vec2 knob) {
 }
 
 // Remembers how the joystick should look; drawn by Input::flushStick.
-Input* g_stickOwner = nullptr;
+detail::InputState* g_stickOwner = nullptr;
 void showStick(bool visible, Vec2 origin, Vec2 knob) {
   if (!g_stickOwner) return;
   g_stickOwner->stickVisible = visible;
@@ -46,43 +48,45 @@ Vec2 clampToStick(Vec2 origin, Vec2 p) {
 // The time of the touch being handled (its event time, from the queue), or
 // now for events handled the moment they arrive (mouse, keys).
 double g_eventMs = 0;
+// When the browser says the event happened (same clock as emscripten_get_now).
+double stamp(double eventMs) { return eventMs > 0 ? eventMs : emscripten_get_now(); }
 double eventNow() { return g_eventMs > 0 ? g_eventMs : emscripten_get_now(); }
 
 constexpr double kTapMaxMs = 350;
 constexpr float kTapMaxMove = 12;  // CSS pixels
 
-Input::Press* findPress(Input& in, int id) {
-  for (Input::Press& p : in.presses) {
+State::Press* findPress(State& in, int id) {
+  for (State::Press& p : in.presses) {
     if (p.id == id) return &p;
   }
   return nullptr;
 }
 
-void pressStart(Input& in, int id, Vec2 p) {
-  Input::Press* slot = findPress(in, Input::kNone);
+void pressStart(State& in, int id, Vec2 p) {
+  State::Press* slot = findPress(in, State::kNone);
   if (slot) *slot = {id, p, eventNow(), 0};
 }
 
-void pressMove(Input& in, int id, Vec2 p) {
-  if (Input::Press* press = findPress(in, id)) {
+void pressMove(State& in, int id, Vec2 p) {
+  if (State::Press* press = findPress(in, id)) {
     const float dx = p.x - press->start.x, dy = p.y - press->start.y;
     press->moved = std::max(press->moved, std::sqrt(dx * dx + dy * dy));
   }
 }
 
-void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
-  Input::Press* press = findPress(in, id);
+void pressEnd(State& in, int id, Vec2 p, bool cancelled) {
+  State::Press* press = findPress(in, id);
   if (!press) return;
   pressMove(in, id, p);
   if (!cancelled && press->moved < kTapMaxMove && eventNow() - press->startMs < kTapMaxMs) {
     const double w = in.canvasW, h = in.canvasH;
     if (w > 0 && h > 0) in.taps.push_back({static_cast<float>(p.x / w), static_cast<float>(p.y / h)});
   }
-  press->id = Input::kNone;
+  press->id = State::kNone;
 }
 
-void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
-  auto it = std::find_if(in.pointers.begin(), in.pointers.end(), [&](const Input::Pointer& p) { return p.id == id; });
+void trackPointer(State& in, int id, Vec2 pos, int type, bool mouse) {
+  auto it = std::find_if(in.pointers.begin(), in.pointers.end(), [&](const Pointer& p) { return p.id == id; });
   if (type == EMSCRIPTEN_EVENT_TOUCHSTART || type == EMSCRIPTEN_EVENT_MOUSEDOWN) {
     if (it == in.pointers.end()) in.pointers.push_back({id, pos, pos, eventNow(), mouse});
     else it->pos = pos;
@@ -94,7 +98,7 @@ void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
 }
 
 bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
-  auto& in = *static_cast<Input*>(user);
+  auto& in = *static_cast<State*>(user);
   const double canvasW = in.canvasW, canvasH = in.canvasH;
   if (in.capture) {
     const double now = eventNow();
@@ -121,11 +125,11 @@ bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
     else pressEnd(in, id, p, type == EMSCRIPTEN_EVENT_TOUCHCANCEL);
 
     if (type == EMSCRIPTEN_EVENT_TOUCHSTART) {
-      if (p.x < canvasW * 0.5 && in.stickTouchId == Input::kNone) {
+      if (p.x < canvasW * 0.5 && in.stickTouchId == State::kNone) {
         in.stickTouchId = id;
         in.stickOrigin = in.stickPos = p;
         showStick(true, p, p);
-      } else if (in.lookTouchId == Input::kNone) {
+      } else if (in.lookTouchId == State::kNone) {
         in.lookTouchId = id;
         in.lastLookPos = p;
       }
@@ -140,10 +144,10 @@ bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
       }
     } else {  // touch end / cancel
       if (id == in.stickTouchId) {
-        in.stickTouchId = Input::kNone;
+        in.stickTouchId = State::kNone;
         showStick(false, {}, {});
       } else if (id == in.lookTouchId) {
-        in.lookTouchId = Input::kNone;
+        in.lookTouchId = State::kNone;
       }
     }
   }
@@ -151,7 +155,7 @@ bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
 }
 
 bool handleMouse(int type, const EmscriptenMouseEvent* e, void* user) {
-  auto& in = *static_cast<Input*>(user);
+  auto& in = *static_cast<State*>(user);
   const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
   if (in.capture) {
     const double w = in.canvasW, h = in.canvasH;
@@ -169,7 +173,7 @@ bool handleMouse(int type, const EmscriptenMouseEvent* e, void* user) {
     in.mousePos = f;
     if (e->button == 0) trackPointer(in, Input::kMouseId, f, type, true);
     if (e->button == 0) {
-      in.rawPresses.push_back({{static_cast<float>(p.x / w), static_cast<float>(p.y / h)}, emscripten_get_now(),
+      in.rawPresses.push_back({{static_cast<float>(p.x / w), static_cast<float>(p.y / h)}, stamp(e->timestamp),
                                Input::kMouseId, type == EMSCRIPTEN_EVENT_MOUSEDOWN, -1});
     }
     return true;
@@ -191,7 +195,7 @@ bool handleMouse(int type, const EmscriptenMouseEvent* e, void* user) {
 }
 
 bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
-  auto& in = *static_cast<Input*>(user);
+  auto& in = *static_cast<State*>(user);
   const bool down = type == EMSCRIPTEN_EVENT_KEYDOWN;
   const char* c = e->code;
   // Typing in a form (the account screens): leave the keys alone.
@@ -212,7 +216,7 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
       if (std::strcmp(c, kLaneKeys[i]) != 0) continue;
       const int k = i < 5 ? i : i - 5;
       if (e->repeat) return true;
-      in.rawPresses.push_back({{0.125f + 0.25f * static_cast<float>(std::min(k, 3)), 0.9f}, emscripten_get_now(),
+      in.rawPresses.push_back({{0.125f + 0.25f * static_cast<float>(std::min(k, 3)), 0.9f}, stamp(e->timestamp),
                                -100 - k, down, k});
       return true;
     }
@@ -227,21 +231,12 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
   return true;
 }
 
-}  // namespace
-
 // Touches arrive through passive listeners (web side, installed in attach)
-// that only queue them; pollTouches() handles the queue once per frame.
-// Listeners that could cancel the touch (what emscripten's are) make Safari
-// wait for the page's code before it can draw, which cost a frame per tap.
-void Input::pollTouches() {
+// that only queue them; they're handled here once per frame. Listeners that
+// could cancel the touch (what emscripten's are) make Safari wait for the
+// page's code before it can draw, which cost a frame per tap.
+void handleQueuedTouches(State& in) {
   const double start = emscripten_get_now();
-  // The page lost focus or went to the background: let go of everything
-  // (otherwise a key or finger lifted elsewhere stays "held").
-  const int blurs = bridge::frame().blurs;
-  if (blurs != lastBlurs_) {
-    lastBlurs_ = blurs;
-    releaseAll();
-  }
   const std::vector<bridge::Touch> touches = bridge::takeTouches();
   static const int kTypes[4] = {EMSCRIPTEN_EVENT_TOUCHSTART, EMSCRIPTEN_EVENT_TOUCHMOVE, EMSCRIPTEN_EVENT_TOUCHEND,
                                 EMSCRIPTEN_EVENT_TOUCHCANCEL};
@@ -255,24 +250,41 @@ void Input::pollTouches() {
     e.touches[0].targetY = e.touches[0].clientY = static_cast<int>(t.y);
     g_eventMs = t.timeMs;
     if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
-    handleTouch(type, &e, this);
+    handleTouch(type, &e, &in);
   }
   g_eventMs = 0;
   if (!touches.empty()) profiler().event(emscripten_get_now() - start, false);
 }
 
-void Input::releaseAll() {
-  stickTouchId = lookTouchId = kNone;
-  showStick(false, {}, {});
-  mouseLooking = false;
-  keyForward = keyBack = keyLeft = keyRight = false;
-  for (Press& p : presses) p.id = kNone;
-  pointers.clear();
-  keysHeld.clear();
-  mouseButtons = 0;
+Vec2 moveOf(const State& in) {
+  Vec2 m;
+  if (in.stickTouchId != State::kNone) {
+    m.x = (in.stickPos.x - in.stickOrigin.x) / Input::kStickRadius;
+    m.y = -(in.stickPos.y - in.stickOrigin.y) / Input::kStickRadius;  // screen up = forward
+  }
+  m.x += (in.keyRight ? 1.0f : 0.0f) - (in.keyLeft ? 1.0f : 0.0f);
+  m.y += (in.keyForward ? 1.0f : 0.0f) - (in.keyBack ? 1.0f : 0.0f);
+  const float len = std::sqrt(m.x * m.x + m.y * m.y);
+  if (len > 1.0f) {
+    m.x /= len;
+    m.y /= len;
+  }
+  return m;
 }
 
-static bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
+// Lets go of everything held (fingers, keys, buttons).
+void letGo(State& in) {
+  in.stickTouchId = in.lookTouchId = State::kNone;
+  showStick(false, {}, {});
+  in.mouseLooking = false;
+  in.keyForward = in.keyBack = in.keyLeft = in.keyRight = false;
+  for (State::Press& p : in.presses) p.id = State::kNone;
+  in.pointers.clear();
+  in.keysHeld.clear();
+  in.mouseButtons = 0;
+}
+
+bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   const double start = emscripten_get_now();
   // After a tap the phone also sends pretend mouse events (the touch
   // listeners are passive, so they can't cancel them): ignore those.
@@ -286,93 +298,90 @@ static bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   return r;
 }
 
-void Input::flushStick() {
-  if (!stickDirty) return;
-  stickDirty = false;
-  applyStick(stickVisible, stickShownOrigin, stickShownKnob);
-}
+}  // namespace
 
-void Input::attach(const char* canvas) {
-  g_stickOwner = this;
-  // Right-click is a game button (mouse steering: brake), not a menu.
-  EM_ASM({
-    var c = document.querySelector(UTF8ToString($0));
-    if (c) c.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-  }, canvas);
-  // Touches arrive through the page mailbox (web/bridge.js: passive
-  // listeners that only queue them), read once per frame in pollTouches().
-  bridge::attach(canvas);
-  emscripten_set_mousedown_callback(canvas, this, true, onMouse);
-  emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);
-  emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onMouse);
-  emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onKey);
-  emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, onKey);
-}
-
-Vec2 Input::move() const {
-  Vec2 m;
-  if (stickTouchId != kNone) {
-    m.x = (stickPos.x - stickOrigin.x) / kStickRadius;
-    m.y = -(stickPos.y - stickOrigin.y) / kStickRadius;  // screen up = forward
-  }
-  m.x += (keyRight ? 1.0f : 0.0f) - (keyLeft ? 1.0f : 0.0f);
-  m.y += (keyForward ? 1.0f : 0.0f) - (keyBack ? 1.0f : 0.0f);
-  const float len = std::sqrt(m.x * m.x + m.y * m.y);
-  if (len > 1.0f) {
-    m.x /= len;
-    m.y /= len;
-  }
-  return m;
-}
-
-void Input::setCapture(bool on) {
-  if (capture == on) return;
-  capture = on;
-  // Let go of everything the other mode was tracking.
-  stickTouchId = lookTouchId = kNone;
-  showStick(false, {}, {});
-  mouseLooking = false;
-  keyForward = keyBack = keyLeft = keyRight = false;
-  for (Press& p : presses) p.id = kNone;
-  taps.clear();
-  rawPresses.clear();
-  pointers.clear();
-  keysHeld.clear();
-  keyPresses.clear();
-  mouseButtons = 0;
-  mouseMoved = false;
-  lookDelta = {};
-}
-
-std::vector<Input::RawPress> Input::takeRawPresses() {
-  std::vector<RawPress> r;
-  r.swap(rawPresses);
-  return r;
-}
-
-bool Input::keyDown(const char* code) const {
+bool InputFrame::keyDown(const char* code) const {
   for (const std::string& k : keysHeld) {
     if (k == code) return true;
   }
   return false;
 }
 
-std::vector<std::string> Input::takeKeyPresses() {
-  std::vector<std::string> k;
-  k.swap(keyPresses);
-  return k;
+const InputFrame& Input::poll() {
+  // The page lost focus or went to the background: let go of everything
+  // (otherwise a key or finger lifted elsewhere stays "held").
+  const int blurs = bridge::frame().blurs;
+  if (blurs != s_.lastBlurs) {
+    s_.lastBlurs = blurs;
+    letGo(s_);
+  }
+  handleQueuedTouches(s_);
+  InputFrame& f = frame_;
+  f.capturing = s_.capture;
+  f.move = moveOf(s_);
+  f.look = s_.lookDelta;
+  s_.lookDelta = {};
+  f.taps.clear();
+  f.taps.swap(s_.taps);
+  f.presses.clear();
+  f.presses.swap(s_.rawPresses);
+  f.keyPresses.clear();
+  f.keyPresses.swap(s_.keyPresses);
+  f.pointers = s_.pointers;
+  f.keysHeld = s_.keysHeld;
+  f.mousePos = s_.mousePos;
+  f.mouseButtons = s_.mouseButtons;
+  f.mouseMoved = s_.mouseMoved;
+  return f;
 }
 
-std::vector<Vec2> Input::takeTaps() {
-  std::vector<Vec2> t;
-  t.swap(taps);
-  return t;
+void Input::releaseAll() { letGo(s_); }
+
+void Input::flushStick() {
+  if (!s_.stickDirty) return;
+  s_.stickDirty = false;
+  applyStick(s_.stickVisible, s_.stickShownOrigin, s_.stickShownKnob);
 }
 
-Vec2 Input::takeLookDelta() {
-  const Vec2 d = lookDelta;
-  lookDelta = {};
-  return d;
+void Input::attach(const char* canvas) {
+  g_stickOwner = &s_;
+  // Right-click is a game button (mouse steering: brake), not a menu.
+  EM_ASM({
+    var c = document.querySelector(UTF8ToString($0));
+    if (c) c.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+  }, canvas);
+  // Touches arrive through the page mailbox (web/bridge.js: passive
+  // listeners that only queue them), read once per frame in poll().
+  bridge::attach(canvas);
+  emscripten_set_mousedown_callback(canvas, &s_, true, onMouse);
+  emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, &s_, true, onMouse);
+  emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, &s_, true, onMouse);
+  emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, &s_, true, onKey);
+  emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, &s_, true, onKey);
+}
+
+void Input::setCapture(bool on) {
+  if (s_.capture == on) return;
+  s_.capture = on;
+  // Let go of everything the other mode was tracking.
+  letGo(s_);
+  s_.taps.clear();
+  s_.rawPresses.clear();
+  s_.keyPresses.clear();
+  s_.mouseMoved = false;
+  s_.lookDelta = {};
+  // This frame's input belonged to the other mode.
+  InputFrame& f = frame_;
+  f.capturing = on;
+  f.move = {};
+  f.look = {};
+  f.taps.clear();
+  f.presses.clear();
+  f.pointers.clear();
+  f.keysHeld.clear();
+  f.keyPresses.clear();
+  f.mouseButtons = 0;
+  f.mouseMoved = false;
 }
 
 }  // namespace engine

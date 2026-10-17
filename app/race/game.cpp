@@ -69,7 +69,7 @@ void Game::close() {
   humVoice_ = 0;
 }
 
-bool Game::update(double nowMs, float dt, engine::Input& input) {
+bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
   if (!open_) return false;
   Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
   const float W = static_cast<float>(gpu_->width), H = static_cast<float>(gpu_->height);
@@ -83,7 +83,7 @@ bool Game::update(double nowMs, float dt, engine::Input& input) {
   // After the finish: tap anywhere on the results to race again.
   if (me.finished && resultsMs_ == 0) resultsMs_ = nowMs;
   if (resultsMs_ > 0 && nowMs - resultsMs_ > 1500) {
-    for (const engine::Input::Pointer& p : input.pointers) {
+    for (const engine::Pointer& p : input.pointers) {
       if (p.pos.x > 0.3f && p.pos.x < 0.7f && p.pos.y > 0.3f && p.pos.y < 0.8f && nowMs - p.startMs < 100) {
         start(rig_, nowMs);
         return false;

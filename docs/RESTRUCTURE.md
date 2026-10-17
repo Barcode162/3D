@@ -769,7 +769,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** God object `g_app`; any function changes anything (`main.cpp:66-142`; `use()` `:650-773` teleports, opens panels, toggles lights, plays sfx, sends net) → Game + systems + event bus. *[4.1a, 4.1b]*
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
-- [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]*
+- [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]* (2.1a part done: page calls per frame ~24 → ~3)
 - [x] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
 - [x] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
 - [ ] **M** Every remote avatar posed/skinned even off-screen (`main.cpp:1303-1317`) → pose only visible ones. *[6.5]*
@@ -821,13 +821,13 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 **D. Engine plumbing (input, GPU device, jobs, logs, bridge, build)**
 - [x] **H** Device loss only logged (`gpu.cpp:69-74`) → recovery overlay + report. *[0.3]*
 - [x] **H** Repeating GPU errors flood the DOM log and cause lag (`gpu.cpp:65-68`, `index.html:80-86`) → dedupe, rate-limit. *[0.3]*
-- [ ] **M** Canvas size read through layout every frame and in touch handlers, interleaved with DOM writes (`gpu.cpp:101-114`; `input.cpp:63,84,144`; `showStick` `input.cpp:14-23,121`) → ResizeObserver + batched DOM. *[2.1a]*
-- [ ] **M** Raw presses use handler time, not `event.timeStamp` (`input.cpp:86,93,159`) → event timestamps. *[2.1a]*
-- [ ] **M** Input internals public; race reads them (`input.h:55-91`) → immutable InputFrame. *[2.1a]*
-- [ ] **L** Keys and stick never cleared on blur/visibility/pagehide (`input.cpp:214-218`) → clear all. *[2.1a]*
-- [ ] **L** `document.activeElement` EM_ASM on every key (`input.cpp:185-190`) → focus flag in mailbox. *[2.1a]*
-- [ ] **L** `beginFrame` skips Outdated/Lost forever (`gpu.cpp:134-142`) → reconfigure + count. *[2.1a]*
-- [ ] **L** Canvas follows Safari's toolbar, reallocating targets (`index.html:16`) → debounced size / `100lvh`. *[2.1a]*
+- [x] **M** Canvas size read through layout every frame and in touch handlers, interleaved with DOM writes (`gpu.cpp:101-114`; `input.cpp:63,84,144`; `showStick` `input.cpp:14-23,121`) → ResizeObserver + batched DOM. *[2.1a]*
+- [x] **M** Raw presses use handler time, not `event.timeStamp` (`input.cpp:86,93,159`) → event timestamps. *[2.1a]*
+- [x] **M** Input internals public; race reads them (`input.h:55-91`) → immutable InputFrame. *[2.1a]*
+- [x] **L** Keys and stick never cleared on blur/visibility/pagehide (`input.cpp:214-218`) → clear all. *[2.1a]*
+- [x] **L** `document.activeElement` EM_ASM on every key (`input.cpp:185-190`) → focus flag in mailbox. *[2.1a]*
+- [x] **L** `beginFrame` skips Outdated/Lost forever (`gpu.cpp:134-142`) → reconfigure + count. *[2.1a]*
+- [x] **L** Canvas follows Safari's toolbar, reallocating targets (`index.html:16`) → debounced size / `100lvh`. *[2.1a]*
 - [x] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
 - [x] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]* (resize cap + dedupe done; export budget later)
 - [x] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
@@ -996,7 +996,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Car drawing needs a full Vehicle; single-instance uniforms (`view.cpp:283-300,344,371`) → CarVisual + per-view uniform ring. *[7.5]*
 - [ ] **M** Steering/pedal latency longer than needed (`controls.cpp:255,283-284,293`) → steer τ ≈ 25 ms, brake jump to 0.4. *[2.4b]*
 - [ ] **M** Wheel pedals read 50% until touched; source switching on absolute values (`controls.cpp:217-241`) → per-axis "moved" flag, switch on deltas. *[7.6]*
-- [ ] **M** Touch zones ignore safe areas and edge gestures (`controls.h:47`; `controls.cpp:103-112`) → safe-area insets via the mailbox. *[2.1a, 2.4b]*
+- [ ] **M** Touch zones ignore safe areas and edge gestures (`controls.h:47`; `controls.cpp:103-112`) → safe-area insets via the mailbox. *[2.1a, 2.4b]* (2.1a part done: insets in the mailbox)
 - [ ] **M** Mesh builders peak at 15 MB of vector capacity (`mesh.h:40-49`) → reserve, strips, chunk by chunk. *[7.6]*
 - [ ] **M** Bot traffic ignores cars alongside; passes in braking zones (`world.cpp:222-234`) → lateral clearance, commit side, no passes when braking. *[7.4]*
 - [ ] **M** RACING.md:47-48 and DECISIONS "max 30 steps" (`DECISIONS.md:419`; really 24) are false; RACING.md:116-121 describes the broken infinite-mass model → correct now; rewrite netcode section. *[0.1, 7.3]* (0.1 part done: both corrected, caveat added)
@@ -1481,6 +1481,9 @@ errors (so smoke/mp_test fail on them).
   `VIEW=932x430` then `430x932` → one resize each; `HOLD=ArrowUp:3000` still walks.
 - **Phone:** walk with the left thumb for 10 s: smooth. Rotate the phone: picture re-fits after a
   moment, no black flash.
+- **Done (2026-10-17):** page calls per game frame ~24 → ~3 (pull, flush; Debug smoke: page 2.7,
+  clock 27.5, graphics 219). Smoke checks one resize per rotation. Input is one read-only
+  `InputFrame` per frame (`Input::poll()`), state private; presses carry the browser's event time.
 
 #### 2.1b UI commands, a JSON writer, one modal manager
 - **Files:** `engine/ui.cpp` + `web/menu.js` (commands pushed into the mailbox ring; settings

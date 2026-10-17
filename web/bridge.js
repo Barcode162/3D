@@ -57,7 +57,7 @@ window.bar3dBridge = (function () {
     ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(function (type, code) {
       canvas.addEventListener(type, function (e) {
         if (touches.length > 2000) return;  // nobody is reading (a stalled frame loop)
-        var now = performance.now();
+        var now = e.timeStamp || performance.now();  // when it happened, not when handled
         for (var i = 0; i < e.changedTouches.length; i++) {
           var t = e.changedTouches[i];
           touches.push(code, t.identifier, t.clientX, t.clientY, now);

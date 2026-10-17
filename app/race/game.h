@@ -29,7 +29,7 @@ class Game {
   void start(int rig, double nowMs);
   void close();
   // Returns true when you chose to leave.
-  bool update(double nowMs, float dt, engine::Input& input);
+  bool update(double nowMs, float dt, const engine::InputFrame& input);
   // Draws the race full screen, with the HUD (queued into `text`, which
   // must be begun for this frame) on top.
   void render(const wgpu::TextureView& target, engine::TextRenderer& text, double nowMs);

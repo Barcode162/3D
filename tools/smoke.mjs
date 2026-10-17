@@ -79,6 +79,23 @@ await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
   } else {
     console.log(`JS crossings per frame: ${per.toFixed(1)} (names are minified; use a Debug build to split them)`);
   }
+  // Rotating the phone: each new size must reconfigure the canvas exactly once
+  // (the size settles for 120 ms first).
+  const resizes = async () => (await logText(cp)).split('\n').filter((l) => /Canvas resized/.test(l)).length;
+  const r0 = await resizes();
+  // Headless runs at a few frames per second: wait for the resize, then a
+  // bit more to catch a second one.
+  const settle = async (from) => {
+    for (let t = 0; t < 15000 && (await resizes()) === from; t += 250) await cp.waitForTimeout(250);
+    await cp.waitForTimeout(1500);
+    return resizes();
+  };
+  await cp.setViewportSize({ width: 932, height: 430 });
+  const r1 = await settle(r0);
+  await cp.setViewportSize({ width: 430, height: 932 });
+  const r2 = await settle(r1);
+  console.log(`rotation: ${r1 - r0} resize(s) to landscape, ${r2 - r1} back`);
+  if (r1 - r0 !== 1 || r2 - r1 !== 1) { console.log('SMOKE TEST FAILED: rotation should resize exactly once each way'); process.exit(1); }
   await cp.close();
 }
 

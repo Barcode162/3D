@@ -275,11 +275,11 @@ void sitOn(int index) {
 // ---- Camera and movement ----
 
 void updateCamera(float dt) {
-  const engine::Vec2 look = g_app.input.takeLookDelta();
+  const engine::Vec2 look = g_app.input.frame().look;
   const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.race.open();
   const float sens = kLookSensitivity * g_app.lookSpeed;
   if (!menu && !g_app.piano.keyboardOpen()) g_app.camera.look(look.x * sens, -look.y * sens * g_app.invertLook);
-  const engine::Vec2 move = g_app.input.move();
+  const engine::Vec2 move = g_app.input.frame().move;
   if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, emscripten_get_now() + kIntroAfterInputMs);
   }
@@ -1029,23 +1029,24 @@ void updateInteraction(double nowMs, float dt) {
 
   const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
   if (g_app.rhythm.isOpen()) {
-    g_app.rhythm.update(nowMs, g_app.input.takeRawPresses(), W, H);
+    g_app.rhythm.update(nowMs, g_app.input.frame().presses, W, H);
     if (!g_app.rhythm.isOpen()) {
       g_app.input.setCapture(false);
       setActivity(Activity::kNone);
     }
   } else if (g_app.race.open()) {
-    g_app.input.takeRawPresses();  // the race reads fingers and keys directly
-    if (g_app.race.update(nowMs, dt, g_app.input)) standUp();
+    if (g_app.race.update(nowMs, dt, g_app.input.frame())) standUp();
   } else if (g_app.piano.keyboardOpen()) {
-    if (g_app.piano.updateKeyboard(g_app.input.takeRawPresses(), W, H)) standUp();
+    if (g_app.piano.updateKeyboard(g_app.input.frame().presses, W, H)) standUp();
     if (g_app.piano.takeSongsRequest()) engine::ui::openPanel("piano");
   }
   g_app.darts.update(nowMs);
 
   // A tap uses what it lands on; tapping anywhere also works while you're
   // standing at something (easier on a small screen).
-  for (const engine::Vec2 tap : g_app.input.takeTaps()) {
+  // (A copy: using something can switch input modes, which empties the frame's taps.)
+  const std::vector<engine::Vec2> taps = g_app.input.frame().taps;
+  for (const engine::Vec2 tap : taps) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
     if (g_app.jukeboxMenu.isOpen()) {
       g_app.jukeboxMenu.tap(tap, g_app.jukebox);
@@ -1259,7 +1260,7 @@ void frame() {
   // counts them for the frame they arrived in.
   engine::bridge::pull();  // everything the page collected since last frame, in one call
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
-  g_app.input.pollTouches();
+  g_app.input.poll();  // what the player did since last frame (read-only from here on)
   const double nowMs = emscripten_get_now();
   ProfiledFrame profiled(nowMs);
   updateLoadingScreen();
