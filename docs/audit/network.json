@@ -1,0 +1,527 @@
+{
+ "group": "network",
+ "systems": [
+  {
+   "name": "Client transport bridge (web/net.js)",
+   "files": [
+    "web/net.js"
+   ],
+   "purpose": "Browser side of multiplayer. Connects to the Cloudflare room (WebSocket, sends every 50 ms when state changed, 2 s keepalive) or polls the IONOS PHP relay every 100 ms. Keeps the id-to-index player map, queues incoming states, world entries, events and voice signals for C++, and estimates server time.",
+   "rating": 4,
+   "compatibility": "Works in iOS 26 Safari (plain WebSocket and fetch, no SharedArrayBuffer). iOS suspends JS in the background and often kills the socket without a close event, and pagehide is not reliable on iOS, so a clean leave can't be counted on. cloud.json is never written by deploy.yml (grep finds no wrangler or cloud.json step), so production always falls back to the relay today.",
+   "delay": "Cloud: 0-50 ms send batching (CLOUD_SEND_MS=50) plus about 20-80 ms one way. Relay: 0-100 ms poll wait plus about 85-300 ms per POST round trip, with only one request in flight, so 150-400 ms before C++ even sees a state. Login or logout forces a reconnect (about 1 s of blackout).",
+   "frameCost": "Low in CPU, but it makes garbage every frame: setState builds a new JS array every frame, JSON.stringify(state) runs every 50 ms for change detection, and takeWorld/takeEvents stringify an empty array every frame. present()/name()/idOf() are linear for-in scans that C++ calls per player per frame, so cost is O(N^2). Queues grow without limit while rAF is paused (desktop background tab), then come out as a burst.",
+   "syncRisk": "high: silent split brain between the Cloudflare and relay backends, no protocol version, frozen ghosts during reconnect, and unbounded queues replaying stale events.",
+   "problems": [
+    {
+     "issue": "Split brain: a client can switch to the IONOS relay in the middle of a session while everyone else stays on Cloudflare. The two backends share no state, so players silently stop seeing each other.",
+     "severity": "critical",
+     "evidence": "web/net.js:136-145 cloudFailed(): after 3 failures, and once status has dropped to 3 (line 144), the next failure sets mode='relay' and starts setInterval(tick). Also lines 303-305: any cloud.json fetch error goes to the relay. Clients still running an old build use the relay too.",
+     "fix": "Remove the per-client fallback. The backend is chosen once per deployment (cloud.json or a build constant), and failing to connect shows 'offline, retrying', never another server. Delete the relay path from net.js."
+    },
+    {
+     "issue": "No echo of your own world writes, plus optimistic local apply. With Cloudflare broadcasting every change immediately, two concurrent writes to one key leave clients disagreeing for good.",
+     "severity": "critical",
+     "evidence": "net.js:380-382 setWorld only queues the write; the local change is applied by the caller (e.g. main.cpp:727-737 setLights before setWorld). worker.js:180-184 broadcasts to everyone except the writer. If A and B write 'lt' at once, the server keeps B's value, A ends on B's and B ends on A's.",
+     "fix": "The server orders every write with a seq and sends the accepted value to everyone, the writer included. The client keeps the optimistic value until its own echo or a newer seq arrives (see the cloud/worker.js rewrite)."
+    },
+    {
+     "issue": "While reconnecting, status stays 'connected' and other players stay frozen in place for up to 8 s.",
+     "severity": "medium",
+     "evidence": "net.js:128-134 onclose sets wsOpen=false but does not change status or the players map. Backoff is Math.min(8000, 500*2^n) (line 145). players.cpp keeps drawing the last sample.",
+     "fix": "On close set status=connecting, mark remote players as stale (fade or ghost them), and resync from the welcome snapshot. Reconnect quickly the first time (about 250 ms)."
+    },
+    {
+     "issue": "Logging in or out tears down the socket. Everyone sees you leave and rejoin, voice peers get dropped and rebuilt, and you get a new player index.",
+     "severity": "medium",
+     "evidence": "net.js:149-151 closes the WebSocket whenever acct.token() != helloTok (checked every 50 ms). dropPlayer and addPlayer give you a new index (line 71, nextIndex++).",
+     "fix": "Send an in-band {auth: token} message. The server re-verifies it and broadcasts a profile update for the same slot."
+    },
+    {
+     "issue": "Unbounded queues for packets, worldIn and eventsIn. After a stall, every queued piano note and sound effect plays at once, and old samples clog interpolation.",
+     "severity": "medium",
+     "evidence": "net.js:46 packets[] and :56 eventsIn[] have no cap. take() drains 64 per frame (engine/net.cpp:105). takeEvents returns everything at once (net.js:373-377).",
+     "fix": "Keep only the latest state per player (overwrite, don't queue). Drop events older than about 500 ms by server tick. Collapse world entries per key."
+    },
+    {
+     "issue": "The relay path has no fetch timeout. One hung POST freezes all multiplayer until the browser gives up (30-60 s or more).",
+     "severity": "medium",
+     "evidence": "net.js:183-189 post() has no AbortController, and :192 tick() returns while inFlight.",
+     "fix": "Gone if the relay is retired; otherwise use AbortSignal.timeout(1500)."
+    },
+    {
+     "issue": "Player identity is a random id from the client, broadcast to everyone, and also used as the reconnect key and the tie-break. Anyone in the room can take over or kick another player by connecting with their id.",
+     "severity": "medium",
+     "evidence": "net.js:41 id='p'+random. worker.js:114-118 accepts ?id= and closes the existing socket with that id ('replaced'). Ids reach every client (worker.js:154, :168).",
+     "fix": "The server assigns a slot (0-15) and a secret resume token in the welcome. Reconnect presents the resume token, never a public id."
+    },
+    {
+     "issue": "No protocol or build version in hello. Clients on different builds misread the 18 positional slots after a deploy.",
+     "severity": "medium",
+     "evidence": "net.js:94 hello = {hello, name, ping}. The slot meaning lives only in app/players.h:220-233.",
+     "fix": "hello carries protoVersion. The server rejects a mismatch with a close code, and the client shows 'New version, tap to reload'."
+    },
+    {
+     "issue": "Room-full and server errors are invisible. A 503 on the upgrade looks like a network failure, so the client retries forever.",
+     "severity": "low",
+     "evidence": "worker.js:116 returns a 503 Response to the upgrade. net.js:128-134 treats every close the same way.",
+     "fix": "Accept the socket, send {error:'full'}, close with 4001, and have the client show the reason and stop retrying."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "A thin binary WebSocket client for a single backend (the Durable Object). On open it sends HELLO{proto, resumeToken|null, authToken|null, name} and gets WELCOME{slot, resumeToken, serverTick, tickRate, full snapshot}. Your avatar state goes up at a fixed 15-20 Hz, quantized into about 40 bytes, only while it changes, plus a 1 Hz keepalive. Received frames (ArrayBuffer) are copied once into a fixed ring buffer in wasm memory that C++ decodes. JS does no JSON per frame and no per-player lookups. Reconnect presents the resume token, gets the same slot back within a 15 s grace window, and receives a fresh snapshot. Status covers connecting, online, offline and full, each with a reason. Clock sync uses ping/pong on the same socket (setWebSocketAutoResponse on the server side). Voice signaling messages ride the same socket as typed messages."
+  },
+  {
+   "name": "C++ net API (engine/net.*)",
+   "files": [
+    "engine/net.h",
+    "engine/net.cpp"
+   ],
+   "purpose": "C++ wrapper over window.bar3dNet: setState, receive packets, present/name/account per player, a world key-value store (setWorld/receiveWorld), events, isLower tie-break, serverTime.",
+   "rating": 5,
+   "compatibility": "Fine on Emscripten and Safari. Names are quoted so Closure doesn't rename them. No threads.",
+   "delay": "Adds none of its own beyond one frame of queueing.",
+   "frameCost": "Per frame: one EM_ASM for setState (allocates a JS array), one for receive (HEAPF64 copy, efficient), two stringToNewUTF8 + Json::parse + malloc/free for world and events even when empty, and present() once per remote player (O(N) JS each, O(N^2) total). Per player every second: 3 more EM_ASM string round trips (players.cpp:354-359). Small, but it's GC churn on a phone.",
+   "syncRisk": "medium: the API itself pushes callers into last-writer-wins key/value writes with no ack and no seq, plus fromLowerId tie-breaks.",
+   "problems": [
+    {
+     "issue": "The world API is a raw last-writer-wins key/value store: no accept or reject, no sequence numbers, and no echo to the writer, so callers can't tell whether their write won.",
+     "severity": "high",
+     "evidence": "engine/net.h:47-56 says 'The last change wins. You don't get your own changes back.' fromLowerId is the only arbitration available.",
+     "fix": "Replace it with typed intents (request(kind,args) -> result) and authoritative world deltas carrying seq, applied by one reducer per subsystem."
+    },
+    {
+     "issue": "JSON round trips every frame for world and events, even when nothing arrived.",
+     "severity": "low",
+     "evidence": "engine/net.cpp:164-175 and 185-196 run stringToNewUTF8(JSON.stringify([])) + Json::parse + free every frame.",
+     "fix": "Use a binary ring buffer with a 'bytes available' counter, and decode only when it's non-zero."
+    },
+    {
+     "issue": "Player identity is a JS-side index that is never reused and differs on every client. isLower compares random ids, so 'who wins' has nothing to do with who was first.",
+     "severity": "medium",
+     "evidence": "engine/net.cpp:198 isLower; net.js:355-358 compares random id strings.",
+     "fix": "Use server-assigned slots, and let the server decide every contested resource."
+    },
+    {
+     "issue": "Event timestamps are missing, so receivers play events when they arrive (jitter) and can't drop stale ones.",
+     "severity": "medium",
+     "evidence": "engine/net.h:62-68 Event has only player, type and values.",
+     "fix": "Stamp each event with the server tick (server-side) and play it at tick + playout delay."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "A small engine::net module: connect(); status(); slot(); a per-frame poll() that decodes the ring buffer into typed messages (Snapshot, WorldDelta{key, seq, value}, Event{tick, slot, type, args}, IntentResult{reqId, ok, reason}, Join/Leave/Profile); sendState(fixed struct); sendIntent(kind, args) -> reqId; sendEvent(type, args); serverTimeSec() and serverTick(). One binary codec header shared between C++ and the worker, generated from one schema so the field order can't drift. No per-player EM_ASM: names, accounts and avatars arrive as Profile messages and get cached in C++."
+  },
+  {
+   "name": "Remote players: state slots, interpolation, clock (app/players.*)",
+   "files": [
+    "app/players.h",
+    "app/players.cpp",
+    "app/main.cpp (selfState 1123-1140, otherTransform 1143-1157)"
+   ],
+   "purpose": "Packs your eye position, look direction and 13 more slots (activity, seat or machine param, look, voice level, emote and counter, 5 activity-dependent numbers, held drink, flags) into 18 floats. For other players, plays position back 250 ms behind on an estimated per-sender clock and drives the walk animation from interpolated movement.",
+   "rating": 5,
+   "compatibility": "Pure C++, no platform problems. Positions are rounded to 1 mm (net.cpp:98).",
+   "delay": "A fixed 250 ms playback delay (players.cpp:293) on top of transport. Total motion delay is about 300-380 ms on Cloudflare and about 450-650 ms on the relay. Activity, seat and emote values apply as soon as they arrive, about 250 ms before the matching position.",
+   "frameCost": "Low: a linear find per packet, plus a deque scan per player. erase_if calls net::present (EM_ASM) for every player every frame.",
+   "syncRisk": "medium: activity and position are on different timelines, there's no extrapolation, and the per-sender clock estimate jumps.",
+   "problems": [
+    {
+     "issue": "Discrete state (activity, seat, emote, held drink, flags) is applied on arrival while position is played back 250 ms later. A player is shown seated or standing before their body gets there, and when they stand up they pop at the old eye position.",
+     "severity": "medium",
+     "evidence": "players.cpp:340 writes o.values right away, while eye/yaw come from samples at t-250 (players.cpp:362-377). main.cpp:1146-1155 picks the seat transform from o.values.",
+     "fix": "Store full snapshots in the sample buffer and pick discrete fields from the sample at the render time."
+    },
+    {
+     "issue": "No extrapolation. When the buffer runs dry (relay jitter over 250 ms) the player freezes, then jumps.",
+     "severity": "medium",
+     "evidence": "players.cpp:367 clamps f to [0,1], so once t passes the newest sample the avatar holds still.",
+     "fix": "Extrapolate with velocity for up to 100 ms, then ease back. Use an adaptive buffer delay (target = 2 \u00d7 send interval + p95 jitter, about 100-150 ms on Cloudflare)."
+    },
+    {
+     "issue": "The clock offset is estimated per sender from one-way arrival times. When a delay spike clears, the offset snaps up and playback jumps forward.",
+     "severity": "low",
+     "evidence": "players.cpp:335 takes the max offset at once and only drifts 2% per packet toward lower ones.",
+     "fix": "Use server ticks: the server stamps each snapshot, and every client interpolates against its synced serverTime. One timeline for everyone."
+    },
+    {
+     "issue": "The 18 positional float slots have activity-dependent meanings (kData = race x/z/heading/speed/steer, darts, rhythm screen) and only 2 spare slots under MAX_VALUES 20. They can't carry a multiplayer race car (pose quaternion, wheels, lap).",
+     "severity": "medium",
+     "evidence": "players.h:220-233; main.cpp:1134-1138 picks data by which game is open; race/game.cpp:157-166 sends 5 floats.",
+     "fix": "A fixed binary avatar block (quantized pos/yaw/pitch/anim flags) and separate typed channels per activity (RaceCar state at its own rate, DartsThrow events, a RhythmScreen block), each versioned."
+    },
+    {
+     "issue": "Remote piano players get YOUR piano hand pose.",
+     "severity": "low",
+     "evidence": "main.cpp:1153: if (act == kPiano) g_app.piano.hands(motion.handL, motion.handR) uses the local piano.",
+     "fix": "Derive hands from the remote player's note events, or send a hand-pose field."
+    },
+    {
+     "issue": "A player who comes back after a reconnect gets a new index, so their OtherPlayer is rebuilt (sample history and clock estimate lost, and they teleport).",
+     "severity": "low",
+     "evidence": "players.cpp:352 erases players who aren't present; net.js:71 gives out a fresh index.",
+     "fix": "A stable server slot plus a resume grace period keeps the same OtherPlayer."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the interpolation and walk-from-motion idea. Change the sample to {serverTick, quantized avatar state} so each player is one struct. renderTick = serverTickNow - adaptiveDelay; interpolate continuous fields and take discrete fields from the earlier sample. Extrapolate up to 100 ms. Seat, machine and held-object ownership come from the server's lock table (WorldDelta), not from the player's own state slots. Profiles (name, account, avatar rev) arrive as events and are cached, with no per-second EM_ASM polling."
+  },
+  {
+   "name": "Shared world: glasses, jukebox, mirrors (app/shared_world.*)",
+   "files": [
+    "app/shared_world.h",
+    "app/shared_world.cpp",
+    "app/jukebox.cpp:50-80"
+   ],
+   "purpose": "Glass physics is owned by whoever touched it last (claim on pickup or knock, sent about 11 times a second, rest pose sent once). Others drive a kinematic copy. Jukebox key 'jb' = [song, server start time]; mirrors 'm<i>'. Every other key goes to piano, bartender and lights through takeOther().",
+   "rating": 4,
+   "compatibility": "Fine. The jukebox respects the iOS rule that audio needs a tap (pending until engine::audio::ready()).",
+   "delay": "Glass: 90 ms send interval plus transport. Remote copies lag about 70 ms (kFollow=14) and extrapolate up to 300 ms from arrival time. Jukebox and mirrors: one transport hop.",
+   "frameCost": "Low: one loop over a handful of bodies. Each moving owned glass costs 1 setWorld EM_ASM per 90 ms.",
+   "syncRisk": "high: no authority for physics ownership. Two players both claim a knocked glass and the lower random id wins. A departed owner leaves each client to drop the glass on its own copy. Jukebox advance has N writers. The no-echo bug makes concurrent writes diverge.",
+   "problems": [
+    {
+     "issue": "A knocked glass is claimed by more than one client at once. Every client simulates the same contact (the remote kinematic glass also hits it), so all of them claim and broadcast, and the loser's view snaps.",
+     "severity": "high",
+     "evidence": "shared_world.cpp:247-254 claims in kIdle when velocity > 0.05; :181-191 resolves conflicts with state==kHeld or fromLowerId.",
+     "fix": "The server grants ownership leases. Only the lease owner may claim on knock (a request can be refused). Others treat a knocked glass as kinematic until the server answers. Better still: only the toucher's client simulates knocks, and other clients never claim from contact with a remote kinematic body."
+    },
+    {
+     "issue": "When the owner leaves mid-throw, every client lets the glass fall on its own copy (each lands somewhere different), then all of them re-claim it from velocity.",
+     "severity": "medium",
+     "evidence": "shared_world.cpp:266-272 (kGoneMs 3000) sets kinematic=false locally on every client.",
+     "fix": "On disconnect the server ends the lease and broadcasts the last known pose as resting (or hands the lease to the nearest player)."
+    },
+    {
+     "issue": "Every client writes 'jb' when a song ends naturally (N writers, each with its own start time). If audio ends more than 2 s apart (buffering, background), everyone's song restarts. Phones with their own songs loaded go to a different next song.",
+     "severity": "medium",
+     "evidence": "jukebox.cpp:80 play(current_+1) without fromNetwork, so localChanges_ goes up and shared_world.cpp:230-238 writes jb. kSongSlack=2.0 at :89 and :171.",
+     "fix": "The server owns the jukebox: a queue plus song durations. It schedules the next track at serverTime and broadcasts {song, startTime, seq}. Clients never write on song end."
+    },
+    {
+     "issue": "Glass extrapolation and the 'gone' timeout use arrival time, so network jitter becomes position jitter.",
+     "severity": "low",
+     "evidence": "shared_world.cpp:198 receivedMs=nowMs; :273-274 extrapolates from age.",
+     "fix": "Stamp every pose with the server tick and interpolate on the shared timeline, like avatars."
+    },
+    {
+     "issue": "Glass updates are persisted on every send (about 11 storage writes per second per moving glass on Cloudflare), which burns free-plan row writes and adds output-gate latency.",
+     "severity": "high",
+     "evidence": "shared_world.cpp:84 kSendEveryMs=90 \u2192 worker.js:187 storage.put on every world message.",
+     "fix": "The server keeps moving poses in memory only and persists resting poses and discrete keys, debounced to at most one write every 2 s."
+    },
+    {
+     "issue": "Jukebox start time is serverTime(), which is 0 before the first clock sync, so a song picked right after joining makes others start it from 0.",
+     "severity": "low",
+     "evidence": "shared_world.cpp:234, net.js:390-393 returns 0 until the first pong.",
+     "fix": "The server stamps the start time when it accepts the jukebox intent."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Split it into reducers that each own one kind of state, all fed by authoritative WorldDelta{key, seq, value} applied in server order, including your own writes (optimistic apply, rolled back if the server rejects). Glasses: intents grab(id) and release(id, pose, velocity). The server grants a lease to one slot; only the lessee streams poses (15 Hz, in memory). Lease ends on release or rest, on a 3 s silence, or on disconnect, and the server then broadcasts the final pose. Jukebox: server-side queue and timer. Mirrors: plain authoritative toggles."
+  },
+  {
+   "name": "Seat, machine and object locks plus game world keys (main.cpp, bartender, piano, lights, events)",
+   "files": [
+    "app/main.cpp:180-189 (playerUsing)",
+    "app/main.cpp:1253-1265 (seat tie-break)",
+    "app/main.cpp:656-683 (rhythm/darts)",
+    "app/main.cpp:727-737 (lt)",
+    "app/main.cpp:151-165 (sfx events)",
+    "app/bartender.cpp:124-169 (dk slots)",
+    "app/piano.cpp:130-235 (pso, pk)"
+   ],
+   "purpose": "Decides who is using a seat, racing rig, piano, rhythm cabinet or darts by reading other players' activity and param slots, with no locks. Shares lights and fire, drinks on the counter, the piano song, and one-off sounds and piano keys.",
+   "rating": 3,
+   "compatibility": "No platform issues.",
+   "delay": "A double booking lasts about 50-400 ms (until the other player's state arrives) before the higher-id player gets kicked out of the seat.",
+   "frameCost": "Low: linear scans over players each frame.",
+   "syncRisk": "high: no authority anywhere. Two people can share a machine, drinks can be duplicated or lost, a lights change can be lost, notes can get stuck, and a ghost can hold a seat forever.",
+   "problems": [
+    {
+     "issue": "Seat conflicts are settled by comparing random ids, not by who sat first, and only after both are already seated. The toast 'X sat there first.' is often wrong.",
+     "severity": "high",
+     "evidence": "main.cpp:1253-1265: if another player's kParam == my seat and isLower(o.id), standUp().",
+     "fix": "Intent sit(seat) \u2192 the server checks its lock table and replies OK or 'taken by X'. The client shows a pending pose until the server confirms (about one round trip, 40-100 ms)."
+    },
+    {
+     "issue": "The rhythm cabinet and darts have no tie-break at all. Two players can start at once, and both games are drawn on top of each other.",
+     "severity": "high",
+     "evidence": "main.cpp:656-659 and 680-683 only check playerUsing before starting; queueMachineScreens (main.cpp:407-445) draws every player's game.",
+     "fix": "Use the same server lock table, machine:rhythm and machine:darts, with a lease that renews while playing."
+    },
+    {
+     "issue": "Bartender drink slots can be duplicated (two players take the same drink) or lost (two bartenders serve into the same free slot). The badge is only checked on the client.",
+     "severity": "high",
+     "evidence": "bartender.cpp:124-131 serve() writes dk<slot>; :134-143 take() writes 0. Both are blind last-writer-wins. main.cpp:171-175 hasBadge is client-side.",
+     "fix": "Server intents serve(type) and take(slot) apply atomically. The server checks the badge from the verified account."
+    },
+    {
+     "issue": "Lights and fire share one key, so concurrent toggles by two players lose one of the changes (and the no-echo bug can then leave clients disagreeing).",
+     "severity": "medium",
+     "evidence": "main.cpp:727-737 writes 'lt' = [dim, fire] from local state.",
+     "fix": "Separate keys (or toggle intents) applied by the server."
+    },
+    {
+     "issue": "Piano key events take two paths (WebRTC data channel when it's open, otherwise the server), so a keyUp can overtake its keyDown and leave a note stuck.",
+     "severity": "medium",
+     "evidence": "net.js:364-370 picks the path per message; piano.cpp:190/206 sends pk down and up separately; piano.cpp:197 ignores a keyUp when liveVoice_ is 0.",
+     "fix": "One ordered path per sender (the DO), events stamped with server tick plus a per-sender seq. The receiver releases notes older than N seconds as a failsafe."
+    },
+    {
+     "issue": "Ghost players keep seats, machines and glasses. The Cloudflare room has no idle timeout, and their last state says 'seated'.",
+     "severity": "high",
+     "evidence": "worker.js has no last-seen or alarm. playerUsing (main.cpp:180-189) trusts any present player's state.",
+     "fix": "The server drops a slot after 8 s of silence (alarm) and frees its locks and leases."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "One server-side lock table: resource ids (seat:N, rig:N, machine:rhythm, machine:darts, piano, glass:N) map to {slot, since, leaseUntil}. Clients send claim and release intents, the server answers OK or taken, and broadcasts LockDelta. Locks are released on disconnect or timeout. Game keys become typed server state (drinks[8], lights{dim, fire}, pianoSong{idx, startTime}) changed only through validated intents. One-off sounds and piano notes are events relayed by the DO with server tick and seq, and receivers play them at tick + playout delay (about 80 ms)."
+  },
+  {
+   "name": "Cloudflare room server (cloud/worker.js, cloud/wrangler.toml)",
+   "files": [
+    "cloud/worker.js",
+    "cloud/wrangler.toml"
+   ],
+   "purpose": "One Durable Object per room. Accepts hibernatable WebSockets, forwards each state to everyone else immediately, keeps a last-writer-wins world map in DO storage, relays messages, answers clock pings, and checks login tokens against IONOS account.php.",
+   "rating": 5,
+   "compatibility": "SQLite-backed DO (new_sqlite_classes) is required on the Workers Free plan, so that part is correct. compatibility_date 2025-09-01 is before automatic replies to close frames, and webSocketClose never calls ws.close(), so client close handshakes may hang. No Origin check. Not deployed: deploy.yml has no wrangler step and doesn't write cloud.json.",
+   "delay": "Forwarding happens at once (good). The hello is held for an IONOS round trip (about 85-300 ms, unbounded if IONOS hangs) before the welcome. Every world write starts a storage.put, and the DO output gate holds outgoing messages until the write commits (a few ms per world change, affecting everyone).",
+   "frameCost": "Server CPU: broadcast() and socketOf() call getWebSockets() and deserializeAttachment() for every socket on every message. At 16 players \u00d7 20 Hz that's about 5,000 deserializations per second. Each world change serializes and writes the whole world map.",
+   "syncRisk": "high: it relays rather than decides, broadcasts world changes without echo (clients diverge), never times out ghosts, and drops messages that arrive while a hello is pending.",
+   "problems": [
+    {
+     "issue": "Concurrent writes to one world key end with clients disagreeing for good, because each change goes to everyone except the writer, in arrival order.",
+     "severity": "critical",
+     "evidence": "worker.js:172-184 world.set(key, [id, v]) then broadcast(id, {w: changes}).",
+     "fix": "Assign a seq per accepted change and broadcast to everyone, the writer included. Better: validate intents server-side and broadcast the resulting state."
+    },
+    {
+     "issue": "No idle timeout or heartbeat check. Phones that get suspended without a clean TCP close stay in the room as frozen ghosts holding seats and glasses.",
+     "severity": "high",
+     "evidence": "worker.js:206-218: removal only happens in webSocketClose/webSocketError. There's no alarm and no last-seen.",
+     "fix": "Track lastSeen per slot and set a storage alarm every 5 s that closes sockets silent for more than 8 s (clients send a 1 Hz keepalive). Free that slot's locks."
+    },
+    {
+     "issue": "Free-plan cost: every incoming message counts, at 20 messages = 1 request against 100,000 per day, and constant traffic keeps the object from hibernating (13,000 GB-s per day \u2248 29 room-hours at 128 MB). Glass storage writes burn the 100,000 rows/day quota fast.",
+     "severity": "high",
+     "evidence": "net.js:62/296 sends at 20 Hz while moving. worker.js:187 storage.put({world, active}) runs about 2 row writes per world message. A held glass at about 11 Hz \u2248 22 rows/s, so about 75 minutes of glass handling per day uses up the rows. 20 Hz per player \u2248 3,600 requests per hour, about 28 player-hours of movement per day.",
+     "fix": "Client sends at 15 Hz (or 10 Hz when slow), only when changed, plus a 1 Hz keepalive. Use setWebSocketAutoResponse for pings (free and doesn't wake the object). Persist only discrete state, debounced to 2 s or more, never moving poses."
+    },
+    {
+     "issue": "The hello awaits an IONOS fetch before saving hello=true. Messages arriving meanwhile are dropped, and a slow IONOS stalls the join with no timeout. Tokens are re-checked on every reconnect with no cache.",
+     "severity": "medium",
+     "evidence": "worker.js:136-147: a.hello=true is set in memory, but serializeAttachment comes after await checkToken (:140). :160 returns for every other message. :221-232 fetch has no timeout.",
+     "fix": "Welcome right away as a guest. Verify the token in parallel with AbortSignal.timeout(2000), then broadcast a profile update. Cache token \u2192 account for 10 minutes in DO memory."
+    },
+    {
+     "issue": "The player limit is checked before hello and only against players who have said hello, so sockets that never say hello are unlimited. Room full is answered with a 503 that the client can't read.",
+     "severity": "low",
+     "evidence": "worker.js:116 this.players.size counts only hello'd players; :119-122 accepts anyway.",
+     "fix": "Count sockets, close sockets without a hello after 5 s, and send a 'full' close code (4001)."
+    },
+    {
+     "issue": "No message-size or rate limit on fan-out ('*' with 40 \u00d7 12,000-character messages is about 480 KB per message \u00d7 15 receivers). No Origin allowlist.",
+     "severity": "low",
+     "evidence": "worker.js:191-203, MAX_MSG 12000, messages capped only at 64000 characters (:126).",
+     "fix": "Per-slot token-bucket rate limit, a typed binary protocol with small caps, and an Origin allowlist (github.io and joshuavelasco.*)."
+    },
+    {
+     "issue": "webSocketClose doesn't reciprocate the close, which matters at this compatibility date.",
+     "severity": "low",
+     "evidence": "worker.js:206 async webSocketClose(ws) { this.gone(ws); } with wrangler.toml compatibility_date = \"2025-09-01\".",
+     "fix": "Call ws.close(code, 'bye') inside webSocketClose, or bump the compatibility date and set the auto-reply flag."
+    },
+    {
+     "issue": "Per-message work deserializes every socket's attachment (O(N) for each message).",
+     "severity": "low",
+     "evidence": "worker.js:89-101 socketsExcept and socketOf run deserializeAttachment in filter and find.",
+     "fix": "Keep an in-memory Map slot \u2192 {ws, state}, rebuilt in the constructor from getWebSockets() after hibernation."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "An authoritative Room DO. State: slots[16] {ws, accountId, name, avatarState, lastSeen, resumeToken}; locks table; glasses {leaseSlot, pose, tick}; jukebox queue and timer; drinks[8]; lights; pianoSong; a seq counter. Inbound: binary messages decoded into STATE (stored, marked dirty), INTENT (validated, then mutate, seq++, broadcast delta to all, reply RESULT to the sender), EVENT (stamped with tick and fanned out), SIGNAL (WebRTC, forwarded to one slot). Outbound: one 15-20 Hz broadcast per tick (setInterval while players are connected) packing all dirty avatar states with the server tick. Outgoing messages are free, so one batched frame per tick is cheap. Idle timeout runs on an alarm. Persistence covers discrete state only, debounced. Accounts: guest welcome first, token verified asynchronously (IONOS now, D1 later). Reject wrong protocol versions. Pings handled by setWebSocketAutoResponse. Later the race (RACING.md step 6) runs here as C++ compiled to wasm, on the same tick."
+  },
+  {
+   "name": "PHP relay (server/relay.php)",
+   "files": [
+    "server/relay.php"
+   ],
+   "purpose": "Fallback multiplayer for IONOS shared hosting. Each POST stores your state, returns everyone else's, merges world changes with revisions, and delivers inbox messages. The room is a flock'd JSON file.",
+   "rating": 3,
+   "compatibility": "Works anywhere PHP runs. text/plain avoids the CORS preflight. It's still the actual live path because cloud.json isn't deployed.",
+   "delay": "0-100 ms poll wait plus about 85-300 ms per request (measured about 85 ms on IONOS), and flock serializes every player's requests on one file.",
+   "frameCost": "No client frame cost beyond net.js. Server: every request reads, decodes, re-encodes and rewrites the whole room file, inbox included (4 players \u00d7 10/s = 40 full rewrites per second).",
+   "syncRisk": "medium: last-writer-wins with revisions (it does converge, since only the latest entry per key is stored), 5 s ghost timeout, no authority, and the client id is trusted (anyone can read another player's inbox and voice signaling).",
+   "problems": [
+    {
+     "issue": "Two backends with the same room names but no shared state is the root of the split-brain bug.",
+     "severity": "high",
+     "evidence": "net.js:136-145 and 298-305 fall back per client; relay.php keeps rooms in rooms/<room>.json.",
+     "fix": "Retire it from the live path once Cloudflare is deployed. Keep account.php on IONOS."
+    },
+    {
+     "issue": "The client id is trusted, so any client can post as another id, take over their slot, or drain their inbox (voice offers and answers).",
+     "severity": "medium",
+     "evidence": "relay.php:55-57 accepts any [a-z0-9]{4,16} id; :125-126 returns and clears that id's inbox.",
+     "fix": "Retired in the new design (server-issued slot and resume token)."
+    },
+    {
+     "issue": "Over the player limit, the request is quietly not stored but still gets a full reply, so the player sees others while being invisible to them.",
+     "severity": "low",
+     "evidence": "relay.php:130: elseif (isset($players[$id]) || count($players) < MAX_PLAYERS) \u2014 otherwise the player is skipped silently.",
+     "fix": "Return {ok:0, error:'full'} (moot if retired)."
+    },
+    {
+     "issue": "Resetting a room's revision counter (file deleted) leaves clients with an old high 'since' that never see new world entries.",
+     "severity": "low",
+     "evidence": "relay.php:102 resets rev to 0; client since = reply.rev (net.js:221).",
+     "fix": "Moot once retired; otherwise add a room epoch id."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Retire it: remove relay.php from deploy.yml uploads and the client once the Durable Object is live and tested on the phone. IONOS keeps account.php (later on MySQL) as the identity provider that the DO calls (or D1 replaces it). If an offline fallback is wanted, the whole room uses one backend, chosen per deployment, never per client."
+  },
+  {
+   "name": "Voice chat and data channel (web/voice.js)",
+   "files": [
+    "web/voice.js",
+    "web/menu.js:15,223-228"
+   ],
+   "purpose": "Full mesh WebRTC: one RTCPeerConnection per pair (the lower id calls), vanilla ICE through the room server, Opus at up to 510 kbps, noise gate, 3D HRTF panners at each head, a stage-mic boost, and a data channel used for quick events.",
+   "rating": 5,
+   "compatibility": "WebRTC, getUserMedia and Web Audio work on iOS 26 Safari once the user has tapped. STUN only (Google). Phones on 5G behind carrier-grade NAT (symmetric NAT) often can't connect at all without TURN. HRTF panners are CPU-heavy on the audio thread with many peers.",
+   "delay": "Connection setup takes at least 2.5 s (it waits for full ICE gathering) plus one signaling round trip. Voice latency itself is the normal WebRTC 100-200 ms. A failed connection is retried only after 20 s, and only by the caller.",
+   "frameCost": "From C++ every frame: peerLevel() per player (getFloatTimeDomainData on 512 samples + log) in queueText (main.cpp:486-489), and place() per player (main.cpp:1163-1170), which sets panner AudioParams and refDistance every frame through an O(N) idOf scan. Plus a 50 Hz mic analyser (1024 samples). Moderate with 8 or more players.",
+   "syncRisk": "medium: the data channel creates a second, unordered path for game events, and peer state depends on the room's player list (a reconnect drops voice).",
+   "problems": [
+    {
+     "issue": "Default 510 kbps per peer in a full mesh: 16 players means 15 uplinks \u2248 7.6 Mbps from one phone. That saturates cellular uplink and heats the phone.",
+     "severity": "high",
+     "evidence": "menu.js:15 hq: true; voice.js:172 maxBitrate = hq ? 510000 : 64000; voice.js:298-313 connects to every peer.",
+     "fix": "Default to 32-48 kbps mono with 'studio' as an opt-in. Cap the mesh at about 6 peers (nearest by distance) and plan an SFU (Cloudflare Realtime) above that."
+    },
+    {
+     "issue": "No TURN server, so voice and the data channel fail for many cellular or strict-NAT users, and only an info log line says so.",
+     "severity": "high",
+     "evidence": "voice.js:16 ICE = STUN only; :197 'failed' calls drop() and nothing more.",
+     "fix": "Add Cloudflare Realtime TURN credentials, minted by the Worker per session. Show the voice status per player in the HUD."
+    },
+    {
+     "issue": "Web Audio nodes leak and audio doubles: playRemote creates new MediaStreamSource, analyser, gain and panner on every call, and the old ones are never disconnected. applySettings calls it again for every peer.",
+     "severity": "medium",
+     "evidence": "voice.js:216-251 creates nodes on every call; :262-268 drop() never disconnects them; :336-340 applySettings re-runs playRemote.",
+     "fix": "Keep one node chain per peer, build it once and update parameters. drop() disconnects every node."
+    },
+    {
+     "issue": "Vanilla ICE adds a fixed 2.5 s, and all peers start connecting at once during loading, which adds to the startup stutter.",
+     "severity": "medium",
+     "evidence": "voice.js:178-185 gathered() waits up to 2500 ms; :314 maintain runs every 1 s from page load.",
+     "fix": "Use trickle ICE over the DO socket. Start voice only after 'Everything loaded' and stagger peer creation (one every 300-500 ms)."
+    },
+    {
+     "issue": "Game events sent over the data channel take a different path from server messages, so they reorder (stuck piano notes) and bypass any server authority.",
+     "severity": "medium",
+     "evidence": "net.js:364-369 picks the data channel when it's open, otherwise msgOut; voice.js:211-214.",
+     "fix": "Route all game events through the DO (a single ordered timeline). Keep the data channel for voice-adjacent extras only, or drop it."
+    },
+    {
+     "issue": "Only 'failed' is handled. 'disconnected' (common on iOS network changes) is left alone, and a non-caller never retries.",
+     "severity": "low",
+     "evidence": "voice.js:194-198 and :309 retry only when initiator.",
+     "fix": "Handle disconnected/failed with restartIce(), and let either side ask for a restart through the server."
+    },
+    {
+     "issue": "Per-frame EM_ASM calls into voice.js per player, each with an O(N) idOf lookup.",
+     "severity": "low",
+     "evidence": "main.cpp:486-489 peerLevel and main.cpp:1163-1170 place; voice.js:355-368 uses n.idOf(index).",
+     "fix": "Push all positions in one call per frame (a Float32Array view), update panners at 20 Hz using setTargetAtTime, and measure levels at 10-20 Hz in JS, read back as one array."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep WebRTC for audio. Signaling becomes typed SIGNAL messages over the DO socket (offer, answer, candidates) keyed by server slot, with TURN from the Worker. Bitrate 32-48 kbps by default. Connect at most the 6 nearest peers (later an SFU). One persistent audio graph per peer. Positions and levels are exchanged with C++ in batch at 20 Hz. Voice starts after loading finishes. Talking level stays in the avatar state (already there, slot kVoice) instead of reading analysers every frame."
+  },
+  {
+   "name": "Clock sync and timelines (serverTime in net.js, used by players, jukebox, piano)",
+   "files": [
+    "web/net.js:57,115-122,212-220,390-393",
+    "app/players.cpp:323-335",
+    "app/piano.cpp:139-143,250-255",
+    "app/shared_world.cpp:140-144,234"
+   ],
+   "purpose": "Estimates server time from the lowest-RTT ping (Cloudflare) or POST (relay) sample, with a 1% per-sample decay. Music start times use it; avatars use separate per-sender clocks; glasses and events use arrival time.",
+   "rating": 5,
+   "compatibility": "performance.now plus server Date.now. Fine on Safari.",
+   "delay": "None added. Accuracy is about \u00b1RTT/2 in the worst case (relay POSTs include flock wait, so they're asymmetric).",
+   "frameCost": "Negligible.",
+   "syncRisk": "medium: three different time bases (per-sender clock, server clock, arrival time) for related things, and 0 is returned before the first sync.",
+   "problems": [
+    {
+     "issue": "Three unrelated timelines. Avatars use sender performance.now, music uses server seconds, glasses and events use arrival time. Nothing can be lined up precisely (a dart throw against avatar pose, or a race).",
+     "severity": "medium",
+     "evidence": "players.cpp:323 offset = p.time - nowMs; shared_world.cpp:198 receivedMs=nowMs; piano.cpp:253 serverTime.",
+     "fix": "Use one server tick (an integer at 20 Hz) plus serverTime for everything: snapshots, events, world deltas and music."
+    },
+    {
+     "issue": "serverTime() returns 0 until the first pong or reply, and callers write 0 as a start time.",
+     "severity": "low",
+     "evidence": "net.js:390-393; shared_world.cpp:234; piano.cpp:140-141 handles it, the jukebox doesn't.",
+     "fix": "Include server time in the welcome. The server stamps start times when it accepts intents."
+    },
+    {
+     "issue": "Clock pings are only every 2 s, and only the very first sample exists right after joining, so early estimates can be off by a full RTT.",
+     "severity": "low",
+     "evidence": "net.js:170-173.",
+     "fix": "Burst 5 pings at connect and keep the best, then one every 2-5 s through the auto-response."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "engine::net::serverTimeSec(), synced with a ping burst at connect (setWebSocketAutoResponse on the server so it's free), then low-RTT filtering. Every server message carries a tick. Players, glasses and events interpolate or play out at serverTick - delay. The jukebox and piano take start times decided by the server."
+  },
+  {
+   "name": "Multiplayer tests (tools/mp_test.mjs, tools/cloud_test.mjs)",
+   "files": [
+    "tools/mp_test.mjs",
+    "tools/cloud_test.mjs"
+   ],
+   "purpose": "mp_test: three headless players through a local PHP relay (or CLOUD=), checking presence, glass rest and late join, mirror, and jukebox. cloud_test: two raw WebSocket clients against wrangler dev, checking welcome, state forwarding, world, messages, pings, and leave.",
+   "rating": 5,
+   "compatibility": "Needs php for mp_test and wrangler plus Node 22 (global WebSocket) for cloud_test. Headless SwiftShader runs the game at 1-2 fps, so timing is slow-motion.",
+   "delay": "n/a",
+   "frameCost": "n/a",
+   "syncRisk": "high (indirectly): none of the bugs above (concurrent writes, double claims, ghosts, reconnect, split brain) are tested.",
+   "problems": [
+    {
+     "issue": "CLOUD mode still polls the PHP relay while waiting for the glass to rest, so it always burns the 60 s timeout, and php is started even when it isn't needed.",
+     "severity": "low",
+     "evidence": "tools/mp_test.mjs:88-93 fetch(relay...) inside the loop regardless of CLOUD; :38 spawn('php') unconditionally.",
+     "fix": "In CLOUD mode, probe through a WebSocket client (read the welcome's world)."
+    },
+    {
+     "issue": "Only happy paths are tested. Nothing covers concurrent writes to one key, two players claiming one seat or glass, reconnect or resume, ghost timeout, room full, protocol mismatch, or added latency and jitter.",
+     "severity": "medium",
+     "evidence": "cloud_test.mjs:158-191 sends one writer per key; mp_test.mjs checks only 5 sequential scenarios (:132-138).",
+     "fix": "A protocol-level test suite (Node, no browser) against wrangler dev: two clients write the same key at once and must end with the same state; both claim seat 3 and exactly one gets OK; kill a socket without close and the slot must be freed within 10 s with locks released; resume with the token keeps the slot; old proto gets close code 4002; 100 ms \u00b1 50 ms jitter injected in the client shim."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the headless browser test as a smoke test for the C++ integration (Cloudflare only). Add a fast deterministic Node test (tools/room_test.mjs) for the authoritative protocol, run in CI before deploy. The binary codec gets a shared test vector file used by both the C++ native tests and the JS tests."
+  }
+ ],
+ "crossCutting": [
+  "SPLIT BRAIN: two backends (Cloudflare DO and IONOS relay) share room names but no state, and net.js picks between them per client (net.js:136-145, 298-305). cloud.json isn't deployed yet (no wrangler step in .github/workflows/deploy.yml), so today everyone is on the relay. Once it is deployed, a flaky connection or an old cached build puts players in separate worlds without any warning. Choose one backend per deployment and remove the client-side fallback.",
+  "AUTHORITY: nothing is decided by a server. Seats (main.cpp:1253-1265, random-id tie-break after the fact), rhythm/darts (no tie-break), glasses (claimed by whoever touches, shared_world.cpp:181-191, 247-254), drinks (bartender.cpp:124-143 blind writes), lights (one combined key) and jukebox advance (N writers, jukebox.cpp:80) are all client last-writer-wins. Design target: one Room DO with a lock and lease table plus validated intents, broadcasting ordered deltas.",
+  "NO ECHO PLUS OPTIMISTIC APPLY: clients apply their own world writes locally and never get them back (engine/net.h:47-49). The Cloudflare server broadcasts each write except to the writer (worker.js:180-184), so concurrent writes leave clients disagreeing for good. The relay happens to converge because it stores only the latest entry. Fix: every accepted change gets a server seq and goes to everyone, the writer included.",
+  "IDENTITY: three namespaces (random public JS id, per-client JS index, account id). The public id doubles as reconnect key and tie-break, so anyone can impersonate or kick (worker.js:114-118). Use a server-assigned slot (0-15) everywhere (C++, voice, locks) plus a private resume token.",
+  "TIME: three timelines (per-sender performance.now for avatars, server seconds for music, arrival time for glasses and events). Move to one server tick plus synced serverTime, carried on every message. Needed before multiplayer racing (RACING.md step 5/6).",
+  "GHOSTS: Cloudflare has no idle timeout (worker.js has no alarm or lastSeen) and iOS suspends pages without closing sockets. Ghosts hold seats, machines and glasses forever because locks are derived from their frozen state. The server must drop silent slots after about 8 s and release their locks.",
+  "EVENTS vs STATE: emotes correctly use a counter in state, but sounds and piano notes are fire-and-forget events with no timestamp or seq, sent over two paths (data channel or server, net.js:364-369), so they reorder and get stuck. Discrete state (activity, seat) also applies 250 ms before position (players.cpp:340 vs 362). Rule: persistent facts are server state with seq; momentary things are events stamped with tick and seq on one ordered path; everything plays out on the same delayed timeline.",
+  "PACKET FORMAT: 18 positional floats as JSON text with activity-dependent meanings (players.h:220-233), 2 spare slots, no version. Mixed builds during a deploy misread each other. Use a versioned binary schema shared by C++ and the worker, with separate typed channels per activity (race car, darts, rhythm screen).",
+  "FREE-PLAN COST (Cloudflare Workers Free: 100,000 DO requests/day, where 20 incoming WebSocket messages = 1 request; 13,000 GB-s/day duration; 100,000 SQLite rows written/day): 20 Hz client sends \u2248 3,600 requests per player-hour, about 28 player-hours of movement per day. Constant traffic blocks hibernation, so one busy room \u2248 29 hours/day of duration. A storage.put on every glass update (about 22 rows/s) uses up the row quota in about 75 minutes of glass handling. Fixes: 15 Hz only when changed plus a 1 Hz keepalive, setWebSocketAutoResponse for pings, persist only discrete state debounced to 2 s or more, batch server broadcasts per tick (outgoing messages are free).",
+  "STARTUP LAG CONTRIBUTORS: multiplayer starts at init during loading (main.cpp:1392). Voice tries to connect to every peer at once (voice.js:314) with 2.5 s ICE waits, HRTF panners and audio elements, the welcome snapshot snaps glasses, and per-frame JSON parsing plus O(N^2) EM_ASM lookups (players.cpp:352, main.cpp:486-489, 1163-1170) all overlap the loading stutter. Defer voice until 'Everything loaded', stagger peers, and replace per-player EM_ASM with one batched binary exchange per frame.",
+  "BACKGROUND/RESUME: net.js queues (packets, eventsIn, worldIn) have no limit (net.js:46, 53, 56). After a stall they come out as a burst of old piano notes and sounds, and old samples clog interpolation. Keep the latest state per player, drop events older than about 500 ms, and collapse world entries by key.",
+  "UPDATE ORDER in frame() (main.cpp:1230-1265): shared.update runs inside updatePhysics with its own emscripten_get_now() (main.cpp:844), events and other world keys are handled afterwards, sendSelf comes before others.update, and the seat conflict check runs last. In the new design, net::poll() runs once at the top of the frame, then deltas are applied to all reducers, then gameplay, then physics, then the outgoing state, using a single nowMs.",
+  "SECURITY/ABUSE: client-only badge check for the bartender (main.cpp:171-175), any client can write any world key, no rate limits or Origin check on the worker, relay inboxes readable by id (relay.php:125-126). The authoritative server should check permissions using the verified account."
+ ]
+}

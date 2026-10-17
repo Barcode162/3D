@@ -1,0 +1,605 @@
+{
+ "group": "rendering",
+ "systems": [
+  {
+   "name": "Scene renderer core (draw submission, uniforms, culling)",
+   "files": [
+    "app/renderer.h",
+    "app/renderer.cpp"
+   ],
+   "purpose": "Owns every bar pipeline, the per-object dynamic-offset uniform buffer (256 B slots), and draws all loaded .glb placements, avatars, boxes, mirror glass, billboards and text into one command buffer each frame.",
+   "rating": 4,
+   "compatibility": "Works on iOS 26 Safari WebGPU and in headless SwiftShader. It only uses core WebGPU features (no ASTC, no timestamp queries). The per-draw API pattern (SetBindGroup x2 + SetVertexBuffer + SetIndexBuffer + DrawIndexed) is the most expensive pattern for Safari, because every call crosses wasm -> JS -> WebKit validation -> IPC to the GPU process.",
+   "delay": "Adds no network delay. Input-to-screen is about 2-3 frames (rAF + Fifo + WebKit GPU-process queue): about 35-50 ms at 60 fps, rising to 60-90 ms when the GPU is the bottleneck at about 35 fps.",
+   "frameCost": "Measured from the GLBs: 67 placements and 524 primitives, so about 524 model draws in the main pass and about 524 more in the full mirror. That is about 1,060 draws and about 4,200 encoder calls per frame, plus boxes (one draw each, up to 320 per pass). Estimated CPU encode: 4-8 ms per frame with the full mirror, 2-4 ms without. Triangles: about 617k for static placements plus about 40k for the avatar, so about 1.3M per frame with the full mirror. Small per-frame heap allocs in drawModels (4 vector allocs + 2 sorts), under 0.1 ms.",
+   "syncRisk": "low. It renders whatever state it is handed. The real risk is indirect: the model placement index is the identity used by physics, the network (bodyOfModel) and highlights (see cross-cutting).",
+   "problems": [
+    {
+     "issue": "No batching or instancing. Every primitive of every placement is its own draw with its own vertex/index buffer binds.",
+     "severity": "critical",
+     "evidence": "renderer.cpp:771-779: drawModels loops placements, then parts, calling SetBindGroup(1, dyn offset), SetBindGroup(2, material), SetVertexBuffer, SetIndexBuffer and DrawIndexed for each part. It is called 4 times per frame (975, 980 main; 919, 926 mirror). GLB census: bar_counter_l 54 prims, decor_walls 61, lounge 35, back_bar_tall 34, 8 bar stools x 4, 12 table stools x 4, and so on, for 524 in total.",
+     "fix": "Bake static placements into a few large shared vertex/index buffers, split into spatial clusters, with a per-vertex or per-draw material index. Draw repeated props (stools, tables, candles, glasses, pendants) instanced from an instance storage buffer. Target 150 or fewer draws in the main pass and 60 or fewer in the mirror."
+    },
+    {
+     "issue": "No frustum culling. Everything behind the camera is submitted and vertex-processed.",
+     "severity": "critical",
+     "evidence": "renderer.cpp:760-781 draws every model where m.gpu is set. GpuModel::boundsMin/boundsMax exist (model.h:49) but are never read. The race renderer already has a working AABB test (race/view.cpp:318 visible(viewProj, ...)).",
+     "fix": "Move visible() into the engine. Cull per cluster and per instance against the camera frustum, and against a portal frustum through the glass rectangle for the mirror. This needs the clustering step, because zone models span the whole room."
+    },
+    {
+     "issue": "Gameplay code writes GPU buffers directly at arbitrary points in the frame, giving scattered uploads with no single owner.",
+     "severity": "medium",
+     "evidence": "setGlow (628-638), setLightScale (640-647), setModelBaseGlow/writeModelGlow (649-660), setModelTransform (749-756) and setOthers (796-806) each call queue.WriteBuffer immediately. They are called from main.cpp interaction, physics (main.cpp:859) and event handlers.",
+     "fix": "Game systems fill a per-frame RenderFrame struct (camera, instance transforms, highlights, light scales, avatar poses). The renderer uploads once per frame in a fixed phase from a ring buffer (2-3 WriteBuffers in total)."
+    },
+    {
+     "issue": "The mirror glass is drawn after the transparent pass with depth write on, so it paints over see-through objects in front of it, such as a glass held up to the mirror.",
+     "severity": "medium",
+     "evidence": "renderer.cpp:979-995: modelBlendPipeline_ runs at 979-980, then glassPipeline_ (depthWriteEnabled = true, createGlassPipeline 588-591) at 983-995. Blended parts never write depth.",
+     "fix": "Draw the glass with the opaque geometry, before the blend pass."
+    },
+    {
+     "issue": "Transparent sorting uses the placement origin, but the room-sized zone models are all placed at (0,0,0). Bottles and glassware inside them sort wrongly against each other and against placed glasses.",
+     "severity": "medium",
+     "evidence": "renderer.cpp:766-769 sorts by ModelDraw::position. bar_scene.cpp:194, 273, 315, 341 place bar_counter_l, back_bar_tall, decor_walls and lounge at {0,0,0}; these contain 8, 3, 2 and 2 BLEND materials. Parts inside one model are never sorted.",
+     "fix": "Sort by the world-space bounds centre of each blended part or cluster (baked at load time). Keep the blended set small (glass, flames)."
+    },
+    {
+     "issue": "Boxes are drawn one per draw call, with a 256 B uniform slot each, in both passes.",
+     "severity": "low",
+     "evidence": "renderer.cpp:840-847 loops over boxCount_ with SetBindGroup + DrawIndexed. setBoxes writes up to 320 x 256 B = 80 KB per frame (816-838).",
+     "fix": "Make it one instanced draw: a storage buffer of 48-64 B box instances, indexed by instance_index."
+    },
+    {
+     "issue": "Index buffers are always Uint32 and vertices are 48 B floats, which doubles index bandwidth and inflates vertex fetch.",
+     "severity": "low",
+     "evidence": "renderer.cpp:693, 777 use IndexFormat::Uint32. GpuModel::vertexLayout (model.cpp:123-135) is f32x3 pos + f32x3 normal + f32x2 uv + f32x4 tangent = 48 B.",
+     "fix": "Use a packed vertex: pos f32x3 (or unorm16 per cluster), oct-encoded normal+tangent snorm16x4, uv f16x2 or unorm16x2, for 20-24 B. Use Uint16 indices per cluster where possible."
+    },
+    {
+     "issue": "objectCount and status still assume the legacy SceneObject path, which now holds 0 objects but still costs setup.",
+     "severity": "low",
+     "evidence": "Smoke log: 'Scene: 0 objects, 23 lights'. sceneDraws_ is empty, yet drawItems (689-696) runs and pipeline_/mirroredPipeline_ are created (521-525) only for boxes.",
+     "fix": "Remove the SceneObject draw path. Boxes become an instanced dynamic layer."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Split into engine/render/: (1) PipelineCache: async creation, keyed by shader variant, vertex layout, blend, winding and format, using WGSL override constants for variants. (2) UploadRing: one per-frame dynamic buffer, all uploads in one phase. (3) RenderWorld: static clusters (merged geometry, AABB, material ids), an instance table (repeated props, movable glasses, with stable entity ids), and dynamic layers (boxes, avatars, text, billboards). (4) Views: main and mirror, each with its own cull list. (5) A FrameGraph-lite: mirror pass, main pass, UI. Game code only writes a RenderFrame; it never touches wgpu. Budgets: 150 or fewer draws in main, 60 or fewer in the mirror, 350k or fewer visible triangles, 2 ms or less CPU encode."
+  },
+  {
+   "name": "Mirror reflections",
+   "files": [
+    "app/renderer.cpp",
+    "shaders/mirror.wgsl",
+    "app/bar_scene.cpp"
+   ],
+   "purpose": "Renders the room (full mode) or just avatars (avatars-only mode) from a camera reflected across the big wall mirror into a screen-sized texture, then draws the glass sampling it 1:1.",
+   "rating": 4,
+   "compatibility": "Works on Safari. It relies on per-fragment discard for the clip plane, which is legal but disables Apple TBDR hidden-surface removal. The textureLoad 1:1 lookup forces the reflection target to match the screen exactly (860x1864 at DPR 2).",
+   "delay": "No added latency (same frame). Turning the mirror on causes an immediate FPS drop.",
+   "frameCost": "Full mode redraws all ~524 model draws plus avatars and boxes: +2-4 ms CPU encode and about +620k triangles. Fill cost is up to the whole screen at full resolution with full PBR shading (estimated +4-7 ms GPU when the mirror fills most of the view). Avatars-only mode is cheap (about 0.3-1 ms). Reflection target: 6.4 MB.",
+   "syncRisk": "medium. Mirror on/off and mode are shared state (DECISIONS: 'Shared as m<i> = [on, avatarsOnly]'), so one player switching to full mirror raises everyone's GPU cost, including people who are not looking at it.",
+   "problems": [
+    {
+     "issue": "The full mirror re-renders the entire scene at full screen resolution with the full material and lighting shader.",
+     "severity": "high",
+     "evidence": "renderer.cpp:915-927 calls drawItems, drawBoxes, drawModels(solid) and drawModels(blend) with the mirrored pipelines. resizeMirrorTargets (663-673) sizes the target to gpu_->width x height. mirror.wgsl:34 textureLoad(reflection, vec2i(in.clip.xy)) requires that 1:1 size.",
+     "fix": "Render the reflection at half resolution (or 0.6x) and sample it with projective UVs and a linear sampler in mirror.wgsl. Use a cheap shading variant (override constants: at most 4 lights, no normal/AO/emissive samples) and skip small clusters and instances in the mirror cull list."
+    },
+    {
+     "issue": "The visibility test is weak. Any mirror corner behind the camera forces a full-screen reflection, and walls never occlude the mirror.",
+     "severity": "high",
+     "evidence": "renderer.cpp:853 only checks the plane side, which is true almost everywhere in the room because the mirror faces in. Lines 872-876 fall back to the whole screen (minX = minY = 0, maxX = W, maxY = H) when any corner has w <= 0.01, which is common when standing near the 4.4 m wide glass and looking along the wall.",
+     "fix": "Clip the glass quad against the near plane properly to get a tight scissor. Add a WebGPU occlusion query on the glass quad in the main pass and use last frame's result to skip the reflection. Add a distance/zone gate (only zones that can see the mirror)."
+    },
+    {
+     "issue": "The clip plane is done with discard in every fragment shader, including the main view, which defeats HSR (see the lighting system). The reflected pass shades hidden pixels too.",
+     "severity": "high",
+     "evidence": "scene.wgsl:158-160, 178-180, 278-280, 289-291 discard by frame.clipPlane. The main view sets clipPlane (0,0,0,1) at renderer.cpp:949 but still runs a shader that contains discard.",
+     "fix": "Use an oblique near-plane projection (Lengyel) for the mirror view, which clips for free with no discard. Remove discard from all opaque entry points."
+    },
+    {
+     "issue": "The mirror mode is shared across the network, so remote players control your GPU budget.",
+     "severity": "medium",
+     "evidence": "main.cpp:776-786 updateMirrorButtons reflects shared mirror state. docs/DECISIONS.md: 'Mirror modes ... Shared as m<i> = [on, avatarsOnly]'.",
+     "fix": "Make the mirror mode local per viewer (the VRChat convention). Keep shared state, if any, only for the button lights, and add a 'performance mode' override."
+    },
+    {
+     "issue": "The reflection is re-rendered every frame even when nothing in it has moved.",
+     "severity": "low",
+     "evidence": "renderer.cpp:953 calls renderMirror unconditionally each frame.",
+     "fix": "Optionally update at 30 Hz on alternate frames when the camera is still. Keep 60 Hz while avatars are moving in view."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "MirrorView = a view in the frame graph with its own cull list (portal frustum through the glass rectangle, small-prop exclusion, LOD1), oblique projection, half-resolution target in the swapchain format, and a quality tier (full / avatars-only / off) chosen locally. Gate it with an occlusion query plus a zone check. Budget: 60 or fewer draws, 150k or fewer triangles, 3 ms or less GPU, 1.6 MB target."
+  },
+  {
+   "name": "Scene shading and lighting (scene.wgsl + light grid)",
+   "files": [
+    "shaders/scene.wgsl",
+    "app/renderer.cpp",
+    "app/bar_scene.cpp"
+   ],
+   "purpose": "PBR metal/roughness shading for glTF models, skinned avatars and boxes. Point lights come from a 2D floor grid (16x16 max cells, 8 lights per cell), plus ambient 'roomGlow', fog, ACES tonemap and manual gamma.",
+   "rating": 6,
+   "compatibility": "Valid WGSL on Safari and Chrome. Manual pow(1/2.2) is needed because the surface is a non-sRGB format (gpu.cpp:94 takes caps.formats[0]).",
+   "delay": "None.",
+   "frameCost": "Per model pixel: 5 texture samples with 8x anisotropy on uncompressed RGBA8, plus up to 8 GGX lights (23 lights in total; 2 cells are over-full per the smoke log). At 1.6M px (DPR 2) with an estimated 2-3x overdraw that is not removed (because of discard), the main pass is estimated at 6-10 ms GPU on an A17 Pro. This is the single biggest GPU cost alongside the mirror.",
+   "syncRisk": "none. Light switch and fire intensities come through setLightScale, which follows shared state.",
+   "problems": [
+    {
+     "issue": "discard in every opaque fragment entry point disables Apple's hidden-surface removal, so every overdrawn fragment runs the full PBR loop.",
+     "severity": "high",
+     "evidence": "scene.wgsl:158-160 (fs_main), 178-180 (fs_skinned), 278-280 (fs_model), 289-291 (fs_model_blend). The main view passes clipPlane (0,0,0,1) at renderer.cpp:949, so the branch is never taken but is still compiled in.",
+     "fix": "Use separate entry points or an override constant without the clip test for the main view, and oblique projection for mirrors. Optionally add a depth pre-pass for the mirror only if profiling says so."
+    },
+    {
+     "issue": "The light grid is 2D, with the top-8 lights per cell chosen per cell. Adjacent over-full cells can pick different light sets, causing visible lighting seams at 1.38 m cell borders.",
+     "severity": "medium",
+     "evidence": "renderer.cpp:397-416 sorts reach per cell and truncates to kLightsPerCell = 8 (renderer.h:83). Smoke log: 'Lights: 23 in a 16x15 grid of 1.38 m cells (some cells have more than 8...) Crowded light cells: 2'.",
+     "fix": "Short term: tune ranges so no cell exceeds 4-6. Long term: bake static diffuse lighting into lightmaps or vertex colour in the Blender pipeline, and keep only the 2-4 nearest dynamic lights for specular plus switchable lights."
+    },
+    {
+     "issue": "Five texture fetches per pixel even when a material has no metal/rough, AO or emissive map (1x1 fallbacks are still sampled), with 8x anisotropy.",
+     "severity": "medium",
+     "evidence": "scene.wgsl:247-251 always samples base, metalRough, normal, occlusion and emissive. renderer.cpp:572 sets samplerDesc.maxAnisotropy = 8. model.cpp:158-160 binds 1x1 fallbacks.",
+     "fix": "Pack ORM (occlusion/roughness/metal) into one texture at bake time and use material feature flags or override variants. Use anisotropy 4 on base/normal only, and 1-2 in the mirror variant."
+    },
+    {
+     "issue": "Manual gamma (pow per pixel) and tonemap duplicated across shaders.",
+     "severity": "low",
+     "evidence": "scene.wgsl:394 pow(tonemap(color), 1/2.2); race.wgsl:87 has its own tonemap; text and billboard work in display space.",
+     "fix": "Configure the surface with viewFormats [BGRA8UnormSrgb] and render to the sRGB view. Share tonemap in one WGSL include (string concatenation at load time)."
+    },
+    {
+     "issue": "The skinned path samples the texture array 3 times for every avatar pixel, even on untextured parts.",
+     "severity": "low",
+     "evidence": "scene.wgsl:183-194: three sampleColor calls, then a select on in.layer.",
+     "fix": "Use UV-mapped avatar textures, or a smaller triplanar (2 samples), in the restructured avatar material."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the PBR math (GGX, Smith, Karis sphere lights, env BRDF approximation), which is sound. Restructure into one WGSL library with variants via override constants: {main|mirror quality} x {opaque|blend} x {static|instanced|skinned}. Remove discard from opaque paths. Lighting: baked static lightmap (second UV set from Blender) plus at most 4 dynamic lights per pixel from a light list per cluster, computed on the CPU per cluster rather than per floor cell. sRGB swapchain view. Budget: 7 ms or less GPU for the main pass at DPR 2."
+  },
+  {
+   "name": "Model streaming and glTF parsing",
+   "files": [
+    "engine/model.h",
+    "engine/model.cpp",
+    "engine/gltf.h",
+    "engine/gltf.cpp",
+    "engine/fetch.cpp"
+   ],
+   "purpose": "Downloads each .glb.gz, gunzips it in the browser, parses JSON and accessors into world-space 48 B vertices (computing tangents and normals if missing), decodes embedded JPEGs, and builds per-part GPU buffers plus per-material bind groups.",
+   "rating": 5,
+   "compatibility": "Uses DecompressionStream (iOS 16.4+), createImageBitmap and copyExternalImageToTexture. All fine on iOS 26. Only embedded images and buffer 0 are supported (gltf.cpp:141, 156), and there is no KHR_mesh_quantization or meshopt. That is fine for the own pipeline, but users' own GLBs may fail.",
+   "delay": "10.93 MB gz over 24 parallel requests: about 2 s at 50 Mbps, about 5 s on 20 Mbps LTE. Parsing and upload add an estimated 1-3 s on the phone. Downloads only start after the procedural textures finish (1267 ms measured in headless; renderer.cpp:277 runs before loadModels at 349).",
+   "frameCost": "During loading: parseGlb runs untimed inside the fetch callback. The 5.7 MB/100k-triangle back bar, the 81k-triangle counter and so on are estimated at 20-80 ms each on the main thread, and several land in the same second, so the frames stall. After loading: zero.",
+   "syncRisk": "low directly. But a failed file still counts as 'done', so one player can be missing models (and their physics colliders keyed by placement) while others have them.",
+   "problems": [
+    {
+     "issue": "GLB parsing runs synchronously in the download-complete callback, outside the per-frame job budget.",
+     "severity": "high",
+     "evidence": "model.cpp:229-240: fetchFile's callback calls parseGlb(bytes, l->data, error) directly. gltf.cpp:278-371 does the JSON parse, per-vertex transforms, computeTangents and bounds. fetch.cpp:43-57 invokes it from the JS promise.",
+     "fix": "Bake a GPU-ready pack offline (pre-transformed, packed vertices, tangents included), so runtime 'parsing' is a header read plus WriteBuffer slices queued as byte-budgeted jobs. Keep gltf.cpp only for user-supplied GLBs, and run it in slices."
+    },
+    {
+     "issue": "finish() creates every buffer and bind group of a model in one job, and runJobs always runs at least one job, so a big model blows the 3/8 ms budget.",
+     "severity": "high",
+     "evidence": "model.cpp:139-215 loops over all materials and primitives, calling makeBuffer and WriteBuffer. gpu_upload.cpp:371-380 runJobs runs a job before checking the time.",
+     "fix": "Use one job per buffer slice of at most 1-2 MB. Budget by bytes per frame (for example 4 MB loading, 1 MB in-world) rather than by elapsed time after the fact."
+    },
+    {
+     "issue": "Every image of every model is sent to createImageBitmap at once. Decoded bitmaps pile up in Module.bitmaps until a job copies them, so peak memory spikes.",
+     "severity": "medium",
+     "evidence": "model.cpp:262-276 calls loadImageTexture for every image immediately. gpu_upload.cpp:330-341 stores bitmaps in Module['bitmaps'][id] until the job at 436-465 runs. hall.glb alone has 48 images (6x1k, 38x512).",
+     "fix": "Limit decodes to 4 in flight (a queue in JS). With ASTC textures there is no decode step at all."
+    },
+    {
+     "issue": "Each file is copied 4-5 times through JS and wasm, and the wasm heap never shrinks.",
+     "severity": "medium",
+     "evidence": "fetch.cpp:80-92 concatenates chunks, decompresses, then mallocs and copies into HEAPU8. fetch.cpp:53 copies again into std::vector. gltf.cpp:146 copies image bytes. gpu_upload.cpp:331 HEAPU8.slice. CMakeLists.txt:24 ALLOW_MEMORY_GROWTH.",
+     "fix": "Stream the pack into a reusable staging region, upload GPU data straight from the JS ArrayBuffer (queue.writeBuffer accepts JS buffers), and keep only small metadata in wasm."
+    },
+    {
+     "issue": "A failed or flaky download is never retried, and the room silently loads without it.",
+     "severity": "medium",
+     "evidence": "model.cpp:230-233 calls done(nullptr). renderer.cpp:731-733 increments filesDone_ anyway. main.cpp:1183 then declares 'Everything loaded'.",
+     "fix": "Retry with backoff (3 attempts), then show a 'some parts failed, tap to retry' message on the loading screen. Gate entering on the shell and colliders being present."
+    },
+    {
+     "issue": "Asset URLs are not versioned, while the wasm is.",
+     "severity": "medium",
+     "evidence": "renderer.cpp:729 builds 'assets/models/' + files[f] + '.gz' with no ?v=. index.html:137 cache-busts only app.js/wasm, and Pages serves max-age=600 (DECISIONS).",
+     "fix": "Use content-hashed filenames from a manifest written by the deploy, served immutable (R2 or Cloudflare)."
+    },
+    {
+     "issue": "No per-part bounds, and zone models are baked in world space, so parts span the whole room.",
+     "severity": "medium",
+     "evidence": "model.h:49 has only whole-model bounds. DECISIONS 'Zone models in world space ... placed at the origin'. finish_and_export joins parts per material.",
+     "fix": "In the bake step, split triangles into spatial clusters (about 3 m cells) per material, each with its own AABB."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Add an offline 'bar pack' baker (Python in tools/assets, or a native C++ tool) that emits manifest.json, geometry.bin (packed vertices and indices per cluster and instance prototype, LOD0/LOD1) and textures (ASTC 4x4/6x6 mip chains in a minimal own container, with an RGBA8 fallback). Runtime: Loader fetches with priorities (shell, then big zones, then props), and all completions only enqueue byte-budgeted upload jobs. Keep engine/gltf.cpp as a dev/user-import path running in time slices."
+  },
+  {
+   "name": "Texture upload and GPU memory",
+   "files": [
+    "engine/texture.h",
+    "engine/texture.cpp",
+    "engine/gpu_upload.h",
+    "engine/gpu_upload.cpp"
+   ],
+   "purpose": "Turns decoded images into mipmapped GPU textures. CPU float mips are used for the procedural arrays and billboards; createImageBitmap, then copyExternalImageToTexture, then render-pass mipgen is used for model JPEGs. It also runs the loading job queue.",
+   "rating": 4,
+   "compatibility": "copyExternalImageToTexture to RGBA8UnormSrgb works on Safari. The device never requests 'texture-compression-astc' (gpu.cpp:63-75 has no requiredFeatures), although Apple GPUs support it in Safari WebGPU. Model textures carry RenderAttachment usage only for mip generation.",
+   "delay": "About 0.5-2 ms of GPU/CPU per texture job while loading, and 232 textures. After that it adds nothing.",
+   "frameCost": "Resident GPU memory is about 320 MB: model textures 231.6 MB (tools/assets/glb_report.py: hall 92.3, bar_counter 29.0, lounge 28.0, back_bar 17.5), procedural arrays 22.4 MB, mirror target 6.4 MB, depth 6.4 MB, swapchain about 19 MB, geometry about 25 MB. Uncompressed RGBA8 sampled 5 times per pixel with 8x anisotropy costs a lot of memory bandwidth and heat.",
+   "syncRisk": "none",
+   "problems": [
+    {
+     "issue": "All textures are uncompressed RGBA8 (231.6 MB for models), with no budget enforcement.",
+     "severity": "high",
+     "evidence": "model.cpp:265-266 picks RGBA8UnormSrgb/RGBA8Unorm. gpu_upload.cpp:447-454 creates full-size textures with a full mip chain. glb_report TOTAL tex MB = 231.6.",
+     "fix": "Short term: a texture budget pass (512 for most surfaces, 1k only for floor/brick/counter, 256 for props), which roughly quarters the memory. Long term: ASTC (4x4 colour/normal, 6x6 large surfaces) pre-mipped offline, giving 30-60 MB in total, with an RGBA8 fallback when the feature is missing. The offline encoder (astcenc) is an outside tool like Blender, so confirm with the user per CLAUDE.md."
+    },
+    {
+     "issue": "One command-buffer submit per texture for mip generation. The mip pipeline is created lazily mid-load, which adds a pipeline-compile hitch.",
+     "severity": "low",
+     "evidence": "gpu_upload.cpp:382-421 creates an encoder, then per level creates 2 views, a bind group and a pass, then submits. mipPipeline (293-315) is created on first use per format.",
+     "fix": "Batch mip generation for several textures into one encoder per job. Pre-create both mip pipelines asynchronously at startup. This goes away with pre-mipped ASTC."
+    },
+    {
+     "issue": "CPU texture arrays compute pow() per channel per texel and copy each layer's Image.",
+     "severity": "medium",
+     "evidence": "texture.cpp:93-116: 'Image level = layers[layer]' is a 4 MB float copy, with linearToSrgb (pow) for 3 channels per texel per mip. createTexture2D 126-178 is the same.",
+     "fix": "Only keep this for tiny runtime-generated images. Use a 256-entry LUT for sRGB encoding, and move it into jobs."
+    },
+    {
+     "issue": "Images used as both colour and data get two full textures (no cases yet, but it doubles memory silently).",
+     "severity": "low",
+     "evidence": "model.cpp:264-266 pushes both formats. gpu_upload.cpp:446-461 creates one texture per format.",
+     "fix": "Create one RGBA8Unorm texture with an sRGB view format (viewFormats), or resolve this at bake time."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "A TextureStore with explicit budgets: resident 64 MB or less (ASTC). A few 2D texture arrays per size class (1024/512/256) so the static world binds one group, with a per-material layer index in a storage buffer. Uploads are pre-mipped blocks via WriteTexture, sliced by bytes per frame. Track memory with counters shown in a ?perf HUD."
+  },
+  {
+   "name": "Procedural textures",
+   "files": [
+    "engine/procedural.h",
+    "engine/procedural.cpp",
+    "app/bar_scene.cpp"
+   ],
+   "purpose": "Generates 8 tileable noise materials (wood planks, grain, brick, leather, plaster, fabric, denim, hair) at 512 px as colour and bump texture arrays for triplanar shading.",
+   "rating": 4,
+   "compatibility": "Pure C++. Works everywhere.",
+   "delay": "1267 ms measured in headless before the first model fetch starts (renderer.cpp:277 createMaterials runs before loadModels at 349). Estimated 0.4-0.9 s on the iPhone, during which 'Starting the engine...' is frozen.",
+   "frameCost": "0 per frame, but 22.4 MB of GPU texture arrays and about 64 MB of float temporaries at startup.",
+   "syncRisk": "none",
+   "problems": [
+    {
+     "issue": "Five of the eight layers are unused but generated at startup. The scene has 0 procedural objects; only the avatar uses fabric, denim and hair.",
+     "severity": "medium",
+     "evidence": "bar_scene.cpp:551-563 generates all 8. Smoke log 'Scene: 0 objects'. kTex usage: avatar.cpp:25, 97-104 (kTexFabric/kTexDenim/kTexHair only). materials.cpp:31-38 references the others only for the unused SceneObject path.",
+     "fix": "Drop the five unused layers. Bake the three avatar patterns offline into small textures (256 px) or generate them in background jobs after the first frame."
+    },
+    {
+     "issue": "Generation blocks the main thread before downloads begin, which adds directly to load time.",
+     "severity": "medium",
+     "evidence": "main.cpp:1369 renderer.init, then createMaterials, then buildBarTextures. loadModels is called afterwards inside init (renderer.cpp:349).",
+     "fix": "Start the asset fetch first (or from index.html before wasm), and generate anything procedural in jobs."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the noise library as an offline and dev tool. At runtime the avatar gets baked pattern textures, ideally in the same texture arrays as the world. No procedural generation on the critical startup path."
+  },
+  {
+   "name": "Procedural meshes and dynamic boxes",
+   "files": [
+    "engine/mesh.h",
+    "engine/mesh.cpp",
+    "app/renderer.cpp"
+   ],
+   "purpose": "Code-built box/cylinder/sphere meshes (position+normal) and the 'Box' dynamic layer used by the piano key lights, darts, drinks and held drinks.",
+   "rating": 6,
+   "compatibility": "Fine.",
+   "delay": "None.",
+   "frameCost": "Each box is 1 draw plus a 256 B uniform slot, drawn in both passes. Typically 0-40 boxes; the worst case is 320 x 2 draws and 80 KB uploaded per frame.",
+   "syncRisk": "low. Boxes for other players' darts and drinks come from network values (main.cpp:432, 1310-1314) and are drawn as-is.",
+   "problems": [
+    {
+     "issue": "Not instanced: one draw call and one 256 B slot per box.",
+     "severity": "low",
+     "evidence": "renderer.cpp:816-848.",
+     "fix": "Use an instanced draw from a storage buffer of compact instances (mat3x4, colour, glow, roughness, metallic: 64 B)."
+    },
+    {
+     "issue": "Mesh::upload uses Uint32 indices and a separate buffer per mesh.",
+     "severity": "low",
+     "evidence": "renderer.cpp:693 (IndexFormat::Uint32); mesh.h Mesh has its own buffers.",
+     "fix": "Put small shared meshes in the global geometry arena with Uint16 indices."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep mesh.* as the tiny procedural-geometry helper. The Box layer becomes a generic 'dynamic instances' layer in RenderFrame (any prototype mesh x N instances, one draw per prototype)."
+  },
+  {
+   "name": "Text renderer",
+   "files": [
+    "engine/text.h",
+    "engine/text.cpp",
+    "shaders/text.wgsl"
+   ],
+   "purpose": "SDF pixel-font text for screen UI, world labels, solid quads and shapes, rebuilt on the CPU every frame and drawn in one draw call.",
+   "rating": 7,
+   "compatibility": "Fine on Safari. fwidth is used for antialiasing, and Uint16 indices are fine (4096 glyphs x 4 = 16384 vertices).",
+   "delay": "None.",
+   "frameCost": "One draw. CPU about 0.1-0.3 ms to build glyphs. Up to 147 KB WriteBuffer per frame (4096 x 4 x 36 B), typically 5-20 KB.",
+   "syncRisk": "low. Other players' machine screens and name tags are drawn from network values every frame.",
+   "problems": [
+    {
+     "issue": "World text is projected on the CPU with the main camera only, so name tags and machine screens never appear in the mirror.",
+     "severity": "low",
+     "evidence": "text.cpp:233-234 transformPoint(viewProj_, p). renderer.cpp:998 draws text only in the main pass.",
+     "fix": "Store world text in world space with a per-view uniform viewProj, and draw it in the mirror pass too (or keep it intentionally main-only, and document that)."
+    },
+    {
+     "issue": "Overflow is silent after the first warning, and the vertex vector is rebuilt from scratch even when nothing changed.",
+     "severity": "low",
+     "evidence": "text.cpp:184-188 logs once (warnedFull_). Glyphs are rebuilt every frame by queueText (main.cpp:449-575).",
+     "fix": "Fine for now. Optionally cache static world labels in a persistent buffer region."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep as the UI and world-label layer. Move world labels to world-space vertices plus a per-view uniform, so the same buffer can draw in the mirror. It should be the last pass in the frame graph."
+  },
+  {
+   "name": "Picture billboards",
+   "files": [
+    "engine/billboard.h",
+    "engine/billboard.cpp",
+    "shaders/billboard.wgsl"
+   ],
+   "purpose": "Round profile pictures over players' heads: a 128 px x 8-slot texture array and one draw call.",
+   "rating": 7,
+   "compatibility": "Fine.",
+   "delay": "Picture appears when the profile image arrives (network).",
+   "frameCost": "One draw, at most 16 quads, negligible. setPicture does a CPU mip chain of a 128 px image, which is trivial.",
+   "syncRisk": "low. The slot is chosen by player index. If players join or leave and indices shift, a picture could briefly show on the wrong head unless slots are keyed by player id.",
+   "problems": [
+    {
+     "issue": "There are 8 slots but up to 7 others plus self; slots are indexed by caller-provided integers with no ownership.",
+     "severity": "low",
+     "evidence": "billboard.h kSlots = 8. main.cpp:383 setPicture(static_cast<uint32_t>(i), image).",
+     "fix": "Map slots by stable player id, with LRU eviction."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Becomes part of the UI/world-overlay layer, keyed by player id. Unchanged otherwise."
+  },
+  {
+   "name": "Bar scene render data",
+   "files": [
+    "app/bar_scene.h",
+    "app/bar_scene.cpp"
+   ],
+   "purpose": "Pure data: 67 model placements, 23 lights, 1 mirror, colliders, seats, interactables and game anchor points. Models are referenced by index in BarScene::models.",
+   "rating": 5,
+   "compatibility": "N/A (data).",
+   "delay": "None.",
+   "frameCost": "None directly. It defines the render load: 617k static triangles, 524 primitives, 23 lights.",
+   "syncRisk": "medium. Placement indices are used as identity by highlights (Interactable.firstModel), seats (Seat.model), mirror buttons (Mirror.buttonModels), physics (bodyOfModel) and therefore shared-world glass sync. Reordering placements, or running a client with stale cached assets or code, silently breaks the cross-client mapping.",
+   "problems": [
+    {
+     "issue": "Index-based coupling between render, physics, interaction and network.",
+     "severity": "medium",
+     "evidence": "bar_scene.h:93 Seat::model, 115 Interactable::firstModel/modelCount, 137 Mirror::buttonModels. main.cpp:848-859 bodyOfModel[i] maps to setModelTransform(i, ...).",
+     "fix": "Use stable string or hash entity ids (for example 'glass.pint.3'), with a registry resolving id to render handle, physics body and network key."
+    },
+    {
+     "issue": "The floor plan is duplicated between the Blender scripts and C++.",
+     "severity": "medium",
+     "evidence": "tools/assets/layout.py header: 'app/bar_scene.cpp repeats these numbers; change both together'. bar_scene.cpp:20-30 has the same constants.",
+     "fix": "The asset pipeline exports one layout JSON (placements, lights, colliders, seats, interactables, mirror) next to the pack. C++ loads it, so there is one source of truth."
+    },
+    {
+     "issue": "Room-sized zone models are placed at the origin, which defeats culling and transparent sorting.",
+     "severity": "medium",
+     "evidence": "bar_scene.cpp:150 hall, 194 bar_counter_l, 273 back_bar_tall, 315 decor_walls, 341 lounge, 387 stage, 411 darts_zone, 497 construction, 513 big_mirror: all at {0,0,0}.",
+     "fix": "Spatial clustering in the bake step (see model streaming)."
+    },
+    {
+     "issue": "Light layout overfills the 8-per-cell grid.",
+     "severity": "low",
+     "evidence": "23 lights; smoke log 'Crowded light cells: 2'.",
+     "fix": "Budget at most 4 overlapping dynamic lights, and bake the rest."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "BarScene becomes a loaded SceneDescription (from the layout JSON) with stable entity ids. The render side gets {clusters, instances, lights, mirrors}; gameplay gets {seats, interactables, anchors}; physics gets colliders. All reference entities by id, never by vector index."
+  },
+  {
+   "name": "Race renderer",
+   "files": [
+    "app/race/view.h",
+    "app/race/view.cpp",
+    "app/race/game.cpp",
+    "shaders/race.wgsl"
+   ],
+   "purpose": "A separate renderer for the full-screen racing sim: track chunks with frustum culling, cars and wheels, start lights, procedural sky and ground noise, and fake car shadows.",
+   "rating": 6,
+   "compatibility": "Fine. It has no discard and uses core features only.",
+   "delay": "The first time you sit at a sim, world_.init() plus view_.init() run synchronously (race/game.cpp:36-40, logs 'Race track ready in X ms'). That is a visible hitch, likely 100-400 ms including pipeline compiles.",
+   "frameCost": "Culls chunks (view.cpp:317-318). Cars use 6 draws each. The sky is a full-screen pass drawn first (view.cpp:312-314), so every covered pixel is shaded twice. Per-pixel noise (several noise() calls per surface in surfaceLook, race.wgsl:125-191) plus a carShadow loop over all cars (96-110) add moderate GPU cost.",
+   "syncRisk": "low for rendering. Spectators see only text on the monitors (main.cpp:418-427).",
+   "problems": [
+    {
+     "issue": "Lazy synchronous initialisation, including pipeline creation, on first sit.",
+     "severity": "medium",
+     "evidence": "race/game.cpp:35-41: 'if (!ready_) { world_.init(); ready_ = view_.init(...)'. view.cpp:142, 159 CreateRenderPipeline.",
+     "fix": "Create the race pipelines asynchronously during bar loading, and build the track mesh in jobs after entering, before anyone can sit."
+    },
+    {
+     "issue": "The sky is drawn before the opaque geometry, so it overdraws.",
+     "severity": "low",
+     "evidence": "view.cpp:312-316 draws the sky pipeline Draw(3) and then the track and cars.",
+     "fix": "Draw the sky last at z = 1 with depthCompare LessEqual."
+    },
+    {
+     "issue": "It duplicates the engine plumbing: its own frame/object layouts, 256 B dynamic slots, tonemap and frustum test.",
+     "severity": "low",
+     "evidence": "view.h:59-60 kObjectStride 256, kMaxObjects 160. race.wgsl:87 tonemap. view.cpp visible().",
+     "fix": "Build it on the shared render core (pipeline cache, upload ring, culling, WGSL library)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "The race becomes a second 'scene' on the shared render core: same pipeline cache, upload ring and cull code, with the sky last. Initialise it in the background during loading. Later, rendering the race onto the sim monitors (RACING step 4) should reuse the mirror's render-to-texture view path at low resolution and 30 Hz."
+  },
+  {
+   "name": "Loading flow and loading screen",
+   "files": [
+    "web/index.html",
+    "app/main.cpp",
+    "engine/gpu_upload.cpp",
+    "app/renderer.cpp"
+   ],
+   "purpose": "An HTML overlay with a progress bar while models stream in, then 'Tap to enter' (which also unlocks audio), a fade, and a version.txt stale-build check.",
+   "rating": 5,
+   "compatibility": "Fine on iOS 26 Safari. Requiring a tap before audio is correct.",
+   "delay": "Procedural textures take 0.4-1.3 s before downloads start. Downloads take 2-5 s, and parse/decode/upload 1-3 s, so a typical total of 4-8 s on Wi-Fi. If version.txt finds a newer build, the page reloads after the wasm and models have already started downloading, which doubles the load.",
+   "frameCost": "While the opaque overlay is shown, frame() still renders the full scene plus mirror every frame behind it (main.cpp:1265-1327 has no 'entered' gate). That wastes GPU time, heats the phone and competes with uploads. The progress-bar width transition (index.html:49-50) runs on the main thread, so it stutters during parse stalls.",
+   "syncRisk": "low. But a client can enter with missing models (failed downloads count as done), which then desynchronises the physics bodies tied to those placements.",
+   "problems": [
+    {
+     "issue": "'Ready' is declared when the CPU-side jobs finish, not when the GPU has compiled pipelines and made textures resident. The first frames after the reveal pay for the deferred work: Metal pipeline compile on first use, texture residency and mip-generation submits. This matches the known 'lag when it starts'.",
+     "severity": "high",
+     "evidence": "main.cpp:1183-1185 checks modelFilesDone() == modelFiles(). renderer.cpp:521-566 creates pipelines synchronously, and WebKit defers the real work. Mipgen submits happen per texture (gpu_upload.cpp:419-420).",
+     "fix": "Create all pipelines with CreateRenderPipelineAsync. After the last upload, render one warm-up frame that touches every pipeline/material at a tiny scissor, wait for queue.OnSubmittedWorkDone, and only then show 'Tap to enter'."
+    },
+    {
+     "issue": "The full scene is rendered behind the opaque loading overlay.",
+     "severity": "medium",
+     "evidence": "main.cpp:1222-1327: frame() always reaches renderer.render. The overlay is z-index 5 and opaque (index.html:38-43).",
+     "fix": "Skip scene rendering (clear only) until warm-up and enter, apart from the deliberate warm-up frame."
+    },
+    {
+     "issue": "The version check races the app start.",
+     "severity": "medium",
+     "evidence": "index.html:93-103 fetches version.txt asynchronously while 141-152 already inject app.js, which starts the wasm and model downloads.",
+     "fix": "Wait for the version check (with a 1.5 s timeout) before injecting app.js, or have the deploy write the build id into index.html with no-cache headers on Cloudflare."
+    },
+    {
+     "issue": "No error or retry state on the loading screen.",
+     "severity": "medium",
+     "evidence": "index.html:116-128 has only set and ready. Failed models still advance filesDone_ (renderer.cpp:731-733).",
+     "fix": "Add a failed(n) state with a retry button. Block entry only if the shell or colliders are missing."
+    },
+    {
+     "issue": "Fade and removal of the overlay can cause a compositing hitch over the WebGPU canvas at the moment of entering.",
+     "severity": "low",
+     "evidence": "index.html:42-43 'transition: opacity 0.7s', and display:none set after 800 ms (line 112).",
+     "fix": "Fade with opacity only (as now), but set will-change: opacity, and remove the element at the end of the transition via transitionend."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Loader states: boot (version check), fetch (prioritised manifest), upload (byte-budgeted jobs), warm-up (async pipelines plus one hidden frame plus onSubmittedWorkDone), ready, entered. Start the asset fetch from index.html in parallel with the wasm. Progress uses transform: scaleX. Show a perf/quality tier chooser in settings. Targets: interactive in 4 s or less on Wi-Fi, and no frame over 50 ms in the first 10 s after entering."
+  },
+  {
+   "name": "GPU device, surface and pipeline creation",
+   "files": [
+    "engine/gpu.h",
+    "engine/gpu.cpp",
+    "app/renderer.cpp",
+    "engine/text.cpp",
+    "engine/billboard.cpp"
+   ],
+   "purpose": "Adapter and device setup, surface configuration (pixel ratio capped at 2, Fifo, opaque), the Depth24Plus depth buffer, and synchronous creation of every pipeline.",
+   "rating": 6,
+   "compatibility": "iOS 26 Safari: Depth24Plus maps to 32-bit float on Apple, which is fine. surfaceFormat = caps.formats[0] (BGRA8Unorm), with no sRGB view format. No optional features are requested (ASTC available but unused).",
+   "delay": "Pipeline compiles land on first use: an estimated 50-200 ms each for scene.wgsl variants (9 bar pipelines, plus text, billboard, 2 mip pipelines and 2 race pipelines).",
+   "frameCost": "resizeIfNeeded reads the canvas CSS size every frame (gpu.cpp:101-104, getBoundingClientRect), which can force a synchronous layout whenever the DOM (log, HUD, menus) changed that frame.",
+   "syncRisk": "none",
+   "problems": [
+    {
+     "issue": "Device loss is only logged, with no recovery. On iOS, backgrounding or memory pressure can kill the GPU process, leaving a black screen until reload.",
+     "severity": "medium",
+     "evidence": "gpu.cpp:69-74 SetDeviceLostCallback only calls LOG_ERROR.",
+     "fix": "On loss, show a 'tap to reload the 3D view' prompt, or re-create the device and re-upload from the retained pack (renderer resources must be rebuildable)."
+    },
+    {
+     "issue": "All pipelines are created synchronously, and the race and mip pipelines lazily, mid-session.",
+     "severity": "medium",
+     "evidence": "renderer.cpp:521-566, 600; gpu_upload.cpp:312; race/view.cpp:142, 159.",
+     "fix": "Use one PipelineCache with CreateRenderPipelineAsync for every pipeline, finished before warm-up."
+    },
+    {
+     "issue": "Fixed DPR 2 with no adaptive quality.",
+     "severity": "medium",
+     "evidence": "gpu.cpp:16 kMaxPixelRatio = 2.0. An iPhone 15 Pro Max at DPR 2 is 860x1864 (1.6M px), and every pass is full resolution.",
+     "fix": "Quality tiers (2.0 / 1.6 / 1.3) chosen by measured frame time with hysteresis. Ideally render the 3D view to an offscreen target at scaled resolution and draw the UI at full resolution."
+    },
+    {
+     "issue": "Manual gamma because the surface is non-sRGB.",
+     "severity": "low",
+     "evidence": "gpu.cpp:94, 117-124 (no viewFormats); scene.wgsl:394.",
+     "fix": "Add config.viewFormats = {BGRA8UnormSrgb} and render through the sRGB view."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Gpu requests texture-compression-astc when the adapter has it, configures an sRGB view, uses a ResizeObserver flag instead of a per-frame CSS read, handles device loss, and exposes a PipelineCache with async creation. A ?perf HUD shows CPU ms per phase, draws, triangles, uploads and texture MB."
+  },
+  {
+   "name": "Skinned avatar drawing",
+   "files": [
+    "app/renderer.cpp",
+    "shaders/scene.wgsl"
+   ],
+   "purpose": "Draws your own first-person body (head hidden), your mirror self, and up to 7 other players with 32-bone uniform palettes.",
+   "rating": 6,
+   "compatibility": "Fine.",
+   "delay": "None in the renderer. Pose latency comes from players.cpp smoothing.",
+   "frameCost": "20,858 vertices per avatar look (smoke log), drawn once in the main pass and once in the mirror per avatar. With 8 players and the full mirror that is about 16 skinned draws and about 330k skinned vertices, plus 2 KB of bones per player per frame (renderer.cpp:800-802). 8 looks are uploaded as separate full meshes (renderer.cpp:341), 6.7 MB in total.",
+   "syncRisk": "low. setOthers(transforms, bones, looks) maps by vector position (renderer.cpp:798-805). If the player list reorders between frames, slot buffers swap with it, which is harmless because everything is rewritten each frame.",
+   "problems": [
+    {
+     "issue": "One full mesh per look, although only the colours differ.",
+     "severity": "low",
+     "evidence": "renderer.cpp:341 uploads every look; avatar.cpp builds a look by colour (Paint).",
+     "fix": "Use one mesh with a per-look palette (a uniform or storage colour table indexed by a vertex part id)."
+    },
+    {
+     "issue": "Each player has its own bones buffer and bind group, and the bone uploads happen as many separate writes.",
+     "severity": "low",
+     "evidence": "renderer.cpp:356 makeBonesBindGroup per slot; 800-802 WriteBuffer per player.",
+     "fix": "Use a single storage buffer of all palettes with an offset per instance, uploaded in the frame upload phase."
+    },
+    {
+     "issue": "No avatar LOD or distance culling. Every player is drawn fully in both passes.",
+     "severity": "low",
+     "evidence": "renderer.cpp:808-814 drawOthers loops over all othersShown_.",
+     "fix": "Add frustum culling, LOD1 (about 6k vertices) beyond 6 m and always in the mirror."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "An avatar layer in RenderFrame: N instances of {transform, palette id, bone offset}, one storage buffer of bones, culled per view, LOD by distance. Same shader library variant 'skinned'."
+  }
+ ],
+ "crossCutting": [
+  "Biggest source of bar lag, estimated: about 1,060 draw calls and about 4,200 WebGPU encoder calls per frame with the full mirror (524 primitives x 2 passes, measured from the GLBs), plus no culling, plus discard in every opaque shader (which kills Apple HSR), plus full-resolution, fully shaded reflection. Fix order, cheapest and biggest first: (1) remove discard from the main-view shaders and use oblique projection for the mirror; (2) half-resolution mirror with a cheap shader, occlusion query and a local-only mirror mode; (3) frustum culling plus spatial clustering of the zone models; (4) instancing and static merging down to 150 or fewer draws; (5) texture budget, then ASTC; (6) baked lighting.",
+  "Lag 'when it starts': nothing warms the GPU before the reveal. Pipelines are created synchronously and compiled lazily by WebKit, mip generation is submitted per texture, and 'ready' means CPU jobs done (main.cpp:1183). Add async pipelines, a hidden warm-up frame and queue.OnSubmittedWorkDone before 'Tap to enter'. Also stop rendering the scene behind the opaque loading overlay.",
+  "Loading stutter is not fully fixed. parseGlb runs untimed in fetch callbacks (model.cpp:236), runJobs always runs at least one job, and model finish() is a single job. All async completions (fetch, decode, network) must only enqueue work, and jobs must be sliced and budgeted by bytes.",
+  "Proposed budgets for the iPhone 15 Pro Max at 60 fps (16.6 ms): main-thread CPU 8 ms or less (sim and net about 3, render encode 2 or less, uploads 0.5 or less, jobs 1-2); GPU 11 ms or less (main 7 or less, mirror 3 or less at half resolution, UI 0.5 or less); 150 or fewer draws in main and 60 or fewer in the mirror; 350k or fewer visible triangles in main and 150k or fewer in the mirror; at most 4 dynamic lights per pixel; resident textures 64 MB or less; render targets 25 MB or less; wasm heap 96 MB or less; first interactive within 4 s on Wi-Fi; no frame over 50 ms after entering.",
+  "Ownership and update order: gameplay code calls renderer setters that WriteBuffer immediately at random points in the frame (setGlow, setModelTransform, setLightScale, setModelBaseGlow, setOthers). Restructure to sim (fixed step), then build RenderFrame (a single writer per field), then one upload phase, then encode. This also gives a clean place to interpolate network and physics state for rendering.",
+  "Identity coupling and sync: BarScene::models vector indices are the identity for highlights, seats, mirror buttons, physics bodies (bodyOfModel) and therefore shared-world glass sync. Combined with unversioned asset URLs (renderer.cpp:729, while the wasm is cache-busted) and the 10-minute Pages cache, two clients can disagree on which glass is which. Use stable entity ids plus a content-hashed asset manifest (immutable, on Cloudflare R2), and include the asset or protocol version in the room join handshake.",
+  "Shared mirror state lets one player push everyone onto the expensive full-mirror path. Make the mirror mode a local, per-viewer setting, as VRChat does.",
+  "Single source of truth for the layout: the floor plan lives in both tools/assets/layout.py and app/bar_scene.cpp. The asset pipeline should export the layout JSON (placements, colliders, lights, seats, interactables, mirror) next to a baked GPU-ready pack, so visuals, physics and gameplay can never drift apart.",
+  "There are two renderers (bar and race) with duplicated plumbing: pipelines, 256 B dynamic slots, tonemap, frustum test. Build one engine render core (PipelineCache, UploadRing, Culling, WGSL library with override-constant variants, frame graph of views), with the bar and race as scenes on it. The race track and pipelines should initialise in the background during loading, not on first sit.",
+  "Measurement gap: there are no per-phase timers, draw or triangle counters, or GPU memory counters on the phone. Add a ?perf HUD and toggles (mirror off, model groups off, lights off, DPR) before and after each restructure step, and ask whether Low Power Mode is on (it caps Safari at 30 fps).",
+  "Memory peaks: about 320 MB GPU, 5 copies of each GLB through JS and wasm, unbounded concurrent image decodes, and a wasm heap that never shrinks. On a long session with heat throttling plus iOS memory pressure this risks GPU-process loss, and device loss is currently only logged (gpu.cpp:69-74). Add budgets plus device-loss recovery.",
+  "Confirm with the user first (CLAUDE.md, outside tools): an offline ASTC encoder (astcenc) for compressed textures, and possibly a mesh simplifier for LODs (Blender's decimate is already available and avoids a new tool)."
+ ]
+}

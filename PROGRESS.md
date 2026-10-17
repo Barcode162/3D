@@ -4,7 +4,17 @@
 **Current focus:** The **racing sim** (`docs/RACING.md`): a real driving sim on the two rigs (1-2 players + bots, real physics, full-screen game, race on the rigs' monitors for everyone), then a realtime sync server
 
 ## Next up (start here in a new session)
-**2026-10-16, NEW TOP PRIORITY: the racing sim. The plan and checklist
+**2026-10-16, NEW TOP PRIORITY: the restructure. The plan is
+`docs/RESTRUCTURE.md`; work through its §4 steps in order, one step per
+session, starting at 0.1.** Every system was audited (scorecard and
+problems checklist in §3). Goals: 60 fps on the iPhone 15 Pro Max with no
+start-up lag, zero multiplayer sync issues (the Cloudflare room becomes the
+authority), far fewer error paths. Read "How to use this plan" in that file
+first. Ask the user the open questions in its §5 when a step needs them
+(Q1 Cloudflare account + secrets is needed by Phase 3, so ask in step 0.1).
+The racing plan below waits, except small driving-feel tweaks the user asks for.
+
+**2026-10-16, previous top priority: the racing sim. The plan and checklist
 is `docs/RACING.md`; work through its "Steps" in order.** Steps 1-3 are
 built: loading stutter fixed (`engine/gpu_upload.*`), real car physics
 (`engine/vehicle.*`), a 2.45 km circuit, 7 bots, collisions, full-screen

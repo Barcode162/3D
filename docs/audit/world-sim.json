@@ -1,0 +1,516 @@
+{
+ "group": "world-sim",
+ "systems": [
+  {
+   "name": "Rigid-body physics engine",
+   "files": [
+    "engine/physics.h",
+    "engine/physics.cpp"
+   ],
+   "purpose": "Own rigid-body solver. Moving bodies are compound spheres (today: 10 glasses, 290 spheres in total). The fixed world is 183 oriented boxes. It runs sequential impulses with friction and restitution, split position correction, sleeping, ray casts for picking and placing, and collects impact events for future sounds. It steps at a fixed 60 Hz with 8 substeps and catches up at most 8 steps per frame.",
+   "rating": 6,
+   "compatibility": "Plain C++ with no SIMD or threads, so it is fine in Safari wasm. Timings below come from my wasm harness in node on x86, built with em++ -O3 from the real sources. A17 Pro single-thread wasm speed is in the same range, maybe 1-1.5x slower. There is no SharedArrayBuffer, so it can't move to a worker thread on GitHub Pages.",
+   "delay": "Rendering reads the raw body state with no interpolation, so it is up to 1 step (16.7 ms) stale and steps unevenly. A held glass chases its target with stiffness 14/s, so it trails the hand by about 70 ms (meant to feel floaty). After a stall the world runs in slow motion, because time is capped at 8 steps (133 ms) and the rest is dropped.",
+   "frameCost": "Measured: about 52 \u00b5s per frame with 9 glasses asleep and 1 glass that never sleeps (see the seam bug); about 74 \u00b5s per frame on average while everything settles after load; about 300 \u00b5s per frame with all 10 awake and sliding; 2.6 ms for an 8-step catch-up frame with all awake. raycastStatic costs 2.8 \u00b5s (183 boxes) and runs 1-2 times per frame for aiming. Cost grows as bodies \u00d7 statics \u00d7 8 substeps plus bodies\u00b2 pairs, so the planned bottles on shelves would grow it fast.",
+   "syncRisk": "High. The solver is not shared or deterministic across clients. Each client simulates every glass nobody owns. Remote-driven (kinematic) bodies are moved per physics step while the network code expects per-frame motion, which causes stutter. Body state can be written from 3 places (main.cpp pick-up/throw, shared_world.cpp, the solver itself). There is no NaN guard, so a bad state would be broadcast to everyone.",
+   "problems": [
+    {
+     "issue": "Overlapping, coplanar static boxes create duplicate contacts. The pint glass at x=-3.7 sits on the seam between counter-top colliders 34 and 37 and wobbles for about 60 s after load (|v| 0.01-0.04 m/s, |\u03c9| up to 0.56 rad/s, above kSleepAngular 0.4) before it ever sleeps. That keeps the solver busy and the glass visibly jiggling. Its speed peaks just under shared_world's 0.05 m/s 'knocked' threshold, so a slightly worse seam would make every client claim and broadcast it.",
+     "severity": "high",
+     "evidence": "engine/physics.cpp:167-205: collideStatic applies a contact for every box a sphere touches, with no merging. app/bar_scene.cpp:206: counter-top segments are sized len/2+0.02, so neighbours overlap. engine/physics.cpp:15 sets kSleepAngular=0.4. My harness: body 1 first sleeps only after about 3600 frames; all others sleep at frame 30.",
+     "fix": "Per sphere, keep only the deepest contact per normal direction (or merge contacts with near-identical normals). Build the counter top from non-overlapping pieces, or one convex prism per straight run. Decide sleep from position/orientation drift over a window (e.g. under 1 mm and 1\u00b0 in 0.5 s) instead of instant speed."
+    },
+    {
+     "issue": "Remote (kinematic) bodies move by step count, not frame time, and rendering doesn't interpolate. shared_world sets velocity = (next-pos)/dt for one frame, but the solver moves the body n\u00d7kStep\u00d7v with n\u2208{0,1,2}. Remote glasses stall or double-move, and thrown glasses judder.",
+     "severity": "high",
+     "evidence": "app/shared_world.cpp:212 sets b.velocity = (next - b.position)/dt. engine/physics.cpp:104-109 runs 0..8 steps per frame from the accumulator. engine/physics.cpp:149-151 does position += velocity*h for kinematic bodies. app/main.cpp:847-859 sends the raw b.position to the renderer. Simulated \u00b11 ms frame jitter gives 0 or 2 steps on 3.3% of frames (195/6000).",
+     "fix": "Keep the previous and current pose per body and render at alpha = pending_/kStep. Give kinematic bodies a target pose per step (they move toward the target inside step()) instead of a per-frame velocity hack. Better still, render remote-owned bodies straight from snapshot interpolation and use the kinematic copy only for contacts."
+    },
+    {
+     "issue": "No broadphase. Each awake body tests all 183 statics in every substep, recomputing length(box.half) (a sqrt) each time, plus an O(n\u00b2) loop over body pairs.",
+     "severity": "medium",
+     "evidence": "engine/physics.cpp:167-170: loop over statics_ with reach = boundRadius + length(box.half). engine/physics.cpp:136: nested pair loop. Measured: 300 \u00b5s per frame with 10 awake, 2.6 ms for an 8-step frame.",
+     "fix": "Put static boxes in a uniform grid built once (the bar is about 18\u00d714 m, so 0.5 m cells) and store each box's bounding radius. Cache candidate boxes per body while its bounds don't move. Use a grid or sort-and-sweep for dynamic pairs. Track islands so a resting group sleeps and wakes together."
+    },
+    {
+     "issue": "60 Hz \u00d7 8 substeps, with up to 8 catch-up steps, means up to 64 substeps in one hitch frame. Time that doesn't fit is silently dropped, so physics time drifts from wall-clock and server time, and remote extrapolation (which assumes real time) goes wrong.",
+     "severity": "medium",
+     "evidence": "engine/physics.h:74-75: kSubsteps=8, kMaxStepsPerFrame=8. engine/physics.cpp:105 clamps pending_.",
+     "fix": "Drop to 4 substeps (spheres are already stable). Cap catch-up at 3-4 steps and keep a monotonic tick counter tied to server time, so network stamps and the sim agree."
+    },
+    {
+     "issue": "No NaN or infinity protection. normalized() divides by the length without a check. A degenerate contact or bad input turns a body into NaN for good, and sendGlass would then broadcast it to the whole room.",
+     "severity": "medium",
+     "evidence": "engine/physics.cpp:23-26 normalized(). app/shared_world.cpp:62-66 (sendGlass) sends the raw body state.",
+     "fix": "After integrating, check isfinite and the room bounds. Reset to the last good pose and put the body to sleep. Validate incoming network poses (finite, inside the room, quaternion renormalized) before applying them."
+    },
+    {
+     "issue": "A held glass is driven by velocity but still collides with statics at full strength, while contacts only push it at 30%. Holding it against a wall or counter (the hold target can sit inside the wall) makes it jitter and grind.",
+     "severity": "low",
+     "evidence": "engine/physics.cpp:116-126 velocity chase. engine/physics.cpp:133 runs collideStatic for held bodies too. engine/physics.cpp:42-45 scales the impulse by 0.3.",
+     "fix": "Treat the held body as kinematic, or sweep the hold target against statics (put it at the ray hit minus the radius) so it never presses into geometry."
+    },
+    {
+     "issue": "Impact events are collected and then thrown away every frame, and takeImpacts() swaps out the vector's storage, so pushes re-allocate.",
+     "severity": "low",
+     "evidence": "engine/physics.cpp:348-352 takeImpacts swap. app/main.cpp:846 discards the result.",
+     "fix": "Use a fixed ring buffer with a read cursor. Skip impact collection until W5 sounds use it."
+    },
+    {
+     "issue": "A body's identity is its vector index, and there is no add/remove/disable API. Its raw fields (held, kinematic, asleep, position) are written from main.cpp, shared_world.cpp and the solver, with no single owner.",
+     "severity": "low",
+     "evidence": "engine/physics.h:86-88: body(i) returns a mutable reference. app/main.cpp:796-830 (putDownOrThrow/tryPickUp). app/shared_world.cpp:127-151 and 180-229.",
+     "fix": "Use handles (BodyId with generation) and an explicit API: setMode(Dynamic|Kinematic|Held), setTarget, teleport. Only the owning entity system calls it."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the compound-sphere solver core (it is small and stable). Wrap it in a PhysicsWorld with: BodyId handles; body modes (Dynamic, Held, KinematicTarget); a static grid broadphase; contact dedupe; islands and drift-based sleep; a tick counter; previous/current poses for interpolated rendering; NaN guards. Physics advances only on fixed ticks driven by one SimClock (shared with networking). Rendering reads interpolated transforms. Long term, the same C++ compiled to wasm can run inside the Cloudflare Durable Object for bodies nobody holds (server-authoritative flight and rest)."
+  },
+  {
+   "name": "Props (movable things \u2192 physics bodies)",
+   "files": [
+    "app/props.h",
+    "app/props.cpp"
+   ],
+   "purpose": "Turns the bar layout into the physics world. Every collider becomes a static box, every scene object an AABB box, and every ModelPlacement with a Prop shape (pint or rocks glass) becomes a compound-sphere body with mass from material density \u00d7 wall volume. It also fills bodyOfModel (model index \u2192 body index).",
+   "rating": 5,
+   "compatibility": "Pure C++ with no compatibility concerns.",
+   "delay": "None at runtime. buildPhysics takes about 0.1 ms once at startup.",
+   "frameCost": "None per frame. The output is 33 spheres per pint glass and 25 per rocks glass, 290 in total, and the solver's cost scales with that.",
+   "syncRisk": "Medium. The body index created here is the multiplayer key: glass 'g<i>' in shared_world assumes body i is glass i and that every body is a glass. Index order follows the model placement order in bar_scene.cpp, so any layout edit, or a client running a cached older build, maps glasses to the wrong entries.",
+   "problems": [
+    {
+     "issue": "The network identity of a glass is its physics body index, which depends on where its model sits in the scene's model list.",
+     "severity": "medium",
+     "evidence": "app/props.cpp:73: bodyOfModel[i] = addBody(...), in model order. app/shared_world.cpp:33: glassKey(index) = \"g\" + index. app/shared_world.cpp:114: physics.body(i) for entry i. app/main.cpp:1393 sizes the shared glasses by bodyCount().",
+     "fix": "Give every networked prop a stable id in the layout data (e.g. 'glass.bar.3' hashed to a uint16). Keep an id \u2192 entity \u2192 BodyId map. Send the layout or protocol version in the hello and refuse mismatched clients."
+    },
+    {
+     "issue": "Glass physics sizes are hard-coded numbers that must match the Blender model by hand, with no check that physics and model agree.",
+     "severity": "low",
+     "evidence": "app/props.cpp:64-71: pint 0.030/0.043/0.150, rocks 0.040/0.040/0.090 in a switch.",
+     "fix": "Export collision proxies (sphere lists or simple primitives) from the Blender asset pipeline as GLB extras or a sidecar JSON, so look and shape come from one source."
+    },
+    {
+     "issue": "SceneObject \u2192 static box (boxFor scans every vertex) is a dead path: scene.objects is empty now, since all geometry moved to GLBs. That is 0 objects versus 67 models and 183 colliders.",
+     "severity": "low",
+     "evidence": "app/props.cpp:38-46 boxFor and :51-53. My harness counted 0 scene objects.",
+     "fix": "Remove it, or replace it with collider generation from model metadata."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Becomes the 'prop archetype' table of an entity system. Each archetype (pint, rocks glass, bottle...) defines collision proxy, mass, material, render model and sync policy. Spawning a prop from the layout creates an Entity {stableId, Transform, BodyId, ModelSlot, NetSync}. Nothing outside the entity system knows body indices."
+  },
+  {
+   "name": "Materials",
+   "files": [
+    "engine/material.h",
+    "app/materials.h",
+    "app/materials.cpp"
+   ],
+   "purpose": "One record per kind of stuff, holding look (PBR color, roughness, metallic, texture layer), feel (density, friction, restitution) and sound (impact pitch, decay, absorption). Physics, renderer and future impact sounds all read it.",
+   "rating": 8,
+   "compatibility": "Static constant data with no concerns.",
+   "delay": "None.",
+   "frameCost": "Negligible: pointer reads in contact friction and bounce math.",
+   "syncRisk": "None. Static data compiled into every client.",
+   "problems": [
+    {
+     "issue": "The table is indexed by the enum's order, and the array is declared with kMaterialCount entries. Adding an enum value without adding a row silently zero-fills a material (name \"\", density 1000) with no compile error.",
+     "severity": "low",
+     "evidence": "app/materials.cpp:29-45 kMaterials[kMaterialCount] = { make(...) ... }. app/materials.h:23-38 enum MaterialId.",
+     "fix": "Declare the array without a size and static_assert(std::size(kMaterials) == kMaterialCount), or use designated slots."
+    },
+    {
+     "issue": "Material::emissive exists but make() never sets it, so glow only comes from per-object overrides. The sound fields are not consumed yet, because impacts are discarded.",
+     "severity": "low",
+     "evidence": "engine/material.h:18 float emissive = 0. app/materials.cpp:10-26 make() has no emissive parameter. app/main.cpp:846 takeImpacts() result is ignored.",
+     "fix": "Add emissive to make() or remove the field. Wire impact events to the sound engine when W5 lands."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep as is. In the entity model, materials stay static data referenced by MaterialId, used by archetypes and colliders. If materials become data-driven (exported from Blender), load them once at startup into the same struct."
+  },
+  {
+   "name": "Bar scene layout (colliders, blockers, lights, mirrors, procedural textures)",
+   "files": [
+    "app/bar_scene.h",
+    "app/bar_scene.cpp"
+   ],
+   "purpose": "Hand-written layout of the bar: 67 GLB model placements, 183 physics boxes, 75 walk rectangles, 2 raised floors, 23 lights, 33 seats, 28 interactables, 1 mirror, game anchor points. It also generates the 8 procedural surface textures (buildBarTextures).",
+   "rating": 5,
+   "compatibility": "Pure C++. The procedural textures are generated synchronously on the main thread, which on iOS means a frozen page.",
+   "delay": "Startup: buildBarScene takes 1.2 ms. buildBarTextures takes about 410 ms measured (8 layers at 512\u00b2) and runs synchronously inside renderer.init from onGpuReady, before the main loop starts, so the loading screen freezes for about half a second. That likely contributes to the 'lag when it starts'.",
+   "frameCost": "None per frame apart from the walking-collision and focus lookups covered in other systems.",
+   "syncRisk": "Medium. Seat, mirror, model and interactable array indices are used as network ids. Runtime state (mirror on/mode) is stored inside this 'static' layout and changed by networking code.",
+   "problems": [
+    {
+     "issue": "About 410 ms of synchronous procedural texture generation at startup. 5 of the 8 layers (wood planks 47 ms, grain 42, brick 37, leather 77, plaster 41, about 245 ms in total) are used only by scene.objects, which is empty now. Only fabric, denim and hair (avatar clothes) are still sampled.",
+     "severity": "high",
+     "evidence": "app/bar_scene.cpp:551-563 buildBarTextures. app/renderer.cpp:397-408 createMaterials calls it during init. app/main.cpp:1360-1371 onGpuReady \u2192 renderer.init. Harness: 407.5 ms in total, per-layer times as listed. scene.objects.size() == 0.",
+     "fix": "Delete the 5 unused layers now. Then bake fabric, denim and hair into small compressed image assets loaded via the existing gpu_upload jobs (createImageBitmap, GPU mips), or generate one layer per runJobs slice."
+    },
+    {
+     "issue": "Three collision descriptions are kept in parallel by hand: 183 solid() boxes for physics, 75 block()/blockRect() rectangles for walking, and the GLB visuals, whose layout numbers are duplicated from tools/assets/layout.py. Drift between them is inevitable: invisible walls, walk-through props, glasses resting on air.",
+     "severity": "high",
+     "evidence": "app/bar_scene.cpp:12-13 ('same numbers as tools/assets/layout.py'). Pairs of solid() + block() for the same thing at :206-218 (counter), :296-299 (tables), :345-356 (lounge), :436-440 (sims).",
+     "fix": "Use one source of truth. Export collision boxes from the Blender layout (collision-tagged empties or meshes in the GLB extras, or a JSON next to it). Derive 2D walk blockers automatically from boxes overlapping 0.1-1.7 m height, as oriented rectangles."
+    },
+    {
+     "issue": "Counter-top physics segments overlap and are coplanar, which causes double contacts and the glass that won't sleep (see Physics).",
+     "severity": "medium",
+     "evidence": "app/bar_scene.cpp:198-208: a 0.5 m path step, each box sized len/2 + 0.02. Body 1 touches colliders 34 and 37.",
+     "fix": "Use non-overlapping segments (exact len/2, mitred), fewer longer boxes, or a convex prism shape for the curved top."
+    },
+    {
+     "issue": "Runtime state lives in the immutable layout. Mirror::on/mode is changed by the network receive code and by use(), and other room state (lights, fire) lives in g_app instead. There is no single replicated 'room state'.",
+     "severity": "medium",
+     "evidence": "app/bar_scene.h:133-134 (MirrorMode mode; bool on). app/shared_world.cpp:89-100 writes scene.mirrors[i]. app/main.cpp:669-675 changes it on tap. Lights live in g_app.lightsDim/fireOn (main.cpp:108).",
+     "fix": "Split it in two. Layout is const, loaded once. RoomState {mirrors, lights, fire, seat occupants, claims, prop states} is a server-replicated struct with versioned fields."
+    },
+    {
+     "issue": "Indices are identities: seat index goes on the wire as kParam, the mirror as 'm<i>', models and interactables are referenced by position in their vectors. Reordering any builder call changes the meaning of network data.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1128 e(kParam) = seat index. app/shared_world.cpp:59 key 'm'+index. app/bar_scene.h:93 Seat::model and :114-115 firstModel/modelCount are indices.",
+     "fix": "Use explicit stable ids in the layout, and send a protocol/layout version in the hello."
+    },
+    {
+     "issue": "Interactable carries overloaded fields (value means mirror mode, drink slot...; mirror index) and its behavior is a big switch in main.cpp, so data and behavior are split across files.",
+     "severity": "low",
+     "evidence": "app/bar_scene.h:116-121. app/main.cpp:650-770 use() switch.",
+     "fix": "Use a typed component per action (MirrorButton{mirrorId, mode}, DrinkSpot{slot}...) and a handler registry. See Seats & interaction."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "bar_scene becomes a pure Layout loader: models, light rigs, anchor points and entity spawn records with stable ids, ideally read from a JSON or GLB export produced by the Blender layout so visuals and colliders share one source. Collision (physics boxes plus generated walk shapes) is derived from it. Runtime state moves into a replicated RoomState. Procedural textures leave the startup path completely."
+  },
+  {
+   "name": "Walking collision & movement",
+   "files": [
+    "app/bar_scene.cpp",
+    "app/main.cpp"
+   ],
+   "purpose": "Walking: a 0.3 m circle is pushed out of 75 axis-aligned floor rectangles (resolveCollisions, 2 passes), the eye height eases onto raised floor areas (groundHeight), and the walk animation is driven by the distance actually moved. Teleports for darts, the bartender spot, sitting and standing.",
+   "rating": 5,
+   "compatibility": "No concerns. Pure math.",
+   "delay": "No added input latency: input is applied the same frame. Height eases at 12/s, about 80 ms, on the stage step.",
+   "frameCost": "resolveCollisions measured at 0.76 \u00b5s per call, about 1 call per frame. Negligible.",
+   "syncRisk": "Low. Each client is the authority for its own position with no server check (speed or teleport hacks are possible, acceptable for friends). Positions reach others through the 250 ms snapshot interpolation in players.cpp.",
+   "problems": [
+    {
+     "issue": "Walk blockers around the curved counter are AABBs of rotated 0.5 m segments, so the invisible wall's distance changes along the curve and sliding along the bar feels bumpy. Measured with the player centre 0.76 m from the counter centreline (just touching the foot-rail line): 105 of 140 sample points get pushed, by up to 0.125 m. At 0.85 m: 6 of 140.",
+     "severity": "medium",
+     "evidence": "app/bar_scene.cpp:209-218: AABB of the segment \u00b1(-0.3, 0.45) offsets, then blockRect. app/bar_scene.cpp:169: the diagonal wall is approximated by 6 stair-step rectangles.",
+     "fix": "Support oriented rectangles and polyline/segment distance in the walk collider (circle vs segment is cheap), or walk against the same oriented boxes the physics uses, sliced at body height."
+    },
+    {
+     "issue": "Walking is completely separate from physics. Players don't push glasses, glasses on the floor pass through feet, thrown glasses fly through avatars, and players overlap each other.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:280-305 updateCamera uses only resolveCollisions. engine/physics.cpp has no player shapes. app/main.cpp:794-830 has no player collision for thrown glasses.",
+     "fix": "Give each avatar (self and remote) a kinematic capsule in PhysicsWorld, built from the walk shape. The local player capsule is a KinematicTarget body, so glasses get nudged and bounce off people."
+    },
+    {
+     "issue": "Teleports skip collision and floor checks (camera set straight to the oche or the bartender spot). Walking only checks rectangles, so if layout data puts a spot inside a blocker, the player ends up stuck or pushed oddly.",
+     "severity": "low",
+     "evidence": "app/main.cpp:684 camera.position = dartOche. app/main.cpp:702 camera.position = bartenderSpot.",
+     "fix": "Route every teleport through one movePlayerTo(pos) that resolves collision and floor height. Validate the layout's anchor points at startup (log an error if one is inside a blocker)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "A small CharacterController component used by the local player: circle or capsule vs a shared static collision set (derived from Layout), with oriented shapes, slide along walls, and step-up driven by floor areas or box tops. It owns a kinematic capsule in PhysicsWorld so props react to bodies. Remote players get kinematic capsules placed at their interpolated positions. All teleports go through it."
+  },
+  {
+   "name": "Seats & interaction model",
+   "files": [
+    "app/bar_scene.h",
+    "app/bar_scene.cpp",
+    "app/main.cpp"
+   ],
+   "purpose": "33 seats (hip point, facing, kind, bounds) and 28 interactables (bounds, prompt, action enum). Each frame works out what you're looking at or standing at (focus); a tap picks, in priority order: pick-up, person card, interactable, seat, fallback to focused, sip. use() runs the action. Whether a seat or game is taken is inferred from other players' broadcast states.",
+   "rating": 4,
+   "compatibility": "No concerns. Pure C++ plus a few EM_ASM calls (hasBadge).",
+   "delay": "A tap acts immediately on your phone. Exclusivity is only settled once both players' states have crossed the network: the 100 ms send tick plus relay delay. On the PHP relay (100 ms server tick) both players can sit on the same seat for about 200-500 ms before one is stood up. On the Durable Object, about 50-150 ms.",
+   "frameCost": "Small: ray-box tests against 28 interactables and 33 seats, 2 physics ray casts (about 3 \u00b5s each), prompt strings built each frame. Roughly 10-20 \u00b5s.",
+   "syncRisk": "High. There is no authority. Seats use 'lower id wins' after the fact. Darts and the rhythm cabinet are checked only at tap time and never settled afterwards, so two players can both play at once. Seats are identified by array index.",
+   "problems": [
+    {
+     "issue": "Darts and the 4K Mania cabinet are 'one player at a time' only when the tap happens. If two players tap within the network window, both start, and nothing ever resolves it, unlike seats.",
+     "severity": "high",
+     "evidence": "app/main.cpp:655-658 (kRhythm checks playerUsing at tap). app/main.cpp:679-682 (kDarts, same). app/main.cpp:1253-1265: the after-the-fact tie-break covers only g_app.seat.",
+     "fix": "Have the server hold exclusive claims: claim('darts'), claim('rhythm'), claim('seat:<id>'), claim('sim:<n>'). The room answers granted or denied, broadcasts the occupant, and releases on stand-up or disconnect."
+    },
+    {
+     "issue": "Seat occupancy is inferred from others' states, with a lower-id tie-break once both have broadcast. The loser is visibly stood up after already sitting. The seat index on the wire is an array index.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:180-189 playerUsing. app/main.cpp:1253-1265 tie-break using net::isLower. app/main.cpp:1128 kParam = seat index. docs/REMASTER.md 'Seats' lists this as known.",
+     "fix": "Use the same claim system as above. Sit optimistically, but play a short sit-down animation (0.2-0.3 s) that hides the claim round trip, and cancel cleanly if the server says no. Use stable seat ids."
+    },
+    {
+     "issue": "The tap priority chain is hard-coded inline. Two fallback lines are equivalent (both mean 'hit = focused'), which suggests the logic has drifted.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1052-1077. Lines 1070-1071 differ only in !direct versus direct.",
+     "fix": "Use one resolver that gathers candidates (prop, person, interactable, seat) with distance and priority and picks the best. It is easy to test natively."
+    },
+    {
+     "issue": "How each action is shared is ad hoc. Bell, guitar, chess and tip jar send 'sfx' events; lights and fire use the 'lt' world entry; the mirror uses 'm<i>'; books, chess moves and the bartender badge are local only; the mic is a state flag. There is no single declared policy.",
+     "severity": "low",
+     "evidence": "app/main.cpp:710-770 use() cases mixing playSfx(...,true), net::setWorld(\"lt\"), shared.mirrorChanged, showToast only.",
+     "fix": "Have each interaction declare a sync policy (Local | Event | RoomState field | Claim). The handler registry routes it through the net layer, so nothing calls the network directly."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Seats and interactables become entity components: Seat {stableId, hip, yaw, kind, claimKey} and Interactable {stableId, bounds, prompt, action, exclusive?, syncPolicy}. The Durable Object keeps a claims map (key \u2192 playerId, with lease and release on disconnect) and RoomState fields. Clients send claim/release intents and render occupancy from replicated state. One InteractionResolver handles focus and taps. Action handlers live in a table, not a switch in main.cpp."
+  },
+  {
+   "name": "Synced body simulation (glass ownership)",
+   "files": [
+    "app/shared_world.h",
+    "app/shared_world.cpp",
+    "engine/physics.cpp",
+    "app/main.cpp",
+    "cloud/worker.js"
+   ],
+   "purpose": "Decides who simulates shared glasses. Whoever holds, throws or knocks a glass claims it (kMine) and sends its pose about 11 times a second as world entry g<i>. Everyone else drives it as a kinematic body with exponential follow plus up to 300 ms of extrapolation. When it comes to rest, a final pose is sent. The server (PHP relay, or the new Durable Object) is last-write-wins.",
+   "rating": 4,
+   "compatibility": "Works on both transports. In the new DO, every glass update writes the whole world map to storage.",
+   "delay": "Owner's send interval 90 ms + PHP relay tick 100 ms (DO: about RTT/2) + follow time constant about 70 ms (kFollow=14/s). Remote glasses lag 150-400 ms on PHP and overshoot on bounces because velocity is extrapolated up to 300 ms.",
+   "frameCost": "Small on the CPU: one loop over 10 glasses plus JSON for about 11 values per moving glass every 90 ms. On the server: one storage.put of the entire world per message that carries world changes.",
+   "syncRisk": "High. Two authorities can exist at once (the observer and the mover both claim a knocked glass and both broadcast before the tie-break), there is no server-side ownership, a leaving owner causes permanent divergence, and keys are index-based with a server key cap.",
+   "problems": [
+    {
+     "issue": "Two owners on a knock. A thrown or held glass hits an idle glass on both the owner's and the observer's phone at slightly different moments, and both claim it (kMine) and broadcast. The loser snaps to the winner's path only after receiving the other's update.",
+     "severity": "high",
+     "evidence": "app/shared_world.cpp:184-188: claim when settled, not held and |v| > 0.05. app/shared_world.cpp:116-126: tie-break only when receiving while kMine. cloud/worker.js:172-181: the server accepts any client's write to any key.",
+     "fix": "Arbitrate ownership on the server. claim(id) is granted if the prop is unowned or its lease has expired (policy: holding beats flying). The DO rejects g-writes from non-owners and broadcasts owner changes. A client simulates a knock optimistically and blends to the owner's stream if denied."
+    },
+    {
+     "issue": "If the owner disconnects mid-flight or mid-hold, every client drops the glass on its own after 3 s, so it lands in different places, and nobody sends a final 'resting' entry. The server keeps the stale 'held' entry, so late joiners also see it as held for 3 s, then drop it somewhere else again.",
+     "severity": "high",
+     "evidence": "app/shared_world.cpp:201-206 (age > kGoneMs \u2192 kinematic=false, mode=kIdle, nothing is sent). cloud/worker.js:206-213 gone() never clears world entries written by the leaver.",
+     "fix": "On disconnect the DO clears ownership, then either simulates the prop to rest itself (C++ physics in the DO) or appoints a new owner (the lowest id present) who settles it and sends the rest pose."
+    },
+    {
+     "issue": "Extrapolating velocity for up to 300 ms pushes falling or bouncing remote glasses through the counter or floor (kinematic bodies skip static collision), then they snap back.",
+     "severity": "medium",
+     "evidence": "app/shared_world.cpp:209: target += velocity*min(age,300 ms). engine/physics.cpp:133 skips collideStatic for kinematic bodies.",
+     "fix": "Replace extrapolation with snapshot interpolation on server time (the same 100-250 ms playback delay players use), so remote glasses replay real trajectories."
+    },
+    {
+     "issue": "Glass keys are physics body indices, and the DO caps world keys at 96. The planned bottles (PROGRESS 'knock bottles off shelves') would silently stop syncing once the key space is full.",
+     "severity": "medium",
+     "evidence": "app/shared_world.cpp:33 glassKey. cloud/worker.js:30 MAX_KEYS = 96. cloud/worker.js:179 silently skips new keys when full.",
+     "fix": "Use stable prop ids. Store only props away from their spawn pose (rest state) and sync moving props with a compact binary or array message per tick instead of one world key each."
+    },
+    {
+     "issue": "Every world write makes the DO persist the entire world. A moving glass (about 11 writes/s) means about 11 full-world storage writes per second, which costs DO storage writes and adds work to every message.",
+     "severity": "medium",
+     "evidence": "cloud/worker.js:183-188 this.ctx.storage.put({ world: [...this.world], ... }) inside the w-message handler.",
+     "fix": "Keep transient prop motion in memory only. Persist rest states and room state at most once every few seconds (debounced with an alarm) and on the last player leaving."
+    },
+    {
+     "issue": "The 'settled once since page load' gating plus the never-sleeping seam glass (see Physics) means that glass can't be claimed or synced for about 60 s after load. If it is knocked during that time, each client simulates it differently and nobody broadcasts.",
+     "severity": "low",
+     "evidence": "app/shared_world.cpp:183-185 (settled only set when asleep). Harness: body 1 first sleeps after about 60 s.",
+     "fix": "The contact dedupe fixes the root cause. Server-arbitrated claims don't need the settle gate."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Ownership model: every networked prop has {stableId, owner (none | playerId | server), lease, seq}. Holding makes the holder the authority, predicting locally and streaming a pose each tick with seq and server time. On release (throw or put down), either the holder keeps authority until rest (lease) or, preferably once the DO runs the same C++ physics in wasm, the server simulates the prop to rest and broadcasts snapshots at 15-20 Hz. Non-owners never simulate an owned prop dynamically: they interpolate its snapshots on the same server-time timeline as avatars, and their local kinematic copy only pushes their other props. A local knock of an unowned prop sends a claim, and the server decides. Rest poses go into RoomState (persisted, debounced) and late joiners get RoomState in the welcome."
+  },
+  {
+   "name": "Avatar build & animation",
+   "files": [
+    "app/avatar.h",
+    "app/avatar.cpp",
+    "app/players.cpp",
+    "app/main.cpp",
+    "app/renderer.cpp"
+   ],
+   "purpose": "Builds 8 procedural looks (18-bone skeleton, a skinned mesh of tubes and ellipsoids with face, hair and clothes). Poses them each frame: walk and idle, a hand-set key pose per activity (sit, drive, piano, rhythm, darts, bartend, drink), 11 emotes with fade. Also covers the first-person 'head collapse' and the transforms for standing and seated bodies. Remote players' motion comes from their broadcast states (players.cpp, main.cpp otherTransform).",
+   "rating": 5,
+   "compatibility": "CPU side is fine. GPU: 2-bone skinning in vs_skinned with a 32-matrix uniform per avatar, standard WebGPU, fine on iOS 26. The cost is the triangle and vertex count on a tile-based GPU (lots of tiny 'curl' triangles).",
+   "delay": "Local avatar: none. Remote avatars are drawn 250 ms behind (kPlaybackDelayMs) plus network time. Their activity and emote are applied when the packet arrives, so the pose runs 250 ms ahead of the body's position.",
+   "frameCost": "CPU: pose plus hideHead measured at 3.5 \u00b5s per avatar, about 30 \u00b5s for 8. GPU: looks 0 (Josh) and 5 (Neon) are 20.9k/19.9k vertices and 31k triangles; the other looks 4.5-6.3k vertices. Worst case self + 7 others, main view plus mirror = 16 skinned draws, about 500k triangles and about 330k skinned vertices per frame, before the rest of the scene. The first-person self draw still skins about 15k collapsed head and hair vertices (Josh). 9 bone uploads per frame of about 1.2-2 KB each.",
+   "syncRisk": "Medium. Activity and emote are applied on arrival while position is delayed 250 ms. Action timing (emote phase, dart throw) is measured from each viewer's receive time. A remote pianist's hands come from your own phone's piano state. Activity and Emote enums are the wire protocol with no version.",
+   "problems": [
+    {
+     "issue": "The curly-hair looks are 4\u00d7 heavier than the rest. 600 Fibonacci curl directions become about 250 small ellipsoids of 63 vertices each, about 75% of the 20.9k vertices. There is no LOD and no distance culling, so 7 curly avatars plus mirrors approach 500k triangles of mostly sub-pixel curls.",
+     "severity": "high",
+     "evidence": "app/avatar.cpp:205-219: kCurlDirections = 600, addEllipsoid(..., 8, 6) per curl. Harness: Josh 20,858 vertices / 31,220 triangles, Neon 19,942 / 30,641, Robot 4,536 / 7,408. app/renderer.h:65 kMaxOthers = 7. app/renderer.cpp:712-714 and 767-769 draw self and others in mirror and main.",
+     "fix": "Rebuild the curly hair as a lumpy shell or about 40 larger clumps (around 1.5-2k vertices). Add LOD index ranges (full under 4 m, no curls or face details beyond that). Skip avatars outside the camera or mirror frustum. In avatars-only mirror mode, draw only avatars actually in front of the glass."
+    },
+    {
+     "issue": "The first-person body skins and draws the whole mesh, including head and hair collapsed to a point, so about 15k wasted vertex invocations every frame for the curly looks.",
+     "severity": "medium",
+     "evidence": "app/avatar.cpp:560-573 hideHead sets the neck and head matrices to a zero-scale collapse. app/renderer.cpp:574-578 drawSkinned always uses the full indexCount. app/renderer.cpp:768.",
+     "fix": "Build the head, face and hair into one contiguous index range and record it. First person draws only the body range, so the collapse trick isn't needed."
+    },
+    {
+     "issue": "All 8 looks are built synchronously at startup (about 1 ms each in wasm), copied into a temporary vector, and uploaded in one go (about 2.9 MB of vertices + 1.3 MB of indices). The CPU copies stay in memory (about 4 MB) for the whole session.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1363-1368 (build + meshes.push_back(copy)). engine/skinned_mesh.cpp:104-121 upload. app/main.cpp:72 g_app.avatars keeps the mesh_ for every look.",
+     "fix": "Build and upload each look as a runJobs job during loading (only your own look and those of players present right away, the rest lazily). Free the CPU mesh after upload, since the pose only needs the skeleton. Use uint16 indices."
+    },
+    {
+     "issue": "Remote activity, emote and timing don't match position. Values are taken as they arrive while the eye position is delayed 250 ms, so a player snaps into the seat pose before their body arrives. actionTime starts at the viewer's receive time, so emote and dart phases differ per viewer. A remote pianist's hands are posed from the local piano.",
+     "severity": "medium",
+     "evidence": "app/players.cpp:61 values overwritten immediately. app/players.cpp:14 kPlaybackDelayMs = 250. app/players.cpp:66 activitySinceMs = nowMs. app/main.cpp:1153 g_app.piano.hands(...) used for others.",
+     "fix": "Store activity, emote and param in the same sample buffer as position and apply them at playback time. Send the activity start in server time. Send the piano hand positions in kData."
+    },
+    {
+     "issue": "Activity poses are hard overrides with no blending. Sitting down, standing up, starting darts or the rhythm game snap instantly; only emotes fade.",
+     "severity": "low",
+     "evidence": "app/avatar.cpp:382-450 'if (seated) bone(...) = ...' overrides. Only the kEmote branch (app/avatar.cpp:453-466) blends with fade.",
+     "fix": "Keep the previous pose and crossfade over 0.2-0.3 s on any activity change (per-bone nlerp, which already exists in the emote code)."
+    },
+    {
+     "issue": "pose() looks bones up by string about 70 times per call (a linear string search over 18 bones) and allocates a vector each call. It is only 3.5 \u00b5s, but it is sloppy and grows with bone count (fingers, GLB/VRM rigs).",
+     "severity": "low",
+     "evidence": "app/avatar.cpp:334 std::vector<Quat> rot(...). app/avatar.cpp:336 bone(name) \u2192 skeleton_.find. engine/skeleton.cpp:10-15.",
+     "fix": "Keep the Bones index struct as a member (it is already computed in build()) and use std::array<Quat, kBones>."
+    },
+    {
+     "issue": "The hip height (0.95) and seated eye offsets are repeated as constants apart from the skeleton, and the Activity and Emote enums are the network protocol ('append only') without a version.",
+     "severity": "low",
+     "evidence": "app/avatar.cpp:108 vs :596 (hip.y - 0.95f). app/avatar.h:13-29 'Sent to other players as a number, so the order must not change'.",
+     "fix": "Read hip and eye offsets from the skeleton's rest pose. Add a protocol version to the hello and refuse mismatched clients."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Avatar becomes AvatarAsset (skeleton, mesh ranges body/head/LODs, built or loaded by jobs) plus AvatarInstance (entity component: look, motion state, previous pose for crossfades, bone palette). An AnimationSystem poses every visible instance by bone index into one bone storage or uniform buffer (dynamic offsets), uploaded with one WriteBuffer per frame. Remote instances are driven by the interpolated snapshot (position + activity + start time on server time). Distance and frustum LOD choose the index range, and first person draws only the body range."
+  },
+  {
+   "name": "Skeleton",
+   "files": [
+    "engine/skeleton.h",
+    "engine/skeleton.cpp"
+   ],
+   "purpose": "Bone tree (parents before children) with model-space rest positions. Forward kinematics turns local rotations into skinning matrices and joint positions.",
+   "rating": 7,
+   "compatibility": "No concerns.",
+   "delay": "None.",
+   "frameCost": "18 bones \u00d7 2 4\u00d74 multiplies per pose, part of the 3.5 \u00b5s pose cost. Negligible.",
+   "syncRisk": "None directly.",
+   "problems": [
+    {
+     "issue": "There are no inverse-bind matrices: the rest pose is assumed to be translation only, and translation(-rest) is rebuilt every call. That doesn't match glTF/VRM skins (rotated bind poses), which are on the roadmap ('load your own avatar GLB/VRM').",
+     "severity": "medium",
+     "evidence": "engine/skeleton.cpp:28 out[i] = parent * Mat4::transform(offset, q). engine/skeleton.cpp:36 out[i] * translation(-restPosition).",
+     "fix": "Store a local bind transform (translation + rotation) and an inverse-bind matrix per bone, as glTF does. Compute globals with quaternion + vector transforms and build the matrix once at the end."
+    },
+    {
+     "issue": "find() is a linear string compare, and jointPositions allocates a temporary vector each call.",
+     "severity": "low",
+     "evidence": "engine/skeleton.cpp:10-15 find. engine/skeleton.cpp:40 std::vector<Mat4> g.",
+     "fix": "Resolve names to indices once when loading. Pass scratch buffers in."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep the small FK core and extend it with bind and inverse-bind data, a joint count limit check against kMaxBones, and index-based access. It is the shared base for procedural avatars and future GLB/VRM rigs."
+  },
+  {
+   "name": "Skinned mesh",
+   "files": [
+    "engine/skinned_mesh.h",
+    "engine/skinned_mesh.cpp"
+   ],
+   "purpose": "40-byte skinned vertex (position, normal, color/gloss, 2 joints/weights, texture layer), tube and ellipsoid builders with automatic winding, and the GPU upload and vertex layout.",
+   "rating": 6,
+   "compatibility": "Standard vertex formats (Float32x3, Unorm8x4, Uint8x4), fine on iOS WebGPU. 32-bit indices are supported but wasteful.",
+   "delay": "Startup only: the build and synchronous WriteBuffer upload are part of the avatar startup cost.",
+   "frameCost": "Per frame it is only the vertex fetch: 40 B per vertex \u00d7 up to 330k skinned vertices per frame in the worst case, about 13 MB/frame of vertex reads.",
+   "syncRisk": "None.",
+   "problems": [
+    {
+     "issue": "There are no submesh or index ranges, so LOD and a 'body without head' draw are impossible, and 32-bit indices are used even though every look is under 65k vertices.",
+     "severity": "medium",
+     "evidence": "engine/skinned_mesh.h:61-67 SkinnedMesh has a single indexCount. engine/skinned_mesh.cpp:116 ib.size = indices \u00d7 sizeof(uint32_t).",
+     "fix": "Record named index ranges while building (body, head, hair, LOD1). Use Uint16 indices when the vertex count is under 65,536."
+    },
+    {
+     "issue": "Only 2 bone influences, and the shader blends only .x/.y, which is fine for procedural rings but not enough for imported GLB/VRM skins (4 influences).",
+     "severity": "low",
+     "evidence": "engine/skinned_mesh.cpp:15-27 makeVertex sets joints[0..1]. shaders/scene.wgsl:102 blends bones.m[joints.x]*w.x + bones.m[joints.y]*w.y.",
+     "fix": "Blend all 4 weights in the shader (unused ones are zero), so procedural and imported avatars share one path."
+    },
+    {
+     "issue": "The builders call a std::function 'keep' callback per vertex and recompute trig per ring, about 1 ms per look. Normals are stored as float32x3.",
+     "severity": "low",
+     "evidence": "engine/skinned_mesh.cpp:83 and :96 kept(...) per triangle. engine/skinned_mesh.h:16-17.",
+     "fix": "Fine once the build moves into loading jobs. Optionally pack normals as Snorm16x4 (32 B \u2192 28 B vertex)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Becomes the common skinned-asset format: vertex with 4 joints and weights, uint16 or uint32 indices chosen automatically, named ranges for parts and LODs, and upload through the gpu_upload job queue. The procedural builder and the future glTF skin loader both produce it."
+  },
+  {
+   "name": "First-person camera",
+   "files": [
+    "engine/camera.h"
+   ],
+   "purpose": "Eye position plus yaw/pitch, forward and flat walking directions, view matrix and projection matrix (70\u00b0 vertical field of view, near 0.05, far 100).",
+   "rating": 7,
+   "compatibility": "Matrices match WebGPU's [0,1] depth range.",
+   "delay": "None.",
+   "frameCost": "Negligible.",
+   "syncRisk": "Low. Yaw is sent wrapped (players.cpp sendSelf uses remainder), but it is unbounded locally.",
+   "problems": [
+    {
+     "issue": "The fixed 70\u00b0 vertical field of view makes portrait and landscape very different on the iPhone. Portrait 430\u00d7932 gives about 36\u00b0 horizontal (tunnel vision); landscape 932\u00d7430 gives about 113\u00b0.",
+     "severity": "low",
+     "evidence": "engine/camera.h:12 fovY = radians(70). engine/camera.h:27 perspective(fovY, aspect, ...).",
+     "fix": "Derive the field of view from the narrower screen axis (e.g. keep horizontal \u2265 65\u00b0 in portrait), or offer it as a setting."
+    },
+    {
+     "issue": "Yaw grows without limit in look(), and wrapping happens only when sending. There are no frustum planes for culling avatars and models.",
+     "severity": "low",
+     "evidence": "engine/camera.h:21-24 yaw += dYaw. app/players.cpp:31 std::remainder at send.",
+     "fix": "Wrap yaw in look(). Add frustum() returning 6 planes for avatar and model culling."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep. It becomes the local player's view component. It also exposes frustum planes and a reflected frustum for mirrors, so the render and animation systems can skip invisible avatars and props."
+  },
+  {
+   "name": "Math library",
+   "files": [
+    "engine/math.h"
+   ],
+   "purpose": "Vec2, Vec3, Vec4, quaternions and column-major Mat4 (multiply, translate, rotate, perspective, reflection, lookAt), plus transformPoint.",
+   "rating": 6,
+   "compatibility": "Header-only and portable. Matches WGSL column-major layout.",
+   "delay": "None.",
+   "frameCost": "Negligible. Mat4 operator* is a generic 64-multiply loop, fine at the current call counts.",
+   "syncRisk": "Low. Indirect: no finite checks, and copies of the quaternion helpers in different files behave slightly differently.",
+   "problems": [
+    {
+     "issue": "Basic helpers are missing, so each file writes its own: quaternion conjugate and normalize in physics.cpp and vehicle.cpp, nlerp in shared_world.cpp, angleLerp in players.cpp, an inline quaternion blend in avatar.cpp's emote code.",
+     "severity": "medium",
+     "evidence": "engine/physics.cpp:21-26. engine/vehicle.cpp:13-14. app/shared_world.cpp:26-31 nlerp. app/players.cpp:18-23 angleLerp. app/avatar.cpp:457-466 inline quaternion blend.",
+     "fix": "Add to math.h: Quat conjugate, normalize, nlerp, slerp, inverse; Vec3 -=, *=, /, lengthSq, lerp; angle wrap/lerp; Mat4 inverse and affine helpers; AABB and frustum; isFinite(Vec3/Quat). Delete the copies."
+    },
+    {
+     "issue": "Quat::axisAngle with a zero axis returns a non-unit quaternion, because normalize() returns the zero vector unchanged and w = cos(angle/2).",
+     "severity": "low",
+     "evidence": "engine/math.h:33-36 normalize returns v when len == 0. engine/math.h:45-47 axisAngle.",
+     "fix": "Return the identity when the axis length is about 0. Add asserts in debug builds."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Grow it into the single math module every system uses (physics, networking interpolation, animation, racing), with finite-checking helpers used at network and physics boundaries. Header-only stays fine."
+  }
+ ],
+ "crossCutting": [
+  "Array indices are used as network identities everywhere: glass 'g<body index>' (shared_world.cpp:33), seat index in kParam (main.cpp:1128), mirror 'm<i>', model and interactable indices for highlighting. Any layout edit, or a client on a cached older build, silently maps to the wrong thing. Fix: stable entity ids in the layout data, and a protocol/layout version in the hello that the Durable Object checks.",
+  "There is no ownership authority on the server. cloud/worker.js stores world entries as last-write-wins from any client (lines 172-181) and doesn't clear a leaver's entries (gone(), 206-213). Seat, darts and rhythm exclusivity, and glass ownership, are all settled by clients after the fact (or not at all). The Durable Object should hold claims (seat:<id>, darts, rhythm, sim:<n>, prop:<id>) with leases and release on disconnect, and reject writes from non-owners.",
+  "Static layout and runtime state are mixed. BarScene::mirrors on/mode is changed by the network code (shared_world.cpp:89-100) and by taps (main.cpp:669); lights and fire live in g_app; seat occupancy is inferred from others' states. Split it into an immutable Layout, a server-replicated RoomState (sent whole in the welcome, then as deltas) and LocalState.",
+  "Several clocks are in use: physics fixed ticks that drop time after stalls (slow motion), a frame dt clamped to 0.1 s, emscripten_get_now for player playback, and server time for the jukebox. Remote glasses extrapolate in wall time while the solver integrates in tick time. One SimClock (tick number \u2194 server time) should drive physics, network stamps and snapshot playback.",
+  "Each networked system smooths in its own way: players use 250 ms snapshot interpolation; glasses use exponential follow plus 300 ms extrapolation; activities and emotes apply instantly; mirrors and lights snap. Use one per-entity snapshot buffer on server time, with the same playback delay for avatars, activities and props, so they stay consistent with each other.",
+  "Body state has no single owner within a frame. main.cpp (tryPickUp/putDownOrThrow), SharedWorld::update/receive and PhysicsWorld all write raw Body fields (held, kinematic, asleep, position, velocity), in an order that is only implied by the frame (updateInteraction \u2192 updatePhysics \u2192 shared.update \u2192 step). An entity system should own the mode changes and expose intents (grab, release, throw, network snapshot).",
+  "Startup work blocks the main thread before the main loop (onGpuReady, main.cpp:1360-1371): about 410 ms of procedural textures (about 245 ms of it for layers nothing uses), 8 avatar builds (about 8-10 ms) plus about 4 MB of synchronous buffer uploads, plus building the scene. That freezes the loading screen, which likely contributes to the reported 'lag when it starts'. Move everything into runJobs slices or prebaked assets, and keep only your own look on the critical path.",
+  "Collision geometry is described three times (physics boxes, walk rectangles, GLB visuals, with layout numbers also duplicated in tools/assets/layout.py). Generate colliders and walk shapes from the Blender layout export so look, physics and walking agree. Players should also get kinematic capsules so glasses and people interact.",
+  "Scaling hazards for the planned features (bottles as bodies, more props): the physics has no broadphase and O(n\u00b2) pairs \u00d7 8 substeps; the DO has MAX_KEYS=96 world keys and does a full-world storage.put on every glass update (worker.js:183-188). Fix the broadphase and the prop sync protocol (compact per-tick messages, persist only rest states, debounced) before adding bottles.",
+  "Math helpers are duplicated (conjugate and normalize in physics.cpp and vehicle.cpp, nlerp, angleLerp, an inline quaternion blend in avatar.cpp), and nothing checks for NaN at the network or physics boundaries. A bad pose from one client would spread to everyone. Centralize them in math.h and validate incoming states (finite, inside the room, normalized quaternions) both on the server (cleanNumbers already checks for finite numbers) and on the client.",
+  "Per-frame avatar GPU cost is dominated by the mesh, not the CPU (pose is 3.5 \u00b5s). The curly looks' 31k triangles \u00d7 up to 16 draws (main view + mirror), the first-person draw of the collapsed head, and no frustum, mirror or LOD culling are the realistic levers for the 60 fps goal with 8 players."
+ ]
+}

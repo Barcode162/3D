@@ -1,0 +1,463 @@
+{
+ "group": "games (piano, MIDI, synth, darts, rhythm + chart, bartender, jukebox, audio bridge)",
+ "systems": [
+  {
+   "name": "Piano",
+   "files": [
+    "app/piano.h",
+    "app/piano.cpp",
+    "app/main.cpp (wiring: 885-896, 1243, 1281)"
+   ],
+   "purpose": "Grand piano. It plays MIDI songs on its own, scheduled ahead on the audio clock, or you play it live with the on-screen 2-octave keyboard or a Web MIDI keyboard. Keys light up and strings glow. The song is shared through world entry 'pso' [song, serverStart] and live notes through events 'pk' [key, vel, on].",
+   "rating": 4,
+   "compatibility": "Web MIDI does not exist on iOS Safari (menu.js:274 handles that); the on-screen keyboard works. Before the first tap audio::now() is 0, so update() returns early (piano.cpp:245) and songs wait for the unlock. Every note gets its own HRTF PannerNode (audio.js:183-184), which costs a lot on WebKit's audio thread. Measured overlapping voices in the bundled songs: Minute Waltz about 20, Rondo/Clair de Lune about 16, Fur Elise about 14.",
+   "delay": "Your own on-screen key: 0-17 ms until the next frame, plus Web Audio output latency (about 10-25 ms on the speaker, 150-250 ms on AirPods). Add 15-30 ms the first time a key is used, while its sample is synthesized. Another player's live note on Cloudflare: 0-50 ms batching (net.js:62/296) + one-way network + 0-17 ms receiver frame, then played at once with no jitter buffer. That is about 40-170 ms with \u00b135 ms jitter. On the PHP relay: up to 100 ms send + up to 100 ms poll + the PHP file lock, so 150-400 ms, and notes arrive in 100 ms clumps. Song start: kStartDelay 0.4 s + MIDI fetch + a synthesis warm-up of 0.7-1.7 s CPU spread over about 15-20 frames.",
+   "frameCost": "Measured pianoNote(): native -O2 = 19 ms for middle C. WASM (emcc -O3, node) = 30.6 ms for middle C, 16.7 ms average, 1.47 s for all 88 keys. kSoundsPerFrame=3, so frames take 45-90 ms during warm-up, on every client in the room. When lookAhead > 0.5 (after any stall of 0.3 s or more) the budget is 40 notes, so one frame can freeze for up to about 1 s. While the bench keyboard is open, 1 note per frame is synthesized until the 25 visible keys exist (15-30 ms hitches). Steady playback costs under 0.5 ms. addBoxes adds up to 2 boxes per lit key, each its own DrawIndexed, repeated in every full mirror pass.",
+   "syncRisk": "high. 'pso' is last-writer-wins and the writer gets no echo, so concurrent picks diverge on Cloudflare. A finished song's 'pso' stays and is replayed to joiners. One set of live voices and one pedal is shared by you and every remote player. The MIDI-keyboard pedal is not shared. Notes carry no timestamps.",
+   "problems": [
+    {
+     "issue": "Piano notes are synthesized inside the frame on the main thread, so every client hitches whenever anyone starts a song (or plays a new key live)",
+     "severity": "critical",
+     "evidence": "piano.cpp:21 sets kSoundsPerFrame=3 with the comment 'each takes a few ms', but measured WASM cost is 16.7 ms average and 30.6 ms for key 60. piano.cpp:259 raises the budget to 40 when lookAhead>0.5. piano.cpp:260-267 calls ensureSound() inside update(). Remote songs reach this through piano.cpp:228, remote live keys through :234 \u2192 keyDown \u2192 ensureSound at :181.",
+     "fix": "Never synthesize during a frame. Ship a pre-rendered sample set, or render it in a Web Worker with a separate small synth.wasm and transfer the Float32Arrays (needs no SharedArrayBuffer), during the loading screen. Render only every 3rd key and pitch-shift the neighbours with playbackRate \u00b11 semitone. Cache in IndexedDB. The scheduler should skip a note whose sample isn't ready instead of blocking on it."
+    },
+    {
+     "issue": "A stale 'pso' entry makes every joiner download and synthesize a song that has already finished, right after tapping enter. This feeds the known start-up stutter.",
+     "severity": "high",
+     "evidence": "piano.cpp:282-285 sets song_=-1 at the natural end but never clears 'pso'. The world is kept 30 min after last activity (worker.js:32, relay.php:38). For a joiner, nextNote_=0 (:255). The 'sample not made \u2192 break' at :274 comes before the 'joined late: skip' check at :276, so every past note's key (44-56 unique keys per song, measured) is synthesized only to be skipped.",
+     "fix": "Store [song, start, duration] and have the owner clear the entry at the end. Joiners ignore entries with start+duration < serverNow. They binary-search nextNote_ to (serverNow-start) and only prepare samples for notes ahead."
+    },
+    {
+     "issue": "Live voices and the pedal are shared between you and all remote players",
+     "severity": "high",
+     "evidence": "piano.h:100-104 has one liveVoice_[88], one pedal_ and one pedalHeld_. piano.cpp:182 keyDown stops whatever voice is on that key, yours or another player's. piano.cpp:233 lets a remote sustain event flip your pedal. liveDown_ leaks (:197). If a remote player leaves with keys down, or a keyUp is dropped (the relay inbox caps at 120, relay.php:122), liveVoice_[i] stays >0 and the key glows forever (piano.cpp:325).",
+     "fix": "Keep a voice table and pedal state per player id. Release all of a player's notes when they leave, time out, or no event arrives for N s."
+    },
+    {
+     "issue": "Remote notes have no timestamps and no playout buffer. They arrive in 50/100 ms batches and are played the moment they are received, and stale ones replay in a burst after backgrounding.",
+     "severity": "high",
+     "evidence": "piano.cpp:234 calls keyDown(...,false) on receipt with when=0. net.js:364-369 queues events until the next cloudTick (50 ms) or relay tick (100 ms). The relay inbox holds up to 120 messages (relay.php:122) that are delivered all at once.",
+     "fix": "Stamp each note with serverNow. The receiver schedules it on the audio clock at ts + playout delay (about 120 ms on Cloudflare, adaptive) and drops events older than about 1 s. In cloud mode send events immediately with to='*'."
+    },
+    {
+     "issue": "Pedal from a MIDI keyboard is not shared, so listeners hear notes cut short",
+     "severity": "medium",
+     "evidence": "main.cpp:896 calls g_app.piano.sustain(vel>=64) with no sendEvent. The on-screen PEDAL button does share it (piano.cpp:410-413).",
+     "fix": "Route every pedal change through one Piano::setPedal(down, share) that sends the event."
+    },
+    {
+     "issue": "Concurrent song picks diverge on Cloudflare",
+     "severity": "medium",
+     "evidence": "piano.cpp:143 calls setWorld('pso'). worker.js:184/109 broadcast to everyone except the writer, so each picker applies the other's song (piano.cpp:228) while the server keeps only the last one.",
+     "fix": "Server-ordered changes with an echo (see cross-cutting), or a piano session owner who alone sets the song."
+    },
+    {
+     "issue": "Every note creates its own HRTF panner, even though the whole piano is one point in space",
+     "severity": "medium",
+     "evidence": "piano.cpp:278 and :184 pass &where, which leads to audio.js:183-184 creating a new HRTF PannerNode per voice. Up to about 20 overlap in the bundled songs.",
+     "fix": "Use one persistent emitter (panner) for the piano, fed by the piano bus. Cap voices at about 32 and steal the oldest."
+    },
+    {
+     "issue": "Key and string lights cost one draw call per box and are redrawn in every mirror pass",
+     "severity": "medium",
+     "evidence": "Piano::addBoxes (piano.cpp:312-360) pushes 2 boxes per lit key (up to 176). renderer.cpp:631-638 issues one DrawIndexed per box, from :708 (mirror) and :764 (main). There is no culling.",
+     "fix": "Draw the boxes instanced (one DrawIndexed with instanceCount), or use a per-key emissive mask on the piano model. Skip them when the piano is off-screen."
+    },
+    {
+     "issue": "Dead or inconsistent bits",
+     "severity": "low",
+     "evidence": "busy() at piano.h:50 is never used. Playing one of your own .mid files (not built-in) leaves 'pso' pointing at the previous built-in song for everyone else (piano.cpp:141-144).",
+     "fix": "Remove busy(). Make personal songs an explicit local-only mode."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Make the piano a GameSession on machine 'piano'. (a) Song playback is a server record {songId, startServer, duration, owner}, set through the Durable Object with an echo. Each client maps server time to audio time through the shared Clock and schedules from a binary-searched note index, preparing only notes ahead. (b) Live play is the owner's timestamped events {key, vel, on/off, pedal, serverTs}, broadcast by the DO. Spectators schedule them at ts+playout. Voice tables are per player and cleaned up on leave. Samples come from a pre-rendered or worker-rendered set loaded during the loading screen and are never made in-frame. One spatial emitter for the instrument. Key lights drawn instanced. The hands pose comes from that player's own voice table."
+  },
+  {
+   "name": "MIDI parser",
+   "files": [
+    "engine/midi.h",
+    "engine/midi.cpp"
+   ],
+   "purpose": "Reads Standard MIDI Files (formats 0/1): tempo map, notes in seconds, sustain pedal stretching, drums skipped.",
+   "rating": 8,
+   "compatibility": "Pure C++, no platform issues. Bounds-safe reader: u8() past the end ends the loop, and oversized meta/sysex lengths jump past trackEnd.",
+   "delay": "Parsing takes under 1 ms per bundled song (905-1614 notes). The only real delay is the network fetch.",
+   "frameCost": "One-off, in the fetch callback on the main thread. Negligible.",
+   "syncRisk": "none. The output is deterministic, so every client gets an identical note list.",
+   "problems": [
+    {
+     "issue": "Events on the same tick are not ordered note-off before note-on",
+     "severity": "low",
+     "evidence": "midi.cpp:107-110 stable_sort only puts tempo first. If a note-on for key K sorts before the note-off of the previous K at the same tick (tracks sharing a channel, or unusual files), the re-strike rule (:126) closes the old note and the note-off then closes the new one at length 0. That is clamped to a 50 ms blip (:150).",
+     "fix": "At equal ticks, order tempo < note-off < pedal < note-on."
+    },
+    {
+     "issue": "Ignores channel volume, expression and program",
+     "severity": "low",
+     "evidence": "midi.cpp handles only 0x80/0x90/CC64/tempo and skips the rest.",
+     "fix": "Fine for a solo piano. Add CC7/CC11 as velocity scaling if multi-instrument songs are ever needed."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep as-is (apply the tick-order fix). In the restructure it can run in the same worker as the sample renderer, and the piano session should store the parsed song's duration and note count for joiners. Built-in songs could also be pre-parsed at build time into a compact binary to skip runtime parsing."
+  },
+  {
+   "name": "Synth (generated sounds)",
+   "files": [
+    "engine/synth.h",
+    "engine/synth.cpp"
+   ],
+   "purpose": "Makes every sound in code at 22.05 kHz: additive piano notes (inharmonic partials, 2-3 detuned strings, two-stage decay, hammer noise), Karplus-Strong guitar, and the bar effects (bell, thunk, clink, pour, shaker, click, engine loop, whoosh, knock, cheer).",
+   "rating": 5,
+   "compatibility": "Pure C++. The 22.05 kHz buffers are resampled by Web Audio to the context rate (48 kHz on iPhone). Fine.",
+   "delay": "15-30 ms per piano note on the main thread (WASM measured: avg 16.7 ms, key 60 = 30.6 ms). Effects and guitar at startup take about 6 ms native, about 10 ms WASM, which is negligible.",
+   "frameCost": "Each note blocks the frame it is requested in (see Piano). Memory: one note is up to 79,380 samples (318 KB). All 88 notes = 20.9 MB, which the JS side keeps twice (audio.js:166 raw copy + :155 AudioBuffer).",
+   "syncRisk": "low. The noise generator has a fixed seed (synth.cpp Noise s=22222), so every client hears identical sounds.",
+   "problems": [
+    {
+     "issue": "Additive synthesis is far more expensive than it needs to be",
+     "severity": "high",
+     "evidence": "synth.cpp:83-92: up to 16 partials \u00d7 3 strings \u00d7 2 decay stages = 96 calls to addPartial. Each one (synth.cpp:25-44, loop at :32) walks the whole 3.6 s buffer (:78), even after the partial has decayed below -60 dB. That is about 7.6M phasor steps for middle C.",
+     "fix": "Merge the two decay stages into one pass (one phasor, amplitude a1\u00b7k1^n + a2\u00b7k2^n). Stop each partial at -80 dB. Render detuned strings in the same loop. Render every 3rd key and pitch-shift the rest. Together that is about 10\u00d7 cheaper. Better still, render at build time or in a worker."
+    },
+    {
+     "issue": "Fixed maximum note length cuts long bass notes",
+     "severity": "low",
+     "evidence": "synth.cpp:78 clamps the length to 0.9-3.6 s with a 0.25 s fade-out, but MIDI pedal-held bass notes can last much longer.",
+     "fix": "Let the sample loop over its tail, or render longer bass samples when they are pre-rendered offline."
+    },
+    {
+     "issue": "Engine-hum loop uses sin() per sample per harmonic",
+     "severity": "low",
+     "evidence": "synth.cpp:184: 24 harmonics \u00d7 22,050 sin() calls.",
+     "fix": "Use the phasor addPartial with decay=\u221e. Startup only, so cosmetic."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the DSP code but run it where it can't block a frame: a Web Worker with its own small wasm build (or build-time rendering of a compressed piano sample set into assets/). Store generated buffers in IndexedDB keyed by a synth version hash so later visits skip the work. Effects stay generated at startup (cheap), but hand the buffers to the AudioMixer once and free the raw copies. This is also the natural home for the future DAW synth (Stage 4b) as an AudioWorklet."
+  },
+  {
+   "name": "Audio bridge (engine::audio / Sound / Track / MusicSource)",
+   "files": [
+    "engine/audio.h",
+    "engine/audio.cpp",
+    "web/audio.js"
+   ],
+   "purpose": "Thin layer over Web Audio. It handles the iOS unlock, volume buses, generated-sound voices with optional 3D placement, the fully decoded Track for the rhythm game, streamed <audio> music sources through an HRTF panner (jukebox), the listener pose, the phone song picker and music ducking.",
+   "rating": 5,
+   "compatibility": "iOS unlock on touchend/mousedown/keydown (audio.js:102), webkit prefixes and OfflineAudioContext fallback present. createMediaElementSource works on iOS 26. ctx.outputLatency/baseLatency may be missing or inaccurate in WebKit, and Bluetooth output latency is never compensated. There is no handling of iOS 'interrupted'/suspended contexts except resume() on the next touch. Whole-song decodeAudioData is a memory risk under iOS per-tab limits.",
+   "delay": "soundPlay adds nothing beyond device output latency. A Sound requested while the context isn't running is silently dropped (returns 0 at audio.js:173), not delayed. A late joiner's MusicSource seek ignores the buffering time after the seek (audio.js:316-326), so it lags the room by 0.3-2 s on mobile and is never corrected.",
+   "frameCost": "About 4-8 EM_ASM crossings per frame: setListener writes 9 AudioParams (audio.js:54-56), the piano calls audio::now() 3-4 times, plus userSongCount and finished. Each voice creates BufferSource+Gain+HRTF Panner (tens of \u00b5s in JS, plus HRTF convolution per voice on the audio thread). Rhythm Track: a JS mono mixdown loop of 27M iterations for a 283 s song (audio.js:249-252) on the main thread (about 30-80 ms), then a 54 MB copy into the WASM heap (audio.cpp:77-81).",
+   "syncRisk": "medium. Three unrelated clocks are used side by side (performance.now in the jukebox seek, ctx.currentTime for the piano and rhythm game, server time from net.js) with no shared mapping, drift correction or latency calibration.",
+   "problems": [
+    {
+     "issue": "HRTF panner per voice",
+     "severity": "high",
+     "evidence": "audio.js:183-184 calls createPanner() with panningModel='HRTF' for every placed soundPlay: all piano notes, sfx and guitar strings.",
+     "fix": "Use persistent emitters per sound location (piano, jukebox, dartboard, bar station, bell...) with one panner each. Use 'equalpower' for tiny one-shots. Cap voices globally."
+    },
+    {
+     "issue": "The rhythm Track holds about 200 MB at peak and never releases it, and the WASM heap grows for good",
+     "severity": "high",
+     "evidence": "bossa-antigua is 283 s. Decoded at 48 kHz stereo float that is about 109 MB (trackLoad, audio.js:236-260), plus a 54 MB mono Float32Array (:248-252), plus a 54 MB std::vector copy in WASM (audio.cpp:77-81). trackStop (:294-296) only stops the node; track.buffer stays alive after closing the game. With -sALLOW_MEMORY_GROWTH (CMakeLists.txt:24) the WASM heap never shrinks.",
+     "fix": "Don't copy samples into WASM at all: use precomputed charts, or analyse in a worker from a 11.025 kHz mono OfflineAudioContext render. Null track.buffer when the game closes."
+    },
+    {
+     "issue": "Generated sounds are kept twice in JS",
+     "severity": "medium",
+     "evidence": "audio.js:166 stores heap.slice() as data, and bufferOf (:153-158) also builds an AudioBuffer without dropping data. The piano alone can reach 2\u00d720.9 MB.",
+     "fix": "Build the AudioBuffer immediately once ctx exists and free data. Before the unlock, keep data only."
+    },
+    {
+     "issue": "The Track bypasses the buses, so volume settings don't apply to it",
+     "severity": "medium",
+     "evidence": "audio.js:281 connects the track gain straight to ctx.destination.",
+     "fix": "Route it through a 'game' or 'music' bus."
+    },
+    {
+     "issue": "Latency compensation depends on outputLatency/baseLatency and there is no user calibration",
+     "severity": "medium",
+     "evidence": "audio.js:290 computes (ctx.outputLatency||0)+(ctx.baseLatency||0). AirPods add 150-250 ms that may not be reported.",
+     "fix": "Add an audio-offset calibration (tap-along test) stored in settings or the account, applied by a shared Clock module."
+    },
+    {
+     "issue": "Jukebox stream is never resynced",
+     "severity": "medium",
+     "evidence": "audio.js:316-326 seeks once on loadedmetadata, using the load time only.",
+     "fix": "After 'playing', compare el.currentTime with the expected server-based position every 2-5 s. Correct small drift with playbackRate 0.98-1.02, and re-seek if off by more than 300 ms."
+    },
+    {
+     "issue": "No visibility or interruption handling",
+     "severity": "low",
+     "evidence": "Only unlock() on touch resumes the context (audio.js:92-101). soundPlay returns 0 while it isn't running.",
+     "fix": "Listen for ctx statechange and document visibilitychange. Show 'tap to resume sound'. Pause or resume schedulers so they don't build backlogs."
+    },
+    {
+     "issue": "Per-call EM_ASM chatter",
+     "severity": "low",
+     "evidence": "audio.cpp has a separate EM_ASM for each now/ready/finished/userSongCount/setListener call.",
+     "fix": "Batch audio commands into one buffer flushed once per frame, and read back a small status block."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Split it into (1) a C++ AudioMixer service: buses, emitters (persistent panners per world source), voice pool with limits, one command buffer flushed per frame; (2) a Clock service: audioNow, serverNow, mapping between them re-estimated about every second, output latency plus a user calibration offset, used by the piano, rhythm game and jukebox; (3) a MusicStream with a drift-correcting follower; (4) an Asset/decode path in a worker that hands only what is needed (charts, small buffers) to WASM. Release large buffers explicitly. Keep web/audio.js as a dumb executor of the command list."
+  },
+  {
+   "name": "Darts",
+   "files": [
+    "app/darts.h",
+    "app/darts.cpp",
+    "app/main.cpp (use() 679-689, walk-away 304-308, queueMachineScreens 434-441, selfState 1137)"
+   ],
+   "purpose": "301 darts at the wall board. Tap to throw (aim plus random wobble), 280 ms flight, real sector/double/treble/bull scoring, bust rule. Others see your stuck darts and the score left through 5 state floats.",
+   "rating": 5,
+   "compatibility": "No platform concerns. Taps arrive through the normal tap path, and wobble uses unseeded std::rand (darts.cpp:22).",
+   "delay": "280 ms flight by design. Your tap is handled on the next frame. Spectators only see a dart once it lands, after the next state send (\u226450 ms Cloudflare, \u2264100 ms relay) plus network. The avatar is played back about 250 ms late (players.h:3-5) while board and score use the newest values, so the board changes before the throwing animation.",
+   "frameCost": "Negligible (<0.05 ms). Two boxes per dart, one draw call each per pass.",
+   "syncRisk": "medium. There are no throw events (no flight or sounds for spectators), 'one player at a time' is a client-side check with no tie-break, and the position encoding overflows.",
+   "problems": [
+    {
+     "issue": "Spectators see no dart in flight and hear nothing",
+     "severity": "medium",
+     "evidence": "whoosh/thunk/cheer play locally only (darts.cpp:124, :143, :156). Only landed darts are sent, packed into 3 floats (darts.cpp:204-210), and drawn at main.cpp:435.",
+     "fix": "Replicate throw events {u, v, serverTs}. Spectators animate the flight after the playout delay and play the thunk and cheer from the board's emitter."
+    },
+    {
+     "issue": "The one-thrower rule can be beaten by two people tapping together",
+     "severity": "medium",
+     "evidence": "main.cpp:680 checks playerUsing(kDarts), which reads others' latest activity slot (0-250 ms old). Seats have a lower-id tie-break (main.cpp:1259); darts have none.",
+     "fix": "Ask the Durable Object for a machine claim (atomic grant with a lease) before entering."
+    },
+    {
+     "issue": "Dart position encoding overflows for taps far from the board",
+     "severity": "low",
+     "evidence": "encode() at darts.cpp:30-31 packs (u+0.5)*1000 and (v+0.5)*1000 into one int. throwAt only rejects dir.z<=0.05 (:112), so v>0.5 m carries into u and u<-0.5 m goes negative. Spectators then see darts in the wrong place or not at all.",
+     "fix": "Clamp u and v to \u00b10.499 (anything off the board is a miss anyway), or send two numbers in the event."
+    },
+    {
+     "issue": "Leaving mid-turn leaves ghost darts on your screen",
+     "severity": "low",
+     "evidence": "darts.h:23 stop() only clears playing_. addBoxes and update still run every frame, so 1-2 thrown darts stay drawn locally while spectators stop seeing them (stateFor is only sent while playing, main.cpp:1137).",
+     "fix": "Have a single leave() that ends the turn and clears or releases the board."
+    },
+    {
+     "issue": "No turns between players, score not saved",
+     "severity": "low",
+     "evidence": "REMASTER.md darts section. Score lives only in scoreLeft_.",
+     "fix": "Turn queue in the session record. Save the stats you want to keep to the IONOS accounts store."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "DartsSession on machine 'dartboard'. The DO record holds {game type, players[] with scores, whose turn, current turn darts}, and a queue makes multi-player 301 possible. The thrower's client rolls the wobble and sends {u, v, ts}. Every client runs the same deterministic score() on the events, so scores can't diverge. Spectators get flight animation and spatial sounds through the shared event playout. Entering and leaving (walking away, X, disconnect) go through the common session API, which releases the claim."
+  },
+  {
+   "name": "4K rhythm game",
+   "files": [
+    "app/rhythm.h",
+    "app/rhythm.cpp",
+    "app/main.cpp (use() 655-665, update 1018-1023, queueText 454-458, selfState 1136)",
+    "engine/audio.* Track",
+    "web/audio.js trackLoad/trackPlay/trackTime"
+   ],
+   "purpose": "osu!mania-style 4-lane game on the cabinet. Pick a jukebox song and a difficulty, the chart is generated from the decoded audio, notes are judged with timestamped touches against the audio clock. Spectators see a cabinet screen drawn from 5 state floats.",
+   "rating": 5,
+   "compatibility": "Works on iOS once audio is unlocked (kWaitTap fallback at rhythm.cpp:195). Whole AAC songs are decoded into memory (see Audio bridge). Latency compensation depends on outputLatency/baseLatency, which WebKit may not report, and Bluetooth latency is not compensated. Touch times come from emscripten_get_now inside the handler (input.cpp:93/159), not event.timeStamp.",
+   "delay": "Start: fetch 2.8-4.6 MB + decodeAudioData + JS mixdown + 0.7 s chart analysis (measured in WASM for the 283 s song) + 2.5 s lead-in. Retry repeats all of it. Input: handler delay (0-16 ms on a busy main thread) counts as lateness. Output latency is uncompensated where the browser doesn't report it.",
+   "frameCost": "Game logic <0.2 ms, and the overlay is about 100-200 rects/shapes. But the whole 3D bar (scene, mirrors, avatars, boxes) still renders under an 80-88% opaque overlay. main.cpp:454-458 only returns from queueText, and renderer.render at main.cpp:1326 still runs. That wastes GPU time and heat during the most timing-sensitive game. Analysis freezes for one frame of about 0.7 s.",
+   "syncRisk": "medium. Spectators see a fake falling-note pattern (rhythm.cpp:441) and nothing audible. Charts can't be reproduced on other devices (see chart generator). There is no claim tie-break (main.cpp:656).",
+   "problems": [
+    {
+     "issue": "The full 3D scene keeps rendering behind the full-screen game",
+     "severity": "high",
+     "evidence": "main.cpp:454-458 returns early from queueText only. frame() still poses avatars and calls g_app.renderer.render (main.cpp:1326) every frame while the game is open.",
+     "fix": "While the rhythm game is open, skip SceneRenderer::render and only clear and draw the overlay (or show a cached blurred snapshot of the bar). Same pattern the race uses (main.cpp:1269)."
+    },
+    {
+     "issue": "Chart analysis runs on the main thread and is redone on every Retry, including the re-download and re-decode",
+     "severity": "high",
+     "evidence": "RETRY (rhythm.cpp:131) \u2192 startSong \u2192 Track::load refetch (:89) \u2192 takeSamples + makeChart (:180-182). Measured at 0.7 s in WASM for the 283 s song.",
+     "fix": "Cache charts by (song id or URL hash, difficulty). Precompute built-in charts at build time as JSON in assets/. Analyse phone songs in a worker. Keep the decoded buffer while the cabinet is open."
+    },
+    {
+     "issue": "Large memory spike: a 54 MB std::vector in the WASM heap, plus about 160 MB in JS",
+     "severity": "high",
+     "evidence": "rhythm.cpp:180 takeSamples, audio.cpp:77-81, audio.js:248-253. The heap growth is permanent (CMakeLists.txt:24).",
+     "fix": "With precomputed or worker-made charts, WASM never needs the samples. Free track.buffer on close."
+    },
+    {
+     "issue": "No audio-offset calibration",
+     "severity": "medium",
+     "evidence": "Song time = ctx.currentTime - start - (outputLatency||0 + baseLatency||0) (audio.js:290). AirPods (150-250 ms) put every judgement off by that amount.",
+     "fix": "Calibration screen plus an offset setting, applied in the shared Clock."
+    },
+    {
+     "issue": "Spectators see a fake chart and hear nothing",
+     "severity": "medium",
+     "evidence": "drawCabinet's own comment says 'a pattern from the song time, not the real chart' (rhythm.cpp:441). The state carries combo, accuracy, lane mask, playing and songTime (:419-426).",
+     "fix": "Broadcast {songId, difficulty, startServer, chartId}. Spectators who have the same precomputed chart draw the real notes from server time. Send judgement events {lane, judge, ts} for bursts and combo, and optionally play the song quietly from the cabinet's emitter."
+    },
+    {
+     "issue": "Best scores lost on reload, song list cut to 7, press time from the handler",
+     "severity": "low",
+     "evidence": "best_ is in-memory only (rhythm.cpp:113). kMaxSongs=7 truncates the list (:49, :67). RawPress.ms is emscripten_get_now at handler time (input.cpp:93/159).",
+     "fix": "Save bests to the account (IONOS) or localStorage. Scrolling list. Use event.timeStamp converted to the same clock."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "RhythmSession on machine 'cabinet', claimed through the DO. Charts come from a ChartService (precomputed for built-ins, worker plus IndexedDB cache for phone songs) keyed by a stable song id, so all devices get the same chart. Song time comes from the Clock service (audio clock + calibration). A dedicated 'overlay-only' render mode while playing. Spectators get {song, difficulty, startServer} plus judgement events and render the real chart on the cabinet. Results go to a scores API (IONOS for permanent data)."
+  },
+  {
+   "name": "Rhythm chart generator",
+   "files": [
+    "app/rhythm_chart.h",
+    "app/rhythm_chart.cpp"
+   ],
+   "purpose": "Turns decoded audio into a 4-lane chart: downsample, 512-point FFT spectral flux in 4 bands, adaptive threshold, tempo by autocorrelation (70-180 BPM, preferring ~120), beat phase, grid candidates per difficulty, lanes from spectral-centroid quartiles, jack avoidance, 2-key chords on loud hits.",
+   "rating": 4,
+   "compatibility": "Pure C++, but the output depends on the decode sample rate, which differs by device and by context: the live ctx (48 kHz on iPhone) versus OfflineAudioContext(\u2026,44100) before unlock (audio.js:132).",
+   "delay": "0.7 s blocking the main thread in WASM for the 283 s song (measured). About 0.45 s native.",
+   "frameCost": "One frozen frame per song start and per Retry.",
+   "syncRisk": "high for anything shared (spectators, versus mode, leaderboards). I measured lobby-time decoded with ffmpeg at 44.1 kHz and at 48 kHz: Easy gave 242 vs 288 notes with only 15 matching (time within 20 ms and same lane), Normal 528 vs 537 with 45 matching, Hard 1088 vs 1086 with 187 matching. Tempo came out 129.2 vs 127.8 BPM.",
+   "problems": [
+    {
+     "issue": "Charts are not deterministic across devices",
+     "severity": "high",
+     "evidence": "rhythm_chart.cpp:58 uses factor=lround(rate/11025): 44.1 kHz gives 11.025 kHz analysis, but 48 kHz gives 12 kHz, and kHop=128 samples then means 11.6 ms vs 10.7 ms frames. Measured chart mismatch is above.",
+     "fix": "Resample to a fixed rate first (render through OfflineAudioContext(1, n, 11025), or use a proper resampler) and define the hop in seconds. Best: precompute built-in charts at build time."
+    },
+    {
+     "issue": "Tempo is quantized to whole frames, and notes sit on the grid time instead of the detected onset",
+     "severity": "medium",
+     "evidence": "period = bestLag*frameSec (:135). Candidates keep the grid time t (:177) and notes use c.t (:208, :210), not bestF. The same song gave 129.2 vs 127.8 BPM, so at least one grid is \u22650.5% off, which is \u22652.5 ms per beat and adds up to \u22650.6 s after about 2 minutes (inferred from the BPM disagreement; my onset-alignment check was inconclusive, so this needs a listening test).",
+     "fix": "Refine the lag with parabolic interpolation, or use a dynamic-programming beat tracker. Snap each note to its actual onset frame (bestF\u00b7frameSec) within the \u00b130 ms window (:159)."
+    },
+    {
+     "issue": "Runs on the main thread",
+     "severity": "medium",
+     "evidence": "Called synchronously from RhythmGame::update (rhythm.cpp:182).",
+     "fix": "Run it in a Web Worker (separate wasm or JS port) and cache the result in IndexedDB by audio hash + algorithm version."
+    },
+    {
+     "issue": "Limited pattern variety",
+     "severity": "low",
+     "evidence": "Chords are always (lane+2)%4 (:210), and only 4 bands feed novelty.",
+     "fix": "Tune later. Not a structural issue."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Make charts content, not a runtime surprise. Build-time tool (tools/, native C++ like tools/native) generates charts for built-in songs into assets/charts/*.json with a version. A worker version handles phone songs at a fixed analysis rate. Charts are keyed by stable ids so spectators and leaderboards line up. Fix the tempo and onset placement before shipping precomputed charts."
+  },
+  {
+   "name": "Bartender",
+   "files": [
+    "app/bartender.h",
+    "app/bartender.cpp",
+    "app/main.cpp (use() 691-718, 763-768, commands 897-900, selfState 1139-1140)"
+   ],
+   "purpose": "Badge holders start a shift and make drinks by tapping through recipe steps (each with a sound and an avatar animation). Finished drinks go on 8 counter spots (world entries dk0..dk7). Anyone can take one into their hand and sip it 4 times.",
+   "rating": 4,
+   "compatibility": "No platform issues. The bartender badge is checked only on the client (hasBadge, main.cpp:168-177).",
+   "delay": "Steps take 900/1600 ms by design. A served drink appears for others after setWorld: \u226450 ms tick + network on Cloudflare, \u2264100 ms + poll on the relay.",
+   "frameCost": "Negligible. drawHud runs an snprintf per recipe step every frame while making a drink. Two boxes per drink.",
+   "syncRisk": "high. The counter is 8 last-writer-wins slots, with free-slot choice and take() both decided on the local copy.",
+   "problems": [
+    {
+     "issue": "Drinks can be duplicated: two players taking the same drink both get it",
+     "severity": "high",
+     "evidence": "take() checks only the local slots_ (bartender.cpp:136-143), then writes dk=0. Both clients already hold the drink before either write arrives.",
+     "fix": "take(slot) becomes a request to the Durable Object: compare-and-set, grant to the first, deny the others, echo to all."
+    },
+    {
+     "issue": "Two bartenders serving at once can lose a drink, and on Cloudflare their counters stay different",
+     "severity": "high",
+     "evidence": "freeSlot() is computed locally (bartender.cpp:91-98) and serve() writes that slot (:124-129). worker.js:184 broadcasts to everyone except the writer, so each bartender applies the other's write.",
+     "fix": "The server allocates the slot (op 'serve drinkType'), or each bartender gets its own slot range. Echo every change with a sequence number."
+    },
+    {
+     "issue": "Serving into a full counter does nothing",
+     "severity": "medium",
+     "evidence": "serve() returns early when freeSlot()<0 (bartender.cpp:126), leaving making_ set and the 'SERVE IT' button inert with no message.",
+     "fix": "Show 'counter full' and keep the drink until a slot frees up."
+    },
+    {
+     "issue": "Spectators can't hear drinks being made",
+     "severity": "medium",
+     "evidence": "The step sound (bartender.cpp:118) and the serve clink play only locally. Others see just the Activity::kBartend pose.",
+     "fix": "Replicate step events {drink, step, ts} and play them from the bar-station emitter."
+    },
+    {
+     "issue": "Small rule gaps",
+     "severity": "low",
+     "evidence": "make() overwrites a drink already in progress (bartender.cpp:79-89, and the tap/coffee shortcuts at main.cpp:765). Any client can write dk* keys (worker.js:175-181 checks only the key format).",
+     "fix": "Confirm before replacing a drink. Validate bartender ops server-side using the badge the DO can get when it checks the token."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Small module; rebuild it on the session framework. The 'bar' station allows several bartenders at once. The DO keeps the authoritative counter (8 slots) with ops serve(type)\u2192slot and take(slot)\u2192ok/deny, checked against the player's role. Badges come from IONOS in the token check the DO already does (worker.js:221-232). Step events drive spectator sounds and animation. The held drink stays in player state (kHeldDrink). Drinks could later become physics bodies like glasses."
+  },
+  {
+   "name": "Jukebox",
+   "files": [
+    "app/jukebox.h",
+    "app/jukebox.cpp",
+    "app/shared_world.cpp (jb handling 103-110, 133-145, 165-175)",
+    "web/audio.js (MusicSource 298-333, picker 106-127)"
+   ],
+   "purpose": "Shared song list: 4 built-in CC-BY tracks plus songs from your phone. Music streams from an <audio> element through an HRTF panner at the jukebox. The menu has codes, pages, Load/Stop/Close. The song plus its server start time is shared as world 'jb' so late joiners seek to the same spot. It auto-advances at the end of a song.",
+   "rating": 5,
+   "compatibility": "Streams through <audio> + createMediaElementSource, so long songs don't eat memory (the right choice, DECISIONS.md:20). Needs the iOS unlock and 'bless' step. Phone-song blob: URLs are lost on reload. AAC seeking in Safari is roughly accurate, but buffering after a seek is unmeasured.",
+   "delay": "Starting a song costs the <audio> fetch and buffering, 0.3-2 s on mobile. Someone else's pick arrives after \u226450 ms tick + network, then waits for your audio unlock. A late joiner's offset error equals the buffering time after the seek, and it is never corrected.",
+   "frameCost": "2-3 EM_ASM calls per frame (userSongCount at jukebox.cpp:70, finished at :80, audio::ready while a song is pending). About 50 quads while the menu is open.",
+   "syncRisk": "medium-high. Every client writes 'jb' on auto-advance, concurrent picks diverge on Cloudflare (no echo), there is no drift correction, and phone songs override the shared machine locally.",
+   "problems": [
+    {
+     "issue": "Every client auto-advances and writes 'jb' at the end of each song",
+     "severity": "high",
+     "evidence": "jukebox.cpp:80 calls play(current_+1) as a local change, which leads to shared_world.cpp:165-172 calling setWorld('jb', [next, myServerNow]). That is N writers with N different start times. The 2 s slack (shared_world.cpp:106) only hides it while everyone ends within 2 s. A client that joined or buffered late skips or restarts the song.",
+     "fix": "Let the room own the playlist. The DO knows durations from a manifest, advances itself with a DO alarm, and broadcasts {songId, startServer}. Clients never write on auto-advance."
+    },
+    {
+     "issue": "Concurrent picks diverge on Cloudflare",
+     "severity": "medium",
+     "evidence": "shared_world.cpp:171 calls setWorld. worker.js:109/184 broadcast to others only, and receivers apply the other pick (shared_world.cpp:103-110).",
+     "fix": "Server-sequenced changes with an echo (cross-cutting fix)."
+    },
+    {
+     "issue": "No ongoing resync",
+     "severity": "medium",
+     "evidence": "Offset is applied once, at loadedmetadata (audio.js:316-326).",
+     "fix": "A follower that nudges playbackRate or re-seeks against serverNow - start (see Audio bridge)."
+    },
+    {
+     "issue": "Phone songs take over the shared jukebox, but only for you",
+     "severity": "medium",
+     "evidence": "Jukebox::update auto-plays a newly loaded phone song (jukebox.cpp:71-78), and shared_world.cpp:168 doesn't share non-built-in songs. You hear your song while everyone else hears the room's, until someone picks again and overrides you.",
+     "fix": "Separate 'my music' mode: non-spatial, ducks the room jukebox, clearly labelled. Or an opt-in upload to R2 to share it with the room."
+    },
+    {
+     "issue": "Songs are identified by list index, and changes are detected by polling a counter",
+     "severity": "low",
+     "evidence": "'jb' carries a list index (shared_world.cpp:103-105). SharedWorld polls jukebox.localChanges() (jukebox.h:38-39, shared_world.cpp:165).",
+     "fix": "Use stable song ids (slugs) and send explicit commands (play/stop) through the session API."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Jukebox becomes a room-owned machine in the DO: {queue, current songId, startServer, paused}. Durations come from a manifest built at deploy time, the DO's alarm advances the queue, and anyone can enqueue or skip with server-side rate limits. Clients follow with a drift-correcting stream follower on the shared Clock. Phone songs are a local 'my music' mode, or optionally an R2 upload. The menu and MusicSource stay mostly as they are; remove the SharedWorld coupling."
+  }
+ ],
+ "crossCutting": [
+  "Cloudflare world updates diverge under concurrent writes. worker.js broadcast() (107-110, called at 184) sends to everyone except the writer, and clients never get their own change back (net.h:49). So when A and B write the same key at once, A ends up on B's value, B on A's, and the server keeps only the last write, for good. This affects 'pso' (piano), 'jb' (jukebox), 'dk0-7' (drinks), 'lt' (lights) and 'm#' (mirrors). The PHP relay happens to converge because each reply reflects the stored state (relay.php:175). Switching to Cloudflare as planned therefore adds a new sync bug. Fix: the DO gives every change a sequence number and broadcasts to all, including the writer. Clients apply changes in sequence order, or apply optimistically and reconcile on the echo. Contended actions (take a drink, claim a machine) become request/grant operations in the DO.",
+  "There is no shared game-session framework, so each game rebuilds enter/leave, claims and spectator views. Leaving: darts on walking more than 0.6 m (main.cpp:304), rhythm on X/Escape, piano on standing up, bartender by tapping the station again. 'One player at a time' checks the other player's latest activity slot on the client (main.cpp:656/680) with no tie-break; only seats have one (main.cpp:1259). Spectator data is squeezed into 5 shared floats (players.h kData) with priority race > rhythm > darts (main.cpp:1135-1137). Game sounds are mostly local only. Proposal: a GameSession {machineId, ownerId, lease/heartbeat, seq, snapshot, events} kept in the Durable Object, with claim/release/heartbeat calls and auto-release when the socket closes. Owner input becomes timestamped events, spectators replay them after a playout delay, and every game uses the same enter()/leave()/onDisconnect plus a spatial audio emitter per machine.",
+  "Events carry no timestamp or sequence number and have no playout buffer. The client fans them out to each recipient separately (net.js:366-369 loops every player, though the worker supports '*'). They wait for the 50 ms (Cloudflare) or 100 ms (relay) tick, and after the tab was in the background they replay as a burst (the relay keeps up to 120 per player, relay.php:122). Fix: an envelope {type, seq, serverTs, sender}, sent immediately in cloud mode with to='*'. Receivers drop events older than about 1 s and schedule anything with sound on the audio clock at ts + playout.",
+  "Heavy work runs on the main thread. Measured: piano synthesis averages 16.7 ms per key in WASM (30.6 ms for middle C), and chart analysis takes 0.7 s for a 283 s song. The JS mono mixdown (audio.js:249-252) and MIDI parsing also run there. GitHub Pages has no COOP/COEP, so pthreads are out, but plain Web Workers running their own small wasm module and passing transferable ArrayBuffers need no SharedArrayBuffer. Add build-time precomputation (charts JSON, a piano sample set) and IndexedDB/Cache Storage caches keyed by version.",
+  "Persistent world entries go stale. The room world is kept 30 min after last activity (worker.js:32, relay.php:38), and entries have no end time. A finished piano song's 'pso' is never cleared (piano.cpp:282-285), so every joiner fetches the MIDI and synthesizes 44-56 keys of a song that's already over, right after entering. That likely contributes to the 'lags when it starts' complaint. Fix: give entries endsAt/ttl, have the DO prune ended sessions, and send joiners snapshots of live sessions only.",
+  "Clocks are mixed ad hoc: emscripten_get_now (darts, bartender, touch timestamps), ctx.currentTime (piano, rhythm), server time from net.js (391-393, mapped to audio time only once in piano.cpp:254), and JS performance.now for the jukebox seek (audio.js:318-321). Fix: one Clock module that owns serverNow, audioNow and frameNow, re-estimates the server\u2192audio mapping about every second, and adds output latency plus a user calibration offset. Every game and the jukebox use it.",
+  "The audio graph doesn't scale: an HRTF panner per voice (audio.js:183-184), no voice cap, the rhythm Track bypasses the buses (audio.js:281), and buffers are kept twice in JS. Fix: an AudioMixer with persistent per-location emitters, voice limits, every source on a bus, and one batched command list per frame instead of 4-8 EM_ASM calls.",
+  "Nothing is validated on the server. Any client can write any world key (worker.js:175-181 checks only the key format), and the bartender badge and machine claims are client-side. The DO already checks login tokens with IONOS (worker.js:139-146, 221-232), so it can carry roles (owner, bartender badge) and validate session operations such as serve/take, piano song changes and jukebox skips.",
+  "Game update order and input routing are scattered through frame(). Rhythm/piano/darts input and updates run in updateInteraction (main.cpp:1018-1031) before network receive, which happens inside updatePhysics \u2192 shared.update (main.cpp:844). Piano and bartender consume world entries after physics (main.cpp:1239-1244). Input is routed by a chain of if/else on which game is open (main.cpp:1018-1047). Fix: a GameManager that receives the network first, routes input to the one active session, ticks every session (owner and spectator), and then renders, plus an 'overlay-only' render mode for full-screen games (the rhythm game currently renders the whole bar under its overlay; main.cpp:454 vs 1326).",
+  "Spectator data uses the newest state while avatars are played back about 250 ms late (players.h:3-5), so the dartboard and cabinet update before the avatar's arm moves. Fix: put session snapshots and events on the same delayed timeline as avatars.",
+  "Moving boxes (piano lights, darts, drinks) cost one DrawIndexed each (renderer.cpp:631-638) and are redrawn in every full mirror pass (renderer.cpp:708), with no culling. Instance them.",
+  "Multiplayer tests don't cover the games: tools/mp_test.mjs checks glasses, jukebox and mirrors only. Add Durable Object tests (wrangler dev/miniflare) for concurrent writes, claims and take-races, and two-client checks for piano notes, darts throws and drinks. Note that rhythm autoplay judges against the chart itself, so it can never catch charts that are out of time with the music."
+ ]
+}

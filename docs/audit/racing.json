@@ -1,0 +1,607 @@
+{
+ "group": "racing",
+ "systems": [
+  {
+   "name": "Car physics (engine/vehicle)",
+   "files": [
+    "engine/vehicle.h",
+    "engine/vehicle.cpp"
+   ],
+   "purpose": "Rigid-body car: raycast suspension with anti-roll bars, Pacejka combined-slip tires with relaxation lengths, implicitly solved wheel spin, engine/clutch/gearbox/LSD, brakes with ABS/TC, aero. Stepped at a fixed 240 Hz by app/race/world.",
+   "rating": 7,
+   "compatibility": "Plain float C++ with no SIMD or threads, so it runs fine in Safari wasm. It is bit-deterministic for the same wasm binary: em++ -O0 and -O3 builds of the same race gave identical finish times and positions, and wasm has no FMA contraction. It is NOT bit-identical to native g++ builds, because libm sin/atan/tan differ, so the tools/native numbers never match the phone exactly.",
+   "delay": "Only fixed-step quantization: an input takes effect at the next 4.17 ms step, inside the frame it was sampled in.",
+   "frameCost": "Measured 2.1-2.5 us per car-step in wasm (V8, includes world overhead). 8 cars x 4 steps at 60 fps is about 0.08 ms per frame. The worst case after a hitch (24 steps, from the main.cpp dt cap) is about 0.5 ms. No allocations per step.",
+   "syncRisk": "medium. It is deterministic per binary, which is good for replay, reconciliation and server-run bots. But the state can't be saved, restored or sent, because key fields are private and the spec is copied into every car.",
+   "problems": [
+    {
+     "issue": "No snapshot/restore API. Part of the state is private, and every Vehicle copies a CarSpec that contains std::vectors.",
+     "severity": "medium",
+     "evidence": "vehicle.h:187-191 keeps spec_, shapeB_, engineSpeed_, reverseHold_, pendingGear_ private. vehicle.h:87-93 torqueCurve/gears are std::vector, copied by setup (vehicle.cpp:27), so Racer copies allocate (world.cpp:98-112 push_back). Without this there is no rollback, no host migration of bots and no network state.",
+     "fix": "Split it into a shared const CarSpec* and a POD VehicleState (pos, quat, vel, angVel, 4x wheel{compression, spin, angle, slipRatio, slipAngle}, engineSpeed, gear, pendingGear, shiftTimer, reverseHold, clutchEngage) with save/load plus a quantized ~32-40 B network encoding."
+    },
+    {
+     "issue": "place() leaves stale state and uses a different static sag than setup(), so the car hops after every reset or teleport.",
+     "severity": "low",
+     "evidence": "vehicle.cpp:52 sets compression = mass*g*0.25/spring, while setup uses the per-axle weight share (vehicle.cpp:31,38-39). reverseHold_, clutchEngage, throttleUsed and wheel contact/load/slide are not reset (vehicle.cpp:46-60).",
+     "fix": "Use one resetState() for both setup and place, with per-axle sag, and clear every runtime field."
+    },
+    {
+     "issue": "Gear requests made during a shift are dropped.",
+     "severity": "low",
+     "evidence": "vehicle.cpp:176-189: input.shift is only read when shiftTimer <= 0, and Controls sets shift for a single frame only (controls.cpp:318). A quick double downshift loses the second press.",
+     "fix": "Queue shift requests (a count) inside VehicleState and consume them when the current shift completes."
+    },
+    {
+     "issue": "Constants are recomputed inside the hot tire path.",
+     "severity": "low",
+     "evidence": "std::tan(t.peakSlipAngle) runs in every tireForce call (vehicle.cpp:95), which is 3 calls per wheel per step, and again at vehicle.cpp:400. wheelbase/tan(rack) runs per wheel (vehicle.cpp:248).",
+     "fix": "Precompute inverse peak slips and shape constants in setup(). This saves an estimated 5-10% of step time."
+    },
+    {
+     "issue": "The determinism contract is implicit. Results depend on the libm in the binary.",
+     "severity": "medium",
+     "evidence": "Verified: the same 1-lap bot race gives identical results for em++ -O0 and -O3, but different finish times for g++ native (e.g. Rossi 92.15 s native vs 88.44 s wasm). Bumps use std::sin (track.cpp:60-63).",
+     "fix": "Document it in DECISIONS.md: 'bit-exact only for identical wasm'. Send a build hash in the multiplayer hello and run regression tests in wasm (em++ + node)."
+    },
+    {
+     "issue": "Safety clamps hide energy-gain bugs instead of surfacing them.",
+     "severity": "low",
+     "evidence": "vehicle.cpp:438-442 clamps spin to 10 rad/s and speed to 110 m/s. The gyroscopic term is explicit (vehicle.cpp:434-436).",
+     "fix": "Keep the clamps, but count clamp hits and log them in debug builds or telemetry."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep the model: tire curve, relaxation, implicit spin solve, clutch lock test and wheel-speed-based auto gearbox are all good and tuned. Restructure it as a stateless step(VehicleState&, const CarSpec&, const InputFrame&, const Ground&, dt) so the exact same code and binary can run in three places: the owner's phone, the bot authority (a host phone, later the Cloudflare Durable Object running the same wasm, about 5 ms CPU per race-second for 8 cars) and replays. Add encode/decode for a quantized snapshot: position (f32x3 or track-relative s/lat), smallest-three quat, vel/angVel as i16, steer i8, rpm u16, gear, flags. Expose per-wheel slide for audio and skid marks."
+  },
+  {
+   "name": "Track: surface queries + geometry generation",
+   "files": [
+    "app/race/track.h",
+    "app/race/track.cpp"
+   ],
+   "purpose": "A Catmull-Rom spline is resampled every 1 m into samples (pos, tangent, banking, curvature, curbs, gravel, walls). It answers locate(), surfacePoint() and cast() for the physics (engine::Ground) and generates all race geometry: road, lines, curbs, run-off, barriers, grandstand, terrain and trees.",
+   "rating": 6,
+   "compatibility": "CPU only. The output is 40-byte vertices and Uint32 indices. Fine on Safari, but heavy to build on the main thread.",
+   "delay": "A one-time stall on the frame you first sit in a rig. Measured in wasm (V8): Track::build plus racing line 24 ms and buildMeshes 41 ms. On top of that come 11.4 MB of WriteBuffer and pipeline compiles. Estimated 150-400 ms freeze on iPhone (not measurable here).",
+   "frameCost": "Per frame it only runs queries, about 9 locate() calls per car-step (4 wheels, 4 wall corners, progress), already included in the physics cost. Build: 128,190 triangles and 248,305 unique vertices (measured).",
+   "syncRisk": "low. The data is static and identical on every phone running the same build. The sin-based bump hash differs between native and wasm (tree triangle counts 128190 native vs 128138 wasm), so a non-wasm server port would drive on a different surface.",
+   "problems": [
+    {
+     "issue": "Track and mesh building happen synchronously when you sit down.",
+     "severity": "high",
+     "evidence": "game.cpp:97-101 calls world_.init() and view_.init() (buildMeshes, 26 uploads, CreateShaderModule, 2x CreateRenderPipeline) inside Game::start, which is called from sitOn (main.cpp:250).",
+     "fix": "Build TrackData at boot as a background job (engine::runJobs, main.cpp:1231). Build meshes one chunk per job (about 1.5 ms each) or bake them into a binary asset. Use CreateRenderPipelineAsync during loading."
+    },
+    {
+     "issue": "The terrain and far trees are one chunk with world-sized bounds, so they are never culled.",
+     "severity": "medium",
+     "evidence": "track.cpp:441-510 builds a single 21,972-triangle terrain chunk plus all trees at d>=120 m. Measured bounds are x -860..980, z -883..437, so visible() always passes.",
+     "fix": "Tile the terrain (e.g. 8x8) with 2 LODs. Draw trees as one instanced mesh with per-instance transforms and a distance cull."
+    },
+    {
+     "issue": "No LOD. About 18 quads are emitted per meter at every distance, with 4 unique vertices per quad.",
+     "severity": "medium",
+     "evidence": "track.cpp:330-380 emits 4 road strips, 2 lines, curbs, 2 run-off strips, 2 skirts and 6 barrier faces per sample. strip() creates 4 fresh vertices per quad (track.cpp:321-329).",
+     "fix": "Use LOD levels per chunk (1 m near, 4 m mid, 16 m far with no lines, curbs or barrier backs) and share vertices along strips."
+    },
+    {
+     "issue": "Surface bumps come from a sin-based hash over floor() cells: libm-dependent and stepwise.",
+     "severity": "medium",
+     "evidence": "track.cpp:60-63 hash uses std::sin. track.cpp:261-264 steps the height every 0.59 m (up to 12 mm on gravel), which gives damper spikes via compressionSpeed = dc/dt (vehicle.cpp:213-217).",
+     "fix": "Use an integer hash with bilinear (smooth) value noise. The surface then becomes independent of libm and continuous."
+    },
+    {
+     "issue": "cast() samples the surface under the mount point instead of along the ray. locate() walk cost is repeated about 9 times per car-step.",
+     "severity": "low",
+     "evidence": "track.cpp:273-288 (surface at the origin's s/lat). Each locate() is up to 64 steps (track.cpp:211-222), and at() normalizes 3 vectors per call (track.cpp:177-179).",
+     "fix": "Cache one locate per car per step and derive the wheel and corner positions from it. Iterate cast() once along the ray for curbs and banking."
+    },
+    {
+     "issue": "Track data is hardcoded and there's only one circuit. The grid is marked for 12 slots only.",
+     "severity": "low",
+     "evidence": "kCircuit at track.cpp:17-29, grid markings at track.cpp:397.",
+     "fix": "Load the track definition from a data file (needed later for more tracks and for the DO to share it)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Split it into TrackData and TrackMeshes. TrackData holds the samples, walls, surface and racing line: deterministic, about 200 KB, built at boot or loaded from a file, and compiled into the same wasm the DO would run. TrackMeshes are LOD chunks plus terrain tiles plus instanced scenery, baked offline by a tools/ script into a compact asset (packed 20 B vertices, Uint16 indices, about 5 MB, gzip about 2 MB) or built in sliced jobs during loading. Also add a 'lite' monitor mesh: road ribbon at 4 m plus barrier tops, about 6-10k triangles."
+  },
+  {
+   "name": "Race simulation loop & rules (World)",
+   "files": [
+    "app/race/world.h",
+    "app/race/world.cpp"
+   ],
+   "purpose": "Owns the racers, runs a fixed 240 Hz accumulator loop (max 30 steps), car-car and car-wall collisions, flip and stuck resets, grid, start lights, lap counting, positions and finish.",
+   "rating": 4,
+   "compatibility": "Pure C++, no platform issues.",
+   "delay": "Fixed-step quantization only (up to 4.2 ms). After any frame over 100 ms, the race runs in slow motion instead of catching up (the main.cpp dt cap).",
+   "frameCost": "Measured about 17-20 us per world step (8 cars, bots, collisions, progress) in wasm, about 0.08 ms per 60 Hz frame. One std::vector allocation plus stable_sort per frame (world.cpp:156-163).",
+   "syncRisk": "high. The sim reads wall-clock time, start time and results are local, and the remote-car collision model is physically wrong and untested.",
+   "problems": [
+    {
+     "issue": "Results depend on the frame rate because the sim reads wall-clock time.",
+     "severity": "high",
+     "evidence": "world.cpp:150 calls stepPhysics(kStep, std::min(simMs_, nowMs)), and that value drives the go check (world.cpp:167) and lap timing (world.cpp:397-411). Verified natively: one 1-lap race at 30/120 fps vs 60/57.3 fps gave different results (e.g. Rossi 85.46 s vs 92.15 s). Passing simMs_ alone made all four rates identical.",
+     "fix": "Make the sim purely tick-based: a uint32 tick, with goTick, lap and finish times all in ticks. Wall or server time only maps to a target tick."
+    },
+    {
+     "issue": "The sim clock drifts away from the wall clock permanently after hitches. The HUD and lights use the wall clock.",
+     "severity": "high",
+     "evidence": "main.cpp:1227 caps dt at 0.1 s, so kMaxSteps=30 (world.cpp:12) never triggers (0.1 s is 24 steps). Every frame over 100 ms, and every return from the background, loses sim time. The HUD lap timer is nowMs - lapStartMs (game.cpp:251) with a sim-based lapStartMs, so it shows inflated times. Lights come from wall time (game.cpp:209, 294-305) while the car is released on sim time.",
+     "fix": "Each frame, compute targetTick = (serverNow - raceEpoch) / kStep and step until reaching it, capped at about 48 steps. If further behind, resync: take your own car state from the last snapshot or freeze it. Pause single-player on visibilitychange."
+    },
+    {
+     "issue": "No render interpolation, so motion judders at speed.",
+     "severity": "high",
+     "evidence": "game.cpp:208 draws the latest step and the camera follows it (game.cpp:162-200). 240 Hz steps against 60 Hz rAF with jitter gives 3/4/5 steps per frame, which at 60 m/s is 0.75/1.0/1.25 m of world motion per frame.",
+     "fix": "Keep prev/cur VehicleState per car and render with lerp/slerp by alpha = accumulator/kStep. That adds at most 4.2 ms of latency."
+    },
+    {
+     "issue": "Remote cars are treated as infinite mass on both phones, with no extrapolation. This path is never exercised.",
+     "severity": "high",
+     "evidence": "world.cpp:365-376: ka/kb = 0 for remote, so each phone gives its own car the full rebound (about 2x the total impulse), and only the local car is pushed out by the full overlap. The remote flag is never set anywhere (only read at world.cpp:132, 170, 365-386).",
+     "fix": "Make remote cars kinematic proxies extrapolated to the current tick (pos + vel*dt, blended). Compute the impulse with both inverse masses but apply it only to your own car. Send ContactEvents so the owner feels the hit immediately. Correct only your own car's position, with slop."
+    },
+    {
+     "issue": "Reset teleports ignore other cars and can be triggered at any time.",
+     "severity": "medium",
+     "evidence": "resetCar (world.cpp:137-143) is used for stuck bots (world.cpp:250), flips (world.cpp:180) and the R button with no cooldown (game.cpp:140). Spawning inside a car leads to a full push-out (world.cpp:366-367) plus an impulse, which launches cars.",
+     "fix": "Search for a free slot along s (no car within 8 m), make the car a ghost (no collisions) for 2 s with a visual cue, add a 3-5 s cooldown, and have the server rate-limit resets in multiplayer."
+    },
+    {
+     "issue": "Start time is local and pseudo-random from the local clock.",
+     "severity": "medium",
+     "evidence": "world.cpp:115 sets goMs_ = lightsMs_ + 4900 + fmod(nowMs, 700).",
+     "fix": "The server picks the hold and goAt (server ms), and clients convert it to goTick."
+    },
+    {
+     "issue": "Positions and finish order are computed locally for every car.",
+     "severity": "medium",
+     "evidence": "world.cpp:155-163 (sort) and world.cpp:408-411 (finishMs = nowMs - goMs_). Each phone would rank a close finish differently.",
+     "fix": "Owners report lap and finish ticks. The race authority (DO) publishes the official order and results and stores best laps in D1."
+    },
+    {
+     "issue": "The contact solver has no slop or iterations, so sustained contact jitters.",
+     "severity": "medium",
+     "evidence": "world.cpp:366-367 removes the whole overlap every step, and world.cpp:286 pushes up to 8 cm from walls per step. There's one pass over pairs (world.cpp:182-185).",
+     "fix": "Use a Baumgarte fraction of 0.2-0.4 with 1-2 cm slop and 2 solver iterations. Warm-start is optional."
+    },
+    {
+     "issue": "Lap 0 has dead code, and car boxes use car A's extents for both cars.",
+     "severity": "low",
+     "evidence": "world.cpp:398-414: lapStartMs = goMs_ is immediately overwritten. world.cpp:315/326 uses h from a.spec() for both boxes.",
+     "fix": "Remove the dead branch, time laps in ticks and use per-vehicle extents (needed once there's more than one car type)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "RaceSim is tick-indexed (240 Hz), takes InputFrames per tick and never reads a wall clock. A Clock adapter maps server time to a target tick. Racer kinds: OwnedLocal (stepped from local inputs), OwnedBot (stepped only on the bot authority), and Proxy (a remote car or another phone's bots, kinematic, extrapolated to the current tick from a snapshot buffer, finite mass in impulses). Keep prev/cur states for interpolated rendering. Collision response goes only to owned cars, with ContactEvents for proxies. Lap and finish are measured in ticks and reported to the DO, which arbitrates. A Reset service handles free-slot placement, ghosting and cooldown. Move the AI out (see Bot AI)."
+  },
+  {
+   "name": "Bot AI",
+   "files": [
+    "app/race/world.cpp"
+   ],
+   "purpose": "Builds the racing line by iterative neighbor smoothing and a speed plan from curvature plus braking and acceleration limits. Drives bots by pure pursuit with slide catching, a simple pass/slow traffic rule, and stuck resets.",
+   "rating": 5,
+   "compatibility": "Pure C++.",
+   "delay": "None locally. In multiplayer, bots would reach the other player and spectators only through snapshots (send interval plus interpolation buffer).",
+   "frameCost": "Included in the world step. Traffic is O(N^2) per step (8x8x240/s), which is trivial. Line building takes 400 iterations over 2,450 samples at init (part of the 24 ms).",
+   "syncRisk": "high. Every phone runs its own bots, and the race is chaotic, so no shared seed can keep two phones' bots together.",
+   "problems": [
+    {
+     "issue": "Each racing phone runs its own 7 bots. There's no single authority.",
+     "severity": "high",
+     "evidence": "game.cpp:109 world_.start(3 + (rig & 1), kBots=7, ...) and world.cpp:171 driveBot runs for every bot on every phone. Chaos measured: a 1-step (4 ms) start difference reordered the whole field (Rossi 85.46 vs 92.15 s, Kimi 92.08 vs 85.95 s).",
+     "fix": "Use a single bot authority: the host phone first (lowest human slot), later the DO running the same wasm. Bots go to the other phones as proxies via snapshots, with handoff of full VehicleState if the host leaves."
+    },
+    {
+     "issue": "Traffic logic ignores cars alongside and doesn't know about corners.",
+     "severity": "medium",
+     "evidence": "world.cpp:225 skips cars with gap < 1 m (side by side). Side choice is based only on room (world.cpp:231-233). Bots slow only within 9 m and 1.9 m lateral (world.cpp:234). Result: bots steer into a car beside them and try passes in braking zones.",
+     "fix": "Keep lateral clearance from any car overlapping in s, commit to a pass side for N seconds, don't start passes when lineSpeed is falling fast (braking zone), and add a simple line defense."
+    },
+    {
+     "issue": "The AI is mixed into the sim rules file.",
+     "severity": "low",
+     "evidence": "world.cpp:37-89 and 189-251. RACING.md:36 already plans app/race/ai.*.",
+     "fix": "Move it to app/race/ai.* as BotDriver(TrackData, RaceView) -> InputFrame."
+    },
+    {
+     "issue": "The racing line is rebuilt on every init.",
+     "severity": "low",
+     "evidence": "world.cpp:48-62: 400 x 2450 iterations, plus speed passes at world.cpp:77-88.",
+     "fix": "Bake it into TrackData (same data on the server)."
+    },
+    {
+     "issue": "Traffic reads other cars' live state, which is stale for proxies.",
+     "severity": "low",
+     "evidence": "world.cpp:222-234 uses o.s, o.lateral and o.car.speed().",
+     "fix": "Read proxy state extrapolated to the current tick."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Create a BotDriver in app/race/ai.* that only produces InputFrames. It runs only where the bots are authoritative. Phase A: the host phone simulates bots and broadcasts them in the race snapshot (8 cars x ~32 B at 30 Hz is about 8 KB/s). Phase B: the DO runs RaceSim (same wasm, measured ~2.5 us per car-step, so about 5 ms CPU per race-second) for bots, with the players' cars as proxies, so bots survive any player leaving. Difficulty stays as skill scaling of the speed plan."
+  },
+  {
+   "name": "Driving controls",
+   "files": [
+    "app/race/controls.h",
+    "app/race/controls.cpp",
+    "engine/gamepad.cpp"
+   ],
+   "purpose": "Turns touch (relative steering pad plus analog pedals), keyboard, mouse, gamepad and wheel into CarInput, with smoothing, a speed-sensitive steering assist and button edge detection.",
+   "rating": 6,
+   "compatibility": "iOS 26 Safari: multi-touch works (touch-action:none, and the handler preventDefaults at input.cpp:96). The Gamepad API supports MFi/Xbox/PS pads, but only after a button press. Steering wheels basically aren't available on iPhone. In landscape the Dynamic Island and rounded corners sit in the left/right edge areas, and Safari's left-edge back-swipe is a system gesture the page may not be able to block (unverified).",
+   "delay": "Touch steering filter time constant about 55 ms (rate 18). Throttle ramps to full in about 143 ms (7/s), brake in about 125 ms (8/s). Gamepad steering about 33 ms. Keyboard reaches full lock in at least 0.31 s. Input is sampled once per frame and held for that frame's substeps. Total estimate 80-120 ms to 63% of a touch steering input, including 1-2 frames of present latency.",
+   "frameCost": "Negligible (<0.02 ms), plus one navigator.getGamepads() call through EM_JS per frame.",
+   "syncRisk": "low today (local only). Medium once inputs are networked: they aren't tick-stamped.",
+   "problems": [
+    {
+     "issue": "The latency chain is longer than it needs to be for a 'buttery' feel.",
+     "severity": "medium",
+     "evidence": "controls.cpp:255 and 293 use touch steer rate 18 (time constant about 55 ms). controls.cpp:283-284 ramp gas at 7/s and brake at 8/s. world.cpp:172 holds one frame's input for all substeps.",
+     "fix": "Lower the steering time constant to about 20-25 ms or use a 1-euro filter (low lag on fast moves). Brake: jump straight to about 0.4, then ramp at 20/s. Expose a 'steering smoothing' setting."
+    },
+    {
+     "issue": "Wheel pedals read 50% gas and brake until touched, and drift forces the input source.",
+     "severity": "medium",
+     "evidence": "controls.cpp:219-225 maps axis value 0 (what browsers report before an axis moves) to 0.5. Wheel steering has no deadzone (controls.cpp:217), while padActive > 0.05 (controls.cpp:241) switches the source every frame, overriding touch.",
+     "fix": "Track 'axis has moved' per axis and add a calibration screen (already in the plan). Switch source on a change (delta), not an absolute value, and add a small center deadzone."
+    },
+    {
+     "issue": "Smoothing depends on frame rate.",
+     "severity": "low",
+     "evidence": "controls.cpp:293 steer_ += (t - steer_) * min(1, dt*rate) gives 0.6 per frame at 30 fps and 0.15 at 120 fps, so the effective response differs.",
+     "fix": "Use alpha = 1 - exp(-dt/tau)."
+    },
+    {
+     "issue": "Only the first gamepad is read.",
+     "severity": "low",
+     "evidence": "engine/gamepad.cpp:13-23 returns the first connected pad, so USB pedals that show up as a separate device (common with Fanatec/Moza) are ignored.",
+     "fix": "Enumerate all pads and map them by role (wheel, pedals, shifter) in calibration."
+    },
+    {
+     "issue": "Touch zones ignore the iOS safe area and edge gestures.",
+     "severity": "medium",
+     "evidence": "steerZone starts at x=0 (controls.h:47). Buttons sit 1.2% from the edge (controls.cpp:109-112) and the gas pedal is 1.5% from the right (controls.cpp:103). In landscape the Dynamic Island, rounded corners and Safari edge swipe overlap these areas.",
+     "fix": "Pass env(safe-area-inset-*) from JS to C++ and inset every rect. Start the steering zone at least 24 px from the edge. Add a pagehide/back-swipe guard such as history.pushState."
+    },
+    {
+     "issue": "Inputs aren't tick-stamped, so they can't be streamed or replayed.",
+     "severity": "low",
+     "evidence": "controls.h:39 has one CarInput per frame, copied to me.input (game.cpp:141).",
+     "fix": "RaceSim samples the controls into InputFrame{tick, steer i8, throttle u8, brake u8, buttons, shiftQueue} per tick, which is also used for replays and spectators' steering wheel animation."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Controls produce a per-frame DriverIntent with filters that are exact and tunable. RaceSim converts it to InputFrames per tick. Devices: per-axis calibration, multi-device mapping, source switching on deltas. Touch layout is computed in CSS pixels with safe-area insets. Optional tilt steering behind a DeviceOrientation permission tap. Keep the relative steering pad with the dragged anchor and the grip-based steering assist (good ideas)."
+  },
+  {
+   "name": "Race renderer (View + race.wgsl)",
+   "files": [
+    "app/race/view.h",
+    "app/race/view.cpp",
+    "shaders/race.wgsl"
+   ],
+   "purpose": "Draws the race full screen: a procedural sky pass, frustum-culled track chunks, cars (body, tail lights, 4 wheels each), start lights and HUD text, with a PBR-ish GGX sun, sky reflections, procedural per-material detail, blob car shadows and haze.",
+   "rating": 5,
+   "compatibility": "WebGPU on iOS 26 Safari: works. The surface is BGRA8Unorm, so the manual gamma at race.wgsl:252 is correct. Depth24Plus is backed by 32-bit float depth on Apple GPUs, so moving to Depth32Float with reverse-Z costs nothing. 4x MSAA resolves on-tile on Apple TBDR GPUs.",
+   "delay": "No added latency beyond the normal 1-2 frames of WebGPU present. The missing state interpolation causes judder, not delay (see the World entry).",
+   "frameCost": "CPU: about 80 draws per frame (sky, plus about 10-20 visible chunks, plus 8 cars x 6 draws, plus 5 lights, plus text), each with SetBindGroup, SetVertexBuffer and SetIndexBuffer. About 14 KB of uniforms written per frame. Under 0.3 ms. GPU, estimated (can't be measured here): 5-9 ms on A17 Pro at 1864x860 (DPR 2). That's about 60-100k double-sided triangles plus a full-screen sky, and on ground pixels 5 value-noise calls (20 hashes) plus a shadow loop over every car with sin/cos per pixel.",
+   "syncRisk": "low (render only). For remote cars it needs interpolated or extrapolated visual states, which it can't take today.",
+   "problems": [
+    {
+     "issue": "No LOD, distance cull or backface culling.",
+     "severity": "high",
+     "evidence": "view.h:20 sets zFar 2500. view.cpp:218 uses CullMode::None for everything. view.cpp:394-396 only tests the frustum, and the terrain chunk with world bounds is always drawn.",
+     "fix": "Use LOD chunks and tiles, a far cull around 800-1000 m hidden by fog, and backface culling for closed meshes (cars, trees, boxes) with consistent winding."
+    },
+    {
+     "issue": "Depth precision is poor for the decals (z-fighting on curbs and lines).",
+     "severity": "medium",
+     "evidence": "gpu.h:28 Depth24Plus, near 0.1 (view.h:20), standard Z. Decal lifts are 2-8 mm (track.cpp:342, 348, 351, 392). The depth step is about z^2/(near*2^24): 1.5 mm at 50 m and 6 mm at 100 m, so curbs flicker beyond about 50 m and lines beyond about 110 m.",
+     "fix": "Use reverse-Z with Depth32Float (clear 0, compare Greater), near 0.2-0.3. Or use a decal pipeline with depth bias."
+    },
+    {
+     "issue": "Shading aliases (sparkle and crawl) and there's no anti-aliasing.",
+     "severity": "medium",
+     "evidence": "race.wgsl:135 uses noise at 37 cycles/m and race.wgsl:149 at 61/m, with no distance filtering. view.cpp:208-219 sets no multisample state.",
+     "fix": "Fade the high-frequency octaves by fwidth or distance and add 4x MSAA, possibly rendering at DPR 1.5 to pay for it."
+    },
+    {
+     "issue": "Fragment work is wasted.",
+     "severity": "medium",
+     "evidence": "race.wgsl:96-113 carShadow loops over every car with sin(c.w)/cos(c.w) on every ground pixel. view.cpp:225-228 and 389-391 draw the sky full screen first with depth Always. The clear coat evaluates skyColor(r) twice (race.wgsl:239, 243).",
+     "fix": "Upload x, z, sin and cos per car from the CPU. Draw the sky last with LessEqual at depth 1. Reuse the sky sample."
+    },
+    {
+     "issue": "Vertex and index formats are oversized.",
+     "severity": "medium",
+     "evidence": "mesh.h:29-34 is a 40 B vertex (3x float3 + u32). view.cpp:306 uses Uint32 indices. Measured 9.9 MB VB + 1.5 MB IB, while the largest chunk has 31,179 vertices, which fits Uint16.",
+     "fix": "Pack to 20 B (pos f32x3, oct/snorm normal, unorm8x4 color with the material in alpha) and Uint16 indices. That's about 5 MB and halves the vertex bandwidth."
+    },
+    {
+     "issue": "Car drawing needs a full Vehicle, and the uniforms are single-instance.",
+     "severity": "medium",
+     "evidence": "view.cpp:283-300 carDraw reads wheels, spec, compression and spin from engine::Vehicle. Frame and object buffers are rewritten per render() (view.cpp:344, 371). Spectators and proxies have no Vehicle, and drawing several views per frame needs one submit and one rewrite each.",
+     "fix": "Take a compact CarVisual (pos, quat, steer, wheelAngle, 4x compression, brake) built from interpolated state, and keep a per-view uniform ring so one encoder can draw several views."
+    },
+    {
+     "issue": "Many small draws, and allocations every frame.",
+     "severity": "low",
+     "evidence": "view.cpp:397-405 issues 6 draws per car. view.cpp:358 allocates a carSlots vector and game.cpp:207 a CarDraw vector every frame.",
+     "fix": "Instance the wheels and bodies (one draw each) and reuse member vectors."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Make it a RaceRenderer with quality tiers (phone, low battery, desktop). It takes CarVisual[] from interpolated or extrapolated states. Draw order: opaque near-to-far, then sky last. Reverse-Z, 4x MSAA, distance-faded procedural detail, instanced wheels, cars and trees, LOD chunks, terrain tiles. The same renderer draws the driver view (full pipeline) and monitor views (lite pipeline: cheap lighting, no noise, lite mesh) using per-view uniforms. Shadows and reflections come later in polish, within the budget freed by LOD."
+  },
+  {
+   "name": "Geometry builders (mesh + car model)",
+   "files": [
+    "app/race/mesh.h",
+    "app/race/mesh.cpp",
+    "app/race/car_model.h",
+    "app/race/car_model.cpp"
+   ],
+   "purpose": "MeshBuilder helpers (quad, flatQuad, box, cylinder, cone) and the code-built car (lofted body with wheel arches, glass, lights, spoked wheels).",
+   "rating": 6,
+   "compatibility": "CPU only, no issues.",
+   "delay": "Part of the first-sit build stall (see Track).",
+   "frameCost": "None per frame. A car is about 1.1k triangles for the body plus about 230 per wheel, so 8 cars are about 17k triangles. There's no car LOD.",
+   "syncRisk": "none",
+   "problems": [
+    {
+     "issue": "Unshared vertices and no reserve() cause a large temporary heap peak.",
+     "severity": "medium",
+     "evidence": "mesh.h:40-49 pushes back each vertex, and flatQuad (mesh.cpp:71-74) always makes 4 new vertices. Measured 15.0 MB of vector capacity alive during buildMeshes. WASM memory never shrinks, so the heap's high-water mark stays raised for the session.",
+     "fix": "Use shared-vertex strips, reserve from known counts, emit packed vertices directly, and build chunk by chunk, uploading and freeing each one."
+    },
+    {
+     "issue": "Degenerate quads and dead code in the car body.",
+     "severity": "low",
+     "evidence": "car_model.cpp:139-140 passes rta twice to flatQuad, which makes zero-area triangles. The mid variable is unused (car_model.cpp:102, 110).",
+     "fix": "Emit triangles for those panels and remove the dead code."
+    },
+    {
+     "issue": "No car LOD for far cars or monitors.",
+     "severity": "low",
+     "evidence": "buildWheel uses 20-segment cylinders with caps, twice (car_model.cpp:163-165), plus 6 boxes, for every wheel at any distance.",
+     "fix": "Add an LOD1 (simplified body, 8-segment wheels) for >60 m and for monitors."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep it as a placeholder until the Blender car (REMASTER.md:72-73). Change the output to the packed vertex format, add LOD1, and keep car space identical to engine/vehicle (x right, y up, -z forward) so the asset swap doesn't touch physics."
+  },
+  {
+   "name": "Race game glue (session, HUD, camera, audio)",
+   "files": [
+    "app/race/game.h",
+    "app/race/game.cpp",
+    "app/main.cpp"
+   ],
+   "purpose": "Sitting in a sim seat opens the race full screen (body.racing). Glues Controls, World and View, runs the chase/hood/bumper cameras, the HUD (position, lap, times, rpm, standings, lights, results, touch controls) and the engine hum, and exports 5 numbers for others to see.",
+   "rating": 4,
+   "compatibility": "EM_ASM toggles body.racing. Shows a 'turn sideways' message in portrait (needed, because iOS Safari can't lock orientation or go fullscreen for a canvas).",
+   "delay": "First sit: one long frame (track build and upload, see Track). Engine sound volume and pitch update once per frame.",
+   "frameCost": "HUD: about 40-60 text and rect items plus snprintf and std::string allocations per frame, under 0.2 ms. The bar isn't rendered while racing (main.cpp:1269-1273), which is good.",
+   "syncRisk": "high. The race session is entirely local (start, roster, restart, results), and only 5 numbers are exported.",
+   "problems": [
+    {
+     "issue": "Synchronous world and view init on first sit.",
+     "severity": "high",
+     "evidence": "game.cpp:97-101 (world_.init and view_.init inside start). It logs 'Race track ready in %.0f ms'.",
+     "fix": "Prebuild at load (jobs plus async pipelines). start() should only do world.start()."
+    },
+    {
+     "issue": "Not network-aware. Each rig runs a private race.",
+     "severity": "high",
+     "evidence": "game.cpp:109 starts a local race with 7 bots. stateFor exports x, z, heading, speed, steer (game.cpp:218-227) into the generic player slots (players.h:27, kData = 5 numbers). 'Tap to race again' restarts only locally (game.cpp:145-153). Racer.remote is never set.",
+     "fix": "Replace it with a RaceSession driven by the DO (claim, roster, goAt, results, restart vote)."
+    },
+    {
+     "issue": "The HUD mixes clocks.",
+     "severity": "medium",
+     "evidence": "game.cpp:251 shows the lap timer as wall nowMs minus sim lapStartMs. Lights and GO come from wall time (game.cpp:209, 294-305) while the car is released on sim time.",
+     "fix": "The HUD reads only session ticks (lap ticks x kStep)."
+    },
+    {
+     "issue": "Reset is available any time with no cooldown.",
+     "severity": "medium",
+     "evidence": "game.cpp:140: pressed[kReset] goes straight to world_.resetCar.",
+     "fix": "Go through a Reset service (free slot, ghost, cooldown, server rate limit)."
+    },
+    {
+     "issue": "Race resources are never released, and other cars are silent.",
+     "severity": "low",
+     "evidence": "The ready_ flag keeps about 11.4 MB of GPU buffers and the track for the session (game.cpp:97, close() at game.cpp:125-130). Only your own car's hum plays (game.cpp:157-158).",
+     "fix": "Keep the buffers if monitors will need them, but release them under memory pressure. Add a pooled engine voice for the nearest 2-3 cars."
+    },
+    {
+     "issue": "Magic numbers and fragile tap detection.",
+     "severity": "low",
+     "evidence": "game.cpp:215 steer/0.5f. game.cpp:147 only accepts a restart tap if the pointer is seen less than 100 ms after touchdown.",
+     "fix": "Use spec.maxSteer and a proper tap event from Input (takeTaps)."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Split it into three parts. RaceSession is a state machine: Idle -> Claiming (DO ack) -> Grid (roster, goTick) -> Countdown -> Racing -> Finished (DO results) -> Restart vote, the single owner of the race clock and network I/O. DriverView holds the camera, HUD and touch overlay, reading interpolated state and session ticks only. RaceAudio handles your own engine plus the nearest others, tires from slide, collision sounds. main.cpp only routes sit/stand and calls session.update/render. Spectators use the same session object in 'watch' mode."
+  },
+  {
+   "name": "Multiplayer race netcode (planned; currently none)",
+   "files": [
+    "app/race/game.cpp",
+    "app/main.cpp",
+    "app/players.h",
+    "web/net.js",
+    "cloud/worker.js"
+   ],
+   "purpose": "Should sync two drivers (left and right rig) plus bots, the start, laps and results through the Cloudflare room. Today only 5 numbers per driver ride the generic player state, and a race doesn't sync at all.",
+   "rating": 1,
+   "compatibility": "The Cloudflare DO supports WebSockets with binary frames and wasm modules, so it can run the same C++ physics. Today net.js sends JSON on setInterval timers, which jitter and get throttled on iOS. The IONOS PHP relay fallback (10 Hz polling) is unusable for racing.",
+   "delay": "No remote cars exist yet. On the current channel they'd be 50 ms (cloud send interval) + ~100 ms interpolation + RTT/2, about 150-250 ms behind, which is 10-17 m at 70 m/s.",
+   "frameCost": "n/a today. Planned: decoding 30 Hz binary snapshots of 8 cars (about 300 B) is negligible. JSON parsing at that rate would cost noticeably more on the phone.",
+   "syncRisk": "high. There is no protocol, no authority, no shared clock and no build check.",
+   "problems": [
+    {
+     "issue": "No race protocol or channel.",
+     "severity": "critical",
+     "evidence": "stateFor (game.cpp:218-227) feeds selfState (main.cpp:1135). The worker caps a state at 20 numbers (worker.js:29 MAX_VALUES=20) and sends JSON at 20 Hz (net.js:62, 296) or 10 Hz over PHP (net.js:19). There's no room for 8 cars, ticks, rotation or laps.",
+     "fix": "Add a race sub-protocol in the DO with binary frames: snapshot {raceId, tick, n, CarSnap[n] ~32 B} at 30 Hz from each authority, ContactEvent, LapReport, ResetRequest."
+    },
+    {
+     "issue": "Rigs are claimed client-side after the fact.",
+     "severity": "high",
+     "evidence": "main.cpp:1252-1263: 'lower id wins' runs only after the other player's state arrives, so both phones may already have started a race (main.cpp:250).",
+     "fix": "Claim atomically in the DO (race.claim -> ack/deny) before diving in. Show a 'waiting' state for at most about 1 RTT."
+    },
+    {
+     "issue": "No server clock in C++.",
+     "severity": "high",
+     "evidence": "net.js:115-120 computes clockOffset from ping/pong, but the race uses emscripten_get_now (main.cpp:250, game.cpp:96-114).",
+     "fix": "Expose engine::net::serverNowMs(). The race epoch and goAt come from the DO."
+    },
+    {
+     "issue": "Sends are timer-driven, not tied to sim ticks.",
+     "severity": "high",
+     "evidence": "net.js:141, 289 and 296 setInterval(tick/cloudTick) send whatever state C++ last stored (net.js:313), with no tick stamp.",
+     "fix": "Send from the frame loop right after the sim step, stamped with the tick. Receivers buffer by tick."
+    },
+    {
+     "issue": "No build or protocol version check, but determinism needs identical binaries.",
+     "severity": "medium",
+     "evidence": "Verified: wasm -O0 and -O3 are bit-identical while native differs. The hello is {hello, name, tok} only (worker.js:13).",
+     "fix": "Put the build hash in the hello. The DO refuses race joins on a mismatch and asks the client to reload."
+    },
+    {
+     "issue": "Message budget on the Cloudflare free tier (verify current limits).",
+     "severity": "medium",
+     "evidence": "Inbound DO WebSocket messages are billed as requests (at a ratio). 30-60 Hz per racer plus 20 Hz bar state for everyone adds up quickly.",
+     "fix": "Batch inputs and snapshots (e.g. 3 ticks per message at 20-30 Hz), use binary frames, and stop the race tick when no race is active."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Authority model: each phone owns its own car (instant response) and streams quantized snapshots plus its last inputs at 30 Hz, tick-stamped. Bots are owned by one authority: phase A the host phone, phase B the DO running the RaceSim wasm. The DO owns the race session: rig claims, roster, seed, laps, goAt in server ms, lap and finish validation (monotonic, plausible sector times), results, and best laps written to D1. Receivers keep a per-car snapshot ring and build proxies extrapolated to the current tick for physics and the driver view (velocity blending over 100-200 ms, capped at 250 ms), and interpolated states at now - 100 ms for spectators. Collisions use the proxy approach from the World entry. Host migration hands off full VehicleState."
+  },
+  {
+   "name": "Spectator monitors (planned render-to-texture)",
+   "files": [
+    "app/main.cpp",
+    "app/race/view.cpp",
+    "docs/RACING.md"
+   ],
+   "purpose": "Let everyone in the bar watch each rig's race on its monitors (left/middle/right views). Today the middle screen only shows '<name> IS RACING / speed' text.",
+   "rating": 2,
+   "compatibility": "WebGPU render-to-texture is fine on iOS. The bar renderer already samples screen-sized mirror textures (renderer.cpp:452-462), so it has a texture-sampling path for this.",
+   "delay": "Planned: the race data delay (about 150-250 ms behind the driver) plus the monitor refresh period (50-100 ms at 10-20 Hz). Fine for spectators.",
+   "frameCost": "Naive plan: View::render per monitor means up to 6 full-scene passes per frame (2 rigs x 3 views, each ~60-100k triangles plus full PBR) on top of the bar. That doesn't fit an iPhone 60 fps budget. With a lite mesh (6-10k triangles), 320x180 targets and one view per frame round-robin, the estimate is about 0.3-0.8 ms GPU.",
+   "syncRisk": "high. Spectators have no bot data and only 5 numbers per driver at 20 Hz.",
+   "problems": [
+    {
+     "issue": "There's no data to render.",
+     "severity": "high",
+     "evidence": "Bots exist only on the driver's phone (world.cpp:171). Spectators receive x, z, heading, speed and steer (game.cpp:218-227): no height, no pitch or roll, no wheels.",
+     "fix": "Spectators subscribe to the race snapshot stream (all cars), rendered interpolated at now - 100 ms."
+    },
+    {
+     "issue": "The rendering cost would be prohibitive if done the obvious way.",
+     "severity": "high",
+     "evidence": "View::render draws every visible chunk with the full shader (view.cpp:394-406). Six views per frame would come on top of the bar's full-resolution mirror passes (renderer.cpp:452-462).",
+     "fix": "MonitorRenderer: lite track mesh, car LOD, a 960x180 atlas (3 views), refresh one view per frame only when the rig is within about 10 m, in the frustum and not occluded by a menu. Otherwise keep the last frame."
+    },
+    {
+     "issue": "Spectators would hit the track build hitch.",
+     "severity": "medium",
+     "evidence": "The track is built only inside Game::start (game.cpp:97-101), so a spectator's phone would need the same ~65 ms (wasm) build plus upload the first time it shows a race.",
+     "fix": "Build TrackData and the lite mesh at boot in background jobs."
+    },
+    {
+     "issue": "The plan and the scene disagree on the number of monitors.",
+     "severity": "medium",
+     "evidence": "RACING.md:20 says three monitors per rig. main.cpp:395-403 simMonitor defines a single 0.72x0.42 m quad, and queueMachineScreens draws text only (main.cpp:419-427).",
+     "fix": "Define three monitor quads per rig in bar_scene (left, middle, right), or decide on one screen and update RACING.md."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "MonitorRenderer is owned by the bar renderer but fed by RaceSession in watch mode: interpolated CarVisual[] for that rig's race, three cameras (left/middle/right, or a TV-style chase of the driver), the lite pipeline (vertex-lit plus fog, no noise), and an atlas texture sampled as emissive on the monitor quads. Round-robin refresh is budgeted by a global GPU quality tier and turned off under low battery or thermal pressure. When no race data is available, show a 'waiting' card. Never build or upload track data on demand."
+  },
+  {
+   "name": "Native test tools",
+   "files": [
+    "tools/native/race_test.cpp",
+    "tools/native/vehicle_test.cpp"
+   ],
+   "purpose": "Run the car physics checks (0-100, braking, cornering, parked stability) and a full 8-bot race natively with g++, without a browser.",
+   "rating": 5,
+   "compatibility": "g++ native only. Results don't match the shipping wasm bit for bit (libm). I verified that the same sources build with em++ and run under node in this container.",
+   "delay": "n/a",
+   "frameCost": "n/a (a whole race takes about 1.1-1.2 s natively and about 1.0-1.2 s in wasm under node).",
+   "syncRisk": "none (but the tests can't currently catch the sync bugs above).",
+   "problems": [
+    {
+     "issue": "Native results differ from the wasm the phones run.",
+     "severity": "medium",
+     "evidence": "The same 1-lap race gives different finish times under g++ and em++ (e.g. Rossi 92.15 vs 88.44 s). Triangle counts are 128190 vs 128138 because of sin-based tree hashes.",
+     "fix": "Also build the tests with em++ and run them in node in CI, treating wasm as the reference."
+    },
+    {
+     "issue": "No determinism or frame-rate tests.",
+     "severity": "medium",
+     "evidence": "The world.cpp:150 frame-rate bug was found with an ad-hoc test (same race at 30/60/120/57.3 fps). Nothing in tools/native checks this, and deploy.yml doesn't run the native tests.",
+     "fix": "Add tests: identical results at several frame rates; snapshot, restore and replay give identical results; -O0 vs -O3 equality; lap-time regression bounds; exit codes, run in CI."
+    },
+    {
+     "issue": "The car spec is duplicated.",
+     "severity": "low",
+     "evidence": "sportsCar() appears both in vehicle_test.cpp:23-32 and world.cpp:21-30.",
+     "fix": "Use one car data source (header or JSON) shared by the game, the tests and the server."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Make tools/native the CI gate for the sim: built twice (g++ for speed, em++ + node as the bit-exact reference), with assertions for determinism, frame-rate independence, snapshot round-trips, physics targets (0-100 about 4.2 s, braking about 31 m) and bot race sanity (resets below N). Later add a headless two-client plus DO simulation for netcode (run with wrangler dev or Miniflare)."
+  },
+  {
+   "name": "Racing plan doc",
+   "files": [
+    "docs/RACING.md",
+    "docs/DECISIONS.md"
+   ],
+   "purpose": "Master plan and checklist for the racing sim: architecture, physics, controls, monitors, netcode and steps.",
+   "rating": 6,
+   "compatibility": "n/a",
+   "delay": "n/a",
+   "frameCost": "n/a",
+   "syncRisk": "medium. Some claims are false today and would mislead a fresh session.",
+   "problems": [
+    {
+     "issue": "Claims that don't match the code.",
+     "severity": "medium",
+     "evidence": "RACING.md:47-48 says the fixed step makes the car behave 'the same at 30 or 120 fps and the same for every player' (false: world.cpp:150, verified). DECISIONS.md:419-420 says 'max 30 steps per frame', but the main.cpp:1227 dt cap makes it 24 and kMaxSteps never triggers.",
+     "fix": "Correct both. Record the tick-based clock, the authority model and the wasm determinism contract."
+    },
+    {
+     "issue": "The netcode section lacks the critical details.",
+     "severity": "medium",
+     "evidence": "RACING.md:116-121 says 'collisions with the other player's car use their synced car as a solid object on your side, and the same happens on theirs'. That is exactly the infinite-mass double-impulse model in world.cpp:365-376.",
+     "fix": "Specify proxies extrapolated to the current tick, the finite-mass impulse applied to your own car only, contact events, DO-arbitrated results, and the bot authority with migration."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep it as the master checklist, but add a 'Sim contract' section (240 Hz ticks, no wall clock, wasm bit-exactness, build hash), a 'Netcode' section (message types, rates, authority, proxies), a 'Render budget' section (LOD tiers, monitor budget) and a 'Loading' section (what is built at boot vs baked)."
+  }
+ ],
+ "crossCutting": [
+  "Three clocks are never unified. The wall clock is emscripten_get_now (main.cpp:250, game.cpp:251), the sim has simMs_ (world.cpp:77, 150), and the server clock offset exists only inside JS (net.js:115-120). Races need a single server-time to tick mapping, owned by RaceSession and exposed to C++ as engine::net::serverNowMs(). Every race timestamp (go, laps, finish, resets) should be in ticks.",
+  "Authority sits on the wrong side everywhere. Rigs are claimed client-side with 'lower id wins' after the fact (main.cpp:1252-1263), races are started locally (game.cpp:109), bots run on every phone (world.cpp:171) and results are computed locally (world.cpp:155-163). The Durable Object should own claims, roster, start time, bots (phase B) and results. Each phone owns only its own car.",
+  "The network layer isn't tied to frames or ticks. net.js sends on setInterval (50 ms cloud, 100 ms PHP; net.js:19, 62, 141, 289, 296) whatever state C++ last stored, as JSON with at most 20 numbers per player (worker.js:29). Racing needs tick-stamped binary frames sent from the frame loop, plus snapshot buffers on the receiving side. The same fix would help bar avatars.",
+  "Determinism holds only for the same binary. Wasm is bit-exact: em++ -O0 and -O3 gave identical race results, while native g++ differs. That is valuable (replay, reconciliation, server-run bots with the same wasm), but only if every client in a race runs the same build. Put a build hash in the hello (the build label already exists in the DOM, read at game.cpp:117-121) and remove the libm sin from the physics surface hash (track.cpp:60-63).",
+  "The race repeats the loading-stutter pattern. Its heaviest work runs synchronously on the frame you sit (game.cpp:97-101): track build and racing line 24 ms plus meshes 41 ms (wasm, measured), plus 11.4 MB WriteBuffer, plus pipeline compiles. Spectator monitors would trigger the same on other phones. All of it should go through the existing engine::runJobs (main.cpp:1231), with async pipeline creation or a baked asset.",
+  "Fixed-step simulation is rendered without interpolation in the race (game.cpp:208, 162-200). Bar systems that step physics at a fixed rate should be checked for the same 3/4/5 steps-per-frame judder. One shared 'prev/cur state plus alpha' convention should apply engine-wide.",
+  "There's no GPU budget arbiter. Racing and the bar never render together today (main.cpp:1269-1273), but spectator monitors would put race views inside the bar frame, which already renders full-resolution mirror reflection targets (renderer.cpp:452-462). A global quality tier (resolution scale, MSAA, monitor refresh, mirror resolution) is needed, driven by measured frame time and lowered under thermal pressure or Low Power Mode (30 fps cap means 8 physics steps per frame, which is fine).",
+  "Memory high-water mark. Race meshes peak at about 15 MB of std::vector capacity in the WASM heap (measured), which never shrinks. About 11.4 MB of GPU buffers (40 B vertices, Uint32 indices) is kept for the whole session after the first race (game.cpp:97). Packing to 20 B and Uint16, plus building chunk by chunk, roughly halves both. That matters on iOS, where the per-tab limit is shared with the bar's textures and models.",
+  "iOS full-screen game UI ignores safe areas and edge gestures. The steering zone starts at x=0 (controls.h:47) and buttons sit 1.2% from the edges (controls.cpp:109-112) under the Dynamic Island and rounded corners in landscape. The same applies to other full-screen mini games (rhythm, piano). Pass env(safe-area-inset-*) into C++ once, in engine/input, and use it everywhere.",
+  "Docs drift: RACING.md:47-48 and DECISIONS.md:419-420 state frame-rate independence and a 30-step cap that the code doesn't deliver. Since fresh sessions rely on these files, wrong claims carry into future work."
+ ]
+}

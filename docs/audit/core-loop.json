@@ -1,0 +1,597 @@
+{
+ "group": "core-loop",
+ "systems": [
+  {
+   "name": "Frame loop and per-frame orchestration (frame() in app/main.cpp)",
+   "files": [
+    "app/main.cpp:1223-1328",
+    "app/main.cpp:1401",
+    "engine/physics.cpp:104-111",
+    "CMakeLists.txt:21-35"
+   ],
+   "purpose": "Runs once per requestAnimationFrame and calls every system in a fixed hand-written order. The exact order today: (0) nowMs=emscripten_get_now; (1) updateLoadingScreen, until loaded; (2) dt=min(now-last,0.1); (3) gpu.resizeIfNeeded, which reads the canvas size and so forces a layout every frame; (4) runJobs(3 or 8 ms); (5) updateFps, which writes the status DOM every 500 ms; (6) handleCommands (UI JSON poll and settings version); (7) updateCamera (look, joystick move, collisions, ground height, walk animation, leaving darts, standing up automatically); (8) updateInteraction (focus raycasts, glow, the aimed glass, rhythm/race/piano updates (race.update also steps the race physics), darts.update, taps leading to use/sitOn/pickup, mirror buttons, jukebox.update, audio listener); (9) updatePhysics (hold target, shared.update with a NEW emscripten_get_now, receiveWorld JSON, glass ownership, jukebox share, physics.step on a fixed 1/60 accumulator, model matrices); (10) takeOther + receiveEvents JSON + handleShared; (11) piano.update, bartender.update; (12) updateSelfMotion; (13) selfState (voice level read through EM_ASM), then sendSelf calls net::setState EVERY frame; (14) others.update (receive, present() per player, interpolation 250 ms behind); (15) updateVoice (one EM_ASM per player); (16) sendInfo every 500 ms; (17) seat-conflict check; (18) gpu.beginFrame; (19) if racing, race.render and return; (20) boxes; (21) queueText, which also adds others' darts to boxes; (22) CPU skinning of self and every remote player; (23) renderer.render (mirrors, then main pass, then submit). The only other loops are JS setIntervals in net.js (100 ms PHP / 50 ms cloud), voice.js (1 s) and menu.js meters. They are not synchronised with rAF.",
+   "rating": 4,
+   "compatibility": "Driven by rAF through emscripten_set_main_loop(frame,0,false), and rAF's own timestamp is thrown away. iOS Safari caps rAF at 60 Hz, and Low Power Mode drops it to 30 Hz. At 30 Hz every frame runs 2 physics steps and the 0.1 s clamp still holds. The fixed kStep=1/60 with no render interpolation aliases against rAF jitter (16.2-17.1 ms frames give 0 or 2 steps), which shows as stutter on moving glasses. If the tab is hidden, rAF stops but net.js setInterval keeps sending your last state, so others see you frozen in place rather than away. There is no visibilitychange or pagehide handling in C++.",
+   "delay": "Input to screen: a touch event waits for the next rAF (0-16.7 ms), then the sim and render run, then Fifo presents through the compositor: about 33-50 ms. A tap is only recognised on finger lift (pressEnd), so add finger-down time up to 350 ms. Your movement reaching others: up to 1 frame for setState, 0-100 ms (PHP) or 0-50 ms (cloud) for the interval tick, network/relay time, then the receiver's 250 ms playback buffer (players.cpp:14). Total is about 350-650 ms on PHP and about 300-400 ms on Cloudflare. The 250 ms buffer is not adjusted to the 50 ms cloud tick.",
+   "frameCost": "CPU per frame with N remote players: about 14 + 4N JS-boundary crossings (EM_ASM/EM_JS), 3 JSON round trips (ui take, receiveWorld, receiveEvents), each with stringToNewUTF8 + malloc + parse + free, and 20-40 queue.WriteBuffer calls. The whole text and HUD glyph list is rebuilt and uploaded, and every remote avatar is skinned on the CPU even when off-screen. Estimated 2-5 ms CPU on an A17 with 8 players; this cannot be measured today. Hitches come from big jobs that ignore the budget (runJobs always runs at least 1 job), resize reconfigures, the race track built synchronously on first sit, profile-picture getImageData when someone joins, and log DOM appends.",
+   "syncRisk": "high: the order mixes network input and local decisions within one frame without an authority. Taps (step 8) check others' state from the previous frame. shared.update (step 9) can take a glass back right after you pick it up. jukebox.update (step 8) auto-advances locally before shared.update broadcasts it, so every client advances and broadcasts. The seat conflict is resolved after you have already sent your seated state (step 13 before step 17). Frame dt drives remote-glass velocity while physics consumes fixed steps.",
+   "problems": [
+    {
+     "issue": "No frame-time instrumentation. Only an averaged FPS every 500 ms, so the known 'lag when the bar starts' cannot be attributed to a system, and the user can only test on the phone.",
+     "severity": "high",
+     "evidence": "app/main.cpp:312-324 updateFps counts frames per 500 ms window. There are no per-phase timers, no worst-frame value and no hitch log.",
+     "fix": "Add a FrameProfiler: emscripten_get_now() around each phase, a ring buffer of 300 frames, worst frame and p95, a hitch log (frames >20 ms with the phase that overran), an overlay toggled from the menu, and a 'send report' button that posts to the Cloudflare worker so a Claude session can read it."
+    },
+    {
+     "issue": "Mixed time sources inside one frame. Several functions call emscripten_get_now() again instead of using the frame's nowMs.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:844 shared.update(emscripten_get_now(),...); :148 showToast; :194 setActivity; :206 startEmote; :250 race.start(..., emscripten_get_now()); while frame() captured nowMs at :1224.",
+     "fix": "Build one FrameTime {rafTimestamp, dt, simTime, serverTime, frameIndex} at frame start from the rAF timestamp (emscripten_request_animation_frame_loop passes it) and pass it everywhere."
+    },
+    {
+     "issue": "Physics runs on a fixed 60 Hz step but bodies are drawn at the last step with no interpolation, and remote glasses get their velocity from the variable frame dt.",
+     "severity": "medium",
+     "evidence": "engine/physics.cpp:105-110 accumulator; app/main.cpp:847-860 copies b.position straight to the model; app/shared_world.cpp:212 b.velocity=(next-b.position)/dt using frame dt, which physics then integrates over 0..8 fixed steps.",
+     "fix": "Keep previous and current transforms per body and draw lerp(prev,cur,alpha). Run remote-follow (shared_world kRemote) inside the fixed step, or set kinematic bodies' target positions directly."
+    },
+    {
+     "issue": "About 14+4N wasm-to-JS crossings and 3 JSON parses per frame, mostly polling for nothing.",
+     "severity": "medium",
+     "evidence": "ui.cpp:11-19 takeCommands stringifies '[]' every frame; ui.cpp:37 settings::version; net.cpp:93,114 receiveWorld/receiveEvents JSON; main.cpp:1130 myLevel; :486-489 peerLevel per player; :1162-1170 voice place per player; players.cpp:73 net::present per player; main.cpp:1248 setState every frame although net.js sends every 50-100 ms.",
+     "fix": "Use one mailbox per frame: JS writes all inbound packets, world entries, events, UI commands and voice levels into a shared binary buffer in the wasm heap. C++ reads it once (one crossing in) and writes one outbound buffer (one crossing out). Send state only on the net tick."
+    },
+    {
+     "issue": "Per-frame layout reads interleaved with DOM writes, which forces synchronous layout on iOS.",
+     "severity": "medium",
+     "evidence": "engine/gpu.cpp:103 emscripten_get_element_css_size every frame (getBoundingClientRect) after DOM writes from engine/log.cpp:7-12 setStatus, engine/input.cpp:14-23 showStick, and web/index.html:80-86 log append + scrollTop.",
+     "fix": "Cache the canvas size from a ResizeObserver(devicePixelContentBox) and apply it at frame start. Batch all DOM writes into one JS function called once at the end of the frame."
+    },
+    {
+     "issue": "Background jobs run at the START of the frame with a fixed budget, and at least one job always runs whatever its size.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1233 runJobs(entered?3:8) before any simulation; engine/gpu_upload.cpp:152-161 checks the budget only after each job.",
+     "fix": "Run jobs after submit, against a deadline (frameStart + 12 ms - measured frame cost). Split jobs so each takes under 2 ms, and give each a cost hint."
+    },
+    {
+     "issue": "Things nobody can see are simulated and rendered. The full scene and mirrors render behind the opaque loading overlay and behind the 80-88% rhythm dimmer, and every remote avatar is skinned even when off-screen.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1267-1327 always renders; app/rhythm.cpp:268 addRect with alpha 0.8/0.88; app/main.cpp:1303-1317 poses every placed other.",
+     "fix": "Give the frame a 'view mode' (loading, world, overlay game, fullscreen game). While loading, render a warm-up frame once, then skip. In overlay games, turn mirrors off and lower the resolution. Pose only players inside the view or mirror frustums."
+    },
+    {
+     "issue": "Per-frame heap churn from temporary vectors and strings.",
+     "severity": "low",
+     "evidence": "app/main.cpp:876 vector<Command>; :1239-1240 world/events vectors; :494 name string per player per frame; :518/:524 prompt strings; app/renderer.cpp:551+ drawModels builds and sorts an 'order' vector for every pass, mirrors included.",
+     "fix": "Use frame-arena or persistent member buffers. Cache prompts and name strings and rebuild only on change. Sort the blend list once per frame."
+    },
+    {
+     "issue": "A crash (abort) freezes the game permanently with no recovery path.",
+     "severity": "medium",
+     "evidence": "web/index.html onAbort only appends to the log; main loop set at app/main.cpp:1401 never restarts.",
+     "fix": "On abort or device loss, show a 'Something broke - tap to rejoin' overlay that reloads with the same ?room and posts the error report."
+    },
+    {
+     "issue": "Default 16 MB wasm heap with ALLOW_MEMORY_GROWTH, so the heap grows many times while models load. Each growth can copy the heap and detaches HEAP views.",
+     "severity": "medium",
+     "evidence": "CMakeLists.txt:24 -sALLOW_MEMORY_GROWTH=1 with no INITIAL_MEMORY; engine/fetch.cpp:91-92 _malloc(bytes.length) for each multi-MB GLB.",
+     "fix": "Measure the peak heap on the phone (log HEAP8.length after loading) and set -sINITIAL_MEMORY to that, rounded up (likely 128-256 MB). Keep growth only as a fallback."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "Replace frame() with an explicit phase pipeline owned by an Engine/Game object: (1) BeginFrame: FrameTime from the rAF timestamp, apply pending resize, Input::poll() gives an immutable InputFrame, Net::poll() gives one inbound batch from the shared mailbox. (2) Apply inbound: server-authoritative events (claims granted or denied, world changes, sfx) go into typed handlers. (3) Fixed-step simulation (60 Hz accumulator): LocalPlayerController, ActivityManager.tick, Interaction, Physics, game ticks, all with fixed dt and storing previous/current state. (4) Net out only on the net tick (20-30 Hz): one binary snapshot plus reliable claim/release messages. (5) Presentation: interpolate bodies (alpha), remote players played back against the server clock, CPU skinning only for visible players, HUD built from cached text, audio listener. (6) Render: acquire the surface texture late, encode, submit. (7) Jobs and idle work against a deadline. (8) FrameProfiler records every phase. Each phase is a function on a system object that receives a context, so the order lives in one table that can be audited. Add visibilitychange: on hide, send 'away', pause audio and stop sending; on show, resync."
+  },
+  {
+   "name": "App state container (struct App / g_app god object)",
+   "files": [
+    "app/main.cpp:66-144",
+    "app/main.cpp:749",
+    "app/main.cpp:778",
+    "app/players.cpp:38",
+    "app/shared_world.cpp:84"
+   ],
+   "purpose": "One global struct holds the GPU, input, camera, scene, renderer, avatars, net players, shared world, every game, sounds, text, the picture cache, physics, model-to-body mapping, local activity, room lights, settings, focus and highlight state, banners, toasts, loading flags and FPS counters. About 30 free functions read and write it directly.",
+   "rating": 3,
+   "compatibility": "No platform issues of its own.",
+   "delay": "None directly.",
+   "frameCost": "Negligible by itself. The cost is in what it allows: duplicated checks and repeated scans of others.players() (playerUsing is called for prompts, taps and seats, plus the separate seat-conflict loop, queueMachineScreens, the name tags, updateVoice and posing all loop the same list each frame).",
+   "syncRisk": "high: local copies of shared truth live in several places. Room lights are in g_app.lightsDim/fireOn plus the renderer's light scales. Mirror modes are in scene.mirrors, mutated by both use() and SharedWorld::receive, with a polled static copy in updateMirrorButtons. Seat occupancy has no owner at all: it is inferred from each player's activity/param slots. Nothing guarantees these agree after a reconnect or room switch.",
+   "problems": [
+    {
+     "issue": "A god object with no ownership boundaries. Any function can change any state, so order-dependent bugs are invisible.",
+     "severity": "high",
+     "evidence": "app/main.cpp:66-142 holds 60+ fields across 10 concerns; e.g. use() at :650-773 teleports the camera, opens HTML panels, toggles lights, plays sfx and sends net messages directly.",
+     "fix": "Split into World (scene, physics, shared objects), LocalPlayer (camera, controller, activity, held items), RemotePlayers, Services (gpu, audio, net, ui bridge, log), Presentation (renderer, text, pictures, HUD state) and Session (loading, settings). Systems get explicit references; state changes go through commands or events."
+    },
+    {
+     "issue": "Hidden function-local static state. It survives room changes and cannot be reset or tested.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:778 static std::vector<int> shown (mirror buttons); :749 static int next (books); app/players.cpp:38 static packets; app/shared_world.cpp:84 static entries.",
+     "fix": "Move it into the owning system objects, with a reset() called on room join or leave."
+    },
+    {
+     "issue": "Shared world state is duplicated and synchronised by polling instead of by events.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:777-789 updateMirrorButtons diffs mirror modes every frame; :643-648 setLights writes renderer light scales from both use() and handleShared(:944).",
+     "fix": "Keep one replicated WorldState (lights, fire, mirrors, jukebox, glass owners, seat claims) with change callbacks. Presentation subscribes to it, and only the net layer writes remote values."
+    },
+    {
+     "issue": "Sound handles are handed to games as raw pointers into a C array inside the god object.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1385-1391 &g_app.sfx[...] passed to darts, race, bartender.",
+     "fix": "Use an AudioService with named sound ids that games ask for."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "main.cpp becomes about 100 lines: create Engine (gpu, input, audio, net, ui, jobs, profiler), create Game (world, local player, remote players, activity manager, interaction, presentation) and register phases. All shared, replicated facts live in WorldState, written only by the net layer or by local requests the server has accepted. Systems talk through a small typed event bus (SeatClaimed, ActivityEntered, ToastRequested, SfxRequested) instead of calling each other's internals."
+  },
+  {
+   "name": "Activity, seat and game-exclusivity state machine (setActivity / startEmote / sitOn / standUp / use / selfState)",
+   "files": [
+    "app/main.cpp:180-260",
+    "app/main.cpp:650-773",
+    "app/main.cpp:1091-1141",
+    "app/main.cpp:1253-1265",
+    "app/main.cpp:264-310"
+   ],
+   "purpose": "Decides what you are doing (sitting, driving, piano, rhythm, darts, emote, bartending, drinking), keeps games mutually exclusive, toggles input capture, and builds the activity, param and data slots others receive.",
+   "rating": 3,
+   "compatibility": "No platform issues of its own.",
+   "delay": "Claims are optimistic: you sit at once, and if a lower-id player took the seat you are kicked about one RTT plus the 100 ms send tick later (roughly 150-400 ms), with a visible teleport.",
+   "frameCost": "Negligible. A few loops over the remote players.",
+   "syncRisk": "high: seat conflicts are decided by lower player id, not by who sat first. Rhythm and darts have no conflict resolution at all. The activity you broadcast is the animation activity, so seat occupancy disappears from your network state while you play a bartend animation.",
+   "problems": [
+    {
+     "issue": "The seat conflict rule is 'lower id wins', yet the comment says 'first wins'. A player who just joined (and has not yet received others' packets, so o.placed is false) can sit on an occupied seat and kick the person who was sitting there.",
+     "severity": "high",
+     "evidence": "app/main.cpp:1253-1265 kicks you if engine::net::isLower(o.id); sitOn's check at :235 uses playerUsing, which skips !o.placed players (:182).",
+     "fix": "Make seats server-authoritative. Send 'claim seat 12'; the Durable Object grants or denies it and broadcasts the owner. Sit only after the grant (show a 'sitting...' pose for one RTT) or sit optimistically and roll back on denial."
+    },
+    {
+     "issue": "Rhythm cabinet and darts exclusivity is only checked locally when you tap. Two players who start at the same moment both play and both broadcast.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:656 and :680 playerUsing check only at use(); no later reconciliation like the seat loop at :1253.",
+     "fix": "Make every exclusive resource (seats, cabinet, oche, bartender station, mic) a server claim with an owner field in WorldState."
+    },
+    {
+     "issue": "The broadcast activity comes from the animation, not from occupancy. If you make a drink while sitting (the menu 'make' command works on shift), others see kBartend, the seat is treated as free (others' playerUsing seated test fails), and your avatar pops from the seat to standing.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1101-1103 shown=kBartend overrides; :1127 e(kActivity)=m.activity (shown); :1144-1158 otherTransform seats a player only if act is kSit, kDrive or kPiano; :897 'make' is accepted in any state.",
+     "fix": "Split the net state into occupancy (seat/resource id, set by the server) and pose/animation (activity, emote, actionTime), and replicate them separately."
+    },
+    {
+     "issue": "Exclusivity and input capture are emergent. 'Am I busy' is defined differently in four places, and setCapture is toggled from seven call sites.",
+     "severity": "high",
+     "evidence": "app/main.cpp:266 menu = jukeboxMenu||rhythm||race; :467 label suppression = jukeboxMenu||!showNames||darts; :510 busy = jukeboxMenu||piano||bartender.making; :1018-1030 exclusive if/else on rhythm/race/piano; :1133-1137 data priority race>rhythm>darts; setCapture at :216, :220, :251, :255, :663, :1021, :1199.",
+     "fix": "Write an Activity interface {claims(), canEnter(), enter(), exit(), tick(), wantsCapture(), blocksMovement(), hud(), netData()} and an ActivityManager that holds exactly one active activity and derives capture, movement lock and HUD from it. Adding a game then means adding one class instead of editing eight places."
+    },
+    {
+     "issue": "Activities are entered without checking each other. You can emote or open rhythm while on a bartender shift, sit while on shift, and so on, and startEmote bypasses setActivity.",
+     "severity": "low",
+     "evidence": "app/main.cpp:199 startEmote checks seat, rhythm and darts but not bartender; :205 writes activity directly; bartender shift (:701) never sets an Activity.",
+     "fix": "Have the ActivityManager validate transitions in one table."
+    },
+    {
+     "issue": "Teleports skip collision and eye-height setup.",
+     "severity": "low",
+     "evidence": "app/main.cpp:684 darts and :702 bartender set camera.position directly; eyeHeight is not reset (only standUp at :228 does that).",
+     "fix": "Route all teleports through LocalPlayerController::teleport(pos, yaw), which resolves collisions and sets eye height."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "The ActivityManager owns the local player's single activity and the claims it needs. Entering is a request: claims go to the Cloudflare room DO, which is the only authority for seats, cabinet, oche, station and mic. On grant: enter(), capture derived, net occupancy set. On deny: a toast. On owner disconnect the DO frees the claims. The animation activity (emote, sip, bartend motion) is a separate, purely cosmetic field. Remote players' occupancy is read from WorldState claims, not inferred from their slots."
+  },
+  {
+   "name": "Interaction: focus, taps, pick-up and use (updateInteraction / use / screenRay / rayBoxDistance)",
+   "files": [
+    "app/main.cpp:578-641",
+    "app/main.cpp:650-773",
+    "app/main.cpp:791-833",
+    "app/main.cpp:957-1088"
+   ],
+   "purpose": "Works out what you are looking at or standing at (interactables, seats, glasses), highlights it, routes taps by priority (jukebox menu > bartender HUD > darts > held glass > pick-up > player card > interactable/seat > sip), and executes the action.",
+   "rating": 5,
+   "compatibility": "Taps are screen fractions taken from the CSS canvas size, so they keep working when the URL bar changes the size. On iOS a tap only fires after lift, under 350 ms and under 12 px of movement.",
+   "delay": "The tap is applied in the same frame it is polled: finger lift plus up to 16.7 ms. Effects others see (bell, guitar, lights) are sent as events or world writes and arrive after the relay delay but are not buffered by 250 ms.",
+   "frameCost": "Small. About 60 interactable and about 40 seat ray-box tests, 2 physics raycasts and glow changes only when focus changes, all under 0.1 ms.",
+   "syncRisk": "medium: actions on shared things are optimistic and local-first. Mirrors are mutated locally and then broadcast (:669-676). Lights are set locally and written to a world key with no owner or version, so two people toggling at once leaves clients disagreeing until the next write. Glass pick-up checks ownership from the previous frame (:825) and can be revoked a frame later by shared.update.",
+   "problems": [
+    {
+     "issue": "Shared toggles (lights, fire, mirrors) are last-writer-wins with no version or server echo. Simultaneous toggles end in a state that depends on arrival order.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:726-738 setLights then net::setWorld('lt'); :669-676 mutate the mirror then shared.mirrorChanged; handleShared (:944) applies whatever arrives.",
+     "fix": "Send 'toggle lights' as a request. The DO applies it, bumps a version and broadcasts the new state. Clients render the server state, with optional optimistic display and a rollback if the version disagrees."
+    },
+    {
+     "issue": "The tap priority chain is hard-coded across several systems, and tapPerson comes before interactables, so tapping a player standing in front of the jukebox opens their card.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1035-1077 sequence; :1053 tapPerson before the interactable loop :1056.",
+     "fix": "Make one pick query over all target kinds (interactable, seat, body, player) and return the nearest hit with a per-kind priority bias. The active activity can intercept taps first."
+    },
+    {
+     "issue": "Dead or redundant code in the tap fallback.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1070-1071 two lines that together equal 'if (hit<0 && focused>=0) hit=focused'.",
+     "fix": "Collapse them during the rewrite."
+    },
+    {
+     "issue": "Prompts and availability are scattered string logic in main.cpp, and the bartender prompt calls a JS badge check (with a new RegExp) every frame while you are focused on it.",
+     "severity": "low",
+     "evidence": "app/main.cpp:327-361 promptFor; :352 hasBadge, defined at :168-176 with EM_ASM and new RegExp.",
+     "fix": "Each interactable kind supplies prompt() and available() through a handler table. Cache account badges in C++ when the account changes."
+    },
+    {
+     "issue": "Interaction reads the activity and menu state of game objects directly, so the focus rules depend on which flags someone remembered to check.",
+     "severity": "low",
+     "evidence": "app/main.cpp:965 seat<0 && !darts.playing; :1008 same; :1018-1030 game branches.",
+     "fix": "Let the ActivityManager say whether world interaction is enabled."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "An Interaction system with one TargetQuery per frame (ray from the camera or a tap) over registered targets, producing a Focus {kind, id, distance}. A handler table maps each kind/action to prompt(), available() and use(ctx). use() for shared things emits a request to the net layer (server-authoritative) plus an optional local prediction. Focus highlighting is presentation-only state."
+  },
+  {
+   "name": "HUD, labels and in-world screens (queueText / queueMachineScreens / pictureSlotFor / boxes)",
+   "files": [
+    "app/main.cpp:363-576",
+    "app/main.cpp:1279-1292"
+   ],
+   "purpose": "Each frame it rebuilds all text: name tags over interactables within 6 m, remote players' names (green while talking, job flags) and profile pictures, the prompt for the focused thing, the now-playing banner, the intro, game HUDs, toasts, the jukebox menu, and spectator screens for others' race, rhythm and darts.",
+   "rating": 5,
+   "compatibility": "The pixel font text is drawn in WebGPU, so it is the same on every device. Profile pictures come through fetch, then getImageData decoding (engine/fetch.cpp:129) on the main thread.",
+   "delay": "None beyond the frame.",
+   "frameCost": "Every glyph quad for every visible label is regenerated and uploaded every frame (text.begin through text.upload), plus one EM_ASM_DOUBLE per remote player for the voice level (:486-489) and string building per player and prompt. Estimated 0.3-1 ms CPU and growing with players and labels. Picture decoding causes a hitch on the main thread when someone joins.",
+   "syncRisk": "low: it only displays network data. But the spectator screens read the raw latest slot values, which are applied immediately and not played back 250 ms late, so screens and avatars are about 250 ms out of step.",
+   "problems": [
+    {
+     "issue": "All text is immediate-mode and rebuilt every frame even though almost nothing changes.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:452 text.begin and :575 text.upload every frame; :466-480 re-adds every nearby label; :483-504 every player name.",
+     "fix": "Use retained text: cache a glyph mesh per label and rebuild it only when the string changes, with billboard orientation done in the shader. Screen prompts get their own mesh rebuilt only on change. Upload only dirty ranges."
+    },
+    {
+     "issue": "A side effect hides inside the text function: others' stuck darts are pushed into the 3D box list from queueMachineScreens. The early returns for rhythm and race skip it, so others' darts vanish from the world while you play rhythm.",
+     "severity": "low",
+     "evidence": "app/main.cpp:435 Darts::addStuckDarts(g_app.boxes,...) inside queueText; :454-459 early returns; :1292 comment 'after the boxes: others' darts are added there'.",
+     "fix": "Move world geometry for spectators into a separate RemoteActivityVisuals presentation step that runs before rendering, whatever the HUD mode."
+    },
+    {
+     "issue": "A failed profile-picture download is never retried, and the decode uses the slow getImageData path on the main thread.",
+     "severity": "low",
+     "evidence": "app/main.cpp:378-379 'if (!ok) return;' leaves the slot with the same account and rev but ready=false, so :373 never refetches; engine/fetch.cpp:129 ctx.getImageData.",
+     "fix": "Store a failure time and retry with backoff. Decode with the createImageBitmap + copyExternalImageToTexture path in engine/gpu_upload."
+    },
+    {
+     "issue": "The voice level is read across the JS boundary per player per frame, and again (myLevel) in selfState.",
+     "severity": "low",
+     "evidence": "app/main.cpp:486-489 peerLevel; :1130 myLevel.",
+     "fix": "voice.js writes levels into the per-frame mailbox; C++ reads them from memory."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "A HUD layer with retained widgets (Label3D, ScreenPrompt, Banner, Toast) whose content is set by events (FocusChanged, SongStarted, ToastRequested). Each activity draws its own HUD through an interface. Spectator visuals of remote activities are a separate presentation system fed by a replicated, time-stamped remote activity state, played back on the same clock as the avatars."
+  },
+  {
+   "name": "Startup and loading orchestration (main / onGpuReady / updateLoadingScreen / app_enter / test URL params)",
+   "files": [
+    "app/main.cpp:1172-1221",
+    "app/main.cpp:1356-1418",
+    "app/renderer.cpp:397-416",
+    "app/bar_scene.cpp:552",
+    "engine/model.cpp:167-227",
+    "app/race/game.cpp:35-41",
+    "web/index.html:88-102",
+    "web/index.html:104-126"
+   ],
+   "purpose": "Brings up WebGPU, builds the scene, physics, avatars, renderer, text, sounds and games, starts the network, streams models behind the HTML loading screen, offers 'Tap to enter' once every model file is in, and applies test parameters (?sit, ?rhythm, ?darts, ?shift, ...).",
+   "rating": 4,
+   "compatibility": "The tap on 'enter' doubles as the iOS audio-unlock gesture, which is good. The version.txt check can call location.replace AFTER app.js has started loading, so the whole load is wasted and runs again (web/index.html:100). Safari compiles WGSL pipelines synchronously on CreateRenderPipeline.",
+   "delay": "Time to first interactive frame = wasm download and compile (793 KB) + the synchronous onGpuReady block + downloading 11 MB of models + texture jobs at 8 ms per frame. The onGpuReady block is estimated at several hundred ms on the phone: 8+ procedural 512x512 textures on the CPU, 14 synchronous pipelines, avatar mesh builds and synth sounds. It freezes the 'Starting the engine...' screen. The first time you sit in a racing rig, world_.init plus view_.init run synchronously (game.cpp:36-40), causing a further freeze.",
+   "frameCost": "During loading: runJobs(8 ms) plus a full scene and mirror render behind the overlay every frame. parseGlb runs inside the fetch callback outside any budget (model.cpp:184), so each GLB arrival is a hitch.",
+   "syncRisk": "medium: the network starts (others.start / shared.start at :1392-1393) before the player has entered, so you appear in the room at the spawn point while still on the loading screen. Test params can sit you down before peers are known (:1204).",
+   "problems": [
+    {
+     "issue": "All of startup is one synchronous task: scene build, physics build, avatar builds, CPU procedural textures, pipeline compilation, synth sounds, game init.",
+     "severity": "high",
+     "evidence": "app/main.cpp:1361-1391 onGpuReady; app/renderer.cpp:397-416 createMaterials generates every material on the CPU and logs its own ms; app/bar_scene.cpp:552 kSize=512; 14 CreateRenderPipeline calls in app and engine, 0 async.",
+     "fix": "Stage the startup as jobs: (a) pipelines through CreateRenderPipelineAsync, all in parallel; (b) bake the procedural textures offline in tools/assets (they are deterministic seeds) into compressed image files loaded like model textures, or generate one per job; (c) avatar and physics builds as separate jobs; (d) the loading bar shows these stages too."
+    },
+    {
+     "issue": "GLB parsing and the per-model GPU 'finish' run as large single tasks.",
+     "severity": "high",
+     "evidence": "engine/model.cpp:184 parseGlb inside the fetchFile callback; engine/model.cpp:62-162 finish() creates every buffer and bind group of a model in one job; :106-108 three new 1x1 solid textures per model.",
+     "fix": "Parse in slices, or make the asset pipeline emit a GPU-ready layout so parsing is just pointer offsets. Split finish() into one job per primitive or material. Share the solid textures."
+    },
+    {
+     "issue": "'Ready' only means 'every file is in', not 'the frame is smooth'. Nothing warms up pipelines or mirrors or waits for hitches to stop before 'Tap to enter'.",
+     "severity": "medium",
+     "evidence": "app/main.cpp:1183 if (modelFilesDone()==modelFiles()) ready.",
+     "fix": "Ready = files done AND pendingJobs()==0 AND every pipeline async-created AND a warm-up frame of each view mode rendered AND 30 consecutive frames under 20 ms."
+    },
+    {
+     "issue": "The race track and race renderer are built synchronously on the first sit.",
+     "severity": "medium",
+     "evidence": "app/race/game.cpp:35-41 world_.init(); view_.init(...) inside Game::start, called from sitOn (app/main.cpp:250).",
+     "fix": "Pre-build it as a low-priority background job after entering (or when you approach a rig), with a 'warming up' state if you sit before it is done."
+    },
+    {
+     "issue": "Your presence is announced before you enter.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1392-1393 others.start()/shared.start() inside onGpuReady, long before app_enter (:1408).",
+     "fix": "Join the room on enter, or join as 'loading' (hidden or ghosted) and switch to visible on enter."
+    },
+    {
+     "issue": "Test hooks are mixed into production startup code.",
+     "severity": "low",
+     "evidence": "app/main.cpp:1186-1218 a series of EM_ASM regexes over location.search.",
+     "fix": "Make a TestHooks module that parses the URL once into a struct and enqueues normal commands after ready."
+    }
+   ],
+   "verdict": "rewrite",
+   "rewriteNotes": "A Loader state machine: Boot (HTML loading screen shown before the wasm, which already happens) -> Device -> Pipelines (async, parallel) -> CoreAssets (baked textures, avatars, physics as jobs) -> World models (streamed, parsed in slices) -> Warmup (render each view mode once offscreen, mirrors included) -> Ready (wait for stable frames) -> Enter (audio unlock, join the room, intro). Each stage reports progress, and the profiler records stage durations for the phone report."
+  },
+  {
+   "name": "Input (engine/input.*)",
+   "files": [
+    "engine/input.h",
+    "engine/input.cpp"
+   ],
+   "purpose": "Turns touch, mouse and keyboard into a left-half virtual joystick, right-half look drag, taps, and (in capture mode) raw presses, pointers and keys for the rhythm game, race and piano.",
+   "rating": 6,
+   "compatibility": "Works on iOS (touch-action:none on the canvas; handlers preventDefault). Desktop mouse-look uses movementX without pointer lock. Key state is never cleared on window blur or visibilitychange, so a key held during alt-tab keeps you walking. iOS can send touchcancel when backgrounding, which is handled. The joystick rings are DOM elements restyled on every touchmove.",
+   "delay": "Event to simulation: up to 1 frame (sampled at frame start). Raw presses are timestamped with emscripten_get_now() when the handler runs instead of the event's own timeStamp, which adds dispatch latency and jitter (a few ms, more under load) to rhythm judgements.",
+   "frameCost": "Per touch event, not per frame: emscripten_get_element_css_size (getBoundingClientRect) on every touch event plus showStick's DOM style writes on every stick touchmove. Write-then-read across events can force layout up to 60-120 times a second while you walk. Per frame: vector swaps that free and reallocate.",
+   "syncRisk": "none directly (purely local).",
+   "problems": [
+    {
+     "issue": "Layout reads and DOM writes inside the touch event handlers.",
+     "severity": "medium",
+     "evidence": "engine/input.cpp:84 emscripten_get_element_css_size per onTouch; :63 in pressEnd; :144 in onMouse; :121 showStick (EM_ASM with 3 style writes) on every stick move; showStick at :14-23.",
+     "fix": "Cache the canvas CSS size from the GPU resize observer. Handlers only record events; joystick visuals update once per frame in the batched DOM step, or are drawn as a WebGPU HUD sprite."
+    },
+    {
+     "issue": "Rhythm and race presses carry handler-time timestamps instead of event timestamps.",
+     "severity": "medium",
+     "evidence": "engine/input.cpp:86 const double now = emscripten_get_now(); used at :93-94 and :159 for mouse.",
+     "fix": "Use the event's timeStamp, which shares performance.now's timebase (it is in EmscriptenTouchEvent in recent Emscripten, or a small JS listener can supply it), and convert to the audio clock in the rhythm game."
+    },
+    {
+     "issue": "Internal state is all public, and the race reads it directly, so input modes leak between systems.",
+     "severity": "medium",
+     "evidence": "engine/input.h:55-91 pointers, keysHeld, mouseButtons and every tracking field are public members; app/main.cpp:1026 race.update(nowMs, dt, g_app.input).",
+     "fix": "Make Input::poll() produce an immutable InputFrame {move, look, taps, presses, pointers, keysDown, keysPressed, mouse}. Modes become the ActivityManager's choice (walk, capture, ui)."
+    },
+    {
+     "issue": "No reset on blur, visibilitychange or pagehide, so keys and the stick can get stuck.",
+     "severity": "low",
+     "evidence": "engine/input.cpp:214-218 key flags are cleared only by keyup; setCapture(:257-274) is the only bulk reset.",
+     "fix": "Register blur, visibilitychange and pagehide handlers that clear all held state."
+    },
+    {
+     "issue": "A JS activeElement check runs on every key event.",
+     "severity": "low",
+     "evidence": "engine/input.cpp:185-190 EM_ASM_INT document.activeElement.",
+     "fix": "Track focus in JS (focusin/focusout) and pass a flag in the mailbox."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "A thin JS input layer records raw events with event.timeStamp into a ring in the wasm heap (no layout work, no DOM writes). Input::poll(frameTime, canvasSize) builds the InputFrame once per frame. The stick and look logic stays (it works) but runs in poll. Clear everything on blur or visibility change. Gamepad polling joins the same InputFrame."
+  },
+  {
+   "name": "GPU device and surface (engine/gpu.*)",
+   "files": [
+    "engine/gpu.h",
+    "engine/gpu.cpp",
+    "web/index.html:16"
+   ],
+   "purpose": "Creates the instance, adapter, device and canvas surface through callbacks (AllowSpontaneous), sizes the drawing buffer to CSS size times DPR (capped at 2), keeps a depth texture, and acquires the frame's texture.",
+   "rating": 6,
+   "compatibility": "Correct emdawnwebgpu usage. On iOS the canvas is height:100% (index.html:16), so Safari's collapsing toolbar and rotation change its size. Each change reconfigures the surface and reallocates depth (rotation can produce several intermediate sizes). PowerPreference is ignored on iOS. Safari can lose the device under memory pressure or when the GPU process restarts after backgrounding, and nothing recovers from that.",
+   "delay": "Fifo present adds about 1 frame (normal).",
+   "frameCost": "One getBoundingClientRect plus a DPR read every frame (forces layout if the DOM changed). Reconfigure plus depth allocation on every size change.",
+   "syncRisk": "none.",
+   "problems": [
+    {
+     "issue": "Device loss only logs, so the screen stays black or frozen for good.",
+     "severity": "high",
+     "evidence": "engine/gpu.cpp:69-74 SetDeviceLostCallback logs and returns.",
+     "fix": "On loss (reason != Destroyed), flag it. The frame loop stops rendering and shows an HTML 'Graphics restarted - tap to rejoin' overlay that reloads with the same room (simplest robust option, since recreating every resource is a lot of code). Post an error report."
+    },
+    {
+     "issue": "Uncaptured GPU errors are logged one by one, so an error that repeats every frame floods the DOM log panel and itself causes lag.",
+     "severity": "high",
+     "evidence": "engine/gpu.cpp:65-68 LOG_ERROR per error; web/index.html:80-86 appends a div, forces scrollTop and un-hides the panel on error.",
+     "fix": "De-duplicate and rate-limit in C++ (count repeats, log the first 3, then once a second with 'xN')."
+    },
+    {
+     "issue": "The canvas size is polled every frame through layout.",
+     "severity": "medium",
+     "evidence": "engine/gpu.cpp:101-114 resizeIfNeeded calls emscripten_get_element_css_size and is called each frame from app/main.cpp:1230.",
+     "fix": "Use a ResizeObserver with devicePixelContentBoxSize in JS that writes the target size into the mailbox. Apply it after the size has been stable for 100-150 ms (skips rotation intermediates)."
+    },
+    {
+     "issue": "beginFrame silently skips the frame on any non-success status and never reconfigures.",
+     "severity": "low",
+     "evidence": "engine/gpu.cpp:134-142 returns nullptr for Outdated/Lost/Timeout; app/main.cpp:1268 returns early.",
+     "fix": "On Outdated or Lost, call configureSurface() and retry next frame. Count skipped frames in the profiler."
+    },
+    {
+     "issue": "Viewport height follows Safari's dynamic toolbar.",
+     "severity": "low",
+     "evidence": "web/index.html:16 #canvas {position:fixed; inset:0; height:100%}.",
+     "fix": "Size the canvas to 100lvh (the largest viewport) or keep the internal resolution fixed and only change the CSS scale, so toolbar animation does not reallocate GPU targets."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Keep the async init. Add: a resize observer feeding a debounced pending size; device-loss and uncaptured-error handling that is rate-limited and surfaces a recovery overlay; a capability record (limits, formats) for other systems; and an optional dynamic resolution scale (e.g. 1.5x DPR when the profiler shows GPU-bound frames) to keep 60 fps on the phone."
+  },
+  {
+   "name": "GPU upload job queue and image textures (engine/gpu_upload.*)",
+   "files": [
+    "engine/gpu_upload.h",
+    "engine/gpu_upload.cpp",
+    "engine/model.cpp:62-227",
+    "engine/fetch.cpp:117-146"
+   ],
+   "purpose": "A FIFO of std::function jobs run with a per-frame time budget. Images are decoded by the browser (createImageBitmap), copied to the GPU (copyExternalImageToTexture) and mipmapped on the GPU.",
+   "rating": 6,
+   "compatibility": "createImageBitmap(Blob), copyExternalImageToTexture and DecompressionStream all work in iOS 26 Safari. WebKit may decode some formats on the main thread; verify with the profiler. There is no cap on texture size: a 4K model texture costs 64 MB per format with mips in RGBA8 and pressures iOS tab memory, which raises the risk of device loss.",
+   "delay": "Models appear only after all their textures are done (by design). The queue is FIFO with no priorities, so the room shell and late small props compete equally once queued.",
+   "frameCost": "Budget 8 ms while loading and 3 ms after, but each job is unbounded. One decoded image job creates a texture per format, copies it and builds mips (one encoder and one submit per texture), and the first job for each format compiles a pipeline synchronously. finish(model) is one large job.",
+   "syncRisk": "none.",
+   "problems": [
+    {
+     "issue": "The budget is checked only after a job finishes, and jobs are coarse, so a single job can blow the frame.",
+     "severity": "high",
+     "evidence": "engine/gpu_upload.cpp:152-161 runJobs; :217-246 one job creates and copies the texture and generates mips for every format of an image; engine/model.cpp:62-162 finish() builds a whole model in one job.",
+     "fix": "Make jobs fine-grained (one texture format, or one primitive's buffers, per job) and deadline-driven: run only while (now + estimatedCost) < deadline. Estimate costs from past jobs of the same kind."
+    },
+    {
+     "issue": "Mip pipeline creation is synchronous inside a loading job.",
+     "severity": "medium",
+     "evidence": "engine/gpu_upload.cpp:74-96 mipPipeline calls kit.device.CreateRenderPipeline (:93) on first use per format.",
+     "fix": "Create both mip pipelines (RGBA8Unorm and RGBA8UnormSrgb) with CreateRenderPipelineAsync during startup."
+    },
+    {
+     "issue": "A second, slow image path exists for profile pictures (getImageData on the main thread).",
+     "severity": "medium",
+     "evidence": "engine/fetch.cpp:117-146 decodeImage uses canvas getImageData plus _malloc/HEAPU8.set; used by app/main.cpp:380.",
+     "fix": "Route every image through loadImageTexture (or a variant that copies into an existing array layer for billboards). Delete decodeImage."
+    },
+    {
+     "issue": "Images are uploaded at full size, which risks memory pressure.",
+     "severity": "medium",
+     "evidence": "engine/gpu_upload.cpp:227-235 creates textures at the decoded width and height with full mips; no limit.",
+     "fix": "Pass resizeWidth/resizeHeight to createImageBitmap when an image is larger than a cap (1024 on phones). Better still, cap texture size in the Blender export tools."
+    },
+    {
+     "issue": "A minor leak path, and the queue is global, untyped and cannot be cancelled.",
+     "severity": "low",
+     "evidence": "engine/gpu_upload.cpp:221-222 returns without js_dropBitmap if the pending entry is missing; :16 static deque shared by everyone; no cancel or priority.",
+     "fix": "Always drop the bitmap. Use a JobScheduler with priorities (critical / world / background / idle) and cancellation tokens (e.g. leaving the race)."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Turn it into an engine JobScheduler with priority lanes, per-kind cost estimates, deadline execution after submit, and stats for the profiler. Keep the createImageBitmap -> copyExternalImageToTexture -> GPU mip path (it is right) as the only image path. Startup and loading stages enqueue into it, and gameplay enqueues background warm-ups (race track, avatar pictures) at low priority."
+  },
+  {
+   "name": "Logging and status line (engine/log.* and the web/index.html log panel)",
+   "files": [
+    "engine/log.h",
+    "engine/log.cpp",
+    "web/index.html:75-86",
+    "web/index.html:132-138"
+   ],
+   "purpose": "LOG_INFO and LOG_ERROR go through printf to Module.print, which appends one DOM line per message to an on-screen panel (errors open it). setStatus writes the FPS and resolution line.",
+   "rating": 4,
+   "compatibility": "Works everywhere, but the panel is the user's only diagnostic tool and it can only be screenshotted. There is no way to get logs off the phone.",
+   "delay": "None directly.",
+   "frameCost": "Per log line: createElement, appendChild and scrollTop=scrollHeight (a forced synchronous layout), with unbounded growth. Usually rare, but bursts (multiplayer glass logs, GPU errors) add up. setStatus writes the DOM every 500 ms, which invalidates layout before the next per-frame getBoundingClientRect.",
+   "syncRisk": "none.",
+   "problems": [
+    {
+     "issue": "The log panel grows without limit and forces a layout on every line, so log bursts become lag.",
+     "severity": "medium",
+     "evidence": "web/index.html:80-86 append() with appendChild and scrollTop=scrollHeight; nothing ever removes lines.",
+     "fix": "Keep a JS ring buffer of about 300 lines. Flush to the DOM at most once per rAF and only while the panel is visible. Collapse repeated lines as 'xN'."
+    },
+    {
+     "issue": "Any error forces the full panel open over the game.",
+     "severity": "low",
+     "evidence": "web/index.html:82 if (isError) logEl.classList.remove('hidden').",
+     "fix": "Show a small red error-count badge on the log button instead. Open the panel only on fatal errors."
+    },
+    {
+     "issue": "Logs never leave the phone.",
+     "severity": "medium",
+     "evidence": "engine/log.h:6-7 prints only to stdout and stderr.",
+     "fix": "Add a 'Send report' action (and automatic sending on fatal errors) that posts the ring buffer, profiler stats, UA and build to a Cloudflare Worker endpoint (D1 or R2), so a Claude session can read the user's real phone logs."
+    },
+    {
+     "issue": "No levels, timestamps or categories, and printf formatting is done even for noise.",
+     "severity": "low",
+     "evidence": "engine/log.h:6-7 macros.",
+     "fix": "Add LOG_DEBUG (compiled out in Release), per-category rate limits and a timestamp prefix."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "engine::log writes into a C++ ring buffer (level, time, category, text). The JS panel reads new lines once per frame through the mailbox. The status line becomes part of the profiler overlay. Fatal paths (abort, device lost) automatically trigger the report upload."
+  },
+  {
+   "name": "Embedded file reading (engine/file.*)",
+   "files": [
+    "engine/file.h",
+    "engine/file.cpp",
+    "CMakeLists.txt:23"
+   ],
+   "purpose": "Reads shader text from the Emscripten embedded virtual filesystem (--embed-file shaders@/shaders).",
+   "rating": 7,
+   "compatibility": "Fine. Only used at startup.",
+   "delay": "None (sync, startup only, tiny files).",
+   "frameCost": "None per frame.",
+   "syncRisk": "none.",
+   "problems": [
+    {
+     "issue": "Pulls in the Emscripten FS runtime and an ifstream/stringstream just to read a few embedded shader strings.",
+     "severity": "low",
+     "evidence": "engine/file.cpp:10-19 ifstream + stringstream; CMakeLists.txt:23 --embed-file.",
+     "fix": "Optional: generate a header of constexpr string_views from shaders/*.wgsl at build time (a CMake step) and drop the FS. This saves wasm and JS size and removes a failure mode."
+    }
+   ],
+   "verdict": "keep",
+   "rewriteNotes": "Keep it as is, or swap in generated shader headers when convenient. Missing shaders should fail loudly at startup, which already happens through LOG_ERROR and the init failure."
+  },
+  {
+   "name": "HTML menu bridge (engine/ui.*, handleCommands, sendInfo)",
+   "files": [
+    "engine/ui.h",
+    "engine/ui.cpp",
+    "app/main.cpp:874-939",
+    "web/menu.js:377-378"
+   ],
+   "purpose": "The HTML menus queue string commands (emote, look, piano, midi, make, endShift, standUp) that C++ polls every frame. C++ pushes a JSON 'info' blob every 500 ms. Settings are read when their version number changes.",
+   "rating": 5,
+   "compatibility": "Works. MIDI keyboard input arrives through the same per-frame poll, so MIDI latency includes up to one frame plus the JSON round trip.",
+   "delay": "A command waits up to 1 frame (16.7 ms), which is fine for menus but adds to MIDI note latency.",
+   "frameCost": "Every frame: JSON.stringify of an empty array, stringToNewUTF8, a C++ malloc, Json::parse and free, plus a settings::version EM_ASM. Every 500 ms: a roughly 1-2 KB JSON string rebuilt in C++, including static lists (looks, songs, drinks, emotes) that never change, then parsed in JS.",
+   "syncRisk": "low: purely local, but commands like 'make' and 'standUp' bypass the activity rules (accepted in any state).",
+   "problems": [
+    {
+     "issue": "Polling plus JSON every frame to receive almost always nothing.",
+     "severity": "medium",
+     "evidence": "engine/ui.cpp:11-19 takeCommands; web/menu.js:377 take returns JSON.stringify(queue) every call; engine/ui.cpp:37 version() every frame from app/main.cpp:905.",
+     "fix": "Push model: JS calls an exported C function per command (ui_command(id, a, b, textPtr)) or writes into the mailbox. Settings changes call ui_settingsChanged()."
+    },
+    {
+     "issue": "Static catalogs are re-sent every 500 ms.",
+     "severity": "low",
+     "evidence": "app/main.cpp:920-939 sendInfo rebuilds looks, songs, drinks and emotes each time.",
+     "fix": "Send the catalog once (and again when a song is added). Send only the small dynamic state when it changes."
+    },
+    {
+     "issue": "Commands are stringly typed with loose validation, and they bypass activity rules.",
+     "severity": "low",
+     "evidence": "app/main.cpp:879 static_cast<Emote>(c.a) with no range check (emote 0 sets Activity::kEmote with no emote); :897 'make' and :901 'standUp' accepted in any state; :889-890 pianoAdd splits text on '\\n'.",
+     "fix": "Use a shared command enum (generated for C++ and JS), validated at the bridge. Commands become requests to the ActivityManager, which applies the transition rules."
+    }
+   ],
+   "verdict": "refactor",
+   "rewriteNotes": "Make the UI bridge an event source on the same mailbox as input and net. Commands are typed, validated, and dispatched to the owning system (ActivityManager, Avatar, Piano, Bartender). Info goes the other way as a small dirty-flagged state struct, with the catalog sent once."
+  }
+ ],
+ "crossCutting": [
+  "No single authority for shared things. Seats are 'lower id wins' (app/main.cpp:1253-1265). Glasses are 'fromLowerId wins' (app/shared_world.cpp:117-120). Every client auto-advances the jukebox, each with its own serverTime: jukebox.cpp:80 play(current_+1) is local, so it bumps localChanges and shared_world.cpp:162-170 broadcasts 'jb'. Rhythm and darts are checked only when tapped (main.cpp:656,680). Lights and mirrors are last-writer-wins (main.cpp:726-738, 669-676). Fix: the Cloudflare room Durable Object becomes the authority for claims (seats, cabinet, oche, station, mic), object ownership (glasses), and the world state (lights, fire, mirrors, jukebox track + start time, with auto-advance decided by the server). Clients send requests, and the server answers with versioned state.",
+  "Discrete state and continuous state are on different clocks. players.cpp:58-61 applies activity, seat and data slots the moment a packet arrives, while position and yaw are played back 250 ms late (players.cpp:83). Sitting pops the avatar onto the seat before it has walked there, standing slides it across the room, and spectator screens run ahead of the avatars. Put discrete state into the same time-stamped samples and apply it at playback time (or send it as reliable events stamped with server time).",
+  "Three clocks: frame nowMs plus scattered emscripten_get_now() calls (main.cpp:148,194,206,250,844), per-peer min-filtered clockOffset (players.cpp:56), and net::serverTime for the jukebox (shared_world.cpp:167). Use one server clock from the DO (ping-based offset) for all replicated timing, and one FrameTime locally.",
+  "Fixed-step physics (physics.cpp:105-110, kStep=1/60) is fed by variable-dt game code (shared_world.cpp:212 velocity = delta/dt) and drawn without interpolation (main.cpp:847-860). The result is jitter on local and remote glasses, worse in iOS Low Power Mode (30 Hz rAF) or with frame-time noise.",
+  "Too much traffic across the JS/wasm boundary: about 14 + 4N EM_ASM calls and 3 JSON round trips per frame (ui take, receiveWorld, receiveEvents), net::setState every frame while net.js sends on a 50-100 ms setInterval, and per-player present(), voice place and peerLevel calls. Replace it with one shared binary mailbox in the wasm heap, read once and written once per frame.",
+  "Forced synchronous layout on iOS: getBoundingClientRect every frame (gpu.cpp:103) and on every touch event (input.cpp:84,63,144), interleaved with DOM writes (showStick per touchmove at input.cpp:121, setStatus every 500 ms, log appends with scrollTop at index.html:80-86). Cache sizes through ResizeObserver and batch every DOM write into one end-of-frame call.",
+  "Main-thread blockers outside any budget, which cause the 'bar lags while loading and when it starts': onGpuReady does everything synchronously (main.cpp:1361-1391), including CPU procedural textures (renderer.cpp:397-416, 8+ textures at 512x512) and 14 synchronous CreateRenderPipeline calls with 0 async. parseGlb runs in the fetch callback (model.cpp:184), finish() is one large job per model (model.cpp:62-162), the default 16 MB heap grows repeatedly (CMakeLists.txt:24), the race track is built on the first sit (race/game.cpp:36-40), and profile pictures are decoded with getImageData when someone joins (fetch.cpp:129). Also suspect after entering (needs the profiler to confirm): first-time audio stream decode, WebRTC voice setup, and GC from per-frame JS garbage.",
+  "Adding or changing a game means editing about 8 places in main.cpp: the menu flag (:266), label suppression (:467), busy (:510), exclusive branches (:1018-1030), net data priority (:1133-1137), sitOn/standUp kind switches (:214-221, :248-259), use() (:650-773) and seven setCapture sites. Restructure around an Activity interface plus an ActivityManager that derives capture, movement lock, HUD and net occupancy.",
+  "There is no on-device instrumentation, yet the user can only test on an iPhone. A per-phase profiler, a hitch log, an overlay, and 'send report' to a Cloudflare endpoint (logs + perf + UA + build) should be the first step of the restructure. Without it, 'nothing lags' cannot be verified.",
+  "Work that nobody can see is still done: a full scene plus mirror renders behind the opaque loading overlay and behind the 80-88% rhythm dimmer (rhythm.cpp:268), and remote avatars are skinned and uploaded even when they are off-screen and not in any mirror (main.cpp:1303-1317).",
+  "No lifecycle handling: no visibilitychange or pagehide logic in C++. When the tab is hidden, rAF stops but net.js keeps sending your stale state, so others see a frozen avatar. Input keys can stick, and on resume an 8-step physics catch-up runs. Add an away/resume protocol: send 'away', pause audio, resync world state on return.",
+  "Hidden static state (main.cpp:749, 778; players.cpp:38; shared_world.cpp:84) and globally shared queues (gpu_upload.cpp:16) make room switches, reconnects and tests unreliable. Every system should have an explicit reset() called on room join or leave.",
+  "Smaller order dependencies in frame(): taps use other players' state from last frame (others.update runs after updateInteraction). The seat-conflict check runs after sendSelf, so you broadcast a seat you are about to lose. queueText adds others' darts to the 3D box list as a side effect and skips it in rhythm and race modes (main.cpp:435, 454-459). In the rewrite, apply inbound network data first, then simulate, then send, then present.",
+  "Suggested build order for the restructure, lowest risk first: (1) profiler and remote report; (2) mailbox bridge plus ResizeObserver plus batched DOM; (3) JobScheduler, async pipelines, baked textures, INITIAL_MEMORY, staged loader with warm-up; (4) the server-authoritative claim/world protocol on the Durable Object; (5) ActivityManager and Interaction rewrite on top of it; (6) phase-pipeline frame loop with fixed-step simulation and interpolation; (7) retained HUD text."
+ ]
+}
