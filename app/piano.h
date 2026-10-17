@@ -47,7 +47,6 @@ class Piano {
   void addBoxes(std::vector<SceneRenderer::Box>& out, double nowMs) const;
   // Where the hands are (-1 = far left .. 1 = far right), for the pianist's pose.
   void hands(float& left, float& right) const;
-  bool busy() const { return song_ >= 0 || liveDown_ > 0; }
 
   // The on-screen keyboard while you sit on the bench (Input capture mode).
   bool keyboardOpen() const { return keyboard_; }
@@ -92,6 +91,7 @@ class Piano {
   double songStartSound_ = 0;  // sound clock time the song's second 0 plays
   double songServerStart_ = 0;
   size_t nextNote_ = 0;
+  bool owner_ = false;  // you started the current song (you clear it for everyone when it ends)
   double lastUpdate_ = 0;  // sound clock at the last update
   bool waitingToLoad_ = false;
   double pendingServerStart_ = 0;

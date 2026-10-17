@@ -133,15 +133,15 @@ void Piano::playSong(int index, double serverStart, bool fromNetwork) {
   song_ = index;
   nextNote_ = 0;
   songServerStart_ = serverStart;
+  owner_ = !fromNetwork;
   if (!fromNetwork) {
     // Start a moment from now; tell the others when (built-in songs only:
-    // your own files stay on your phone).
+    // your own files stay on your phone, so the others' piano goes quiet).
     const double now = engine::net::serverTime();
     songServerStart_ = now > 0 ? now + kStartDelay : 0;
-    if (songs_[static_cast<size_t>(index)].builtIn) {
-      const double v[2] = {static_cast<double>(index), songServerStart_};
-      engine::net::setWorld("pso", v, 2);
-    }
+    const bool shared = songs_[static_cast<size_t>(index)].builtIn;
+    const double v[2] = {shared ? static_cast<double>(index) : -1.0, shared ? songServerStart_ : 0.0};
+    engine::net::setWorld("pso", v, 2);
   }
   waitingToLoad_ = true;
   LoadedSong& l = loaded_[static_cast<size_t>(index)];
@@ -242,9 +242,21 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
   // Lights of finished notes go out.
   active_.erase(std::remove_if(active_.begin(), active_.end(), [&](const Active& a) { return a.endTime < now; }),
                 active_.end());
-  if (song_ < 0 || now <= 0) return;
+  if (song_ < 0) return;
   LoadedSong& l = loaded_[static_cast<size_t>(song_)];
   if (!l.ready) return;
+  // Joined after someone else's song ended (its start is still in the
+  // shared world): nothing to play or prepare. Checked on the server clock,
+  // so it works before sound is unlocked.
+  if (!owner_ && songServerStart_ > 0) {
+    const double server = engine::net::serverTime();
+    if (server > 0 && server > songServerStart_ + l.midi.duration + 1.0) {
+      LOG_INFO("Piano: song already ended.");
+      song_ = -1;
+      return;
+    }
+  }
+  if (now <= 0) return;
   const std::vector<engine::midi::Note>& notes = l.midi.notes;
   if (waitingToLoad_) {
     waitingToLoad_ = false;
@@ -252,7 +264,13 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
     // same bar), or start shortly from now.
     const double server = engine::net::serverTime();
     songStartSound_ = songServerStart_ > 0 && server > 0 ? now - (server - songServerStart_) : now + kStartDelay;
-    nextNote_ = 0;
+    // Joined mid-song: start at the first note still ahead (notes are
+    // sorted by start time).
+    const double since = now - 0.05 - songStartSound_;
+    nextNote_ = static_cast<size_t>(
+        std::lower_bound(notes.begin(), notes.end(), since,
+                         [](const engine::midi::Note& n, double t) { return n.start < t; }) -
+        notes.begin());
   }
   // Make the sounds for the next two seconds' notes, a few per frame.
   int made = 0;
@@ -282,6 +300,11 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
   if (nextNote_ >= notes.size() && now > songStartSound_ + l.midi.duration + 1.0) {
     LOG_INFO("Piano: song finished.");
     song_ = -1;
+    if (owner_) {  // so people who join later don't prepare a finished song
+      const double v[2] = {-1, 0};
+      engine::net::setWorld("pso", v, 2);
+      owner_ = false;
+    }
   }
 }
 

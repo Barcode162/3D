@@ -806,7 +806,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **H** Procedural textures ≈ 410 ms (8 layers), 5 unused (≈ 245 ms), run before any download starts (`bar_scene.cpp:551-563`, `renderer.cpp` createMaterials) → keep 3 layers, fetch first. *[1.1]*
 - [ ] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
 - [ ] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
-- [ ] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
+- [x] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
 - [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]*
 - [x] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
 - [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]* (1.1 part done)
@@ -932,15 +932,15 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 
 **G. Games and audio**
 - [ ] **C** Piano synthesizes notes inside the frame: 16.7 ms average, 30.6 ms middle C (wasm; native g++ -O2 15.7-20 ms middle C, 9.1 ms average); 3 per frame, budget up to 40 after a slow frame (`piano.cpp:21,259-267`; also in `keyDown` `:181`) → optimized synth, every 3rd key + playbackRate, prepare in jobs, skip not-ready notes. *[1.2a, 1.2b]*
-- [ ] **H** Synth ≈ 10× too expensive: 96 full-length `addPartial` passes for middle C (16 partials × 3 strings × 2 decay stages; `synth.cpp:25-44,83-92`) → one pass per partial, -80 dB cutoff, strings in one loop. *[1.2a]*
+- [x] **H** Synth ≈ 10× too expensive: 96 full-length `addPartial` passes for middle C (16 partials × 3 strings × 2 decay stages; `synth.cpp:25-44,83-92`) → one pass per partial, -80 dB cutoff, strings in one loop. *[1.2a]*
 - [ ] **H** One live-voice table and pedal for you and every remote player; stuck glowing keys (`piano.h:100-104`; `piano.cpp:182,197,233,325`) → per-player tables, release on leave/timeout. *[1.2b]*
 - [ ] **H** Remote notes unstamped, played on arrival in 50/100 ms clumps, stale bursts after background (`piano.cpp:234`; `relay.php:122`) → stamped events + playout. *[5.6]*
 - [ ] **H** HRTF panner per voice for every note and sfx (`audio.js:182-192`) → persistent emitters, equalpower one-shots, voice cap. *[2.5]*
 - [ ] **M** MIDI-keyboard pedal not shared (`main.cpp:896`; the on-screen pedal does send, `piano.cpp:410-412`) → `setPedal(down, share)`. *[1.2b]*
 - [ ] **M** Concurrent piano song picks diverge (`piano.cpp:143`) → server session record. *[5.6]*
 - [ ] **M** Piano key lights: 2 boxes per lit key, one draw each, redrawn in the mirror (`piano.cpp:312-360`) → instanced boxes. *[6.1]*
-- [ ] **L** Dead `busy()`; own .mid leaves `pso` at the old song for others (`piano.h:50`; `piano.cpp:141-144`) → remove; explicit local mode. *[1.2a]*
-- [ ] **L** Long bass notes cut at 3.6 s (`synth.cpp:78`); engine hum uses `sin` per sample (`synth.cpp:184`) → loop tail; phasor. *[1.2a]*
+- [x] **L** Dead `busy()`; own .mid leaves `pso` at the old song for others (`piano.h:50`; `piano.cpp:141-144`) → remove; explicit local mode. *[1.2a]*
+- [x] **L** Long bass notes cut at 3.6 s (`synth.cpp:78`); engine hum uses `sin` per sample (`synth.cpp:184`) → loop tail; phasor. *[1.2a]*
 - [ ] **L** MIDI events on the same tick not ordered off-before-on (`midi.cpp:107-110`) → tempo < off < pedal < on. *[5.6]*
 - [ ] **H** Rhythm Track ≈ 200 MB peak, never released; 54 MB copied into wasm (`audio.js:236-260`; `audio.cpp:77-81`) → low-rate mono via OfflineAudioContext, no copy, free on close. *[5.9b]*
 - [ ] **M** Generated sounds kept twice in JS (`audio.js:153-166`) → drop raw data after the AudioBuffer exists. *[2.5]*
@@ -1302,6 +1302,12 @@ pixel-identical.
   4K Mania the overlay's ms number is lower; your brother doesn't appear until he taps enter.
 
 #### 1.2a Cheaper synth and the stale piano song
+Done 2026-10-17. Middle C 24 → 1.1-1.7 ms native, 30.6 → 2.9 ms wasm; 30 keys 394 → 36-49 ms
+(same sound energy). How: the 2-3 strings are one carrier times a slow "beat" factor updated
+every 64 samples, both decay stages in one pass, -80 dB cutoff, 4 partials side by side. Bass
+notes now last up to 6 s instead of a looped tail. Joiners check a song's end on the server
+clock ("Piano: song already ended", 0 keys made); the owner clears `pso` when it ends; playing
+your own .mid clears `pso` for the others. `synth_bench` runs in `tools/native/run.sh`.
 - **Files:** `engine/synth.cpp` (one pass per partial with both decay stages, stop at -80 dB,
   detuned strings in the same loop, phasor engine hum, looping bass tail), `app/piano.{h,cpp}`
   (a joiner computes the song's end from the parsed MIDI and ignores songs that already

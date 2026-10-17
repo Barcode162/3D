@@ -22,4 +22,11 @@ for t in "${!TESTS[@]}"; do
     echo "(em++ not found: skipped the wasm run)"
   fi
 done
+echo "== synth_bench (g++, limits) and (em++ + node, print only)"
+g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -o build/native/synth_bench
+build/native/synth_bench
+if command -v em++ >/dev/null; then
+  em++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -sENVIRONMENT=node -o build/native/synth_bench.js
+  node build/native/synth_bench.js --print
+fi
 echo "NATIVE TESTS PASSED"
