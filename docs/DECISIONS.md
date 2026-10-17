@@ -467,6 +467,9 @@ was answered by the user on 2026-10-17.
   players' names and long hex strings; the server refuses any 48-hex string.
   `?testerror` logs a test error. Test tools read log lines from the
   panel's child elements (lines no longer start with `[info]`).
+- **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
+  (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
+  yes, private folder writable and outside the web root, no open_basedir.
 
 ## Racing sim (2026-10-16)
 - **Own physics, fixed 240 Hz**, substepped from the frame (the code's cap
