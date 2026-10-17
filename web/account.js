@@ -329,6 +329,7 @@ window.bar3dAccount = (function () {
   function init() {
     var relay = window.bar3dNet && bar3dNet.serverUrl ? bar3dNet.serverUrl() : '';
     server = relay ? relay.replace(/relay\.php(\?.*)?$/, 'account.php') : '';
+    if (server && !bar3dNet.tokenOk(server)) server = '';  // never send a password elsewhere
     addStyles();
     root = el('div', { id: 'acctRoot' });
     root.addEventListener('click', function (e) { if (e.target === root) close(); });

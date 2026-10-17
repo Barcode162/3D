@@ -11,9 +11,11 @@ problems checklist in §3). Goals: 60 fps on the iPhone 15 Pro Max with no
 start-up lag, zero multiplayer sync issues (the Cloudflare room becomes the
 authority), far fewer error paths. Read "How to use this plan" in that file
 first. Ask the user the open questions in its §5 when a step needs them
-(Q1 is done: the user made the Cloudflare account and added the GitHub
-secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` on 2026-10-16).
-The plan was reviewed against the code on 2026-10-17 (see its last section).
+(Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
+the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
+ask again). The plan was reviewed against the code on 2026-10-17 (see its
+last section). **Done: 0.1 (2026-10-17). Next: 0.2** (frame profiler and
+`?perf` overlay).
 The racing plan below waits, except small driving-feel tweaks the user asks for.
 
 **2026-10-16, previous top priority: the racing sim. The plan and checklist
@@ -356,3 +358,11 @@ A small DAW inside the bar, all DSP written in C++:
   writing `cloud.json`). User's plan: Cloudflare = live backend, IONOS =
   accounts and other sensitive/permanent data (move accounts from JSON
   files into IONOS MySQL later).
+- **2026-10-17:** Restructure step 0.1 done. Closed the token leak:
+  `?server=` / `?cloud=` overrides now only work for localhost or exact
+  allowlisted hosts (`web/net.js`), and logins/passwords go only to
+  same-origin or allowlisted hosts. `cloud/.wrangler` removed from git and
+  ignored. IONOS upload list generated from the build, `mirror` no longer
+  skips same-size edits. Racing docs corrected (frame-rate dependence,
+  remote-car mass). `tools/shots.mjs` takes its own `server=` and
+  `REQUESTS=1` (prints requests to outside hosts).

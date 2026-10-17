@@ -407,17 +407,48 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   Start on the free `*.workers.dev` address (no DNS work); later a
   subdomain like `bar.joshuavelasco.com`.
 - **IONOS = the "home" side:** domains (joshuavelasco.com / .org), email,
-  the landing page / personal site, and the old PHP relay + accounts as a
-  fallback until they're moved to Cloudflare (accounts move to D1 + R2).
+  the landing page / personal site, **accounts (moving from JSON files to
+  IONOS MySQL, restructure 5.1)**, and the old PHP relay until it's retired
+  (restructure 3.5).
+- **Updated 2026-10-16 (restructure):** accounts stay on IONOS (MySQL), not
+  D1. D1 holds game data only (lap times, leaderboards, reports). The
+  sentence above about "D1 (accounts, profiles...)" is superseded.
 - The user needs to make: a free Cloudflare account, its Account ID and a
   custom API token (Workers Scripts, D1, Workers R2 Storage, Workers KV
   Storage, Cloudflare Pages: Edit), saved as GitHub secrets
   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; the deploy then
   publishes the server with wrangler.
 
+## Restructure (2026-10-16)
+The top priority is `docs/RESTRUCTURE.md` (audit of every system plus a
+step-by-step plan, one step per session). Its sync invariants (§1.3):
+one writer per fact; the server orders every shared change and echoes it
+to the writer too; contested things (seats, machines, glasses, drinks) are
+claimed from the server; one clock (server time); momentary things are
+events, lasting things are state; one backend per deployment (version
+mismatch → "New version, tap to reload"); identity = server slot (+
+account id); the server detects ghosts; join = full snapshot + deltas;
+validate every incoming value. Q1 (Cloudflare account + GitHub secrets)
+was answered by the user on 2026-10-17.
+- **Server overrides are allowlisted (step 0.1):** `?server=` works only
+  for localhost or exact hosts in `ALLOWED_HOSTS` in `web/net.js`
+  (`joshuavelasco.com`); `?cloud=` only for localhost until 3.3 adds the
+  room's workers.dev host to `ALLOWED_CLOUD_HOSTS`. Never a suffix match.
+  Tokens and passwords go only to same-origin or allowlisted hosts.
+- **Race determinism** holds only for the identical wasm build: a native
+  build can differ from wasm, and the track surface hash uses `sin`
+  (`app/race/track.cpp`). Two players must run the same build (steps
+  2.4a/2.4b/7.3 add em++ tests, an integer hash and a build hash check).
+- **IONOS upload:** `mirror` runs without `--ignore-time` (it skipped edits
+  that kept the size), so after a fresh CI build it re-sends everything
+  (about 45 MB of assets); the per-build `mput` list comes from
+  `build/site/*.js *.json`.
+
 ## Racing sim (2026-10-16)
-- **Own physics, fixed 240 Hz**, substepped from the frame (max 30 steps
-  per frame; slower phones slow the race instead of exploding). Tires are
+- **Own physics, fixed 240 Hz**, substepped from the frame (the code's cap
+  is 30 steps, but the frame dt cap of 0.1 s means really 24; slower phones
+  slow the race instead of exploding, so results depend on frame rate
+  until restructure step 2.4a). Tires are
   one Magic Formula curve over normalized combined slip with relaxation
   lengths; wheel spin is solved implicitly against the tire's pull (an
   explicit step was borderline unstable at 240 Hz). Clutch: lock test

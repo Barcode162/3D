@@ -916,7 +916,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** After hibernation, states empty until the next heartbeat (`worker.js:74-77`) → keep last state in attachment. *[3.2c]*
 - [ ] **L** *(review)* `tools/cloud_test.mjs` tests the v1 protocol and would overlap room_test → renamed/extended into `tools/room_test.mjs`; `tools/setup.sh` runs `npm ci --prefix cloud` so `wrangler dev` works in fresh sessions. *[3.2a]*
 - [ ] **M** *(review)* After 3.4, `check_live` (run after every deploy) and local smoke/shots would join the production room as guests (a ghost walks in; DO requests spent); `?server=off` (`shots.mjs:39`) means nothing in v2 → net off on localhost unless `?cloud=`, `?net=off`, `NET=1` for check_live. *[3.4a]*
-- [ ] **L** Worker not deployed; `wrangler.toml:2` comment false; `cloud/.wrangler` state committed to the public repo → deploy job; gitignore. *[0.1, 3.3]*
+- [ ] **L** Worker not deployed; `wrangler.toml:2` comment false; `cloud/.wrangler` state committed to the public repo → deploy job; gitignore. *[0.1, 3.3]* (0.1 part done: comment fixed, `.wrangler` untracked + ignored)
 - [ ] **L** Remote piano players get YOUR piano's hand pose (`main.cpp:1153`) → from their notes/pose. *[5.6]*
 - [ ] **L** A reconnecting player gets a new index: history lost, teleport (`net.js:82-87` drops the player, `net.js:71` `nextIndex++`, `players.cpp:73-76` erases it) → stable slot. *[3.4a]*
 - [ ] **M** Relay: trusted ids, readable inboxes, over-limit players silently invisible, no fetch timeout, rev reset (`relay.php:55-57,125-130,102`; `net.js:183-189`) → retire. *[3.5]*
@@ -981,7 +981,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** Spectators have no data; naive monitor rendering is unaffordable → snapshot stream + MonitorRenderer. *[7.5]*
 - [ ] **H** Race renderer: no LOD, no distance or backface culling; terrain chunk never culled (`view.h:20` zFar 2500; `view.cpp:218,394-396`; `track.cpp:441-510`) → LOD chunks, tiles, far cull, culling. *[7.6]*
 - [ ] **M** No VehicleState save/restore; private fields; CarSpec with vectors copied per car (`vehicle.h:87-93,187-191`) → POD state + `const CarSpec*`. *[7.1]*
-- [ ] **M** Determinism only for identical wasm; native ≠ wasm; `sin` in the surface hash (`track.cpp:60-63`) → document, em++ tests, integer hash, build hash in race join. *[0.1, 2.4a, 2.4b, 7.3]*
+- [ ] **M** Determinism only for identical wasm; native ≠ wasm; `sin` in the surface hash (`track.cpp:60-63`) → document, em++ tests, integer hash, build hash in race join. *[0.1, 2.4a, 2.4b, 7.3]* (0.1 part done: documented in DECISIONS → Restructure)
 - [ ] **M** Resets ignore other cars, no cooldown (`world.cpp:137-143,180,250`; `game.cpp:140`) → free slot, 2 s ghost, cooldown. *[2.4b]*
 - [ ] **M** Start time local and pseudo-random (`world.cpp:115`) → server goAt. *[7.2]*
 - [ ] **M** Positions and finish computed locally (`world.cpp:155-163,408-411`) → server results. *[7.2]*
@@ -998,7 +998,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Touch zones ignore safe areas and edge gestures (`controls.h:47`; `controls.cpp:103-112`) → safe-area insets via the mailbox. *[2.1a, 2.4b]*
 - [ ] **M** Mesh builders peak at 15 MB of vector capacity (`mesh.h:40-49`) → reserve, strips, chunk by chunk. *[7.6]*
 - [ ] **M** Bot traffic ignores cars alongside; passes in braking zones (`world.cpp:222-234`) → lateral clearance, commit side, no passes when braking. *[7.4]*
-- [ ] **M** RACING.md:47-48 and DECISIONS "max 30 steps" (`DECISIONS.md:419`; really 24) are false; RACING.md:116-121 describes the broken infinite-mass model → correct now; rewrite netcode section. *[0.1, 7.3]*
+- [ ] **M** RACING.md:47-48 and DECISIONS "max 30 steps" (`DECISIONS.md:419`; really 24) are false; RACING.md:116-121 describes the broken infinite-mass model → correct now; rewrite netcode section. *[0.1, 7.3]* (0.1 part done: both corrected, caveat added)
 - [ ] **M** Monitors: RACING says 3 per rig, the scene has 1 quad (`main.cpp:395-403`) → decide (Q10); new monitor quads in `tools/assets/sim_rig.py` + `bar_scene.cpp`. *[7.5]*
 - [ ] **L** `place()` leaves stale state and a different sag (`vehicle.cpp:46-60`) → one `resetState()`. *[2.4b]*
 - [ ] **L** Gear presses during a shift are dropped (`vehicle.cpp:176-189`) → shift queue. *[7.1]*
@@ -1045,7 +1045,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** `axisAngle` with a zero axis returns a non-unit quaternion (`math.h:33-47`) → identity. *[2.3a]*
 
 **J. Web, accounts, hosting, deploy, tools**
-- [ ] **C** Token and password theft through `?server=` / `?cloud=`: the saved token is POSTed to any host on page load (`net.js:30-36,96-97,196,298-301`; `account.js:330-331,347-348`) → exact-host allowlist (never a `*.workers.dev` suffix match); never send tokens elsewhere. *[0.1]*
+- [x] **C** Token and password theft through `?server=` / `?cloud=`: the saved token is POSTed to any host on page load (`net.js:30-36,96-97,196,298-301`; `account.js:330-331,347-348`) → exact-host allowlist (never a `*.workers.dev` suffix match); never send tokens elsewhere. *[0.1]*
 - [ ] **H** Long-lived bearer token in localStorage, never expires, sent 10×/s to the relay (`account.js:303`; `net.js:196`; `account.php:95-109`) → refresh token + 15 min tickets. *[5.1b, 5.1c]*
 - [ ] **H** `names.json` rewritten in place; a bad write wipes all usernames and can make a new owner (`account.php:77-83,135-150`) → MySQL with UNIQUE. *[5.1b]*
 - [ ] **H** Account data inside the deployed web folder, protected by `.htaccess` only, no backups (`account.php:43`; `server/.htaccess`) → MySQL + backups (Q11). *[5.1b]*
@@ -1064,7 +1064,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** No Content-Security-Policy (`index.html:3-11`) → meta CSP that still allows the local test servers and `https://*.workers.dev`. *[1.8]*
 - [ ] **M** *(review)* The planned `report.php` stores into the docroot (`.htaccess` only, the weakness 5.1 removes), has no global cap or retention, a public GET, and no CORS for the github.io page → private folder, cap 500, 30-day expiry, no secrets in payloads, allowlisted CORS, `?env=1` IONOS facts for 5.1. *[0.3]*
 - [ ] **M** IONOS upload not atomic; a newer push can cancel it halfway (`deploy.yml:16-18,104-106`) → own concurrency group; upload index last / versioned folder. *[8.2]*
-- [ ] **M** IONOS `mput` list misses `menu.js`, `voice.js`; `mirror --ignore-time` skips same-size edits (`deploy.yml:104,106`) → generated list, no `--ignore-time`. *[0.1]*
+- [x] **M** IONOS `mput` list misses `menu.js`, `voice.js`; `mirror --ignore-time` skips same-size edits (`deploy.yml:104,106`) → generated list, no `--ignore-time`. *[0.1]*
 - [ ] **M** No tests before publishing (`deploy.yml`) → test job. *[0.4]*
 - [ ] **M** *(review)* The CI smoke depends on SwiftShader WebGPU on GitHub's ubuntu runners, never tried (works here with global Playwright 1.56.1) → pinned Playwright + `--with-deps`, non-blocking until one green run. *[0.4]*
 - [ ] **L** *(review)* Sessions can't run Cloudflare/IONOS admin commands (secrets only in Actions; `gh secret list` returns 403 through the proxy) → `cloudflare-check` step and `admin.yml` workflow_dispatch. *[0.4, 3.3]*

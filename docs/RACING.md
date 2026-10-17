@@ -44,8 +44,11 @@ app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
 ```
 
 ### Physics (engine/vehicle)
-- Fixed time step (240 Hz, substepped from the frame), so the car behaves
-  the same at 30 or 120 fps and the same for every player.
+- Fixed time step (240 Hz, substepped from the frame). *Not yet* the same
+  at every frame rate: a frame is capped at 0.1 s (24 steps), so after a
+  hitch the race clock falls behind the wall clock, and the lap times use
+  the wall clock. Restructure step 2.4a moves the race onto a tick clock
+  so results match at 30, 60 or 120 fps.
 - Rigid body with mass and inertia, 4 wheels with **raycast suspension**
   (spring, bump and rebound damping, bump stops, anti-roll bars).
 - **Tires: Pacejka "Magic Formula"** for lateral and longitudinal force,
@@ -118,7 +121,10 @@ app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
   slightly in the past with interpolation and short extrapolation. The
   race "host" (later the server) runs the bots, the start and the timing.
   Collisions with the other player's car use their synced car as a solid
-  object on your side, and the same happens on theirs.
+  object on your side, and the same happens on theirs. *Caveat:* as built,
+  remote cars act with infinite mass (you bounce off, they don't move),
+  which feels wrong; the real netcode is redesigned in restructure
+  Phase 7 (`docs/RESTRUCTURE.md` 7.3).
 
 ## Steps (in order)
 - [x] 1. Loading stutter fix: textures upload a little per frame, mipmaps

@@ -11,12 +11,38 @@
 // Page options: ?room=name (default "main"), ?name=Josh (your name tag,
 // remembered), ?server=https://.../relay.php (force the relay),
 // ?cloud=wss://... (force a Cloudflare address), ?cloud=off, ?server=off.
+// Overrides are honoured only for localhost or the exact hosts in
+// ALLOWED_HOSTS (so a link can't send your login token somewhere else).
 window.bar3dNet = (function () {
   'use strict';
   // Where the relay lives when the game is served from GitHub Pages. When
   // the page itself is on the IONOS site, relay.php sits right next to it.
   var DEFAULT_SERVER = 'https://joshuavelasco.com/bar/relay.php';
   var SEND_INTERVAL_MS = 100;
+  // Exact hosts a ?server= override may point at (never a suffix: anyone can
+  // make a *.workers.dev name). ?cloud= overrides only accept localhost until
+  // the room is deployed (restructure step 3.3 adds its workers.dev host).
+  var ALLOWED_HOSTS = ['joshuavelasco.com'];
+  var ALLOWED_CLOUD_HOSTS = [];
+
+  function hostOf(value) {
+    try { return new URL(value, location.href).hostname; } catch (e) { return null; }
+  }
+  function isLocal(h) { return h === 'localhost' || h === '127.0.0.1'; }
+  // Whether an override value may be used.
+  function overrideOk(value, list) {
+    if (value === 'off') return true;
+    var h = hostOf(value);
+    return !!h && (isLocal(h) || list.indexOf(h) >= 0);
+  }
+  // Whether a login token may be sent to this URL: same origin or allowlisted.
+  function tokenOk(value) {
+    try {
+      var u = new URL(value, location.href);
+      return u.origin === location.origin || isLocal(u.hostname) ||
+        ALLOWED_HOSTS.indexOf(u.hostname) >= 0 || ALLOWED_CLOUD_HOSTS.indexOf(u.hostname) >= 0;
+    } catch (e) { return false; }
+  }
 
   function param(name) {
     var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
@@ -27,8 +53,18 @@ window.bar3dNet = (function () {
     return null;
   }
 
-  var forcedRelay = param('server') !== null;
-  var server = param('server');
+  var serverParam = param('server'), cloudOverride = param('cloud'), ignored = [];
+  if (serverParam !== null && !overrideOk(serverParam, ALLOWED_HOSTS)) {
+    ignored.push(serverParam);
+    serverParam = null;
+  }
+  if (cloudOverride !== null && !overrideOk(cloudOverride, ALLOWED_CLOUD_HOSTS)) {
+    ignored.push(cloudOverride);
+    cloudOverride = null;
+  }
+  ignored.forEach(function (v) { console.log('Multiplayer: ignored server option (' + v + ')'); });
+  var forcedRelay = serverParam !== null;
+  var server = serverParam;
   if (server === null) {
     var host = location.hostname;
     server = /github\.io$/.test(host) ? DEFAULT_SERVER : /^localhost$|^127\./.test(host) ? '' : 'relay.php';
@@ -193,7 +229,7 @@ window.bar3dNet = (function () {
     inFlight = true;
     var body = { room: room, id: id, name: name, t: stateTime, s: state, since: since };
     var acct = window.bar3dAccount;
-    if (acct && acct.token()) body.tok = acct.token();  // the relay shows your account's name and picture
+    if (acct && acct.token() && tokenOk(server)) body.tok = acct.token();  // the relay shows your account's name and picture
     var sending = worldOut;
     worldOut = {};
     if (Object.keys(sending).length) body.w = sending;
@@ -278,8 +314,9 @@ window.bar3dNet = (function () {
     // Starts sending/receiving. Returns false when multiplayer is off.
     start: function () {
       if (started) return !!(server || cloudUrl !== 'off');
-      var cloudParam = param('cloud');
-      if (param('server') === 'off') return false;
+      ignored.forEach(function (v) { info('Multiplayer: ignored server option (' + v + ')'); });
+      var cloudParam = cloudOverride;
+      if (serverParam === 'off') return false;
       started = true;
       window.addEventListener('pagehide', leave);
       // Cloudflare first (unless the relay was asked for), else the relay.
@@ -343,6 +380,8 @@ window.bar3dNet = (function () {
       return 0;
     },
     serverUrl: function () { return server; },
+    // Whether a login token may be sent to this URL (same origin or allowlisted).
+    tokenOk: tokenOk,
     myId: function () { return id; },
     // Ids of everyone else in the room right now.
     peers: function () { return Object.keys(players); },

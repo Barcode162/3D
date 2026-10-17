@@ -83,8 +83,10 @@ jobs:
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       # The multiplayer relay (server/relay.php) runs on the IONOS web
-      # hosting, next to a second copy of the game. Only files whose size
-      # changed are sent, except the small per-build files, always sent.
+      # hosting, next to a second copy of the game. mirror sends files whose
+      # size or time differ (no --ignore-time: it skipped same-size edits),
+      # then every page script and per-build file is sent again by name,
+      # with the list taken from build/site so new scripts aren't missed.
       - name: Upload to IONOS
         if: env.IONOS_SFTP_HOST != ''
         env:
@@ -101,9 +103,9 @@ jobs:
           mkdir -p -f $IONOS_DIR
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/index.php
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/.htaccess
-          mirror -R --verbose --ignore-time --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
+          mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
-          mput index.html version.txt app.js app.wasm audio.js net.js account.js project.json relay.php account.php .htaccess
+          mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php .htaccess
           cls -l
           bye
           EOF

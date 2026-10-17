@@ -60,7 +60,8 @@ can be viewed with the Read tool. To look at a specific spot, run with
 `CAM="x,y,z,yaw,pitch"` (degrees) → `build/smoke-cam.png`; the page itself
 accepts `?cam=x,y,z,yaw,pitch` (see `docs/DECISIONS.md` → Gotchas for
 testing music and the song picker). `tools/shots.mjs` takes `VIEW=932x430`
-(landscape) and `HOLD=ArrowUp:9000` (hold a key, e.g. to drive); `sit=30`
+(landscape), `HOLD=ArrowUp:9000` (hold a key, e.g. to drive) and
+`REQUESTS=1` (print requests to outside hosts); `sit=30`
 sits in a racing rig. Car physics and whole races also run natively
 (no browser): see `tools/native/*.cpp`. Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
