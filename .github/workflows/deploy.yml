@@ -79,6 +79,9 @@ jobs:
       - name: "Test: browser smoke (Release build)"
         run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
 
+      - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
+        run: node tools/menu_test.mjs
+
       # Prints only whether the Cloudflare secrets exist, whether wrangler
       # accepts the token, and whether a workers.dev subdomain is registered.
       - name: "Check: Cloudflare"

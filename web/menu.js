@@ -1,8 +1,10 @@
 // The in-game menus, as HTML panels over the game (like the account
 // screens): a Menu button in the top bar opens Emotes, Avatar, Profile,
 // Voice chat, Settings, Piano songs, and (for bartenders) the drink list.
-// C++ reads the settings (bar3dSettings) and takes the commands the menus
-// queue (bar3dUi.take); it tells the menus what's going on (bar3dUi.setInfo).
+// C++ reads the settings (bar3dSettings) and gets the menus' commands through
+// the page mailbox (bar3dBridge.command); it tells the menus what's going on
+// (bar3dUi.setInfo, only when something changed). Only one panel covers the
+// game at a time (bar3dModal, web/bridge.js).
 window.bar3dSettings = (function () {
   'use strict';
   var DEFAULTS = {
@@ -35,12 +37,12 @@ window.bar3dSettings = (function () {
 window.bar3dUi = (function () {
   'use strict';
   var S = window.bar3dSettings;
-  var queue = [], info = {}, root = null, toastEl = null, toastTimer = 0, current = '';
+  var info = {}, root = null, toastEl = null, toastTimer = 0, current = '';
   var EMOJI = ['\u{1F44B}', '\u{1F483}', '\u{1F44F}', '\u{1F64C}', '\u{1F647}', '\u{1F449}', '\u{1F937}', '\u{1F602}',
                '\u{1FAE1}', '\u{1F44D}', '\u{1F926}'];
   var LOOK_COLORS = ['#232326', '#ececE6', '#0d0d0d', '#bf1a1a', '#141a38', '#ff40a6', '#2e6138', '#5a5e6b'];
 
-  function cmd(name, a, b, text) { queue.push([name, a || 0, b || 0, text || '']); }
+  function cmd(name, a, b, text, text2) { if (window.bar3dBridge) bar3dBridge.command(name, a, b, text, text2); }
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     for (var k in attrs || {}) {
@@ -97,8 +99,14 @@ window.bar3dUi = (function () {
     document.head.appendChild(el('style', { text: css }));
   }
 
-  function close() { if (root) { root.classList.remove('open'); root.innerHTML = ''; } current = ''; stopMeter(); }
+  function close() {
+    if (root) { root.classList.remove('open'); root.innerHTML = ''; }
+    current = '';
+    stopMeter();
+    if (window.bar3dModal) bar3dModal.closed('menu');
+  }
   function show(title, children) {
+    if (window.bar3dModal) bar3dModal.open('menu', close);
     root.innerHTML = '';
     var panel = el('div', { class: 'mPanel' }, [
       el('h2', {}, [title, el('button', { class: 'mX', text: '✕', onclick: close })]),
@@ -152,7 +160,7 @@ window.bar3dUi = (function () {
     show('Avatar', [el('div', { class: 'mGrid' }, names.map(function (n, i) {
       var swatch = el('span', { class: 'big', style: 'width:34px;height:34px;border-radius:50%;margin:0 auto 6px;border:2px solid #fff4;background:' + (LOOK_COLORS[i] || '#888') });
       return el('button', { class: 'mTile' + (S.get('look') === i ? ' on' : ''), onclick: function () {
-        S.set('look', i);
+        S.set('look', i);  // remembered for next time; the game changes it from the command
         cmd('look', i);
         avatarPanel();
       } }, [swatch, n]);
@@ -275,7 +283,7 @@ window.bar3dUi = (function () {
     var file = el('input', { type: 'file', accept: '.mid,.midi,audio/midi,audio/x-midi', id: 'midiPicker', style: 'display:none' });
     file.onchange = function () {
       Array.prototype.forEach.call(file.files, function (f) {
-        cmd('pianoAdd', 0, 0, f.name.replace(/\.[^.]+$/, '') + '\n' + URL.createObjectURL(f));
+        cmd('pianoAdd', 0, 0, f.name.replace(/\.[^.]+$/, ''), URL.createObjectURL(f));
       });
       toast('Added to the piano. Open Piano again to play it.');
       close();
@@ -376,12 +384,15 @@ window.bar3dUi = (function () {
       });
       logBtn.parentNode.insertBefore(micBtn, logBtn);
       logBtn.parentNode.insertBefore(menuBtn, logBtn);
-      setInterval(function () {
+      var micText = '', micClass = null;
+      setInterval(function () {  // the page is only touched when the state changes
         var V = window.bar3dVoice;
         if (!V) return;
-        var on = V.micOn();
-        micBtn.textContent = on ? (V.gateOpen() ? '\u{1F3A4} talking' : '\u{1F3A4} on') : '\u{1F3A4} off';
-        micBtn.className = on ? (V.gateOpen() ? 'live' : '') : 'muted';
+        var on = V.micOn(), live = on && V.gateOpen();
+        var text = on ? (live ? '\u{1F3A4} talking' : '\u{1F3A4} on') : '\u{1F3A4} off';
+        var cls = on ? (live ? 'live' : '') : 'muted';
+        if (text !== micText) micBtn.textContent = micText = text;
+        if (cls !== micClass) micBtn.className = micClass = cls;
       }, 150);
     }
     // Volumes follow the settings.
@@ -399,8 +410,16 @@ window.bar3dUi = (function () {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   return {
-    take: function () { var out = JSON.stringify(queue); queue = []; return out; },
-    setInfo: function (json) { try { info = JSON.parse(json); } catch (e) {} },
+    // What the game says is going on: an object whose keys replace the old ones.
+    setInfo: function (changes) {
+      if (typeof changes === 'string') {
+        try { changes = JSON.parse(changes); } catch (e) {
+          if (window.bar3dLog) bar3dLog.add('error', 'Menu: bad info from the game: ' + e.message);
+          return;
+        }
+      }
+      for (var k in changes) info[k] = changes[k];
+    },
     toast: toast,
     open: function (name) {
       var panels = { main: mainPanel, emotes: emotesPanel, avatar: avatarPanel, settings: settingsPanel, voice: voicePanel,
@@ -409,6 +428,8 @@ window.bar3dUi = (function () {
       if (panels[name]) panels[name]();
     },
     isOpen: function () { return !!current; },
+    info: function () { return info; },  // tests
+    close: close,
     command: cmd,
   };
 })();

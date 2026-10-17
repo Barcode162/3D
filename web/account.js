@@ -59,7 +59,7 @@ window.bar3dAccount = (function () {
   function addStyles() {
     var css = [
       '#acctRoot{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;',
-      'background:#0b0710cc;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:16px;',
+      'background:#0b0710e0;padding:16px;',  // no blur: blurring the live game costs every frame
       'font:15px/1.4 -apple-system,system-ui,sans-serif;color:#f5ecf8;}',
       '#acctRoot.open{display:flex;}',
       '.acctPanel{width:min(92vw,380px);max-height:88vh;overflow:auto;background:#1a1220;border-radius:20px;',
@@ -101,11 +101,16 @@ window.bar3dAccount = (function () {
   }
 
   function open(content) {
+    if (window.bar3dModal) bar3dModal.open('account', close);
     root.innerHTML = '';
     root.appendChild(content);
     root.classList.add('open');
   }
-  function close() { root.classList.remove('open'); root.innerHTML = ''; }
+  function close() {
+    root.classList.remove('open');
+    root.innerHTML = '';
+    if (window.bar3dModal) bar3dModal.closed('account');
+  }
 
   function picture(rev, id, letter, color) {
     var img = el('img', { class: 'acctPic', alt: '' });

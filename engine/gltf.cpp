@@ -324,7 +324,7 @@ bool GlbParser::begin(std::vector<uint8_t> fileBytes, std::string& error) {
     return false;
   }
   std::string jsonError;
-  st.doc = Json::parse(jsonText, &jsonError);
+  st.doc = Json::parse(jsonText, &jsonError, {64, 1u << 20});  // our own model files: generous limits
   if (!st.doc.isObject()) {
     error = "bad JSON: " + jsonError;
     return false;

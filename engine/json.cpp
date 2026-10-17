@@ -1,17 +1,21 @@
 #include "engine/json.h"
 
+#include <charconv>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 namespace engine {
 
 namespace {
 const Json kNullJson;
-const std::vector<Json> kNoItems;
 }  // namespace
 
 class JsonParser {
  public:
-  explicit JsonParser(std::string_view text) : s_(text) {}
+  JsonParser(std::string_view text, JsonLimits limits) : s_(text), limits_(limits) {}
 
   bool parseDocument(Json& out) {
     if (!parseValue(out, 0)) return false;
@@ -21,8 +25,6 @@ class JsonParser {
   const std::string& error() const { return error_; }
 
  private:
-  static constexpr int kMaxDepth = 64;
-
   bool fail(const char* what) {
     if (error_.empty()) error_ = std::string(what) + " at byte " + std::to_string(pos_);
     return false;
@@ -37,7 +39,7 @@ class JsonParser {
   }
 
   bool parseValue(Json& out, int depth) {
-    if (depth > kMaxDepth) return fail("nested too deeply");
+    if (depth >= limits_.maxDepth) return fail("nested too deeply");
     skipSpace();
     if (pos_ >= s_.size()) return fail("unexpected end");
     const char c = s_[pos_];
@@ -60,10 +62,11 @@ class JsonParser {
     const size_t start = pos_;
     while (pos_ < s_.size() && std::string_view("+-0123456789.eE").find(s_[pos_]) != std::string_view::npos) ++pos_;
     if (pos_ == start) return fail("unexpected character");
+    if (pos_ - start > 64) return fail("bad number");
     const std::string digits(s_.substr(start, pos_ - start));
     char* end = nullptr;
     out.number_ = std::strtod(digits.c_str(), &end);
-    if (end != digits.c_str() + digits.size()) return fail("bad number");
+    if (end != digits.c_str() + digits.size() || !std::isfinite(out.number_)) return fail("bad number");
     out.type_ = Json::Type::kNumber;
     return true;
   }
@@ -105,7 +108,9 @@ class JsonParser {
     while (pos_ < s_.size()) {
       const char c = s_[pos_++];
       if (c == '"') return true;
+      if (out.size() >= limits_.maxString) return fail("string too long");
       if (c != '\\') {
+        if (static_cast<unsigned char>(c) < 0x20) return fail("control character in a string");
         out += c;
         continue;
       }
@@ -123,11 +128,15 @@ class JsonParser {
         case 'u': {
           uint32_t cp;
           if (!parseHex4(cp)) return false;
-          if (cp >= 0xD800 && cp < 0xDC00 && s_.substr(pos_, 2) == "\\u") {  // surrogate pair
+          if (cp >= 0xD800 && cp < 0xDC00) {  // surrogate pair
+            uint32_t low = 0;
+            if (s_.substr(pos_, 2) != "\\u") return fail("lone surrogate");
             pos_ += 2;
-            uint32_t low;
             if (!parseHex4(low)) return false;
+            if (low < 0xDC00 || low > 0xDFFF) return fail("lone surrogate");
             cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+          } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+            return fail("lone surrogate");
           }
           appendUtf8(out, cp);
           break;
@@ -141,15 +150,14 @@ class JsonParser {
   bool parseArray(Json& out, int depth) {
     ++pos_;
     out.type_ = Json::Type::kArray;
-    out.array_ = std::make_shared<std::vector<Json>>();
     skipSpace();
     if (pos_ < s_.size() && s_[pos_] == ']') {
       ++pos_;
       return true;
     }
     while (true) {
-      out.array_->emplace_back();
-      if (!parseValue(out.array_->back(), depth + 1)) return false;
+      out.array_.emplace_back();
+      if (!parseValue(out.array_.back(), depth + 1)) return false;
       skipSpace();
       if (pos_ >= s_.size()) return fail("unterminated array");
       const char c = s_[pos_++];
@@ -161,7 +169,6 @@ class JsonParser {
   bool parseObject(Json& out, int depth) {
     ++pos_;
     out.type_ = Json::Type::kObject;
-    out.object_ = std::make_shared<std::map<std::string, Json>>();
     skipSpace();
     if (pos_ < s_.size() && s_[pos_] == '}') {
       ++pos_;
@@ -174,7 +181,18 @@ class JsonParser {
       if (!parseString(key)) return false;
       skipSpace();
       if (pos_ >= s_.size() || s_[pos_++] != ':') return fail("expected :");
-      if (!parseValue((*out.object_)[key], depth + 1)) return false;
+      // A repeated key: the last one wins (like JavaScript).
+      Json* slot = nullptr;
+      for (auto& m : out.object_) {
+        if (m.first == key) slot = &m.second;
+      }
+      if (!slot) {
+        out.object_.emplace_back(std::move(key), Json());
+        slot = &out.object_.back().second;
+      } else {
+        *slot = Json();
+      }
+      if (!parseValue(*slot, depth + 1)) return false;
       skipSpace();
       if (pos_ >= s_.size()) return fail("unterminated object");
       const char c = s_[pos_++];
@@ -184,12 +202,13 @@ class JsonParser {
   }
 
   std::string_view s_;
+  JsonLimits limits_;
   size_t pos_ = 0;
   std::string error_;
 };
 
-Json Json::parse(std::string_view text, std::string* error) {
-  JsonParser parser(text);
+Json Json::parse(std::string_view text, std::string* error, JsonLimits limits) {
+  JsonParser parser(text, limits);
   Json out;
   if (!parser.parseDocument(out)) {
     if (error) *error = parser.error();
@@ -198,16 +217,117 @@ Json Json::parse(std::string_view text, std::string* error) {
   return out;
 }
 
-const Json& Json::operator[](size_t i) const {
-  return array_ && i < array_->size() ? (*array_)[i] : kNullJson;
+int Json::integer(int fallback) const {
+  if (type_ != Type::kNumber) return fallback;
+  if (!(number_ > -2147483648.0 && number_ < 2147483648.0)) return fallback;  // also NaN
+  return static_cast<int>(number_);
 }
 
-const Json& Json::operator[](const std::string& key) const {
-  if (!object_) return kNullJson;
-  const auto it = object_->find(key);
-  return it == object_->end() ? kNullJson : it->second;
+bool Json::has(std::string_view key) const {
+  for (const auto& m : object_) {
+    if (m.first == key) return true;
+  }
+  return false;
 }
 
-const std::vector<Json>& Json::items() const { return array_ ? *array_ : kNoItems; }
+const Json& Json::operator[](size_t i) const { return i < array_.size() ? array_[i] : kNullJson; }
+
+const Json& Json::operator[](std::string_view key) const {
+  for (const auto& m : object_) {
+    if (m.first == key) return m.second;
+  }
+  return kNullJson;
+}
+
+std::string jsonQuote(std::string_view text) {
+  std::string out;
+  out.reserve(text.size() + 2);
+  out += '"';
+  for (const char ch : text) {
+    const auto c = static_cast<unsigned char>(ch);
+    switch (c) {
+      case '"': out += "\\\""; break;
+      case '\\': out += "\\\\"; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default:
+        if (c < 0x20) {
+          char buf[8];
+          std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+          out += buf;
+        } else {
+          out += ch;
+        }
+    }
+  }
+  out += '"';
+  return out;
+}
+
+void JsonWriter::separate() {
+  if (afterKey_) {
+    afterKey_ = false;
+    return;
+  }
+  if (!first_.empty()) {
+    if (!first_.back()) out_ += ',';
+    first_.back() = false;
+  }
+}
+
+JsonWriter& JsonWriter::open(char c) {
+  separate();
+  out_ += c;
+  first_.push_back(true);
+  return *this;
+}
+
+JsonWriter& JsonWriter::close(char c) {
+  out_ += c;
+  if (!first_.empty()) first_.pop_back();
+  return *this;
+}
+
+JsonWriter& JsonWriter::key(std::string_view k) {
+  separate();
+  out_ += jsonQuote(k);
+  out_ += ':';
+  afterKey_ = true;
+  return *this;
+}
+
+JsonWriter& JsonWriter::value(std::string_view s) {
+  separate();
+  out_ += jsonQuote(s);
+  return *this;
+}
+
+JsonWriter& JsonWriter::value(double d) {
+  if (!std::isfinite(d)) return null();  // JSON has no NaN or infinity
+  separate();
+  char buf[32];
+  const auto r = std::to_chars(buf, buf + sizeof(buf), d);
+  out_.append(buf, r.ptr);
+  return *this;
+}
+
+JsonWriter& JsonWriter::value(int i) {
+  separate();
+  out_ += std::to_string(i);
+  return *this;
+}
+
+JsonWriter& JsonWriter::value(bool b) {
+  separate();
+  out_ += b ? "true" : "false";
+  return *this;
+}
+
+JsonWriter& JsonWriter::null() {
+  separate();
+  out_ += "null";
+  return *this;
+}
 
 }  // namespace engine

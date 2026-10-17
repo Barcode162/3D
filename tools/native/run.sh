@@ -9,6 +9,7 @@ RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp engine/vehicle.cpp
 declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
   [race_test]="tools/native/race_test.cpp $RACE"
+  [json_test]="tools/native/json_test.cpp engine/json.cpp"
 )
 for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"

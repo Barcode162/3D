@@ -114,7 +114,8 @@ judged on the user's phone.
 - `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
   web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
-  `check_live.mjs` (loads the deployed site headlessly), `mp_test.mjs`
+  `check_live.mjs` (loads the deployed site headlessly), `menu_test.mjs`
+  (menus ↔ game through the mailbox), `mp_test.mjs`
   (two players through a local PHP relay), `voice_test.mjs` (WebRTC voice
   between two players), `shots.mjs` (screenshots with page options).
   `tools/assets/` builds the 3D models in headless Blender (see

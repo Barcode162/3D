@@ -77,10 +77,6 @@ void showCard(const std::string& account, const std::string& name) {
   }, account.c_str(), name.c_str());
 }
 
-bool panelOpen() {
-  return EM_ASM_INT({ var a = window['bar3dAccount']; return a && a['isOpen']() ? 1 : 0; }) != 0;
-}
-
 void setWorld(const std::string& key, const double* values, int count) {
   EM_ASM({
     var v = [];

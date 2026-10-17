@@ -32,6 +32,7 @@
 #include "engine/file.h"
 #include "engine/gpu.h"
 #include "engine/input.h"
+#include "engine/json.h"
 #include "engine/log.h"
 #include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
@@ -151,7 +152,8 @@ struct App {
   double lastFrameMs = 0;
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
-  double infoSentMs = 0;
+  size_t infoSongCount = SIZE_MAX;  // piano songs the menu knows (SIZE_MAX: nothing sent yet)
+  std::string infoState;            // what the menu was last told about you
 };
 
 App g_app;
@@ -275,11 +277,13 @@ void sitOn(int index) {
 // ---- Camera and movement ----
 
 void updateCamera(float dt) {
-  const engine::Vec2 look = g_app.input.frame().look;
+  // A menu or account panel covers the game: no looking or walking meanwhile.
+  const bool covered = engine::bridge::frame().modalOpen;
+  const engine::Vec2 look = covered ? engine::Vec2{} : g_app.input.frame().look;
   const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.race.open();
   const float sens = kLookSensitivity * g_app.lookSpeed;
   if (!menu && !g_app.piano.keyboardOpen()) g_app.camera.look(look.x * sens, -look.y * sens * g_app.invertLook);
-  const engine::Vec2 move = g_app.input.frame().move;
+  const engine::Vec2 move = covered ? engine::Vec2{} : g_app.input.frame().move;
   if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, emscripten_get_now() + kIntroAfterInputMs);
   }
@@ -898,8 +902,7 @@ void handleCommands() {
     } else if (c.name == "pianoStop") {
       g_app.piano.stopSong();
     } else if (c.name == "pianoAdd") {
-      const size_t nl = c.text.find('\n');
-      if (nl != std::string::npos) g_app.piano.addUserSong(c.text.substr(0, nl), c.text.substr(nl + 1));
+      if (!c.text2.empty()) g_app.piano.addUserSong(c.text, c.text2);  // name, file URL
     } else if (c.name == "midi") {
       // From a MIDI keyboard: a = status byte, b = note * 1000 + velocity.
       const int status = static_cast<int>(c.a) & 0xf0, note = static_cast<int>(c.b) / 1000, vel = static_cast<int>(c.b) % 1000;
@@ -916,12 +919,14 @@ void handleCommands() {
   }
   const int v = engine::settings::version();
   if (v != g_app.settingsVersion) {
+    const bool first = g_app.settingsVersion < 0;
     g_app.settingsVersion = v;
     g_app.lookSpeed = static_cast<float>(engine::settings::number("lookSpeed", 1));
     g_app.invertLook = engine::settings::number("invertLook", 0) != 0 ? -1.0f : 1.0f;
     g_app.showNames = engine::settings::number("showNames", 1) != 0;
     engine::profiler().overlay = g_app.hooks.perf || engine::settings::number("perf", 0) != 0;
-    const int look = static_cast<int>(engine::settings::number("look", g_app.look));
+    // Your saved look, at start only (later the menu sends a "look" command).
+    const int look = first ? static_cast<int>(engine::settings::number("look", g_app.look)) : g_app.look;
     if (look != g_app.look && look >= 0 && look < static_cast<int>(app::avatarLooks().size())) {
       g_app.look = look;
       g_app.renderer.setSelfAvatar(static_cast<size_t>(look));
@@ -929,26 +934,39 @@ void handleCommands() {
   }
 }
 
-// Tells the menus what's going on (piano songs, your look...), now and then.
-void sendInfo(double nowMs) {
-  if (nowMs - g_app.infoSentMs < 500) return;
-  g_app.infoSentMs = nowMs;
-  std::string json = "{\"look\":" + std::to_string(g_app.look) + ",\"pianoSong\":" + std::to_string(g_app.piano.currentSong()) +
-                     ",\"shift\":" + (g_app.bartender.onShift() ? "1" : "0") + ",\"seated\":" + (g_app.seat >= 0 ? "1" : "0") +
-                     ",\"looks\":[";
-  for (size_t i = 0; i < app::avatarLooks().size(); ++i) json += std::string(i ? "," : "") + "\"" + app::avatarLooks()[i].name + "\"";
-  json += "],\"songs\":[";
-  for (size_t i = 0; i < g_app.piano.songs().size(); ++i) {
-    std::string t = g_app.piano.songs()[i].title;
-    std::replace(t.begin(), t.end(), '"', '\'');
-    json += std::string(i ? "," : "") + "\"" + t + "\"";
+// Tells the menus what's going on: the lists once (the piano's again when it
+// grows), and your state whenever it changes.
+void sendInfo() {
+  const auto& songs = g_app.piano.songs();
+  if (songs.size() != g_app.infoSongCount) {
+    engine::JsonWriter w;
+    w.beginObject();
+    if (g_app.infoSongCount == SIZE_MAX) {
+      w.key("looks").beginArray();
+      for (const auto& l : app::avatarLooks()) w.value(l.name);
+      w.endArray().key("drinks").beginArray();
+      for (const auto& d : app::drinkRecipes()) w.value(d.name);
+      w.endArray().key("emotes").beginArray();
+      for (int i = 1; i < static_cast<int>(Emote::kCount); ++i) w.value(app::emoteName(static_cast<Emote>(i)));
+      w.endArray();
+    }
+    w.key("songs").beginArray();
+    for (const auto& song : songs) w.value(song.title);
+    w.endArray().endObject();
+    engine::ui::setInfo(w.str());
+    g_app.infoSongCount = songs.size();
   }
-  json += "],\"drinks\":[";
-  for (size_t i = 0; i < app::drinkRecipes().size(); ++i) json += std::string(i ? "," : "") + "\"" + app::drinkRecipes()[i].name + "\"";
-  json += "],\"emotes\":[";
-  for (int i = 1; i < static_cast<int>(Emote::kCount); ++i) json += std::string(i > 1 ? "," : "") + "\"" + app::emoteName(static_cast<Emote>(i)) + "\"";
-  json += "]}";
-  engine::ui::setInfo(json);
+  engine::JsonWriter w;
+  w.beginObject()
+      .key("look").value(g_app.look)
+      .key("pianoSong").value(g_app.piano.currentSong())
+      .key("shift").value(g_app.bartender.onShift() ? 1 : 0)
+      .key("seated").value(g_app.seat >= 0 ? 1 : 0)
+      .endObject();
+  if (w.str() != g_app.infoState) {
+    g_app.infoState = w.str();
+    engine::ui::setInfo(g_app.infoState);
+  }
 }
 
 // Lights, the fireplace, sounds and piano notes from other players.
@@ -1307,7 +1325,7 @@ void frame() {
     g_app.others.sendSelf(nowMs, g_app.camera.position, g_app.camera.yaw, g_app.camera.pitch, extra);
     g_app.others.update(nowMs, dt, kWalkSpeed);
     updateVoice(nowMs);
-    sendInfo(nowMs);
+    sendInfo();
   }
 
   // A seat someone else took at the same moment: the one who was first wins.

@@ -15,6 +15,7 @@ window.bar3dBridge = (function () {
   var lastTouch = -1e9;    // when the last touch came (the phone's pretend mouse clicks follow it)
   var encoder = new TextEncoder();
   var pulls = 0;  // = game frames (tests use it)
+  var commands = [];       // menu commands since the last pull: [name, a, b, text, text2]
 
   function measure() {
     if (!canvas) return;
@@ -90,12 +91,15 @@ window.bar3dBridge = (function () {
     attach: attach,
     lastTouch: function () { return lastTouch; },
     pulls: function () { return pulls; },
+    // A menu command for the game (web/menu.js), read at the next pull.
+    command: function (name, a, b, text, text2) {
+      if (commands.length < 500) commands.push([String(name), +a || 0, +b || 0, String(text || ''), String(text2 || '')]);
+    },
     // C++ → page, once per frame: f64 = HEAPF64, at = index of the area,
     // u8 = HEAPU8, text = byte offset for the menu commands. Layout: see
     // engine/bridge.cpp.
     pull: function (f64, at, u8, text, textCap) {
-      var A = window.bar3dAudio, S = window.bar3dSettings, V = window.bar3dVoice, U = window.bar3dUi;
-      var acct = window.bar3dAccount;
+      var A = window.bar3dAudio, S = window.bar3dSettings, V = window.bar3dVoice;
       var h = at;
       pulls++;
       f64[h + 0] = performance.now();
@@ -106,7 +110,7 @@ window.bar3dBridge = (function () {
       f64[h + 8] = document.hidden ? 1 : 0;
       f64[h + 9] = blurs;
       f64[h + 10] = focusedField();
-      f64[h + 11] = (U && U['isOpen'] && U['isOpen']()) || (acct && acct['isOpen'] && acct['isOpen']()) ? 1 : 0;
+      f64[h + 11] = window.bar3dModal && bar3dModal.isOpen() ? 1 : 0;
       f64[h + 12] = A && A['ready'] && A['ready']() ? 1 : 0;
       f64[h + 13] = A && A['now'] ? A['now']() : 0;
       f64[h + 14] = S ? S['version']() : 0;
@@ -122,8 +126,14 @@ window.bar3dBridge = (function () {
       f64[h + 17] = nv;
       var vb = h + HEADER + MAX_TOUCHES * 5;
       for (var k = 0; k < nv; k++) { f64[vb + k * 2] = lv[k][0]; f64[vb + k * 2 + 1] = lv[k][1]; }
-      // Menu commands, as JSON text.
-      f64[h + 18] = writeText(u8, text, textCap, U ? U['take']() : '[]');
+      // Menu commands, as JSON text (nothing at all when there are none).
+      if (commands.length) {
+        var json = JSON.stringify(commands);
+        if (json.length * 3 < textCap) { commands = []; f64[h + 18] = writeText(u8, text, textCap, json); }
+        else { f64[h + 18] = writeText(u8, text, textCap, JSON.stringify(commands.splice(0, 1))); }
+      } else {
+        f64[h + 18] = 0;
+      }
       f64[h + 19] = lastTouch;
       f64[h + 20] = A && A['userSongCount'] ? A['userSongCount']() : 0;
       return 1;
@@ -131,7 +141,10 @@ window.bar3dBridge = (function () {
     // Page work the game asked for this frame, as JSON: [[op, ...args], ...].
     flush: function (json) {
       var ops;
-      try { ops = JSON.parse(json); } catch (e) { return; }
+      try { ops = JSON.parse(json); } catch (e) {
+        if (window.bar3dLog) bar3dLog.add('error', 'Bridge: bad page operations (' + e.message + '): ' + json.slice(0, 200));
+        return;
+      }
       for (var i = 0; i < ops.length; i++) {
         var op = ops[i];
         try {
@@ -152,12 +165,34 @@ window.bar3dBridge = (function () {
               break;
             }
             case 'listener': { var A2 = window.bar3dAudio; if (A2) A2['setListener'].apply(A2, op.slice(1)); break; }
-            case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }
+            case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
+            case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
+            case 'panel': { var U4 = window.bar3dUi; if (U4) U4['open'](op[1]); break; }
           }
         } catch (e) {
           if (window.bar3dLog) bar3dLog.add('error', 'Bridge: ' + op[0] + ' failed: ' + e);
         }
       }
     },
+  };
+})();
+
+// One manager for every panel that covers the game (the menus in
+// web/menu.js, the account screens in web/account.js): only one is open at
+// a time (opening one closes the other), and the game is told (modalOpen in
+// the mailbox) so it ignores look input meanwhile.
+window.bar3dModal = (function () {
+  'use strict';
+  var current = null;  // {name, close}
+  return {
+    // Call when a panel opens; close() is how to close it if another opens.
+    open: function (name, close) {
+      if (current && current.name !== name) { var c = current; current = null; try { c.close(); } catch (e) {} }
+      current = { name: name, close: close };
+    },
+    // Call when a panel closes itself.
+    closed: function (name) { if (current && current.name === name) current = null; },
+    isOpen: function () { return !!current; },
+    name: function () { return current ? current.name : ''; },
   };
 })();

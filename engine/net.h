@@ -41,8 +41,6 @@ int playerAvatarRev(int player);
 std::string avatarUrl(const std::string& account, int revision);
 // Opens the person card for a player (an HTML panel over the game).
 void showCard(const std::string& account, const std::string& name);
-// True while an account panel (login, card...) covers the game.
-bool panelOpen();
 
 // Shared world: short named entries (key = 1-8 lowercase letters/digits)
 // of up to kMaxValues numbers that everyone in the room sees the same. The

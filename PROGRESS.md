@@ -485,3 +485,9 @@ A small DAW inside the bar, all DSP written in C++:
   frame (page calls ~24 → ~3), canvas size from a ResizeObserver (one
   resize per rotation, checked in smoke), input read once per frame as a
   read-only `InputFrame`, presses timed by the browser's event time.
+- **2026-10-17:** Restructure 2.1b done: a JSON writer that escapes
+  properly (a MIDI file named with `\` or quotes works now), safer JSON
+  reading (limits, no crash on garbage: new native json_test), menu
+  commands pushed into the mailbox, menu info only when it changes, one
+  panel at a time (menu vs account card), no blur behind panels, no
+  looking/walking while a panel is open. New test: `tools/menu_test.mjs`.

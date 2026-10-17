@@ -835,14 +835,14 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** Any error auto-opens the log over ≈ 40% of the screen and swallows taps (`index.html:82`; `audio.js:22,305,327`) → badge; warn level for audio. *[0.3]*
 - [x] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
 - [x] **L** No levels, timestamps or categories in logs → add. *[0.3]*
-- [ ] **M** `setInfo` JSON hand-built without escaping; a `\` in a MIDI file name silently freezes menu info (`main.cpp:923-937`, `menu.js:378`) → JSON writer + log parse failures. *[2.1b]*
-- [ ] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]*
-- [ ] **L** UI command poll stringifies `[]` every frame (`ui.cpp:11-19`) → push model. *[2.1b]*
-- [ ] **L** Static catalogs re-sent every 500 ms (`main.cpp:920-939`) → once + on change. *[2.1b]*
-- [ ] **L** Avatar look set through two paths (`menu.js:153-155`) → command only. *[2.1b]*
-- [ ] **L** Mic button DOM rewritten every 150 ms (`menu.js:354-360`) → on change. *[2.1b]*
-- [ ] **L** Dead bridge code (`net.cpp:80-81` panelOpen; `bar3dUi.isOpen`) → modal manager. *[2.1b]*
-- [ ] **L** Backdrop blur over the live canvas (`account.js:62`); two modal systems both z-index 8 → opaque dim + modal manager + cheap render. *[2.1b]*
+- [x] **M** `setInfo` JSON hand-built without escaping; a `\` in a MIDI file name silently freezes menu info (`main.cpp:923-937`, `menu.js:378`) → JSON writer + log parse failures. *[2.1b]*
+- [ ] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]* (2.1b part done: writer, limits, no shared_ptr, json_test with 1,000 garbage inputs)
+- [x] **L** UI command poll stringifies `[]` every frame (`ui.cpp:11-19`) → push model. *[2.1b]*
+- [x] **L** Static catalogs re-sent every 500 ms (`main.cpp:920-939`) → once + on change. *[2.1b]*
+- [x] **L** Avatar look set through two paths (`menu.js:153-155`) → command only. *[2.1b]*
+- [x] **L** Mic button DOM rewritten every 150 ms (`menu.js:354-360`) → on change. *[2.1b]*
+- [x] **L** Dead bridge code (`net.cpp:80-81` panelOpen; `bar3dUi.isOpen`) → modal manager. *[2.1b]*
+- [x] **L** Backdrop blur over the live canvas (`account.js:62`); two modal systems both z-index 8 → opaque dim + modal manager + cheap render. *[2.1b]*
 - [x] **M** Closure renames unquoted EM_ASM names in Release only → JS libraries + lint + Release smoke in CI. *[0.4]*
 - [x] **L** `web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
 - [x] **L** Models re-gzipped on every build → per-file custom commands. *[0.4]*
@@ -1498,6 +1498,12 @@ errors (so smoke/mp_test fail on them).
   quotes, control characters, emoji) and 1,000 random garbage inputs don't crash.
 - **Phone:** open the menu and the account panel: they work, no blur lag; pick an emote:
   it plays.
+- **Done (2026-10-17):** `JsonWriter` + `jsonQuote` in `engine/json.*` (values held directly,
+  depth 32 / string 4 KB limits, glTF passes its own generous limits); commands pushed with
+  `bar3dBridge.command` (a second text field replaces the `\n` split); menu info sent as an
+  object, lists once, state on change; toast/panel through the flush; `bar3dModal` in
+  `web/bridge.js`; look and walk ignored while a panel is open. Test: `tools/menu_test.mjs` (CI).
+  Not done here: a cheaper render while a panel is open (the menu dim is see-through; 6.7).
 
 #### 2.1c Voice batch, log flush, settings schema
 - **Files:** `engine/log.cpp` (lines out through the flush); `app/main.cpp` (voice levels read

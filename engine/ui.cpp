@@ -6,26 +6,31 @@
 
 #include "engine/bridge.h"
 #include "engine/json.h"
+#include "engine/log.h"
 
 namespace engine::ui {
 
 void takeCommands(std::vector<Command>& out) {
   // Collected by the page mailbox at the start of the frame (engine/bridge.h).
   const std::string& text = bridge::uiCommandsJson();
-  if (text.size() <= 2) return;  // "[]"
-  const Json list = Json::parse(text);
-  for (const Json& c : list.items()) out.push_back({c[0].string(), c[1].number(), c[2].number(), c[3].string()});
+  if (text.empty()) return;
+  std::string error;
+  const Json list = Json::parse(text, &error);
+  if (!error.empty()) {
+    LOG_ERROR("Menu commands: bad JSON (%s).", error.c_str());
+    return;
+  }
+  for (const Json& c : list.items()) {
+    if (!c.isArray() || !c[0].isString()) continue;
+    out.push_back({c[0].string(), c[1].number(), c[2].number(), c[3].string(), c[4].string()});
+  }
 }
 
-void setInfo(const std::string& json) { bridge::op("[\"info\"," + bridge::quote(json) + "]"); }
+void setInfo(const std::string& jsonObject) { bridge::op("[\"info\"," + jsonObject + "]"); }
 
-void toast(const std::string& text) {
-  EM_ASM({ var u = window['bar3dUi']; if (u) u['toast'](UTF8ToString($0)); }, text.c_str());
-}
+void toast(const std::string& text) { bridge::op("[\"toast\"," + jsonQuote(text) + "]"); }
 
-void openPanel(const std::string& name) {
-  EM_ASM({ var u = window['bar3dUi']; if (u) u['open'](UTF8ToString($0)); }, name.c_str());
-}
+void openPanel(const std::string& name) { bridge::op("[\"panel\"," + jsonQuote(name) + "]"); }
 
 }  // namespace engine::ui
 
