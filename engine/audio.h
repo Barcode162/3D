@@ -28,10 +28,21 @@ void setMusicGain(float gain);
 
 // The sound clock (seconds), for scheduling notes ahead of time.
 double now();
+
+// A fixed place sounds come from, with full 3D (HRTF) sound, made once and
+// shared by every sound played there (the piano's notes). Other placed
+// sounds get a cheaper panner each. Returns an emitter id (> 0).
+int createEmitter(Vec3 position, bool pianoBus);
+
+// At most this many sounds play at once; a new one replaces the oldest.
+constexpr int kMaxVoices = 32;
 }  // namespace audio
 
 // A short sound made in code (engine/synth.h), kept in the browser and
 // played as often as needed. Each play is a "voice" that can be stopped.
+// Plays, stops and changes are commands sent with the frame's page mailbox
+// (one call per frame, not one per sound). A Sound is just an id: copy it
+// freely.
 class Sound {
  public:
   enum Bus { kEffects, kPiano };
@@ -41,6 +52,8 @@ class Sound {
   // Returns a voice id (0 if sound isn't unlocked yet).
   int play(float gain, const Vec3* where = nullptr, double when = 0, float rate = 1, Bus bus = kEffects,
            bool loop = false) const;
+  // The same, from an emitter (audio::createEmitter).
+  int playAt(int emitter, float gain, double when = 0, float rate = 1) const;
   static void stop(int voice, double when = 0, float release = 0.08f);
   static void set(int voice, float gain, float rate);  // e.g. engine revs
 

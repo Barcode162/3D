@@ -14,7 +14,7 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a and 2.4b (2026-10-17). Next: 2.5, then Phase 3 (3.1, 3.2a)**
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a and 2.4b (2026-10-17). In progress: 2.5 (mostly built, see the handoff note at the end of the Log), then Phase 3 (3.1, 3.2a)**
 (batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
@@ -523,3 +523,22 @@ A small DAW inside the bar, all DSP written in C++:
   background after you enter (no freeze when you sit), resets find a free
   spot and pass through cars for 2 s, quicker steering and brake bite,
   race buttons avoid the notch/home bar. Car physics unchanged.
+- **2026-10-17, HANDOFF (user paused to regroup; "exciting news" for the
+  project coming in a new chat):** step 2.5 is mostly built and pushed.
+  Done: sound plays/stops/changes go as commands in the frame's mailbox
+  flush (`sp`/`ss`/`sv`/`se` ops in `web/bridge.js`; C++ picks voice ids,
+  times are absolute sound-clock times), 32-voice cap (oldest replaced),
+  one shared HRTF emitter for the piano (`audio::createEmitter`, other
+  placed sounds use equal-power panners), raw sound data dropped once the
+  AudioBuffer exists, the 4K Mania track goes through the music bus (music
+  slider), unlock listeners removed once sound runs, games hold
+  `engine::Sound` values instead of pointers into `g_app.sfx`, smoke prints
+  audio commands per frame and checks a piano song stays ≤ 32 voices
+  (headless: max 6). **Left for 2.5:** revoke object URLs (MIDI blob URL
+  after the piano fetched it; user songs when replaced), run
+  `tools/rhythm_test.mjs` and `tools/voice_test.mjs` (not run since the
+  audio change), tick the 2.5 boxes in RESTRUCTURE §3.2, write "Done" under
+  2.5. Remaining after 2.5: about 54 steps (Phase 3: 10, Phase 4: 7,
+  Phase 5: 14, Phase 6: 12, Phase 7: 6, Phase 8: 3); at ~3 per message,
+  about 18 more "continue"s. Gates still open: G2 (IONOS MySQL secrets,
+  for 5.1a), G3 (user approval of `astcenc`, for 6.8).

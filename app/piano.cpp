@@ -140,8 +140,10 @@ void Piano::prepareSamples() {
 }
 
 int Piano::playKey(int i, float gain, double when) {
-  const Vec3 where = world({0, 1.0f, 0.8f});
-  return samples_[sampleOf(i)].play(gain, &where, when, rateFor(i), engine::Sound::kPiano);
+  // All notes come from one shared 3D emitter at the piano (cheaper than a
+  // 3D panner per note).
+  if (emitter_ == 0) emitter_ = engine::audio::createEmitter(world({0, 1.0f, 0.8f}), true);
+  return samples_[sampleOf(i)].playAt(emitter_, gain, when, rateFor(i));
 }
 
 void Piano::releaseAll(Hands& h) {

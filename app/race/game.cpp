@@ -81,7 +81,7 @@ bool Game::start(int rig, double nowMs) {
   const Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
   camYaw_ = engine::Vehicle::headingOf(me.car.forward());
   camPos_ = me.car.position;
-  if (hum_ && !humVoice_) humVoice_ = hum_->play(0.0f, nullptr, 0, 0.6f, engine::Sound::kEffects, true);
+  if (!humVoice_) humVoice_ = hum_.play(0.0f, nullptr, 0, 0.6f, engine::Sound::kEffects, true);
   // The page's top bar (menu, mic, log) would sit on the race buttons.
   engine::ui::setBodyClass("racing", true);
   build_ = engine::ui::buildLabel();

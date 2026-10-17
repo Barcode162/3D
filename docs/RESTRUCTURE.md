@@ -1643,6 +1643,10 @@ errors (so smoke/mp_test fail on them).
   passes; piano song headless shows ≤ 32 voices.
 - **Phone:** play a fast piano song next to the jukebox: no crackling; volume sliders now also
   change the 4K Mania song; bell, darts and drinks still sound right and come from the right place.
+- **In progress (2026-10-17):** built: mailbox sound commands, voice cap 32, piano emitter,
+  equal-power one-shots, raw data dropped, Track on the music bus, unlock listeners removed,
+  Sound values instead of pointers, smoke audio lines. Left: revoke object URLs, run
+  rhythm_test + voice_test, tick boxes. See the PROGRESS.md handoff note.
 
 ### Phase 3: The authoritative Cloudflare room (G1 met; 3.1-3.3 may run early, see Execution order)
 

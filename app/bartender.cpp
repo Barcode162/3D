@@ -60,7 +60,7 @@ const std::vector<DrinkRecipe>& drinkRecipes() {
   return r;
 }
 
-void Bartender::init(const Vec3 spots[8], const engine::Sound* sounds[kSfxCount]) {
+void Bartender::init(const Vec3 spots[8], const engine::Sound sounds[kSfxCount]) {
   for (int i = 0; i < 8; ++i) spots_[i] = spots[i];
   for (int i = 0; i < kSfxCount; ++i) sounds_[i] = sounds[i];
 }
@@ -115,7 +115,7 @@ bool Bartender::tap(engine::Vec2 tap, float W, float H, double nowMs, Vec3 eye) 
   }
   const int sfx = sfxFor(r.steps[step_]);
   shakeStep_ = sfx == kShakeSfx;
-  if (sounds_[sfx]) sounds_[sfx]->play(0.7f, &eye);
+  sounds_[sfx].play(0.7f, &eye);
   stepMs_ = nowMs;
   ++step_;
   return true;
@@ -129,7 +129,7 @@ void Bartender::serve() {
   engine::net::setWorld("dk" + std::to_string(slot), v, 1);
   message_ = std::string(drinkRecipes()[static_cast<size_t>(making_)].name) + " served on the counter!";
   LOG_INFO("Bartender: served a %s at spot %d.", drinkRecipes()[static_cast<size_t>(making_)].name, slot);
-  if (sounds_[kClinkSfx]) sounds_[kClinkSfx]->play(0.8f, &spots_[slot]);
+  sounds_[kClinkSfx].play(0.8f, &spots_[slot]);
   making_ = -1;
 }
 

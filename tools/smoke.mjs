@@ -79,6 +79,9 @@ await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
   } else {
     console.log(`JS crossings per frame: ${per.toFixed(1)} (names are minified; use a Debug build to split them)`);
   }
+  // Sound commands per frame (they ride the frame's mailbox flush).
+  const au = await cp.evaluate(() => window.bar3dAudio && bar3dAudio.stats ? bar3dAudio.stats() : null);
+  if (au) console.log(`audio: ${((au.commands - (a.audio || 0)) / Math.max(1, b.pulls)).toFixed(2)} commands per frame, ${au.voices} voices playing`);
   // Rotating the phone: each new size must reconfigure the canvas exactly once
   // (the size settles for 120 ms first).
   const resizes = async () => (await logText(cp)).split('\n').filter((l) => /Canvas resized/.test(l)).length;
@@ -97,6 +100,23 @@ await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
   console.log(`rotation: ${r1 - r0} resize(s) to landscape, ${r2 - r1} back`);
   if (r1 - r0 !== 1 || r2 - r1 !== 1) { console.log('SMOKE TEST FAILED: rotation should resize exactly once each way'); process.exit(1); }
   await cp.close();
+}
+
+// A piano song: never more than 32 sounds at once (engine/audio.h kMaxVoices).
+{
+  const pp = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  await openBar(pp, site.url, 'skipintro&server=off&pianosong=0&cam=-3.6,1.65,3.2,-115,-10');
+  await pp.mouse.click(5, 900);  // sound starts after a tap
+  let most = 0, stolen = 0;
+  for (let t = 0; t < 12000; t += 250) {
+    const st = await pp.evaluate(() => bar3dAudio.stats());
+    most = Math.max(most, st.voices);
+    stolen = st.stolen;
+    await pp.waitForTimeout(250);
+  }
+  console.log(`piano song: at most ${most} voices at once (${stolen} replaced)`);
+  if (most > 32) { console.log('SMOKE TEST FAILED: more than 32 voices'); process.exit(1); }
+  await pp.close();
 }
 
 // FAIL_MODEL=name: that model's download is blocked (every retry too); the

@@ -94,7 +94,7 @@ int Darts::score(float u, float v, std::string* label) {
   return n * mult;
 }
 
-void Darts::init(Vec3 boardCenter, const engine::Sound* thunk, const engine::Sound* whoosh, const engine::Sound* cheer) {
+void Darts::init(Vec3 boardCenter, engine::Sound thunk, engine::Sound whoosh, engine::Sound cheer) {
   board_ = boardCenter;
   thunk_ = thunk;
   whoosh_ = whoosh;
@@ -121,9 +121,9 @@ void Darts::throwAt(Vec3 eye, Vec3 dir, double nowMs) {
   dart.from = eye + Vec3{-0.15f, -0.12f, 0.3f};
   darts_.push_back(dart);
   lastThrowMs_ = nowMs;
-  if (whoosh_) {
+  {
     const Vec3 p = eye;
-    whoosh_->play(0.5f, &p);
+    whoosh_.play(0.5f, &p);
   }
 }
 
@@ -142,7 +142,7 @@ void Darts::update(double nowMs) {
     std::string label;
     const int pts = score(d.u, d.v, &label);
     const Vec3 at = boardPoint(board_, d.u, d.v);
-    if (thunk_) thunk_->play(pts > 0 ? 0.9f : 0.5f, &at);
+    thunk_.play(pts > 0 ? 0.9f : 0.5f, &at);
     char text[96];
     if (scoreLeft_ - pts < 0 || scoreLeft_ - pts == 1) {
       std::snprintf(text, sizeof(text), "%s - BUST! Back to %d", label.c_str(), turnStart_);
@@ -155,7 +155,7 @@ void Darts::update(double nowMs) {
       if (scoreLeft_ == 0) {
         ++games_;
         std::snprintf(text, sizeof(text), "%s - GAME SHOT! You won (%d won so far)", label.c_str(), games_);
-        if (cheer_) cheer_->play(0.8f, &at);
+        cheer_.play(0.8f, &at);
         turnEndsMs_ = nowMs + 2500;
       } else {
         std::snprintf(text, sizeof(text), "%s = %d", label.c_str(), pts);

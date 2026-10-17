@@ -179,6 +179,11 @@ window.bar3dBridge = (function () {
             case 'listener': { var A2 = window.bar3dAudio; if (A2) A2['setListener'].apply(A2, op.slice(1)); break; }
             case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
             case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
+            // Sounds (engine/audio.cpp): play, stop, change, emitter.
+            case 'sp': { var A3 = window.bar3dAudio; if (A3) A3['soundPlay'](op[1], op[2], op[3], op[4], op[5], op[6], op[7], op[8], op[9], op[10] ? 'piano' : 'sfx', op[11], op[12]); break; }
+            case 'ss': { var A4 = window.bar3dAudio; if (A4) A4['soundStop'](op[1], op[2], op[3]); break; }
+            case 'sv': { var A5 = window.bar3dAudio; if (A5) A5['soundSet'](op[1], op[2], op[3]); break; }
+            case 'se': { var A6 = window.bar3dAudio; if (A6) A6['emitterCreate'](op[1], op[2], op[3], op[4], op[5]); break; }
             case 'bodyClass': document.body.classList.toggle(op[1], !!op[2]); break;
             case 'panel': { var U4 = window.bar3dUi; if (U4) U4['open'](op[1]); break; }
           }

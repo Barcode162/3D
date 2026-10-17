@@ -108,6 +108,7 @@ class Piano {
   std::vector<SongInfo> songs_;
   std::vector<LoadedSong> loaded_;
   engine::Sound samples_[kSamples];
+  int emitter_ = 0;  // where the notes come from (engine::audio::createEmitter)
   bool preparing_ = false;
   engine::Vec3 position_;
   engine::Quat rotation_;

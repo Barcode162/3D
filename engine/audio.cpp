@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 
 #include <algorithm>
+#include <cstdarg>
 #include <cstdio>
 
 #include "engine/bridge.h"
@@ -56,7 +57,7 @@ double now() {
   const bridge::Frame& f = bridge::frame();
   if (f.pulledMs <= 0) return EM_ASM_DOUBLE({ return window['bar3dAudio']['now'](); });
   if (f.audioTime <= 0) return 0;  // not unlocked yet
-  return f.audioTime + (emscripten_get_now() - f.pulledMs) / 1000.0;
+  return f.audioTime + (emscripten_get_now() - f.pulledMs) / 1000.0;  // (engine code: measures elapsed time)
 }
 
 }  // namespace audio
@@ -66,21 +67,57 @@ void Sound::create(const std::vector<float>& samples, float rate) {
                    static_cast<int>(samples.size()), rate);
 }
 
+namespace {
+int g_nextVoice = 0;
+
+// One sound command for the page: sent with the frame's flush.
+void command(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+void command(const char* fmt, ...) {
+  char op[256];
+  va_list args;
+  va_start(args, fmt);
+  std::vsnprintf(op, sizeof(op), fmt, args);
+  va_end(args);
+  bridge::op(op);
+}
+
+// "seconds from now" → the sound clock, so commands that leave at the end
+// of the frame still start exactly when they were meant to.
+double at(double when) { return audio::now() + std::max(0.0, when); }
+}  // namespace
+
 int Sound::play(float gain, const Vec3* where, double when, float rate, Bus bus, bool loop) const {
-  if (id_ < 0) return 0;
+  if (id_ < 0 || !audio::ready()) return 0;
+  const int voice = ++g_nextVoice;
   const Vec3 p = where ? *where : Vec3{};
-  return EM_ASM_INT({
-    return window['bar3dAudio']['soundPlay']($0, $1, $2, $3, $4, $5, $6, $7, $8 ? 'piano' : 'sfx', $9);
-  }, id_, gain, where != nullptr, p.x, p.y, p.z, when, rate, bus == kPiano, loop);
+  command("[\"sp\",%d,%d,%.4f,%d,%.3f,%.3f,%.3f,%.4f,%.5f,%d,%d,0]", id_, voice, gain, where ? 1 : 0, p.x, p.y, p.z,
+          at(when), rate, bus == kPiano ? 1 : 0, loop ? 1 : 0);
+  return voice;
+}
+
+int Sound::playAt(int emitter, float gain, double when, float rate) const {
+  if (id_ < 0 || !audio::ready()) return 0;
+  const int voice = ++g_nextVoice;
+  command("[\"sp\",%d,%d,%.4f,0,0,0,0,%.4f,%.5f,0,0,%d]", id_, voice, gain, at(when), rate, emitter);
+  return voice;
 }
 
 void Sound::stop(int voice, double when, float release) {
-  if (voice > 0) EM_ASM({ window['bar3dAudio']['soundStop']($0, $1, $2); }, voice, when, release);
+  if (voice > 0) command("[\"ss\",%d,%.4f,%.4f]", voice, at(when), release);
 }
 
 void Sound::set(int voice, float gain, float rate) {
-  if (voice > 0) EM_ASM({ window['bar3dAudio']['soundSet']($0, $1, $2); }, voice, gain, rate);
+  if (voice > 0) command("[\"sv\",%d,%.4f,%.4f]", voice, gain, rate);
 }
+
+namespace audio {
+int createEmitter(Vec3 p, bool pianoBus) {
+  static int next = 0;
+  const int id = ++next;
+  command("[\"se\",%d,%.3f,%.3f,%.3f,%d]", id, p.x, p.y, p.z, pianoBus ? 1 : 0);
+  return id;
+}
+}  // namespace audio
 
 void Track::load(const std::string& url) {
   EM_ASM({ window['bar3dAudio']['trackLoad'](UTF8ToString($0)); }, url.c_str());

@@ -16,8 +16,7 @@ namespace app {
 
 class Darts {
  public:
-  void init(engine::Vec3 boardCenter, const engine::Sound* thunk, const engine::Sound* whoosh,
-            const engine::Sound* cheer);
+  void init(engine::Vec3 boardCenter, engine::Sound thunk, engine::Sound whoosh, engine::Sound cheer);
   bool playing() const { return playing_; }
   void start();
   void stop() { playing_ = false; }
@@ -50,9 +49,7 @@ class Darts {
   void endTurn();
 
   engine::Vec3 board_;
-  const engine::Sound* thunk_ = nullptr;
-  const engine::Sound* whoosh_ = nullptr;
-  const engine::Sound* cheer_ = nullptr;
+  engine::Sound thunk_, whoosh_, cheer_;
   bool playing_ = false;
   int scoreLeft_ = 301;
   int turnStart_ = 301;

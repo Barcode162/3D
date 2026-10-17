@@ -25,7 +25,7 @@ const std::vector<DrinkRecipe>& drinkRecipes();
 class Bartender {
  public:
   enum Sfx { kClinkSfx, kPourSfx, kShakeSfx, kClickSfx, kSfxCount };
-  void init(const engine::Vec3 spots[8], const engine::Sound* sounds[kSfxCount]);
+  void init(const engine::Vec3 spots[8], const engine::Sound sounds[kSfxCount]);
 
   bool onShift() const { return onShift_; }
   void startShift();
@@ -58,7 +58,7 @@ class Bartender {
 
   engine::Vec3 spots_[8];
   int slots_[8] = {};
-  const engine::Sound* sounds_[kSfxCount] = {};
+  engine::Sound sounds_[kSfxCount];
   bool onShift_ = false;
   int making_ = -1;
   size_t step_ = 0;

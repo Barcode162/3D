@@ -105,10 +105,16 @@ window.bar3dAudio = (function () {
       applyListener();
       watchState();
     }
-    if (ctx.state !== 'running') ctx.resume();
+    var p = ctx.state !== 'running' ? ctx.resume() : null;
     sources.forEach(function (s) { connect(s); bless(s); });
+    // Once sound runs, the listeners go (a later interruption shows the
+    // "Tap to resume sound" banner instead).
+    if (p && p.then) p.then(function () { if (ctx.state === 'running') removeUnlock(); }, function () {});
+    else if (ctx.state === 'running') removeUnlock();
   }
-  ['touchend', 'mousedown', 'keydown'].forEach(function (type) {
+  var UNLOCK_EVENTS = ['touchend', 'mousedown', 'keydown'];
+  function removeUnlock() { UNLOCK_EVENTS.forEach(function (type) { window.removeEventListener(type, unlock, true); }); }
+  UNLOCK_EVENTS.forEach(function (type) {
     window.addEventListener(type, unlock, true);
   });
 
@@ -178,6 +184,25 @@ window.bar3dAudio = (function () {
   // Samples arrive once as a Float32Array and become an AudioBuffer when
   // sound is unlocked. Each plays through a bus (effects or piano) whose
   // volume follows the settings, optionally placed in 3D.
+  var MAX_VOICES = 32;   // engine/audio.h kMaxVoices
+  var stats = { commands: 0, stolen: 0 };
+  var emitters = {};     // id -> {x, y, z, bus, node}
+  function emitterNode(id) {
+    var e = emitters[id];
+    if (!e) return bus('sfx');
+    if (!e.node) {
+      var p = ctx.createPanner();
+      p.panningModel = 'HRTF';
+      p.distanceModel = 'inverse';
+      p.refDistance = 1.2;
+      p.rolloffFactor = 1;
+      if (p.positionX) { p.positionX.value = e.x; p.positionY.value = e.y; p.positionZ.value = e.z; }
+      else p.setPosition(e.x, e.y, e.z);
+      p.connect(bus(e.bus));
+      e.node = p;
+    }
+    return e.node;
+  }
   var sounds = [];       // id -> {data, rate, buffer}
   var voices = {};       // id -> {src, gain}
   var nextVoice = 1;
@@ -196,6 +221,7 @@ window.bar3dAudio = (function () {
     if (!s.buffer && ctx) {
       s.buffer = ctx.createBuffer(1, s.data.length, s.rate);
       s.buffer.getChannelData(0).set(s.data);
+      s.data = null;  // the AudioBuffer has it now: don't keep two copies
     }
     return s.buffer;
   }
@@ -208,11 +234,21 @@ window.bar3dAudio = (function () {
       sounds.push({ data: heap.slice(start, start + count), rate: rate, buffer: null });
       return sounds.length - 1;
     },
-    // Plays sound `id`; when = seconds from now; placed = use x, y, z.
-    // Returns a voice id (0 = not played).
-    soundPlay: function (id, gain, placed, x, y, z, when, rate, busName, loop) {
+    // Plays sound `id` as voice `voice` (the game picks the number) at
+    // sound-clock time `at`. placed = use x, y, z (a cheap equal-power
+    // panner); emitter > 0 = through that shared 3D emitter instead.
+    soundPlay: function (id, voice, gain, placed, x, y, z, at, rate, busName, loop, emitter) {
       var s = sounds[id];
+      stats.commands++;
       if (!ctx || ctx.state !== 'running' || !s) return 0;
+      // Too many at once: the oldest gives way (quick fade).
+      var ids = Object.keys(voices);
+      if (ids.length >= MAX_VOICES) {
+        var oldest = voices[ids[0]];
+        try { oldest.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.01); oldest.src.stop(ctx.currentTime + 0.05); } catch (e) {}
+        delete voices[ids[0]];
+        stats.stolen++;
+      }
       var src = ctx.createBufferSource();
       src.buffer = bufferOf(s);
       src.playbackRate.value = rate || 1;
@@ -220,39 +256,49 @@ window.bar3dAudio = (function () {
       var g = ctx.createGain();
       g.gain.value = gain;
       src.connect(g);
-      var out = g;
-      if (placed) {
+      if (emitter > 0) {
+        g.connect(emitterNode(emitter));
+      } else if (placed) {
         var p = ctx.createPanner();
-        p.panningModel = 'HRTF';
+        p.panningModel = 'equalpower';
         p.distanceModel = 'inverse';
         p.refDistance = 1.2;
         p.rolloffFactor = 1;
         if (p.positionX) { p.positionX.value = x; p.positionY.value = y; p.positionZ.value = z; }
         else p.setPosition(x, y, z);
         g.connect(p);
-        out = p;
+        p.connect(bus(busName || 'sfx'));
+      } else {
+        g.connect(bus(busName || 'sfx'));
       }
-      out.connect(bus(busName || 'sfx'));
-      var id2 = nextVoice++;
-      voices[id2] = { src: src, gain: g };
-      src.onended = function () { delete voices[id2]; };
-      src.start(ctx.currentTime + Math.max(0, when || 0));
-      return id2;
+      voices[voice] = { src: src, gain: g };
+      src.onended = function () { if (voices[voice] && voices[voice].src === src) delete voices[voice]; };
+      src.start(Math.max(ctx.currentTime, at || 0));
+      return voice;
     },
-    // Fades a voice out over `release` seconds, `when` seconds from now.
-    soundStop: function (voice, when, release) {
+    // Fades a voice out over `release` seconds from sound-clock time `at`.
+    soundStop: function (voice, at, release) {
+      stats.commands++;
       var v = voices[voice];
       if (!v || !ctx) return;
-      var t = ctx.currentTime + Math.max(0, when || 0);
+      var t = Math.max(ctx.currentTime, at || 0);
       try {
         v.gain.gain.setTargetAtTime(0, t, Math.max(0.005, release / 3));
         v.src.stop(t + release + 0.05);
       } catch (e) {}
     },
+    // A fixed 3D place for sounds (the piano): one HRTF panner, made when
+    // first used.
+    emitterCreate: function (id, x, y, z, pianoBus) {
+      stats.commands++;
+      emitters[id] = { x: x, y: y, z: z, bus: pianoBus ? 'piano' : 'sfx', node: null };
+    },
+    stats: function () { return { voices: Object.keys(voices).length, commands: stats.commands, stolen: stats.stolen }; },
     // Called every frame for engine sounds: only changes of 1% or more are
     // sent, and old scheduled changes are cleared first, so Safari's list of
     // pending changes can't grow (it lagged the race while revving).
     soundSet: function (voice, gain, rate) {
+      stats.commands++;
       var v = voices[voice];
       if (!v || !ctx) return;
       var t = ctx.currentTime;
@@ -269,7 +315,11 @@ window.bar3dAudio = (function () {
     // Volumes from the settings (0..1): sfx, piano, music, voice.
     setBusVolume: function (name, v) {
       busLevel[name] = v;
-      if (name === 'music') { this.setMusicGain(musicLevel); return; }
+      if (name === 'music') {
+        this.setMusicGain(musicLevel);
+        if (buses.music && ctx) buses.music.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
+        return;
+      }
       if (buses[name] && ctx) buses[name].gain.setTargetAtTime(v, ctx.currentTime, 0.05);
     },
     context: function () { return ctx; },
@@ -330,7 +380,7 @@ window.bar3dAudio = (function () {
       var g = ctx.createGain();
       g.gain.value = 0.9;
       src.connect(g);
-      g.connect(ctx.destination);
+      g.connect(bus('music'));  // the music volume slider applies to it too
       track.start = ctx.currentTime + delay;
       src.start(track.start);
       track.node = src;

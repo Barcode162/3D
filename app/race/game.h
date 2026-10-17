@@ -18,7 +18,7 @@ namespace app::race {
 
 class Game {
  public:
-  void init(engine::Gpu* gpu, const engine::Sound* engineHum) {
+  void init(engine::Gpu* gpu, engine::Sound engineHum) {
     gpu_ = gpu;
     hum_ = engineHum;
     view_.preparePipelines(*gpu);  // compile them while the bar loads
@@ -51,7 +51,7 @@ class Game {
   void queueHud(engine::TextRenderer& text, float W, float H, float px, double nowMs);
 
   engine::Gpu* gpu_ = nullptr;
-  const engine::Sound* hum_ = nullptr;
+  engine::Sound hum_;
   int humVoice_ = 0;
   bool ready_ = false, open_ = false, prepared_ = false;
   int pendingRig_ = -1;

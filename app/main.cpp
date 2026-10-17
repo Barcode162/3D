@@ -1513,12 +1513,12 @@ void onGpuReady(bool ok) {
   makeSounds();
   using engine::synth::Effect;
   g_app.piano.init(g_app.scene);
-  g_app.darts.init(g_app.scene.dartBoard, &g_app.sfx[static_cast<int>(Effect::kThunk)],
-                   &g_app.sfx[static_cast<int>(Effect::kWhoosh)], &g_app.sfx[static_cast<int>(Effect::kCheer)]);
-  g_app.race.init(&g_app.gpu, &g_app.sfx[static_cast<int>(Effect::kEngine)]);
-  const engine::Sound* barSounds[app::Bartender::kSfxCount] = {
-      &g_app.sfx[static_cast<int>(Effect::kClink)], &g_app.sfx[static_cast<int>(Effect::kPour)],
-      &g_app.sfx[static_cast<int>(Effect::kShake)], &g_app.sfx[static_cast<int>(Effect::kClick)]};
+  // Sounds are ids (copies are fine): made above in makeSounds().
+  const auto sfx = [](Effect e) { return g_app.sfx[static_cast<int>(e)]; };
+  g_app.darts.init(g_app.scene.dartBoard, sfx(Effect::kThunk), sfx(Effect::kWhoosh), sfx(Effect::kCheer));
+  g_app.race.init(&g_app.gpu, sfx(Effect::kEngine));
+  const engine::Sound barSounds[app::Bartender::kSfxCount] = {sfx(Effect::kClink), sfx(Effect::kPour),
+                                                              sfx(Effect::kShake), sfx(Effect::kClick)};
   g_app.bartender.init(g_app.scene.barTopFront, barSounds);
   g_app.sceneReady = true;  // multiplayer starts when you enter (app_enter)
   g_app.shownPosition.assign(g_app.physics.bodyCount(), engine::Vec3{1e9f, 0, 0});
