@@ -495,3 +495,13 @@ A small DAW inside the bar, all DSP written in C++:
   game through the mailbox only when it changes (no page call per player
   per frame), saved settings are checked against a schema (a broken one
   → defaults + one warning). Page calls per frame: 2.8.
+- **2026-10-17, phone baseline (G4), build 4ae5f15:** iPhone report
+  8RN8VS: avg frame 17.2 ms (≈58 fps), p95 21 ms, CPU ~1 ms/frame, GPU
+  ~9.3 ms (worst 60), 529 draws / 657k triangles, ready 3.7 s, entered
+  4.8 s, heap 80 MB, no errors; hitches (~76 after enter) are GPU/browser
+  side (CPU ≤ 2 ms in each), some on taps, one 148 ms pause with no CPU
+  work. User: "everything works well". PC report 6SH8QY: 3.6 ms frames,
+  CPU 0.85 ms, GPU 7.4 ms; one 67 ms spike in the "interaction" phase
+  (mouse move, no tap): look at it if it repeats (maybe a raycast or a
+  first-use pipeline). So the GPU is the phone's limit now (Phase 6),
+  not the CPU.
