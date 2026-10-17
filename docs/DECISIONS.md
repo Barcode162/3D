@@ -473,6 +473,16 @@ was answered by the user on 2026-10-17.
 - **Web Audio on Safari:** never call `setTargetAtTime` every frame without
   clearing old events; `soundSet` (web/audio.js) sends only 1% changes and
   uses `cancelAndHoldAtTime` first.
+- **CI tests (step 0.4):** native tests (g++ + em++), `php -l`, EM_ASM lint
+  and the browser smoke run before publishing; a failing step stops the
+  deploy. SwiftShader WebGPU works on GitHub's ubuntu runners with
+  Playwright 1.56.1 (`npx playwright install --with-deps chromium`), so the
+  smoke is blocking (first green run 39007465628). Cloudflare check
+  (2026-10-17): secrets set, wrangler accepts the token, workers.dev
+  subdomain is `joshuavelasco60` → the room will be
+  `bar3d.joshuavelasco60.workers.dev` (step 3.3 adds it to
+  `ALLOWED_CLOUD_HOSTS`). Don't print `wrangler whoami` output in CI: it
+  shows the account email and the logs are public.
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

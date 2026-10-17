@@ -74,10 +74,9 @@ jobs:
           npm i --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
 
-      # Software WebGPU (SwiftShader) on GitHub's runners: see DECISIONS.md
-      # -> Restructure (CI smoke). Non-blocking until it has passed once.
+      # Software WebGPU (SwiftShader) works on GitHub's runners (first green
+      # run 2026-10-17), so a failing smoke blocks the deploy.
       - name: "Test: browser smoke (Release build)"
-        continue-on-error: true
         run: node tools/smoke.mjs
 
       # Prints only whether the Cloudflare secrets exist, whether wrangler
