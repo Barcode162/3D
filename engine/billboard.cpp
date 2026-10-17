@@ -4,6 +4,7 @@
 
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/profiler.h"
 
 namespace engine {
 
@@ -172,6 +173,7 @@ void PictureBillboards::draw(const wgpu::RenderPassEncoder& pass) const {
   pass.SetVertexBuffer(0, vertexBuffer_);
   pass.SetIndexBuffer(indexBuffer_, wgpu::IndexFormat::Uint16);
   pass.DrawIndexed(static_cast<uint32_t>(vertices_.size() / 4 * 6));
+  prof::draw(static_cast<uint32_t>(vertices_.size() / 4 * 6));
 }
 
 }  // namespace engine

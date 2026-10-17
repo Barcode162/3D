@@ -46,6 +46,18 @@ const log = await page.$eval('#log', (el) => el.textContent.replace(/\[(info|err
 const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
 const status = await page.$eval('#status', (el) => el.textContent);
 await page.screenshot({ path: shotPath });
+// Frame profiler numbers (engine/profiler.cpp). Headless runs at 1-2 fps,
+// so judge phase costs and counts here, never the frame rate.
+const perf = await page.evaluate(() => window.bar3dPerf);
+let perfLine = 'perf: (window.bar3dPerf missing)';
+if (perf) {
+  const top = Object.entries(perf.phases).sort((a, b) => b[1] - a[1]).slice(0, 4)
+    .map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ');
+  perfLine = `perf: avg ${perf.avg.toFixed(1)} p95 ${perf.p95.toFixed(1)} worst ${perf.worst.toFixed(0)} ms, ` +
+    `cpu ${perf.cpu.toFixed(2)} ms, hitches ${perf.hitchesTotal}, profiler ${perf.phases.profiler.toFixed(3)} ms/frame\n` +
+    `  phases: ${top}\n  draws ${JSON.stringify(perf.draws)} tris ${JSON.stringify(perf.tris)} heap ${perf.heapMB} MB\n` +
+    `  stages ${JSON.stringify(Object.fromEntries(Object.entries(perf.stages).filter(([k]) => !k.startsWith('model:'))))}`;
+}
 
 // Walk forward, then turn right by dragging, to exercise input + collisions.
 await page.keyboard.down('KeyW');
@@ -86,6 +98,7 @@ await browser.close();
 server.close();
 
 console.log('--- status ---\n' + status + '\n--- log ---\n' + log);
-const ok = errors.length === 0 && log.includes('Running.');
+console.log(perfLine);
+const ok = errors.length === 0 && log.includes('Running.') && !!perf;
 console.log(ok ? 'SMOKE TEST PASSED' : 'SMOKE TEST FAILED');
 process.exit(ok ? 0 : 1);

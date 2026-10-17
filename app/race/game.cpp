@@ -8,6 +8,7 @@
 #include <string>
 
 #include "engine/log.h"
+#include "engine/profiler.h"
 
 using engine::Vec2;
 using engine::Vec3;
@@ -142,6 +143,7 @@ void Game::render(const wgpu::TextureView& target, engine::TextRenderer& text, d
   if (!open_ || !ready_) return;
   const float W = static_cast<float>(gpu_->width), H = static_cast<float>(gpu_->height);
   queueHud(text, W, H, gpu_->pixelRatio, nowMs);
+  engine::profiler().drawOverlay(text, W, H, gpu_->pixelRatio);
   text.upload(gpu_->queue);
   std::vector<CarDraw> cars;
   for (const Racer& r : world_.racers()) cars.push_back(View::carDraw(r.car, r.paint, r.car.brakeUsed));

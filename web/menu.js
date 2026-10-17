@@ -13,6 +13,7 @@ window.bar3dSettings = (function () {
     micGate: -50, micGain: 1, pushToTalk: false,
     echoCancel: true, noiseSuppress: true, autoGain: false,
     hq: true, stereo: false, voice3d: true,
+    perf: false,  // performance overlay (engine/profiler)
   };
   var values = {}, version = 1, listeners = [];
   try { values = JSON.parse(localStorage.getItem('bar3dSettings') || '{}') || {}; } catch (e) { values = {}; }
@@ -173,6 +174,7 @@ window.bar3dUi = (function () {
       toggle('Invert look up/down', 'invertLook'),
       el('h3', { text: 'Screen' }),
       toggle('Show name tags', 'showNames'),
+      toggle('Performance overlay', 'perf'),
       el('h3', { text: 'Sound' }),
       slider('Music', 'musicVol', 0, 1, 0.05, pct),
       slider('Effects', 'sfxVol', 0, 1, 0.05, pct),

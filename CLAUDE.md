@@ -53,7 +53,8 @@ emcmake cmake -B build -G Ninja      # once
 cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
 ```
-The smoke test prints the on-screen log and saves `build/smoke.png` and
+The smoke test prints the on-screen log and a `perf:` line (phase costs,
+draw counts, start-up stages; never judge frame rate headless), and saves `build/smoke.png` and
 `build/smoke-walk.png` (after walking forward and turning) and
 `build/smoke-down.png` (looking down at your own body), which
 can be viewed with the Read tool. To look at a specific spot, run with
@@ -71,7 +72,8 @@ judged on the user's phone.
 - `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
   (incl. taps), logging, files, text (own pixel font), procedural textures,
   audio bridge, skeletons and skinned meshes, physics, car physics
-  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`).
+  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`), the frame
+  profiler and performance overlay (`profiler.*`, `?perf=1`).
 - `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.

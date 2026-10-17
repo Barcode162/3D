@@ -30,6 +30,7 @@
 #include "engine/gpu.h"
 #include "engine/input.h"
 #include "engine/log.h"
+#include "engine/profiler.h"
 #include "engine/mesh.h"
 #include "engine/net.h"
 #include "engine/synth.h"
@@ -118,6 +119,7 @@ struct App {
 
   // Settings (web/menu.js).
   int settingsVersion = -1;
+  bool perfParam = false;  // ?perf=1 forces the performance overlay on
   float lookSpeed = 1, invertLook = 1;
   bool showNames = true;
 
@@ -453,6 +455,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
   g_app.pictures.begin(viewProj);
   if (g_app.rhythm.isOpen()) {  // the game covers the screen
     g_app.rhythm.draw(text, W, H, px, nowMs);
+    engine::profiler().drawOverlay(text, W, H, px);
     text.upload(g_app.gpu.queue);
     return;
   }
@@ -572,6 +575,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
     text.addScreen(g_app.toast, W * 0.5f, H * 0.2f, 10 * px, s);
   }
   g_app.jukeboxMenu.draw(text, g_app.jukebox, W, H, px);  // last, so it's on top
+  engine::profiler().drawOverlay(text, W, H, px);
   text.upload(g_app.gpu.queue);
 }
 
@@ -908,6 +912,7 @@ void handleCommands() {
     g_app.lookSpeed = static_cast<float>(engine::settings::number("lookSpeed", 1));
     g_app.invertLook = engine::settings::number("invertLook", 0) != 0 ? -1.0f : 1.0f;
     g_app.showNames = engine::settings::number("showNames", 1) != 0;
+    engine::profiler().overlay = g_app.perfParam || engine::settings::number("perf", 0) != 0;
     const int look = static_cast<int>(engine::settings::number("look", g_app.look));
     if (look != g_app.look && look >= 0 && look < static_cast<int>(app::avatarLooks().size())) {
       g_app.look = look;
@@ -1183,6 +1188,7 @@ void updateLoadingScreen() {
   if (r.modelFilesDone() == r.modelFiles()) {
     g_app.loadReported = true;
     LOG_INFO("Everything loaded (%zu model files).", r.modelFiles());
+    engine::profiler().stage("loaded");
     // Tests: ?rhythm=song,difficulty opens the rhythm game on that song;
     // ?autoplay lets it play itself. ?sit=seat sits down; ?emote=n waves...
     int song = -1, difficulty = 1;
@@ -1220,8 +1226,16 @@ void updateLoadingScreen() {
   }
 }
 
+// Closes the profiler's frame on every way out of frame().
+struct ProfiledFrame {
+  explicit ProfiledFrame(double nowMs) { engine::profiler().beginFrame(nowMs); }
+  ~ProfiledFrame() { engine::profiler().endFrame(emscripten_get_now()); }
+};
+
 void frame() {
+  using engine::Phase;
   const double nowMs = emscripten_get_now();
+  ProfiledFrame profiled(nowMs);
   updateLoadingScreen();
   // Clamp the time step so a stall (e.g. switching apps) doesn't teleport you.
   const float dt = std::min(static_cast<float>((nowMs - g_app.lastFrameMs) / 1000.0), 0.1f);
@@ -1230,25 +1244,47 @@ void frame() {
   g_app.gpu.resizeIfNeeded();
   // Loading work (textures, model buffers) gets a slice of each frame: more
   // while the loading screen is up, little once you walk around.
-  engine::runJobs(g_app.entered ? 3.0 : 8.0);
+  {
+    PROFILE(Phase::kJobs);
+    engine::runJobs(g_app.entered ? 3.0 : 8.0);
+  }
   updateFps(nowMs);
-  handleCommands();
-  updateCamera(dt);
-  updateInteraction(nowMs, dt);
-  updatePhysics(dt);
-  std::vector<engine::net::WorldEntry> world = g_app.shared.takeOther();
+  {
+    PROFILE(Phase::kInput);
+    handleCommands();
+    updateCamera(dt);
+  }
+  {
+    PROFILE(Phase::kInteraction);
+    updateInteraction(nowMs, dt);
+  }
+  {
+    PROFILE(Phase::kPhysics);
+    updatePhysics(dt);
+  }
+  std::vector<engine::net::WorldEntry> world;
   std::vector<engine::net::Event> events;
-  if (g_app.others.online()) engine::net::receiveEvents(events);
-  handleShared(world, events);
-  g_app.piano.update(nowMs, world, events);
-  g_app.bartender.update(nowMs, world);
-  updateSelfMotion(nowMs);
-  float extra[kCount - app::slot::kActivity] = {};
-  selfState(extra);
-  g_app.others.sendSelf(nowMs, g_app.camera.position, g_app.camera.yaw, g_app.camera.pitch, extra);
-  g_app.others.update(nowMs, dt, kWalkSpeed);
-  updateVoice();
-  sendInfo(nowMs);
+  {
+    PROFILE(Phase::kNet);
+    world = g_app.shared.takeOther();
+    if (g_app.others.online()) engine::net::receiveEvents(events);
+    handleShared(world, events);
+  }
+  {
+    PROFILE(Phase::kGames);
+    g_app.piano.update(nowMs, world, events);
+    g_app.bartender.update(nowMs, world);
+  }
+  {
+    PROFILE(Phase::kNet);
+    updateSelfMotion(nowMs);
+    float extra[kCount - app::slot::kActivity] = {};
+    selfState(extra);
+    g_app.others.sendSelf(nowMs, g_app.camera.position, g_app.camera.yaw, g_app.camera.pitch, extra);
+    g_app.others.update(nowMs, dt, kWalkSpeed);
+    updateVoice();
+    sendInfo(nowMs);
+  }
 
   // A seat someone else took at the same moment: the one who was first wins.
   if (g_app.seat >= 0) {
@@ -1264,13 +1300,20 @@ void frame() {
     }
   }
 
-  wgpu::TextureView target = g_app.gpu.beginFrame();
+  wgpu::TextureView target;
+  {
+    PROFILE(Phase::kAcquire);
+    target = g_app.gpu.beginFrame();
+  }
   if (!target) return;
   if (g_app.race.open()) {  // you dove into the race: it's the whole screen
+    PROFILE(Phase::kRace);
     queueText(nowMs, Mat4{});
     g_app.race.render(target, g_app.text, nowMs);
     return;
   }
+  // Scene prep is split around queueText, so it's timed by hand.
+  double sceneStart = emscripten_get_now();
 
   const engine::FirstPersonCamera& cam = g_app.camera;
   const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
@@ -1289,7 +1332,12 @@ void frame() {
                       Vec3{0, -0.35f + 0.25f * lift, 0};
     app::Bartender::addHeldDrink(g_app.boxes, g_app.bartender.held(), hand, cam.yaw);
   }
-  queueText(nowMs, viewProj);  // after the boxes: others' darts are added there
+  engine::profiler().add(Phase::kScene, emscripten_get_now() - sceneStart);
+  {
+    PROFILE(Phase::kText);
+    queueText(nowMs, viewProj);  // after the boxes: others' darts are added there
+  }
+  sceneStart = emscripten_get_now();
 
   g_app.avatarMotion.pitch = cam.pitch;
   g_app.avatarMotion.time = static_cast<float>(nowMs / 1000.0);
@@ -1323,6 +1371,8 @@ void frame() {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
     self = app::seatedTransform(s.hip, s.yaw);
   }
+  engine::profiler().add(Phase::kScene, emscripten_get_now() - sceneStart);
+  PROFILE(Phase::kRender);
   g_app.renderer.render(target, viewProj, cam.position, self, g_app.avatarBones, g_app.firstPersonBones,
                         g_app.scene.mirrors, g_app.text, g_app.pictures);
 }
@@ -1358,20 +1408,25 @@ void onGpuReady(bool ok) {
     engine::setStatus("Startup failed - see log");
     return;
   }
+  engine::profiler().stage("gpu");
+  g_app.perfParam = EM_ASM_INT({ return /[?&]perf=1/.test(location.search) ? 1 : 0; }) != 0;
   g_app.scene = app::buildBarScene();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
+  engine::profiler().stage("scene");
   std::vector<engine::SkinnedMeshData> meshes;
   for (const app::AvatarLook& look : app::avatarLooks()) {
     g_app.avatars.emplace_back();
     g_app.avatars.back().build(look);
     meshes.push_back(g_app.avatars.back().mesh());
   }
+  engine::profiler().stage("avatars");
   if (!g_app.renderer.init(g_app.gpu, g_app.scene, meshes) ||
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat) ||
       !g_app.pictures.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");
     return;
   }
+  engine::profiler().stage("renderer");
   g_app.camera.position = g_app.scene.spawnPosition;
   g_app.camera.yaw = g_app.scene.spawnYaw;
   applyTestCamera();
@@ -1396,6 +1451,7 @@ void onGpuReady(bool ok) {
   g_app.lastFrameMs = g_app.fpsWindowStartMs = emscripten_get_now();
   // The intro starts when you tap "enter" on the loading screen (app_enter).
   g_app.introEndMs = g_app.entered ? g_app.lastFrameMs + kIntroMaxMs : 1e300;
+  engine::profiler().stage("running");
   LOG_INFO("Running. Left thumb: walk. Right thumb: look around. Tap to use things.");
   LOG_INFO("Seats: %zu. Things to use: %zu.", g_app.scene.seats.size(), g_app.scene.interactables.size());
   emscripten_set_main_loop(frame, 0, false);
@@ -1409,6 +1465,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
   if (g_app.entered) return;
   g_app.entered = true;
   g_app.introEndMs = emscripten_get_now() + kIntroMaxMs;
+  engine::profiler().entered(emscripten_get_now());
 }
 
 int main() {

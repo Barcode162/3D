@@ -14,8 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1 (2026-10-17). Next: 0.2** (frame profiler and
-`?perf` overlay).
+last section). **Done: 0.1, 0.2 (2026-10-17). Next: 0.3** (logs and
+reports that leave the phone).
 The racing plan below waits, except small driving-feel tweaks the user asks for.
 
 **2026-10-16, previous top priority: the racing sim. The plan and checklist
@@ -366,3 +366,10 @@ A small DAW inside the bar, all DSP written in C++:
   skips same-size edits. Racing docs corrected (frame-rate dependence,
   remote-car mass). `tools/shots.mjs` takes its own `server=` and
   `REQUESTS=1` (prints requests to outside hosts).
+- **2026-10-17:** Restructure step 0.2 done. Frame profiler
+  (`engine/profiler.*`): time per frame phase, draw/triangle counts per
+  pass, loading jobs, heap, hitches, start-up stages. Performance overlay
+  (Menu → Settings → Performance overlay, or `?perf=1`). Smoke test prints
+  a `perf:` line from `window.bar3dPerf`. First finding: at the door the
+  bar draws ~527 objects plus ~525 more for the mirror each frame (target
+  ≤ 150 + 60, Phase 6).

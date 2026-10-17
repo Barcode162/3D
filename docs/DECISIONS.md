@@ -444,6 +444,16 @@ was answered by the user on 2026-10-17.
   (about 45 MB of assets); the per-build `mput` list comes from
   `build/site/*.js *.json`.
 
+- **Frame profiler (step 0.2, `engine/profiler.*`):** fixed phase enum,
+  `PROFILE(Phase::kX)` scopes in `frame()`, `prof::draw()` next to every
+  draw call, start-up `stage()` marks. Overlay: Settings → Performance
+  overlay or `?perf=1` (bars = time between frames, blue = CPU part, lines
+  at 16.7 and 33.3 ms). `window.bar3dPerf` is a getter that builds the JSON
+  only when read (a per-second refresh cost ~5 ms headless). Safari rounds
+  `performance.now()` to ~1 ms without cross-origin isolation, so single
+  phase times are coarse; trust averages. A hitch (> 20 ms between frames)
+  is blamed on the previous frame's longest phase.
+
 ## Racing sim (2026-10-16)
 - **Own physics, fixed 240 Hz**, substepped from the frame (the code's cap
   is 30 steps, but the frame dt cap of 0.1 s means really 24; slower phones

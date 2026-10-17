@@ -764,7 +764,7 @@ Tags name sub-steps where a step was split (e.g. 3.2a); a tag without a letter o
 step means all its parts. Items marked *(review)* were added on 2026-10-17.
 
 **A. Frame loop and app core**
-- [ ] **H** No per-phase timing; the start-up lag can't be attributed (`main.cpp:312-324` updateFps only) → FrameProfiler + phone report. *[0.2, 0.3]*
+- [ ] **H** No per-phase timing; the start-up lag can't be attributed (`main.cpp:312-324` updateFps only) → FrameProfiler + phone report. *[0.2, 0.3]* (0.2 part done: profiler + overlay)
 - [ ] **H** God object `g_app`; any function changes anything (`main.cpp:66-142`; `use()` `:650-773` teleports, opens panels, toggles lights, plays sfx, sends net) → Game + systems + event bus. *[4.1a, 4.1b]*
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
@@ -1079,7 +1079,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** *(review)* Stopping the upload deletes nothing: `lftp mirror -R` has no `--delete`, so `home/bar/relay.php` (returns 200 today) and `rooms/` would stay live as a second room for cached tabs; dropping `project.json` would hide the bar from the homepage (`homepage/index.php` lists folders with one); `account_test.mjs:31` and `voice_test.mjs:33` copy `relay.php` → one-off remote delete with exclusions, keep `project.json` + redirect, port both tests. *[3.4c, 3.5]*
 - [ ] **L** `version.txt` reload becomes dead weight once `index.html` is no-cache → remove. *[8.1]*
 - [ ] **M** Smoke test passes even if models never finish loading (`smoke.mjs:41-42,89`) → require "Everything loaded" + non-blank image. *[0.4]*
-- [ ] **M** No performance numbers in any test → `window.bar3dPerf` printed by smoke. *[0.2]*
+- [x] **M** No performance numbers in any test → `window.bar3dPerf` printed by smoke. *[0.2]*
 - [ ] **L** Static server + browser launch copied into 6 scripts (`smoke`, `shots`, `mp_test`, `account_test`, `rhythm_test`, `voice_test`) → `tools/lib/`. *[0.4]*
 - [ ] **L** No security/abuse tests → negative cases in room_test and account_test. *[3.2c, 5.1a]*
 - [ ] **M** *(review)* "Looks the same" checks have no baseline images or diff tool, and headless frames aren't deterministic (candle flicker, idle animation) → `?still`, `tools/imgdiff.mjs`, standard spots (VIS). *[0.4]*
@@ -1192,6 +1192,10 @@ Done in `de05ef9` (2026-10-17).
   (check on both github.io and joshuavelasco.com/bar).
 
 #### 0.2 Frame profiler and `?perf` overlay
+Done 2026-10-17 (see PROGRESS log). `window.bar3dPerf` is a getter (computed when read),
+not refreshed once a second: building it cost ~5 ms headless, a hitch every second.
+First numbers (headless, at the door): 527 draws / 649k tris main and 525 draws / 649k tris
+mirror, so the mirror pass runs at spawn; budget is ≤ 150 / ≤ 60 (Phase 6).
 - **Files:** new `engine/profiler.{h,cpp}`; `app/main.cpp` (scopes around every phase of
   `frame()` as it is today, plus startup stages); `engine/gpu_upload.cpp` (jobs run, pending,
   max job ms); `app/renderer.cpp` (draw + triangle counters per pass); `web/menu.js` (Settings

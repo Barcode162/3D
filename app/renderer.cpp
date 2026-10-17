@@ -9,6 +9,7 @@
 
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/profiler.h"
 #include "engine/texture.h"
 
 using engine::Mat4;
@@ -64,8 +65,10 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrors.size();
   if (!createScenePipelines() || !createGlassPipeline()) return false;
+  engine::profiler().stage("pipelines");
 
   createMaterials(colorMaps_, bumpMaps_, sampler_);
+  engine::profiler().stage("textures");
   buildLighting(scene);
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) {
     View v;
@@ -483,6 +486,7 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
     pass.SetVertexBuffer(0, d.mesh.vertexBuffer);
     pass.SetIndexBuffer(d.mesh.indexBuffer, wgpu::IndexFormat::Uint32);
     pass.DrawIndexed(d.mesh.indexCount);
+    engine::prof::draw(d.mesh.indexCount);
   }
 }
 
@@ -567,6 +571,7 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
       pass.SetVertexBuffer(0, part.vertexBuffer);
       pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
       pass.DrawIndexed(part.indexCount);
+      engine::prof::draw(part.indexCount);
     }
   }
 }
@@ -575,6 +580,7 @@ void SceneRenderer::drawSkinned(const wgpu::RenderPassEncoder& pass, const engin
   pass.SetVertexBuffer(0, mesh.vertexBuffer);
   pass.SetIndexBuffer(mesh.indexBuffer, wgpu::IndexFormat::Uint32);
   pass.DrawIndexed(mesh.indexCount);
+  engine::prof::draw(mesh.indexCount);
 }
 
 void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
@@ -635,6 +641,7 @@ void SceneRenderer::drawBoxes(const wgpu::RenderPassEncoder& pass) const {
     const uint32_t offset = boxOffset_ + static_cast<uint32_t>(i * kObjectStride);
     pass.SetBindGroup(1, objectBindGroup_, 1, &offset);
     pass.DrawIndexed(boxMesh_.indexCount);
+    engine::prof::draw(boxMesh_.indexCount);
   }
 }
 
@@ -701,6 +708,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   passDesc.depthStencilAttachment = &depth;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetScissorRect(x0, y0, x1 - x0, y1 - y0);
+  engine::prof::setPass(engine::prof::kMirror);
   pass.SetPipeline(mirroredPipeline_);
   pass.SetBindGroup(0, view.bindGroup);
   if (full) {
@@ -717,6 +725,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
     drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
   }
   pass.End();
+  engine::prof::setPass(engine::prof::kMain);
 }
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
@@ -783,6 +792,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     queue.WriteBuffer(mirrorTargets_[i].glassBuffer, 0, &g, sizeof(g));
     pass.SetBindGroup(0, mirrorTargets_[i].glassBindGroup);
     pass.Draw(6);
+    engine::prof::draw(6);
   }
 
   pictures.draw(pass);  // profile pictures over heads

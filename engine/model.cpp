@@ -7,6 +7,7 @@
 #include "engine/fetch.h"
 #include "engine/gpu_upload.h"
 #include "engine/log.h"
+#include "engine/profiler.h"
 #include "engine/texture.h"
 
 namespace engine {
@@ -159,6 +160,11 @@ void finish(const std::shared_ptr<Loading>& l) {
   }
   LOG_INFO("Model %s: %zu parts, %zu triangles, %zu textures, %.0f ms.", l->url.c_str(), model->parts.size(),
            triangles, l->data.images.size(), emscripten_get_now() - l->startMs);
+  {  // "assets/models/piano.glb.gz" -> "model:piano"
+    std::string name = l->url.substr(l->url.find_last_of('/') + 1);
+    name = name.substr(0, name.find('.'));
+    profiler().stage("model:" + name, false);  // already logged above
+  }
   l->done(model);
 }
 

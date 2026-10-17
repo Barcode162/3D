@@ -8,6 +8,7 @@
 #include "app/race/car_model.h"
 #include "engine/file.h"
 #include "engine/log.h"
+#include "engine/profiler.h"
 
 using engine::Mat4;
 using engine::Quat;
@@ -228,6 +229,7 @@ void View::draw(const wgpu::RenderPassEncoder& pass, const Part& part, uint32_t 
   pass.SetVertexBuffer(0, part.vertices);
   pass.SetIndexBuffer(part.indices, wgpu::IndexFormat::Uint32);
   pass.DrawIndexed(part.indexCount);
+  engine::prof::draw(part.indexCount);
 }
 
 void View::render(const wgpu::TextureView& target, const wgpu::TextureView& depthView, uint32_t width,
@@ -309,9 +311,11 @@ void View::render(const wgpu::TextureView& target, const wgpu::TextureView& dept
   rp.colorAttachments = &color;
   rp.depthStencilAttachment = &depth;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&rp);
+  engine::prof::setPass(engine::prof::kRacePass);
   pass.SetPipeline(skyPipeline_);
   pass.SetBindGroup(0, frameGroup_);
   pass.Draw(3);
+  engine::prof::draw(3);
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, frameGroup_);
   for (const Part& c : chunks_) {

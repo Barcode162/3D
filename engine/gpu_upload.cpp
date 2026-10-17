@@ -9,6 +9,7 @@
 #include <map>
 
 #include "engine/log.h"
+#include "engine/profiler.h"
 
 namespace engine {
 namespace {
@@ -152,12 +153,19 @@ size_t pendingJobs() { return jobs().size(); }
 void runJobs(double budgetMs) {
   const double start = emscripten_get_now();
   auto& q = jobs();
+  int ran = 0;
+  double maxJob = 0, before = start;
   while (!q.empty()) {
     std::function<void()> job = std::move(q.front());
     q.pop_front();
     job();
-    if (emscripten_get_now() - start > budgetMs) break;
+    ++ran;
+    const double now = emscripten_get_now();
+    maxJob = std::max(maxJob, now - before);
+    before = now;
+    if (now - start > budgetMs) break;
   }
+  profiler().jobs(ran, q.size(), maxJob);
 }
 
 void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture) {
