@@ -11,7 +11,9 @@ problems checklist in §3). Goals: 60 fps on the iPhone 15 Pro Max with no
 start-up lag, zero multiplayer sync issues (the Cloudflare room becomes the
 authority), far fewer error paths. Read "How to use this plan" in that file
 first. Ask the user the open questions in its §5 when a step needs them
-(Q1 Cloudflare account + secrets is needed by Phase 3, so ask in step 0.1).
+(Q1 is done: the user made the Cloudflare account and added the GitHub
+secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` on 2026-10-16).
+The plan was reviewed against the code on 2026-10-17 (see its last section).
 The racing plan below waits, except small driving-feel tweaks the user asks for.
 
 **2026-10-16, previous top priority: the racing sim. The plan and checklist
