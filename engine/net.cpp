@@ -65,7 +65,7 @@ std::string avatarUrl(const std::string& account, int revision) {
   char buffer[512];
   EM_ASM({
     var a = window['bar3dAccount'];
-    stringToUTF8(a ? a['avatarUrl'](UTF8ToString($0), $1) : '', $2, $3);
+    stringToUTF8(a ? a['avatarUrl'](UTF8ToString($0), $1) : "", $2, $3);
   }, account.c_str(), revision, buffer, sizeof(buffer));
   return buffer;
 }

@@ -911,7 +911,7 @@ void handleCommands() {
       const int status = static_cast<int>(c.a) & 0xf0, note = static_cast<int>(c.b) / 1000, vel = static_cast<int>(c.b) % 1000;
       if (status == 0x90 && vel > 0) g_app.piano.keyDown(note, static_cast<float>(vel) / 127.0f, true);
       else if (status == 0x80 || status == 0x90) g_app.piano.keyUp(note, true);
-      else if (status == 0xb0 && note == 64) g_app.piano.sustain(vel >= 64);
+      else if (status == 0xb0 && note == 64) g_app.piano.setPedal(vel >= 64, true);  // shared, like the on-screen pedal
     } else if (c.name == "make") {
       g_app.bartender.make(static_cast<int>(c.a));
     } else if (c.name == "endShift") {
@@ -1212,6 +1212,17 @@ void updateWarmUp() {
   g_app.readyReported = true;
   LOG_INFO("Warm-up done (%s).", g_app.steadyFrames >= 30 ? "30 steady frames" : "2 s");
   engine::profiler().stage("ready");
+  const app::SceneRenderer& r = g_app.renderer;
+  if (r.modelFilesFailed() > 0) {
+    // Show what's missing with a Retry; you can still enter unless the room
+    // itself is missing.
+    const size_t n = r.modelFilesFailed();
+    LOG_ERROR("Loading: %zu part%s of the bar failed to download.", n, n == 1 ? "" : "s");
+    EM_ASM({ if (window['barLoading'] && window['barLoading']['fail'])
+               window['barLoading']['fail'](UTF8ToString($0), $1); },
+           (std::to_string(n) + (n == 1 ? " part failed" : " parts failed")).c_str(), r.criticalFileFailed() ? 1 : 0);
+    if (r.criticalFileFailed()) return;
+  }
   EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
 }
 
@@ -1267,9 +1278,17 @@ void updateLoadingScreen() {
 }
 
 // Closes the profiler's frame on every way out of frame().
+// Background jobs run last, after the frame is submitted, until a deadline:
+// a few ms in the bar, more behind the loading screen.
 struct ProfiledFrame {
   explicit ProfiledFrame(double nowMs) { engine::profiler().beginFrame(nowMs); }
-  ~ProfiledFrame() { engine::profiler().endFrame(emscripten_get_now()); }
+  ~ProfiledFrame() {
+    {
+      PROFILE(engine::Phase::kJobs);
+      engine::runJobs(emscripten_get_now() + (g_app.entered ? 3.0 : 8.0));
+    }
+    engine::profiler().endFrame(emscripten_get_now());
+  }
 };
 
 void frame() {
@@ -1288,10 +1307,6 @@ void frame() {
   g_app.gpu.resizeIfNeeded();
   // Loading work (textures, model buffers) gets a slice of each frame: more
   // while the loading screen is up, little once you walk around.
-  {
-    PROFILE(Phase::kJobs);
-    engine::runJobs(g_app.entered ? 3.0 : 8.0);
-  }
   updateFps(nowMs);
   {
     PROFILE(Phase::kInput);
@@ -1540,6 +1555,7 @@ void joinRoom() {
   g_app.others.start();
   g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
   EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
+  g_app.piano.prepareSamples();  // note samples in background jobs
 }
 
 // Called by the loading screen when you tap "enter": the intro title and

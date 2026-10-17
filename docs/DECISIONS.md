@@ -501,6 +501,15 @@ was answered by the user on 2026-10-17.
   empty until compiled, so draw code must check. Never use
   `GetBindGroupLayout` on a pipeline (it may not exist yet): give the
   pipeline an explicit layout (`pipelines::pipelineLayout`).
+- **Jobs (step 1.4):** queue background work with `engine::queueJob(fn,
+  lane, kind)` (`engine/jobs.h`); give it a kind name so the queue learns
+  its cost. Jobs run after the frame's submit until a deadline (3 ms in the
+  bar, 8 ms loading). Keep a job small (one mesh part, one image, a 512 KB
+  buffer slice). Jobs in one lane run in order, so a "done" job queued
+  after its slices runs after them.
+- **Piano samples (step 1.2b):** 30 synthesized samples, the keys between
+  play them at ±1 semitone (playbackRate). Built in background jobs after
+  you enter.
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

@@ -81,15 +81,19 @@ void Profiler::jobs(int ran, size_t pending, double maxJobMs) {
   current_.jobsRun = static_cast<uint16_t>(std::min(ran, 65535));
   current_.jobsPending = static_cast<uint16_t>(std::min<size_t>(pending, 65535));
   current_.maxJobMs = static_cast<float>(maxJobMs);
+  maxJobMs_ = std::max(maxJobMs_, current_.maxJobMs);
 }
 
 void Profiler::endFrame(double nowMs) {
   current_.cpuMs = static_cast<float>(nowMs - frameStartMs_);
+  if (enteredMs_ == 0) loadingWorstCpu_ = std::max(loadingWorstCpu_, current_.cpuMs);
   for (int p = 0; p < prof::kPassCount; ++p) {
     current_.draws[p] = prof::gDraws[p];
     current_.tris[p] = static_cast<uint32_t>(std::min<uint64_t>(prof::gTris[p], 0xffffffffu));
   }
   current_.heapMB = static_cast<uint16_t>(emscripten_get_heap_size() >> 20);
+  if (countGrowth_ && current_.heapMB > lastHeapMB_) ++heapGrowths_;
+  lastHeapMB_ = current_.heapMB;
   current_.gpuMs = lastGpuMs_;
   Frame& slot = frames_[head_];
   slot = current_;
@@ -152,6 +156,10 @@ void Profiler::trackGpu(const wgpu::Queue& queue) {
 void Profiler::stage(const std::string& name, bool log) {
   const double t = emscripten_get_now();
   stages_.emplace_back(name, t);
+  if (name == "running") {  // count growth from here on
+    countGrowth_ = true;
+    lastHeapMB_ = static_cast<uint16_t>(emscripten_get_heap_size() >> 20);
+  }
   if (log) LOG_INFO("Stage %s at %.0f ms.", name.c_str(), t);
 }
 
@@ -182,9 +190,9 @@ std::string Profiler::json() const {
   char b[512];
   std::snprintf(b, sizeof(b),
                 "{\"t\":%.0f,\"frames\":%d,\"avg\":%.2f,\"p95\":%.2f,\"worst\":%.2f,\"cpu\":%.2f,\"cpuWorst\":%.2f,\"gpu\":%.2f,\"gpuWorst\":%.2f,\"pauses\":%d,"
-                "\"hitches\":%d,\"hitchesTotal\":%d,\"hitchesAfterEnter\":%d,\"worstAfterEnter\":%.1f,",
+                "\"hitches\":%d,\"hitchesTotal\":%d,\"hitchesAfterEnter\":%d,\"worstAfterEnter\":%.1f,\"maxJobMs\":%.2f,\"loadingWorstCpu\":%.1f,\"heapGrowths\":%d,",
                 nowMs, s.frames, s.avg, s.p95, s.worst, s.cpuAvg, s.cpuWorst, s.gpuAvg, s.gpuWorst, pauses_, s.hitches, hitchesTotal_,
-                hitchesAfterEnter_, worstAfterEnter_);
+                hitchesAfterEnter_, worstAfterEnter_, maxJobMs_, loadingWorstCpu_, heapGrowths_);
   j += b;
   j += "\"phases\":{";
   for (int p = 0; p < kPhases; ++p) {

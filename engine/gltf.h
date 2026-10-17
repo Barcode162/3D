@@ -10,6 +10,7 @@
 // (with KHR_materials_emissive_strength).
 // Not (yet): animation, skins, morph targets, cameras, lights.
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -56,5 +57,24 @@ struct ModelData {
 
 // Parses a .glb file. Returns false and fills `error` if it can't.
 bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& error);
+
+// The same, a piece at a time, so a big file doesn't stall a frame:
+// begin() reads the file's directory, each step() one mesh part, finish()
+// the materials and images.
+class GlbParser {
+ public:
+  GlbParser();
+  ~GlbParser();
+  bool begin(std::vector<uint8_t> file, std::string& error);
+  size_t partCount() const;
+  bool done() const;
+  bool step(ModelData& out, std::string& error);
+  bool finish(ModelData& out, std::string& error);  // materials, bounds; sizes out.images
+  bool image(size_t index, ModelData& out, std::string& error);  // copies one image out (after finish)
+
+ private:
+  struct State;
+  std::unique_ptr<State> s_;
+};
 
 }  // namespace engine

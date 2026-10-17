@@ -5,6 +5,7 @@
 // Safari has no Web MIDI). Every note sounds from the piano's spot in the
 // room (synthesized in engine/synth.cpp), lights its key and makes its
 // strings glow and shake. Songs and live notes are shared in multiplayer.
+#include <map>
 #include <string>
 #include <vector>
 
@@ -37,9 +38,15 @@ class Piano {
   std::string nowPlaying() const;
 
   // Live playing (the on-screen keyboard, a MIDI keyboard, other players).
-  void keyDown(int key, float velocity, bool share);
-  void keyUp(int key, bool share);
-  void sustain(bool down);
+  // Each player has their own held keys and pedal; kYou = this phone.
+  static constexpr int kYou = -1;
+  void keyDown(int key, float velocity, bool share, int player = kYou);
+  void keyUp(int key, bool share, int player = kYou);
+  // The sustain pedal (on-screen button or a MIDI keyboard's pedal).
+  void setPedal(bool down, bool share, int player = kYou);
+  // Starts making the note samples in background jobs (call once you've
+  // entered; a key played before its sample is ready makes it right away).
+  void prepareSamples();
 
   // Each frame.
   void update(double nowMs, std::vector<engine::net::WorldEntry>& world, std::vector<engine::net::Event>& events);
@@ -75,14 +82,33 @@ class Piano {
     engine::midi::Song midi;
   };
 
-  void ensureSound(int key);
+  // Samples: one for every 3rd key; the two keys around it play it a
+  // semitone up or down (playbackRate).
+  static constexpr int kSamples = 30;
+  static int sampleOf(int i) { return i / 3; }               // i = key index 0..87
+  static int sampleKey(int s) { return 21 + 3 * s + 1; }     // the key a sample was made at
+  static float rateFor(int i);
+  bool sampleReady(int i) const { return samples_[sampleOf(i)].valid(); }
+  void ensureSample(int i);
+  int playKey(int i, float gain, double when);
+  // One player's hands on the keyboard.
+  struct Hands {
+    int voice[88] = {};       // held (or pedal-held) keys: their voice (0 = up)
+    double start[88] = {};
+    bool pedal = false;
+    std::vector<int> pedalHeld;  // keys released while the pedal is down
+    double lastMs = 0;           // last time they did anything (silent 10 s = released)
+  };
+  void releaseAll(Hands& h);
+  bool keyLit(int i, double& since) const;
   void startScheduled(double nowSound);
   engine::Vec3 world(engine::Vec3 local) const;
   int keyAt(float x, float y, float W, float H) const;
 
   std::vector<SongInfo> songs_;
   std::vector<LoadedSong> loaded_;
-  engine::Sound sounds_[88];
+  engine::Sound samples_[kSamples];
+  bool preparing_ = false;
   engine::Vec3 position_;
   engine::Quat rotation_;
   float yaw_ = 0;
@@ -97,11 +123,7 @@ class Piano {
   double pendingServerStart_ = 0;
 
   std::vector<Active> active_;   // sounding notes (for the lights)
-  int liveVoice_[88] = {};       // live notes held down: their voice (0 = up)
-  double liveStart_[88] = {};
-  int liveDown_ = 0;
-  bool pedal_ = false;
-  std::vector<int> pedalHeld_;   // live keys released while the pedal is down
+  std::map<int, Hands> hands_;   // by player (kYou = this phone)
 
   // On-screen keyboard.
   bool keyboard_ = false;

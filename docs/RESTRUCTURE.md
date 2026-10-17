@@ -770,11 +770,11 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** Frame order mixes network input and local decisions: taps read others from last frame (others.update `:1249` after updateInteraction `:1237`), seat conflict checked after sending your seat (`main.cpp:1253-1265` vs `:1248`), `shared.update` inside physics with its own clock (`:844`) → phase table §2.1. *[4.1b]*
 - [ ] **M** Several clocks in one frame (`emscripten_get_now` at `main.cpp:148,194,206,250,844`) → one FrameTime. *[2.2]*
 - [ ] **M** ≈ 14 + 4N JS crossings and 3 JSON round trips per frame; `setState` every frame while net.js sends on a timer (`ui.cpp:11-19`, `net.cpp` receiveWorld/receiveEvents, `main.cpp:1248`) → mailbox; send on the net tick. *[2.1a, 2.1b, 3.4a]*
-- [ ] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
+- [x] **M** Jobs run at frame start and at least one always runs (`main.cpp:1233`, `gpu_upload.cpp:152-161`) → deadline after submit. *[1.4]*
 - [x] **M** Invisible work: full scene + mirror behind the loading overlay and the 80-88% rhythm dimmer (`main.cpp:1267-1327`, `rhythm.cpp:268`) → view modes. *[1.1]*
 - [ ] **M** Every remote avatar posed/skinned even off-screen (`main.cpp:1303-1317`) → pose only visible ones. *[6.5]*
 - [x] **M** Abort or device loss freezes the game forever (`index.html` onAbort; `gpu.cpp:69-74`) → fatal overlay, rejoin, auto report. *[0.3]*
-- [ ] **M** 16 MB default heap grows repeatedly while loading (`CMakeLists.txt` only `ALLOW_MEMORY_GROWTH`) → `INITIAL_MEMORY`. *[1.5]*
+- [x] **M** 16 MB default heap grows repeatedly while loading (`CMakeLists.txt` only `ALLOW_MEMORY_GROWTH`) → `INITIAL_MEMORY`. *[1.5]*
 - [ ] **M** Function-local statics survive room changes (`main.cpp:749,778`; `players.cpp:38`; `shared_world.cpp:84`) → members + `reset()`. *[4.1b]*
 - [ ] **M** No visibility/pagehide handling: others see a frozen you, keys stick, catch-up burst on return → lifecycle §2.5.8. *[2.2]*
 - [ ] **L** Per-frame heap churn (`main.cpp:876,1239-1240,494,518`; `drawModels` sort vectors) → persistent buffers. *[4.1b, 6.1]*
@@ -805,15 +805,15 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** `onGpuReady` does everything synchronously: scene, physics, 8 avatar looks (`avatar.cpp:74`), CPU textures, sounds and 11 sync pipelines (renderer ×9 `renderer.cpp:312-391`, `text.cpp:107`, `billboard.cpp:74`); the mip pipeline(s) are created lazily per format mid-load (`gpu_upload.cpp:74-96`) and the 2 race pipelines on the first sit (`view.cpp:142,159`): 14 call sites (`main.cpp:1356-1400`) → staged loader + async pipelines + jobs. *[1.1, 1.3, 1.8]* (1.1 + 1.3 parts done: textures cut, pipelines async)
 - [x] **H** Procedural textures ≈ 410 ms (8 layers), 5 unused (≈ 245 ms), run before any download starts (`bar_scene.cpp:551-563`, `renderer.cpp` createMaterials) → keep 3 layers, fetch first. *[1.1]*
 - [x] **H** "Ready" means files arrived, not smooth; pipelines compile on first use; per-texture mip submits (`main.cpp:1183`) → warm-up + stable-frames gate. *[1.3]*
-- [ ] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
+- [x] **H** `parseGlb` runs untimed in the fetch callback; `finish()` builds a whole model in one job (`model.cpp:184`, `finish` `:87`) → sliced jobs. *[1.4]*
 - [x] **H** A finished piano song's `pso` stays; every joiner downloads and synthesizes 44-56 keys from the moment the world arrives (net starts in `onGpuReady`, `main.cpp:1392-1393`, so during loading at 3 keys/frame) onward (`piano.cpp:282-285`; break at `:274` before the skip at `:276`) → joiners ignore ended songs (song end computed from the parsed MIDI, no wire change); owner clears it. *[1.2a]*
 - [ ] **M** Race track + race pipelines built synchronously on the first sit (`race/game.cpp:35-42` `world_.init()` + `view_.init()`) → pipelines async during loading, track in background jobs after enter. *[1.3, 2.4b]* (1.3 part done)
 - [x] **M** You join the room while still loading, visible at spawn (`main.cpp:1392-1393`) → join on enter. *[1.1]*
 - [ ] **M** Voice connects to every peer from page load with 2.5 s ICE waits (`voice.js:178-185,314`) → start after enter, staggered; trickle ICE later. *[1.1, 5.10]* (1.1 part done)
-- [ ] **M** Failed downloads count as done, no retry, no fail state (`model.cpp` done(nullptr), `renderer.cpp:523`, `index.html:116-128`) → retry ×3, fail UI with Retry. *[1.4]*
+- [x] **M** Failed downloads count as done, no retry, no fail state (`model.cpp` done(nullptr), `renderer.cpp:523`, `index.html:116-128`) → retry ×3, fail UI with Retry. *[1.4]*
 - [ ] **M** `version.txt` reload races the app start, errors swallowed (`index.html:93-103`) → check first (1.5 s timeout), later no-cache index. *[1.8, 8.1]*
 - [ ] **M** No preload of wasm or models (`index.html:141-152`) → `<link rel=preload>`. *[1.8]*
-- [ ] **M** All images decoded at once; bitmaps pile up in `Module.bitmaps` → ≤ 4 in flight. *[1.4]*
+- [x] **M** All images decoded at once; bitmaps pile up in `Module.bitmaps` → ≤ 4 in flight. *[1.4]*
 - [ ] **M** Each file copied 4-5 times through JS and wasm (`fetch.cpp:79-92,53`; gltf image copies) → one copy; GPU data from JS buffers in the pack. *[1.5, 6.2c]*
 - [ ] **L** Overlay fade/removal can hitch (`index.html:42-43,112`) → `will-change`, remove on `transitionend`. *[1.8]*
 - [ ] **L** HUD buttons work before the world exists (`#hud` z-index 6 over `#loading`) → hidden until enter. *[1.8]*
@@ -830,7 +830,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Canvas follows Safari's toolbar, reallocating targets (`index.html:16`) → debounced size / `100lvh`. *[2.1a]*
 - [x] **M** Mip pipelines created synchronously mid-load (`gpu_upload.cpp:74-96`) → async at startup. *[1.3]*
 - [ ] **M** No texture size cap (`gpu_upload.cpp` full-size textures) → resize cap + export budget. *[1.6]*
-- [ ] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
+- [x] **L** Bitmap leak if the pending entry is missing; global queue can't cancel → always drop; cancel tokens. *[1.4]*
 - [x] **M** Log panel unbounded, forced layout per line (`index.html:80-86`) → ring + rAF batch. *[0.3]*
 - [x] **M** Any error auto-opens the log over ≈ 40% of the screen and swallows taps (`index.html:82`; `audio.js:22,305,327`) → badge; warn level for audio. *[0.3]*
 - [x] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
@@ -846,8 +846,8 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** Closure renames unquoted EM_ASM names in Release only → JS libraries + lint + Release smoke in CI. *[0.4]*
 - [x] **L** `web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
 - [x] **L** Models re-gzipped on every build → per-file custom commands. *[0.4]*
-- [ ] **L** No `STACK_SIZE`, no `-Werror` on engine → set. *[1.5]*
-- [ ] **L** *(review)* `-Werror` would break the build today: `engine/net.cpp:68:61` "empty character constant" inside an EM_ASM body (the only warning across `engine/*.cpp`) → fix it first, verify with a clean rebuild. *[1.5]*
+- [x] **L** No `STACK_SIZE`, no `-Werror` on engine → set. *[1.5]*
+- [x] **L** *(review)* `-Werror` would break the build today: `engine/net.cpp:68:61` "empty character constant" inside an EM_ASM body (the only warning across `engine/*.cpp`) → fix it first, verify with a clean rebuild. *[1.5]*
 - [ ] **L** Shaders via `--embed-file` pull in the FS runtime (`CMakeLists.txt:23`) → generated header (optional). *[6.4]*
 
 **E. Rendering**
@@ -874,7 +874,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Boxes: one draw + 256 B slot each, both passes (`setBoxes`/`drawBoxes` `renderer.cpp:607-638`) → one instanced draw. *[6.1]*
 - [ ] **L** Uint32 indices and 48 B vertices everywhere → packed 24 B + Uint16. *[6.2c]*
 - [ ] **L** Legacy SceneObject path costs setup with 0 objects → delete. *[6.1]*
-- [ ] **L** One submit per texture for mips → batch (gone with ASTC). *[1.4, 6.8]*
+- [ ] **L** One submit per texture for mips → batch (gone with ASTC). *[1.4, 6.8]* (1.4 part done: one submit per image job)
 - [ ] **L** An image used as colour and data gets two textures (`model.cpp`) → one texture + sRGB view format. *[6.2c]*
 - [ ] **L** World text never in the mirror (`text.cpp:233-234`) → per-view uniform, or document as intended. *[6.6]*
 - [ ] **L** One full mesh per look; per-player bones buffer + WriteBuffer → palette + one storage buffer. *[6.5]*
@@ -931,12 +931,12 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Voice level and panner placement via EM_ASM per player per frame, each an O(N) id lookup (`main.cpp:486-489,1130,1163-1170`; `voice.js:355-368`) → one batch at 20 Hz through the mailbox. *[2.1c]*
 
 **G. Games and audio**
-- [ ] **C** Piano synthesizes notes inside the frame: 16.7 ms average, 30.6 ms middle C (wasm; native g++ -O2 15.7-20 ms middle C, 9.1 ms average); 3 per frame, budget up to 40 after a slow frame (`piano.cpp:21,259-267`; also in `keyDown` `:181`) → optimized synth, every 3rd key + playbackRate, prepare in jobs, skip not-ready notes. *[1.2a, 1.2b]*
+- [x] **C** Piano synthesizes notes inside the frame: 16.7 ms average, 30.6 ms middle C (wasm; native g++ -O2 15.7-20 ms middle C, 9.1 ms average); 3 per frame, budget up to 40 after a slow frame (`piano.cpp:21,259-267`; also in `keyDown` `:181`) → optimized synth, every 3rd key + playbackRate, prepare in jobs, skip not-ready notes. *[1.2a, 1.2b]*
 - [x] **H** Synth ≈ 10× too expensive: 96 full-length `addPartial` passes for middle C (16 partials × 3 strings × 2 decay stages; `synth.cpp:25-44,83-92`) → one pass per partial, -80 dB cutoff, strings in one loop. *[1.2a]*
-- [ ] **H** One live-voice table and pedal for you and every remote player; stuck glowing keys (`piano.h:100-104`; `piano.cpp:182,197,233,325`) → per-player tables, release on leave/timeout. *[1.2b]*
+- [x] **H** One live-voice table and pedal for you and every remote player; stuck glowing keys (`piano.h:100-104`; `piano.cpp:182,197,233,325`) → per-player tables, release on leave/timeout. *[1.2b]*
 - [ ] **H** Remote notes unstamped, played on arrival in 50/100 ms clumps, stale bursts after background (`piano.cpp:234`; `relay.php:122`) → stamped events + playout. *[5.6]*
 - [ ] **H** HRTF panner per voice for every note and sfx (`audio.js:182-192`) → persistent emitters, equalpower one-shots, voice cap. *[2.5]*
-- [ ] **M** MIDI-keyboard pedal not shared (`main.cpp:896`; the on-screen pedal does send, `piano.cpp:410-412`) → `setPedal(down, share)`. *[1.2b]*
+- [x] **M** MIDI-keyboard pedal not shared (`main.cpp:896`; the on-screen pedal does send, `piano.cpp:410-412`) → `setPedal(down, share)`. *[1.2b]*
 - [ ] **M** Concurrent piano song picks diverge (`piano.cpp:143`) → server session record. *[5.6]*
 - [ ] **M** Piano key lights: 2 boxes per lit key, one draw each, redrawn in the mirror (`piano.cpp:312-360`) → instanced boxes. *[6.1]*
 - [x] **L** Dead `busy()`; own .mid leaves `pso` at the old song for others (`piano.h:50`; `piano.cpp:141-144`) → remove; explicit local mode. *[1.2a]*
@@ -1353,6 +1353,13 @@ frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the la
   Open 4K Mania for the first time: no hitch.
 
 #### 1.4 Job scheduler and sliced model loading
+Done 2026-10-17. `engine/jobs.*` (lanes, kinds with learned cost, cancel tokens, a gate for the
+mip pipelines), run after submit. Models: parse begin / one job per mesh part / materials /
+one per image copy / materials+bind groups / buffer slices of 512 KB / done; shared 1×1
+fallbacks; ≤ 4 image decodes in flight; bitmaps always dropped; one submit per image job.
+Downloads retry 3× (0.5, 1.5, 4 s). "N parts failed - Retry" (reload) on the loading screen,
+still enters unless `hall` failed. Smoke: `FAIL_MODEL=candle` check (in CI). Headless: max job
+7-12 ms (single GPU calls, SwiftShader shares the CPU), slowest loading frame 12-25 ms.
 - **Files:** `engine/gpu_upload.{h,cpp}` → `engine/jobs.{h,cpp}` (priority lanes, cancel tokens,
   per-kind cost estimate, run while `now + estimate < deadline`; always drop bitmaps; batch
   mipgen per job); `engine/model.cpp` (parse in a job, sliced per mesh; `finish()` = one job per
@@ -1367,6 +1374,11 @@ frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the la
   smooth while the last textures arrive.
 
 #### 1.2b Piano samples in background jobs, per-player voices, shared pedal (runs after 1.4)
+Done 2026-10-17. 30 samples (key 3s+1), neighbours by playbackRate; background-lane jobs from
+the middle out after enter; song notes without a ready sample are skipped; a live key makes
+its sample at once if needed. Per-player `Hands` (voices, pedal) released after 10 s quiet.
+`setPedal(down, share)` for the on-screen and MIDI pedal. Not done: the headless pedal
+mp_test variant (checked by reading the code; no Web MIDI on iOS anyway).
 - **Files:** `app/piano.{h,cpp}` (samples for every 3rd key, neighbours by `playbackRate`;
   prepared by background-lane jobs (1.4) after enter, one key per job; the scheduler skips
   notes whose sample isn't ready; per-player voice tables + pedal, released on leave or 10 s
@@ -1382,6 +1394,9 @@ frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the la
   starts a song, you reload and enter: no stutter after entering.
 
 #### 1.5 Memory: initial heap, fewer copies
+Done 2026-10-17. `INITIAL_MEMORY=80MB` (headless peak 76 MB while loading), `STACK_SIZE=1MB`,
+`-Werror` on `engine/`; downloads land directly in the vector C++ hands on (no copy); the
+profiler counts heap growth after start ("grew 0 times").
 - **Files:** `CMakeLists.txt` (`-sINITIAL_MEMORY=<peak from the phone report, rounded up to 16 MB>`,
   `-sSTACK_SIZE=1MB`, `-Werror` for `engine/`), `engine/net.cpp` (first fix the one warning
   `-Werror` would turn into an error: line 68 "empty character constant

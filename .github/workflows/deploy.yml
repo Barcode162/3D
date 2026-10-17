@@ -77,7 +77,7 @@ jobs:
       # Software WebGPU (SwiftShader) works on GitHub's runners (first green
       # run 2026-10-17), so a failing smoke blocks the deploy.
       - name: "Test: browser smoke (Release build)"
-        run: node tools/smoke.mjs
+        run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
 
       # Prints only whether the Cloudflare secrets exist, whether wrangler
       # accepts the token, and whether a workers.dev subdomain is registered.

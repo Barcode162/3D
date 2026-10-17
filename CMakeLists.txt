@@ -17,11 +17,17 @@ file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS app/*.cpp)
 add_executable(app ${ENGINE_SOURCES} ${APP_SOURCES})
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR})
 target_compile_options(app PRIVATE --use-port=emdawnwebgpu -Wall -Wextra)
+# The engine builds without warnings; keep it that way.
+set_source_files_properties(${ENGINE_SOURCES} PROPERTIES COMPILE_OPTIONS "-Werror")
 
 target_link_options(app PRIVATE
   --use-port=emdawnwebgpu
   "--embed-file=${CMAKE_SOURCE_DIR}/shaders@/shaders"
   -sALLOW_MEMORY_GROWTH=1
+  # Start with enough memory for the whole bar (peak ~76 MB headless), so the
+  # heap doesn't grow (and copy itself) again and again while loading.
+  -sINITIAL_MEMORY=80MB
+  -sSTACK_SIZE=1MB
   -sENVIRONMENT=web
   -sEXPORTED_RUNTIME_METHODS=[]
   # Used from EM_ASM blocks (engine/audio.cpp, engine/net.cpp).

@@ -283,9 +283,21 @@
           'Building the bar… ' + done + ' / ' + total + ' pieces';
       },
       stage: function (text) { document.getElementById('loadText').textContent = text; },
+      // Some files never arrived: say so, with Retry (a reload). `critical` =
+      // the room itself is missing, so entering isn't offered.
+      fail: function (text, critical) {
+        var t = document.getElementById('loadText');
+        t.textContent = text + (critical ? ' - the bar can\'t open. ' : ' - ');
+        var retry = document.createElement('button');
+        retry.textContent = 'Retry';
+        retry.style.cssText = 'font:inherit;margin-left:6px;padding:4px 12px;border-radius:12px;border:1px solid #f5d9a8;background:none;color:#f5d9a8';
+        retry.onclick = function () { location.reload(); };
+        t.appendChild(retry);
+      },
       ready: function () {
         document.getElementById('loadFill').style.width = '100%';
-        document.getElementById('loadText').textContent = 'Everything is ready.';
+        var lt = document.getElementById('loadText');
+        if (!lt.querySelector('button')) lt.textContent = 'Everything is ready.';
         if (/[?&]skipintro/.test(location.search)) { enter(); return; }
         enterBtn.hidden = false;
       },

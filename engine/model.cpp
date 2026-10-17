@@ -2,7 +2,9 @@
 
 #include <emscripten/emscripten.h>
 
+#include <algorithm>
 #include <cstddef>
+#include <cstring>
 
 #include "engine/fetch.h"
 #include "engine/gpu_upload.h"
@@ -27,6 +29,24 @@ wgpu::TextureView solidTexture(const wgpu::Device& device, uint8_t r, uint8_t g,
   return createTexture2D(device, 1, 1, pixel, srgb, "solid").CreateView();
 }
 
+// 1x1 stand-ins for missing textures, shared by every model.
+struct Fallbacks {
+  wgpu::TextureView white, whiteLinear, flatNormal;
+};
+const Fallbacks& fallbacks(const wgpu::Device& device) {
+  static Fallbacks f;
+  if (!f.white) {
+    f.white = solidTexture(device, 255, 255, 255, true);
+    f.whiteLinear = solidTexture(device, 255, 255, 255, false);
+    f.flatNormal = solidTexture(device, 128, 128, 255, false);
+  }
+  return f;
+}
+
+// Buffers are filled at most this much per job, so a big model is uploaded
+// over several frames.
+constexpr size_t kSliceBytes = 512 << 10;
+
 // Shared state while one model loads.
 struct Loading {
   wgpu::Device device;
@@ -39,6 +59,9 @@ struct Loading {
   std::vector<wgpu::Texture> srgbTextures, linearTextures;
   size_t pendingImages = 0;
   double startMs = 0;
+  std::shared_ptr<GpuModel> model;  // being built by finish()'s jobs
+  std::shared_ptr<GlbParser> parser;  // while parsing
+  bool failed = false;
   std::function<void(std::shared_ptr<GpuModel>)> done;
 };
 
@@ -85,90 +108,164 @@ wgpu::VertexBufferLayout GpuModel::vertexLayout() {
 
 namespace {
 
+// Fills `buffer` from `data` in slices of at most kSliceBytes, one job each.
+void queueBufferWrites(const std::shared_ptr<Loading>& l, const wgpu::Buffer& buffer, const void* data, size_t size) {
+  for (size_t offset = 0; offset < size; offset += kSliceBytes) {
+    const size_t n = std::min(kSliceBytes, size - offset);
+    // Writes must be multiples of 4 bytes; the buffer is padded to match.
+    const size_t padded = (n + 3) & ~size_t{3};
+    queueJob([l, buffer, data, offset, n, padded] {
+      if (padded == n) {
+        l->device.GetQueue().WriteBuffer(buffer, offset, static_cast<const uint8_t*>(data) + offset, n);
+      } else {
+        std::vector<uint8_t> tail(padded, 0);
+        std::memcpy(tail.data(), static_cast<const uint8_t*>(data) + offset, n);
+        l->device.GetQueue().WriteBuffer(buffer, offset, tail.data(), padded);
+      }
+    }, JobLane::kNormal, "buffer");
+  }
+}
+
+// Builds the GPU model in small jobs: the materials, then each part's
+// buffers in slices, then hands it over.
 void finish(const std::shared_ptr<Loading>& l) {
-  const wgpu::Device& device = l->device;
-  auto model = std::make_shared<GpuModel>();
-  model->boundsMin = l->data.boundsMin;
-  model->boundsMax = l->data.boundsMax;
+  queueJob([l] {
+    const wgpu::Device& device = l->device;
+    auto model = l->model = std::make_shared<GpuModel>();
+    model->boundsMin = l->data.boundsMin;
+    model->boundsMax = l->data.boundsMax;
 
-  // Textures, created once per image and shared by materials. Color images
-  // are sRGB; data images (roughness, normals) are linear.
-  std::vector<wgpu::TextureView> srgbViews(l->srgbTextures.size()), linearViews(l->linearTextures.size());
-  const auto view = [&](int image, bool srgb, const wgpu::TextureView& fallback) {
-    auto& textures = srgb ? l->srgbTextures : l->linearTextures;
-    auto& views = srgb ? srgbViews : linearViews;
-    if (image < 0 || static_cast<size_t>(image) >= textures.size() || !textures[static_cast<size_t>(image)]) {
-      return fallback;
+    // Textures, created once per image and shared by materials. Color images
+    // are sRGB; data images (roughness, normals) are linear.
+    std::vector<wgpu::TextureView> srgbViews(l->srgbTextures.size()), linearViews(l->linearTextures.size());
+    const auto view = [&](int image, bool srgb, const wgpu::TextureView& fallback) {
+      auto& textures = srgb ? l->srgbTextures : l->linearTextures;
+      auto& views = srgb ? srgbViews : linearViews;
+      if (image < 0 || static_cast<size_t>(image) >= textures.size() || !textures[static_cast<size_t>(image)]) {
+        return fallback;
+      }
+      auto& slot = views[static_cast<size_t>(image)];
+      if (!slot) slot = textures[static_cast<size_t>(image)].CreateView();
+      return slot;
+    };
+    const Fallbacks& f = fallbacks(device);
+
+    std::vector<ModelMaterial> materials = l->data.materials;
+    materials.emplace_back();  // the default material, for parts without one
+    for (const ModelMaterial& m : materials) {
+      GpuModel::MaterialUniforms u = {};
+      for (int i = 0; i < 4; ++i) u.baseColor[i] = m.baseColor[i];
+      u.params[0] = m.metallic;
+      u.params[1] = m.roughness;
+      u.params[2] = m.normalScale;
+      u.params[3] = m.occlusionStrength;
+      u.emissive[0] = m.emissive.x;
+      u.emissive[1] = m.emissive.y;
+      u.emissive[2] = m.emissive.z;
+      wgpu::BindGroupEntry e[7];
+      e[0].binding = 1;
+      e[0].buffer = makeBuffer(device, &u, sizeof(u), wgpu::BufferUsage::Uniform);
+      e[0].size = sizeof(u);
+      e[1].binding = 2;
+      e[1].textureView = view(m.baseColorImage, true, f.white);
+      e[2].binding = 3;
+      e[2].textureView = view(m.metalRoughImage, false, f.whiteLinear);
+      e[3].binding = 4;
+      e[3].textureView = view(m.normalImage, false, f.flatNormal);
+      e[4].binding = 5;
+      e[4].textureView = view(m.occlusionImage, false, f.whiteLinear);
+      e[5].binding = 6;
+      e[5].sampler = l->sampler;
+      e[6].binding = 7;
+      e[6].textureView = view(m.emissiveImage, true, f.white);
+      wgpu::BindGroupDescriptor desc;
+      desc.layout = l->layout;
+      desc.entryCount = 7;
+      desc.entries = e;
+      model->bindGroups.push_back(device.CreateBindGroup(&desc));
     }
-    auto& slot = views[static_cast<size_t>(image)];
-    if (!slot) slot = textures[static_cast<size_t>(image)].CreateView();
-    return slot;
-  };
-  const wgpu::TextureView white = solidTexture(device, 255, 255, 255, true);
-  const wgpu::TextureView whiteLinear = solidTexture(device, 255, 255, 255, false);
-  const wgpu::TextureView flatNormal = solidTexture(device, 128, 128, 255, false);
+    l->srgbTextures.clear();
+    l->linearTextures.clear();
 
-  std::vector<ModelMaterial> materials = l->data.materials;
-  materials.emplace_back();  // the default material, for parts without one
-  for (const ModelMaterial& m : materials) {
-    GpuModel::MaterialUniforms u = {};
-    for (int i = 0; i < 4; ++i) u.baseColor[i] = m.baseColor[i];
-    u.params[0] = m.metallic;
-    u.params[1] = m.roughness;
-    u.params[2] = m.normalScale;
-    u.params[3] = m.occlusionStrength;
-    u.emissive[0] = m.emissive.x;
-    u.emissive[1] = m.emissive.y;
-    u.emissive[2] = m.emissive.z;
-    wgpu::BindGroupEntry e[7];
-    e[0].binding = 1;
-    e[0].buffer = makeBuffer(device, &u, sizeof(u), wgpu::BufferUsage::Uniform);
-    e[0].size = sizeof(u);
-    e[1].binding = 2;
-    e[1].textureView = view(m.baseColorImage, true, white);
-    e[2].binding = 3;
-    e[2].textureView = view(m.metalRoughImage, false, whiteLinear);
-    e[3].binding = 4;
-    e[3].textureView = view(m.normalImage, false, flatNormal);
-    e[4].binding = 5;
-    e[4].textureView = view(m.occlusionImage, false, whiteLinear);
-    e[5].binding = 6;
-    e[5].sampler = l->sampler;
-    e[6].binding = 7;
-    e[6].textureView = view(m.emissiveImage, true, white);
-    wgpu::BindGroupDescriptor desc;
-    desc.layout = l->layout;
-    desc.entryCount = 7;
-    desc.entries = e;
-    model->bindGroups.push_back(device.CreateBindGroup(&desc));
-  }
+    // Each part: empty buffers now, filled by slice jobs.
+    for (const ModelPrimitive& p : l->data.primitives) {
+      GpuModel::Part part;
+      const size_t vbytes = p.vertices.size() * sizeof(ModelVertex), ibytes = p.indices.size() * sizeof(uint32_t);
+      wgpu::BufferDescriptor vd;
+      vd.size = (vbytes + 3) & ~size_t{3};
+      vd.usage = wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst;
+      part.vertexBuffer = device.CreateBuffer(&vd);
+      wgpu::BufferDescriptor id;
+      id.size = (ibytes + 3) & ~size_t{3};
+      id.usage = wgpu::BufferUsage::Index | wgpu::BufferUsage::CopyDst;
+      part.indexBuffer = device.CreateBuffer(&id);
+      queueBufferWrites(l, part.vertexBuffer, p.vertices.data(), vbytes);
+      queueBufferWrites(l, part.indexBuffer, p.indices.data(), ibytes);
+      part.indexCount = static_cast<uint32_t>(p.indices.size());
+      const bool hasMaterial = p.material >= 0 && static_cast<size_t>(p.material) < l->data.materials.size();
+      part.material = hasMaterial ? static_cast<size_t>(p.material) : l->data.materials.size();
+      part.blend = hasMaterial && l->data.materials[static_cast<size_t>(p.material)].blend;
+      model->hasBlend = model->hasBlend || part.blend;
+      model->parts.push_back(part);
+    }
 
-  size_t triangles = 0;
-  for (const ModelPrimitive& p : l->data.primitives) {
-    GpuModel::Part part;
-    part.vertexBuffer = makeBuffer(device, p.vertices.data(), p.vertices.size() * sizeof(ModelVertex),
-                                   wgpu::BufferUsage::Vertex);
-    part.indexBuffer = makeBuffer(device, p.indices.data(), p.indices.size() * sizeof(uint32_t),
-                                  wgpu::BufferUsage::Index);
-    part.indexCount = static_cast<uint32_t>(p.indices.size());
-    const bool hasMaterial = p.material >= 0 && static_cast<size_t>(p.material) < l->data.materials.size();
-    part.material = hasMaterial ? static_cast<size_t>(p.material) : l->data.materials.size();
-    part.blend = hasMaterial && l->data.materials[static_cast<size_t>(p.material)].blend;
-    model->hasBlend = model->hasBlend || part.blend;
-    triangles += p.indices.size() / 3;
-    model->parts.push_back(part);
-  }
-  LOG_INFO("Model %s: %zu parts, %zu triangles, %zu textures, %.0f ms.", l->url.c_str(), model->parts.size(),
-           triangles, l->data.images.size(), emscripten_get_now() - l->startMs);
-  {  // "assets/models/piano.glb.gz" -> "model:piano"
-    std::string name = l->url.substr(l->url.find_last_of('/') + 1);
-    name = name.substr(0, name.find('.'));
-    profiler().stage("model:" + name, false);  // already logged above
-  }
-  l->done(model);
+    // After every slice (jobs in a lane run in order): hand the model over.
+    queueJob([l] {
+      size_t triangles = 0;
+      for (const GpuModel::Part& part : l->model->parts) triangles += part.indexCount / 3;
+      LOG_INFO("Model %s: %zu parts, %zu triangles, %zu textures, %.0f ms.", l->url.c_str(), l->model->parts.size(),
+               triangles, l->data.images.size(), emscripten_get_now() - l->startMs);
+      std::string name = l->url.substr(l->url.find_last_of('/') + 1);  // "assets/models/piano.glb.gz" -> "piano"
+      name = name.substr(0, name.find('.'));
+      profiler().stage("model:" + name, false);  // already logged above
+      l->data.primitives.clear();  // the GPU has its copy now
+      auto done = std::move(l->done);
+      done(std::move(l->model));
+    }, JobLane::kNormal, "model-done");
+  }, JobLane::kNormal, "model-materials");
 }
 
 }  // namespace
+
+// After parsing: start the image decodes; finish() runs when they're in.
+static void afterParse(const std::shared_ptr<Loading>& l) {
+  // Which images are colors and which are data (both is possible).
+  const size_t count = l->data.images.size();
+  std::vector<bool> asSrgb(count, false), asLinear(count, false);
+  const auto use = [&](int image, bool srgb) {
+    if (image >= 0 && static_cast<size_t>(image) < count) (srgb ? asSrgb : asLinear)[static_cast<size_t>(image)] = true;
+  };
+  for (const ModelMaterial& m : l->data.materials) {
+    use(m.baseColorImage, true);
+    use(m.emissiveImage, true);
+    use(m.metalRoughImage, false);
+    use(m.normalImage, false);
+    use(m.occlusionImage, false);
+  }
+  l->srgbTextures.resize(count);
+  l->linearTextures.resize(count);
+  l->pendingImages = 0;
+  for (size_t i = 0; i < count; ++i) l->pendingImages += asSrgb[i] || asLinear[i] ? 1 : 0;
+  if (l->pendingImages == 0) {
+    finish(l);
+    return;
+  }
+  for (size_t i = 0; i < count; ++i) {
+    if (!asSrgb[i] && !asLinear[i]) continue;
+    std::vector<wgpu::TextureFormat> formats;
+    if (asSrgb[i]) formats.push_back(wgpu::TextureFormat::RGBA8UnormSrgb);
+    if (asLinear[i]) formats.push_back(wgpu::TextureFormat::RGBA8Unorm);
+    ModelImage& img = l->data.images[i];
+    loadImageTexture(l->device, std::move(img.bytes), img.mimeType, formats, l->url.c_str(),
+                     [l, i, srgb = static_cast<bool>(asSrgb[i])](std::vector<wgpu::Texture> textures) {
+      if (textures.empty()) LOG_ERROR("Model %s: texture %zu could not be loaded.", l->url.c_str(), i);
+      size_t k = 0;
+      if (srgb && k < textures.size()) l->srgbTextures[i] = textures[k++];
+      if (k < textures.size()) l->linearTextures[i] = textures[k];
+      if (--l->pendingImages == 0) finish(l);
+    });
+  }
+}
 
 void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& layout, const wgpu::Sampler& sampler,
                     const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done,
@@ -186,49 +283,54 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
       l->done(nullptr);
       return;
     }
-    std::string error;
-    if (!parseGlb(bytes, l->data, error)) {
-      LOG_ERROR("Model %s: %s", l->url.c_str(), error.c_str());
-      l->done(nullptr);
-      return;
-    }
-    // Which images are colors and which are data (both is possible).
-    const size_t count = l->data.images.size();
-    std::vector<bool> asSrgb(count, false), asLinear(count, false);
-    const auto use = [&](int image, bool srgb) {
-      if (image >= 0 && static_cast<size_t>(image) < count) (srgb ? asSrgb : asLinear)[static_cast<size_t>(image)] = true;
-    };
-    for (const ModelMaterial& m : l->data.materials) {
-      use(m.baseColorImage, true);
-      use(m.emissiveImage, true);
-      use(m.metalRoughImage, false);
-      use(m.normalImage, false);
-      use(m.occlusionImage, false);
-    }
-    l->srgbTextures.resize(count);
-    l->linearTextures.resize(count);
-    l->pendingImages = 0;
-    for (size_t i = 0; i < count; ++i) l->pendingImages += asSrgb[i] || asLinear[i] ? 1 : 0;
-    if (l->pendingImages == 0) {
-      queueJob([l] { finish(l); });
-      return;
-    }
-    for (size_t i = 0; i < count; ++i) {
-      if (!asSrgb[i] && !asLinear[i]) continue;
-      std::vector<wgpu::TextureFormat> formats;
-      if (asSrgb[i]) formats.push_back(wgpu::TextureFormat::RGBA8UnormSrgb);
-      if (asLinear[i]) formats.push_back(wgpu::TextureFormat::RGBA8Unorm);
-      ModelImage& img = l->data.images[i];
-      loadImageTexture(l->device, img.bytes, img.mimeType, formats, l->url.c_str(),
-                       [l, i, srgb = static_cast<bool>(asSrgb[i])](std::vector<wgpu::Texture> textures) {
-        if (textures.empty()) LOG_ERROR("Model %s: texture %zu could not be loaded.", l->url.c_str(), i);
-        size_t k = 0;
-        if (srgb && k < textures.size()) l->srgbTextures[i] = textures[k++];
-        if (k < textures.size()) l->linearTextures[i] = textures[k];
-        if (--l->pendingImages == 0) queueJob([l] { finish(l); });
-      });
-    }
-    for (ModelImage& m : l->data.images) std::vector<uint8_t>().swap(m.bytes);  // the browser has its own copy
+    // Parsing runs as jobs too: the file's directory, then one job per mesh
+    // part, then the materials and images.
+    queueJob([l, bytes = std::move(bytes)]() mutable {
+      l->parser = std::make_shared<GlbParser>();
+      std::string error;
+      if (!l->parser->begin(std::move(bytes), error)) {
+        LOG_ERROR("Model %s: %s", l->url.c_str(), error.c_str());
+        l->done(nullptr);
+        return;
+      }
+      for (size_t i = 0; i < l->parser->partCount(); ++i) {
+        queueJob([l] {
+          if (l->failed) return;
+          std::string e;
+          if (!l->parser->step(l->data, e)) {
+            l->failed = true;
+            LOG_ERROR("Model %s: %s", l->url.c_str(), e.c_str());
+            l->done(nullptr);
+          }
+        }, JobLane::kNormal, "model-part");
+      }
+      queueJob([l] {
+        if (l->failed) return;
+        std::string e;
+        if (!l->parser->finish(l->data, e)) {
+          l->failed = true;
+          LOG_ERROR("Model %s: %s", l->url.c_str(), e.c_str());
+          l->done(nullptr);
+          return;
+        }
+        for (size_t i = 0; i < l->data.images.size(); ++i) {  // one image copy per job
+          queueJob([l, i] {
+            if (l->failed) return;
+            std::string err;
+            if (!l->parser->image(i, l->data, err)) {
+              l->failed = true;
+              LOG_ERROR("Model %s: %s", l->url.c_str(), err.c_str());
+              l->done(nullptr);
+            }
+          }, JobLane::kNormal, "model-image");
+        }
+        queueJob([l] {
+          if (l->failed) return;
+          l->parser.reset();
+          afterParse(l);
+        }, JobLane::kNormal, "model-images-done");
+      }, JobLane::kNormal, "model-parse-end");
+    }, JobLane::kNormal, "model-parse");
   }, std::move(progress));
 }
 

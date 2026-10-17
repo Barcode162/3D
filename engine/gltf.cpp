@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <memory>
+#include <utility>
 
 #include "engine/json.h"
 
@@ -255,27 +257,43 @@ bool readPrimitive(GlbReader& r, const Json& prim, const Mat4& world, ModelPrimi
   return true;
 }
 
-bool readNode(GlbReader& r, const Json& doc, int index, const Mat4& parent, int depth, ModelData& out) {
+// Lists every mesh part in the scene with its world transform (cheap: no
+// vertex data is read here).
+bool collectNodes(GlbReader& r, const Json& doc, int index, const Mat4& parent, int depth,
+                  std::vector<std::pair<const Json*, Mat4>>& out) {
   if (depth > 32) return r.fail("node tree too deep");
   const Json& node = doc["nodes"][static_cast<size_t>(index)];
   const Mat4 world = parent * nodeMatrix(node);
   if (node.has("mesh")) {
     const Json& mesh = doc["meshes"][static_cast<size_t>(node["mesh"].integer())];
-    for (const Json& prim : mesh["primitives"].items()) {
-      ModelPrimitive p;
-      if (!readPrimitive(r, prim, world, p)) return false;
-      if (!p.indices.empty()) out.primitives.push_back(std::move(p));
-    }
+    for (const Json& prim : mesh["primitives"].items()) out.emplace_back(&prim, world);
   }
   for (const Json& child : node["children"].items()) {
-    if (!readNode(r, doc, child.integer(), world, depth + 1, out)) return false;
+    if (!collectNodes(r, doc, child.integer(), world, depth + 1, out)) return false;
   }
   return true;
 }
 
 }  // namespace
 
-bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& error) {
+struct GlbParser::State {
+  std::vector<uint8_t> file;
+  Json doc;
+  const uint8_t* bin = nullptr;
+  size_t binSize = 0;
+  std::string error;
+  std::unique_ptr<GlbReader> reader;
+  std::vector<std::pair<const Json*, Mat4>> parts;
+  size_t next = 0;
+};
+
+GlbParser::GlbParser() : s_(std::make_unique<State>()) {}
+GlbParser::~GlbParser() = default;
+
+bool GlbParser::begin(std::vector<uint8_t> fileBytes, std::string& error) {
+  State& st = *s_;
+  st.file = std::move(fileBytes);
+  const std::vector<uint8_t>& file = st.file;
   error.clear();
   if (file.size() < 20 || readU32(file.data()) != kGlbMagic) {
     error = "not a .glb file";
@@ -287,8 +305,6 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
   }
   // Chunks: JSON first, then the optional binary chunk.
   std::string_view jsonText;
-  const uint8_t* bin = nullptr;
-  size_t binSize = 0;
   size_t offset = 12;
   const size_t total = std::min<size_t>(readU32(file.data() + 8), file.size());
   while (offset + 8 <= total) {
@@ -297,9 +313,9 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
     if (offset + 8 + length > total) break;
     const uint8_t* data = file.data() + offset + 8;
     if (type == kChunkJson) jsonText = {reinterpret_cast<const char*>(data), length};
-    if (type == kChunkBin && !bin) {
-      bin = data;
-      binSize = length;
+    if (type == kChunkBin && !st.bin) {
+      st.bin = data;
+      st.binSize = length;
     }
     offset += 8 + ((length + 3) & ~3u);
   }
@@ -308,18 +324,41 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
     return false;
   }
   std::string jsonError;
-  const Json doc = Json::parse(jsonText, &jsonError);
-  if (!doc.isObject()) {
+  st.doc = Json::parse(jsonText, &jsonError);
+  if (!st.doc.isObject()) {
     error = "bad JSON: " + jsonError;
     return false;
   }
-
-  GlbReader reader(doc, bin, binSize, error);
-  const Json& scene = doc["scenes"][static_cast<size_t>(doc["scene"].integer(0))];
+  st.reader = std::make_unique<GlbReader>(st.doc, st.bin, st.binSize, st.error);
+  const Json& scene = st.doc["scenes"][static_cast<size_t>(st.doc["scene"].integer(0))];
   for (const Json& node : scene["nodes"].items()) {
-    if (!readNode(reader, doc, node.integer(), Mat4(), 0, out)) return false;
+    if (!collectNodes(*st.reader, st.doc, node.integer(), Mat4(), 0, st.parts)) {
+      error = st.error;
+      return false;
+    }
   }
+  return true;
+}
 
+size_t GlbParser::partCount() const { return s_->parts.size(); }
+bool GlbParser::done() const { return s_->next >= s_->parts.size(); }
+
+bool GlbParser::step(ModelData& out, std::string& error) {
+  State& st = *s_;
+  if (done()) return true;
+  const auto& [prim, world] = st.parts[st.next++];
+  ModelPrimitive p;
+  if (!readPrimitive(*st.reader, *prim, world, p)) {
+    error = st.error;
+    return false;
+  }
+  if (!p.indices.empty()) out.primitives.push_back(std::move(p));
+  return true;
+}
+
+bool GlbParser::finish(ModelData& out, std::string& error) {
+  State& st = *s_;
+  const Json& doc = st.doc;
   // Materials: glTF textures point at images; store image indices directly.
   const auto imageOf = [&](const Json& textureInfo) {
     if (!textureInfo.has("index")) return -1;
@@ -348,11 +387,7 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
                         static_cast<float>(e[2].number())} * strength;
     out.materials.push_back(mat);
   }
-  for (size_t i = 0; i < doc["images"].size(); ++i) {
-    ModelImage img;
-    if (!reader.image(static_cast<int>(i), img)) return false;
-    out.images.push_back(std::move(img));
-  }
+  out.images.resize(doc["images"].size());  // filled by image()
 
   if (out.primitives.empty()) {
     error = "no triangles in the file";
@@ -366,6 +401,33 @@ bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& err
       out.boundsMax = {std::max(out.boundsMax.x, v.position.x), std::max(out.boundsMax.y, v.position.y),
                        std::max(out.boundsMax.z, v.position.z)};
     }
+  }
+  return true;
+}
+
+bool GlbParser::image(size_t index, ModelData& out, std::string& error) {
+  State& st = *s_;
+  if (index >= out.images.size()) return true;
+  if (!st.reader->image(static_cast<int>(index), out.images[index])) {
+    error = st.error;
+    return false;
+  }
+  if (index + 1 == out.images.size()) {  // the last one: done with the file
+    st.file.clear();
+    st.file.shrink_to_fit();
+  }
+  return true;
+}
+
+bool parseGlb(const std::vector<uint8_t>& file, ModelData& out, std::string& error) {
+  GlbParser parser;
+  if (!parser.begin(file, error)) return false;
+  while (!parser.done()) {
+    if (!parser.step(out, error)) return false;
+  }
+  if (!parser.finish(out, error)) return false;
+  for (size_t i = 0; i < out.images.size(); ++i) {
+    if (!parser.image(i, out, error)) return false;
   }
   return true;
 }

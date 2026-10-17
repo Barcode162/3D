@@ -81,7 +81,8 @@ judged on the user's phone.
 - `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
   (incl. taps), logging, files, text (own pixel font), procedural textures,
   audio bridge, skeletons and skinned meshes, physics, car physics
-  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`), the frame
+  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
+  (`jobs.*`), async pipelines (`pipeline_cache.*`), the frame
   profiler and performance overlay (`profiler.*`, `?perf=1`).
 - `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,

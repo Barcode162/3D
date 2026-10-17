@@ -15,10 +15,6 @@
 namespace engine {
 namespace {
 
-std::deque<std::function<void()>>& jobs() {
-  static std::deque<std::function<void()>> q;
-  return q;
-}
 
 // --- Mipmaps on the GPU: draw each level from the one above with a
 // filtered (bilinear) read of the middle of every 2x2 block.
@@ -111,6 +107,20 @@ std::map<int, PendingImage>& pendingImages() {
   return p;
 }
 
+// At most kMaxDecodes images decode at once (each decoded bitmap holds its
+// full pixels in memory until its job copies it); the rest wait here.
+constexpr int kMaxDecodes = 4;
+int g_decoding = 0;
+struct WaitingDecode {
+  int id;
+  std::vector<uint8_t> bytes;
+  std::string mime;
+};
+std::deque<WaitingDecode>& waitingDecodes() {
+  static std::deque<WaitingDecode> w;
+  return w;
+}
+
 EM_JS(void, js_decodeBitmap, (int id, const uint8_t* data, int size, const char* mime), {
   var bytes = HEAPU8.slice(data, data + size);
   var blob = new Blob([bytes], {type: UTF8ToString(mime)});
@@ -148,10 +158,6 @@ EM_JS(void, js_dropBitmap, (int id), {
 
 }  // namespace
 
-void queueJob(std::function<void()> job) { jobs().push_back(std::move(job)); }
-
-size_t pendingJobs() { return jobs().size(); }
-
 namespace {
 const wgpu::Device* g_mipDevice = nullptr;
 }  // namespace
@@ -161,42 +167,20 @@ void prepareMipmaps(const wgpu::Device& device) {
   MipKit& kit = mipKit(device);
   mipPipeline(kit, wgpu::TextureFormat::RGBA8Unorm);
   mipPipeline(kit, wgpu::TextureFormat::RGBA8UnormSrgb);
+  // Texture jobs make mipmaps: jobs wait until both mip pipelines have
+  // compiled (a few ms after start-up) rather than compile one mid-load.
+  setJobGate([] {
+    MipKit& k = mipKit(*g_mipDevice);
+    return k.pipelines[wgpu::TextureFormat::RGBA8Unorm] && k.pipelines[wgpu::TextureFormat::RGBA8UnormSrgb];
+  });
 }
 
-void runJobs(double budgetMs) {
-  const double start = emscripten_get_now();
-  auto& q = jobs();
-  // Texture jobs make mipmaps: wait until both mip pipelines have compiled
-  // (a few ms after start-up) rather than compile one mid-load.
-  if (g_mipDevice) {
-    MipKit& kit = mipKit(*g_mipDevice);
-    if (!kit.pipelines[wgpu::TextureFormat::RGBA8Unorm] || !kit.pipelines[wgpu::TextureFormat::RGBA8UnormSrgb]) {
-      profiler().jobs(0, q.size(), 0);
-      return;
-    }
-  }
-  int ran = 0;
-  double maxJob = 0, before = start;
-  while (!q.empty()) {
-    std::function<void()> job = std::move(q.front());
-    q.pop_front();
-    job();
-    ++ran;
-    const double now = emscripten_get_now();
-    maxJob = std::max(maxJob, now - before);
-    before = now;
-    if (now - start > budgetMs) break;
-  }
-  profiler().jobs(ran, q.size(), maxJob);
-}
-
-void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture) {
+void encodeMipmaps(const wgpu::Device& device, const wgpu::CommandEncoder& encoder, const wgpu::Texture& texture) {
   const uint32_t levels = texture.GetMipLevelCount();
   if (levels < 2) return;
   MipKit& kit = mipKit(device);
   const wgpu::TextureFormat format = texture.GetFormat();
   wgpu::RenderPipeline pipeline = mipPipeline(kit, format);
-  wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
   for (uint32_t level = 1; level < levels; ++level) {
     wgpu::TextureViewDescriptor src;
     src.baseMipLevel = level - 1;
@@ -227,17 +211,33 @@ void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture) {
     p.Draw(3);
     p.End();
   }
+}
+
+void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture) {
+  wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
+  encodeMipmaps(device, encoder, texture);
   wgpu::CommandBuffer commands = encoder.Finish();
   device.GetQueue().Submit(1, &commands);
 }
 
-void loadImageTexture(const wgpu::Device& device, const std::vector<uint8_t>& bytes, const std::string& mimeType,
+void startDecodes() {
+  auto& waiting = waitingDecodes();
+  while (g_decoding < kMaxDecodes && !waiting.empty()) {
+    WaitingDecode w = std::move(waiting.front());
+    waiting.pop_front();
+    ++g_decoding;
+    js_decodeBitmap(w.id, w.bytes.data(), static_cast<int>(w.bytes.size()), w.mime.c_str());
+  }
+}
+
+void loadImageTexture(const wgpu::Device& device, std::vector<uint8_t> bytes, const std::string& mimeType,
                       std::vector<wgpu::TextureFormat> formats, const char* label,
                       std::function<void(std::vector<wgpu::Texture>)> done) {
   static int nextId = 1;
   const int id = nextId++;
   pendingImages()[id] = {std::move(formats), label ? label : "", device, std::move(done)};
-  js_decodeBitmap(id, bytes.data(), static_cast<int>(bytes.size()), mimeType.c_str());
+  waitingDecodes().push_back({id, std::move(bytes), mimeType});
+  startDecodes();
 }
 
 }  // namespace engine
@@ -246,13 +246,19 @@ void loadImageTexture(const wgpu::Device& device, const std::vector<uint8_t>& by
 // GPU work waits in the job queue so it's spread over frames.
 extern "C" EMSCRIPTEN_KEEPALIVE void engine_bitmapDecoded(int id, int width, int height) {
   using namespace engine;
+  --g_decoding;
+  startDecodes();
   queueJob([id, width, height] {
     auto& pending = pendingImages();
     const auto it = pending.find(id);
-    if (it == pending.end()) return;
+    if (it == pending.end()) {
+      js_dropBitmap(id);  // always free the bitmap, even if nobody waits for it
+      return;
+    }
     PendingImage p = std::move(it->second);
     pending.erase(it);
     std::vector<wgpu::Texture> textures;
+    wgpu::CommandEncoder encoder = p.device.CreateCommandEncoder();  // one submit for all mip work
     if (width > 0 && height > 0) {
       for (wgpu::TextureFormat format : p.formats) {
         wgpu::TextureDescriptor desc;
@@ -267,11 +273,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE void engine_bitmapDecoded(int id, int width, int
           textures.clear();
           break;
         }
-        generateMipmaps(p.device, texture);
+        encodeMipmaps(p.device, encoder, texture);
         textures.push_back(texture);
       }
     }
+    wgpu::CommandBuffer commands = encoder.Finish();
+    p.device.GetQueue().Submit(1, &commands);
     js_dropBitmap(id);
     p.done(std::move(textures));
-  });
+  }, JobLane::kNormal, "texture");
 }

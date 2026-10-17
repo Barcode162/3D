@@ -14,9 +14,12 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1-0.4, 1.1, 1.2a, 1.3 (2026-10-17). Next: 1.4** (job
-scheduler and sliced model loading). User's pace: in order, 2-3 steps per
-message. Waiting on the user: 3 reports for the G4 baseline (after
+last section). **Done: 0.1-0.4, 1.1-1.5 (2026-10-17). Next: 1.6, 1.7, 1.8** (textures
+at export, cheap GPU wins, loader tidy-up). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
+related steps (about 3 per message), automatic tests on every change, docs
+once per batch. Racing: keep the racing steps for multiplayer/sync, but
+skip anything that changes car/track models or visuals (the user will
+redesign the racing game). Waiting on the user: 3 reports for the G4 baseline (after
 "Tap to enter", at the big mirror, after 2 minutes walking), and the tap
 stutter (yellow bar on every tap, seen 2026-10-17): read `recentHitches`
 (`touches`, `phase`) in their reports.
@@ -432,3 +435,9 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-17:** Restructure step 1.3 done: shaders compile in the
   background, and "Tap to enter" waits until a warm-up frame has finished
   on the GPU (loading text shows "Warming up…").
+- **2026-10-17:** Restructure 1.4 + 1.2b + 1.5 done (one batch): loading
+  work in small jobs after each frame (longest ~7-12 ms headless), models
+  parsed and uploaded in slices, downloads retried 3 times with a
+  "parts failed - Retry" message, piano notes from 30 samples made in the
+  background, each player's piano keys/pedal kept apart, MIDI pedal
+  shared, memory starts at 80 MB (no growth while playing).

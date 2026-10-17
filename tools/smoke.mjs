@@ -32,7 +32,7 @@ if (perf) {
     .map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ');
   perfLine = `perf: avg ${perf.avg.toFixed(1)} p95 ${perf.p95.toFixed(1)} worst ${perf.worst.toFixed(0)} ms, ` +
     `cpu ${perf.cpu.toFixed(2)} ms, hitches ${perf.hitchesTotal}, profiler ${perf.phases.profiler.toFixed(3)} ms/frame\n` +
-    `  phases: ${top}\n  draws ${JSON.stringify(perf.draws)} tris ${JSON.stringify(perf.tris)} heap ${perf.heapMB} MB\n` +
+    `  phases: ${top}\n  max job ${perf.maxJobMs.toFixed(1)} ms, slowest loading frame ${perf.loadingWorstCpu.toFixed(0)} ms (CPU)\n  draws ${JSON.stringify(perf.draws)} tris ${JSON.stringify(perf.tris)} heap ${perf.heapMB} MB (grew ${perf.heapGrowths} times after start)\n` +
     `  stages ${JSON.stringify(Object.fromEntries(Object.entries(perf.stages).filter(([k]) => !k.startsWith('model:'))))}`;
 }
 
@@ -54,6 +54,22 @@ await page.mouse.move(215, 520, { steps: 10 });  // about 70 degrees down
 await page.mouse.up();
 await page.waitForTimeout(500);
 await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
+
+// FAIL_MODEL=name: that model's download is blocked (every retry too); the
+// loading screen must say "1 part failed - Retry" and still let you in.
+if (process.env.FAIL_MODEL) {
+  const failPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
+  await failPage.route(`**/assets/models/${process.env.FAIL_MODEL}.glb.gz*`, (r) => r.abort());
+  await failPage.goto(`${site.url}?skipintro`);
+  await failPage.waitForFunction(() => /part failed|parts failed/.test(document.getElementById('loadText').textContent),
+                                 null, { timeout: 120000 }).catch(() => {});
+  const text = await failPage.$eval('#loadText', (e) => e.textContent);
+  await failPage.waitForTimeout(1500);
+  const entered = await failPage.evaluate(() => /Stage entered/.test(document.getElementById('log').textContent));
+  console.log(`failed-download check: "${text}", entered: ${entered}`);
+  if (!/1 part failed/.test(text) || !entered) process.exitCode = 1;
+  await failPage.close();
+}
 
 // Optional close-ups for checking spots: CAM="x,y,z,yaw,pitch" (degrees)
 // saves build/smoke-cam.png from there. Several spots separated by ";"

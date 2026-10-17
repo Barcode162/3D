@@ -523,13 +523,19 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
   // Files are requested in placement order, so the room shell (placed
   // first) arrives first.
   fileProgress_.assign(files.size(), 0.0f);
+  fileNames_ = files;
   for (size_t f = 0; f < files.size(); ++f) {
     engine::GpuModel::load(
         gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f] + ".gz",
         [this, f, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
           fileProgress_[f] = 1.0f;
           ++filesDone_;
-          if (!model) return;
+          if (!model) {
+            ++filesFailed_;
+            // The room shell: without it there's no bar to enter.
+            if (fileNames_[f].find("hall") != std::string::npos) criticalFailed_ = true;
+            return;
+          }
           for (size_t i : placements) models_[i].gpu = model;
           modelsLoaded_ += placements.size();
         },

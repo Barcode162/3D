@@ -131,6 +131,11 @@ class Profiler {
   Frame current_;
   double frameStartMs_ = 0, lastStartMs_ = 0;
   bool published_ = false;
+  float maxJobMs_ = 0;          // the longest single background job so far
+  float loadingWorstCpu_ = 0;   // the slowest frame (CPU) before entering
+  uint16_t lastHeapMB_ = 0;
+  int heapGrowths_ = 0;         // times the heap grew after start-up ("running")
+  bool countGrowth_ = false;
   uint8_t pendingTouches_ = 0;
   uint16_t pendingMoves_ = 0;
   double pendingEventsMs_ = 0;

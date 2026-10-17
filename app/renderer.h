@@ -10,6 +10,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "app/avatar.h"
@@ -79,6 +80,8 @@ class SceneRenderer {
   // Model loading, for the loading screen: files finished (loaded or
   // failed), files in total, and overall progress 0..1 (downloads included).
   size_t modelFilesDone() const { return filesDone_; }
+  size_t modelFilesFailed() const { return filesFailed_; }
+  bool criticalFileFailed() const { return criticalFailed_; }
   size_t modelFiles() const { return fileProgress_.size(); }
   float loadProgress() const;
 
@@ -181,6 +184,9 @@ class SceneRenderer {
   std::vector<float> fileProgress_;  // per model file, 0..1
   std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
   size_t filesDone_ = 0;
+  size_t filesFailed_ = 0;
+  bool criticalFailed_ = false;
+  std::vector<std::string> fileNames_;
   wgpu::TextureView colorMaps_, bumpMaps_;
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i

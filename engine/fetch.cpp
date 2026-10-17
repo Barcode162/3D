@@ -1,9 +1,12 @@
 #include "engine/fetch.h"
 
 #include <emscripten/emscripten.h>
+#include <emscripten/eventloop.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
+#include <string>
 #include <map>
 
 #include "engine/log.h"
@@ -18,7 +21,12 @@ using DecodeDone = std::function<void(bool, Rgba8Image)>;
 struct Download {
   FetchDone done;
   FetchProgress progress;
+  std::string url;
+  int attempt = 0;  // retries so far
+  std::vector<uint8_t> bytes;  // filled by JavaScript in place (no extra copy)
 };
+constexpr int kRetries = 3;
+constexpr double kRetryDelayMs[kRetries] = {500, 1500, 4000};
 
 std::map<int, Download>& pendingDownloads() {
   static std::map<int, Download> pending;
@@ -37,23 +45,6 @@ extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchProgress(int id, float fraction
   auto& pending = pendingDownloads();
   const auto it = pending.find(id);
   if (it != pending.end() && it->second.progress) it->second.progress(std::min(fraction, 1.0f));
-}
-
-// Called from JavaScript when a download has finished (size < 0 = failed).
-extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchDone(int id, uint8_t* data, int size) {
-  auto& pending = pendingDownloads();
-  const auto it = pending.find(id);
-  if (it == pending.end()) return;
-  Download d = std::move(it->second);
-  pending.erase(it);
-  if (size < 0) {
-    d.done(false, {});
-    return;
-  }
-  std::vector<uint8_t> bytes(data, data + size);
-  free(data);
-  if (d.progress) d.progress(1.0f);
-  d.done(true, std::move(bytes));
 }
 
 // fetch() with progress. Files that are gzipped (they start with 1f 8b) are
@@ -88,14 +79,59 @@ EM_JS(void, js_fetch, (int id, const char* urlPtr), {
       return bytes;
     });
   }).then(function(bytes) {
-    var ptr = _malloc(Math.max(bytes.length, 1));
+    var ptr = _engine_fetchBuffer(id, bytes.length);  // C++ owns the memory
+    if (!ptr && bytes.length) throw new Error('no buffer');
     HEAPU8.set(bytes, ptr);
     _engine_fetchDone(id, ptr, bytes.length);
   }).catch(function(e) {
-    err('Download failed: ' + url + ' (' + e + ')');
-    _engine_fetchDone(id, 0, -1);
+    _engine_fetchDone(id, 0, -1);  // C++ retries and reports
   });
 });
+
+// Called from JavaScript before it copies a finished download in: the
+// bytes go straight into the vector the caller will get.
+extern "C" EMSCRIPTEN_KEEPALIVE uint8_t* engine_fetchBuffer(int id, int size) {
+  auto& pending = pendingDownloads();
+  const auto it = pending.find(id);
+  if (it == pending.end() || size < 0) return nullptr;
+  it->second.bytes.resize(static_cast<size_t>(std::max(size, 1)));
+  return it->second.bytes.data();
+}
+
+// Called from JavaScript when a download has finished (size < 0 = failed).
+extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchDone(int id, uint8_t* data, int size) {
+  auto& pending = pendingDownloads();
+  const auto it = pending.find(id);
+  if (it == pending.end()) return;
+  if (size < 0) {
+    Download& d = it->second;
+    if (d.attempt < kRetries) {  // the network hiccuped: try again a bit later
+      LOG_WARN("Download: %s failed, retrying (%d of %d).", d.url.c_str(), d.attempt + 1, kRetries);
+      emscripten_set_timeout([](void* p) {
+        const int retryId = static_cast<int>(reinterpret_cast<intptr_t>(p));
+        auto& all = pendingDownloads();
+        const auto found = all.find(retryId);
+        if (found == all.end()) return;
+        js_fetch(retryId, found->second.url.c_str());
+      }, kRetryDelayMs[d.attempt], reinterpret_cast<void*>(static_cast<intptr_t>(id)));
+      ++d.attempt;
+      return;
+    }
+    LOG_ERROR("Download: %s failed after %d tries.", d.url.c_str(), kRetries + 1);
+    Download failed = std::move(d);
+    pending.erase(it);
+    failed.done(false, {});
+    return;
+  }
+  Download d = std::move(it->second);
+  pending.erase(it);
+  (void)data;
+  std::vector<uint8_t> bytes = std::move(d.bytes);
+  bytes.resize(static_cast<size_t>(size));
+  if (d.progress) d.progress(1.0f);
+  d.done(true, std::move(bytes));
+}
+
 
 // Called from JavaScript when an image has been decoded (pixels = 0 on failure).
 extern "C" EMSCRIPTEN_KEEPALIVE void engine_imageDecoded(int id, uint8_t* pixels, int width, int height) {
@@ -139,7 +175,7 @@ EM_JS(void, js_decodeImage, (int id, const uint8_t* data, int size, const char* 
 void fetchFile(const std::string& url, FetchDone done, FetchProgress progress) {
   static int nextId = 1;
   const int id = nextId++;
-  pendingDownloads()[id] = {std::move(done), std::move(progress)};
+  pendingDownloads()[id] = {std::move(done), std::move(progress), url, 0, {}};
   js_fetch(id, url.c_str());
 }
 

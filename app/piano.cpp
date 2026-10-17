@@ -1,11 +1,14 @@
 #include "app/piano.h"
 
+#include <emscripten/emscripten.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdio>
 
 #include "engine/fetch.h"
+#include "engine/jobs.h"
 #include "engine/log.h"
 #include "engine/synth.h"
 
@@ -18,7 +21,6 @@ namespace {
 constexpr int kFirstKey = 21;          // A0
 constexpr double kLookAhead = 0.35;    // seconds of notes scheduled ahead
 constexpr double kStartDelay = 0.4;    // a new song starts this long after you pick it
-constexpr int kSoundsPerFrame = 3;     // notes synthesized per frame at most (each takes a few ms)
 
 // The keyboard and strings in the piano's model space (tools/assets/piano.py):
 // keys along x (bass at -x), the player at -z.
@@ -116,10 +118,50 @@ void Piano::addUserSong(const std::string& title, const std::string& url) {
 
 Vec3 Piano::world(Vec3 local) const { return position_ + rotation_.rotate(local); }
 
-void Piano::ensureSound(int key) {
-  const int i = key - kFirstKey;
-  if (i < 0 || i >= 88 || sounds_[i].valid()) return;
-  sounds_[i].create(engine::synth::pianoNote(key), engine::synth::kRate);
+float Piano::rateFor(int i) {
+  return std::pow(2.0f, static_cast<float>(i + kFirstKey - sampleKey(sampleOf(i))) / 12.0f);
+}
+
+void Piano::ensureSample(int i) {
+  engine::Sound& s = samples_[sampleOf(i)];
+  if (!s.valid()) s.create(engine::synth::pianoNote(sampleKey(sampleOf(i))), engine::synth::kRate);
+}
+
+void Piano::prepareSamples() {
+  if (preparing_) return;
+  preparing_ = true;
+  // Middle of the keyboard first (most played), then outwards; one per job.
+  for (int d = 0; d < kSamples; ++d) {
+    const int s = kSamples / 2 + ((d % 2) ? -(d + 1) / 2 : d / 2);
+    if (s < 0 || s >= kSamples) continue;
+    engine::queueJob([this, s] { ensureSample(3 * s); }, engine::JobLane::kBackground, "piano-sample");
+  }
+}
+
+int Piano::playKey(int i, float gain, double when) {
+  const Vec3 where = world({0, 1.0f, 0.8f});
+  return samples_[sampleOf(i)].play(gain, &where, when, rateFor(i), engine::Sound::kPiano);
+}
+
+void Piano::releaseAll(Hands& h) {
+  for (int i = 0; i < 88; ++i) {
+    if (h.voice[i] > 0) engine::Sound::stop(h.voice[i], 0, 0.2f);
+    h.voice[i] = 0;
+  }
+  h.pedalHeld.clear();
+  h.pedal = false;
+}
+
+// A key is lit while any player holds it (not just the pedal).
+bool Piano::keyLit(int i, double& since) const {
+  bool lit = false;
+  for (const auto& [player, h] : hands_) {
+    if (h.voice[i] > 0) {
+      lit = true;
+      since = std::min(since, engine::audio::now() - h.start[i]);
+    }
+  }
+  return lit;
 }
 
 std::string Piano::nowPlaying() const {
@@ -175,31 +217,33 @@ void Piano::stopSong(bool fromNetwork) {
   }
 }
 
-void Piano::keyDown(int key, float velocity, bool share) {
+void Piano::keyDown(int key, float velocity, bool share, int player) {
   const int i = key - kFirstKey;
   if (i < 0 || i >= 88) return;
-  ensureSound(key);
-  if (liveVoice_[i] > 0) engine::Sound::stop(liveVoice_[i], 0, 0.05f);
-  const Vec3 where = world({0, 1.0f, 0.8f});
-  liveVoice_[i] = sounds_[i].play(0.25f + 0.75f * velocity, &where, 0, 1, engine::Sound::kPiano);
-  liveStart_[i] = engine::audio::now();
-  pedalHeld_.erase(std::remove(pedalHeld_.begin(), pedalHeld_.end(), i), pedalHeld_.end());
-  ++liveDown_;
+  ensureSample(i);  // only if its background job hasn't made it yet
+  Hands& h = hands_[player];
+  h.lastMs = emscripten_get_now();
+  if (h.voice[i] > 0) engine::Sound::stop(h.voice[i], 0, 0.05f);
+  h.voice[i] = playKey(i, 0.25f + 0.75f * velocity, 0);
+  h.start[i] = engine::audio::now();
+  h.pedalHeld.erase(std::remove(h.pedalHeld.begin(), h.pedalHeld.end(), i), h.pedalHeld.end());
   if (share) {
     const double v[3] = {static_cast<double>(key), velocity, 1};
     engine::net::sendEvent("pk", v, 3);
   }
 }
 
-void Piano::keyUp(int key, bool share) {
+void Piano::keyUp(int key, bool share, int player) {
   const int i = key - kFirstKey;
-  if (i < 0 || i >= 88 || liveVoice_[i] == 0) return;
-  liveDown_ = std::max(0, liveDown_ - 1);
-  if (pedal_) {
-    pedalHeld_.push_back(i);
+  const auto it = hands_.find(player);
+  if (i < 0 || i >= 88 || it == hands_.end() || it->second.voice[i] == 0) return;
+  Hands& h = it->second;
+  h.lastMs = emscripten_get_now();
+  if (h.pedal) {
+    h.pedalHeld.push_back(i);
   } else {
-    engine::Sound::stop(liveVoice_[i], 0, 0.15f);
-    liveVoice_[i] = 0;
+    engine::Sound::stop(h.voice[i], 0, 0.15f);
+    h.voice[i] = 0;
   }
   if (share) {
     const double v[3] = {static_cast<double>(key), 0, 0};
@@ -207,20 +251,34 @@ void Piano::keyUp(int key, bool share) {
   }
 }
 
-void Piano::sustain(bool down) {
-  if (pedal_ == down) return;
-  pedal_ = down;
+void Piano::setPedal(bool down, bool share, int player) {
+  Hands& h = hands_[player];
+  h.lastMs = emscripten_get_now();
+  if (h.pedal == down) return;
+  h.pedal = down;
   if (!down) {
-    for (int i : pedalHeld_) {
-      engine::Sound::stop(liveVoice_[i], 0, 0.2f);
-      liveVoice_[i] = 0;
+    for (int i : h.pedalHeld) {
+      engine::Sound::stop(h.voice[i], 0, 0.2f);
+      h.voice[i] = 0;
     }
-    pedalHeld_.clear();
+    h.pedalHeld.clear();
+  }
+  if (share) {
+    const double v[3] = {-1, 0, down ? 1.0 : 0.0};
+    engine::net::sendEvent("pk", v, 3);
   }
 }
 
 void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, std::vector<engine::net::Event>& events) {
-  (void)nowMs;
+  // Someone who went quiet for 10 s (or left) lets go of everything.
+  for (auto it = hands_.begin(); it != hands_.end();) {
+    if (it->first != kYou && nowMs - it->second.lastMs > 10000) {
+      releaseAll(it->second);
+      it = hands_.erase(it);
+    } else {
+      ++it;
+    }
+  }
   for (const engine::net::WorldEntry& e : entries) {
     if (e.key != "pso" || e.values.size() < 2) continue;
     const int index = static_cast<int>(e.values[0]);
@@ -230,9 +288,9 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
   for (const engine::net::Event& e : events) {
     if (e.type != "pk" || e.values.size() < 3) continue;
     const int key = static_cast<int>(e.values[0]);
-    if (key < 0) sustain(e.values[2] != 0);
-    else if (e.values[2] != 0) keyDown(key, static_cast<float>(e.values[1]), false);
-    else keyUp(key, false);
+    if (key < 0) setPedal(e.values[2] != 0, false, e.player);
+    else if (e.values[2] != 0) keyDown(key, static_cast<float>(e.values[1]), false, e.player);
+    else keyUp(key, false, e.player);
   }
 
   const double now = engine::audio::now();
@@ -272,28 +330,19 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
                          [](const engine::midi::Note& n, double t) { return n.start < t; }) -
         notes.begin());
   }
-  // Make the sounds for the next two seconds' notes, a few per frame.
-  int made = 0;
-  const int budget = lookAhead > 0.5 ? 40 : kSoundsPerFrame;
-  for (size_t k = nextNote_; k < notes.size() && made < budget; ++k) {
-    if (songStartSound_ + notes[k].start > now + 2.0 + lookAhead) break;
-    const int i = notes[k].key - kFirstKey;
-    if (i >= 0 && i < 88 && !sounds_[i].valid()) {
-      ensureSound(notes[k].key);
-      ++made;
-    }
-  }
-  const Vec3 where = world({0, 1.0f, 0.8f});
+  // Samples are made by background jobs (prepareSamples); a note whose
+  // sample isn't ready yet is skipped rather than made inside the frame.
+  prepareSamples();
   while (nextNote_ < notes.size()) {
     const engine::midi::Note& n = notes[nextNote_];
     const double t = songStartSound_ + n.start;
     if (t > now + lookAhead) break;
     const int i = n.key - kFirstKey;
-    if (i >= 0 && i < 88 && !sounds_[i].valid()) break;  // its sound isn't made yet: wait a frame
     ++nextNote_;
     if (t < now - 0.05 || i < 0 || i >= 88) continue;  // joined late: skip notes already past
+    if (!sampleReady(i)) continue;
     const double when = t - now;
-    const int voice = sounds_[i].play(0.2f + 0.7f * n.velocity, &where, when, 1, engine::Sound::kPiano);
+    const int voice = playKey(i, 0.2f + 0.7f * n.velocity, when);
     engine::Sound::stop(voice, when + n.length, 0.18f);
     active_.push_back({n.key, t + n.length, t, n.velocity, voice});
   }
@@ -326,7 +375,8 @@ void Piano::hands(float& left, float& right) const {
     if (a.startTime <= now && now - a.startTime < 0.6) add(a.key);
   }
   for (int i = 0; i < 88; ++i) {
-    if (liveVoice_[i] > 0) add(i + kFirstKey);
+    double since = 99;
+    if (keyLit(i, since)) add(i + kFirstKey);
   }
   left = nL ? sumL / static_cast<float>(nL) : -0.15f;
   right = nR ? sumR / static_cast<float>(nR) : 0.15f;
@@ -344,9 +394,10 @@ void Piano::addBoxes(std::vector<SceneRenderer::Box>& out, double nowMs) const {
     since[i] = std::min(since[i], static_cast<float>(now - a.startTime));
   }
   for (int i = 0; i < 88; ++i) {
-    if (liveVoice_[i] > 0) {
+    double held = 99;
+    if (keyLit(i, held)) {
       glowKey[i] = 1.0f;
-      since[i] = std::min(since[i], static_cast<float>(now - liveStart_[i]));
+      since[i] = std::min(since[i], static_cast<float>(held));
     }
   }
   const float t = static_cast<float>(nowMs / 1000.0);
@@ -388,7 +439,7 @@ void Piano::closeKeyboard() {
   keyboard_ = false;
   for (const Finger& f : fingers_) keyUp(f.key, true);
   fingers_.clear();
-  sustain(false);
+  setPedal(false, true);
 }
 
 int Piano::keyAt(float x, float y, float W, float H) const {
@@ -413,14 +464,7 @@ int Piano::keyAt(float x, float y, float W, float H) const {
 
 bool Piano::updateKeyboard(const std::vector<engine::Input::RawPress>& presses, float W, float H) {
   bool standUp = false;
-  // Every so often, make the sounds of the keys on screen ahead of time.
-  for (int k = 0, made = 0; k < 25 && made < 1; ++k) {
-    const int key = 12 * (octave_ + 1) + k, i = key - kFirstKey;
-    if (i >= 0 && i < 88 && !sounds_[i].valid()) {
-      ensureSound(key);
-      ++made;
-    }
-  }
+  prepareSamples();
   for (const engine::Input::RawPress& p : presses) {
     const float x = p.pos.x * W, y = p.pos.y * H;
     if (p.key == 4 && p.down) standUp = true;  // Escape
@@ -429,11 +473,7 @@ bool Piano::updateKeyboard(const std::vector<engine::Input::RawPress>& presses, 
         if (!topButton(b, W, H).contains(x, y)) continue;
         if (b == 0) octave_ = std::max(0, octave_ - 1);
         if (b == 1) octave_ = std::min(6, octave_ + 1);
-        if (b == 2) {
-          sustain(!pedal_);
-          const double v[3] = {-1, 0, pedal_ ? 1.0 : 0.0};
-          engine::net::sendEvent("pk", v, 3);
-        }
+        if (b == 2) setPedal(!hands_[kYou].pedal, true);
         if (b == 3) songsRequest_ = true;
         if (b == 4) standUp = true;
       }
@@ -461,7 +501,8 @@ void Piano::drawKeyboard(engine::TextRenderer& text, float W, float H, float px)
   text.addRect(0, H * 0.645f, W, H * 0.08f, {0.05f, 0.03f, 0.07f, 0.85f});
   for (int b = 0; b < 5; ++b) {
     const Rect r = topButton(b, W, H);
-    const bool on = b == 2 && pedal_;
+    const auto mine = hands_.find(kYou);
+    const bool on = b == 2 && mine != hands_.end() && mine->second.pedal;
     text.addRect(r.x, r.y, r.w, r.h, on ? Vec4{1.0f, 0.42f, 0.78f, 0.9f} : Vec4{0.16f, 0.12f, 0.2f, 0.95f});
     engine::TextStyle s;
     s.align = 0.5f;
@@ -471,9 +512,12 @@ void Piano::drawKeyboard(engine::TextRenderer& text, float W, float H, float px)
   const float ww = W / kWhitesShown;
   const int c0 = 12 * (octave_ + 1);
   static const int kWhiteSemis[7] = {0, 2, 4, 5, 7, 9, 11};
+  const auto mine = hands_.find(kYou);
   auto down = [&](int key) {
     const int i = key - kFirstKey;
-    return i >= 0 && i < 88 && liveVoice_[i] > 0 && std::find(pedalHeld_.begin(), pedalHeld_.end(), i) == pedalHeld_.end();
+    if (i < 0 || i >= 88 || mine == hands_.end()) return false;
+    const Hands& h = mine->second;
+    return h.voice[i] > 0 && std::find(h.pedalHeld.begin(), h.pedalHeld.end(), i) == h.pedalHeld.end();
   };
   for (int w = 0; w < kWhitesShown; ++w) {
     const int key = c0 + 12 * (w / 7) + kWhiteSemis[w % 7];
