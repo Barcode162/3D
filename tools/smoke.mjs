@@ -1,51 +1,28 @@
 // Smoke test: serves build/site, opens it in headless Chromium with software
 // WebGPU, waits, then prints the on-screen log and saves a screenshot.
 // Usage: node tools/smoke.mjs [siteDir] [screenshot.png]
-// Fails (exit 1) if the log shows any error or the app never starts running.
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+// Fails (exit 1) unless: every model loaded within 120 s, the log shows no
+// error, the profiler numbers exist, and the screenshot isn't blank.
+import { serveSite } from './lib/site.mjs';
+import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
+import { readPng, brightnessSpread } from './lib/png.mjs';
 
-const require = createRequire(import.meta.url);
-let playwright;
-try {
-  playwright = require('playwright');
-} catch {
-  playwright = require(join(process.execPath, '../../lib/node_modules/playwright'));
-}
-
-const siteDir = resolve(process.argv[2] ?? 'build/site');
 const shotPath = process.argv[3] ?? 'build/smoke.png';
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm' };
+const MIN_SPREAD = 8;  // brightness spread (0-255) below this = a blank screen
 
-const server = createServer(async (req, res) => {
-  const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  try {
-    const body = await readFile(join(siteDir, path === '/' ? 'index.html' : path));
-    res.writeHead(200, { 'content-type': types[extname(path)] ?? 'text/html' });
-    res.end(body);
-  } catch {
-    res.writeHead(404).end();
-  }
-}).listen(0);
-const port = server.address().port;
-
-const browser = await playwright.chromium.launch({
-  args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
-         '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
-});
+const site = serveSite(process.argv[2] ?? 'build/site');
+const browser = await launchBrowser();
 const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
 // ?skipintro closes the loading screen by itself once everything is in.
-await page.goto(`http://localhost:${port}/?skipintro`);
-await page.waitForFunction(() => /Everything loaded|Startup failed/.test(document.getElementById('log').textContent),
-                           null, { timeout: 120000 }).catch(() => console.log('(models still loading after 120 s)'));
+const loaded = await openBar(page, site.url, 'skipintro');
+if (!loaded) console.log('(models not all loaded after 120 s, or startup failed)');
 await page.waitForTimeout(1500);
 
-const log = await page.$eval('#log', (el) => [...el.children].map((c) => c.textContent).join('\n'));
-const errors = await page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
+const log = await logText(page);
+const errors = await logErrors(page);
 const status = await page.$eval('#status', (el) => el.textContent);
 await page.screenshot({ path: shotPath });
+const spread = brightnessSpread(readPng(shotPath));
 // Frame profiler numbers (engine/profiler.cpp). Headless runs at 1-2 fps,
 // so judge phase costs and counts here, never the frame rate.
 const perf = await page.evaluate(() => window.bar3dPerf);
@@ -85,9 +62,7 @@ if (process.env.CAM) {
   const cams = process.env.CAM.split(';').map((c) => c.trim()).filter(Boolean);
   for (let i = 0; i < cams.length; ++i) {
     const camPage = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-    await camPage.goto(`http://localhost:${port}/?skipintro&cam=${encodeURIComponent(cams[i])}`);
-    await camPage.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
-                                  { timeout: 120000 }).catch(() => {});
+    await openBar(camPage, site.url, `skipintro&cam=${encodeURIComponent(cams[i])}`);
     await camPage.waitForTimeout(1500);
     const suffix = cams.length === 1 ? '-cam.png' : `-cam-${i + 1}.png`;
     await camPage.screenshot({ path: shotPath.replace(/\.png$/, suffix) });
@@ -95,10 +70,11 @@ if (process.env.CAM) {
   }
 }
 await browser.close();
-server.close();
+site.close();
 
 console.log('--- status ---\n' + status + '\n--- log ---\n' + log);
 console.log(perfLine);
-const ok = errors.length === 0 && log.includes('Running.') && !!perf;
+console.log(`screenshot brightness spread ${spread.toFixed(1)} (blank below ${MIN_SPREAD})`);
+const ok = loaded && errors.length === 0 && log.includes('Running.') && !!perf && spread >= MIN_SPREAD;
 console.log(ok ? 'SMOKE TEST PASSED' : 'SMOKE TEST FAILED');
 process.exit(ok ? 0 : 1);

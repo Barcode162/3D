@@ -120,6 +120,9 @@ struct App {
   // Settings (web/menu.js).
   int settingsVersion = -1;
   bool perfParam = false;  // ?perf=1 forces the performance overlay on
+  // ?still (tests): no intro text, no idle motion, so two screenshots of the
+  // same spot match (tools/imgdiff.mjs). Temporary; moves to TestHooks in 1.8.
+  bool still = false;
   float lookSpeed = 1, invertLook = 1;
   bool showNames = true;
 
@@ -549,7 +552,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
                    H * 0.11f + 22 * px, 9 * px, style);
   }
 
-  if (nowMs < g_app.introEndMs) {
+  if (nowMs < g_app.introEndMs && !g_app.still) {
     const float fade = engine::clampf(static_cast<float>((g_app.introEndMs - nowMs) / 1000.0), 0, 1);
     engine::TextStyle title;
     title.align = 0.5f;
@@ -1341,7 +1344,7 @@ void frame() {
   sceneStart = emscripten_get_now();
 
   g_app.avatarMotion.pitch = cam.pitch;
-  g_app.avatarMotion.time = static_cast<float>(nowMs / 1000.0);
+  g_app.avatarMotion.time = g_app.still ? 0.0f : static_cast<float>(nowMs / 1000.0);
   const app::Avatar& body = g_app.avatars[0];  // the skeleton is the same for every look
   body.pose(g_app.avatarMotion, g_app.avatarBones);
   body.hideHead(g_app.avatarBones, g_app.firstPersonBones);
@@ -1413,6 +1416,7 @@ void onGpuReady(bool ok) {
   }
   engine::profiler().stage("gpu");
   g_app.perfParam = EM_ASM_INT({ return /[?&]perf=1/.test(location.search) ? 1 : 0; }) != 0;
+  g_app.still = EM_ASM_INT({ return /[?&]still/.test(location.search) ? 1 : 0; }) != 0;
   g_app.scene = app::buildBarScene();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   engine::profiler().stage("scene");

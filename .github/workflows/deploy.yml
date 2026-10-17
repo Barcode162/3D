@@ -57,6 +57,48 @@ jobs:
           echo "${GITHUB_SHA::7}" > build/site/version.txt
           touch build/site/.nojekyll
 
+      # --- Tests: a failing step stops the job, so nothing broken is
+      # published. (restructure step 0.4)
+      - name: "Test: native (g++ and em++ + node)"
+        run: |
+          source ./emsdk/emsdk_env.sh
+          bash tools/native/run.sh
+
+      - name: "Test: PHP syntax and EM_ASM lint"
+        run: |
+          for f in server/*.php; do php -l "$f"; done
+          node tools/lint_emasm.mjs
+
+      - name: Install Playwright
+        run: |
+          npm i --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      # Software WebGPU (SwiftShader) on GitHub's runners: see DECISIONS.md
+      # -> Restructure (CI smoke). Non-blocking until it has passed once.
+      - name: "Test: browser smoke (Release build)"
+        continue-on-error: true
+        run: node tools/smoke.mjs
+
+      # Prints only whether the Cloudflare secrets exist, whether wrangler
+      # accepts the token, and whether a workers.dev subdomain is registered.
+      - name: "Check: Cloudflare"
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Cloudflare secrets: missing"; exit 0
+          fi
+          echo "Cloudflare secrets: set"
+          npm ci --prefix cloud --no-audit --no-fund >/dev/null
+          # (whoami's own output has the account email; the logs are public)
+          if npx --prefix cloud wrangler whoami 2>&1 | grep -q "You are logged in"; then echo "wrangler: token works"; else echo "wrangler: token rejected"; fi
+          sub=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain")
+          echo "$sub" | python3 -c 'import json,sys; d=json.load(sys.stdin); r=d.get("result") or {}; print("workers.dev subdomain:", (r.get("subdomain") + ".workers.dev") if r.get("subdomain") else "none (" + str([e.get("message") for e in d.get("errors", [])]) + ")")'
+
       # A Pages deployment that hangs on GitHub's side blocks every later
       # one ("in progress deployment, please cancel <sha> first"). Cancel
       # any unfinished ones so this build can go live.

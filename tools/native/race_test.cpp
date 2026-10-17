@@ -51,5 +51,12 @@ int main() {
                 r.bestLapMs / 1000, r.finishMs / 1000);
   }
   std::printf("stuck resets: %d, race time %.0f s\n", resets, (now - w.goMs()) / 1000);
-  return 0;
+  // Basic checks so CI fails on a broken race: everyone finishes 3 laps in
+  // a sane time with sane lap times.
+  int failures = 0;
+  for (const Racer& r : w.racers()) {
+    if (r.lap < 3 || r.finishMs <= 0 || !(r.bestLapMs > 50000 && r.bestLapMs < 120000)) failures++;
+  }
+  if (failures) std::printf("RACE TEST FAILED (%d racers)\n", failures);
+  return failures ? 1 : 0;
 }

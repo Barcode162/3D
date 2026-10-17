@@ -80,9 +80,10 @@ What changes for you, in order:
   current HEAD and capture `build/before/` with `?still` at the standard spots (plus the
   step's test-param shots); after the change capture `build/after/` the same way and run
   `node tools/imgdiff.mjs build/before build/after` → ≤ 1% differing pixels unless the step
-  says otherwise. `?still`, `tools/imgdiff.mjs` and the spot list `tools/lib/spots.mjs` come
-  from 0.4. Standard spots: door = spawn `0.4,1.65,5.2,0,0`; mirror front; bar top; back
-  bar; piano (stage, piano at x -8, z 5.6). 0.4 writes the exact CAM strings here.
+  says otherwise. Capture with `OUT=build/before node tools/shots.mjs spots` (all spots,
+  `?still`). Standard spots (`tools/lib/spots.mjs`): door `0.4,1.65,5.2,0,0`; mirror
+  `6.0,1.65,3.6,90,0`; bartop `-2.5,1.65,-2.6,0,-20`; backbar `-1.0,1.65,-3.2,0,8`; piano
+  `-3.6,1.65,3.2,-115,-10`. Two runs of the same build differ by 0.000% (checked in 0.4).
 - **Gates** (stop and do something else if not met):
   **G1 met (2026-10-17):** the user created the Cloudflare account and added the GitHub
   secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`. Sessions can't read secrets
@@ -842,9 +843,9 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Mic button DOM rewritten every 150 ms (`menu.js:354-360`) → on change. *[2.1b]*
 - [ ] **L** Dead bridge code (`net.cpp:80-81` panelOpen; `bar3dUi.isOpen`) → modal manager. *[2.1b]*
 - [ ] **L** Backdrop blur over the live canvas (`account.js:62`); two modal systems both z-index 8 → opaque dim + modal manager + cheap render. *[2.1b]*
-- [ ] **M** Closure renames unquoted EM_ASM names in Release only → JS libraries + lint + Release smoke in CI. *[0.4]*
-- [ ] **L** `web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
-- [ ] **L** Models re-gzipped on every build → per-file custom commands. *[0.4]*
+- [x] **M** Closure renames unquoted EM_ASM names in Release only → JS libraries + lint + Release smoke in CI. *[0.4]*
+- [x] **L** `web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
+- [x] **L** Models re-gzipped on every build → per-file custom commands. *[0.4]*
 - [ ] **L** No `STACK_SIZE`, no `-Werror` on engine → set. *[1.5]*
 - [ ] **L** *(review)* `-Werror` would break the build today: `engine/net.cpp:68:61` "empty character constant" inside an EM_ASM body (the only warning across `engine/*.cpp`) → fix it first, verify with a clean rebuild. *[1.5]*
 - [ ] **L** Shaders via `--embed-file` pull in the FS runtime (`CMakeLists.txt:23`) → generated header (optional). *[6.4]*
@@ -1065,8 +1066,8 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** *(review)* The planned `report.php` stores into the docroot (`.htaccess` only, the weakness 5.1 removes), has no global cap or retention, a public GET, and no CORS for the github.io page → private folder, cap 500, 30-day expiry, no secrets in payloads, allowlisted CORS, `?env=1` IONOS facts for 5.1. *[0.3]*
 - [ ] **M** IONOS upload not atomic; a newer push can cancel it halfway (`deploy.yml:16-18,104-106`) → own concurrency group; upload index last / versioned folder. *[8.2]*
 - [x] **M** IONOS `mput` list misses `menu.js`, `voice.js`; `mirror --ignore-time` skips same-size edits (`deploy.yml:104,106`) → generated list, no `--ignore-time`. *[0.1]*
-- [ ] **M** No tests before publishing (`deploy.yml`) → test job. *[0.4]*
-- [ ] **M** *(review)* The CI smoke depends on SwiftShader WebGPU on GitHub's ubuntu runners, never tried (works here with global Playwright 1.56.1) → pinned Playwright + `--with-deps`, non-blocking until one green run. *[0.4]*
+- [x] **M** No tests before publishing (`deploy.yml`) → test job. *[0.4]*
+- [x] **M** *(review)* The CI smoke depends on SwiftShader WebGPU on GitHub's ubuntu runners, never tried (works here with global Playwright 1.56.1) → pinned Playwright + `--with-deps`, non-blocking until one green run. *[0.4]*
 - [ ] **L** *(review)* Sessions can't run Cloudflare/IONOS admin commands (secrets only in Actions; `gh secret list` returns 403 through the proxy) → `cloudflare-check` step and `admin.yml` workflow_dispatch. *[0.4, 3.3]*
 - [ ] **M** SFTP host key accepted blindly (`deploy.yml:98`) → pinned key. *[8.2]*
 - [ ] **M** Cloudflare not wired into the deploy (no wrangler step, no config) → Cloudflare steps in the existing job + config.json (a separate job can't write into the site build; a job-level `if:` can't read secrets). *[3.3]*
@@ -1078,12 +1079,12 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Two live game copies (github.io + joshuavelasco.com/bar): different logins, maybe different builds → one canonical URL (Q5). *[3.5]*
 - [ ] **M** *(review)* Stopping the upload deletes nothing: `lftp mirror -R` has no `--delete`, so `home/bar/relay.php` (returns 200 today) and `rooms/` would stay live as a second room for cached tabs; dropping `project.json` would hide the bar from the homepage (`homepage/index.php` lists folders with one); `account_test.mjs:31` and `voice_test.mjs:33` copy `relay.php` → one-off remote delete with exclusions, keep `project.json` + redirect, port both tests. *[3.4c, 3.5]*
 - [ ] **L** `version.txt` reload becomes dead weight once `index.html` is no-cache → remove. *[8.1]*
-- [ ] **M** Smoke test passes even if models never finish loading (`smoke.mjs:41-42,89`) → require "Everything loaded" + non-blank image. *[0.4]*
+- [x] **M** Smoke test passes even if models never finish loading (`smoke.mjs:41-42,89`) → require "Everything loaded" + non-blank image. *[0.4]*
 - [x] **M** No performance numbers in any test → `window.bar3dPerf` printed by smoke. *[0.2]*
-- [ ] **L** Static server + browser launch copied into 6 scripts (`smoke`, `shots`, `mp_test`, `account_test`, `rhythm_test`, `voice_test`) → `tools/lib/`. *[0.4]*
+- [ ] **L** Static server + browser launch copied into 6 scripts (`smoke`, `shots`, `mp_test`, `account_test`, `rhythm_test`, `voice_test`) → `tools/lib/`. *[0.4]* (smoke, shots, check_live ported; the other four when next touched)
 - [ ] **L** No security/abuse tests → negative cases in room_test and account_test. *[3.2c, 5.1a]*
-- [ ] **M** *(review)* "Looks the same" checks have no baseline images or diff tool, and headless frames aren't deterministic (candle flicker, idle animation) → `?still`, `tools/imgdiff.mjs`, standard spots (VIS). *[0.4]*
-- [ ] **L** `check_live` doesn't compare the sha → `EXPECT_SHA`. *[0.4]*
+- [x] **M** *(review)* "Looks the same" checks have no baseline images or diff tool, and headless frames aren't deterministic (candle flicker, idle animation) → `?still`, `tools/imgdiff.mjs`, standard spots (VIS). *[0.4]*
+- [x] **L** `check_live` doesn't compare the sha → `EXPECT_SHA`. *[0.4]*
 
 ---
 
@@ -1246,6 +1247,10 @@ then "(xN more in 1 s)"). Hitches also record `touches` (taps in that frame).
   (G4 baseline): right after "Tap to enter", at the big mirror, after 2 minutes of walking.
 
 #### 0.4 Tests gate every deploy
+Done 2026-10-17. Tests run as steps of the one deploy job (a failed step stops it before
+publishing) instead of a separate job. `mp_test`, `account_test`, `rhythm_test` and
+`voice_test` still have their own server/browser code (port them when next touched).
+The native tests got basic pass/fail checks (they only printed before).
 - **Files:** `.github/workflows/deploy.yml` (job `test` between build and publish: native tests with
   g++ and em++ + node, `php -l server/*.php`, Playwright chromium smoke on the Release build
   (pin `playwright@1.56.1`, the version that works here, and run

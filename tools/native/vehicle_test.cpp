@@ -32,6 +32,7 @@ CarSpec sportsCar() {
 }
 
 int main() {
+  int failures = 0;  // basic sanity checks, so CI can fail on a broken car
   Flat ground;
   CarAssists assists;
   const float dt = 1.0f / 240;
@@ -137,8 +138,11 @@ int main() {
       maxSlip = std::max(maxSlip, std::fabs(beta));
     }
     std::printf("turned %s; ", car.forward().x > 0 ? "right (correct)" : "LEFT (wrong)");
+    if (!(car.forward().x > 0)) failures++;
+    if (!std::isfinite(car.speed()) || !std::isfinite(car.position.x) || car.speed() * 3.6f < 50) failures++;
     std::printf("step steer 0.15 at 150: yaw rate %.2f rad/s, body slip max %.1f deg, roll %.2f deg, speed %.0f\n",
                 car.angularVelocity.y, maxSlip * 57.3f, std::asin(car.right().y) * 57.3f, car.speed() * 3.6f);
   }
-  return 0;
+  if (failures) std::printf("VEHICLE TEST FAILED (%d checks)\n", failures);
+  return failures ? 1 : 0;
 }

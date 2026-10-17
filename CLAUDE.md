@@ -52,7 +52,16 @@ source /opt/emsdk/emsdk_env.sh
 emcmake cmake -B build -G Ninja      # once
 cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
+bash tools/native/run.sh             # car + race tests, g++ and em++ (node)
+node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
 ```
+CI runs all of these before publishing (smoke is non-blocking until it has
+passed once on GitHub's runners). "Looks the same" checks:
+`OUT=build/before node tools/shots.mjs spots` (5 standard spots with `?still`,
+before the change), same with `OUT=build/after`, then
+`node tools/imgdiff.mjs build/before build/after`. After a deploy:
+`EXPECT_SHA=<sha> NODE_PATH=$(npm root -g) node tools/check_live.mjs` (stays
+out of the real room unless `NET=1`). Test helpers live in `tools/lib/`.
 The smoke test prints the on-screen log and a `perf:` line (phase costs,
 draw counts, start-up stages; never judge frame rate headless), and saves `build/smoke.png` and
 `build/smoke-walk.png` (after walking forward and turning) and

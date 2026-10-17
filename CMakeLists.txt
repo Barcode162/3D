@@ -39,17 +39,37 @@ endif()
 file(GLOB SHADER_FILES CONFIGURE_DEPENDS shaders/*.wgsl)
 set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${SHADER_FILES})
 
-# Place the web page next to the compiled app.js / app.wasm.
-add_custom_command(TARGET app POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/web $<TARGET_FILE_DIR:app>/site
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm $<TARGET_FILE_DIR:app>/site
-)
-# Streamed assets (music, models) and the page's own files (web/) are
-# copied on every build, so a change there shows up even when no C++ changed.
-add_custom_target(site_assets ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/web ${CMAKE_BINARY_DIR}/site
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/site/assets
-  # Models are served gzipped (about half the size); the engine unpacks them
-  # with the browser's DecompressionStream (engine/fetch.cpp). -n keeps the
-  # output identical between builds.
-  COMMAND sh -c "gzip -9 -n -f ${CMAKE_BINARY_DIR}/site/assets/models/*.glb")
+# The site folder (build/site): one staging step. Every file is its own
+# build rule, so only changed files are copied (and models re-gzipped).
+set(SITE ${CMAKE_BINARY_DIR}/site)
+file(GLOB_RECURSE WEB_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/web/*)
+file(GLOB_RECURSE ASSET_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)
+set(SITE_OUTPUTS)
+foreach(src ${WEB_FILES})
+  file(RELATIVE_PATH rel ${CMAKE_SOURCE_DIR}/web ${src})
+  add_custom_command(OUTPUT ${SITE}/${rel} DEPENDS ${src}
+                     COMMAND ${CMAKE_COMMAND} -E copy ${src} ${SITE}/${rel} VERBATIM)
+  list(APPEND SITE_OUTPUTS ${SITE}/${rel})
+endforeach()
+foreach(src ${ASSET_FILES})
+  file(RELATIVE_PATH rel ${CMAKE_SOURCE_DIR} ${src})
+  get_filename_component(dir ${SITE}/${rel} DIRECTORY)
+  if(src MATCHES "\\.glb$")
+    # Models are served gzipped (about half the size); the engine unpacks
+    # them with the browser's DecompressionStream (engine/fetch.cpp). -n
+    # keeps the output identical between builds.
+    add_custom_command(OUTPUT ${SITE}/${rel}.gz DEPENDS ${src}
+                       COMMAND ${CMAKE_COMMAND} -E make_directory ${dir}
+                       COMMAND sh -c "gzip -9 -n -c \"$0\" > \"$1\"" ${src} ${SITE}/${rel}.gz VERBATIM)
+    list(APPEND SITE_OUTPUTS ${SITE}/${rel}.gz)
+  else()
+    add_custom_command(OUTPUT ${SITE}/${rel} DEPENDS ${src}
+                       COMMAND ${CMAKE_COMMAND} -E copy ${src} ${SITE}/${rel} VERBATIM)
+    list(APPEND SITE_OUTPUTS ${SITE}/${rel})
+  endif()
+endforeach()
+add_custom_command(OUTPUT ${SITE}/app.js ${SITE}/app.wasm DEPENDS app
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm ${SITE}
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/app.js ${SITE}/app.wasm)
+add_custom_target(site ALL DEPENDS ${SITE_OUTPUTS})

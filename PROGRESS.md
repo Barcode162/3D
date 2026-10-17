@@ -14,8 +14,8 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: 0.1, 0.2, 0.3 (2026-10-17). Next: 0.4** (tests gate
-every deploy). Waiting on the user: 3 reports for the G4 baseline (after
+last section). **Done: 0.1-0.4 (2026-10-17). Next: 1.1** (stop invisible and
+useless work). Waiting on the user: 3 reports for the G4 baseline (after
 "Tap to enter", at the big mirror, after 2 minutes walking), and the tap
 stutter (yellow bar on every tap, seen 2026-10-17): read `recentHitches`
 (`touches`, `phase`) in their reports.
@@ -393,3 +393,8 @@ A small DAW inside the bar, all DSP written in C++:
   the overlay and reports, race engine sound no longer reschedules Web
   Audio values every frame (the user saw lag only while pressing gas).
   Note: the race sim is timed under "interaction" (race.update runs there).
+- **2026-10-17:** Restructure step 0.4 done. CI runs native tests (g++ and
+  em++), `php -l`, an EM_ASM lint and the browser smoke before publishing,
+  plus a Cloudflare check. New: `tools/imgdiff.mjs`, `?still`,
+  `tools/shots.mjs spots`, `tools/lib/`, `EXPECT_SHA` for check_live. The
+  build copies only changed files (models gzipped once).

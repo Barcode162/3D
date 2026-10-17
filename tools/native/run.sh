@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Runs the native tests twice: built with g++ (fast) and with em++ run in
+# node (the same compiler as the game, so wasm math is checked too).
+# Usage: bash tools/native/run.sh   (needs emsdk_env.sh sourced for em++)
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+mkdir -p build/native
+RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp engine/vehicle.cpp"
+declare -A TESTS=(
+  [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
+  [race_test]="tools/native/race_test.cpp $RACE"
+)
+for t in "${!TESTS[@]}"; do
+  echo "== $t (g++)"
+  g++ -std=c++20 -O2 -I. ${TESTS[$t]} -o build/native/$t
+  build/native/$t
+  if command -v em++ >/dev/null; then
+    echo "== $t (em++ + node)"
+    em++ -std=c++20 -O2 -I. ${TESTS[$t]} -sENVIRONMENT=node -sALLOW_MEMORY_GROWTH=1 -o build/native/$t.js
+    node build/native/$t.js
+  else
+    echo "(em++ not found: skipped the wasm run)"
+  fi
+done
+echo "NATIVE TESTS PASSED"
