@@ -65,7 +65,11 @@ for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
   await p2.goto(`${site.url}?skipintro&server=off`);
   await p2.waitForFunction(() => window.bar3dSettings, null, { timeout: 30000 });
   const got = await p2.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, bar3dSettings.get(k)])), Object.keys(expect));
-  const warns = await p2.evaluate(() => [...document.querySelectorAll('#log div')].filter((d) => /Settings: reset/.test(d.textContent)).length);
+  // The log panel draws on the next animation frame: wait for the line.
+  const countWarns = () => p2.evaluate(() => [...document.querySelectorAll('#log div')].filter((d) => /Settings: reset/.test(d.textContent)).length);
+  for (let t = 0; t < 10000 && (await countWarns()) === 0; t += 200) await p2.waitForTimeout(200);
+  await p2.waitForTimeout(500);  // and make sure no second one follows
+  const warns = await countWarns();
   check(JSON.stringify(got) === JSON.stringify(expect) && warns === 1,
         `saved settings ${saved} → ${JSON.stringify(got)}, ${warns} warning(s)`);
   await p2.close();
