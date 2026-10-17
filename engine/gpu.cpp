@@ -112,6 +112,8 @@ void Gpu::onDevice(wgpu::Device dev) {
 void Gpu::resizeIfNeeded() {
   double cssW = 0, cssH = 0;
   emscripten_get_element_css_size(canvasSelector_.c_str(), &cssW, &cssH);
+  cssWidth = cssW;
+  cssHeight = cssH;
   const double ratio = std::min(emscripten_get_device_pixel_ratio(), kMaxPixelRatio);
   const auto w = static_cast<uint32_t>(std::max(1.0, std::round(cssW * ratio)));
   const auto h = static_cast<uint32_t>(std::max(1.0, std::round(cssH * ratio)));

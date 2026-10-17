@@ -1245,6 +1245,7 @@ void frame() {
   g_app.lastFrameMs = nowMs;
 
   g_app.gpu.resizeIfNeeded();
+  g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   // Loading work (textures, model buffers) gets a slice of each frame: more
   // while the loading screen is up, little once you walk around.
   {
@@ -1256,6 +1257,7 @@ void frame() {
     PROFILE(Phase::kInput);
     handleCommands();
     updateCamera(dt);
+    g_app.input.flushStick();
   }
   {
     PROFILE(Phase::kInteraction);
@@ -1441,6 +1443,7 @@ void onGpuReady(bool ok) {
   // Keep the start height above the floor (test cameras may start higher).
   g_app.eyeHeight = g_app.camera.position.y - app::groundHeight(g_app.scene, g_app.camera.position);
   g_app.input.attach("#canvas");
+  g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.jukebox.init(g_app.scene.jukeboxSpeaker);
   makeSounds();
   using engine::synth::Effect;

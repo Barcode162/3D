@@ -34,6 +34,7 @@ enum class Phase : uint8_t {
   kText,         // HUD and labels queued
   kRender,       // drawing commands encoded and submitted
   kRace,         // the full-screen race (its sim + drawing)
+  kEvents,       // touch / mouse handlers, run by the browser between frames
   kProfiler,     // this profiler and its overlay
   kCount
 };
@@ -66,6 +67,7 @@ class Profiler {
     float maxJobMs = 0;
     uint16_t heapMB = 0;
     uint8_t touches = 0;  // touch / mouse presses since the previous frame
+    uint16_t moves = 0;   // touch / mouse move events since the previous frame
     float gpuMs = 0;      // newest submit-to-done time (see trackGpu)
   };
   struct Stats {
@@ -82,6 +84,8 @@ class Profiler {
     Phase phase;  // the phase that took longest in that frame
     float phaseMs;
     int touches;  // touch presses just before that frame (to spot tap stutters)
+    int moves;     // move events just before it
+    float eventsMs;  // time in their handlers
     float gpuMs;
   };
 
@@ -92,6 +96,11 @@ class Profiler {
   // A touch or mouse event arrived (engine/input.cpp).
   // Events arrive between frames, so they're held until the next one starts.
   void touch() { if (pendingTouches_ < 255) ++pendingTouches_; }
+  // Time spent in an input event handler (move = a touchmove / mousemove).
+  void event(double ms, bool move) {
+    pendingEventsMs_ += ms;
+    if (move && pendingMoves_ < 65535) ++pendingMoves_;
+  }
   // Call right after a Submit: measures until the GPU has finished that work
   // (an upper bound on GPU time per frame; one measurement in flight).
   void trackGpu(const wgpu::Queue& queue);
@@ -123,6 +132,8 @@ class Profiler {
   double frameStartMs_ = 0, lastStartMs_ = 0;
   bool published_ = false;
   uint8_t pendingTouches_ = 0;
+  uint16_t pendingMoves_ = 0;
+  double pendingEventsMs_ = 0;
   bool gpuInFlight_ = false;
   float lastGpuMs_ = 0;
   int pauses_ = 0;  // gaps over 1 s (app in the background): not counted as hitches

@@ -13,7 +13,9 @@ namespace engine {
 namespace {
 
 // Shows the joystick rings (HTML elements in web/index.html) at the touch spot.
-void showStick(bool visible, Vec2 origin, Vec2 knob) {
+// Called once per frame at most (Input::flushStick): moving page elements
+// inside every touch event made Safari redo its layout many times a frame.
+void applyStick(bool visible, Vec2 origin, Vec2 knob) {
   EM_ASM({
     var base = document.getElementById('stickBase');
     var knob = document.getElementById('stickKnob');
@@ -22,6 +24,16 @@ void showStick(bool visible, Vec2 origin, Vec2 knob) {
     base.style.transform = 'translate(' + $1 + 'px,' + $2 + 'px)';
     knob.style.transform = 'translate(' + $3 + 'px,' + $4 + 'px)';
   }, visible, origin.x, origin.y, knob.x, knob.y);
+}
+
+// Remembers how the joystick should look; drawn by Input::flushStick.
+Input* g_stickOwner = nullptr;
+void showStick(bool visible, Vec2 origin, Vec2 knob) {
+  if (!g_stickOwner) return;
+  g_stickOwner->stickVisible = visible;
+  g_stickOwner->stickShownOrigin = origin;
+  g_stickOwner->stickShownKnob = knob;
+  g_stickOwner->stickDirty = true;
 }
 
 Vec2 clampToStick(Vec2 origin, Vec2 p) {
@@ -61,8 +73,7 @@ void pressEnd(Input& in, int id, Vec2 p, bool cancelled) {
   if (!press) return;
   pressMove(in, id, p);
   if (!cancelled && press->moved < kTapMaxMove && emscripten_get_now() - press->startMs < kTapMaxMs) {
-    double w = 0, h = 0;
-    emscripten_get_element_css_size("#canvas", &w, &h);
+    const double w = in.canvasW, h = in.canvasH;
     if (w > 0 && h > 0) in.taps.push_back({static_cast<float>(p.x / w), static_cast<float>(p.y / h)});
   }
   press->id = Input::kNone;
@@ -80,11 +91,9 @@ void trackPointer(Input& in, int id, Vec2 pos, int type, bool mouse) {
   }
 }
 
-bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
+bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
-  if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
-  double canvasW = 0, canvasH = 0;
-  emscripten_get_element_css_size("#canvas", &canvasW, &canvasH);
+  const double canvasW = in.canvasW, canvasH = in.canvasH;
   if (in.capture) {
     const double now = emscripten_get_now();
     for (int i = 0; i < e->numTouches; ++i) {
@@ -139,13 +148,11 @@ bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
   return true;  // prevents page scrolling / zooming
 }
 
-bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
+bool handleMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   auto& in = *static_cast<Input*>(user);
-  if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();
   const Vec2 p{static_cast<float>(e->targetX), static_cast<float>(e->targetY)};
   if (in.capture) {
-    double w = 0, h = 0;
-    emscripten_get_element_css_size("#canvas", &w, &h);
+    const double w = in.canvasW, h = in.canvasH;
     if (w <= 0 || h <= 0) return true;
     const Vec2 f{static_cast<float>(p.x / w), static_cast<float>(p.y / h)};
     if (type == EMSCRIPTEN_EVENT_MOUSEMOVE) {
@@ -225,7 +232,31 @@ bool onKey(int type, const EmscriptenKeyboardEvent* e, void* user) {
 
 }  // namespace
 
+// Every touch / mouse event is timed for the profiler (Phase::kEvents).
+static bool onTouch(int type, const EmscriptenTouchEvent* e, void* user) {
+  const double start = emscripten_get_now();
+  if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
+  const bool r = handleTouch(type, e, user);
+  profiler().event(emscripten_get_now() - start, type == EMSCRIPTEN_EVENT_TOUCHMOVE);
+  return r;
+}
+
+static bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
+  const double start = emscripten_get_now();
+  if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();
+  const bool r = handleMouse(type, e, user);
+  profiler().event(emscripten_get_now() - start, type == EMSCRIPTEN_EVENT_MOUSEMOVE);
+  return r;
+}
+
+void Input::flushStick() {
+  if (!stickDirty) return;
+  stickDirty = false;
+  applyStick(stickVisible, stickShownOrigin, stickShownKnob);
+}
+
 void Input::attach(const char* canvas) {
+  g_stickOwner = this;
   // Right-click is a game button (mouse steering: brake), not a menu.
   EM_ASM({
     var c = document.querySelector(UTF8ToString($0));

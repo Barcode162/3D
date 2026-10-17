@@ -398,3 +398,13 @@ A small DAW inside the bar, all DSP written in C++:
   plus a Cloudflare check. New: `tools/imgdiff.mjs`, `?still`,
   `tools/shots.mjs spots`, `tools/lib/`, `EXPECT_SHA` for check_live. The
   build copies only changed files (models gzipped once).
+- **2026-10-17:** Race report `ETCPZN` (build 018ee60): during the race CPU
+  ~1 ms and GPU (submit → done) 3-9 ms, yet frames of 30-40 ms keep coming
+  while a finger is down, so the time goes outside our frame. The engine
+  sound fix didn't help. User: GPU number at the bar door is 14-15 ms (near
+  the 16.7 ms budget: Phase 6 and 1.7 matter). Changes: touch handlers no
+  longer measure the page per event (canvas size cached once per frame),
+  the joystick moves once per frame (no layout thrash), and the profiler
+  times input handlers (`events` phase; hitches show `moves`, `eventsMs`).
+  If `eventsMs` stays small in the next report, pull the input mailbox of
+  step 2.1a forward (JS collects touches, C++ reads them once per frame).

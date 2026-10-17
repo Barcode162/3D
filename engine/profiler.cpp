@@ -20,7 +20,7 @@ uint64_t gTris[kPassCount] = {};
 namespace {
 constexpr int kPhases = static_cast<int>(Phase::kCount);
 constexpr const char* kPhaseNames[kPhases] = {"jobs",  "input", "interaction", "physics", "net",  "games",
-                                              "acquire", "scene", "text",       "render",  "race", "profiler"};
+                                              "acquire", "scene", "text",       "render",  "race", "events", "profiler"};
 constexpr size_t kMaxHitches = 32;
 constexpr int kOverlayFrames = 120;
 }  // namespace
@@ -56,14 +56,19 @@ void Profiler::beginFrame(double nowMs) {
       if (afterEnter) ++hitchesAfterEnter_;
       if (hitches_.size() == kMaxHitches) hitches_.erase(hitches_.begin());
       hitches_.push_back(
-          {lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top], last.touches,
+          {lastStartMs_, last.intervalMs, last.cpuMs, static_cast<Phase>(top), last.phaseMs[top], last.touches, last.moves,
+           last.phaseMs[static_cast<int>(Phase::kEvents)],
            last.gpuMs});
     }
   }
   lastStartMs_ = frameStartMs_ = nowMs;
   current_ = Frame{};
   current_.touches = pendingTouches_;
+  current_.moves = pendingMoves_;
+  current_.phaseMs[static_cast<int>(Phase::kEvents)] = static_cast<float>(pendingEventsMs_);
   pendingTouches_ = 0;
+  pendingMoves_ = 0;
+  pendingEventsMs_ = 0;
   for (int p = 0; p < prof::kPassCount; ++p) {
     prof::gDraws[p] = 0;
     prof::gTris[p] = 0;
@@ -192,8 +197,8 @@ std::string Profiler::json() const {
   j += b;
   for (size_t i = 0; i < hitches_.size(); ++i) {
     const Hitch& h = hitches_[i];
-    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f,\"touches\":%d,\"gpu\":%.1f}",
-                  i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches, h.gpuMs);
+    std::snprintf(b, sizeof(b), "%s{\"at\":%.0f,\"ms\":%.1f,\"cpu\":%.1f,\"phase\":\"%s\",\"phaseMs\":%.1f,\"touches\":%d,\"moves\":%d,\"eventsMs\":%.2f,\"gpu\":%.1f}",
+                  i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches, h.moves, h.eventsMs, h.gpuMs);
     j += b;
   }
   j += "],\"stages\":{";

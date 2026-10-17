@@ -483,6 +483,11 @@ was answered by the user on 2026-10-17.
   `bar3d.joshuavelasco60.workers.dev` (step 3.3 adds it to
   `ALLOWED_CLOUD_HOSTS`). Don't print `wrangler whoami` output in CI: it
   shows the account email and the logs are public.
+- **Touch events:** never read layout (getBoundingClientRect, element
+  size) or change page styles inside a touch handler; touchmove can fire
+  120+ times a second on iPhone. The canvas size is measured once per frame
+  (`Gpu::cssWidth`) and the joystick drawn once per frame
+  (`Input::flushStick`).
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.

@@ -39,6 +39,14 @@ class Input {
     bool down = true;
     int key = -1;   // -1 = a touch or click
   };
+  // The canvas size in CSS pixels; set once per frame (Gpu::resizeIfNeeded
+  // measures it), so touch events never have to measure the page.
+  void setCanvasSize(double w, double h) { canvasW = w; canvasH = h; }
+  double canvasW = 0, canvasH = 0;
+  // Moves the joystick rings on the page, if they changed (once per frame).
+  void flushStick();
+  bool stickVisible = false, stickDirty = false;
+  Vec2 stickShownOrigin, stickShownKnob;
   void setCapture(bool on);
   bool capturing() const { return capture; }
   std::vector<RawPress> takeRawPresses();
