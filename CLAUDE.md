@@ -127,7 +127,11 @@ judged on the user's phone.
   codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
   `proto/vectors.json`. `cloud/` is the Cloudflare Worker (`worker.js`:
   router, Origin check, `/health`) + room Durable Object (`room.js`), the
-  multiplayer server: deployed by CI to https://bar3d.joshuavelasco60.workers.dev,
+  multiplayer server. The room checks every shared write (`rules.js`) and runs
+  games itself (`cloud/games/`: darts, jukebox, glasses); the glasses use the
+  bar's own C++ physics compiled for the Worker (`cloud/sim/`, built by
+  `cloud/sim/build.sh` into `room_sim.wasm`, not in git: CI and `setup.sh` build
+  it). It is deployed by CI to https://bar3d.joshuavelasco60.workers.dev,
   its address written into the site's `config.json`. The game finds it there
   (`web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
   On localhost multiplayer is off unless `?cloud=ws://...` is given.

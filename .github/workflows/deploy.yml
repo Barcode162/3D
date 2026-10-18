@@ -59,6 +59,8 @@ jobs:
           sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
           echo "${GITHUB_SHA::7}" > build/site/version.txt
           touch build/site/.nojekyll
+          # The room's physics (the bar's C++ for the Cloudflare Worker).
+          bash cloud/sim/build.sh
 
       # --- Tests: a failing step stops the job, so nothing broken is
       # published. (restructure step 0.4)

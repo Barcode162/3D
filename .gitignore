@@ -5,3 +5,4 @@ node_modules/
 __pycache__/
 .wrangler/
 build-debug/
+cloud/sim/room_sim.wasm

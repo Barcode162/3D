@@ -380,6 +380,13 @@ window.bar3dNet = (function () {
   }
 
   function onTick(t) {
+    // Glasses moved by the room's physics: handed to C++ as world entries
+    // g<n> (pos, quat, vel, state 1 = in someone's hand, 0 = flying).
+    (t.props || []).forEach(function (p) {
+      var held = ('glass.' + p.id) in claims ? 1 : 0;
+      worldIn.push(['g' + p.id, 0, [p.pos[0], p.pos[1], p.pos[2], p.quat[0], p.quat[1], p.quat[2], p.quat[3],
+                                    p.vel[0], p.vel[1], p.vel[2], held]]);
+    });
     t.players.forEach(function (row) {
       var p = players[pidOf(row.slot)];
       if (!p) return;

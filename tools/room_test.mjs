@@ -248,16 +248,32 @@ try {
   const r11 = room('rules');
   const ra = await joined(r11, { name: 'Ana' }), rb = await joined(r11, { name: 'Bo', ticket: 'test:bo:bartender' });
   await rb.until(() => rb.find('F', (f) => f.acct === 'bo'));
-  const glass = (x) => [x, 1.1, -3, 0, 0, 0, 1, 0, 0, 0, 2];
-  ra.send('I', { i: 1, k: 'claim', key: 'glass.2' });
-  await ra.until(() => ra.find('R', (r) => r.r === 1));
-  ra.send('K', { w: { g2: glass(1) } });
-  check(!!(await rb.until(() => rb.find('K', (k) => k.w.some((e) => e[1] === 'g2' && e[3][0] === 1)))), 'the glass holder moves the glass');
-  rb.send('K', { w: { g2: glass(5) } });
-  const snap = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'g2' && e[2] !== rb.find('W').body.slot && e[3][0] === 1 && rb.all('K').length >= 2));
+  // Glasses: the room's own physics moves them (cloud/games/glasses.js).
+  const sAna = ra.find('W').body.slot;
+  ra.state(1, -3.7, { y: 1.65, z: -3.4 });  // standing at the bar, next to glass 1
+  await wait(200);
+  ra.send('I', { i: 1, k: 'grab', g: 1 });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 1)))?.body.ok === 1, 'Ana grabs glass 1 (in reach)');
+  check(!!(await rb.until(() => rb.find('D', (d) => d.d.some((x) => x[1] === 'claim.glass.1' && x[2] === sAna)))), 'everyone hears Ana has it');
+  rb.send('I', { i: 2, k: 'grab', g: 1 });
+  check((await rb.until(() => rb.find('R', (r) => r.r === 2)))?.body.why === 'taken', 'Bo can\'t grab it from her hand');
+  const heldPose = await rb.until(() => rb.all('T').flatMap((m) => m.body.props).find((p) => p.id === 1));
+  check(heldPose && Math.abs(heldPose.pos[0] - -3.58) < 0.5 && heldPose.pos[1] > 1.1, `the room moves it to her hand (${heldPose && heldPose.pos.map((v) => v.toFixed(2))})`);
+  rb.send('K', { w: { g2: [1, 1.1, -3, 0, 0, 0, 1, 0, 0, 0, 2] } });
   await wait(300);
-  check(!ra.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 'g2' && e[3][0] === 5), 'someone else can\'t move a glass you hold');
-  check(!!snap, 'and their copy is sent back to where the room has it');
+  check(!ra.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 'g2'), 'phones can\'t write a glass\'s position');
+  ra.send('I', { i: 3, k: 'throw', g: 1, vel: [1.5, 1, 0] });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 3)))?.body.ok === 1, 'Ana throws it');
+  check(!!(await rb.until(() => rb.find('D', (d) => d.d.some((x) => x[1] === 'claim.glass.1' && x[2] === -1)))), 'it\'s nobody\'s once it leaves her hand');
+  const rest = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'g1' && e[2] === -1 && e[3][10] === 2), 8000);
+  const flight = rb.all('T').flatMap((m) => m.body.props).filter((p) => p.id === 1);
+  check(!!rest && flight.length > 5, `it flies (${flight.length} poses) and comes to rest, decided by the room (${rest && rest[3].slice(0, 3).map((v) => v.toFixed(2))})`);
+  ra.state(2, 15, { y: 1.65, z: 15 });  // across the room
+  await wait(200);
+  ra.send('I', { i: 4, k: 'grab', g: 2 });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 4)))?.body.why === 'too far', 'a glass out of reach can\'t be grabbed');
+  ra.send('I', { i: 6, k: 'claim', key: 'glass.3' });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 6)))?.body.ok === 0, 'glasses can\'t be claimed around the physics');
   const okBefore = ra.all('K').length;
   ra.send('K', { w: { lt: [5, 0], zz: [1], g0: [99, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2] } });
   await wait(300);

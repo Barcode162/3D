@@ -181,7 +181,7 @@ await browser.close();
 await roomServer.stop();
 site.close();
 const putDown = /Put down at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(carolLog);
-const rested = /glass 1 came to rest at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(log);
+const rested = /glass 1 (?:came to rest at|is at) (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(log);
 const rejoined = /glass 1 is at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(carolLog2);
 const near = (m) => m && putDown && Math.abs(+m[1] - +putDown[1]) < 0.05 && Math.abs(+m[3] - +putDown[3]) < 0.05;
 const checks = {

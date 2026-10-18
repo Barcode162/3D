@@ -882,10 +882,12 @@ void putDownOrThrow(Vec3 dir) {
     b.velocity = {};
     b.angularVelocity = {};
     LOG_INFO("Put down at %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
+    g_app.shared.letGo(g_app.held, b, true);
   } else {
     b.velocity = dir * kThrowSpeed + Vec3{0, 1.0f, 0};
     b.angularVelocity = {0, 0, 0};
     LOG_INFO("Thrown from %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
+    g_app.shared.letGo(g_app.held, b, false);
   }
   g_app.held = -1;
 }

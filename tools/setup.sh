@@ -23,3 +23,9 @@ cd "$(dirname "$0")/.."
 if [ -f cloud/package-lock.json ] && [ ! -x cloud/node_modules/.bin/wrangler ]; then
   npm ci --prefix cloud --no-audit --no-fund >/dev/null 2>&1 && echo "Cloud dev server (wrangler) installed." || echo "Note: npm ci --prefix cloud failed (room_test needs it)."
 fi
+
+# The room's physics module (cloud/sim/room_sim.wasm, not in git): the
+# Worker and room_test need it. Never fails the setup.
+if [ ! -f cloud/sim/room_sim.wasm ] && [ -f "$EMSDK_DIR/emsdk_env.sh" ]; then
+  (source "$EMSDK_DIR/emsdk_env.sh" >/dev/null 2>&1 && bash cloud/sim/build.sh >/dev/null 2>&1) && echo "Room physics built (cloud/sim/room_sim.wasm)." || echo "Note: cloud/sim/build.sh failed (room_test needs it)."
+fi

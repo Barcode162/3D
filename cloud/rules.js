@@ -5,8 +5,8 @@
 //
 // Keys today (written by the game, app/*.cpp):
 //   g<n>   glass n: x,y,z, quaternion x,y,z,w, velocity x,y,z, state
-//          (0 moving, 1 held, 2 resting). Only the player who holds the
-//          room's claim `glass.<n>` may move it (anyone may, while nobody holds it).
+//          (0 moving, 1 held, 2 resting). Written only by the room's own
+//          physics (cloud/games/glasses.js); phones use grab/drop/throw intents.
 //   m<n>   mirror n: on (0/1), avatars only (0/1)
 //   jb     jukebox: song (-1 = off), server time it started (s)
 //   pso    piano song: song (-1 = none), server time it starts (s)
@@ -43,9 +43,9 @@ export function checkWrite(key, values, ctx) {
     if (q < 0.9 || q > 1.1) return { ok: false, why: 'bad rotation' };
     if (Math.hypot(v[7], v[8], v[9]) > MAX_SPEED) return { ok: false, why: 'too fast' };
     if (!isInt(v[10], 0, 2)) return { ok: false, why: 'bad glass state' };
-    const owner = ctx.owner(claimFor(key));
-    if (owner !== undefined && owner !== ctx.slot) return { ok: false, why: 'someone else holds it' };
-    return { ok: true, values: v };
+    // The room's physics moves every glass (cloud/games/glasses.js): phones
+    // ask with grab / drop / throw intents and never write g<n> themselves.
+    return { ok: false, why: 'the room moves the glasses' };
   }
   if ((m = /^m(\d)$/.exec(key))) {
     if (v.length !== 2 || !isBit(v[0]) || !isBit(v[1])) return { ok: false, why: 'a mirror is two 0/1 values' };

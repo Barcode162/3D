@@ -6,6 +6,7 @@
 #include <string>
 
 #include "engine/audio.h"
+#include "engine/frame_time.h"
 #include "engine/log.h"
 #include "engine/net.h"
 
@@ -16,15 +17,12 @@ using engine::Vec3;
 
 namespace {
 
-constexpr double kSendEveryMs = 90;     // a moving glass's updates (the relay ticks every 100 ms)
 constexpr double kExtrapolateMs = 300;  // guess ahead at most this far past the last update
 constexpr double kGoneMs = 3000;        // no update this long: the mover left, let it fall
-constexpr double kQuietMs = 1500;       // after a glass is placed by the network
 constexpr float kFollow = 14.0f;        // how fast a remote glass catches up (per second)
 constexpr double kSongSlack = 2.0;      // seconds; closer song starts count as the same
 
 
-std::string glassKey(int index) { return "g" + std::to_string(index); }
 std::string glassClaim(int index) { return "glass." + std::to_string(index); }
 
 }  // namespace
@@ -46,23 +44,40 @@ void SharedWorld::pickedUp(int body) {
   Glass& g = glasses_[static_cast<size_t>(body)];
   g.mode = Mode::kMine;
   g.settled = true;
-  g.lastSentMs = -1e9;  // send right away
-  // The room decides who holds it: ask (and hold it meanwhile).
-  g.claim = engine::net::claim(glassClaim(body));
+  // The room's physics moves every glass (cloud/games/glasses.js): ask to
+  // grab it, and hold it in your hand meanwhile (the others see the room's).
+  g.claim = engine::net::request("grab", "{\"g\":" + std::to_string(body) + "}");
   g.claimed = true;
+}
+
+void SharedWorld::letGo(int body, engine::Body& b, bool putDown) {
+  if (!on_ || body < 0 || static_cast<size_t>(body) >= glasses_.size()) return;
+  Glass& g = glasses_[static_cast<size_t>(body)];
+  char args[160];
+  if (putDown) {
+    std::snprintf(args, sizeof(args), "{\"g\":%d,\"pos\":[%.4f,%.4f,%.4f]}", body, b.position.x, b.position.y, b.position.z);
+  } else {
+    std::snprintf(args, sizeof(args), "{\"g\":%d,\"vel\":[%.3f,%.3f,%.3f]}", body, b.velocity.x, b.velocity.y, b.velocity.z);
+  }
+  engine::net::request(putDown ? "drop" : "throw", args);
+  // From now on it goes where the room's physics says.
+  g.claim = 0;
+  g.claimed = false;
+  g.mode = Mode::kRemote;
+  g.state = kMoving;
+  g.position = b.position;
+  g.rotation = b.rotation;
+  g.velocity = b.velocity;
+  g.receivedMs = engine::frameTime().nowMs;
+  b.kinematic = true;
+  b.target = b.position;
+  b.targetRotation = b.rotation;
 }
 
 void SharedWorld::mirrorChanged(int mirror, bool on, bool avatarsOnly) {
   if (!on_) return;
   const double v[2] = {on ? 1.0 : 0.0, avatarsOnly ? 1.0 : 0.0};
   engine::net::setWorld("m" + std::to_string(mirror), v, 2);
-}
-
-void SharedWorld::sendGlass(int index, const engine::Body& b, int state) {
-  if (!engine::isFinite(b.position) || !engine::isFinite(b.rotation) || !engine::isFinite(b.velocity)) return;
-  const double v[11] = {b.position.x, b.position.y, b.position.z, b.rotation.x, b.rotation.y, b.rotation.z,
-                        b.rotation.w, b.velocity.x, b.velocity.y, b.velocity.z, static_cast<double>(state)};
-  engine::net::setWorld(glassKey(index), v, 11);
 }
 
 void SharedWorld::applyJukebox(Jukebox& jukebox) {
@@ -81,6 +96,7 @@ void SharedWorld::applyJukebox(Jukebox& jukebox) {
 
 void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene& scene, Jukebox& jukebox,
                           int& held) {
+  (void)held;  // a refused grab is handled in update()
   static std::vector<engine::net::WorldEntry> entries;
   entries.clear();
   engine::net::receiveWorld(entries);
@@ -116,17 +132,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
       for (size_t k = 0; k < 11; ++k) finite = finite && std::isfinite(v[k]);
       if (!finite) continue;  // a broken message: ignore it
       const int state = static_cast<int>(v[10]);
-      if (g.mode == Mode::kMine) {
-        // Both of us are moving it. Someone holding it beats a glass that's
-        // just flying; otherwise the player with the lower id wins.
-        const bool mineHeld = b.held;
-        const bool theyWin = (state == kHeld && !mineHeld) || ((state == kHeld) == mineHeld && e.fromLowerId);
-        if (!theyWin) continue;
-        if (held == i) {
-          held = -1;
-          LOG_INFO("Multiplayer: someone else took the glass.");
-        }
-      }
+      if (g.mode == Mode::kMine) continue;  // in your hand: your phone shows it there (the room agrees, or says no)
       b.held = false;
       g.position = {static_cast<float>(v[0]), static_cast<float>(v[1]), static_cast<float>(v[2])};
       g.rotation = Quat{static_cast<float>(v[3]), static_cast<float>(v[4]), static_cast<float>(v[5]),
@@ -141,11 +147,12 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
         }
         physics.teleport(static_cast<size_t>(i), g.position, g.rotation);
         b.velocity = b.angularVelocity = {};
-        b.kinematic = false;
+        b.kinematic = true;  // online the room's physics moves it, not this phone's
+        b.target = g.position;
+        b.targetRotation = g.rotation;
         b.asleep = true;
         g.mode = Mode::kIdle;
         g.settled = true;
-        g.quietUntilMs = nowMs + kQuietMs;
         continue;
       }
       if (g.mode != Mode::kRemote) {
@@ -187,45 +194,30 @@ void SharedWorld::update(double nowMs, float dt, engine::PhysicsWorld& physics, 
     const int index = static_cast<int>(i);
     switch (g.mode) {
       case Mode::kIdle:
-        if (b.asleep) {
-          g.settled = true;
-        } else if (g.settled && !b.held && nowMs > g.quietUntilMs &&
-                   engine::length(b.velocity) > 0.05f) {
-          g.mode = Mode::kMine;  // knocked by something here: we move it now
-          g.lastSentMs = -1e9;
+        // Online the room's physics moves glasses: this phone doesn't push them.
+        if (!b.held && !b.kinematic) {
+          b.kinematic = true;
+          b.target = b.position;
+          b.targetRotation = b.rotation;
         }
         break;
       case Mode::kMine:
         if (g.claim) {
           const int answer = engine::net::claimResult(g.claim);
           if (answer >= 0) g.claim = 0;
-          if (answer == 0) {  // someone else got it first: let go; their moves come in
+          if (answer == 0) {  // someone else got it first (or it's out of reach): let go
             if (held == index) held = -1;
             b.held = false;
             g.claimed = false;
             g.mode = Mode::kIdle;
-            LOG_INFO("Multiplayer: someone else took glass %d first.", index);
-            break;
+            LOG_INFO("Multiplayer: the room said no to glass %d.", index);
           }
-        }
-        if (b.asleep) {
-          sendGlass(index, b, kResting);
-          if (g.claimed) {
-            engine::net::release(glassClaim(index));
-            g.claimed = false;
-          }
-          g.mode = Mode::kIdle;
-        } else if (nowMs - g.lastSentMs >= kSendEveryMs) {
-          sendGlass(index, b, b.held ? kHeld : kMoving);
-          g.lastSentMs = nowMs;
         }
         break;
       case Mode::kRemote: {
         const double age = nowMs - g.receivedMs;
         if (age > kGoneMs && g.state != kResting) {
-          b.kinematic = false;  // its mover vanished: let it drop here
-          b.asleep = false;
-          g.mode = Mode::kIdle;
+          g.mode = Mode::kIdle;  // no news from the room for a while: it stays where it is
           break;
         }
         Vec3 target = g.position;
@@ -241,12 +233,13 @@ void SharedWorld::update(double nowMs, float dt, engine::PhysicsWorld& physics, 
                    g.position.z);
           physics.teleport(i, g.position, g.rotation);
           b.velocity = {};
-          b.kinematic = false;
+          b.kinematic = true;
+          b.target = g.position;
+          b.targetRotation = g.rotation;
           b.asleep = true;
           g.mode = Mode::kIdle;
           g.settled = true;
-          g.quietUntilMs = nowMs + kQuietMs;
-        }
+          }
         break;
       }
     }

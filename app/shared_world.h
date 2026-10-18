@@ -1,11 +1,10 @@
 #pragma once
-// The shared bar (multiplayer M2): glasses, the jukebox song and the mirrors
-// look the same for everyone in the room. Each thing is a small "world
-// entry" on the relay (engine/net.h). Whoever is moving a glass (holding
-// it, or it's flying after a throw or a knock) sends where it is about 10
-// times a second; everyone else's copy follows smoothly and still knocks
-// their other glasses around. When it comes to rest, its final spot is
-// sent once and it's free again. The jukebox entry is the song and the
+// The shared bar: glasses, the jukebox song and the mirrors look the same
+// for everyone in the room. Each thing is a small "world entry" in the room
+// (engine/net.h). Glasses are moved by the room's own physics
+// (cloud/games/glasses.js): this phone asks to grab, put down or throw one,
+// shows the glass in your hand at once, and otherwise follows the poses the
+// room sends; their resting spots are world entries g<n>. The jukebox entry is the song and the
 // server time it started, so late joiners hear the same part of the song.
 #include <vector>
 
@@ -22,6 +21,9 @@ class SharedWorld {
 
   // Local actions to share.
   void pickedUp(int body);
+  // You put it down (where it stands now) or threw it (its velocity now):
+  // the room's physics takes it from here.
+  void letGo(int body, engine::Body& b, bool putDown);
   void mirrorChanged(int mirror, bool on, bool avatarsOnly);
   // False if someone else is holding it right now.
   bool canPickUp(int body) const;
@@ -38,10 +40,8 @@ class SharedWorld {
   struct Glass {
     Mode mode = Mode::kIdle;
     bool settled = false;  // has come to rest once since the page loaded
-    double lastSentMs = -1e9;
     int claim = 0;          // the room's answer to "may I hold it?" (engine::net::claim)
     bool claimed = false;   // we asked for its claim (released when it comes to rest)
-    double quietUntilMs = 0;  // don't claim it before this (just placed by the network)
     // Latest state from the player moving it.
     engine::Vec3 position, velocity;
     engine::Quat rotation;
@@ -50,7 +50,6 @@ class SharedWorld {
   };
 
   void receive(double nowMs, engine::PhysicsWorld& physics, BarScene& scene, Jukebox& jukebox, int& held);
-  void sendGlass(int index, const engine::Body& b, int state);
   void applyJukebox(Jukebox& jukebox);
 
   bool on_ = false;

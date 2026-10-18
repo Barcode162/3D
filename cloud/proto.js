@@ -147,6 +147,12 @@ function writeProp(o, s) {
   return true;
 }
 
+// One prop sample as its 18 bytes (the room builds TICKs itself), or null.
+export function propBytes(sample) {
+  const o = new Out();
+  return writeProp(o, sample) ? o.done() : null;
+}
+
 function readProp(r) {
   const s = { id: r.u16(), pos: [r.i16() / 1000, r.i16() / 1000, r.i16() / 1000] };
   const packed = r.u32();

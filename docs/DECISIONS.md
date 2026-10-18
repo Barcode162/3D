@@ -629,6 +629,18 @@ was answered by the user on 2026-10-17.
   everyone when one ends (a `song` deadline in the alarm scheduler). Online, a phone
   doesn't advance a built-in song itself; your own songs from the Files app still
   advance on your phone only. Adding a built-in song = add it to both lists.
+- **The room runs the glasses' physics (2026-10-18):** the bar's own C++ (engine/physics +
+  app/bar_scene + app/props, the same code the phones run) compiled with
+  `-sSTANDALONE_WASM --no-entry` into `cloud/sim/room_sim.wasm` (≈ 90 KB; 4 WASI/env
+  imports stubbed in `cloud/sim/sim.js`), imported by the Worker. Init ≈ 14 ms (it
+  settles the glasses once), a 50 ms tick's step ≤ 0.2 ms in Node. Phones ask
+  (`grab`/`drop`/`throw`), show the glass in their own hand at once, and otherwise keep
+  every glass kinematic, following the room's poses (TICK props → world entries `g<n>`
+  in `web/net.js` → `SharedWorld`); the resting spot is world key `g<n>` by the room.
+  The wasm isn't in git: CI builds it (Build step) and `tools/setup.sh` builds it in a
+  fresh session.
+- **Gotcha:** send a glass's "came to rest" (KV) *after* the TICK that carries its last
+  pose, or phones end on "still moving" and never settle it.
 - **Gotcha (voice_test):** in headless Chromium the remote voice level sometimes reads 0
   for the whole sample window although the audio bytes arrive (about 44 KB); about 1
   run in 3. Seen right after the move to the room; signaling works (connections

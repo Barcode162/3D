@@ -132,8 +132,17 @@ props that changed since the previous TICK.
 | `claim` | `key`: `[A-Za-z0-9_.-]{1,40}` (e.g. `seat.4`) | `ok:1` (also if it's already yours), or `ok:0` with `why:"taken"` and `by` (owner's slot); max 8 claims per player | DELTA `claim.<key>` = your slot, to everyone |
 | `release` | `key` | `ok:1`, or `ok:0 why:"not yours"` | DELTA `claim.<key>` = -1 |
 | `set` | `key`, `v` (≤20 numbers), `expect` (≤20 numbers, optional) | `ok:1 seq`, or `ok:0` with `why:"changed"` (the key no longer holds `expect`; `by` = who changed it) or the rule that refused it | KV with the new value, to everyone |
+| `grab` | `g`: glass number | `ok:1`, or `ok:0` with `why`: `taken` (+ `by`), `too far` (more than 3 m from your eyes), `one glass at a time`, `no such glass` | DELTA `claim.glass.<g>` = your slot; the room's physics pulls it to your hand (eyes + 0.5 m forward, 0.12 m right, 0.28 m down) |
+| `drop` | `g`, `pos` [x,y,z]: put it down there (stood upright) | `ok:1`, or `ok:0` (`not in your hand`, `too far`, `bad spot`) | DELTA `claim.glass.<g>` = -1; it settles in the room's physics |
+| `throw` | `g`, `vel` [x,y,z] m/s (capped at 12) | as `drop` | as `drop`; it flies in the room's physics |
 | `dart` | `u`, `v`: where you aimed on the board (m from the centre, u = right, v = up) | needs the claim `machine.darts`. `ok:1` + `u`, `v` (where it landed: the room adds the hand's wobble), `pts`, `label` ("T20"...), `left`, `bust`, `won`, `turnOver`, `games` | DELTA `darts` = that same result, to the others |
 | other | | `ok:0 why:"unknown intent"` | |
+
+**Glasses** (`cloud/games/glasses.js`) are simulated by the room with the bar's own C++
+physics (`cloud/sim/room_sim.cpp` → `room_sim.wasm`, built by `cloud/sim/build.sh`).
+While a glass is held or moving, every TICK carries its prop sample (`id` = glass number,
+the same as the game's physics body index); when it comes to rest the room writes world
+key `g<n>` (state 2) right after that TICK. Phones never write `g<n>`.
 
 Games the room runs live in `cloud/games/` (darts: `darts.js`, 301 rules as in
 `app/darts.cpp`). A game's state is kept in its player's socket attachment (survives the
@@ -148,7 +157,7 @@ and a KV writer gets the room's current value of that key back (so their copy sn
 back). Counted as `refused` in the usage on `/health`.
 | Key | Values | Rule |
 |---|---|---|
-| `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | inside the bar (±40 m, y -2..12), unit quaternion, speed ≤ 40 m/s; only the holder of the claim `glass.<n>` may write it while it's claimed |
+| `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | written only by the room's physics (resting spots); phones use `grab`/`drop`/`throw`. Claims `glass.*` can't be asked for directly |
 | `m<n>` (0..9) | mirror on, avatars only (two 0/1) | |
 | `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock. `jb`: when a built-in song ends the room writes the next one itself (`by` -1, `cloud/games/jukebox.js`); nobody connected → `[-1, 0]` |
 | `lt` | lights dim, fire on (two 0/1) | |

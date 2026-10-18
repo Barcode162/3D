@@ -21,10 +21,13 @@
 // Hibernation: the room may be evicted from memory between messages. Who is
 // connected, their last STATE and their claims are rebuilt from the sockets'
 // attachments; players in their grace period and the world are in storage.
-import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary } from './proto.js';
+import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary, propBytes } from './proto.js';
 import { checkWrite } from './rules.js';
 import * as darts from './games/darts.js';
 import * as jukebox from './games/jukebox.js';
+import { Glasses, eyesOf } from './games/glasses.js';
+import { Sim } from './sim/sim.js';
+import simWasm from './sim/room_sim.wasm';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -107,6 +110,8 @@ export class Room {
     this.lastActive = new Map(); // slot → ms of their last movement, intent or event
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
     this.games = {};             // games the room runs: darts → {owner slot, session}
+    this.glasses = new Glasses(new Sim(simWasm));  // the bar's physics: every glass
+    this.lastSimMs = 0;
     this.lastSeq = 0;
     this.ticker = null;
     this.lastChangeMs = 0;
@@ -154,6 +159,12 @@ export class Room {
     const usage = await s.get('usage');
     if (usage && usage.day === this.usage.day) Object.assign(this.usage, usage);
     this.alarmAt = (await s.getAlarm()) || 0;
+    // Glasses where they last came to rest; ones in a hand stay in it.
+    this.glasses.restore(this.kv);
+    for (const [key, slot] of this.claims) {
+      const m = /^glass\.(\d+)$/.exec(key);
+      if (m) this.glasses.grab(+m[1], slot, this.eyes(slot));
+    }
     this.scheduleSongEnd();
     this.reschedule();
   }
@@ -409,6 +420,7 @@ export class Room {
     const key = body.key;
     if (body.k === 'claim' || body.k === 'release') {
       if (typeof key !== 'string' || !CLAIM_KEY.test(key)) return { ok: 0, why: 'bad key' };
+      if (/^glass\./.test(key)) return { ok: 0, why: 'glasses use grab' };
       const owner = this.claims.get(key);
       if (body.k === 'claim') {
         if (owner === slot) return { ok: 1, seq: this.lastSeq };
@@ -429,6 +441,7 @@ export class Room {
       return { ok: 1, seq };
     }
     if (body.k === 'dart') return this.throwDart(slot, body);
+    if (body.k === 'grab' || body.k === 'drop' || body.k === 'throw') return this.glassIntent(slot, body);
     if (body.k === 'set') {
       // A world write that only happens if the key still holds `expect`
       // (e.g. taking a drink: the first one to ask gets it).
@@ -460,6 +473,29 @@ export class Room {
     return { ok: 1, ...r };
   }
 
+  // Glasses (cloud/games/glasses.js): grab, put down (`pos`) or throw (`vel`).
+  // The room's physics moves them; holding one is the claim `glass.<n>`.
+  glassIntent(slot, body) {
+    const g = body.g, key = 'glass.' + g;
+    const eyes = this.eyes(slot);
+    const r = body.k === 'grab' ? this.glasses.grab(g, slot, eyes)
+      : this.glasses.letGo(g, slot, eyes, body.k === 'drop' ? { pos: body.pos } : { vel: body.vel });
+    if (!r.ok) return r;
+    const was = this.claims.get(key);
+    if (body.k === 'grab') this.claims.set(key, slot); else this.claims.delete(key);
+    const now = this.claims.get(key);
+    if (was !== now) this.broadcast(text('D', { d: [[this.nextSeq(), 'claim.' + key, now === undefined ? -1 : now, slot]] }));
+    this.saveAttachment(slot);
+    this.lastSimMs = this.lastSimMs || Date.now();
+    this.startTicker();
+    return { ok: 1, seq: this.lastSeq };
+  }
+
+  eyes(slot) {
+    const st = this.states.get(slot);
+    return st ? eyesOf(st.raw) : null;
+  }
+
   // Leaving a machine ends your game on it (the next player starts fresh).
   endGamesOf(slot, key) {
     if (key === 'machine.darts' && this.games.darts && this.games.darts.owner === slot) delete this.games.darts;
@@ -473,6 +509,7 @@ export class Room {
 
   // Frees every claim a player holds (they left), telling everyone.
   releaseAll(slot) {
+    if (this.glasses.drop(slot).length) { this.lastSimMs = this.lastSimMs || Date.now(); this.startTicker(); }
     const d = [];
     for (const key of this.claimsOf(slot)) {
       this.claims.delete(key);
@@ -617,10 +654,24 @@ export class Room {
     const now = Date.now();
     const slots = [...this.dirtyPlayers];
     this.dirtyPlayers.clear();
-    if (slots.length) {
-      const frame = this.tickFrame(slots, []);
-      if (frame) this.broadcastBinary(frame, slots);
+    // The glasses' physics: hands follow their holders, thrown ones fly.
+    let props = [], rested = [];
+    if (this.glasses.busy()) {
+      const dt = this.lastSimMs ? (now - this.lastSimMs) / 1000 : TICK_MS / 1000;
+      const out = this.glasses.tick(dt, (s) => this.eyes(s));
+      props = out.samples.map((x) => propBytes(x)).filter(Boolean);
+      rested = out.rested;
+      this.lastChangeMs = now;  // keep ticking while anything moves
     }
+    this.lastSimMs = now;
+    if (slots.length || props.length) {
+      const frame = this.tickFrame(slots, props);
+      if (frame) this.broadcastBinary(frame, props.length ? [] : slots);
+    }
+    // After the TICK with their last poses: the glasses that came to rest
+    // (so a phone's last word about each is "resting here").
+    for (const r of rested) this.broadcast(text('K', { w: [this.storeKv(-1, 'g' + r.g, r.values)] }));
+    if (rested.length) this.scheduleFlush();
     if (this.pendingEvents.length) {
       const events = this.pendingEvents;
       this.pendingEvents = [];
@@ -640,11 +691,13 @@ export class Room {
     this.armIdleGhostCheck();
   }
 
-  // A TICK frame: tick, server time, the given players' latest blocks, props.
+  // A TICK frame: tick, server time, the given players' latest blocks, and
+  // prop samples (18 bytes each, from propBytes).
   tickFrame(slots, props) {
     const rows = slots.map((s) => [s, this.states.get(s)]).filter(([, st]) => st).slice(0, MAX_SLOTS);
+    props = props.slice(0, 32);
     if (!rows.length && !props.length) return null;
-    let size = 1 + 4 + 8 + 1 + 1;
+    let size = 1 + 4 + 8 + 1 + 1 + props.length * 18;
     for (const [, st] of rows) size += 1 + st.raw.length;
     const out = new Uint8Array(size);
     const dv = new DataView(out.buffer);
@@ -654,7 +707,8 @@ export class Room {
     dv.setFloat64(p, Date.now(), true); p += 8;
     out[p++] = rows.length;
     for (const [s, st] of rows) { out[p++] = s; out.set(st.raw, p); p += st.raw.length; }
-    out[p++] = 0;  // props: Phase 5
+    out[p++] = props.length;
+    for (const b of props) { out.set(b, p); p += 18; }
     return out;
   }
 
