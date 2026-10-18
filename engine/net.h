@@ -70,4 +70,14 @@ void receiveEvents(std::vector<Event>& out);
 // True if that player's id sorts before ours (for fair tie-breaks).
 bool isLower(int player);
 
+// Claims: the room decides who has something (a seat, a machine), one
+// player per key (letters, digits, "._-", up to 40). claim() asks and returns
+// a request id (0 when offline); release() lets it go. claimOwner(): -1
+// nobody (or not known), 0 you, else that player's number. claimResult():
+// 1 granted, 0 refused, -1 no answer yet (each answer is read once).
+int claim(const std::string& key);
+void release(const std::string& key);
+int claimOwner(const std::string& key);
+int claimResult(int request);
+
 }  // namespace engine::net

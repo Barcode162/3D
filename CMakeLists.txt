@@ -74,6 +74,12 @@ foreach(src ${ASSET_FILES})
     list(APPEND SITE_OUTPUTS ${SITE}/${rel})
   endif()
 endforeach()
+# The room protocol codec (cloud/proto.js, an ES module shared with the
+# server) as a plain page script that sets window.bar3dProto (web/net.js).
+add_custom_command(OUTPUT ${SITE}/proto.js DEPENDS ${CMAKE_SOURCE_DIR}/cloud/proto.js
+                   COMMAND sh -c "{ echo '(function () {'; sed -e 's/^export //' \"$0\"; echo 'window.bar3dProto = { PROTO: PROTO, MAX_SLOTS: MAX_SLOTS, BIN: BIN, decodeBinary: decodeBinary, encodeState: encodeState, decodeText: decodeText, encodeText: encodeText };'; echo '})();'; } > \"$1\"" ${CMAKE_SOURCE_DIR}/cloud/proto.js ${SITE}/proto.js
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/proto.js)
 add_custom_command(OUTPUT ${SITE}/app.js ${SITE}/app.wasm DEPENDS app
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm ${SITE}
                    VERBATIM)

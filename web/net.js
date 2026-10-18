@@ -1,40 +1,44 @@
-// Thin bridge from the C++ multiplayer code (engine/net.cpp) to the
-// multiplayer server. Two ways to reach it:
-// - Cloudflare (cloud/worker.js), the main one: one live WebSocket; your
-//   state goes out up to 20 times a second (only when it changed) and
-//   others' states arrive the moment they're sent. Its address comes from
-//   cloud.json, written by the deploy.
-// - The PHP relay on IONOS (server/relay.php), the fallback: polled about
-//   10 times a second. Used when Cloudflare can't be reached.
-// What the numbers mean, smoothing and drawing are all decided in C++.
+// Thin bridge from the C++ multiplayer code (engine/net.cpp) to the room on
+// Cloudflare (cloud/room.js; protocol in docs/PROTOCOL.md). One WebSocket
+// carries everything:
+// - your state (where you are, what you're doing) as a small binary STATE,
+//   sent up to 20 times a second and only when it changed;
+// - everyone else's states, arriving in the room's TICKs (20 a second while
+//   someone moves) stamped with the server's clock;
+// - the shared world (glasses, jukebox, mirrors...): every write goes through
+//   the room, which numbers it and sends it to everyone, so all phones end up
+//   with the same value;
+// - claims: the room decides who sits where (one person per seat);
+// - quick events (piano keys, sounds), in order, stamped by the room;
+// - voice chat handshakes (SIGNAL).
+// The binary layouts are encoded/decoded by proto.js (the same code the room
+// runs, copied into the site by the build). What the numbers mean, smoothing
+// and drawing are all decided in C++.
 //
-// Page options: ?room=name (default "main"), ?name=Josh (your name tag,
-// remembered), ?server=https://.../relay.php (force the relay),
-// ?cloud=wss://... (force a Cloudflare address), ?cloud=off, ?server=off.
-// Overrides are honoured only for localhost or the exact hosts in
-// ALLOWED_HOSTS (so a link can't send your login token somewhere else).
+// Where the room is: config.json (written by the deploy). Page options:
+// ?room=name (default "main"), ?name=Josh, ?cloud=ws://localhost:8787 (local
+// tests; only localhost and the hosts below), ?cloud=off or ?net=off. On
+// localhost multiplayer is off unless ?cloud= is given (tests stay alone).
 window.bar3dNet = (function () {
   'use strict';
-  // Where the relay lives when the game is served from GitHub Pages. When
-  // the page itself is on the IONOS site, relay.php sits right next to it.
+  var PROTO = 1;
+  // The accounts and reports servers (index.html and account.js take these
+  // from serverUrl(): "...relay.php" → "...account.php" / "...report.php").
   var DEFAULT_SERVER = 'https://joshuavelasco.com/bar/relay.php';
-  var SEND_INTERVAL_MS = 100;
-  // Exact hosts a ?server= override may point at (never a suffix: anyone can
-  // make a *.workers.dev name). ?cloud= overrides only accept localhost until
-  // the room is deployed (restructure step 3.3 adds its workers.dev host).
+  // Exact hosts a ?cloud= override may point at (never a suffix: anyone can
+  // make a *.workers.dev name).
   var ALLOWED_HOSTS = ['joshuavelasco.com'];
-  var ALLOWED_CLOUD_HOSTS = [];
+  var ALLOWED_CLOUD_HOSTS = ['bar3d.joshuavelasco60.workers.dev'];
+  var SEND_MS = 50;           // STATE at most 20 times a second
+  var KEEPALIVE_MS = 5000;    // a plain "ping" when nothing else was sent
+  var DEAD_MS = 12000;        // nothing at all received this long: the socket is dead
+  var RETRY_MS = [250, 1000, 2000, 4000, 8000];
+  var GAP_MS = 150;           // a player who was still this long gets a "hold" sample first
 
   function hostOf(value) {
     try { return new URL(value, location.href).hostname; } catch (e) { return null; }
   }
   function isLocal(h) { return h === 'localhost' || h === '127.0.0.1'; }
-  // Whether an override value may be used.
-  function overrideOk(value, list) {
-    if (value === 'off') return true;
-    var h = hostOf(value);
-    return !!h && (isLocal(h) || list.indexOf(h) >= 0);
-  }
   // Whether a login token may be sent to this URL: same origin or allowlisted.
   function tokenOk(value) {
     try {
@@ -43,7 +47,6 @@ window.bar3dNet = (function () {
         ALLOWED_HOSTS.indexOf(u.hostname) >= 0 || ALLOWED_CLOUD_HOSTS.indexOf(u.hostname) >= 0;
     } catch (e) { return false; }
   }
-
   function param(name) {
     var m = new RegExp('[?&]' + name + '=([^&]*)').exec(location.search);
     return m ? decodeURIComponent(m[1]) : null;
@@ -52,322 +55,493 @@ window.bar3dNet = (function () {
     try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) {}
     return null;
   }
-
-  var serverParam = param('server'), cloudOverride = param('cloud'), ignored = [];
-  if (serverParam !== null && !overrideOk(serverParam, ALLOWED_HOSTS)) {
-    ignored.push(serverParam);
-    serverParam = null;
-  }
-  if (cloudOverride !== null && !overrideOk(cloudOverride, ALLOWED_CLOUD_HOSTS)) {
-    ignored.push(cloudOverride);
-    cloudOverride = null;
-  }
-  ignored.forEach(function (v) { console.log('Multiplayer: ignored server option (' + v + ')'); });
-  var forcedRelay = serverParam !== null;
-  var server = serverParam;
-  if (server === null) {
-    var host = location.hostname;
-    server = /github\.io$/.test(host) ? DEFAULT_SERVER : /^localhost$|^127\./.test(host) ? '' : 'relay.php';
-  }
-  if (server === 'off') server = '';
-  var room = (param('room') || 'main').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || 'main';
-  var name = param('name');
-  if (name) store('bar3dName', name); else name = store('bar3dName');
-  if (!name) name = 'Guest ' + (100 + Math.floor(Math.random() * 900));
-  var id = 'p' + Math.random().toString(36).slice(2, 10);
-
-  var state = null, stateTime = 0;  // latest from C++
-  // While the page is hidden (another app, locked phone) the game stops, so
-  // the others get one last state with the "away" bit set in it (C++ says
-  // which slot and bit, awayFlag) and nothing new until you're back.
-  var awaySlot = -1, awayBit = 0, away = false;
-  function sendNow() { if (!started) return; if (mode === 'cloud') cloudTick(); else if (!inFlight) tick(); }
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden && !away && state && awaySlot >= 0 && awaySlot < state.length) {
-      away = true;
-      state = state.slice();
-      state[awaySlot] = state[awaySlot] | awayBit;
-      stateTime = performance.now();
-      sendNow();
-    } else if (!document.hidden && away) {
-      away = false;  // the game sends a fresh state on its next frame
-      pingAt = 0;    // and the clock is checked again at once
-    }
-  });
-  var players = {};                 // id -> {index, name}
-  var nextIndex = 1;
-  var packets = [];                 // new states not yet taken by C++
-  var lastSent = {};                // id -> t, to forward only new states
-  var status = server ? 1 : 0;      // 0 off, 1 connecting, 2 connected, 3 failing
-  var inFlight = false, failures = 0, started = false;
-  // Shared world (see server/relay.php): our changes waiting to be sent,
-  // entries from others not yet taken by C++, the newest revision we have,
-  // and the server's clock relative to ours.
-  var worldOut = {}, worldIn = [], since = 0;
-  // Messages through the relay (voice chat handshakes, events for players
-  // without a direct connection), and quick events waiting for C++.
-  var msgOut = [], eventsIn = [], signalHandlers = [];
-  var clockOffset = null, clockRtt = 1e9;
-
-  // --- Cloudflare (WebSocket) mode.
-  var cloudUrl = null, ws = null, wsOpen = false, wsFails = 0, mode = 'relay';
-  var lastStateText = '', lastStateSent = 0, pingAt = 0, helloTok = '';
-  var CLOUD_SEND_MS = 50;
-
-  function wsSend(obj) {
-    if (ws && wsOpen) { try { ws.send(JSON.stringify(obj)); return true; } catch (e) {} }
-    return false;
-  }
-  // Who's here, for the game: changes rosterVer, and the page mailbox sends
-  // the list (rosterJson) to the game only then (web/bridge.js).
-  var rosterVer = 0;
-  function rememberPlayer(p) {
-    var known = players[p.id];
-    if (!known) {
-      known = players[p.id] = { index: nextIndex++, name: p.name };
-      info('Multiplayer: ' + p.name + ' joined.');
-      rosterVer++;
-    }
-    var acct = p.acct || '', av = p.av || 0;
-    if (known.name !== p.name || known.acct !== acct || known.av !== av) rosterVer++;
-    known.name = p.name;
-    known.acct = acct;
-    known.av = av;
-    return known;
-  }
-  function addPlayer(p) {
-    var known = rememberPlayer(p);
-    if (p.s && p.s.length && lastSent[p.id] !== p.t) {
-      lastSent[p.id] = p.t;
-      packets.push({ index: known.index, t: p.t, s: p.s });
-    }
-  }
-  function dropPlayer(pid) {
-    if (!players[pid]) return;
-    info('Multiplayer: ' + players[pid].name + ' left.');
-    delete players[pid];
-    delete lastSent[pid];
-    rosterVer++;
-  }
-  function connectCloud() {
-    var url = cloudUrl.replace(/\/$/, '') + '/room/' + room + '?id=' + id;
-    try { ws = new WebSocket(url); } catch (e) { ws = null; cloudFailed(); return; }
-    ws.onopen = function () {
-      wsOpen = true;
-      wsFails = 0;
-      var hello = { hello: 1, name: name, ping: performance.now() };
-      var acct = window.bar3dAccount;
-      helloTok = acct && acct.token() ? acct.token() : '';
-      if (helloTok) hello.tok = helloTok;
-      pingAt = performance.now();
-      ws.send(JSON.stringify(hello));
-      lastStateText = '';
-    };
-    ws.onmessage = function (e) {
-      var msg;
-      try { msg = JSON.parse(e.data); } catch (err) { return; }
-      if (msg.welcome) {
-        if (status !== 2) info('Multiplayer: connected to room "' + room + '" as ' + (msg.name || name) + ' (Cloudflare).');
-        status = 2;
-        // Anyone we knew who isn't in the room any more has left.
-        var here = {};
-        msg.players.forEach(function (p) { here[p.id] = true; });
-        Object.keys(players).forEach(function (pid) { if (!here[pid]) dropPlayer(pid); });
-        msg.players.forEach(addPlayer);
-        msg.world.forEach(function (w) { worldIn.push([w[0], w[1] < id ? 1 : 0, w[2]]); });
-      }
-      if ('pong' in msg) {
-        var rtt = performance.now() - msg.pong;
-        clockRtt *= 1.01;
-        if (rtt < clockRtt) {
-          clockRtt = rtt;
-          clockOffset = msg.now - (msg.pong + rtt / 2) / 1000;
-        }
-      }
-      if (msg.p) addPlayer(msg.p);
-      if (msg.left) dropPlayer(msg.left);
-      if (msg.w) msg.w.forEach(function (w) { worldIn.push([w[0], w[1] < id ? 1 : 0, w[2]]); });
-      if (msg.m) receiveText(msg.m[0], msg.m[1]);
-    };
-    ws.onclose = function () {
-      var was = wsOpen;
-      wsOpen = false;
-      ws = null;
-      if (was) info('Multiplayer: connection lost, reconnecting...');
-      cloudFailed();
-    };
-  }
-  function cloudFailed() {
-    if (++wsFails >= 3 && status !== 2 && server) {
-      // Never got through: use the relay on IONOS instead.
-      info('Multiplayer: Cloudflare unreachable, using the IONOS relay.');
-      mode = 'relay';
-      setInterval(tick, SEND_INTERVAL_MS);
-      return;
-    }
-    if (wsFails >= 3) status = 3;
-    setTimeout(connectCloud, Math.min(8000, 500 * Math.pow(2, wsFails)));
-  }
-  function cloudTick() {
-    if (!wsOpen) return;
-    // Logged in or out since connecting: reconnect so the room knows.
-    var acct = window.bar3dAccount;
-    if ((acct && acct.token() ? acct.token() : '') !== helloTok) { try { ws.close(); } catch (e) {} return; }
-    var now = performance.now();
-    var out = {};
-    if (state) {
-      var text = JSON.stringify(state);
-      // Only when it changed (or now and then, so others know you're here).
-      if (text !== lastStateText || now - lastStateSent > 2000) {
-        out.t = stateTime;
-        out.s = state;
-        lastStateText = text;
-        lastStateSent = now;
-      }
-    }
-    if (Object.keys(worldOut).length) {
-      out.w = worldOut;
-      worldOut = {};
-    }
-    var msgs = msgOut.splice(0, 40);
-    if (msgs.length) out.m = msgs;
-    if (now - pingAt > 2000) {
-      out.ping = now;
-      pingAt = now;
-    }
-    if (Object.keys(out).length && !wsSend(out)) {
-      msgOut = msgs.concat(msgOut);
-    }
-  }
-
   function info(text) {
     if (window.Module && Module.print) Module.print('[info] ' + text);
   }
 
-  function post(body, onDone) {
-    fetch(server, { method: 'POST', body: JSON.stringify(body), cache: 'no-store',
-                    headers: { 'Content-Type': 'text/plain' } })
-      .then(function (r) { return r.json(); })
-      .then(function (reply) { onDone(reply && reply.ok ? reply : null); })
-      .catch(function () { onDone(null); });
+  var local = isLocal(location.hostname);
+  var cloudParam = param('cloud'), netParam = param('net');
+  if (cloudParam !== null && cloudParam !== 'off') {
+    var ch = hostOf(cloudParam);
+    if (!ch || !(isLocal(ch) || ALLOWED_CLOUD_HOSTS.indexOf(ch) >= 0)) {
+      console.log('Multiplayer: ignored server option (' + cloudParam + ')');
+      cloudParam = null;
+    }
   }
+  var disabled = netParam === 'off' || cloudParam === 'off' || (local && !cloudParam);
+  // The accounts server: next to the game on IONOS, else joshuavelasco.com.
+  var server = /github\.io$/.test(location.hostname) ? DEFAULT_SERVER : local ? '' : 'relay.php';
+  var room = (param('room') || 'main').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || 'main';
+  var name = param('name');
+  if (name) store('bar3dName', name); else name = store('bar3dName');
+  if (!name) name = 'Guest ' + (100 + Math.floor(Math.random() * 900));
+  var buildCode = (function () { var b = document.getElementById('build'); return b ? b.textContent.replace(/^build\s*/, '').slice(0, 16) : ''; })();
 
-  function tick() {
-    if (inFlight || !state) return;
-    inFlight = true;
-    var body = { room: room, id: id, name: name, t: stateTime, s: state, since: since };
+  // ---- Connection state ----
+  var P = null;               // proto.js (window.bar3dProto)
+  var url = '', ws = null, open = false, started = false;
+  var status = disabled ? 0 : 1;  // 0 off, 1 connecting, 2 connected, 3 offline
+  var why = '';               // last reason we're not connected (for the log)
+  var stopped = false;        // no automatic reconnect (full, new version, rate limit...)
+  var retries = 0, retryTimer = 0;
+  var mySlot = -1, resume = '', helloTok = '';
+  var lastRecv = 0, lastSend = 0;
+
+  // ---- Your state ----
+  var state = null;           // latest 20 numbers from C++
+  var awaySlot = -1, awayBit = 0, away = false;
+  var stateSeq = 0, lastStateHex = '', stateHz = 20, lastStateAt = 0;
+
+  // ---- Others ----
+  var players = {};           // pid -> {slot, index, name, acct, av, away, last: {t, s}}
+  var bySlot = {};            // slot -> pid
+  var nextIndex = 1, gen = 0, rosterVer = 0;
+  var packets = [];           // new states not yet taken by C++
+  var eventsIn = [], eventSeq = {};  // per slot: newest event seq seen
+  var signalHandlers = [];
+
+  // ---- Shared world ----
+  var worldOut = {}, worldIn = [];
+  var pending = {};           // key -> our writes not yet echoed back
+  var foreign = {};           // key -> someone else's write arrived since our last one
+  var eventsOut = [];
+  var claims = {};            // key -> slot
+  var intentId = 1, intentsOut = [], results = {};  // request id -> {ok, why, by}
+
+  // ---- Clock (server ms = performance.now() + clockOffset) ----
+  var clockOffset = null, clockRtt = 1e9, pingTimer = 0, pingsLeft = 0, lastPingAt = 0;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function pidOf(slot) { return bySlot[slot] || ''; }
+  function serverNowMs() { return clockOffset === null ? 0 : performance.now() + clockOffset; }
+
+  function send(data) {
+    if (!ws || !open) return false;
+    try { ws.send(data); lastSend = performance.now(); return true; } catch (e) { return false; }
+  }
+  function sendText(letter, body) {
+    var t = P.encodeText(letter, body, 'toServer');
+    if (t === null) { console.log('Multiplayer: not sent (invalid ' + letter + ')', body); return false; }
+    return send(t);
+  }
+  function ticket() {
     var acct = window.bar3dAccount;
-    if (acct && acct.token() && tokenOk(server)) body.tok = acct.token();  // the relay shows your account's name and picture
-    var sending = worldOut;
-    worldOut = {};
-    if (Object.keys(sending).length) body.w = sending;
-    var sendingMsgs = msgOut.splice(0, 40);
-    if (sendingMsgs.length) body.m = sendingMsgs;
-    var sentAt = performance.now();
-    post(body, function (reply) {
-      inFlight = false;
-      if (!reply) {
-        // Put unsent changes back, unless a newer one for the same key came.
-        for (var k in sending) if (!(k in worldOut)) worldOut[k] = sending[k];
-        msgOut = sendingMsgs.concat(msgOut);
-        if (++failures === 5) { status = 3; info('Multiplayer: can\'t reach the server (' + server + ').'); }
-        return;
-      }
-      if (typeof reply.rev === 'number') {
-        // The fastest round trip tells the server's clock best; slowly
-        // forget old samples so a changed network is picked up.
-        var rtt = performance.now() - sentAt;
-        clockRtt *= 1.01;
-        if (rtt < clockRtt) {
-          clockRtt = rtt;
-          clockOffset = reply.now - (sentAt + rtt / 2) / 1000;
-        }
-        since = reply.rev;
-        reply.world.forEach(function (e) { worldIn.push([e[0], e[1] < id ? 1 : 0, e[2]]); });
-      }
-      if (status !== 2) info('Multiplayer: connected to room "' + room + '" as ' + name + '.');
-      if (status === 3) info('Multiplayer: server reachable again.');
-      status = 2;
-      failures = 0;
-      var seen = {};
-      reply.players.forEach(function (p) {
-        seen[p.id] = true;
-        var known = rememberPlayer(p);
-        if (lastSent[p.id] === p.t) return;
-        lastSent[p.id] = p.t;
-        packets.push({ index: known.index, t: p.t, s: p.s });
-      });
-      (reply.inbox || []).forEach(function (m) { receiveText(m[0], m[1]); });
-      Object.keys(players).forEach(function (pid) { if (!seen[pid]) dropPlayer(pid); });
-    });
+    return acct && acct.token && acct.token() ? acct.token() : '';
   }
 
-  // A message from another player: a voice handshake ('v:') or an event ('e:').
-  function receiveText(from, text) {
-    if (text.slice(0, 2) === 'v:') {
-      var data;
-      try { data = JSON.parse(text.slice(2)); } catch (e) { return; }
-      signalHandlers.forEach(function (h) { h(from, data); });
-    } else if (text.slice(0, 2) === 'e:') {
-      var p = players[from];
-      if (!p) return;
-      try {
-        var ev = JSON.parse(text.slice(2));
-        eventsIn.push([p.index, ev[0], ev[1]]);
-      } catch (e) {}
+  // ---- Connecting ----
+  function connect() {
+    if (stopped || !url) return;
+    clearTimeout(retryTimer);
+    status = status === 2 ? 1 : status;
+    try { ws = new WebSocket(url.replace(/\/$/, '') + '/room/' + room); } catch (e) { ws = null; lost('could not open'); return; }
+    ws.binaryType = 'arraybuffer';
+    var me = ws;
+    ws.onopen = function () {
+      if (ws !== me) return;
+      open = true;
+      lastRecv = performance.now();
+      helloTok = ticket();
+      var hello = { proto: PROTO, build: buildCode, name: name.slice(0, 24) || 'Guest', look: state ? Math.max(0, Math.min(255, state[7] | 0)) : 0 };
+      if (resume) hello.resume = resume;
+      if (helloTok) hello.ticket = helloTok;
+      sendText('H', hello);
+    };
+    ws.onmessage = function (e) { if (ws === me) receive(e.data); };
+    ws.onclose = function (e) { if (ws === me) closed(e.code, e.reason); };
+    ws.onerror = function () {};
+  }
+
+  function closed(code, reason) {
+    ws = null;
+    open = false;
+    clearInterval(pingTimer);
+    var wasOnline = status === 2;
+    if (code === 4001) return stop('Room full (' + (reason || '16 players') + ').');
+    if (code === 4002) { stop('A new version is out: reloading when it\'s ready.'); waitForNewVersion(); return; }
+    if (code === 4003) return stop('This bar is open in another tab.');
+    if (code === 4005) return stop('Disconnected (too many messages).');
+    if (code === 4004) {
+      // Idle too long: rejoin on the next tap (no automatic retry).
+      stop(/away/.test(reason || '') ? 'Away for a while: tap to rejoin.' : 'Connection went quiet: tap to rejoin.');
+      resume = '';
+      var again = function () {
+        document.removeEventListener('pointerdown', again, true);
+        stopped = false;
+        retries = 0;
+        info('Multiplayer: rejoining...');
+        connect();
+      };
+      document.addEventListener('pointerdown', again, true);
+      return;
+    }
+    lost(wasOnline ? 'connection lost' : 'can\'t reach the room');
+  }
+
+  function lost(reason) {
+    why = reason;
+    if (status === 2) info('Multiplayer: ' + reason + ', reconnecting...');
+    var delay = RETRY_MS[Math.min(retries, RETRY_MS.length - 1)];
+    if (++retries >= 4 && status !== 3) { status = 3; info('Multiplayer: offline (' + reason + '); still trying.'); }
+    else if (status !== 3) status = 1;
+    retryTimer = setTimeout(connect, delay);
+  }
+
+  function stop(text) {
+    stopped = true;
+    status = 3;
+    why = text;
+    info('Multiplayer: ' + text);
+  }
+
+  // After a "new version" close: wait until the site has the new build, then
+  // reload once (GitHub Pages can serve the old page for a few minutes).
+  function waitForNewVersion() {
+    var check = function () {
+      fetch('version.txt?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (v) {
+        v = v.trim();
+        if (v && buildCode && v !== buildCode) location.reload();
+        else setTimeout(check, 30000);
+      }).catch(function () { setTimeout(check, 30000); });
+    };
+    setTimeout(check, 5000);
+  }
+
+  // ---- Receiving ----
+  function receive(data) {
+    lastRecv = performance.now();
+    if (typeof data !== 'string') {
+      var d = P.decodeBinary(data);
+      if (d.ok && d.type === 'tick') onTick(d.msg);
+      return;
+    }
+    if (data === 'pong') return;  // keepalive answer
+    var m = P.decodeText(data, 'toClient');
+    if (!m.ok) { console.log('Multiplayer: dropped a message (' + m.why + ')'); return; }
+    var b = m.body;
+    switch (m.letter) {
+      case 'W': onWelcome(b); break;
+      case 'J': addPlayer(b); break;
+      case 'L': dropPlayer(b.slot); break;
+      case 'F': onProfile(b); break;
+      case 'P': onPong(b); break;
+      case 'K': onKv(b.w, false); break;
+      case 'E': onEvents(b.e); break;
+      case 'D': onDelta(b.d); break;
+      case 'R': results[b.r] = b; break;
+      case 'G': {
+        var from = pidOf(b.from);
+        if (from) signalHandlers.forEach(function (h) { try { h(from, b.data); } catch (e) {} });
+        break;
+      }
+      default: break;
     }
   }
 
-  function leave() {
-    if (mode === 'cloud') { if (ws) try { ws.close(); } catch (e) {} return; }
-    if (!server || !started) return;
-    try {
-      navigator.sendBeacon(server, JSON.stringify({ room: room, id: id, leave: 1 }));
-    } catch (e) {}
+  function onWelcome(b) {
+    var resumed = !!resume && mySlot === b.slot;
+    mySlot = b.slot;
+    resume = b.resume;
+    retries = 0;
+    stopped = false;
+    if (status !== 2) info('Multiplayer: connected to room "' + b.room + '" as ' + name + ' (Cloudflare, slot ' + b.slot + ').');
+    status = 2;
+    why = '';
+    // Who's here now: anyone we knew who isn't any more has left.
+    var here = {};
+    b.roster.forEach(function (p) { if (p.slot !== mySlot) here[p.slot] = true; });
+    Object.keys(bySlot).forEach(function (s) { if (!here[s]) dropPlayer(+s); });
+    b.roster.forEach(function (p) { if (p.slot !== mySlot) addPlayer(p); });
+    claims = {};
+    for (var k in b.claims) claims[k] = b.claims[k];
+    // The world as the room has it. Our own entries are kept as we have them
+    // (they're ours, and at least as new).
+    pending = {};
+    foreign = {};
+    onKv(b.kv || [], resumed);
+    if (!resumed) { stateSeq = 0; lastStateHex = ''; }
+    lastStateHex = '';  // send our state again at once
+    // Clock: a short burst of pings, then one every 10 s.
+    clockRtt = 1e9;
+    pingsLeft = 5;
+    clearInterval(pingTimer);
+    pingTimer = setInterval(function () {
+      if (pingsLeft > 0) { pingsLeft--; ping(); }
+      else if (performance.now() - lastPingAt > 10000) ping();
+    }, 200);
+    ping();
+  }
+
+  function ping() { lastPingAt = performance.now(); sendText('P', { c: lastPingAt }); }
+
+  function onPong(b) {
+    var now = performance.now();
+    var rtt = now - b.c;
+    if (rtt < 0 || rtt > 10000) return;
+    clockRtt *= 1.02;  // slowly forget old samples
+    if (rtt <= clockRtt) {
+      clockRtt = rtt;
+      clockOffset = b.s + rtt / 2 - now;
+    }
+  }
+
+  function addPlayer(p) {
+    if (p.slot === mySlot) return;
+    var pid = bySlot[p.slot];
+    var known = pid && players[pid];
+    if (!known) {
+      pid = 's' + pad(p.slot) + '_' + (++gen);
+      known = players[pid] = { slot: p.slot, index: nextIndex++, name: p.name, acct: p.acct || '', av: p.av || 0, away: !!p.away, last: null };
+      bySlot[p.slot] = pid;
+      info('Multiplayer: ' + p.name + ' joined.');
+    } else {
+      known.name = p.name;
+      known.acct = p.acct || '';
+      known.av = p.av || 0;
+      known.away = !!p.away;
+    }
+    rosterVer++;
+  }
+
+  function dropPlayer(slot) {
+    var pid = bySlot[slot];
+    if (!pid) return;
+    info('Multiplayer: ' + players[pid].name + ' left.');
+    delete players[pid];
+    delete bySlot[slot];
+    delete eventSeq[slot];
+    rosterVer++;
+  }
+
+  function onProfile(b) {
+    if (b.slot === mySlot) return;
+    var p = players[pidOf(b.slot)];
+    if (!p) return;
+    p.name = b.name;
+    p.acct = b.acct || '';
+    p.av = b.av || 0;
+    rosterVer++;
+  }
+
+  // Avatar block + activity (PROTOCOL §3) ↔ the 20 numbers C++ uses
+  // (app/players.h slot list).
+  var FLAG_BARTENDER = 1, FLAG_MIC = 2, FLAG_AWAY = 4;  // C++ kFlags bits
+  function encodeState(s) {
+    var flags = s[17] | 0, voice = +s[8] || 0;
+    var avatar = {
+      x: +s[0] || 0, y: +s[1] || 0, z: +s[2] || 0, yaw: +s[3] || 0, pitch: +s[4] || 0,
+      anim: clampInt(s[9], 0, 255), animTick: (s[10] | 0) & 0xffff, held: clampInt(s[16], 0, 255), look: clampInt(s[7], 0, 255),
+      flags: (voice > 0.05 ? 1 : 0) | (flags & FLAG_AWAY ? 2 : 0) | (flags & FLAG_BARTENDER ? 4 : 0) | (flags & FLAG_MIC ? 8 : 0),
+    };
+    // Activity TLV kind 1 (the bar's activity): activity u8, param i16,
+    // voice u8, 5 × f32 activity data = 24 bytes.
+    var b = new DataView(new ArrayBuffer(26));
+    b.setUint8(0, 1);
+    b.setUint8(1, 24);
+    b.setUint8(2, clampInt(s[5], 0, 255));
+    b.setInt16(3, clampInt(s[6], -32768, 32767), true);
+    b.setUint8(5, clampInt(Math.round(voice * 255), 0, 255));
+    for (var i = 0; i < 5; i++) b.setFloat32(6 + i * 4, isFinite(s[11 + i]) ? +s[11 + i] : 0, true);
+    var hex = '';
+    for (var j = 0; j < 26; j++) { var x = b.getUint8(j); hex += (x < 16 ? '0' : '') + x.toString(16); }
+    return { avatar: avatar, act: hex };
+  }
+  function clampInt(v, lo, hi) { v = Math.round(+v || 0); return v < lo ? lo : v > hi ? hi : v; }
+
+  function decodeState(avatar, act) {
+    var s = [avatar.x, avatar.y, avatar.z, avatar.yaw > Math.PI ? avatar.yaw - 2 * Math.PI : avatar.yaw, avatar.pitch,
+             0, 0, avatar.look, avatar.flags & 1 ? 0.5 : 0, avatar.anim, avatar.animTick, 0, 0, 0, 0, 0, avatar.held,
+             (avatar.flags & 4 ? FLAG_BARTENDER : 0) | (avatar.flags & 8 ? FLAG_MIC : 0) | (avatar.flags & 2 ? FLAG_AWAY : 0)];
+    // Walk the TLV for kind 1.
+    var bytes = [];
+    for (var i = 0; i + 1 < act.length; i += 2) bytes.push(parseInt(act.substr(i, 2), 16));
+    var p = 0;
+    while (p + 2 <= bytes.length) {
+      var kind = bytes[p], n = bytes[p + 1];
+      if (kind === 1 && n === 24 && p + 2 + n <= bytes.length) {
+        var dv = new DataView(new Uint8Array(bytes.slice(p + 2, p + 2 + n)).buffer);
+        s[5] = dv.getUint8(0);
+        s[6] = dv.getInt16(1, true);
+        s[8] = dv.getUint8(3) / 255;
+        for (var k = 0; k < 5; k++) s[11 + k] = dv.getFloat32(4 + k * 4, true);
+      }
+      p += 2 + n;
+    }
+    return s;  // the 18 numbers of app/players.h (kCount)
+  }
+
+  function pushPacket(p, t, s) {
+    packets.push({ index: p.index, t: t, s: s });
+    if (packets.length > 512) packets.splice(0, packets.length - 512);
+    p.last = { t: t, s: s };
+  }
+
+  function onTick(t) {
+    t.players.forEach(function (row) {
+      var p = players[pidOf(row.slot)];
+      if (!p) return;
+      var s = decodeState(row.avatar, row.act);
+      if (p.away) s[17] = s[17] | FLAG_AWAY;
+      // After a still spell, start the move from where they stood (C++ plays
+      // back between samples; without this the first step would be smeared
+      // over the whole quiet time).
+      if (p.last && t.serverMs - p.last.t > GAP_MS) pushPacket(p, t.serverMs - SEND_MS, p.last.s);
+      pushPacket(p, t.serverMs, s);
+    });
+  }
+
+  function onDelta(list) {
+    list.forEach(function (d) {
+      var field = d[1], value = d[2], by = d[3];
+      if (field.slice(0, 6) === 'claim.') {
+        var key = field.slice(6);
+        if (value < 0) delete claims[key]; else claims[key] = value;
+      } else if (field === 'away') {
+        var p = players[pidOf(by)];
+        if (!p) return;
+        p.away = !!value;
+        // Tell C++ through their state: same numbers, away bit changed.
+        if (p.last) {
+          var s = p.last.s.slice();
+          s[17] = value ? (s[17] | FLAG_AWAY) : (s[17] & ~FLAG_AWAY);
+          pushPacket(p, Math.max(p.last.t + 1, serverNowMs()), s);
+        }
+        rosterVer++;
+      } else if (field === 'net.stateHz') {
+        stateHz = Math.max(1, Math.min(20, value | 0));
+        info('Multiplayer: the server is busy today, sending less often.');
+      }
+    });
+  }
+
+  // World writes from the room, in order. Our own writes come back too: we
+  // skip them (we already have them) unless someone else's write to the same
+  // key arrived after ours was sent; then our echo is the room's final word
+  // and is applied, so every phone ends on the same value.
+  function onKv(list, skipOwn) {
+    list.forEach(function (e) {
+      var key = e[1], by = e[2], values = e[3];
+      if (by === mySlot && mySlot >= 0) {
+        if (skipOwn) return;  // a resumed session: we already have our own writes
+        if (pending[key] > 0) pending[key]--;
+        if (!pending[key] && foreign[key]) {
+          foreign[key] = false;
+          worldIn.push([key, 0, values]);
+        }
+        return;
+      }
+      if (pending[key] > 0) foreign[key] = true;
+      worldIn.push([key, by >= 0 && by < mySlot ? 1 : 0, values]);
+    });
+  }
+
+  function onEvents(list) {
+    list.forEach(function (e) {
+      var slot = e[1], seq = e[2];
+      if (eventSeq[slot] !== undefined && seq <= eventSeq[slot]) return;  // a repeat
+      eventSeq[slot] = seq;
+      var p = players[pidOf(slot)];
+      if (p) eventsIn.push([p.index, e[3], e[4]]);
+    });
+  }
+
+  // ---- Sending (every 50 ms) ----
+  function tick() {
+    if (!open || mySlot < 0) {
+      if (open && performance.now() - lastRecv > DEAD_MS) { try { ws.close(); } catch (e) {} }
+      return;
+    }
+    var now = performance.now();
+    if (now - lastRecv > DEAD_MS && !document.hidden) {
+      info('Multiplayer: no answer from the room, reconnecting...');
+      var dead = ws;
+      ws = null;
+      open = false;
+      try { dead.close(); } catch (e) {}
+      closed(1006, 'dead');
+      return;
+    }
+    // Logged in or out since connecting: tell the room.
+    var tok = ticket();
+    if (tok !== helloTok) { helloTok = tok; sendText('R', { ticket: tok || 'guest' }); }
+    if (state && !away && now - lastStateAt >= 1000 / stateHz - 5) {
+      var enc = encodeState(state);
+      var hex = JSON.stringify(enc.avatar) + enc.act;
+      if (hex !== lastStateHex) {
+        stateSeq = (stateSeq + 1) & 0xffff;
+        var bin = P.encodeState({ seq: stateSeq, avatar: enc.avatar, act: enc.act });
+        if (bin && send(bin)) { lastStateHex = hex; lastStateAt = now; }
+      }
+    }
+    var keys = Object.keys(worldOut);
+    if (keys.length) {
+      var w = {};
+      keys.slice(0, 32).forEach(function (k) { w[k] = worldOut[k]; delete worldOut[k]; });
+      if (sendText('K', { w: w })) {
+        for (var k in w) { pending[k] = (pending[k] || 0) + 1; foreign[k] = false; }
+      }
+    }
+    if (eventsOut.length) sendText('E', { e: eventsOut.splice(0, 32) });
+    while (intentsOut.length) {
+      if (!sendText('I', intentsOut[0])) break;
+      intentsOut.shift();
+    }
+    if (now - lastSend > KEEPALIVE_MS) send('ping');
+  }
+
+  // ---- Background / foreground ----
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && !away) {
+      away = true;
+      if (state && awaySlot >= 0) {
+        var s = state.slice();
+        s[awaySlot] = s[awaySlot] | awayBit;
+        var enc = encodeState(s);
+        stateSeq = (stateSeq + 1) & 0xffff;
+        var bin = P && P.encodeState({ seq: stateSeq, avatar: enc.avatar, act: enc.act });
+        if (bin) send(bin);
+      }
+      if (P) sendText('A', { on: 1 });
+    } else if (!document.hidden && away) {
+      away = false;
+      lastStateHex = '';
+      if (open) { sendText('A', { on: 0 }); pingsLeft = 3; }
+      else if (!stopped && started) { retries = 0; connect(); }
+    }
+  });
+
+  function leave() { if (ws) { try { ws.close(1000, 'left'); } catch (e) {} } }
+
+  function begin() {
+    P = window.bar3dProto;
+    if (!P) { status = 3; info('Multiplayer: proto.js is missing.'); return; }
+    window.addEventListener('pagehide', leave);
+    setInterval(tick, SEND_MS);
+    if (cloudParam) { url = cloudParam; connect(); return; }
+    fetch('config.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
+      if (!c || !c.ws) { status = 0; info('Multiplayer: no room server in this build.'); return; }
+      url = c.ws;
+      connect();
+    }).catch(function () { status = 3; info('Multiplayer: couldn\'t read config.json.'); });
   }
 
   return {
     // Starts sending/receiving. Returns false when multiplayer is off.
     start: function () {
-      if (started) return !!(server || cloudUrl !== 'off');
-      ignored.forEach(function (v) { info('Multiplayer: ignored server option (' + v + ')'); });
-      var cloudParam = cloudOverride;
-      if (serverParam === 'off') return false;
-      started = true;
-      window.addEventListener('pagehide', leave);
-      // Cloudflare first (unless the relay was asked for), else the relay.
-      var useRelay = function () {
-        if (!server) { status = 0; return; }
-        mode = 'relay';
-        setInterval(tick, SEND_INTERVAL_MS);
-      };
-      var useCloud = function (url) {
-        cloudUrl = url;
-        mode = 'cloud';
-        status = 1;
-        connectCloud();
-        setInterval(cloudTick, CLOUD_SEND_MS);
-      };
-      if (cloudParam === 'off' || forcedRelay) {
-        useRelay();
-      } else if (cloudParam) {
-        useCloud(cloudParam);
-      } else {
-        fetch('cloud.json', { cache: 'no-store' }).then(function (r) { return r.json(); })
-          .then(function (c) { if (c && c.ws) useCloud(c.ws); else useRelay(); })
-          .catch(useRelay);
-      }
+      if (disabled) return false;
+      if (!started) { started = true; begin(); }
       return true;
     },
     status: function () { return status; },
+    statusReason: function () { return why; },
     room: function () { return room; },
-    // Your latest state; t is your clock in ms (sent along so the others
-    // can play your movement back smoothly).
-    setState: function (t, values) { if (away) return; stateTime = t; state = values; },
+    // Your latest state (C++ sends it every frame; the room gets it when it
+    // changed, at most 20 times a second).
+    setState: function (t, values) { if (!away) state = values; },
     // Which state number carries the "away" bit (set once by C++).
     awayFlag: function (slot, bit) { awaySlot = slot; awayBit = bit; },
     // Moves new states to C++: each packet is [player, t, count, values...]
-    // as doubles. Returns how many packets were written.
+    // as doubles (t = server ms). Returns how many packets were written.
     take: function (heap, start, capacity, maxValues) {
       var n = 0, at = start;
       while (packets.length && n < capacity) {
@@ -385,10 +559,9 @@ window.bar3dNet = (function () {
     rosterJson: function () {
       return JSON.stringify(Object.keys(players).map(function (pid) {
         var p = players[pid];
-        return [p.index, p.name || '', p.acct || '', p.av || 0, pid < id ? 1 : 0];
+        return [p.index, p.name || '', p.acct || '', p.av || 0, p.slot < mySlot ? 1 : 0];
       }));
     },
-    // Index of each player currently in the room (others only).
     present: function (index) {
       for (var pid in players) if (players[pid].index === index) return true;
       return false;
@@ -397,7 +570,6 @@ window.bar3dNet = (function () {
       for (var pid in players) if (players[pid].index === index) return players[pid].name;
       return '';
     },
-    // Their account id ('' = guest) and profile picture revision (0 = none).
     account: function (index) {
       for (var pid in players) if (players[pid].index === index) return players[pid].acct || '';
       return '';
@@ -406,38 +578,35 @@ window.bar3dNet = (function () {
       for (var pid in players) if (players[pid].index === index) return players[pid].av || 0;
       return 0;
     },
+    // Where the accounts and reports servers are (see DEFAULT_SERVER).
     serverUrl: function () { return server; },
-    // Names of the other players (reports remove them).
     names: function () { return Object.keys(players).map(function (k) { return players[k].name; }); },
-    // Whether a login token may be sent to this URL (same origin or allowlisted).
     tokenOk: tokenOk,
-    myId: function () { return id; },
-    // Ids of everyone else in the room right now.
+    myId: function () { return mySlot >= 0 ? 's' + pad(mySlot) : ''; },
     peers: function () { return Object.keys(players); },
     idOf: function (index) {
       for (var pid in players) if (players[pid].index === index) return pid;
       return '';
     },
     indexOf: function (pid) { return players[pid] ? players[pid].index : 0; },
-    // True if that player's id sorts before ours (tie-breaks: who wins a seat).
     isLower: function (index) {
-      for (var pid in players) if (players[pid].index === index) return pid < id;
+      for (var pid in players) if (players[pid].index === index) return players[pid].slot < mySlot;
       return false;
     },
-    // Voice chat handshakes (web/voice.js).
-    sendSignal: function (to, data) { if (server || mode === 'cloud') msgOut.push([to, 'v:' + JSON.stringify(data)]); },
-    onSignal: function (handler) { signalHandlers.push(handler); },
-    // Quick events (piano notes...) to everyone: straight over the voice
-    // chat's data connection where there is one, else through the relay.
-    sendEvent: function (type, values) {
-      var text = 'e:' + JSON.stringify([type, values]);
-      var voice = window.bar3dVoice;
-      for (var pid in players) {
-        if (!(voice && voice.sendData(pid, text))) msgOut.push([pid, text]);
-      }
+    // Voice chat handshakes (web/voice.js), through the room.
+    sendSignal: function (to, data) {
+      var p = players[to];
+      if (p && P) sendText('G', { to: p.slot, data: data });
     },
-    receiveText: receiveText,
-    // Events from others since the last call, as JSON [[player, type, [values]], ...].
+    onSignal: function (handler) { signalHandlers.push(handler); },
+    // Quick events (piano notes, sounds) to everyone, through the room (in
+    // order, stamped with the server's clock).
+    sendEvent: function (type, values) {
+      eventsOut.push([String(type).slice(0, 16), values.slice(0, 16).map(function (v) { return isFinite(v) ? +v : 0; })]);
+      if (eventsOut.length > 64) eventsOut.shift();
+    },
+    // Old path: events over voice chat's data channel (not sent any more).
+    receiveText: function () {},
     takeEvents: function () {
       var out = JSON.stringify(eventsIn);
       eventsIn = [];
@@ -446,18 +615,40 @@ window.bar3dNet = (function () {
     count: function () { return Object.keys(players).length; },
     // Shared world: queue a change to `key` (sent on the next tick).
     setWorld: function (key, values) {
-      worldOut[key] = values.map(function (v) { return Math.round(v * 10000) / 10000; });
+      worldOut[key] = values.slice(0, 20).map(function (v) { return isFinite(v) ? Math.round(v * 10000) / 10000 : 0; });
     },
-    // Changes from others since the last call, as JSON:
-    // [[key, writerIdIsLowerThanOurs, [values...]], ...]
+    // Changes since the last call, as JSON: [[key, writerSortsBeforeMe, [values...]], ...]
     takeWorld: function () {
       var out = JSON.stringify(worldIn);
       worldIn = [];
       return out;
     },
-    // The server's clock in seconds (shared by everyone), 0 if not known yet.
-    serverTime: function () {
-      return clockOffset === null ? 0 : performance.now() / 1000 + clockOffset;
+    // Claims (the room decides): ask for a key (a seat...), let it go, and
+    // who has it: -1 nobody, 0 you, else that player's index.
+    claim: function (key) {
+      var i = intentId++;
+      intentsOut.push({ i: i, k: 'claim', key: key });
+      return i;
     },
+    release: function (key) {
+      var i = intentId++;
+      intentsOut.push({ i: i, k: 'release', key: key });
+      return i;
+    },
+    claimOwner: function (key) {
+      if (!(key in claims)) return -1;
+      if (claims[key] === mySlot) return 0;
+      var p = players[pidOf(claims[key])];
+      return p ? p.index : -1;
+    },
+    // The room's answer to a claim: 1 yes, 0 no, -1 not yet.
+    result: function (id) {
+      var r = results[id];
+      if (!r) return -1;
+      delete results[id];
+      return r.ok;
+    },
+    // The server's clock in seconds (shared by everyone), 0 if not known yet.
+    serverTime: function () { return clockOffset === null ? 0 : (performance.now() + clockOffset) / 1000; },
   };
 })();

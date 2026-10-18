@@ -44,9 +44,11 @@ async function startServer() {
   throw new Error('wrangler dev did not start');
 }
 
-function stopServer() {
+async function stopServer() {
   if (server) { try { process.kill(-server.pid, 'SIGTERM'); } catch (e) {} }
-  if (stateDir) rmSync(stateDir, { recursive: true, force: true });
+  // wrangler can still be writing its files for a moment after the signal.
+  await wait(500);
+  if (stateDir) { try { rmSync(stateDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); } catch (e) {} }
 }
 
 // A fake player: a socket plus everything it received, decoded.
@@ -337,7 +339,7 @@ try {
 } catch (e) {
   check(false, 'test crashed: ' + (e.stack || e));
 } finally {
-  stopServer();
+  await stopServer();
 }
 
 if (failed) { console.log(`ROOM TEST FAILED (${failed})`); process.exit(1); }

@@ -1,24 +1,23 @@
-// Multiplayer test: runs server/relay.php with PHP's built-in web server,
-// opens the game twice (players "Alice" and "Bob") in headless Chromium,
-// lets Alice walk while Bob looks at her, and saves Bob's view to
-// build/mp-bob.png. Then the shared world (M2): Carol joins, moves a glass
-// along the bar and turns the full mirror off; Bob must see both, and Carol
-// (rejoining) must find the glass where she left it. Needs `php` installed.
+// Multiplayer test: starts the Cloudflare room (cloud/) locally with
+// wrangler dev, opens the game twice (players "Alice" and "Bob") in headless
+// Chromium, lets Alice walk while Bob looks at her, and saves Bob's view to
+// build/mp-bob.png. Then the shared world: Carol joins, moves a glass along
+// the bar and turns the full mirror off; Bob must see both, and Carol
+// (rejoining) must find the glass where she left it. Then seats: the room
+// decides who sits where. Needs `npm ci --prefix cloud`.
 // Usage: NODE_PATH=$(npm root -g) node tools/mp_test.mjs
-// RELAY=https://joshuavelasco.com/bar/relay.php tests through the live relay;
-// CLOUD=ws://127.0.0.1:8787 through the Cloudflare room server (cloud/).
+// ROOM_URL=ws://127.0.0.1:8787 uses a room server you started yourself;
+// ROOM_URL=wss://bar3d.joshuavelasco60.workers.dev tests the live one.
 import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { mkdtempSync, copyFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { extname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
+import { startRoom, probe } from './lib/room.mjs';
 
 const require = createRequire(import.meta.url);
 const playwright = require('playwright');
 const siteDir = resolve('build/site');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 
 const site = createServer(async (req, res) => {
   const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -31,22 +30,18 @@ const site = createServer(async (req, res) => {
   }
 }).listen(0);
 const port = site.address().port;
-
-const relayDir = mkdtempSync(join(tmpdir(), 'relay-'));
-copyFileSync('server/relay.php', join(relayDir, 'relay.php'));
-const relayPort = port + 1;
-const php = spawn('php', ['-S', `127.0.0.1:${relayPort}`, '-t', relayDir], { stdio: 'ignore' });
-const relay = process.env.RELAY ?? `http://127.0.0.1:${relayPort}/relay.php`;
+const roomServer = await startRoom(8792, { CONNECT_LIMIT_PER_MIN: 1000 });
+const CLOUD = roomServer.ws;
+const ROOM = 'mp' + Math.floor(Math.random() * 1e6);
 
 const browser = await playwright.chromium.launch({
   args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
          '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 });
-async function open(name, cam) {
+async function open(name, cam, extra = '') {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
-  const via = process.env.CLOUD ? `cloud=${encodeURIComponent(process.env.CLOUD)}` : `server=${encodeURIComponent(relay)}`;
-  await page.goto(`http://localhost:${port}/?skipintro&room=test&name=${name}&${via}` +
-                  `&cam=${encodeURIComponent(cam)}`);
+  await page.goto(`http://localhost:${port}/?skipintro&room=${ROOM}&name=${name}&cloud=${encodeURIComponent(CLOUD)}` +
+                  `&cam=${encodeURIComponent(cam)}${extra}`);
   return page;
 }
 const alice = await open('Alice', process.env.ALICE ?? '0,1.66,-0.5,0,0');
@@ -107,15 +102,15 @@ await carol.mouse.click(vw * 0.75, vh * 0.45);  // onto the bar top, past the ar
 await waitLog(carol, /Put down at/);
 await carol.waitForTimeout(1000);
 const carolLog = await logOf(carol);
-// Wait (up to 60 s, the headless world runs in slow motion) until the relay
+// Wait (up to 60 s, the headless world runs in slow motion) until the room
 // says the glass has come to rest.
 for (let i = 0; i < 60; i++) {
-  const r = await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], since: 0 }) });
-  const g1 = (await r.json()).world.find((e) => e[0] === 'g1');
-  if (g1 && g1[2][10] === 2) break;
+  const pr = await probe(CLOUD, ROOM);
+  const g1 = (pr.welcome?.kv || []).find((e) => e[1] === 'g1');
+  pr.close();
+  if (g1 && g1[3][10] === 2) break;
   await carol.waitForTimeout(1000);
 }
-await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
 // Then rejoins at the big mirror and taps it (full -> avatars only).
 await carol.goto(carol.url().replace(/cam=[^&]*/, 'cam=' + encodeURIComponent('6.6,1.66,3.6,90,0')));
 await waitLog(carol, /glass 1 is at/);
@@ -131,23 +126,32 @@ await waitLog(bob, /Everything loaded/, 180000);
 // Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
 // tap (phones only play sound after one), must start the same song.
 await bob.mouse.click(215, 300);
-if (process.env.CLOUD) {
-  const probe = new WebSocket(`${process.env.CLOUD}/room/test?id=probe`);
-  await new Promise((r) => (probe.onopen = r));
-  probe.send(JSON.stringify({ hello: 1, name: 'Probe', t: 1, s: [0], w: { jb: [1, Date.now() / 1000] } }));
-  await new Promise((r) => setTimeout(r, 500));
-  probe.close();
-} else {
-  await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', s: [0], w: { jb: [1, Date.now() / 1000] } }) });
-}
+const dj = await probe(CLOUD, ROOM, 'DJ');
+dj.send('K', { w: { jb: [1, Date.now() / 1000] } });
 await waitLog(bob, /Bossa Antigua" \(chosen by another player\)/, 20000);
-await fetch(relay, { method: 'POST', body: JSON.stringify({ room: 'test', id: 'probe', leave: 1 }) });
+dj.close();
 const log = await logOf(bob);
+
+// Seats: the room decides. Someone (a probe) already has seat 6; Bob tries
+// it (the ?sit test option) and must be told and stood up. Carol sits on
+// seat 5: the room must know it's hers.
+await carol.close();
+const sitter = await probe(CLOUD, ROOM, 'Sitter');
+sitter.send('I', { i: 1, k: 'claim', key: 'seat.6' });
+const sitterOk = (await sitter.until(() => sitter.find('R', (r) => r.r === 1)))?.body.ok === 1;
+await bob.goto(bob.url().replace(/&sit=\d+/, '') + '&sit=6');
+await waitLog(bob, /sat there first|is sitting there/, 120000);
+const bobSeatLog = await logOf(bob);
+const carol2 = await open('Carol', '-3.7,1.66,-3.41,0,-34', '&sit=5');
+await waitLog(carol2, /connected to room/, 120000);
+const seatOwner = await sitter.until(() => sitter.find('D', (d) => d.d.some((x) => x[1] === 'claim.seat.5' && x[2] >= 0)), 120000);
+const carolSlot = (await sitter.until(() => sitter.find('J', (j) => j.name === 'Carol') || sitter.find('F', (f) => f.name === 'Carol'), 20000))?.body.slot;
+sitter.close();
 show('Bob', log);
 show('Carol', carolLog);
 show('Carol again', carolLog2);
 await browser.close();
-php.kill();
+await roomServer.stop();
 site.close();
 const putDown = /Put down at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(carolLog);
 const rested = /glass 1 came to rest at (-?\d+\.\d+), (-?\d+\.\d+), (-?\d+\.\d+)/.exec(log);
@@ -160,6 +164,8 @@ const checks = {
   'Carol finds the glass there after rejoining': near(rejoined),
   'Bob sees the mirror switch to avatars only': /mirror 0 set to avatars only/.test(log),
   'Bob plays the song another player picked': /Bossa Antigua" \(chosen by another player\)/.test(log),
+  'the room refuses Bob a seat someone else has': sitterOk && /Sitter (sat there first|is sitting there)/.test(bobSeatLog),
+  'the room records Carol on seat 5': !!seatOwner && seatOwner.body.d.some((x) => x[1] === 'claim.seat.5' && x[2] === carolSlot),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);
 const ok = Object.values(checks).every(Boolean);

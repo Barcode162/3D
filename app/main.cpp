@@ -117,6 +117,7 @@ struct App {
   int look = 0;
   Activity activity = Activity::kNone;
   int seat = -1;               // the seat you're on
+  int seatClaim = 0;           // the room's answer to "may I sit here?" (engine::net::claim)
   double activityStartMs = 0;
   Emote emote = Emote::kNone;
   int emoteCount = 0;
@@ -224,9 +225,13 @@ void startEmote(Emote e) {
 
 // ---- Sitting ----
 
+std::string seatKey(int seat) { return "seat." + std::to_string(seat); }
+
 void standUp() {
   if (g_app.seat < 0) return;
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
+  if (g_app.others.online()) engine::net::release(seatKey(g_app.seat));
+  g_app.seatClaim = 0;
   if (s.kind == app::SeatKind::kSim) {
     g_app.race.close();
     g_app.input.setCapture(false);
@@ -252,12 +257,23 @@ void sitOn(int index) {
     showToast(o->name + " is sitting there.");
     return;
   }
+  // The room decides who sits where: ask, and sit down right away; if the
+  // room says someone else got there first, you stand up again (frame()).
+  if (g_app.others.online()) {
+    const int owner = engine::net::claimOwner(seatKey(index));
+    if (owner > 0) {
+      showToast(engine::net::playerName(owner) + " is sitting there.");
+      LOG_INFO("Seat %d: %s is sitting there.", index, engine::net::playerName(owner).c_str());
+      return;
+    }
+  }
   if (g_app.held >= 0) {
     showToast("Put the glass down first.");
     return;
   }
   standUp();
   g_app.seat = index;
+  if (g_app.others.online()) g_app.seatClaim = engine::net::claim(seatKey(index));
   g_app.camera.position = app::seatedEye(s.hip, s.yaw, s.lowSeat);
   g_app.camera.yaw = s.yaw;
   g_app.camera.pitch = s.kind == app::SeatKind::kPianoBench ? engine::radians(-58.0f) : 0;
@@ -1339,17 +1355,19 @@ void frame(double rafMs) {
     sendInfo();
   }
 
-  // A seat someone else took at the same moment: the one who was first wins.
-  if (g_app.seat >= 0) {
-    for (const app::OtherPlayer& o : g_app.others.players()) {
-      const auto act = static_cast<Activity>(static_cast<int>(o.values[app::slot::kActivity]));
-      const bool seated = act == Activity::kSit || act == Activity::kDrive || act == Activity::kPiano;
-      if (o.placed && seated && static_cast<int>(o.values[app::slot::kParam]) == g_app.seat &&
-          engine::net::isLower(o.id)) {
-        showToast(o.name + " sat there first.");
-        standUp();
-        break;
-      }
+  // The room said this seat is someone else's: stand up. (After a reconnect
+  // that lost your place in the room, the seat is asked for again.)
+  if (g_app.seat >= 0 && g_app.others.online()) {
+    const int answer = engine::net::claimResult(g_app.seatClaim);
+    if (answer >= 0) g_app.seatClaim = 0;
+    const int owner = engine::net::claimOwner(seatKey(g_app.seat));
+    if (owner > 0 || answer == 0) {
+      const std::string who = owner > 0 ? engine::net::playerName(owner) : std::string("Someone");
+      showToast(who + " sat there first.");
+      LOG_INFO("Seat %d: %s sat there first.", g_app.seat, who.c_str());
+      standUp();
+    } else if (owner < 0 && g_app.seatClaim == 0 && engine::net::status() == engine::net::Status::kConnected) {
+      g_app.seatClaim = engine::net::claim(seatKey(g_app.seat));
     }
   }
 

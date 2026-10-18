@@ -135,6 +135,24 @@ bool isLower(int player) {
   return e && e->lowerId;
 }
 
+int claim(const std::string& key) {
+  return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['claim'] ? n['claim'](UTF8ToString($0)) : 0; }, key.c_str());
+}
+
+void release(const std::string& key) {
+  EM_ASM({ var n = window['bar3dNet']; if (n && n['release']) n['release'](UTF8ToString($0)); }, key.c_str());
+}
+
+int claimOwner(const std::string& key) {
+  return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['claimOwner'] ? n['claimOwner'](UTF8ToString($0)) : -1; },
+                    key.c_str());
+}
+
+int claimResult(int request) {
+  if (request <= 0) return -1;
+  return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['result'] ? n['result']($0) : -1; }, request);
+}
+
 double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 
 }  // namespace engine::net
