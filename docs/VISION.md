@@ -150,3 +150,10 @@ to leaning into that. They have about $100 to spend on upgrades (more
 Claude, tools, or servers) and are open to changing fundamental pieces.
 Next: a frank review of what exists, then a business + tech roadmap
 (still to be written together).
+- **More facts (2026-10-18):** Claude plan is the $20/month one; the $100
+  is one-time (could become monthly if it pays off). IONOS hosting ($1 for
+  the first year) and the domain ($1 + $1 domain guard) are one-year promos.
+  The web stack was chosen only because the user works from a phone, not
+  as a goal. The user sees the current bar as a small sandbox, is fine with
+  restarting or changing the tech stack, and now wants a serious, clear
+  direction: something that makes money and that they're proud of.
