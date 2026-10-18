@@ -138,3 +138,15 @@ other). Plan: `docs/RACING.md`.
 - **Mirror quality (2026-10-17):** your character in the mirror always looks
   full quality, and so does everything near you; only far-away things in the
   reflection may be lower quality (planned in RESTRUCTURE 6.3).
+
+## The business goal (user, 2026-10-18)
+The user wants this to become a product people pay for: **digital goods
+inside a social 3D space** (mostly 3D scenes, plus the social side). The
+target is enough income to cover the family's bills (housing, car, gas,
+food) with a little left to reinvest, so the user can become a full-time
+developer. They didn't set out to build a VRChat/Rec Room-style hangout,
+but avatars + mirrors + multiplayer + voice made it one, and they're open
+to leaning into that. They have about $100 to spend on upgrades (more
+Claude, tools, or servers) and are open to changing fundamental pieces.
+Next: a frank review of what exists, then a business + tech roadmap
+(still to be written together).
