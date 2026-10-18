@@ -58,6 +58,8 @@ export async function probe(wsBase, room, name = 'Probe') {
   p.until = async (fn, ms = 5000) => { for (let t = 0; t < ms; t += 50) { const v = fn(); if (v) return v; await wait(50); } return fn(); };
   p.send('H', { proto: 1, build: 'probe', name, look: 0 });
   p.welcome = (await p.until(() => p.find('W')))?.body;
-  p.close = () => { try { ws.close(1000); } catch (e) {} };
+  // Keepalive like a phone's, so the room doesn't close the probe as a ghost.
+  const keep = setInterval(() => { try { ws.send('ping'); } catch (e) {} }, 4000);
+  p.close = () => { clearInterval(keep); try { ws.close(1000); } catch (e) {} };
   return p;
 }

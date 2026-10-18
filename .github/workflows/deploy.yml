@@ -93,6 +93,13 @@ jobs:
       - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
         run: node tools/menu_test.mjs
 
+      # Two players through the Cloudflare room (run locally with wrangler
+      # dev): movement, away, glasses, mirror, jukebox, seats decided by the
+      # room. Non-blocking until it has passed once on GitHub's runners.
+      - name: "Test: multiplayer (two players + the room)"
+        continue-on-error: true
+        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
+
       # Prints only whether the Cloudflare secrets exist, whether wrangler
       # accepts the token, and whether a workers.dev subdomain is registered.
       - name: "Check: Cloudflare"
@@ -117,7 +124,6 @@ jobs:
       # start-up to find the room (docs/RESTRUCTURE.md 2.12, step 3.3).
       - name: "Deploy: Cloudflare room"
         if: env.HAVE_CF == 'true'
-        continue-on-error: true  # dark launch (3.3); blocking from the cutover (3.4d)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

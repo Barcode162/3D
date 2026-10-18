@@ -4,6 +4,17 @@
 **Current focus:** The **racing sim** (`docs/RACING.md`): a real driving sim on the two rigs (1-2 players + bots, real physics, full-screen game, race on the rigs' monitors for everyone), then a realtime sync server
 
 ## Next up (start here in a new session)
+**2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now
+goes through the Cloudflare room (build after `173f06d`; `docs/DECISIONS.md` →
+"Cloudflare room is the multiplayer server"). The user's order: (1) the connection
+and the server side first: move authority for every shared thing into the room
+(seats done; next glasses, machines, drinks, jukebox, piano, lights, mirrors, games),
+then the room *running* the game logic itself; (2) only then client-side work. Work
+only on what the user names. Keep joshuavelasco.com (home) + /bar (the game).
+Open: joshuavelasco.com doesn't load on the user's phone ("can't be reached",
+2026-10-18) while barcode162.github.io/3D does and the domain answers from
+everywhere we tested; suspect the domain's IPv6 (AAAA) record at IONOS.
+
 **2026-10-16, NEW TOP PRIORITY: the restructure. The plan is
 `docs/RESTRUCTURE.md`; work through its §4 steps in order, one step per
 session, starting at 0.1.** Every system was audited (scorecard and
@@ -552,6 +563,13 @@ A small DAW inside the bar, all DSP written in C++:
   are tested to agree byte for byte on shared examples
   (`proto/vectors.json`), and to refuse broken messages. Nothing changes on
   the phone yet.
+- **2026-10-18:** Restructure 3.2b, 3.2c, 3.3 and the cutover done in one go
+  (user: "server first"): the room ticks, events, signals, shared world with
+  echo, claims (seats decided by the room), ghosts, AFK, rate limits, saved
+  world, `/health` usage; CI deploys it and writes `config.json`; `web/net.js`
+  rewritten for it (no relay any more); mp_test (8 checks) and voice_test run
+  against the room on wrangler dev. The racing game Meridian (user's three.js
+  zip) is waiting: the user said to do only the server work for now.
 - **2026-10-18:** Restructure 3.2a done: the new Cloudflare room
   (`cloud/room.js`) hands out player slots, lets a dropped phone come back
   to the same slot for 30 s (resume token), refuses other websites, old

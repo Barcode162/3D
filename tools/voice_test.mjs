@@ -1,15 +1,14 @@
-// Voice chat test: two players through a local PHP relay (needs `php`).
+// Voice chat test: two players through the Cloudflare room run locally
+// (wrangler dev; the room carries the WebRTC handshake).
 // Chromium's fake microphone stands in for a real one. Checks that the
 // players connect phone-to-phone (WebRTC), that Alice's mic turns on and
-// her voice reaches Bob, and that a piano key Alice plays arrives at Bob
-// over the direct data channel. Bob sits on a bar stool; Alice must see him
+// her voice reaches Bob, and that a piano key Alice plays goes out through
+// the room. Bob sits on a bar stool; Alice must see him
 // sitting. Saves build/voice-alice.png.
 // Usage: NODE_PATH=$(npm root -g) node tools/voice_test.mjs
 import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { mkdtempSync, copyFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { startRoom, probe } from './lib/room.mjs';
 import { extname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 
@@ -29,11 +28,8 @@ const site = createServer(async (req, res) => {
   }
 }).listen(0);
 const port = site.address().port;
-const relayDir = mkdtempSync(join(tmpdir(), 'relay-'));
-copyFileSync('server/relay.php', join(relayDir, 'relay.php'));
-const relayPort = port + 1;
-const php = spawn('php', ['-S', `127.0.0.1:${relayPort}`, '-t', relayDir], { stdio: 'ignore' });
-const relay = `http://127.0.0.1:${relayPort}/relay.php`;
+const roomServer = await startRoom(8794, { CONNECT_LIMIT_PER_MIN: 1000 });
+const ROOM = 'voice' + Math.floor(Math.random() * 1e6);
 
 const browser = await playwright.chromium.launch({
   args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
@@ -43,7 +39,7 @@ const browser = await playwright.chromium.launch({
 const context = await browser.newContext({ viewport: { width: 430, height: 932 }, permissions: ['microphone'] });
 async function open(name, extra) {
   const page = await context.newPage();
-  await page.goto(`http://localhost:${port}/?skipintro&room=voice&name=${name}&server=${encodeURIComponent(relay)}&${extra}`);
+  await page.goto(`http://localhost:${port}/?skipintro&room=${ROOM}&name=${name}&cloud=${encodeURIComponent(roomServer.ws)}&${extra}`);
   return page;
 }
 const waitLog = (page, re, ms = 90000) =>
@@ -99,8 +95,11 @@ console.log('Alice mic dB over 3 s:', samples);
 console.log('Bob ctx:', await bob.evaluate(() => window.bar3dAudio.context().state));
 console.log('Bob stats:\n' + stats + '\nAlice stats:\n' + astats);
 check(`Bob hears Alice (level ${level.toFixed(2)})`, level > 0.05);
-const viaChannel = await alice.evaluate(() => window.bar3dVoice.sendData(window.bar3dNet.peers()[0], 'e:["pk",[60,0.8,1]]'));
-check('Piano notes go over the direct data channel', viaChannel);
+const listener = await probe(roomServer.ws, ROOM, 'Ear');
+await alice.evaluate(() => window.bar3dNet.sendEvent('pk', [60, 0.8, 1]));
+const note = await listener.until(() => listener.find('E', (b) => b.e.some((e) => e[3] === 'pk' && e[4][0] === 60)), 15000);
+listener.close();
+check('A piano key Alice plays goes out through the room', !!note);
 await alice.bringToFront();
 await alice.waitForTimeout(3000);
 await alice.screenshot({ path: 'build/voice-alice.png' });
@@ -108,7 +107,7 @@ const log = await alice.$eval('#log', (el) => [...el.children].map((c) => c.text
 console.log(log.split('\n').filter((l) => /Voice|Multiplayer/.test(l)).join('\n'));
 await browser.close();
 site.close();
-php.kill();
+await roomServer.stop();
 const passed = results.every(Boolean);
 console.log(passed ? 'VOICE TEST PASSED' : 'VOICE TEST FAILED');
 process.exit(passed ? 0 : 1);

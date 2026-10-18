@@ -569,6 +569,40 @@ was answered by the user on 2026-10-17.
   (except view/game/controls/car_model) without Emscripten; see the
   commands at the top of `tools/native/*.cpp`.
 
+## Cloudflare room is the multiplayer server (2026-10-18)
+- **Live:** https://bar3d.joshuavelasco60.workers.dev (CI deploys `cloud/` before
+  the site, then writes `config.json` with its `wss://` address). Both copies of the
+  game (GitHub Pages and joshuavelasco.com/bar) read `config.json` and connect there.
+  The PHP relay is no longer used; `relay.php` is still uploaded until 3.5.
+- **The user's wish (2026-10-18):** keep the domain: joshuavelasco.com is the home
+  page and the bar stays at joshuavelasco.com/bar. Cloudflare only carries the live
+  connection. Don't remove the IONOS game copy (RESTRUCTURE 3.5 said to; the user
+  overrode that).
+- **User's direction (2026-10-18):** rework every system; first make the server side
+  the authority for everything (the backend runs and manages the game), client-side
+  work after. Only work on what the user names.
+- **Deviation from RESTRUCTURE 3.4a:** the phone decodes room messages in JavaScript
+  (`web/net.js` with `proto.js`, the room's own codec copied in by the build), not in
+  C++ through a wasm ring. It keeps the C++ net API unchanged (20-number states,
+  world entries, events) so the cutover touched no game code except seats. The C++
+  codec (`engine/netproto.*`) stays tested for when C++ takes over.
+- **Shared world echo rule (net.js `onKv`):** the room echoes every world write to
+  the writer too. Our own echo is skipped, unless someone else's write to the same
+  key arrived after ours was sent and this is the echo of our latest write: then it's
+  applied, so every phone ends on the room's last value. In a WELCOME, entries by our
+  slot are applied too (a reloaded page can land in the same slot), except on a resume.
+- **Seats are decided by the room:** sitting sends a `claim` for `seat.<n>` and sits
+  at once; if the room says someone else has it, you stand up ("X sat there first").
+  Standing up releases it; leaving frees it. Replaces the old lower-id tie-break.
+- **AFK** is 30 min (not the plan's 10): people sit and listen to voice chat without
+  moving. Ghost sockets (no traffic or keepalive 15 s) are closed with 4004 and keep
+  their slot for the 30 s grace.
+- **Gotcha:** every room must save its world and `schemaVersion`, not only `main`: a
+  Durable Object can be evicted from memory whenever it's idle (about 10 s), and a
+  room that only kept its world in memory lost the glasses (found by mp_test).
+- **Gotcha:** test probes must send the `ping` keepalive, or the room (correctly)
+  closes them as ghosts after 15 s while a slow headless page loads.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

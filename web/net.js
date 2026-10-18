@@ -225,7 +225,7 @@ window.bar3dNet = (function () {
       case 'L': dropPlayer(b.slot); break;
       case 'F': onProfile(b); break;
       case 'P': onPong(b); break;
-      case 'K': onKv(b.w, false); break;
+      case 'K': onKv(b.w, false, false); break;
       case 'E': onEvents(b.e); break;
       case 'D': onDelta(b.d); break;
       case 'R': results[b.r] = b; break;
@@ -258,7 +258,10 @@ window.bar3dNet = (function () {
     // (they're ours, and at least as new).
     pending = {};
     foreign = {};
-    onKv(b.kv || [], resumed);
+    var before = worldIn.length;
+    onKv(b.kv || [], true, resumed);
+    console.log('Multiplayer: welcome brought ' + (worldIn.length - before) + ' of ' + (b.kv || []).length + ' shared things: ' +
+                (b.kv || []).map(function (e) { return e[1] + '@' + e[2] + ':' + (e[3][10] !== undefined ? e[3][10] : ''); }).join(' '));
     if (!resumed) { stateSeq = 0; lastStateHex = ''; }
     lastStateHex = '';  // send our state again at once
     // Clock: a short burst of pings, then one every 10 s.
@@ -418,11 +421,11 @@ window.bar3dNet = (function () {
   // skip them (we already have them) unless someone else's write to the same
   // key arrived after ours was sent; then our echo is the room's final word
   // and is applied, so every phone ends on the same value.
-  function onKv(list, skipOwn) {
+  function onKv(list, welcome, skipOwn) {
     list.forEach(function (e) {
       var key = e[1], by = e[2], values = e[3];
-      if (by === mySlot && mySlot >= 0) {
-        if (skipOwn) return;  // a resumed session: we already have our own writes
+      if (welcome && by === mySlot && skipOwn) return;  // a resumed session: we already have our own writes
+      if (!welcome && by === mySlot && mySlot >= 0) {
         if (pending[key] > 0) pending[key]--;
         if (!pending[key] && foreign[key]) {
           foreign[key] = false;

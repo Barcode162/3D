@@ -27,7 +27,7 @@ const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
 const HELLO_MS = 5000;
 const GHOST_MS = 15000;          // no message and no keepalive this long: a ghost
-const AFK_MS = 10 * 60 * 1000;   // no movement, intent or event this long: away
+const AFK_MS = 30 * 60 * 1000;   // no movement, voice, intent or event this long: away
 const GHOST_CHECK_IDLE_MS = 60000;  // how often an idle room checks (one alarm)
 const FLUSH_MS = 2500;           // world writes are saved at most this often
 const USAGE_SAVE_MS = 60000;     // usage counters are saved with a flush at most this often
@@ -135,6 +135,7 @@ export class Room {
       await s.deleteAll();
       this.usage.wiped++;
     }
+    this.schemaMarked = (await s.get('schemaVersion')) === SCHEMA_VERSION;
     const grace = (await s.get('grace')) || {};
     for (const p of Object.values(grace)) {
       if (!this.players.has(p.slot)) this.players.set(p.slot, { ...p, ws: null, away: 1 });
@@ -645,6 +646,7 @@ export class Room {
     // Only "main" keeps anything; other rooms leave no trace.
     if (this.name && this.name !== PERSISTENT_ROOM) {
       await this.ctx.storage.deleteAll();
+      this.schemaMarked = false;
       this.kv.clear();
       this.dirtyKv.clear();
       this.deadlines.clear();
@@ -676,21 +678,21 @@ export class Room {
   }
 
   async markSchema() {
-    if (this.name === PERSISTENT_ROOM && !this.schemaMarked) {
+    if (!this.schemaMarked) {
       await this.ctx.storage.put('schemaVersion', SCHEMA_VERSION);
       this.schemaMarked = true;
     }
   }
 
   // ---- Saving the world (debounced: changed keys only, ≤ once per 2 s) ----
+  // Every room saves its world (the room can be put to sleep and woken up at
+  // any time); rooms other than "main" are erased when the last player leaves.
   scheduleFlush() {
-    if (this.name && this.name !== PERSISTENT_ROOM) return;  // other rooms aren't kept
     if (!this.deadlines.has('flush')) this.setDeadline('flush', Date.now() + FLUSH_MS);
   }
 
   async flush() {
     this.setDeadline('flush', 0);
-    if (this.name && this.name !== PERSISTENT_ROOM) { this.dirtyKv.clear(); return; }
     const put = {};
     for (const key of this.dirtyKv) {
       const e = this.kv.get(key);

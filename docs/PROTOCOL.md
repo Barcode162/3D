@@ -66,7 +66,11 @@ e.g. race steering, darts aim) and listed here when they are added.
 
 | Kind | Meaning | Added |
 |---|---|---|
-| (none yet) | | |
+| 1 | The bar's activity, 24 bytes: `u8 activity` (app `Activity`), `i16 param` (seat, machine...), `u8 voice level` (0..255), `5 × f32` activity data (app/players.h `kData`) | 3.4 |
+
+Until 3.4b the avatar block's `animTick` carries the emote counter (it goes up by one per
+emote, so a repeat restarts it), `anim` the emote id and `held` the drink in hand + 1.
+`web/net.js` maps the block + kind 1 to the 18 numbers of `app/players.h` both ways.
 
 ### 3.3 Prop sample (18 bytes)
 | Offset | Type | Field | Encoding |
@@ -121,6 +125,23 @@ props that changed since the previous TICK.
 | `P` | PONG | `{c: number (echo), s: number (server ms)}` |
 
 - *player* = `{slot, name: str 1..24, look: int 0..255, acct?: str ≤32, av?: int, away?: 0 or 1}`
+
+### 4.3 Intents (the room decides)
+| `k` | Extra keys | RESULT | Then |
+|---|---|---|---|
+| `claim` | `key`: `[A-Za-z0-9_.-]{1,40}` (e.g. `seat.4`) | `ok:1` (also if it's already yours), or `ok:0` with `why:"taken"` and `by` (owner's slot); max 8 claims per player | DELTA `claim.<key>` = your slot, to everyone |
+| `release` | `key` | `ok:1`, or `ok:0 why:"not yours"` | DELTA `claim.<key>` = -1 |
+| other | | `ok:0 why:"unknown intent"` | |
+
+A player's claims are freed when they leave (after the grace period), as DELTAs with
+value -1, by -1. Claims are in WELCOME (`claims`).
+
+### 4.4 DELTA fields so far
+| Field | Value | By |
+|---|---|---|
+| `claim.<key>` | owner slot, or -1 = free | the slot that changed it, -1 = the room |
+| `away` | 1 = away (page hidden, or socket lost and in its grace period), 0 = back | that player |
+| `net.stateHz` | 10 when today's free quota is 70% used: send STATE at most this often | -1 |
 - *kv entry* = `[seq: int, key: str, by: slot or -1, values: [number ≤20]]`
 - `by: -1` means the server itself (layout defaults, timers).
 
@@ -172,4 +193,7 @@ defaults (logged, counted on `/health`). Bump it whenever stored keys change sha
 
 | schemaVersion | Step | Stored keys |
 |---|---|---|
-| 1 | 3.2a | `schemaVersion`; `kv:<key>` legacy world values (3.2b) |
+| 1 | 3.2a | `schemaVersion`; `grace` (players in their grace period, with their claims); `kv:<key>` legacy world `{seq, by, values}` (3.2b); `emptySince` (main: the world is forgotten after 30 min empty); `usage` (today's counters) |
+
+Every room saves its world (a room can be put to sleep between messages and woken up
+again); rooms other than `main` erase all storage when their last player leaves.

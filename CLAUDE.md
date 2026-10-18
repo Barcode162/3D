@@ -56,6 +56,8 @@ bash tools/native/run.sh             # car, race, JSON, math, physics tests (g++
 node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
 node tools/proto_test.mjs            # room protocol codec on proto/vectors.json (C++ twin in run.sh)
 node tools/room_test.mjs             # Cloudflare room via its own wrangler dev (setup.sh installs it)
+NODE_PATH=$(npm root -g) node tools/mp_test.mjs     # two/three players + the room (wrangler dev)
+NODE_PATH=$(npm root -g) node tools/voice_test.mjs  # voice chat between two players
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:
@@ -117,14 +119,21 @@ judged on the user's phone.
 - `docs/PROTOCOL.md` is the room protocol (Cloudflare room ↔ game); its two
   codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
   `proto/vectors.json`. `cloud/` is the Cloudflare Worker (`worker.js`:
-  router, Origin check) + room Durable Object (`room.js`), not deployed yet.
-- `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
-  web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
+  router, Origin check, `/health`) + room Durable Object (`room.js`), the
+  multiplayer server: deployed by CI to https://bar3d.joshuavelasco60.workers.dev,
+  its address written into the site's `config.json`. The game finds it there
+  (`web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
+  On localhost multiplayer is off unless `?cloud=ws://...` is given.
+- `server/` is PHP on the user's IONOS hosting: `account.php` (logins,
+  profiles) and `report.php`, uploaded by the deploy with a second copy of the
+  game at joshuavelasco.com/bar (the user wants their domain kept: home page
+  at `/`, the bar at `/bar/`). `relay.php` is the old multiplayer relay, no
+  longer used by the game (Cloudflare replaced it, 2026-10-18).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
   `check_live.mjs` (loads the deployed site headlessly), `menu_test.mjs`
   (menus ↔ game through the mailbox), `mp_test.mjs`
-  (two players through a local PHP relay), `voice_test.mjs` (WebRTC voice
-  between two players), `shots.mjs` (screenshots with page options).
+  (two players through the room on local wrangler dev), `voice_test.mjs` (WebRTC voice
+  between two players, handshake through the room), `shots.mjs` (screenshots with page options).
   `tools/assets/` builds the 3D models in headless Blender (see
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes

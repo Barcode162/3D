@@ -92,6 +92,8 @@ const waitLog = (page, re, ms = 60000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent), re.source,
                        { timeout: ms, polling: 250 }).catch(() => console.log('timed out waiting for ' + re));
 const carol = await open('Carol', '-3.7,1.66,-3.41,0,-34');
+const carolConsole = [];
+carol.on('console', (m) => carolConsole.push(m.text()));
 await waitLog(carol, /connected to room/);
 await waitLog(carol, /Everything loaded/, 180000);  // the loading screen covers the canvas until then
 await carol.waitForTimeout(3000);
@@ -108,6 +110,7 @@ for (let i = 0; i < 60; i++) {
   const pr = await probe(CLOUD, ROOM);
   const g1 = (pr.welcome?.kv || []).find((e) => e[1] === 'g1');
   pr.close();
+  if (i % 10 === 0 || (g1 && g1[3][10] === 2)) console.log('room has g1:', JSON.stringify(g1));
   if (g1 && g1[3][10] === 2) break;
   await carol.waitForTimeout(1000);
 }
@@ -117,6 +120,8 @@ await waitLog(carol, /glass 1 is at/);
 await waitLog(carol, /Everything loaded/, 180000);
 await carol.waitForTimeout(2000);
 const carolLog2 = await logOf(carol);
+console.log('carol console:', carolConsole.filter((l) => /welcome brought/.test(l)).join('\n'));
+console.log('--- Carol again (all)\n' + carolLog2.split('\n').filter((l) => !/Model assets|Texture|Stage /.test(l)).slice(-25).join('\n'));
 await carol.screenshot({ path: 'build/mp-carol.png' });
 await carol.mouse.click(vw / 2, vh / 2);
 await carol.waitForTimeout(2500);
@@ -145,6 +150,7 @@ const bobSeatLog = await logOf(bob);
 const carol2 = await open('Carol', '-3.7,1.66,-3.41,0,-34', '&sit=5');
 await waitLog(carol2, /connected to room/, 120000);
 const seatOwner = await sitter.until(() => sitter.find('D', (d) => d.d.some((x) => x[1] === 'claim.seat.5' && x[2] >= 0)), 120000);
+console.log('--- Carol (seat)\n' + (await logOf(carol2)).split('\n').filter((l) => /Seat|sit|Multiplayer|Stage entered/i.test(l)).join('\n'));
 const carolSlot = (await sitter.until(() => sitter.find('J', (j) => j.name === 'Carol') || sitter.find('F', (f) => f.name === 'Carol'), 20000))?.body.slot;
 sitter.close();
 show('Bob', log);
