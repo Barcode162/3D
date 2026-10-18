@@ -118,6 +118,8 @@ struct App {
   Activity activity = Activity::kNone;
   int seat = -1;               // the seat you're on
   int seatClaim = 0;           // the room's answer to "may I sit here?" (engine::net::claim)
+  std::string machineKey;      // the machine you're using (darts, 4K Mania), claimed in the room
+  int machineClaim = 0;
   double activityStartMs = 0;
   Emote emote = Emote::kNone;
   int emoteCount = 0;
@@ -207,6 +209,12 @@ const app::OtherPlayer* playerUsing(Activity a, int param) {
 
 void setActivity(Activity a) {
   if (g_app.activity == a) return;
+  // Leaving darts or 4K Mania frees the machine for the others.
+  if (!g_app.machineKey.empty() && (g_app.activity == Activity::kDarts || g_app.activity == Activity::kRhythm)) {
+    engine::net::release(g_app.machineKey);
+    g_app.machineKey.clear();
+    g_app.machineClaim = 0;
+  }
   g_app.activity = a;
   g_app.activityStartMs = engine::frameTime().nowMs;
   if (a != Activity::kEmote) g_app.emote = Emote::kNone;
@@ -687,6 +695,21 @@ void setLights(bool dim, bool fire) {
   if (g_app.scene.fireLight >= 0) g_app.renderer.setLightScale(static_cast<size_t>(g_app.scene.fireLight), fire ? 1.0f : 0.0f);
 }
 
+// The room decides who uses a machine (one at a time). False if someone
+// else has it; otherwise asks for it (and you start right away).
+bool claimMachine(const char* key, const char* what) {
+  if (!g_app.others.online()) return true;
+  const int owner = engine::net::claimOwner(key);
+  if (owner > 0) {
+    showToast(engine::net::playerName(owner) + " is " + what + ". One player at a time.");
+    LOG_INFO("Machine %s: %s is %s.", key, engine::net::playerName(owner).c_str(), what);
+    return false;
+  }
+  g_app.machineKey = key;
+  g_app.machineClaim = engine::net::claim(key);
+  return true;
+}
+
 void use(const app::Interactable& it) {
   using app::Action;
   const Vec3 where = (it.boundsMin + it.boundsMax) * 0.5f;
@@ -697,6 +720,7 @@ void use(const app::Interactable& it) {
         showToast(o->name + " is playing. One player at a time.");
         break;
       }
+      if (!claimMachine("machine.rhythm", "playing")) break;
       std::vector<app::RhythmGame::SongChoice> songs;
       for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
       g_app.rhythm.open(std::move(songs));
@@ -721,6 +745,7 @@ void use(const app::Interactable& it) {
         showToast(o->name + " is throwing. One player at a time.");
         break;
       }
+      if (!claimMachine("machine.darts", "throwing")) break;
       g_app.camera.position = g_app.scene.dartOche;
       g_app.camera.yaw = engine::kPi;  // facing the board (+z)
       g_app.camera.pitch = 0;
@@ -1368,6 +1393,32 @@ void frame(double rafMs) {
       standUp();
     } else if (owner < 0 && g_app.seatClaim == 0 && engine::net::status() == engine::net::Status::kConnected) {
       g_app.seatClaim = engine::net::claim(seatKey(g_app.seat));
+    }
+  }
+
+  // Started a machine before joining the room (or after a reconnect that
+  // lost your place): ask for it now.
+  if (g_app.machineKey.empty() && g_app.others.online() && engine::net::status() == engine::net::Status::kConnected &&
+      (g_app.darts.playing() || g_app.rhythm.isOpen())) {
+    g_app.machineKey = g_app.darts.playing() ? "machine.darts" : "machine.rhythm";
+    g_app.machineClaim = engine::net::claim(g_app.machineKey);
+  }
+  // The room said the machine you're on is someone else's: leave it.
+  if (!g_app.machineKey.empty() && g_app.others.online()) {
+    const int answer = engine::net::claimResult(g_app.machineClaim);
+    if (answer >= 0) g_app.machineClaim = 0;
+    const int owner = engine::net::claimOwner(g_app.machineKey);
+    if (owner > 0 || answer == 0) {
+      const std::string who = owner > 0 ? engine::net::playerName(owner) : std::string("Someone");
+      LOG_INFO("Machine %s: %s is using it (got there first).", g_app.machineKey.c_str(), who.c_str());
+      showToast(who + " got there first.");
+      g_app.machineKey.clear();  // not ours: nothing to release
+      if (g_app.darts.playing()) g_app.darts.stop();
+      if (g_app.rhythm.isOpen()) {
+        g_app.rhythm.close();
+        g_app.input.setCapture(false);
+      }
+      setActivity(Activity::kNone);
     }
   }
 

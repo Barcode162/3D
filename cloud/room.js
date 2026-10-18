@@ -22,6 +22,7 @@
 // connected, their last STATE and their claims are rebuilt from the sockets'
 // attachments; players in their grace period and the world are in storage.
 import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary } from './proto.js';
+import { checkWrite } from './rules.js';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -108,7 +109,7 @@ export class Room {
     this.lastGhostCheck = 0;
     this.emptySince = 0;
     this.stateHz = 0;            // 0 = normal; 10 when the daily quota runs low
-    this.usage = { day: today(), messages: 0, alarms: 0, rows: 0, bad: 0, upgrades: 0, wiped: 0 };
+    this.usage = { day: today(), messages: 0, alarms: 0, rows: 0, bad: 0, upgrades: 0, wiped: 0, refused: 0 };
     // A plain "ping" text is answered by the runtime without waking the room
     // (the idle keepalive, §2.5.9). It isn't a protocol message.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
@@ -195,7 +196,8 @@ export class Room {
   // ---- Usage (for /health and the "slow down" switch) ----
   count(what, n = 1) {
     const day = today();
-    if (this.usage.day !== day) this.usage = { day, messages: 0, alarms: 0, rows: 0, bad: 0, upgrades: 0, wiped: 0 };
+    if (this.usage.day !== day) this.usage = { day, messages: 0, alarms: 0, rows: 0, bad: 0, upgrades: 0, wiped: 0, refused: 0 };
+    if (!(what in this.usage)) this.usage[what] = 0;
     this.usage[what] += n;
   }
 
@@ -285,6 +287,8 @@ export class Room {
   // A STATE: keep the newest per player (by sequence number), mark it for the
   // next TICK, and remember it in the socket's attachment (hibernation).
   onState(ws, slot, msg, bytes) {
+    const a = msg.avatar;
+    if (Math.abs(a.x) > 40 || Math.abs(a.z) > 40 || a.y < -2 || a.y > 12) { this.count('refused'); return; }  // not in the bar
     const old = this.states.get(slot);
     if (old) {
       const ahead = (msg.seq - old.seq) & 0xffff;
@@ -302,19 +306,47 @@ export class Room {
 
   // Legacy shared world: each key gets a server sequence number; everyone,
   // the writer too, hears the result, so the last write wins everywhere.
+  // Each write is checked against the world's rules (cloud/rules.js). A
+  // refused write isn't stored or passed on; the writer gets the room's
+  // current value back (so their copy snaps back), and a refusal counter.
   onKv(slot, w) {
-    const out = [];
+    const out = [], back = [];
     for (const [key, values] of Object.entries(w)) {
-      if (!this.kv.has(key) && this.kv.size >= MAX_KV_KEYS) continue;
-      const entry = { seq: this.nextSeq(), by: slot, values };
-      this.kv.set(key, entry);
-      this.dirtyKv.add(key);
-      out.push([entry.seq, key, slot, values]);
+      const r = this.checkKv(slot, key, values, false);
+      if (!r.ok) {
+        this.count('refused');
+        const cur = this.kv.get(key);
+        if (cur) back.push([cur.seq, key, cur.by, cur.values]);
+        continue;
+      }
+      out.push(this.storeKv(slot, key, r.values));
     }
+    if (back.length) this.sendTo(slot, text('K', { w: back.slice(0, 64) }));
     if (!out.length) return;
     this.lastActive.set(slot, Date.now());
     for (let i = 0; i < out.length; i += 64) this.broadcast(text('K', { w: out.slice(i, i + 64) }));
     this.scheduleFlush();
+  }
+
+  checkKv(slot, key, values, viaIntent) {
+    if (!this.kv.has(key) && this.kv.size >= MAX_KV_KEYS) return { ok: false, why: 'world full' };
+    const p = this.players.get(slot);
+    return checkWrite(key, values, {
+      slot, viaIntent, nowS: Date.now() / 1000, owner: (k) => (k ? this.claims.get(k) : undefined),
+      badges: (p && p.badges) || [],
+    });
+  }
+
+  storeKv(slot, key, values) {
+    const entry = { seq: this.nextSeq(), by: slot, values };
+    this.kv.set(key, entry);
+    this.dirtyKv.add(key);
+    return [entry.seq, key, slot, values];
+  }
+
+  sendTo(slot, data) {
+    const p = this.players.get(slot);
+    if (p && p.ws) this.send(p.ws, data);
   }
 
   // Events: stamped and sent to the others with the next TICK.
@@ -368,6 +400,22 @@ export class Room {
       this.saveAttachment(slot);
       return { ok: 1, seq };
     }
+    if (body.k === 'set') {
+      // A world write that only happens if the key still holds `expect`
+      // (e.g. taking a drink: the first one to ask gets it).
+      const values = body.v, expect = body.expect;
+      if (typeof key !== 'string' || !/^[A-Za-z0-9_]{1,16}$/.test(key) || !Array.isArray(values) || values.length > 20) return { ok: 0, why: 'bad key' };
+      const cur = this.kv.get(key);
+      if (Array.isArray(expect) && JSON.stringify(cur ? cur.values : []) !== JSON.stringify(expect)) {
+        return cur && cur.by >= 0 ? { ok: 0, why: 'changed', by: cur.by } : { ok: 0, why: 'changed' };
+      }
+      const r = this.checkKv(slot, key, values, true);
+      if (!r.ok) { this.count('refused'); return { ok: 0, why: r.why.slice(0, 64) }; }
+      const entry = this.storeKv(slot, key, r.values);
+      this.broadcast(text('K', { w: [entry] }));
+      this.scheduleFlush();
+      return { ok: 1, seq: entry[0] };
+    }
     return { ok: 0, why: 'unknown intent' };
   }
 
@@ -400,8 +448,8 @@ export class Room {
     const who = await this.checkToken(ticket);
     const p = this.players.get(slot);
     if (!p || p.ws !== ws) return;
-    if (who) Object.assign(p, { acct: who.acct, name: who.name, av: who.av });
-    else Object.assign(p, { acct: '', av: 0 });
+    if (who) Object.assign(p, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [] });
+    else Object.assign(p, { acct: '', av: 0, badges: [] });
     this.saveAttachment(slot);
     const f = { slot, name: p.name };
     if (p.acct) { f.acct = p.acct; f.av = p.av; }
@@ -443,7 +491,7 @@ export class Room {
     const p = { slot, name: h.name, look: h.look, acct: '', av: 0, resume: randomHex(16), proto: h.proto, graceUntil: 0, away: 0 };
     if (resumed) {  // keep what the login check already found
       const old = this.players.get(slot);
-      Object.assign(p, { acct: old.acct, av: old.av, name: old.acct ? old.name : h.name });
+      Object.assign(p, { acct: old.acct, av: old.av, badges: old.badges || [], name: old.acct ? old.name : h.name });
     } else {
       this.states.delete(slot);
       this.intentResults.delete(slot);
@@ -476,7 +524,7 @@ export class Room {
       const who = await this.checkToken(h.ticket);
       const cur = this.players.get(slot);
       if (who && cur && cur.ws === ws) {
-        Object.assign(cur, { acct: who.acct, name: who.name, av: who.av });
+        Object.assign(cur, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [] });
         this.saveAttachment(slot);
         this.broadcast(text('F', { slot, name: cur.name, acct: cur.acct, av: cur.av }));
       }
@@ -485,7 +533,7 @@ export class Room {
 
   connectedCount() { return [...this.players.values()].filter((p) => p.ws).length; }
 
-  publicFields(p) { return { slot: p.slot, name: p.name, look: p.look, acct: p.acct, av: p.av }; }
+  publicFields(p) { return { slot: p.slot, name: p.name, look: p.look, acct: p.acct, av: p.av, badges: p.badges || [] }; }
 
   // What survives hibernation for a connected player: their public fields,
   // resume token, last STATE and claims, in the socket's attachment.
@@ -791,7 +839,8 @@ export class Room {
     if (cached && cached.until > now) return cached.who;
     let who = null;
     if (this.dev && tok.startsWith('test:')) {
-      who = { acct: clip(tok.slice(5), 32), name: clip(tok.slice(5), 24) || 'Tester', av: 1 };
+      const [acct, ...badges] = tok.slice(5).split(':');  // test:<acct>[:badge...]
+      who = { acct: clip(acct, 32), name: clip(acct, 24) || 'Tester', av: 1, badges };
     } else if (/^[0-9a-f]{48}$/.test(tok) && this.env.ACCOUNT_URL) {
       try {
         const r = await fetch(this.env.ACCOUNT_URL, {
@@ -801,7 +850,10 @@ export class Room {
           signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS),
         });
         const j = await r.json();
-        if (j && j.ok && j.me) who = { acct: clip(String(j.me.id), 32), name: clip(String(j.me.name), 24) || 'Guest', av: Math.max(0, j.me.avatar | 0) };
+        if (j && j.ok && j.me) {
+          who = { acct: clip(String(j.me.id), 32), name: clip(String(j.me.name), 24) || 'Guest', av: Math.max(0, j.me.avatar | 0),
+            badges: Array.isArray(j.me.badges) ? j.me.badges.filter((b) => typeof b === 'string').slice(0, 16).map((b) => clip(b, 16)) : [] };
+        }
       } catch (e) {}
     }
     if (this.tokens.size > 500) this.tokens.clear();

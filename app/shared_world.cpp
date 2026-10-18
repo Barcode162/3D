@@ -25,6 +25,7 @@ constexpr double kSongSlack = 2.0;      // seconds; closer song starts count as 
 
 
 std::string glassKey(int index) { return "g" + std::to_string(index); }
+std::string glassClaim(int index) { return "glass." + std::to_string(index); }
 
 }  // namespace
 
@@ -36,6 +37,7 @@ void SharedWorld::start(bool online, size_t bodyCount, size_t /*mirrorCount*/) {
 bool SharedWorld::canPickUp(int body) const {
   if (!on_ || body < 0) return true;
   const Glass& g = glasses_[static_cast<size_t>(body)];
+  if (engine::net::claimOwner(glassClaim(body)) > 0) return false;  // the room says someone has it
   return !(g.mode == Mode::kRemote && g.state == kHeld);
 }
 
@@ -45,6 +47,9 @@ void SharedWorld::pickedUp(int body) {
   g.mode = Mode::kMine;
   g.settled = true;
   g.lastSentMs = -1e9;  // send right away
+  // The room decides who holds it: ask (and hold it meanwhile).
+  g.claim = engine::net::claim(glassClaim(body));
+  g.claimed = true;
 }
 
 void SharedWorld::mirrorChanged(int mirror, bool on, bool avatarsOnly) {
@@ -190,8 +195,24 @@ void SharedWorld::update(double nowMs, float dt, engine::PhysicsWorld& physics, 
         }
         break;
       case Mode::kMine:
+        if (g.claim) {
+          const int answer = engine::net::claimResult(g.claim);
+          if (answer >= 0) g.claim = 0;
+          if (answer == 0) {  // someone else got it first: let go; their moves come in
+            if (held == index) held = -1;
+            b.held = false;
+            g.claimed = false;
+            g.mode = Mode::kIdle;
+            LOG_INFO("Multiplayer: someone else took glass %d first.", index);
+            break;
+          }
+        }
         if (b.asleep) {
           sendGlass(index, b, kResting);
+          if (g.claimed) {
+            engine::net::release(glassClaim(index));
+            g.claimed = false;
+          }
           g.mode = Mode::kIdle;
         } else if (nowMs - g.lastSentMs >= kSendEveryMs) {
           sendGlass(index, b, b.held ? kHeld : kMoving);

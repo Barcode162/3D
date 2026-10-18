@@ -131,10 +131,28 @@ props that changed since the previous TICK.
 |---|---|---|---|
 | `claim` | `key`: `[A-Za-z0-9_.-]{1,40}` (e.g. `seat.4`) | `ok:1` (also if it's already yours), or `ok:0` with `why:"taken"` and `by` (owner's slot); max 8 claims per player | DELTA `claim.<key>` = your slot, to everyone |
 | `release` | `key` | `ok:1`, or `ok:0 why:"not yours"` | DELTA `claim.<key>` = -1 |
+| `set` | `key`, `v` (≤20 numbers), `expect` (≤20 numbers, optional) | `ok:1 seq`, or `ok:0` with `why:"changed"` (the key no longer holds `expect`; `by` = who changed it) or the rule that refused it | KV with the new value, to everyone |
 | other | | `ok:0 why:"unknown intent"` | |
 
 A player's claims are freed when they leave (after the grace period), as DELTAs with
 value -1, by -1. Claims are in WELCOME (`claims`).
+
+### 4.5 World rules (cloud/rules.js)
+Every world write (KV or `set`) is checked; a refused write isn't stored or passed on,
+and a KV writer gets the room's current value of that key back (so their copy snaps
+back). Counted as `refused` in the usage on `/health`.
+| Key | Values | Rule |
+|---|---|---|
+| `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | inside the bar (±40 m, y -2..12), unit quaternion, speed ≤ 40 m/s; only the holder of the claim `glass.<n>` may write it while it's claimed |
+| `m<n>` (0..9) | mirror on, avatars only (two 0/1) | |
+| `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock |
+| `lt` | lights dim, fire on (two 0/1) | |
+| `dk<n>` (0..7) | drink type + 1, 0 = empty | serving (non-zero) needs the `bartender` or `owner` badge; taking (0) only through a `set` intent that expects the drink |
+| anything else | | refused |
+
+Positions in STATE outside the bar (|x| or |z| > 40 m, y outside -2..12) are ignored.
+Badges come from the login check (`account.php` `me` → `badges`; dev tickets
+`test:<acct>:<badge>...`).
 
 ### 4.4 DELTA fields so far
 | Field | Value | By |

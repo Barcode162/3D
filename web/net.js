@@ -638,6 +638,11 @@ window.bar3dNet = (function () {
       intentsOut.push({ i: i, k: 'release', key: key });
       return i;
     },
+    setWorldIf: function (key, values, expect) {
+      var i = intentId++;
+      intentsOut.push({ i: i, k: 'set', key: key, v: values.slice(0, 20), expect: expect.slice(0, 20) });
+      return i;
+    },
     claimOwner: function (key) {
       if (!(key in claims)) return -1;
       if (claims[key] === mySlot) return 0;

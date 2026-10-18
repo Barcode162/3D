@@ -59,12 +59,12 @@ await alice.evaluate(() => window.bar3dVoice.micStart());
 await alice.evaluate(() => window.bar3dSettings.set('micGate', -100));  // the fake mic's beep always passes
 check("Alice's mic is on", await alice.evaluate(() => window.bar3dVoice.micOn()));
 await bob.waitForTimeout(4000);
-// The fake mic beeps on and off: take the loudest of 3 s of readings.
+// The fake mic beeps on and off: take the loudest of 6 s of readings.
 const level = await bob.evaluate(async () => {
   const n = window.bar3dNet;
   const idx = n.indexOf(n.peers()[0]);
   let best = 0;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 60; i++) {
     best = Math.max(best, window.bar3dVoice.peerLevel(idx));
     await new Promise((r) => setTimeout(r, 100));
   }

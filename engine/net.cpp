@@ -153,6 +153,18 @@ int claimResult(int request) {
   return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['result'] ? n['result']($0) : -1; }, request);
 }
 
+int setWorldIf(const std::string& key, const double* values, int count, const double* expect, int expectCount) {
+  return EM_ASM_INT({
+    var n = window['bar3dNet'];
+    if (!n || !n['setWorldIf']) return 0;
+    var v = [];
+    var e = [];
+    for (var i = 0; i < $2; i++) v.push(HEAPF64[($1 >> 3) + i]);
+    for (var j = 0; j < $4; j++) e.push(HEAPF64[($3 >> 3) + j]);
+    return n['setWorldIf'](UTF8ToString($0), v, e);
+  }, key.c_str(), values, count, expect, expectCount);
+}
+
 double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 
 }  // namespace engine::net

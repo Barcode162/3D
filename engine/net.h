@@ -79,5 +79,9 @@ int claim(const std::string& key);
 void release(const std::string& key);
 int claimOwner(const std::string& key);
 int claimResult(int request);
+// A world write the room makes only if `key` still holds `expect` (e.g.
+// taking a drink: the first one to ask gets it). Returns a request id for
+// claimResult() (0 when offline).
+int setWorldIf(const std::string& key, const double* values, int count, const double* expect, int expectCount);
 
 }  // namespace engine::net

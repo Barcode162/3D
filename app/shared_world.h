@@ -39,6 +39,8 @@ class SharedWorld {
     Mode mode = Mode::kIdle;
     bool settled = false;  // has come to rest once since the page loaded
     double lastSentMs = -1e9;
+    int claim = 0;          // the room's answer to "may I hold it?" (engine::net::claim)
+    bool claimed = false;   // we asked for its claim (released when it comes to rest)
     double quietUntilMs = 0;  // don't claim it before this (just placed by the network)
     // Latest state from the player moving it.
     engine::Vec3 position, velocity;

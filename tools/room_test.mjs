@@ -174,11 +174,13 @@ try {
     'the TICK carries her position and the server time');
   await wait(200);
   check(!ta.find('T'), 'Ann doesn\'t get her own STATE back');
+  ta.state(3, 500);  // far outside the bar: ignored
   ta.state(1, 9);  // same seq again: dropped
   ta.state(2, 2.5);
   await wait(300);
   const lastX = tb.all('T').flatMap((t) => t.body.players).filter((p) => p.slot === sa).map((p) => Math.round(p.avatar.x * 100) / 100);
   check(!lastX.includes(9) && lastX[lastX.length - 1] === 2.5, `an old or repeated STATE is dropped (${lastX})`);
+  check(!lastX.includes(500), 'a position outside the bar is ignored');
   await wait(2600);
   const ticks = tb.all('T').length;
   await wait(600);
@@ -187,16 +189,16 @@ try {
   check(!!(await late.until(() => late.find('T', (t) => t.players.some((p) => p.slot === sa)))), 'a newcomer gets everyone\'s pose at once');
 
   // Both write the same world key 50 times at once → the same final value everywhere.
-  for (let i = 0; i < 50; i++) { ta.send('K', { w: { g3: [1, i] } }); tb.send('K', { w: { g3: [2, i] } }); }
+  for (let i = 0; i < 50; i++) { ta.send('K', { w: { lt: [i % 2, 0] } }); tb.send('K', { w: { lt: [(i + 1) % 2, 1] } }); }
   await wait(1200);
-  const final = (c) => { const k = c.all('K').flatMap((m) => m.body.w).filter((e) => e[1] === 'g3'); return k.length ? JSON.stringify(k[k.length - 1]) : ''; };
+  const final = (c) => { const k = c.all('K').flatMap((m) => m.body.w).filter((e) => e[1] === 'lt'); return k.length ? JSON.stringify(k[k.length - 1]) : ''; };
   check(final(ta) && final(ta) === final(tb) && final(ta) === final(late), `same final world value on every phone (${final(ta)})`);
   check(ta.all('K').flatMap((m) => m.body.w).some((e) => e[2] === sa), 'writes are echoed to the writer too');
   const seqs = tb.all('K').flatMap((m) => m.body.w).map((e) => e[0]);
   check(seqs.every((v, i) => i === 0 || v > seqs[i - 1]), 'world writes arrive in rising sequence order');
   const late2 = await joined(r8, { name: 'Dan' });
   const wkv = late2.find('W').body.kv || [];
-  check(wkv.some((e) => e[1] === 'g3' && JSON.stringify(e) === final(ta)), 'a newcomer\'s welcome has the world');
+  check(wkv.some((e) => e[1] === 'lt' && JSON.stringify(e) === final(ta)), 'a newcomer\'s welcome has the world');
 
   // Events: stamped, in order, not back to the sender.
   ta.send('E', { e: [['note', [60]], ['note', [62]]] });
@@ -242,6 +244,39 @@ try {
   check(!!(await late.until(() => late.find('D', (d) => d.d.some((x) => x[1] === 'away' && x[2] === 1 && x[3] === sb)))), 'AWAY reaches the others');
   [tb, late, late2].forEach((c) => c.ws.close(1000));
 
+  // ---- The room's rules for the shared world (cloud/rules.js) ----
+  const r11 = room('rules');
+  const ra = await joined(r11, { name: 'Ana' }), rb = await joined(r11, { name: 'Bo', ticket: 'test:bo:bartender' });
+  await rb.until(() => rb.find('F', (f) => f.acct === 'bo'));
+  const glass = (x) => [x, 1.1, -3, 0, 0, 0, 1, 0, 0, 0, 2];
+  ra.send('I', { i: 1, k: 'claim', key: 'glass.2' });
+  await ra.until(() => ra.find('R', (r) => r.r === 1));
+  ra.send('K', { w: { g2: glass(1) } });
+  check(!!(await rb.until(() => rb.find('K', (k) => k.w.some((e) => e[1] === 'g2' && e[3][0] === 1)))), 'the glass holder moves the glass');
+  rb.send('K', { w: { g2: glass(5) } });
+  const snap = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'g2' && e[2] !== rb.find('W').body.slot && e[3][0] === 1 && rb.all('K').length >= 2));
+  await wait(300);
+  check(!ra.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 'g2' && e[3][0] === 5), 'someone else can\'t move a glass you hold');
+  check(!!snap, 'and their copy is sent back to where the room has it');
+  const okBefore = ra.all('K').length;
+  ra.send('K', { w: { lt: [5, 0], zz: [1], g0: [99, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2] } });
+  await wait(300);
+  check(rb.all('K').every((m) => m.body.w.every((e) => !['zz', 'g0'].includes(e[1]) && !(e[1] === 'lt' && e[3][0] === 5))) && ra.all('K').length === okBefore,
+    'out-of-range values, unknown keys and glasses outside the bar are refused');
+  ra.send('K', { w: { jb: [2, 1000] } });
+  const jb = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'jb'));
+  check(jb && Math.abs(jb[3][1] - Date.now() / 1000) < 5, 'a song start time far from the room\'s clock is set by the room');
+  ra.send('K', { w: { dk0: [3] } });
+  await wait(300);
+  check(!rb.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 'dk0'), 'a guest can\'t serve a drink');
+  rb.send('K', { w: { dk0: [3] } });
+  check(!!(await ra.until(() => ra.find('K', (k) => k.w.some((e) => e[1] === 'dk0' && e[3][0] === 3)))), 'a bartender serves one');
+  ra.send('I', { i: 5, k: 'set', key: 'dk0', v: [0], expect: [3] });
+  rb.send('I', { i: 6, k: 'set', key: 'dk0', v: [0], expect: [3] });
+  const ta5 = await ra.until(() => ra.find('R', (r) => r.r === 5)), tb6 = await rb.until(() => rb.find('R', (r) => r.r === 6));
+  check(ta5 && tb6 && ta5.body.ok + tb6.body.ok === 1, `two people take the same drink: exactly one gets it (${ta5?.body.ok}, ${tb6?.body.ok})`);
+  [ra, rb].forEach((c) => c.ws.close(1000));
+
   // ---- 3.2c: ghosts, AFK, floods, storage, /health ----
   const r9 = room('ghost');
   const watcher = await joined(r9, { name: 'Watch' });
@@ -266,11 +301,11 @@ try {
   const mw = await joined('main', { name: 'Writer' });
   const before = (await debug('main')).usage.rows;
   const t0 = Date.now();
-  while (Date.now() - t0 < 6000) { mw.send('K', { w: { tst: [Date.now() % 1000] } }); mw.state(Math.floor((Date.now() - t0) / 100) + 1, (Date.now() - t0) / 1000); await wait(100); }
+  while (Date.now() - t0 < 6000) { mw.send('K', { w: { m1: [Math.floor(Date.now() / 100) % 2, 0] } }); mw.state(Math.floor((Date.now() - t0) / 100) + 1, (Date.now() - t0) / 1000); await wait(100); }
   for (let i = 0; i < 6; i++) { mw.ws.send('ping'); await wait(500); }
   const rows = (await debug('main')).usage.rows - before;
   check(rows <= 6, `6 s of 10 Hz world writes → ${rows} rows written (≤ 30 per minute)`);
-  check((await debug('main')).storageKeys.includes('kv:tst'), 'the world key is saved');
+  check((await debug('main')).storageKeys.includes('kv:m1'), 'the world key is saved');
   for (let i = 0; i < 5; i++) { mw.ws.send('ping'); await wait(500); }
   const idle = await debug('main');
   check(!idle.ticking && idle.deadlines.ghost > Date.now(), 'an idle room stops ticking and sets one ghost-check alarm');

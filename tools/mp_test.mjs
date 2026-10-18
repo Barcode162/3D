@@ -91,6 +91,7 @@ await alice.close();
 const waitLog = (page, re, ms = 60000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent), re.source,
                        { timeout: ms, polling: 250 }).catch(() => console.log('timed out waiting for ' + re));
+const glassWatch = await probe(CLOUD, ROOM, 'Watcher');
 const carol = await open('Carol', '-3.7,1.66,-3.41,0,-34');
 const carolConsole = [];
 carol.on('console', (m) => carolConsole.push(m.text()));
@@ -131,6 +132,8 @@ await waitLog(bob, /Everything loaded/, 180000);
 // Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
 // tap (phones only play sound after one), must start the same song.
 await bob.mouse.click(215, 300);
+const glassClaims = glassWatch.got.filter((m) => m.letter === 'D').flatMap((m) => m.body.d).filter((x) => x[1] === 'claim.glass.1').map((x) => x[2]);
+glassWatch.close();
 const dj = await probe(CLOUD, ROOM, 'DJ');
 dj.send('K', { w: { jb: [1, Date.now() / 1000] } });
 await waitLog(bob, /Bossa Antigua" \(chosen by another player\)/, 20000);
@@ -147,6 +150,11 @@ const sitterOk = (await sitter.until(() => sitter.find('R', (r) => r.r === 1)))?
 await bob.goto(bob.url().replace(/&sit=\d+/, '') + '&sit=6');
 await waitLog(bob, /sat there first|is sitting there/, 120000);
 const bobSeatLog = await logOf(bob);
+sitter.send('I', { i: 2, k: 'claim', key: 'machine.darts' });
+await sitter.until(() => sitter.find('R', (r) => r.r === 2));
+await bob.goto(bob.url().replace(/&sit=\d+/, '') + '&darts');
+await waitLog(bob, /Machine machine.darts: Sitter is (throwing|using it)/, 120000);
+const bobDartsLog = await logOf(bob);
 const carol2 = await open('Carol', '-3.7,1.66,-3.41,0,-34', '&sit=5');
 await waitLog(carol2, /connected to room/, 120000);
 const seatOwner = await sitter.until(() => sitter.find('D', (d) => d.d.some((x) => x[1] === 'claim.seat.5' && x[2] >= 0)), 120000);
@@ -171,6 +179,8 @@ const checks = {
   'Bob sees the mirror switch to avatars only': /mirror 0 set to avatars only/.test(log),
   'Bob plays the song another player picked': /Bossa Antigua" \(chosen by another player\)/.test(log),
   'the room refuses Bob a seat someone else has': sitterOk && /Sitter (sat there first|is sitting there)/.test(bobSeatLog),
+  'the room records Carol holding the glass, then frees it': glassClaims.length >= 2 && glassClaims[0] >= 0 && glassClaims[glassClaims.length - 1] === -1,
+  'the room refuses Bob the darts someone else is playing': /Machine machine.darts: Sitter is (throwing|using it)/.test(bobDartsLog),
   'the room records Carol on seat 5': !!seatOwner && seatOwner.body.d.some((x) => x[1] === 'claim.seat.5' && x[2] === carolSlot),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);

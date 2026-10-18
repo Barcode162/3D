@@ -135,11 +135,13 @@ void Bartender::serve() {
 
 bool Bartender::take(int slot) {
   if (slot < 0 || slot >= 8 || !slots_[slot] || held_) return false;
+  // The room decides who gets it (two people tapping the same drink): ask,
+  // and hold it meanwhile; if the room says no, it goes (update()).
+  const double v[1] = {0}, expect[1] = {static_cast<double>(slots_[slot])};
+  pendingTake_ = engine::net::setWorldIf("dk" + std::to_string(slot), v, 1, expect, 1);
   held_ = slots_[slot];
   sipsLeft_ = kSips;
   slots_[slot] = 0;
-  const double v[1] = {0};
-  engine::net::setWorld("dk" + std::to_string(slot), v, 1);
   return true;
 }
 
@@ -162,6 +164,15 @@ Activity Bartender::activity(double nowMs, float& actionTime) const {
 
 void Bartender::update(double nowMs, std::vector<engine::net::WorldEntry>& world) {
   (void)nowMs;
+  if (pendingTake_) {
+    const int answer = engine::net::claimResult(pendingTake_);
+    if (answer >= 0) pendingTake_ = 0;
+    if (answer == 0) {
+      held_ = 0;
+      message_ = "Someone else took that drink first.";
+      LOG_INFO("Bartender: someone else took that drink first.");
+    }
+  }
   for (const engine::net::WorldEntry& e : world) {
     if (e.key.size() != 3 || e.key[0] != 'd' || e.key[1] != 'k' || e.values.empty()) continue;
     const int slot = e.key[2] - '0';

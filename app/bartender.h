@@ -65,6 +65,7 @@ class Bartender {
   double stepMs_ = -1e9;     // when the current step's action started
   bool shakeStep_ = false;
   int held_ = 0;
+  int pendingTake_ = 0;  // the room's answer to "may I take this drink?" (engine::net::setWorldIf)
   int sipsLeft_ = 0;
   double sipMs_ = -1e9;
   std::string message_;

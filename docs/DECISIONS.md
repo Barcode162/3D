@@ -594,6 +594,18 @@ was answered by the user on 2026-10-17.
 - **Seats are decided by the room:** sitting sends a `claim` for `seat.<n>` and sits
   at once; if the room says someone else has it, you stand up ("X sat there first").
   Standing up releases it; leaving frees it. Replaces the old lower-id tie-break.
+- **The room checks every shared write (2026-10-18)** (`cloud/rules.js`, PROTOCOL §4.5):
+  glasses move only for whoever the room says holds them (pick up = claim
+  `glass.<n>`, released when it comes to rest; refused → you let go), darts and 4K
+  Mania are claims (`machine.darts`, `machine.rhythm`; started before joining → asked
+  for once connected), drinks are taken with a `set` intent (first one wins; the loser's
+  drink goes away) and only bartenders can serve, song start times come from the room's
+  clock, positions and values out of range are dropped. The phone still predicts
+  (acts at once) and backs off when the room says no.
+- **Gotcha (voice_test):** in headless Chromium the remote voice level sometimes reads 0
+  for the whole sample window although the audio bytes arrive (about 44 KB); about 1
+  run in 3. Seen right after the move to the room; signaling works (connections
+  succeed). Not chased yet (the user asked for server work only).
 - **AFK** is 30 min (not the plan's 10): people sit and listen to voice chat without
   moving. Ghost sockets (no traffic or keepalive 15 s) are closed with 4004 and keep
   their slot for the 30 s grace.
