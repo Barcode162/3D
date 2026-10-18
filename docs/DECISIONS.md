@@ -673,3 +673,16 @@ was answered by the user on 2026-10-17.
 - A solid block in the shell hides anything built "inside" it (the
   fireplace needed an opening cut into the chimney breast).
 - Auto mode blocks `git push -f` from the session. CI does the force-push to `gh-pages` instead.
+- **Cloudflare room locally (step 3.2a):** `wrangler dev` (4.42 and 4.151
+  alike) never delivers a server-side `ws.close()` to a client socket that
+  hasn't sent a single frame yet (sends do arrive; the close stays in
+  CLOSING). `room_test` sends one junk frame before testing the 5 s hello
+  timeout. Check the real behaviour on the live worker in 3.3. Also: don't
+  `pkill -f "wrangler dev"` from the Bash tool (it matches and kills the
+  tool's own shell); `room_test` starts and stops its own server.
+- **Room protocol (step 3.1):** text frames are a type letter + JSON
+  (`P{"c":1}`); all rounding is `floor(v * scale + 0.5)` in double on both
+  sides (Math.round and lround disagree on negative halves); keep golden
+  vector inputs off rounding edges that float vs double could flip. Native
+  wasm tests are built with `-sNODERAWFS=1` so they can read repo files.
+

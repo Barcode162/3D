@@ -1,15 +1,24 @@
-# Bar3D realtime server on Cloudflare (see cloud/worker.js and
-# docs/DECISIONS.md -> Hosting split). Not deployed yet: restructure step 3.3
+# Bar3D realtime server on Cloudflare (cloud/worker.js + cloud/room.js;
+# protocol in docs/PROTOCOL.md). Not deployed yet: restructure step 3.3
 # (docs/RESTRUCTURE.md) adds the deploy job.
+# Keep the class name `Room`, the binding `ROOMS` and the migration tag `v1`:
+# renaming them needs a Durable Object migration and can lose storage. Add
+# new migration tags, never edit old ones.
 name = "bar3d"
 main = "worker.js"
-compatibility_date = "2025-09-01"
+compatibility_date = "2025-10-01"
 workers_dev = true
 
 [vars]
 # Accounts still live on the IONOS side for now; the room asks it who a
 # login token belongs to.
 ACCOUNT_URL = "https://joshuavelasco.com/bar/account.php"
+# Exact origins of pages allowed to connect (localhost is always allowed).
+ALLOWED_ORIGINS = "https://barcode162.github.io,https://joshuavelasco.com"
+# Protocol version the room speaks (it also accepts PROTO - 1).
+PROTO = "1"
+# Test-only switches, set by tools/room_test.mjs with --var: DEV = "1",
+# GRACE_MS, CONNECT_LIMIT_PER_MIN.
 
 [[durable_objects.bindings]]
 name = "ROOMS"

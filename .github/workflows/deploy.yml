@@ -72,6 +72,11 @@ jobs:
       - name: "Test: room protocol codec (cloud/proto.js on the golden vectors)"
         run: node tools/proto_test.mjs
 
+      - name: "Test: room server (wrangler dev + tools/room_test.mjs)"
+        run: |
+          npm ci --prefix cloud --no-audit --no-fund >/dev/null
+          node tools/room_test.mjs
+
       - name: Install Playwright
         run: |
           npm i --no-save --no-package-lock playwright@1.56.1

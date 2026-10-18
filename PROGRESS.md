@@ -14,7 +14,7 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a, 2.4b (2026-10-17) and 2.5 and 3.1 (2026-10-18). Next: 3.2a, 3.2b, 3.2c (the room server, tested locally with wrangler dev)**
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a, 2.4b (2026-10-17) and 2.5, 3.1 and 3.2a (2026-10-18). Next: 3.2b, 3.2c, 3.3 (rest of the room server, then its dark launch)**
 (batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
@@ -552,3 +552,10 @@ A small DAW inside the bar, all DSP written in C++:
   are tested to agree byte for byte on shared examples
   (`proto/vectors.json`), and to refuse broken messages. Nothing changes on
   the phone yet.
+- **2026-10-18:** Restructure 3.2a done: the new Cloudflare room
+  (`cloud/room.js`) hands out player slots, lets a dropped phone come back
+  to the same slot for 30 s (resume token), refuses other websites, old
+  versions (4002) and a 17th player (4001), and checks logins without
+  making you wait. `tools/room_test.mjs` (replaces `cloud_test.mjs`, in CI)
+  runs it locally with 35 checks. Still not deployed (3.3).
+

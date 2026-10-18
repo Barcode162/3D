@@ -889,14 +889,14 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **H** Free-plan cost: 20 Hz sends, never hibernates, `storage.put` of the whole world per world message (≈ 22 rows/s per moving glass) (`worker.js:187`) → batching, debounced persistence of changed discrete keys. *[3.2b, 3.2c]*
 - [ ] **M** *(review)* A 5 s ghost alarm would keep the DO awake while anyone is connected (an open desktop tab ≈ 28% of the daily duration per 8 h) → checks inside message handling, one ≥ 60 s idle alarm, AFK close after 10 min (§2.5.9). *[3.2c]*
 - [ ] **M** *(review)* A DO has one alarm; separate `setAlarm` calls for persistence, ghosts, jukebox, timeouts overwrite each other → alarm scheduler (§2.5.11). *[3.2c]*
-- [ ] **M** *(review)* Free-plan gaps: rows (not writes) are counted; Worker requests include upgrades and `/health`; a public `/health` costs a DO request per call; any `/room/<name>` creates a DO; no per-IP connect limit; nothing defined for an exhausted quota → changed-keys persistence, cached `/health`, per-IP limit, only `main` persisted, "Server busy" + 5 min retry. *[3.2a, 3.2c, 3.4a]*
-- [ ] **M** *(review)* Room DO storage changes shape at 3.2, 4.2, 5.3, 5.4, 5.11 with no schema version → `schemaVersion` key, wipe to layout defaults on mismatch. *[3.2a; bumps in 4.2, 5.3, 5.4, 5.11]*
-- [ ] **M** Identity = client-chosen public id; anyone can kick, impersonate or read another's messages (`worker.js:114-118`; `relay.php:55-57,125-126`) → server slots + resume secret. *[3.2a]*
-- [ ] **M** No protocol/build version in hello (`net.js:94`, `worker.js:13`) → proto field, close 4002, reload prompt. *[3.2a]*
+- [ ] **M** *(review)* Free-plan gaps: rows (not writes) are counted; Worker requests include upgrades and `/health`; a public `/health` costs a DO request per call; any `/room/<name>` creates a DO; no per-IP connect limit; nothing defined for an exhausted quota → changed-keys persistence, cached `/health`, per-IP limit, only `main` persisted, "Server busy" + 5 min retry. *[3.2a, 3.2c, 3.4a]* (3.2a part done: per-IP connect limit, only `main` keeps storage)
+- [x] **M** *(review)* Room DO storage changes shape at 3.2, 4.2, 5.3, 5.4, 5.11 with no schema version → `schemaVersion` key, wipe to layout defaults on mismatch. *[3.2a; bumps in 4.2, 5.3, 5.4, 5.11]*
+- [x] **M** Identity = client-chosen public id; anyone can kick, impersonate or read another's messages (`worker.js:114-118`; `relay.php:55-57,125-126`) → server slots + resume secret. *[3.2a]*
+- [x] **M** No protocol/build version in hello (`net.js:94`, `worker.js:13`) → proto field, close 4002, reload prompt. *[3.2a]* (3.2a: server side; the reload prompt is the client, 3.4a)
 - [ ] **M** While reconnecting, status stays "connected" and others freeze for up to 8 s (`net.js:128-134,145`) → stale/dimmed players, fast first retry, snapshot resync. *[3.4a, 3.4b]*
 - [ ] **M** Log in/out tears down the socket: everyone sees you leave and rejoin, voice drops (`net.js:149-151`) → in-band REAUTH. *[5.1c]*
 - [ ] **M** Unbounded queues replay stale bursts after stalls (`net.js:46,53,56`) → latest-per-player, event TTL, collapse by key. *[3.4a]*
-- [ ] **M** Hello waits for an uncached IONOS fetch with no timeout; messages meanwhile are dropped (`worker.js:136-147,221-232`) → guest welcome + async verify; tickets later. *[3.2a, 5.1c]*
+- [ ] **M** Hello waits for an uncached IONOS fetch with no timeout; messages meanwhile are dropped (`worker.js:136-147,221-232`) → guest welcome + async verify; tickets later. *[3.2a, 5.1c]* (3.2a part done: guest welcome, then a cached check with a 2 s timeout → PROFILE)
 - [ ] **M** Discrete state applied on arrival, positions 250 ms later: seated before arriving, pop on stand-up (`players.cpp:61` vs `:83`) → samples carry everything. *[3.4b]*
 - [ ] **M** No extrapolation: freeze then jump (`players.cpp` clamps f to [0,1]); fixed 250 ms not tuned to a 50 ms tick → adaptive delay, 100 ms extrapolation. *[3.4b]*
 - [ ] **M** 18 positional float slots with activity-dependent meanings, 2 spare of `MAX_VALUES` 20 (slot enum `players.h:18-31`, `kParam` at `:22`) → binary avatar block + activity TLV. *[3.4a, 4.3b]*
@@ -909,19 +909,19 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** Glass keys are body indices; DO caps world keys at 96 (`shared_world.cpp:33`; `worker.js:30,179`) → stable ids, props in TICK, only rest poses stored. *[4.2, 5.4]*
 - [ ] **L** `serverTime()` is 0 before the first pong; callers write 0 (`net.js:390-393`; `shared_world.cpp:234`) → time in WELCOME; server stamps start times. *[3.4a, 5.5]*
 - [ ] **L** Clock pings every 2 s; first estimate off by up to an RTT (`net.js:170-173`) → 5-ping burst at connect. *[3.4a]*
-- [ ] **L** Room full = unreadable 503, client retries forever (`worker.js:116`) → accept, send reason, close 4001; client doesn't auto-retry on 4001/4002/4005. *[3.2a, 3.4a]*
-- [ ] **L** Player cap counts only hello'd players; no-hello sockets unlimited → count sockets; 5 s hello timeout. *[3.2a]*
-- [ ] **L** No rate or size limits on fan-out; no Origin check (`worker.js:126,191-203`) → token bucket + allowlist. *[3.2a, 3.2c]*
-- [ ] **L** `webSocketClose` doesn't reciprocate (`worker.js:206`, compat date 2025-09-01) → `ws.close()`. *[3.2a]*
-- [ ] **L** O(N) attachment deserialization per message (`worker.js:89-101`) → in-memory map. *[3.2a]*
+- [ ] **L** Room full = unreadable 503, client retries forever (`worker.js:116`) → accept, send reason, close 4001; client doesn't auto-retry on 4001/4002/4005. *[3.2a, 3.4a]* (3.2a part done: accept, reason, 4001)
+- [x] **L** Player cap counts only hello'd players; no-hello sockets unlimited → count sockets; 5 s hello timeout. *[3.2a]*
+- [ ] **L** No rate or size limits on fan-out; no Origin check (`worker.js:126,191-203`) → token bucket + allowlist. *[3.2a, 3.2c]* (3.2a part done: exact Origin allowlist)
+- [x] **L** `webSocketClose` doesn't reciprocate (`worker.js:206`, compat date 2025-09-01) → `ws.close()`. *[3.2a]*
+- [x] **L** O(N) attachment deserialization per message (`worker.js:89-101`) → in-memory map. *[3.2a]*
 - [ ] **L** After hibernation, states empty until the next heartbeat (`worker.js:74-77`) → keep last state in attachment. *[3.2c]*
-- [ ] **L** *(review)* `tools/cloud_test.mjs` tests the v1 protocol and would overlap room_test → renamed/extended into `tools/room_test.mjs`; `tools/setup.sh` runs `npm ci --prefix cloud` so `wrangler dev` works in fresh sessions. *[3.2a]*
+- [x] **L** *(review)* `tools/cloud_test.mjs` tests the v1 protocol and would overlap room_test → renamed/extended into `tools/room_test.mjs`; `tools/setup.sh` runs `npm ci --prefix cloud` so `wrangler dev` works in fresh sessions. *[3.2a]*
 - [ ] **M** *(review)* After 3.4, `check_live` (run after every deploy) and local smoke/shots would join the production room as guests (a ghost walks in; DO requests spent); `?server=off` (`shots.mjs:39`) means nothing in v2 → net off on localhost unless `?cloud=`, `?net=off`, `NET=1` for check_live. *[3.4a]*
 - [ ] **L** Worker not deployed; `wrangler.toml:2` comment false; `cloud/.wrangler` state committed to the public repo → deploy job; gitignore. *[0.1, 3.3]* (0.1 part done: comment fixed, `.wrangler` untracked + ignored)
 - [ ] **L** Remote piano players get YOUR piano's hand pose (`main.cpp:1153`) → from their notes/pose. *[5.6]*
 - [ ] **L** A reconnecting player gets a new index: history lost, teleport (`net.js:82-87` drops the player, `net.js:71` `nextIndex++`, `players.cpp:73-76` erases it) → stable slot. *[3.4a]*
 - [ ] **M** Relay: trusted ids, readable inboxes, over-limit players silently invisible, no fetch timeout, rev reset (`relay.php:55-57,125-130,102`; `net.js:183-189`) → retire. *[3.5]*
-- [ ] **M** Multiplayer tests cover only happy paths; `mp_test` CLOUD mode still polls PHP and always hits its 60 s timeout (`mp_test.mjs:38,88-93`) → room_test + fixed mp_test. *[3.2a, 3.4c]*
+- [ ] **M** Multiplayer tests cover only happy paths; `mp_test` CLOUD mode still polls PHP and always hits its 60 s timeout (`mp_test.mjs:38,88-93`) → room_test + fixed mp_test. *[3.2a, 3.4c]* (3.2a part done: room_test replaces cloud_test; mp_test CLOUD mode no longer matches the room until 3.4a)
 - [ ] **H** Voice 510 kbps per peer in a full mesh (≈ 7.6 Mbps uplink at 16 players) (`voice.js:172`, `menu.js:15`) → 32-48 kbps default (Q6), ≤ 6 nearest peers. *[5.10]*
 - [ ] **H** No TURN: cellular/strict-NAT users can't connect (`voice.js:16`) → Cloudflare TURN via the Worker (Q6). *[5.10]*
 - [ ] **M** Web Audio nodes leak and audio doubles: `playRemote` rebuilds the chain each call, `drop()` never disconnects (`voice.js:216-251,262-268,336-340`) → one chain per peer. *[5.10]*
@@ -1037,7 +1037,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **M** All 8 looks built and uploaded at startup; CPU copies kept (≈ 4 MB) (`main.cpp:1363-1368`) → jobs; own look first; free CPU mesh. *[6.5]*
 - [ ] **L** Activity poses snap; only emotes fade (`avatar.cpp:382-450`) → 0.25 s crossfade. *[6.5]*
 - [ ] **L** `pose()` string lookups + allocation (`avatar.cpp:334-336`) → bone indices, `std::array`. *[6.5]*
-- [ ] **L** Hip/eye constants duplicated; Activity/Emote enums are the wire format (`avatar.cpp:108,596`; `avatar.h:13-29`) → rest pose; protocol version. *[3.2a, 6.5]*
+- [ ] **L** Hip/eye constants duplicated; Activity/Emote enums are the wire format (`avatar.cpp:108,596`; `avatar.h:13-29`) → rest pose; protocol version. *[3.2a, 6.5]* (3.2a part done: protocol version in HELLO, 4002)
 - [ ] **M** Skeleton has no inverse-bind matrices (blocks GLB/VRM avatars) (`skeleton.cpp:28,36`) → bind + inverse-bind. *[later, with own-avatar import]*
 - [ ] **M** Skinned mesh: no index ranges; Uint32; 2 influences (`skinned_mesh.h:61-67`; `scene.wgsl:102`) → ranges, Uint16, 4-weight path. *[6.5]*
 - [ ] **L** Fixed 70° vertical FOV = 36° horizontal in portrait (`camera.h:12`) → horizontal minimum or setting. *[6.7]*
@@ -1687,6 +1687,15 @@ errors (so smoke/mp_test fail on them).
   refused; a non-`main` room leaves no storage after its last socket closes;
   `tools/cloud_test.mjs` no longer exists.
 - **Phone:** nothing.
+- **Done (2026-10-18):** `cloud/room.js` (slots, rotating resume tokens, 4001-4004, PING/PONG,
+  5 s hello timeout, 30 s grace kept in storage so hibernation can't lose it, normal close 1000
+  frees the slot at once, schemaVersion, one-alarm scheduler, socket cap 32), `cloud/worker.js`
+  (router, exact Origin allowlist, dev-only `/room/<name>/debug`), per-IP limit counted in the
+  room DO (3.2c re-checks the rate-limit binding). `tools/room_test.mjs` starts its own
+  `wrangler dev` (fresh storage, test vars) and runs 35 checks; in CI. Gotcha: `wrangler dev`
+  doesn't deliver a server close to a socket that never sent a frame (see DECISIONS).
+  The old v0 cloud path in `web/net.js` and `mp_test` CLOUD mode no longer match the room;
+  that's fine (never deployed), 3.4a replaces them.
 
 #### 3.2b Ticks, events, signals, legacy KV with echo
 - **Files:** `cloud/room.js`, `cloud/proto.js`, `tools/room_test.mjs`.

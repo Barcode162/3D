@@ -16,3 +16,10 @@ if [ ! -f "$EMSDK_DIR/.installed-$EMSDK_VERSION" ]; then
   touch "$EMSDK_DIR/.installed-$EMSDK_VERSION"
 fi
 echo "Emscripten $EMSDK_VERSION ready. Run: source $EMSDK_DIR/emsdk_env.sh"
+
+# The Cloudflare room's local dev server (wrangler dev, used by
+# tools/room_test.mjs). Skipped if already installed; never fails the setup.
+cd "$(dirname "$0")/.."
+if [ -f cloud/package-lock.json ] && [ ! -x cloud/node_modules/.bin/wrangler ]; then
+  npm ci --prefix cloud --no-audit --no-fund >/dev/null 2>&1 && echo "Cloud dev server (wrangler) installed." || echo "Note: npm ci --prefix cloud failed (room_test needs it)."
+fi
