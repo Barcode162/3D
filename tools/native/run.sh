@@ -11,6 +11,7 @@ declare -A TESTS=(
   [race_test]="tools/native/race_test.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
+  [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"
   [physics_test]="tools/native/physics_test.cpp engine/physics.cpp engine/mesh_data.cpp app/props.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp"
 )
 for t in "${!TESTS[@]}"; do
@@ -19,7 +20,7 @@ for t in "${!TESTS[@]}"; do
   build/native/$t
   if command -v em++ >/dev/null; then
     echo "== $t (em++ + node)"
-    em++ -std=c++20 -O2 -I. ${TESTS[$t]} -sENVIRONMENT=node -sALLOW_MEMORY_GROWTH=1 -o build/native/$t.js
+    em++ -std=c++20 -O2 -I. ${TESTS[$t]} -sENVIRONMENT=node -sNODERAWFS=1 -sALLOW_MEMORY_GROWTH=1 -o build/native/$t.js
     node build/native/$t.js
   else
     echo "(em++ not found: skipped the wasm run)"

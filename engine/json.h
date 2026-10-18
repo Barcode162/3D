@@ -68,6 +68,9 @@ class Json {
 // `text` as a JSON string literal, quotes included.
 std::string jsonQuote(std::string_view text);
 
+// A parsed value written back as compact JSON text.
+std::string jsonDump(const Json& value);
+
 // Builds JSON text: commas and escaping are handled here.
 //   JsonWriter w; w.beginObject().key("look").value(3).key("songs").beginArray();
 //   for (...) w.value(title);

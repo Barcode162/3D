@@ -836,7 +836,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
 - [x] **L** No levels, timestamps or categories in logs → add. *[0.3]*
 - [x] **M** `setInfo` JSON hand-built without escaping; a `\` in a MIDI file name silently freezes menu info (`main.cpp:923-937`, `menu.js:378`) → JSON writer + log parse failures. *[2.1b]*
-- [ ] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]* (2.1b part done: writer, limits, no shared_ptr, json_test with 1,000 garbage inputs)
+- [x] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]* (2.1b part done: writer, limits, no shared_ptr, json_test with 1,000 garbage inputs; 3.1: malformed JSON, NaN, 1e999, deep nesting in proto vectors)
 - [x] **L** UI command poll stringifies `[]` every frame (`ui.cpp:11-19`) → push model. *[2.1b]*
 - [x] **L** Static catalogs re-sent every 500 ms (`main.cpp:920-939`) → once + on change. *[2.1b]*
 - [x] **L** Avatar look set through two paths (`menu.js:153-155`) → command only. *[2.1b]*
@@ -1662,6 +1662,13 @@ errors (so smoke/mp_test fail on them).
   vectors, including garbage cases (truncated frames, wrong type bytes, NaN floats, huge
   lengths, malformed JSON for `engine/json`) that must be rejected without a crash.
 - **Phone:** nothing.
+- **Done (2026-10-18):** PROTOCOL.md (frames, binary layouts, every JSON message with field
+  ranges, close codes, rates, limits, versions, schemaVersion table), `cloud/proto.js`,
+  `engine/netproto.*` (no std::regex, for wasm size), `proto/vectors.json` (9 binary, 20
+  text, 44 bad frames), `tools/proto_test.mjs` (+ CI step) and native `proto_test` (g++ and
+  em++; `run.sh` now builds wasm tests with `-sNODERAWFS=1` so they can read files). Both
+  codecs agree byte for byte; 20,000 random frames each without a crash. Text frames are a
+  type letter + JSON (`P{"c":1}`) so the page can route by one character.
 
 #### 3.2a Room DO v2 skeleton: slots, hello, close codes
 - **Files:** `cloud/worker.js` (router, Origin allowlist of exact origins, per-IP connect

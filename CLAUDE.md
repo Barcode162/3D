@@ -54,6 +54,7 @@ cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
 bash tools/native/run.sh             # car, race, JSON, math, physics tests (g++ and em++ + node)
 node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
+node tools/proto_test.mjs            # room protocol codec on proto/vectors.json (C++ twin in run.sh)
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:
@@ -82,7 +83,8 @@ judged on the user's phone.
   (incl. taps), logging, files, text (own pixel font), procedural textures,
   audio bridge, skeletons and skinned meshes, physics, car physics
   (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
-  (`jobs.*`), async pipelines (`pipeline_cache.*`), the frame
+  (`jobs.*`), async pipelines (`pipeline_cache.*`), the room protocol codec
+  (`netproto.*`), the frame
   profiler and performance overlay (`profiler.*`, `?perf=1`).
 - `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
@@ -111,6 +113,9 @@ judged on the user's phone.
 - `docs/REMASTER.md` lists every crude first version to redo properly.
 - `server/report.php` stores phone reports (Menu → Settings → Send report gives
   a code; read it with `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`).
+- `docs/PROTOCOL.md` is the room protocol (Cloudflare room ↔ game); its two
+  codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
+  `proto/vectors.json`. `cloud/` is the Cloudflare Worker + room.
 - `server/` is the multiplayer relay (PHP), uploaded to the user's IONOS
   web hosting by the deploy (see `docs/DECISIONS.md` → Multiplayer).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),

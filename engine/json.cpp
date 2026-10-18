@@ -330,4 +330,34 @@ JsonWriter& JsonWriter::null() {
   return *this;
 }
 
+namespace {
+void dumpInto(const Json& v, JsonWriter& w) {
+  switch (v.type()) {
+    case Json::Type::kNull: w.null(); break;
+    case Json::Type::kBool: w.value(v.boolean()); break;
+    case Json::Type::kNumber: w.value(v.number()); break;
+    case Json::Type::kString: w.value(v.string()); break;
+    case Json::Type::kArray:
+      w.beginArray();
+      for (const Json& x : v.items()) dumpInto(x, w);
+      w.endArray();
+      break;
+    case Json::Type::kObject:
+      w.beginObject();
+      for (const auto& m : v.members()) {
+        w.key(m.first);
+        dumpInto(m.second, w);
+      }
+      w.endObject();
+      break;
+  }
+}
+}  // namespace
+
+std::string jsonDump(const Json& value) {
+  JsonWriter w;
+  dumpInto(value, w);
+  return w.take();
+}
+
 }  // namespace engine

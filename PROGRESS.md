@@ -14,7 +14,7 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a, 2.4b (2026-10-17) and 2.5 (2026-10-18). Next: Phase 3 (3.1, 3.2a, 3.2b...)**
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a, 2.4b (2026-10-17) and 2.5 and 3.1 (2026-10-18). Next: 3.2a, 3.2b, 3.2c (the room server, tested locally with wrangler dev)**
 (batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
@@ -546,3 +546,9 @@ A small DAW inside the bar, all DSP written in C++:
   links (MIDI files after the piano reads them, the mic test recording,
   no duplicate link when the same song is picked twice). rhythm_test and
   voice_test pass with the new sound path.
+- **2026-10-18:** Restructure 3.1 done: the language the phone and the
+  new Cloudflare room will speak is written down (`docs/PROTOCOL.md`), with
+  one translator on each side (`cloud/proto.js`, `engine/netproto.*`) that
+  are tested to agree byte for byte on shared examples
+  (`proto/vectors.json`), and to refuse broken messages. Nothing changes on
+  the phone yet.
