@@ -350,6 +350,49 @@ window.bar3dUi = (function () {
     });
   }
 
+  // The racing rigs: pick which game to play.
+  function simPanel() {
+    show('Racing rig', [
+      el('div', { class: 'mSmall', text: 'Pick a game. You stay in the bar meanwhile: the others see you sitting at the rig.' }),
+      el('button', { class: 'mBtn', text: 'Race (with bots)', onclick: function () { close(); cmd('simRace'); } }),
+      el('button', { class: 'mBtn', text: 'Meridian: an endless drive', onclick: function () { close(); openMeridian(); } }),
+      el('button', { class: 'mBtn ghost', text: 'Stand up', onclick: function () { close(); cmd('standUp'); } }),
+    ]);
+    current = 'sim';
+  }
+
+  // Meridian (the user's driving game, web/meridian/) full screen over the
+  // bar. The bar keeps its connection; its music and sounds go quiet (voice
+  // chat stays on) and it stops drawing until you come back.
+  var meridian = null;
+  function openMeridian() {
+    if (meridian) return;
+    var A = window.bar3dAudio;
+    if (A) ['music', 'sfx', 'piano'].forEach(function (b) { A.setBusVolume(b, 0); });
+    var frame = el('iframe', { src: 'meridian/index.html?v=' + (document.getElementById('build') || {}).textContent,
+                              allow: 'autoplay; fullscreen; gamepad', title: 'Meridian' });
+    frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2000;background:#000;';
+    var back = el('button', { text: '\u2190 Back to the bar', onclick: closeMeridian });
+    // Top middle: Meridian's own displays use the top corners.
+    back.style.cssText = 'position:fixed;z-index:2001;left:50%;transform:translateX(-50%);top:calc(8px + env(safe-area-inset-top));' +
+      'padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(10,8,16,.55);color:#fff;font:600 13px system-ui;';
+    document.body.appendChild(frame);
+    document.body.appendChild(back);
+    meridian = { frame: frame, back: back };
+    cmd('meridianOpen');
+    if (window.bar3dLog) bar3dLog.add('info', 'Meridian: opened.');
+  }
+  function closeMeridian() {
+    if (!meridian) return;
+    meridian.frame.remove();
+    meridian.back.remove();
+    meridian = null;
+    applyVolumes();
+    cmd('meridianClosed');
+    if (window.bar3dLog) bar3dLog.add('info', 'Meridian: closed, back in the bar.');
+    simPanel();  // still sitting at the rig: race, drive again or stand up
+  }
+
   function bartenderPanel() {
     var drinks = info.drinks || [];
     var a = window.bar3dAccount;
@@ -425,17 +468,17 @@ window.bar3dUi = (function () {
         if (cls !== micClass) micBtn.className = micClass = cls;
       }, 150);
     }
-    // Volumes follow the settings.
-    function applyVolumes() {
+    S.onChange(applyVolumes);
+    applyVolumes();
+  }
+  // Volumes follow the settings (not while Meridian has the screen).
+  function applyVolumes() {
       var A = window.bar3dAudio;
-      if (!A) return;
+      if (!A || meridian) return;
       A.setBusVolume('music', S.get('musicVol'));
       A.setBusVolume('sfx', S.get('sfxVol'));
       A.setBusVolume('piano', S.get('pianoVol'));
       A.setBusVolume('voice', S.get('voiceVol'));
-    }
-    S.onChange(applyVolumes);
-    applyVolumes();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
@@ -453,11 +496,14 @@ window.bar3dUi = (function () {
     toast: toast,
     open: function (name) {
       var panels = { main: mainPanel, emotes: emotesPanel, avatar: avatarPanel, settings: settingsPanel, voice: voicePanel,
-                     piano: pianoPanel, bartender: bartenderPanel, help: helpPanel };
+                     piano: pianoPanel, bartender: bartenderPanel, help: helpPanel, sim: simPanel };
       if (name === 'bartenderShift') { info.shift = 1; name = 'bartender'; }
       if (panels[name]) panels[name]();
     },
     isOpen: function () { return !!current; },
+    meridianOpen: function () { return !!meridian; },
+    openMeridian: openMeridian,
+    closeMeridian: closeMeridian,
     info: function () { return info; },  // tests
     close: close,
     command: cmd,

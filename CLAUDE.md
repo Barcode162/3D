@@ -58,6 +58,7 @@ node tools/proto_test.mjs            # room protocol codec on proto/vectors.json
 node tools/room_test.mjs             # Cloudflare room via its own wrangler dev (setup.sh installs it)
 NODE_PATH=$(npm root -g) node tools/mp_test.mjs     # two/three players + the room (wrangler dev)
 NODE_PATH=$(npm root -g) node tools/voice_test.mjs  # voice chat between two players
+NODE_PATH=$(npm root -g) node tools/meridian_test.mjs  # Meridian from a racing rig and back
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:
@@ -112,6 +113,12 @@ judged on the user's phone.
   `web/bridge.js` (with `engine/bridge.*`) is the per-frame mailbox: one
   pull at frame start, one flush at frame end; prefer it over new EM_ASM
   calls in the frame.
+- `web/meridian/` is **Meridian**, the user's own driving game (three.js from
+  jsDelivr: the one approved exception to the no-outside-engines rule, for this
+  game only; credits in its CREDITS.md, Blender scripts in `incoming/meridian/`).
+  Sitting in a racing rig opens a menu (`web/menu.js` "sim"): the bot race or
+  Meridian, which opens full screen in an iframe while the bar keeps its
+  connection and stops drawing. Test: `tools/meridian_test.mjs`.
 - `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
 - `docs/REMASTER.md` lists every crude first version to redo properly.
 - `server/report.php` stores phone reports (Menu → Settings → Send report gives
@@ -148,7 +155,8 @@ judged on the user's phone.
 - Log with `LOG_INFO` / `LOG_ERROR` from `engine/log.h`.
 - Pixel ratio is capped at 2 (`engine/gpu.cpp`) for phone GPU budget.
 - No outside engines or libraries. The engine is written from scratch.
-  Exceptions must be discussed with the user first.
+  Exceptions must be discussed with the user first. (Approved so far: three.js,
+  for Meridian only, 2026-10-18.)
 
 ## iOS Safari constraints to remember
 - WebGPU is available on iOS 26. There's no WebXR (AR would mean exporting USDZ for AR Quick Look).

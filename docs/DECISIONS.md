@@ -569,6 +569,20 @@ was answered by the user on 2026-10-17.
   (except view/game/controls/car_model) without Emscripten; see the
   commands at the top of `tools/native/*.cpp`.
 
+## Meridian in the bar (2026-10-18)
+- The user's own three.js driving game (uploaded as a zip) lives in `web/meridian/`,
+  served at `<site>/meridian/`. Sitting in a racing rig opens a menu: "Race (with
+  bots)" (our engine) or "Meridian". Meridian opens full screen in an iframe with a
+  "Back to the bar" button at the top middle (its own displays use the top corners).
+  Meanwhile the bar keeps its room connection (others see you at the rig), mutes its
+  music, sounds and piano (voice chat stays on) and skips drawing. Back → the rig menu
+  again (race, drive again or stand up). The `?sit=` test option still goes straight
+  into the bot race.
+- three.js is the first outside engine in the project, for this game only: the user
+  approved it ("then add it", 2026-10-18). The Perplexity editor script at the end of
+  the uploaded index.html was left out. Meridian is single player for now; racing
+  together in it would mean rebuilding it on our engine and the room.
+
 ## Cloudflare room is the multiplayer server (2026-10-18)
 - **Live:** https://bar3d.joshuavelasco60.workers.dev (CI deploys `cloud/` before
   the site, then writes `config.json` with its `wss://` address). Both copies of the

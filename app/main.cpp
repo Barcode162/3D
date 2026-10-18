@@ -118,6 +118,7 @@ struct App {
   Activity activity = Activity::kNone;
   int seat = -1;               // the seat you're on
   int seatClaim = 0;           // the room's answer to "may I sit here?" (engine::net::claim)
+  bool meridianOpen = false;   // Meridian (web/meridian/) covers the screen: the bar stops drawing
   std::string machineKey;      // the machine you're using (darts, 4K Mania), claimed in the room
   int machineClaim = 0;
   double activityStartMs = 0;
@@ -259,6 +260,18 @@ void standUp() {
   setActivity(Activity::kNone);
 }
 
+// The race on the rig you're sitting in.
+void startRace() {
+  if (g_app.seat < 0) return;
+  const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
+  if (s.kind != app::SeatKind::kSim) return;
+  if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs)) {
+    g_app.input.setCapture(true);
+  } else {
+    showToast("Warming up the race...");  // it starts by itself in a moment
+  }
+}
+
 void sitOn(int index) {
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(index)];
   if (const app::OtherPlayer* o = playerUsing(Activity::kSit, index)) {
@@ -287,11 +300,10 @@ void sitOn(int index) {
   g_app.camera.pitch = s.kind == app::SeatKind::kPianoBench ? engine::radians(-58.0f) : 0;
   if (s.kind == app::SeatKind::kSim) {
     setActivity(Activity::kDrive);
-    if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs)) {
-      g_app.input.setCapture(true);
-    } else {
-      showToast("Warming up the race...");  // it starts by itself in a moment
-    }
+    // Pick a game: the race with bots or Meridian (web/menu.js "sim"). The
+    // ?sit= test option goes straight into the race.
+    if (g_app.hooks.sit == index) startRace();
+    else engine::ui::openPanel("sim");
   } else if (s.kind == app::SeatKind::kPianoBench) {
     setActivity(Activity::kPiano);
     g_app.piano.openKeyboard();
@@ -963,6 +975,13 @@ void handleCommands() {
       g_app.bartender.endShift();
     } else if (c.name == "standUp") {
       standUp();
+    } else if (c.name == "simRace") {
+      startRace();
+    } else if (c.name == "meridianOpen") {
+      g_app.meridianOpen = true;
+      LOG_INFO("Meridian: open (the bar pauses drawing).");
+    } else if (c.name == "meridianClosed") {
+      g_app.meridianOpen = false;
     }
   }
   const int v = engine::settings::version();
@@ -1424,6 +1443,9 @@ void frame(double rafMs) {
       setActivity(Activity::kNone);
     }
   }
+
+  // Meridian has the screen: the bar keeps its connection but doesn't draw.
+  if (g_app.meridianOpen) return;
 
   wgpu::TextureView target;
   {

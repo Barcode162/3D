@@ -93,6 +93,11 @@ jobs:
       - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
         run: node tools/menu_test.mjs
 
+      # Meridian (the user's driving game) opens from a racing rig and back.
+      - name: "Test: Meridian inside the bar"
+        continue-on-error: true
+        run: node tools/meridian_test.mjs
+
       # Two players through the Cloudflare room (run locally with wrangler
       # dev): movement, away, glasses, mirror, jukebox, seats decided by the
       # room. Non-blocking until it has passed once on GitHub's runners.

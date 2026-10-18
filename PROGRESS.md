@@ -565,13 +565,15 @@ A small DAW inside the bar, all DSP written in C++:
   are tested to agree byte for byte on shared examples
   (`proto/vectors.json`), and to refuse broken messages. Nothing changes on
   the phone yet.
+- **2026-10-18:** Meridian (the user's driving game) is in the bar: sit in a racing
+  rig → pick "Meridian" (or the bot race). `web/meridian/`, test
+  `tools/meridian_test.mjs`.
 - **2026-10-18:** Restructure 3.2b, 3.2c, 3.3 and the cutover done in one go
   (user: "server first"): the room ticks, events, signals, shared world with
   echo, claims (seats decided by the room), ghosts, AFK, rate limits, saved
   world, `/health` usage; CI deploys it and writes `config.json`; `web/net.js`
   rewritten for it (no relay any more); mp_test (8 checks) and voice_test run
-  against the room on wrangler dev. The racing game Meridian (user's three.js
-  zip) is waiting: the user said to do only the server work for now.
+  against the room on wrangler dev. Meridian was added afterwards (see the entry above).
 - **2026-10-18:** Restructure 3.2a done: the new Cloudflare room
   (`cloud/room.js`) hands out player slots, lets a dropped phone come back
   to the same slot for 30 s (resume token), refuses other websites, old
