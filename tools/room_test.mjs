@@ -277,6 +277,34 @@ try {
   check(ta5 && tb6 && ta5.body.ok + tb6.body.ok === 1, `two people take the same drink: exactly one gets it (${ta5?.body.ok}, ${tb6?.body.ok})`);
   [ra, rb].forEach((c) => c.ws.close(1000));
 
+  // ---- Darts run by the room (cloud/games/darts.js) ----
+  const { score: dscore, throwDart: dthrow, newSession: dnew } = await import('../cloud/games/darts.js');
+  check(dscore(0, 0).label === 'BULL' && dscore(0, 0.103).pts === 60 && dscore(0, 0.165).label === 'D20' && dscore(0.3, 0).pts === 0 && dscore(0.05, 0).label === '6',
+    'dart scores: bull 50, treble 20, double 20, miss, 6 to the right');
+  const ds = dnew(); ds.left = ds.turnStart = 40;
+  const still = () => 0.5;  // no wobble
+  const t1 = dthrow(ds, 0, 0.103, still);
+  check(t1.bust === 1 && ds.left === 40, 'going below zero is a bust: back to the score before the turn');
+  const t2 = dthrow(ds, 0, 0.165, still);
+  check(t2.won === 1 && t2.left === 0, 'exactly zero wins');
+  const r12 = room('darts');
+  const da = await joined(r12, { name: 'Dee' }), db = await joined(r12, { name: 'Eli' });
+  da.send('I', { i: 1, k: 'dart', u: 0, v: 0 });
+  check((await da.until(() => da.find('R', (r) => r.r === 1)))?.body.ok === 0, 'no throwing without the board');
+  da.send('I', { i: 2, k: 'claim', key: 'machine.darts' });
+  await da.until(() => da.find('R', (r) => r.r === 2));
+  for (let i = 0; i < 3; i++) da.send('I', { i: 3 + i, k: 'dart', u: 0, v: 0.103 });
+  const res = [];
+  for (let i = 0; i < 3; i++) res.push((await da.until(() => da.find('R', (r) => r.r === 3 + i)))?.body);
+  check(res.every((r) => r && r.ok === 1 && typeof r.pts === 'number' && r.label), `three darts scored by the room (${res.map((r) => r?.label).join(', ')})`);
+  check(res[2].left === 301 - res.reduce((a, r) => a + r.pts, 0) && res[2].turnOver === 1, `the room keeps the 301 count (${res[2].left} left, turn over)`);
+  check(res.some((r) => r.u !== 0 || Math.abs(r.v - 0.103) > 1e-6), 'the room adds the hand\'s wobble (darts don\'t land exactly on the aim)');
+  const seen = await db.until(() => { const d = db.all('D').flatMap((m) => m.body.d).filter((x) => x[1] === 'darts'); return d.length >= 3 ? d : null; });
+  check(seen && seen[2][2].left === res[2].left && seen.every((x) => x[3] === da.find('W').body.slot), 'the others see every throw and the score');
+  db.send('I', { i: 9, k: 'dart', u: 0, v: 0 });
+  check((await db.until(() => db.find('R', (r) => r.r === 9)))?.body.ok === 0, 'someone else can\'t throw on your turn');
+  [da, db].forEach((c) => c.ws.close(1000));
+
   // ---- 3.2c: ghosts, AFK, floods, storage, /health ----
   const r9 = room('ghost');
   const watcher = await joined(r9, { name: 'Watch' });

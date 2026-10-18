@@ -10,8 +10,8 @@ goes through the Cloudflare room (build after `173f06d`; `docs/DECISIONS.md` →
 and the server side first: move authority for every shared thing into the room
 (done 2026-10-18: seats, glasses, darts + 4K Mania, drinks, value checks on every
 shared write; see DECISIONS → "The room checks every shared write"), next: the room
-*running* the game logic itself (darts scores, piano/jukebox timing, races with bots,
-glass physics), and bartender badges checked by the room for the station too; (2) only then client-side work. Work
+*running* the game logic itself (darts done 2026-10-18, `cloud/games/darts.js`; next
+4K Mania scores, piano/jukebox timing, races with bots, glass physics), and bartender badges checked by the room for the station too; (2) only then client-side work. Work
 only on what the user names. Keep joshuavelasco.com (home) + /bar (the game).
 Open: joshuavelasco.com doesn't load on the user's phone ("can't be reached",
 2026-10-18) while barcode162.github.io/3D does and the domain answers from

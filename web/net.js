@@ -643,6 +643,23 @@ window.bar3dNet = (function () {
       intentsOut.push({ i: i, k: 'set', key: key, v: values.slice(0, 20), expect: expect.slice(0, 20) });
       return i;
     },
+    // Any intent: kind + its arguments as JSON text. Returns the request id.
+    request: function (kind, argsJson) {
+      var args = {};
+      try { args = JSON.parse(argsJson) || {}; } catch (e) {}
+      var i = intentId++;
+      args.i = i;
+      args.k = kind;
+      intentsOut.push(args);
+      return i;
+    },
+    // The room's whole answer to a request, as JSON text ('' = not yet).
+    answer: function (id) {
+      var r = results[id];
+      if (!r) return '';
+      delete results[id];
+      return JSON.stringify(r);
+    },
     claimOwner: function (key) {
       if (!(key in claims)) return -1;
       if (claims[key] === mySlot) return 0;

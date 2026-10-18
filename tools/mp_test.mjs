@@ -160,6 +160,19 @@ await waitLog(carol2, /connected to room/, 120000);
 const seatOwner = await sitter.until(() => sitter.find('D', (d) => d.d.some((x) => x[1] === 'claim.seat.5' && x[2] >= 0)), 120000);
 console.log('--- Carol (seat)\n' + (await logOf(carol2)).split('\n').filter((l) => /Seat|sit|Multiplayer|Stage entered/i.test(l)).join('\n'));
 const carolSlot = (await sitter.until(() => sitter.find('J', (j) => j.name === 'Carol') || sitter.find('F', (f) => f.name === 'Carol'), 20000))?.body.slot;
+// Darts scored by the room: the board is free again, Bob throws three darts
+// at the middle of his view; the room scores them and tells everyone.
+await carol2.close();
+sitter.send('I', { i: 3, k: 'release', key: 'machine.darts' });
+await sitter.until(() => sitter.find('R', (r) => r.r === 3));
+await bob.goto(bob.url().replace(/&sit=\d+|&darts/g, '') + '&darts');
+await waitLog(bob, /Stage entered/, 120000);
+await bob.waitForTimeout(4000);
+for (let i = 0; i < 3; i++) { await bob.mouse.click(215, 466); await bob.waitForTimeout(2500); }
+await waitLog(bob, /(scored by the room)[\s\S]*(scored by the room)[\s\S]*(scored by the room)/, 60000);
+const throwsSeen = sitter.got.filter((m) => m.letter === 'D').flatMap((m) => m.body.d).filter((x) => x[1] === 'darts').map((x) => x[2]);
+const bobThrows = [...(await logOf(bob)).matchAll(/Darts: (\S+) = (\d+), (\d+) left \(scored by the room\)/g)].map((m) => [m[1], +m[2], +m[3]]);
+console.log('Bob\'s darts:', JSON.stringify(bobThrows), 'room told the others:', JSON.stringify(throwsSeen.map((t) => [t.label, t.pts, t.left])));
 sitter.close();
 show('Bob', log);
 show('Carol', carolLog);
@@ -181,6 +194,8 @@ const checks = {
   'the room refuses Bob a seat someone else has': sitterOk && /Sitter (sat there first|is sitting there)/.test(bobSeatLog),
   'the room records Carol holding the glass, then frees it': glassClaims.length >= 2 && glassClaims[0] >= 0 && glassClaims[glassClaims.length - 1] === -1,
   'the room refuses Bob the darts someone else is playing': /Machine machine.darts: Sitter is (throwing|using it)/.test(bobDartsLog),
+  'the room scores Bob\'s three darts and everyone gets the same numbers': bobThrows.length === 3 && throwsSeen.length === 3 &&
+    bobThrows.every((t, i) => t[0] === throwsSeen[i].label && t[1] === throwsSeen[i].pts && t[2] === throwsSeen[i].left),
   'the room records Carol on seat 5': !!seatOwner && seatOwner.body.d.some((x) => x[1] === 'claim.seat.5' && x[2] === carolSlot),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);

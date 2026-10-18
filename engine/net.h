@@ -83,5 +83,11 @@ int claimResult(int request);
 // taking a drink: the first one to ask gets it). Returns a request id for
 // claimResult() (0 when offline).
 int setWorldIf(const std::string& key, const double* values, int count, const double* expect, int expectCount);
+// Asks the room to do something (an intent: `kind` plus its arguments as a
+// JSON object, e.g. request("dart", "{\"u\":0.1,\"v\":0}")). Returns a request
+// id (0 when offline). takeAnswer() gives the room's whole answer once it
+// came (true; `out` = the RESULT object: ok, why, and the game's fields).
+int request(const std::string& kind, const std::string& argsJson);
+bool takeAnswer(int request, std::string& outJson);
 
 }  // namespace engine::net

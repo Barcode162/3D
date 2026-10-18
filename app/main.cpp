@@ -749,6 +749,7 @@ void use(const app::Interactable& it) {
       g_app.camera.position = g_app.scene.dartOche;
       g_app.camera.yaw = engine::kPi;  // facing the board (+z)
       g_app.camera.pitch = 0;
+      g_app.darts.setOnline(g_app.others.online() && g_app.machineKey == "machine.darts");
       g_app.darts.start();
       setActivity(Activity::kDarts);
       break;
@@ -1403,6 +1404,8 @@ void frame(double rafMs) {
     g_app.machineKey = g_app.darts.playing() ? "machine.darts" : "machine.rhythm";
     g_app.machineClaim = engine::net::claim(g_app.machineKey);
   }
+  // Darts are scored by the room while it has given you the board.
+  g_app.darts.setOnline(g_app.others.online() && g_app.machineKey == "machine.darts");
   // The room said the machine you're on is someone else's: leave it.
   if (!g_app.machineKey.empty() && g_app.others.online()) {
     const int answer = engine::net::claimResult(g_app.machineClaim);

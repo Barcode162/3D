@@ -20,6 +20,9 @@ class Darts {
   bool playing() const { return playing_; }
   void start();
   void stop() { playing_ = false; }
+  // Online, the room scores every dart (cloud/games/darts.js): a throw sends
+  // the aim, the dart lands where the room says. Offline, this phone scores.
+  void setOnline(bool on) { online_ = on; }
 
   // A tap while playing: `eye` and `dir` = the ray through the tap.
   void throwAt(engine::Vec3 eye, engine::Vec3 dir, double nowMs);
@@ -45,6 +48,11 @@ class Darts {
     double thrownMs = 0;
     bool landed = false;
     engine::Vec3 from;   // where it left your hand
+    int request = 0;     // waiting for the room's answer (online)
+    // The room's answer: points, label, what's left, bust/won, turn over.
+    int pts = 0, left = 0;
+    bool bust = false, won = false, turnOver = false, scored = false;
+    std::string label;
   };
   void endTurn();
 
@@ -59,6 +67,7 @@ class Darts {
   double turnEndsMs_ = 0;   // pull the darts out at this time
   double lastThrowMs_ = -1e9;
   int games_ = 0, bestTurn_ = 0;
+  bool online_ = false;
 };
 
 }  // namespace app

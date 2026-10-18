@@ -602,6 +602,13 @@ was answered by the user on 2026-10-17.
   drink goes away) and only bartenders can serve, song start times come from the room's
   clock, positions and values out of range are dropped. The phone still predicts
   (acts at once) and backs off when the room says no.
+- **The room runs darts (2026-10-18)** (`cloud/games/darts.js`): the phone sends only
+  its aim (`dart` intent); the room adds the wobble, scores it, keeps the 301 count
+  (bust, game shot, new turn) and tells everyone. The phone flies the dart toward the
+  aim and lands it where the room says (offline it scores alone, as before). First of
+  the games moved to the room; the pattern for the others: game code in `cloud/games/`,
+  one intent per player action, results as RESULT + DELTA, state in the player's socket
+  attachment.
 - **Gotcha (voice_test):** in headless Chromium the remote voice level sometimes reads 0
   for the whole sample window although the audio bytes arrive (about 44 KB); about 1
   run in 3. Seen right after the move to the room; signaling works (connections

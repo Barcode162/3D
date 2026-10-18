@@ -165,6 +165,24 @@ int setWorldIf(const std::string& key, const double* values, int count, const do
   }, key.c_str(), values, count, expect, expectCount);
 }
 
+int request(const std::string& kind, const std::string& argsJson) {
+  return EM_ASM_INT({
+    var n = window['bar3dNet'];
+    return n && n['request'] ? n['request'](UTF8ToString($0), UTF8ToString($1)) : 0;
+  }, kind.c_str(), argsJson.c_str());
+}
+
+bool takeAnswer(int request, std::string& outJson) {
+  if (request <= 0) return false;
+  char* text = static_cast<char*>(EM_ASM_PTR({
+    var n = window['bar3dNet'];
+    return stringToNewUTF8(n && n['answer'] ? n['answer']($0) : "");
+  }, request));
+  outJson = text;
+  std::free(text);
+  return !outJson.empty();
+}
+
 double serverTime() { return EM_ASM_DOUBLE({ return window['bar3dNet']['serverTime'](); }); }
 
 }  // namespace engine::net

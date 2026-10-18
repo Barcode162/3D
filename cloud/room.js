@@ -23,6 +23,7 @@
 // attachments; players in their grace period and the world are in storage.
 import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary } from './proto.js';
 import { checkWrite } from './rules.js';
+import * as darts from './games/darts.js';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -103,6 +104,7 @@ export class Room {
     this.lastMsg = new Map();    // slot → ms of their last message
     this.lastActive = new Map(); // slot → ms of their last movement, intent or event
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
+    this.games = {};             // games the room runs: darts → {owner slot, session}
     this.lastSeq = 0;
     this.ticker = null;
     this.lastChangeMs = 0;
@@ -122,6 +124,7 @@ export class Room {
       this.players.set(a.slot, { ...a, ws, graceUntil: 0, away: a.away || 0 });
       if (a.st) this.states.set(a.slot, { seq: a.st.seq, raw: hexToBytes(a.st.raw) });
       for (const key of a.claims || []) this.claims.set(key, a.slot);
+      if (a.darts) this.games.darts = { owner: a.slot, session: a.darts };
       this.lastMsg.set(a.slot, now);
       this.lastActive.set(a.slot, now);
     }
@@ -395,11 +398,13 @@ export class Room {
       }
       if (owner !== slot) return { ok: 0, why: 'not yours' };
       this.claims.delete(key);
+      this.endGamesOf(slot, key);
       const seq = this.nextSeq();
       this.broadcast(text('D', { d: [[seq, 'claim.' + key, -1, slot]] }));
       this.saveAttachment(slot);
       return { ok: 1, seq };
     }
+    if (body.k === 'dart') return this.throwDart(slot, body);
     if (body.k === 'set') {
       // A world write that only happens if the key still holds `expect`
       // (e.g. taking a drink: the first one to ask gets it).
@@ -419,6 +424,23 @@ export class Room {
     return { ok: 0, why: 'unknown intent' };
   }
 
+  // Darts (cloud/games/darts.js): only the player the room gave the board to
+  // throws; the room adds the wobble, scores it and tells everyone.
+  throwDart(slot, body) {
+    if (this.claims.get('machine.darts') !== slot) return { ok: 0, why: 'not your turn at the board' };
+    if (!Number.isFinite(body.u) || !Number.isFinite(body.v)) return { ok: 0, why: 'bad aim' };
+    if (!this.games.darts || this.games.darts.owner !== slot) this.games.darts = { owner: slot, session: darts.newSession() };
+    const r = darts.throwDart(this.games.darts.session, body.u, body.v);
+    this.saveAttachment(slot);
+    this.broadcast(text('D', { d: [[this.nextSeq(), 'darts', r, slot]] }), slot);
+    return { ok: 1, ...r };
+  }
+
+  // Leaving a machine ends your game on it (the next player starts fresh).
+  endGamesOf(slot, key) {
+    if (key === 'machine.darts' && this.games.darts && this.games.darts.owner === slot) delete this.games.darts;
+  }
+
   claimsOf(slot) {
     const out = [];
     for (const [k, s] of this.claims) if (s === slot) out.push(k);
@@ -430,6 +452,7 @@ export class Room {
     const d = [];
     for (const key of this.claimsOf(slot)) {
       this.claims.delete(key);
+      this.endGamesOf(slot, key);
       d.push([this.nextSeq(), 'claim.' + key, -1, -1]);
     }
     for (let i = 0; i < d.length; i += 64) this.broadcast(text('D', { d: d.slice(i, i + 64) }));
@@ -543,7 +566,8 @@ export class Room {
     const st = this.states.get(slot);
     try {
       p.ws.serializeAttachment({ room: this.name, ...this.publicFields(p), resume: p.resume, proto: p.proto, away: p.away || 0,
-        st: st ? { seq: st.seq, raw: bytesToHex(st.raw) } : null, claims: this.claimsOf(slot) });
+        st: st ? { seq: st.seq, raw: bytesToHex(st.raw) } : null, claims: this.claimsOf(slot),
+        darts: this.games.darts && this.games.darts.owner === slot ? this.games.darts.session : null });
     } catch (e) {}
   }
 

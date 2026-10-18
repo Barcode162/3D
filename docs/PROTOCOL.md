@@ -132,7 +132,12 @@ props that changed since the previous TICK.
 | `claim` | `key`: `[A-Za-z0-9_.-]{1,40}` (e.g. `seat.4`) | `ok:1` (also if it's already yours), or `ok:0` with `why:"taken"` and `by` (owner's slot); max 8 claims per player | DELTA `claim.<key>` = your slot, to everyone |
 | `release` | `key` | `ok:1`, or `ok:0 why:"not yours"` | DELTA `claim.<key>` = -1 |
 | `set` | `key`, `v` (≤20 numbers), `expect` (≤20 numbers, optional) | `ok:1 seq`, or `ok:0` with `why:"changed"` (the key no longer holds `expect`; `by` = who changed it) or the rule that refused it | KV with the new value, to everyone |
+| `dart` | `u`, `v`: where you aimed on the board (m from the centre, u = right, v = up) | needs the claim `machine.darts`. `ok:1` + `u`, `v` (where it landed: the room adds the hand's wobble), `pts`, `label` ("T20"...), `left`, `bust`, `won`, `turnOver`, `games` | DELTA `darts` = that same result, to the others |
 | other | | `ok:0 why:"unknown intent"` | |
+
+Games the room runs live in `cloud/games/` (darts: `darts.js`, 301 rules as in
+`app/darts.cpp`). A game's state is kept in its player's socket attachment (survives the
+room sleeping) and ends when they release the machine or leave.
 
 A player's claims are freed when they leave (after the grace period), as DELTAs with
 value -1, by -1. Claims are in WELCOME (`claims`).
@@ -159,6 +164,7 @@ Badges come from the login check (`account.php` `me` → `badges`; dev tickets
 |---|---|---|
 | `claim.<key>` | owner slot, or -1 = free | the slot that changed it, -1 = the room |
 | `away` | 1 = away (page hidden, or socket lost and in its grace period), 0 = back | that player |
+| `darts` | a throw's result (see the `dart` intent) | the thrower |
 | `net.stateHz` | 10 when today's free quota is 70% used: send STATE at most this often | -1 |
 - *kv entry* = `[seq: int, key: str, by: slot or -1, values: [number ≤20]]`
 - `by: -1` means the server itself (layout defaults, timers).

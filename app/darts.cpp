@@ -7,6 +7,9 @@
 #include <cstdlib>
 
 #include "engine/frame_time.h"
+#include "engine/json.h"
+#include "engine/log.h"
+#include "engine/net.h"
 
 using engine::Vec3;
 using engine::Vec4;
@@ -103,7 +106,8 @@ void Darts::init(Vec3 boardCenter, engine::Sound thunk, engine::Sound whoosh, en
 
 void Darts::start() {
   playing_ = true;
-  if (scoreLeft_ <= 0) scoreLeft_ = 301;
+  if (scoreLeft_ <= 0 || online_) scoreLeft_ = turnStart_ = 301;  // online: the room starts each visit at 301
+  if (online_) darts_.clear();
   message_ = "301: tap the board to throw";
   messageMs_ = engine::frameTime().nowMs;
 }
@@ -115,8 +119,16 @@ void Darts::throwAt(Vec3 eye, Vec3 dir, double nowMs) {
   const float t = (board_.z - eye.z) / dir.z;
   const Vec3 hit = eye + dir * t;
   Dart dart;
-  dart.u = -(hit.x - board_.x) + wobble() * kSpread * 2;
-  dart.v = (hit.y - board_.y) + wobble() * kSpread * 2;
+  const float aimU = -(hit.x - board_.x), aimV = hit.y - board_.y;
+  if (online_) {
+    // The room adds the wobble and scores it; the dart flies toward the aim
+    // meanwhile and lands where the room says.
+    char args[96];
+    std::snprintf(args, sizeof(args), "{\"u\":%.4f,\"v\":%.4f}", aimU, aimV);
+    dart.request = engine::net::request("dart", args);
+  }
+  dart.u = aimU + (dart.request ? 0 : wobble() * kSpread * 2);
+  dart.v = aimV + (dart.request ? 0 : wobble() * kSpread * 2);
   dart.thrownMs = nowMs;
   dart.from = eye + Vec3{-0.15f, -0.12f, 0.3f};
   darts_.push_back(dart);
@@ -136,24 +148,63 @@ void Darts::endTurn() {
 }
 
 void Darts::update(double nowMs) {
+  // The room's answers: where each dart really landed and what it scored.
+  for (size_t i = 0; i < darts_.size(); ++i) {
+    Dart& d = darts_[i];
+    std::string answer;
+    if (!d.request || !engine::net::takeAnswer(d.request, answer)) continue;
+    d.request = 0;
+    const engine::Json r = engine::Json::parse(answer);
+    if (r["ok"].integer() != 1) {
+      message_ = "The room didn't take that throw (" + r["why"].string() + ")";
+      messageMs_ = nowMs;
+      LOG_INFO("Darts: the room refused a throw (%s).", r["why"].string().c_str());
+      darts_.erase(darts_.begin() + static_cast<long>(i));
+      --i;
+      continue;
+    }
+    d.u = static_cast<float>(r["u"].number());
+    d.v = static_cast<float>(r["v"].number());
+    d.pts = r["pts"].integer();
+    d.label = r["label"].string();
+    d.left = r["left"].integer();
+    d.bust = r["bust"].integer() != 0;
+    d.won = r["won"].integer() != 0;
+    d.turnOver = r["turnOver"].integer() != 0;
+    games_ = r["games"].integer();
+    d.scored = true;
+  }
   for (Dart& d : darts_) {
-    if (d.landed || nowMs < d.thrownMs + kFlightMs) continue;
+    if (d.landed || nowMs < d.thrownMs + kFlightMs || d.request) continue;  // flying, or waiting for the room
     d.landed = true;
     std::string label;
-    const int pts = score(d.u, d.v, &label);
+    int pts = score(d.u, d.v, &label);
+    if (d.scored) {  // the room's word, not ours
+      pts = d.pts;
+      label = d.label;
+      LOG_INFO("Darts: %s = %d, %d left (scored by the room).", label.c_str(), pts, d.left);
+    }
     const Vec3 at = boardPoint(board_, d.u, d.v);
     thunk_.play(pts > 0 ? 0.9f : 0.5f, &at);
     char text[96];
-    if (scoreLeft_ - pts < 0 || scoreLeft_ - pts == 1) {
+    if (d.scored && !d.bust) scoreLeft_ = d.left + pts;  // so the local count below lands on the room's
+    if (d.scored ? d.bust : (scoreLeft_ - pts < 0 || scoreLeft_ - pts == 1)) {
+      if (d.scored) turnStart_ = d.left;
       std::snprintf(text, sizeof(text), "%s - BUST! Back to %d", label.c_str(), turnStart_);
       scoreLeft_ = turnStart_;
       turnEndsMs_ = nowMs + 1500;
       for (Dart& other : darts_) other.landed = true;  // the turn ends now
-      while (darts_.size() < 3) darts_.push_back({0, -1, nowMs, true, {}});  // fills the turn (off the board)
+      while (darts_.size() < 3) {  // fills the turn (off the board)
+        Dart filler;
+        filler.v = -1;
+        filler.thrownMs = nowMs;
+        filler.landed = true;
+        darts_.push_back(filler);
+      }
     } else {
       scoreLeft_ -= pts;
       if (scoreLeft_ == 0) {
-        ++games_;
+        if (!d.scored) ++games_;  // online the room counts games
         std::snprintf(text, sizeof(text), "%s - GAME SHOT! You won (%d won so far)", label.c_str(), games_);
         cheer_.play(0.8f, &at);
         turnEndsMs_ = nowMs + 2500;
