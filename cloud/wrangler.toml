@@ -1,6 +1,6 @@
 # Bar3D realtime server on Cloudflare (cloud/worker.js + cloud/room.js;
-# protocol in docs/PROTOCOL.md). Not deployed yet: restructure step 3.3
-# (docs/RESTRUCTURE.md) adds the deploy job.
+# protocol in docs/PROTOCOL.md). Deployed by .github/workflows/deploy.yml on
+# every push to main, to https://bar3d.joshuavelasco60.workers.dev.
 # Keep the class name `Room`, the binding `ROOMS` and the migration tag `v1`:
 # renaming them needs a Durable Object migration and can lose storage. Add
 # new migration tags, never edit old ones.
@@ -18,7 +18,7 @@ ALLOWED_ORIGINS = "https://barcode162.github.io,https://joshuavelasco.com"
 # Protocol version the room speaks (it also accepts PROTO - 1).
 PROTO = "1"
 # Test-only switches, set by tools/room_test.mjs with --var: DEV = "1",
-# GRACE_MS, CONNECT_LIMIT_PER_MIN.
+# GRACE_MS, CONNECT_LIMIT_PER_MIN, GHOST_MS, AFK_MS, GHOST_CHECK_MS.
 
 [[durable_objects.bindings]]
 name = "ROOMS"
