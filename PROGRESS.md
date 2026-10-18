@@ -14,7 +14,7 @@ first. Ask the user the open questions in its §5 when a step needs them
 (Q1 is answered, 2026-10-17: the user made the Cloudflare account and added
 the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; don't
 ask again). The plan was reviewed against the code on 2026-10-17 (see its
-last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a and 2.4b (2026-10-17). In progress: 2.5 (mostly built, see the handoff note at the end of the Log), then Phase 3 (3.1, 3.2a)**
+last section). **Done: Phase 0, Phase 1 (0.1-1.8) 2.1a-c, 2.2, 2.3a, 2.3b, 2.4a, 2.4b (2026-10-17) and 2.5 (2026-10-18). Next: Phase 3 (3.1, 3.2a, 3.2b...)**
 (batch them; see Execution order in RESTRUCTURE §4). User's pace (2026-10-17): the full plan stays (no cuts); Claude batches
 related steps (about 3 per message), automatic tests on every change, docs
 once per batch. Racing: keep the racing steps for multiplayer/sync, but
@@ -542,3 +542,7 @@ A small DAW inside the bar, all DSP written in C++:
   Phase 5: 14, Phase 6: 12, Phase 7: 6, Phase 8: 3); at ~3 per message,
   about 18 more "continue"s. Gates still open: G2 (IONOS MySQL secrets,
   for 5.1a), G3 (user approval of `astcenc`, for 6.8).
+- **2026-10-18:** Restructure 2.5 done: last bits were freeing local file
+  links (MIDI files after the piano reads them, the mic test recording,
+  no duplicate link when the same song is picked twice). rhythm_test and
+  voice_test pass with the new sound path.

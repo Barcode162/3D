@@ -164,7 +164,10 @@ window.bar3dAudio = (function () {
   picker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
   picker.addEventListener('change', function () {
     Array.prototype.forEach.call(picker.files, function (file) {
-      userSongs.push({ name: file.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(file) });
+      // The same file picked again keeps its old link (no new one to leak).
+      var name = file.name.replace(/\.[^.]+$/, '');
+      if (userSongs.some(function (s) { return s.name === name && s.size === file.size; })) return;
+      userSongs.push({ name: name, size: file.size, url: URL.createObjectURL(file) });
     });
     picker.value = '';
   });

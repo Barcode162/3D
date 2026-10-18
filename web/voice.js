@@ -117,9 +117,10 @@ window.bar3dVoice = (function () {
         rec.onstop = function () {
           onStage('Playing it back...');
           var blob = new Blob(chunks, { type: rec.mimeType || 'audio/mp4' });
-          var a = new Audio(URL.createObjectURL(blob));
-          a.onended = function () { resolve(); };
-          a.onerror = function () { reject(new Error('Could not play the recording.')); };
+          var url = URL.createObjectURL(blob);
+          var a = new Audio(url);
+          a.onended = function () { URL.revokeObjectURL(url); resolve(); };
+          a.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not play the recording.')); };
           a.play().catch(reject);
         };
         rec.start();

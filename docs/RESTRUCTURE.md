@@ -779,7 +779,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** No visibility/pagehide handling: others see a frozen you, keys stick, catch-up burst on return → lifecycle §2.5.8. *[2.2]*
 - [ ] **L** Per-frame heap churn (`main.cpp:876,1239-1240,494,518`; `drawModels` sort vectors) → persistent buffers. *[4.1b, 6.1]*
 - [ ] **L** Shared facts duplicated and polled (`updateMirrorButtons` `main.cpp:777-789`; `setLights` from two places) → RoomState + change events. *[5.3]*
-- [ ] **L** Sound handles are raw pointers into `g_app.sfx` (`main.cpp:1385-1391`) → AudioMixer sound ids. *[2.5]*
+- [x] **L** Sound handles are raw pointers into `g_app.sfx` (`main.cpp:1385-1391`) → AudioMixer sound ids. *[2.5]*
 - [ ] **L** Test hooks are regexes inside startup (`main.cpp:1186-1218`) → TestHooks parsed once. *[1.8]*
 - [ ] **L** *(review)* E-7 has no global check; `app/race/game.cpp` keeps 2 `EM_ASM` (the `racing` body class) that no step removed → moved behind an engine call; `grep -rn "EM_ASM\|EM_JS" app` → 0. *[2.4b, 4.1c]* (2.4b part done: `grep EM_ASM app/race` → 0; `ui::setBodyClass`, `ui::buildLabel`)
 
@@ -935,7 +935,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **H** Synth ≈ 10× too expensive: 96 full-length `addPartial` passes for middle C (16 partials × 3 strings × 2 decay stages; `synth.cpp:25-44,83-92`) → one pass per partial, -80 dB cutoff, strings in one loop. *[1.2a]*
 - [x] **H** One live-voice table and pedal for you and every remote player; stuck glowing keys (`piano.h:100-104`; `piano.cpp:182,197,233,325`) → per-player tables, release on leave/timeout. *[1.2b]*
 - [ ] **H** Remote notes unstamped, played on arrival in 50/100 ms clumps, stale bursts after background (`piano.cpp:234`; `relay.php:122`) → stamped events + playout. *[5.6]*
-- [ ] **H** HRTF panner per voice for every note and sfx (`audio.js:182-192`) → persistent emitters, equalpower one-shots, voice cap. *[2.5]*
+- [x] **H** HRTF panner per voice for every note and sfx (`audio.js:182-192`) → persistent emitters, equalpower one-shots, voice cap. *[2.5]*
 - [x] **M** MIDI-keyboard pedal not shared (`main.cpp:896`; the on-screen pedal does send, `piano.cpp:410-412`) → `setPedal(down, share)`. *[1.2b]*
 - [ ] **M** Concurrent piano song picks diverge (`piano.cpp:143`) → server session record. *[5.6]*
 - [ ] **M** Piano key lights: 2 boxes per lit key, one draw each, redrawn in the mirror (`piano.cpp:312-360`) → instanced boxes. *[6.1]*
@@ -943,13 +943,13 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **L** Long bass notes cut at 3.6 s (`synth.cpp:78`); engine hum uses `sin` per sample (`synth.cpp:184`) → loop tail; phasor. *[1.2a]*
 - [ ] **L** MIDI events on the same tick not ordered off-before-on (`midi.cpp:107-110`) → tempo < off < pedal < on. *[5.6]*
 - [ ] **H** Rhythm Track ≈ 200 MB peak, never released; 54 MB copied into wasm (`audio.js:236-260`; `audio.cpp:77-81`) → low-rate mono via OfflineAudioContext, no copy, free on close. *[5.9b]*
-- [ ] **M** Generated sounds kept twice in JS (`audio.js:153-166`) → drop raw data after the AudioBuffer exists. *[2.5]*
-- [ ] **M** Rhythm Track bypasses the volume buses (`audio.js:281`) → bus. *[2.5]*
+- [x] **M** Generated sounds kept twice in JS (`audio.js:153-166`) → drop raw data after the AudioBuffer exists. *[2.5]*
+- [x] **M** Rhythm Track bypasses the volume buses (`audio.js:281`) → bus. *[2.5]*
 - [ ] **M** No audio-latency calibration; AirPods shift judgements 150-250 ms (`audio.js:290`) → calibration + Clock. *[5.9b]*
 - [ ] **M** Jukebox stream seeks once and never resyncs (`audio.js:312-328`) → drift follower. *[5.5]*
 - [ ] **L** No visibility/interruption handling in audio (`audio.js:92-101`) → statechange + "tap to resume sound". *[2.2]*
-- [ ] **L** 4-8 EM_ASM audio calls per frame (`audio.cpp`) → command buffer. *[2.5]*
-- [ ] **L** Unlock listeners never removed; object URLs never revoked (`audio.js:100-104,119`; `menu.js:253`) → clean up. *[2.5]*
+- [x] **L** 4-8 EM_ASM audio calls per frame (`audio.cpp`) → command buffer. *[2.5]*
+- [x] **L** Unlock listeners never removed; object URLs never revoked (`audio.js:100-104,119`; `menu.js:253`) → clean up. *[2.5]*
 - [ ] **M** Darts: spectators see no flight and hear nothing (`darts.cpp:124,143,156`) → throw events. *[5.8]*
 - [ ] **L** Darts position encoding overflows off-board (`darts.cpp:30-31,112`) → clamp ±0.499. *[5.8]*
 - [ ] **L** Darts: leaving mid-turn leaves ghost darts locally (`darts.h:23`) → `leave()` clears. *[5.8]*
@@ -1643,10 +1643,11 @@ errors (so smoke/mp_test fail on them).
   passes; piano song headless shows ≤ 32 voices.
 - **Phone:** play a fast piano song next to the jukebox: no crackling; volume sliders now also
   change the 4K Mania song; bell, darts and drinks still sound right and come from the right place.
-- **In progress (2026-10-17):** built: mailbox sound commands, voice cap 32, piano emitter,
-  equal-power one-shots, raw data dropped, Track on the music bus, unlock listeners removed,
-  Sound values instead of pointers, smoke audio lines. Left: revoke object URLs, run
-  rhythm_test + voice_test, tick boxes. See the PROGRESS.md handoff note.
+- **Done (2026-10-18):** mailbox sound commands, voice cap 32, piano emitter, equal-power
+  one-shots, raw data dropped, Track on the music bus, unlock listeners removed, Sound values
+  instead of pointers, smoke audio lines, blob links revoked (fetch helper after a read, mic
+  test after playback; the same song file picked twice reuses its link). rhythm_test and
+  voice_test pass.
 
 ### Phase 3: The authoritative Cloudflare room (G1 met; 3.1-3.3 may run early, see Execution order)
 

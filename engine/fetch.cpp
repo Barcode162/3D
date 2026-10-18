@@ -82,6 +82,8 @@ EM_JS(void, js_fetch, (int id, const char* urlPtr), {
     var ptr = _engine_fetchBuffer(id, bytes.length);  // C++ owns the memory
     if (!ptr && bytes.length) throw new Error('no buffer');
     HEAPU8.set(bytes, ptr);
+    // A local file link (blob:) is read once and kept by the caller: free it.
+    if (url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
     _engine_fetchDone(id, ptr, bytes.length);
   }).catch(function(e) {
     _engine_fetchDone(id, 0, -1);  // C++ retries and reports
