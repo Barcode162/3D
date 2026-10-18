@@ -623,6 +623,12 @@ was answered by the user on 2026-10-17.
   the games moved to the room; the pattern for the others: game code in `cloud/games/`,
   one intent per player action, results as RESULT + DELTA, state in the player's socket
   attachment.
+- **The room runs the jukebox (2026-10-18)** (`cloud/games/jukebox.js`): it knows the
+  built-in songs' lengths (ffprobe; keep the list in the order of `kBuiltIn` in
+  `app/jukebox.cpp`, room_test checks the names) and starts the next song for
+  everyone when one ends (a `song` deadline in the alarm scheduler). Online, a phone
+  doesn't advance a built-in song itself; your own songs from the Files app still
+  advance on your phone only. Adding a built-in song = add it to both lists.
 - **Gotcha (voice_test):** in headless Chromium the remote voice level sometimes reads 0
   for the whole sample window although the audio bytes arrive (about 44 KB); about 1
   run in 3. Seen right after the move to the room; signaling works (connections

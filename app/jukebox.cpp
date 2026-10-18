@@ -77,7 +77,12 @@ void Jukebox::update() {
     userSongsSeen_ = userCount;
     play(firstNew);
   }
-  if (current_ >= 0 && source_.finished()) play(current_ + 1);
+  if (current_ >= 0 && source_.finished()) {
+    // A built-in song while online: the room picks the next one for
+    // everyone. Your own songs (only on your phone) still go on here.
+    if (followRoom_ && songs_[static_cast<size_t>(current_)].builtIn) return;
+    play(current_ + 1);
+  }
 }
 
 std::string Jukebox::prompt() const {

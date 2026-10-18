@@ -164,6 +164,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
 void SharedWorld::update(double nowMs, float dt, engine::PhysicsWorld& physics, BarScene& scene, Jukebox& jukebox,
                          int& held) {
   if (!on_) return;
+  jukebox.followRoom(engine::net::status() == engine::net::Status::kConnected);
   receive(nowMs, physics, scene, jukebox, held);
 
   // Jukebox: share songs you choose (built-in ones; your own files stay on

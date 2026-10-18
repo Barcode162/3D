@@ -24,6 +24,7 @@
 import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary } from './proto.js';
 import { checkWrite } from './rules.js';
 import * as darts from './games/darts.js';
+import * as jukebox from './games/jukebox.js';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -87,6 +88,7 @@ export class Room {
     this.afkMs = Number(env.AFK_MS) || AFK_MS;
     this.ghostCheckMs = Number(env.GHOST_CHECK_MS) || GHOST_CHECK_IDLE_MS;
     this.usageSavedAt = 0;
+    this.songTestSeconds = this.dev ? Number(env.SONG_SECONDS) || 0 : 0;  // tests: every song this long
     this.connectLimit = Number(env.CONNECT_LIMIT_PER_MIN) || 10;
     this.name = '';
     this.players = new Map();    // slot → {slot, name, look, acct, av, resume, ws|null, graceUntil, away}
@@ -152,6 +154,7 @@ export class Room {
     const usage = await s.get('usage');
     if (usage && usage.day === this.usage.day) Object.assign(this.usage, usage);
     this.alarmAt = (await s.getAlarm()) || 0;
+    this.scheduleSongEnd();
     this.reschedule();
   }
 
@@ -344,7 +347,28 @@ export class Room {
     const entry = { seq: this.nextSeq(), by: slot, values };
     this.kv.set(key, entry);
     this.dirtyKv.add(key);
+    if (key === 'jb') this.scheduleSongEnd();
     return [entry.seq, key, slot, values];
+  }
+
+  // The jukebox (cloud/games/jukebox.js): when the current song ends, the room
+  // starts the next one for everyone. One deadline in the alarm scheduler.
+  scheduleSongEnd() {
+    const jb = this.kv.get('jb');
+    this.setDeadline('song', jb ? jukebox.endsAtMs(jb.values, this.songTestSeconds) : 0);
+  }
+
+  nextSong() {
+    const jb = this.kv.get('jb');
+    if (!jb || !jukebox.endsAtMs(jb.values, this.songTestSeconds)) return;
+    if (!this.connectedCount()) {  // nobody's listening: the jukebox goes quiet
+      this.storeKv(-1, 'jb', [-1, 0]);
+      this.scheduleFlush();
+      return;
+    }
+    const entry = this.storeKv(-1, 'jb', jukebox.next(jb.values, Date.now()));
+    this.broadcast(text('K', { w: [entry] }));
+    this.scheduleFlush();
   }
 
   sendTo(slot, data) {
@@ -826,6 +850,10 @@ export class Room {
     }
     for (const p of [...this.players.values()]) {
       if (p.graceUntil > 0 && now >= p.graceUntil) await this.leave(p.slot, 'connection lost');
+    }
+    if ((this.deadlines.get('song') || Infinity) <= now) {
+      this.deadlines.delete('song');
+      this.nextSong();
     }
     if ((this.deadlines.get('flush') || Infinity) <= now) await this.flush();
     if ((this.deadlines.get('ghost') || Infinity) <= now) {

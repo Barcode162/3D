@@ -29,6 +29,9 @@ class Jukebox {
   // Call every frame: moves to the next song at the end of one, and picks
   // up songs the user just loaded.
   void update();
+  // Online the room starts the next built-in song when one ends (for
+  // everyone, cloud/games/jukebox.js), so this phone waits for it.
+  void followRoom(bool on) { followRoom_ = on; }
 
   const std::vector<Song>& songs() const { return songs_; }
   int current() const { return current_; }  // -1 = silent
@@ -46,6 +49,7 @@ class Jukebox {
   int current_ = -1;
   int songsStarted_ = 0;
   int localChanges_ = 0;
+  bool followRoom_ = false;
 };
 
 // The on-screen jukebox menu: song list with jukebox-style codes (A1, A2...),

@@ -150,7 +150,7 @@ back). Counted as `refused` in the usage on `/health`.
 |---|---|---|
 | `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | inside the bar (±40 m, y -2..12), unit quaternion, speed ≤ 40 m/s; only the holder of the claim `glass.<n>` may write it while it's claimed |
 | `m<n>` (0..9) | mirror on, avatars only (two 0/1) | |
-| `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock |
+| `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock. `jb`: when a built-in song ends the room writes the next one itself (`by` -1, `cloud/games/jukebox.js`); nobody connected → `[-1, 0]` |
 | `lt` | lights dim, fire on (two 0/1) | |
 | `dk<n>` (0..7) | drink type + 1, 0 = empty | serving (non-zero) needs the `bartender` or `owner` badge; taking (0) only through a `set` intent that expects the drink |
 | anything else | | refused |

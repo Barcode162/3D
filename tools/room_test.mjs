@@ -29,7 +29,7 @@ async function startServer() {
   stateDir = mkdtempSync(join(tmpdir(), 'bar3d-room-'));
   server = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', stateDir,
     '--var', 'DEV:1', '--var', `PROTO:${SERVER_PROTO}`, '--var', `GRACE_MS:${GRACE_MS}`, '--var', 'CONNECT_LIMIT_PER_MIN:20',
-    '--var', `GHOST_MS:${GHOST_MS}`, '--var', `AFK_MS:${AFK_MS}`, '--var', 'GHOST_CHECK_MS:2000'],
+    '--var', `GHOST_MS:${GHOST_MS}`, '--var', `AFK_MS:${AFK_MS}`, '--var', 'GHOST_CHECK_MS:2000', '--var', 'SONG_SECONDS:2'],
   { cwd: new URL('../cloud/', import.meta.url).pathname, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   let log = '';
   server.stdout.on('data', (d) => (log += d));
@@ -304,6 +304,28 @@ try {
   db.send('I', { i: 9, k: 'dart', u: 0, v: 0 });
   check((await db.until(() => db.find('R', (r) => r.r === 9)))?.body.ok === 0, 'someone else can\'t throw on your turn');
   [da, db].forEach((c) => c.ws.close(1000));
+
+  const { SONGS } = await import('../cloud/games/jukebox.js');
+  const { readFileSync } = await import('node:fs');
+  const cppSongs = [...readFileSync(new URL('../app/jukebox.cpp', import.meta.url), 'utf8').matchAll(/\{"([a-z0-9-]+\.m4a)"/g)].map((m) => m[1]);
+  check(JSON.stringify(cppSongs) === JSON.stringify(SONGS.map((x) => x.file)), `the room's song list matches the game's (${cppSongs.length} songs)`);
+  // ---- The jukebox run by the room (cloud/games/jukebox.js; songs 2 s long here) ----
+  const r13 = room('jukebox');
+  const ja = await joined(r13, { name: 'Jo' }), jbp = await joined(r13, { name: 'Kai' });
+  const keepJ = setInterval(() => { try { ja.ws.send('ping'); jbp.ws.send('ping'); } catch (e) {} }, 2000);
+  ja.send('K', { w: { jb: [3, Date.now() / 1000] } });
+  const nextUp = await jbp.until(() => jbp.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'jb' && e[2] === -1), 8000);
+  check(nextUp && nextUp[3][0] === 0 && Math.abs(nextUp[3][1] - Date.now() / 1000) < 3, `when a song ends the room starts the next one for everyone (after the last: the first, ${nextUp && nextUp[3][0]})`);
+  check(!!ja.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'jb' && e[2] === -1), 'the player who picked the song gets it too');
+  const again = await jbp.until(() => jbp.all('K').flatMap((m) => m.body.w).filter((e) => e[1] === 'jb' && e[2] === -1).length >= 2, 8000);
+  check(!!again, 'and it keeps going, song after song');
+  ja.send('K', { w: { jb: [-1, 0] } });
+  await wait(300);
+  const n = jbp.all('K').length;
+  await wait(4000);
+  check(jbp.all('K').length === n, 'stopped: the room starts nothing');
+  clearInterval(keepJ);
+  [ja, jbp].forEach((c) => c.ws.close(1000));
 
   // ---- 3.2c: ghosts, AFK, floods, storage, /health ----
   const r9 = room('ghost');
