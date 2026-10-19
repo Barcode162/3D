@@ -51,8 +51,9 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
   Clash style, emote faces), the remaster list (`docs/REMASTER.md`).
 
 ### Parked (not now; the user promotes items at "start")
-- Racing "Drive Zone feel" for the bot race (not Meridian): camera, sound, a real car,
-  clean track, tuning garage, smooth on the phone. Full plan: `docs/RACING_FEEL.md` (R1-R7).
+- **Driving rework (full):** new physics from scratch (tires, suspension, driveline, aero,
+  steering, electronics), C7 Corvette, GR86, RX-7 FD, Miata ND; circuit racing, drift area,
+  free drive. Full spec and build order: `docs/DRIVING_REWORK.md` (22 stages; §0 has the user's decisions).
 - Kids edition: a separate, simpler game in the same universe (under 13).
 - New name for the world and its currency (Bar3D is a working name).
 - The street and city outside.

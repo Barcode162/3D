@@ -212,3 +212,11 @@ smoothness come first; money never gets in the way of play.
   Block, mute and report everywhere.
 - **Later:** a street and a city outside; homes as your "real home" there.
   Characters from the user's own character builder (in progress).
+
+## Driving rework (user, 2026-10-19)
+"A full game rework" of the driving, not a polish: the best possible,
+fully planned physics (tires, suspension, aerodynamics, everything), the
+feel of Drive Zone Online. Cars: a C7 Corvette "at least", the Toyota
+GR86, the RX-7 and the Miata. Circuit racing first, plus a drift area and
+open free drive. "Not the least amount of work: the absolute best possible
+detailed plan from A to Z." Plan: `docs/DRIVING_REWORK.md`.

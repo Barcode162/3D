@@ -1,0 +1,1164 @@
+# Driving rework: the full plan, A to Z (2026-10-19, not started)
+
+The user (2026-10-19): a **full rework of the driving**, not a polish pass.
+The physics first and in full: tires, suspension, drivetrain, brakes,
+steering and aerodynamics, aiming at the smooth, heavy-but-controlled
+feel of **Drive Zone Online**. Four cars, all real: a **C7 Corvette**, the
+**Toyota GR86**, the **Mazda RX-7** and the **Mazda MX-5 Miata**. Three
+ways to drive: **circuit racing**, a **drift area** and **open free
+drive**. "The absolute best possible, regardless of what we need to do."
+
+This file is the specification and the build order. Each section says what
+is built, which equations it uses, what numbers it starts from and how we
+prove it works. It replaces the short-lived `RACING_FEEL.md`. Where it overlaps
+`docs/RACING.md` steps 4-7 and `docs/RESTRUCTURE.md` Phase 7, this file
+wins, and those steps are folded in below (Stage 12).
+
+**Status labels in this file**
+- **[S]**: published figure, with a source (list at the end).
+- **[E]**: our engineering estimate. Calibrated against the targets in
+  Stage 3, never left as a guess.
+- **[D]**: our own design choice. Nothing about Drive Zone's internals is
+  public, so nothing here claims to be its code. What is known about it:
+  Unity/C#, a custom URP fork, an in-editor road tool, real-time day/night
+  and weather, suspension/camber/engine/gearbox tuning, detailed interiors
+  with opening doors, 32-player online.
+
+---
+
+## Contents
+0. Decisions needed first (legal, car versions, art)
+1. Conventions (units, axes, signs)
+2. Architecture and files
+3. Timing and update order
+4. The vehicle model, part by part
+   4.1 Chassis rigid body · 4.2 Road and contact · 4.3 Wheel vertical motion
+   4.4 Suspension · 4.5 Tires · 4.6 Wheel spin and the driveline
+   4.7 Engine and turbo · 4.8 Clutch and gearbox · 4.9 Differentials
+   4.10 Brakes · 4.11 Steering · 4.12 Aerodynamics · 4.13 Electronics
+   4.14 Collisions and damage · 4.15 Surfaces and weather
+5. The four cars: data sheets
+6. Input and the feel layer
+7. Presentation: cameras, visuals, HUD
+8. Sound
+9. Car art
+10. Rendering for the driving worlds
+11. Worlds: circuit, drift area, free drive, the road tool
+12. Game modes
+13. Tuning garage and customization
+14. Multiplayer
+15. Bots and traffic
+16. Performance budget
+17. Validation: the test catalogue
+18. Build order (stages, each one a deploy)
+19. Risks
+20. Sources
+
+---
+
+## 0. Decisions needed first
+1. **Real car names and shapes.** Commercial games pay carmakers for
+   names, badges and body shapes, because those are trademarks and trade
+   dress. Technical facts like weights, gear ratios and power curves are
+   free to use. Options:
+   (a) real names and faithful shapes, no logos or badges. Fine as a
+   private hobby, but risky once the game takes money (the master list
+   has a real-money VIP marketplace, item 8);
+   (b) faithful shapes with our own names (e.g. "Vette C7", "86 GR",
+   "Seven FD", "Roadster ND"), no logos;
+   (c) our own designs inspired by each car, with the real physics data.
+   Recommendation [D]: **(b) now**, and if the game ever earns money,
+   either license the cars or move to (c).
+2. **Which version of each car** (the data sheets in §5 use the bold one):
+   - Corvette: **C7 Stingray Z51 coupe, 7-speed manual (2014-2019, 460 hp)**,
+     or the C7 Z06 (650 hp supercharged, real downforce), or both later.
+   - GR86: **2022+ GR86, 6-speed manual (228 hp)**.
+   - RX-7: **FD3S, 1993 US (255 hp)**, or the JDM Spirit R (280 PS, 17" wheels).
+   - Miata: **ND2, 2019+ Club, 6-speed manual (181 hp)**, or the NA
+     (1989, pop-up lights, the classic drift starter).
+3. **Who builds the 3D cars** (§9): Claude with Blender scripts from
+   blueprints and photos (slow, good but not showroom level), licensed
+   models (CC-BY or bought, quality varies, the naming question stays), or
+   a commissioned artist.
+4. **First playable slice** [D, recommended]: the new physics + the GR86 +
+   the drift skidpad, before everything else. It is the fastest way for
+   the user to feel the new physics on the phone.
+
+---
+
+## 1. Conventions (one set, used everywhere)
+- **SI units** inside the sim: m, kg, s, N, N·m, rad, rad/s, Pa, K.
+  km/h, mph, degrees, rpm, psi and °C only at the edges: data files,
+  the HUD and logs. Data files say their unit in the key (`mass_kg`,
+  `rpm`, `deg`).
+- **World:** right-handed, **y up**, gravity g = 9.81 m/s² along -y.
+- **Car body frame** (same as today's `engine/vehicle`): **x right, y
+  up, -z forward**. The origin is at the centre of mass (CG).
+- **Tire frame** (for the tire maths only, ISO-W style): x_t forward
+  along the wheel's heading in the ground plane, y_t to the left, z_t
+  along the road normal. Converted at the boundary.
+- **Signs:** suspension travel s > 0 = compression. Slip ratio κ > 0 =
+  driving (wheel turns faster than the road). Slip angle
+  α = atan2(-V_cy, |V_cx|), so lateral force F_y has the same sign as α
+  and always works against sliding. Steering angle δ > 0 = turning left.
+  Camber γ > 0 = the top of the wheel leans out.
+- **Rotations:** unit quaternions (w, x, y, z), normalized after every
+  integration step. Angular velocity ω in world frame for the integrator;
+  the inertia tensor in body frame.
+- **Cars per corner:** index 0 FL, 1 FR, 2 RL, 3 RR. Left/right as seen
+  from the driver's seat.
+
+---
+
+## 2. Architecture and files
+New module **`engine/drive/`** (reusable, no game code). It replaces
+`engine/vehicle.*` once it passes every test in §17; until then the old
+one stays for comparison (`FEEL=old` in the tests, like `steering_test`).
+
+```
+engine/drive/
+  car_spec.{h,cpp}      every number of a car (POD), loaded from JSON, checked
+  body.{h,cpp}          6-DOF rigid body, integrator
+  road.{h,cpp}          RoadQuery interface: height, normal, material, velocity
+  contact.{h,cpp}       tire shape vs road: several probes → one contact patch
+  suspension.{h,cpp}    kinematics tables, springs, dampers, bump stops, ARBs
+  tire.{h,cpp}          Magic Formula + transients + low speed + heat + wear
+  driveline.{h,cpp}     engine, turbo, clutch, gearbox, diff, shafts, wheels
+  brakes.{h,cpp}        pressure, bias, torque, temperature, handbrake
+  steering.{h,cpp}      wheel → rack → road wheels, aligning torque, the
+                        virtual steering wheel (the existing engine/steering
+                        becomes its "assist" layer)
+  aero.{h,cpp}          drag, lift per axle, ride height and yaw, slipstream
+  electronics.{h,cpp}   ABS, TC, ESC, launch, rev-match, drive modes
+  collide.{h,cpp}       body hulls vs world and other cars, damage events
+  vehicle_sim.{h,cpp}   one car: the update order in §3, state, snapshots
+  telemetry.{h,cpp}     ring buffer of channels, CSV export
+assets/cars/<id>/car.json   data sheet (§5), plus tuning presets
+assets/cars/<id>/*.glb      model, hulls, LODs (§9)
+engine/road/            road graph, spline sections, terrain tiles (§11)
+app/drive/              game side: modes, garage, HUD, cameras, sound mixer
+tools/native/           drive_lab.cpp (tests), calibrate.cpp (fitting)
+```
+Rules [D]: the sim never reads the clock, the screen or the network. It
+takes `(state, inputFrame) → state` per tick, so replays, ghosts,
+multiplayer and native tests all run the same code.
+
+---
+
+## 3. Timing and update order
+- **Chassis rate: 480 Hz** [D]. It gives a whole number of steps per
+  frame at 30, 60, 120 and 240 fps (16 / 8 / 4 / 2), so no frame gets one
+  step more than its neighbour (that causes a beat judder). Reference
+  rates in other sims: iRacing 360 Hz, Assetto Corsa 333 Hz, ACC 400 Hz,
+  Project Motor Racing 720 Hz with the driveline at 7,200 Hz [S].
+- **Driveline and wheel spin: 2 substeps per tick (960 Hz)**, solved
+  implicitly (§4.6). If a test shows the need, raise it to 4.
+- **Heat and wear: 60 Hz** (every 8th tick).
+- **Rendering:** blends the last two ticks (α = leftover / tick length):
+  position lerp, rotation slerp, plus every visual quantity (steer angle,
+  wheel spin angle, suspension travel, engine rpm for the gauges).
+- **Hitches:** at most 0.25 s of ticks per frame; past that the sim
+  drops time (the race clock is in ticks, as RESTRUCTURE 2.4a made it).
+
+**One tick, in this exact order** (all quantities from the previous
+tick unless the step computes them):
+1. Read the input frame (steer, throttle, brake, clutch, handbrake,
+   shift up/down, buttons). It is held for the whole tick.
+2. **Electronics** (§4.13): from last tick's sensors (filtered wheel
+   speeds, yaw rate, slip estimates) → brake pressure per wheel, throttle
+   cut, diff lock command, auto-blip.
+3. **Steering** (§4.11): the virtual steering wheel moves from the input
+   and last tick's aligning torque → rack → each road wheel's steer
+   angle (Ackermann, bump steer, compliance steer).
+4. **Contact** (§4.2): each wheel's probes against the road → contact
+   point, normal, material, road velocity.
+5. **Suspension** (§4.4): travel and its speed → spring, damper, bump
+   stop and anti-roll forces; kinematics → camber, toe and the anti-dive,
+   anti-squat and jacking angles.
+6. **Tire load** (§4.3): tire deflection → F_z ≥ 0.
+7. **Tire forces** (§4.5): contact velocity → κ, α (with relaxation) and
+   camber → F_x, F_y, M_z, rolling resistance.
+8. **Driveline** (§4.6), 2 substeps: engine, clutch, gearbox, diff,
+   shafts and wheels solved together with the tires' linearized
+   longitudinal grip and the brake torques → new wheel speeds; then F_x
+   is re-evaluated from the final wheel speed.
+9. **Aero** (§4.12).
+10. **Sum** all forces and torques on the chassis (tire forces through
+    the suspension geometry, springs/dampers between body and wheel,
+    aero, gravity). Integrate each wheel's vertical motion.
+11. **Collisions** (§4.14): contacts, impulses, position fix-up, damage events.
+12. **Integrate** the chassis (§4.1) and the wheel spin angles.
+13. Every 8th tick: **heat and wear** (§4.5.7, §4.10).
+14. **Outputs:** telemetry ring buffer, sound signals (§8), effect
+    emitters (§7).
+
+---
+
+## 4. The vehicle model, part by part
+
+### 4.1 Chassis rigid body
+- State: position p, velocity v, orientation q, angular velocity ω;
+  mass m (curb + driver 75 kg + fuel), body-frame inertia I_b
+  (diagonal: roll, yaw, pitch; products of inertia neglected [E]).
+- Inertia estimate before calibration [E]: a box of the car's length L,
+  width W and height H, scaled by k ≈ 0.85 (mass is concentrated in the
+  middle): I_yaw = k·m(L² + W²)/12, I_pitch = k·m(L² + H²)/12,
+  I_roll = k·m(W² + H²)/12. Typical sports-car yaw radius of gyration
+  ≈ 1.1-1.2 m; checked against that.
+- CG height h_cg [E]: 0.45-0.50 m (sports cars); refined in calibration
+  from the measured weight transfer.
+- **Integrator: semi-implicit Euler** (velocities first, then positions)
+  with the gyroscopic term ω × (I ω) solved implicitly (one Newton step,
+  as in Box2D/Bullet), which keeps fast spins stable:
+  - v += h·(F/m)
+  - ω += h·I_w⁻¹(τ - ω × I_w ω) (implicit form)
+  - p += h·v ; q += ½·h·(0, ω)·q ; q = normalize(q)
+  where I_w = R I_b Rᵀ is the world-frame inertia.
+- Safety caps stay, but now as test failures, not silent clamps: |ω| >
+  20 rad/s or |v| > 120 m/s logs an error in the telemetry.
+
+### 4.2 Road and contact
+**The road is a function, not triangles** [D]. The biggest single cause
+of "stepping" and jitter in driving games is the tire hitting triangle
+edges. Every surface the tires touch answers one query:
+```
+RoadQuery(point, downDir) → { height, normal, material, roughness, roadVelocity }
+```
+with three implementations:
+1. **Spline roads** (`engine/road/`): position on the road (s along,
+   t across) found through a grid; height and normal from the cross-
+   section formula (§11.4). C1-continuous (no kinks) by construction.
+2. **Terrain**: a height grid sampled **bicubically** (smooth normals).
+3. **Meshes** (ramps, kerb stones, parking garage decks): triangle BVH
+   with **smoothed vertex normals** blended across edges.
+
+**Tire shape.** A wheel is not one ray. Each tire is probed with a small
+grid: **3 across the tread × 5 around the lower arc** (-40° to +40°),
+15 points [D]. Each probe gives the penetration of the tire's circle into
+the surface at that spot. Combined:
+- Contact point = penetration-weighted average of the probe points.
+- Contact normal = penetration-weighted average of the surface normals,
+  then low-passed with a 2 ms time constant (kills single-tick flips on
+  seams without adding lag you can feel).
+- Deflection δ = the deepest weighted penetration.
+This lets a wheel roll **over** a kerb edge or a pothole instead of
+snapping up onto it, and the wheel's side can rub a wall.
+
+**Edge cases.** No probe hits → the wheel is airborne (F_z = 0, the
+spring extends to droop). Normal facing more than 60° from the body's up
+→ that probe is treated as a wall (wheel-vs-wall in §4.14), not road.
+
+### 4.3 Wheel vertical motion (unsprung mass)
+Today's wheels have no mass of their own. Now each wheel has a **vertical
+degree of freedom** along its suspension axis, with **unsprung mass m_u**
+(wheel, tire, brake, hub, half of the links), between two springs:
+- Suspension: body ↔ wheel (§4.4).
+- **Tire**: wheel ↔ road: F_z = k_t·δ + c_t·δ̇, clamped to ≥ 0 (a tire
+  pushes but never pulls). k_t ≈ 200-300 kN/m for these tire sizes [E],
+  c_t ≈ 200-500 N·s/m [E].
+- Wheel hop (≈ 10-14 Hz) and body ride (≈ 1.5-2.2 Hz) now both exist,
+  which is what makes bumps, kerbs and landings feel real. At 480 Hz
+  there are 35+ steps per hop cycle: stable.
+- Loaded radius R_l = R₀ - δ; effective rolling radius R_e ≈ R₀ - δ/3 [S, Pacejka].
+
+### 4.4 Suspension
+Per corner, from data:
+
+**Springs and wheel rate.** Data gives the spring rate k_s and motion
+ratio MR (wheel travel → spring travel). The force at the wheel is
+F = k_s·MR²·(s + s_preload). Wheel-rate targets from ride frequency [E]:
+k_w = m_corner_sprung·(2π f)², with f ≈ 1.6-2.0 Hz front, 1.8-2.3 Hz
+rear for these cars (the higher rear rate gives a flat ride, the classic
+rule). The C7 uses **transverse composite leaf springs** front and rear;
+modelled as a wheel rate plus extra anti-roll stiffness (a transverse
+leaf also resists roll) [E].
+
+**Dampers (4-way, digressive).** For travel speed v (at the damper, ×MR):
+- |v| ≤ v_knee: F = c_low·v
+- |v| > v_knee: F = sign(v)·(c_low·v_knee + c_high·(|v| - v_knee))
+with separate bump and rebound values. v_knee ≈ 0.08-0.12 m/s [E].
+Starting damping ratios [E]: low-speed bump ζ ≈ 0.30, rebound ζ ≈ 0.60
+of critical (c_crit = 2·√(k_w·m_corner)). Optional **magnetic ride**
+(C7 option): c_low scaled by a controller from body motion (skyhook) [D].
+
+**Bump stops.** F_bs = k_bs·(s - s_bs)^n, n = 2.5, with a little damping;
+starts 20-30 mm before full bump [E]. **Droop:** a hard limit; the wheel
+hangs.
+
+**Anti-roll bars.** F = k_arb·(s_L - s_R), pushed + on one side, - on the
+other. The rate is given at the wheel.
+
+**Kinematics tables** (functions of travel s, plus steer for the front),
+from the real suspension type, built by a small solver in `tools/` that
+moves the real link geometry (double wishbone, MacPherson strut,
+multi-link) and writes tables [D]:
+- camber γ(s), toe (bump steer) toe(s), caster(s), track change, wheel
+  centre path;
+- **front-view and side-view swing-arm angles** θ_fv(s), θ_sv(s). These
+  carry the link forces:
+  - jacking (from roll centre height): vertical F = F_y·tan θ_fv
+  - anti-dive (front, braking) and anti-squat (rear, driving): vertical
+    F = F_x·tan θ_sv
+  The tire forces enter the body at the wheel, plus these vertical link
+  forces. This is how roll centre height and anti-dive % actually reach
+  the car, with no fake weight-transfer formula.
+- The wheel's orientation in the world = body orientation × kinematic
+  rotation(γ(s), toe(s), steer). So body roll changes camber to the road
+  by itself.
+- **Compliance steer** (rubber bushings): extra toe = c_cs·F_y
+  (≈ 0.1-0.3°/kN [E]). Small but important: road cars understeer a
+  little more when loaded, which is part of the "stable, heavy" feel.
+
+Suspension types [S/E]:
+| Car | Front | Rear |
+|---|---|---|
+| C7 Stingray | double wishbone (SLA), transverse leaf | double wishbone, transverse leaf |
+| GR86 | MacPherson strut | double wishbone |
+| RX-7 FD | double wishbone (aluminium arms) | double wishbone (multi-link) |
+| MX-5 ND | double wishbone | multi-link |
+
+### 4.5 Tires (the heart)
+Model: **Pacejka Magic Formula 5.2/6.1 subset** with transients, a
+low-speed "stick" mode, heat, pressure and wear [D]. Today's car uses a
+single MF curve over combined slip. The rework uses separate
+longitudinal, lateral and aligning curves with load and camber
+dependence, and proper combined-slip weighting.
+
+#### 4.5.1 Slip
+Contact-patch velocity in the tire frame (from body v, ω, wheel position,
+steer, minus the road's velocity): V_cx, V_cy. Wheel spin ω_w,
+effective radius R_e. Slip speed V_sx = V_cx - ω_w·R_e.
+- κ = -V_sx / max(|V_cx|, V_lo), V_lo = 1.0 m/s [E]
+- α_ss = atan2(-V_cy, max(|V_cx|, V_lo))
+- dfz = (F_z - F_z0)/F_z0 (normalized load change; F_z0 = rated load ≈
+  4,000-4,500 N for these tires [E])
+
+#### 4.5.2 Transients (relaxation length)
+The tire doesn't reach its steady slip instantly; the carcass has to
+deform first. First-order lag over distance, **solved implicitly**:
+- k = (|V_cx| + V_rel) / σ, with V_rel = 0.5 m/s [E]
+- α_t ← (α_t + h·k·α_ss) / (1 + h·k), same for κ_t
+- σ_α ≈ 0.25-0.45 m lateral, σ_κ ≈ 0.10-0.20 m longitudinal [E];
+  σ grows with load: σ = σ₀·(F_z/F_z0)^0.5 [E]
+This is what makes steering progressive at speed and stops the shaking
+at low speed.
+
+#### 4.5.3 Low speed and standing still (no creep, no jitter)
+Below about 2 m/s the slip maths breaks down. Standard fix [D, after
+bristle/LuGre-style models]: each tire keeps an **anchor point** on the
+road. While it holds, the force is a stiff spring-damper to the anchor:
+F = -k_st·d - c_st·ḋ (k_st ≈ 1.5×10⁵ N/m, c_st ≈ 1.5×10³ N·s/m [E]),
+**limited to μ·F_z**. If the limit is exceeded, the anchor slides along
+(it is moved to where the limit is just met). It blends into the normal
+slip model between 0.5 and 2 m/s. This makes a car stand still on a 20%
+slope with the brake held, a parked car never creep, and braking
+through zero into reverse smooth.
+
+#### 4.5.4 Pure-slip curves (MF)
+y(x) = D·sin(C·atan(B·x - E·(B·x - atan(B·x)))) + S_v, x = X + S_h
+- **Longitudinal F_x0(κ):** C_x = pCx1; μ_x = (pDx1 + pDx2·dfz)·(1 -
+  pDx3·γ²)·λ_μx·μ_surf·μ_heat; D_x = μ_x·F_z;
+  K_xκ = F_z·(pKx1 + pKx2·dfz)·exp(pKx3·dfz); B_x = K_xκ/(C_x·D_x);
+  E_x = (pEx1 + pEx2·dfz + pEx3·dfz²)·(1 - pEx4·sign(κ)), clamped ≤ 1.
+- **Lateral F_y0(α, γ):** C_y = pCy1; μ_y = (pDy1 + pDy2·dfz)·(1 -
+  pDy3·γ²)·λ_μy·μ_surf·μ_heat; D_y = μ_y·F_z;
+  K_yα = pKy1·F_z0·sin(2·atan(F_z/(pKy2·F_z0)))·(1 - pKy3·|γ|);
+  B_y = K_yα/(C_y·D_y); E_y = (pEy1 + pEy2·dfz)·(1 - pEy3·sign(α));
+  camber thrust S_v = F_z·(pVy3 + pVy4·dfz)·γ.
+- **Aligning torque:** M_z0 = -t(α)·F_y0 + M_zr, pneumatic trail
+  t(α) = D_t·cos(C_t·atan(B_t·α - E_t·(B_t·α - atan(B_t·α))))·cos(α),
+  D_t = F_z·(R₀/F_z0)·qDz1 (from qBz/qCz/qDz/qEz). It falls to near zero
+  past the peak slip angle. **That fall is what the driver feels as the
+  steering going light before the front lets go** (§4.11).
+- **Starting coefficients** [S: Pacejka, *Tire and Vehicle Dynamics*,
+  example passenger tire 205/60R15, signs adapted to §1]: pCx1 1.65,
+  pDx1 1.21, pDx2 -0.037, pEx1 0.344, pKx1 21.5, pKx2 13.8,
+  pKx3 -0.44; pCy1 1.19, pDy1 0.99, pDy2 -0.145, pEy1 -1.0,
+  pKy1 14.95, pKy2 2.13; combined rBx1 12.35, rBx2 -10.77, rCx1 1.09,
+  rBy1 6.46, rBy2 4.20, rBy3 -0.015, rCy1 1.08. **These must be checked
+  against the book in R-0 (§18)**, then scaled per tire class (below)
+  and calibrated (Stage 3).
+- **Tire classes** [E]: peak μ (dry): street summer 1.00-1.05;
+  UHP summer (Pilot Sport 4, Potenza S001) 1.10-1.15; extreme summer
+  (Pilot Super Sport, Cup 2) 1.20-1.30; semi-slick 1.35; drift tire (hard
+  compound, progressive) 0.95 with a wide plateau (E_y nearer 0.5). Peak
+  slip angle ≈ 6-9° street → 4-6° semi-slick; peak κ ≈ 0.08-0.15.
+
+#### 4.5.5 Combined slip
+Braking and turning share grip through MF weighting functions:
+- G_xα = cos(rCx1·atan(B_xα·α)), B_xα = rBx1·cos(atan(rBx2·κ))
+- G_yκ = cos(rCy1·atan(B_yκ·κ)), B_yκ = rBy1·cos(atan(rBy2·(α - rBy3)))
+- F_x = G_xα·F_x0, F_y = G_yκ·F_y0 (+ S_Vyκ, the small lateral force
+  from κ, added later if the tests ask for it)
+- Safety net: |F| ≤ 1.02·μ·F_z (friction circle) after weighting.
+
+#### 4.5.6 Rolling resistance and pressure
+- F_rr = F_z·(c₀ + c₁·V + c₂·V⁴), c₀ ≈ 0.010-0.013 [E], applied as a
+  torque on the wheel (not as a body force), so a coasting car slows
+  correctly and a parked car feels nothing.
+- Pressure P (from §4.5.7) changes vertical stiffness (k_t ∝ P^0.8),
+  cornering stiffness (pKy scale, peak near the cold set pressure +
+  heat) and peak μ (falls ~1%/0.1 bar away from the optimum) [E].
+
+#### 4.5.7 Heat and wear (60 Hz)
+Per tire, 5 temperatures: **tread inner / middle / outer**, **carcass**,
+**gas** [D, standard in sims]:
+- Heat in (tread): the slip power, η·(|F_x·V_sx| + |F_y·V_sy|), split
+  across the three zones by camber and load; plus rolling hysteresis
+  (∝ F_z·V·c_hyst) into the carcass.
+- Heat out: convection to air h(V)·A·(T - T_air), h rising with speed;
+  conduction tread ↔ carcass ↔ gas; conduction to the road.
+- Gas pressure: P = P_cold·(T_gas + 273.15)/(T_cold + 273.15).
+- Grip: μ_heat = a bell curve over the tread temperature, peak 1.0 in
+  the tire's window (street 60-90 °C, UHP 70-100 °C, semi-slick
+  85-105 °C) [E]; street tires vary less (floor 0.92), semi-slicks more
+  (floor 0.80) [E].
+- Wear: d(wear) ∝ slip power / tread mass; grip -3% at 50% wear,
+  -10% when worn out [E]. Off by default in free drive.
+- These drive the HUD tire widget and the sound (§8).
+
+### 4.6 Wheel spin and the driveline solver
+Today the wheel spin is solved implicitly against the tire's pull. The
+rework solves the **whole driveline together**: engine and flywheel →
+clutch → gearbox → driveshaft → differential → half shafts → wheels,
+plus the brakes. Otherwise a locking diff, a clutch kick or a
+handbrake pull (all central to drifting) aren't right.
+
+- Lumped inertias: I_e (engine + flywheel), I_gb (gearbox input),
+  I_ds (driveshaft + diff), I_w (each wheel + tire + disc).
+- **Couplings as constraints, solved with sequential impulses** (the
+  same scheme as a physics joint solver, 8-12 iterations per substep):
+  - clutch: locked = rigid (if the torque needed stays under capacity),
+    slipping = torque ±T_cap·engagement against the speed difference;
+  - gearbox: ω_out = ω_in / i_gear, efficiency η_g per gear (0.95-0.98);
+  - driveshaft: optional torsional spring-damper (k_ds, c_ds), off at
+    first. It gives the "shunt" on throttle changes; added if it helps the feel;
+  - differential (§4.9);
+  - brakes: friction torque up to T_brake against wheel spin. Static
+    when the wheel is stopped, so a braked wheel at rest stays at rest
+    with no wobble;
+  - tire: F_x linearized around the current slip:
+    F_x ≈ F_x(κ₀) + (∂F_x/∂ω)·Δω, ∂F_x/∂ω = (∂F_x/∂κ)·R_e/max(|V_cx|, V_lo),
+    so a wheel on the limit can't overshoot (the cause of oscillation
+    in naive sims).
+- After solving: re-evaluate F_x with the final ω and use that for the
+  body forces.
+
+### 4.7 Engine and turbo
+- **Torque map:** T(rpm, τ) = τ·T_wot(rpm) + (1 - τ)·T_closed(rpm),
+  where T_wot is the full-throttle curve (from the data sheet: 8-12
+  points, smooth spline) and T_closed is engine braking (negative, ≈
+  -0.08 to -0.15 of peak torque, rising with rpm) [E]. τ = throttle after
+  the ECU map and a lag (drive-by-wire 40-60 ms; FD cable 20 ms [E]).
+- **Idle controller:** PI on rpm, adds τ to hold idle (C7 600, GR86 700,
+  FD 750, ND 650 rpm [E]).
+- **Rev limiter:** fuel cut at the limit, back on 150 rpm lower (a
+  limiter bounce you can hear and feel). Overrun fuel cut when τ = 0
+  above 1,500 rpm.
+- **Stall:** below 400 rpm with the clutch engaged, the engine stops;
+  restart button (auto-restart with assists on).
+- **Inertia** I_e [E]: C7 LT1 ≈ 0.28 kg·m², GR86 FA24 ≈ 0.16, FD 13B ≈
+  0.11 (a rotary revs very freely), ND ≈ 0.13.
+- **Turbo (RX-7 FD only): sequential twin turbo** [S/E]:
+  - each turbo has a speed state n ∈ [0, 1]; dn/dt = (n_target - n)/τ_t,
+    n_target from exhaust flow ∝ rpm × load; τ_t ≈ 0.4 s primary, 0.6 s
+    secondary [E];
+  - the primary alone below ≈ 4,000 rpm; the secondary pre-spools from
+    ≈ 3,500 and joins at ≈ 4,000-4,500 rpm [S]; boost held at ≈ 10 psi
+    (0.69 bar) by the wastegate [S];
+  - **model the famous torque dip at the hand-over** (≈ -8 to -12% for
+    ~300 rpm [E]), one of the FD's character traits;
+  - torque = T_NA(rpm)·(1 + k_b·boost) with T_NA the off-boost curve [E];
+  - blow-off valve: when the throttle closes with boost > 0.2 bar, boost
+    vents in 0.15 s (sound event "bov").
+
+### 4.8 Clutch and gearbox
+- Clutch torque capacity T_cap [E]: C7 ≈ 800 N·m, GR86 ≈ 380, FD ≈ 450,
+  ND ≈ 300 (≈ 1.3-1.5× peak engine torque). The engagement curve over
+  pedal travel: S-shaped, bite point at 35-55% [E].
+- **Auto clutch** (assist, default for touch): launches, stops, shifts.
+  With manual clutch (gamepad/wheel) you can **clutch-kick** (drift).
+- Gearbox: H-pattern ratios (§5). Shift = clutch out, a neutral time
+  (C7 0.25 s, GR86 0.30, FD 0.30, ND 0.25 for a human-like shift; with
+  "fast shift" assist 0.12 s [E]), next gear in. **Rev matching** on
+  downshifts (C7 has it from the factory: Active Rev Matching [S]; for
+  the others it's an assist).
+- Auto gearbox (assist): shift points from the power curve (up at the
+  rpm where the next gear's wheel torque is higher; down when braking
+  so the engine lands at ≈ 70% of redline) [D]. Decides from wheel speed,
+  not engine rpm (lesson in DECISIONS → Racing sim).
+
+### 4.9 Differentials
+| Type | Model | Used by |
+|---|---|---|
+| Open | equal torque to both sides, speeds free | none (tuning option) |
+| Clutch LSD (1/1.5/2-way) | locking torque T_lock = T_pre + k_ramp·|T_in| (power and coast ramps separate), limited by the speed difference like a clutch | MX-5 ND2 Club [E: verify], tuning option |
+| Torsen | torque bias ratio TBR: T_high/T_low ≤ TBR (≈ 2.5-3.0 [E]); with one wheel unloaded it acts open | GR86 [E], RX-7 FD [S] |
+| Electronic LSD | clutch pack whose lock is set by a controller (open on turn-in, locking on exit and at high speed) | C7 Z51 eLSD [S/E] |
+| Welded / spool | rigid both sides | drift tuning option |
+All are constraints in the §4.6 solver.
+
+### 4.10 Brakes
+- Pedal → pressure (booster curve) → per-wheel torque:
+  T = P·A_piston·μ_pad·r_eff·2 faces; the data sheet gives max torque
+  per axle and the bias [E from disc sizes], calibrated to the 60-0 /
+  100-0 targets.
+- **Disc temperature:** heat in = T·|ω|·h; out = convection ∝
+  (0.3 + V/20)·(T - T_air) [E]. Pad μ(T): street pads flat to 400 °C and
+  fading above 550 °C [E]. Glowing discs (visual) above 600 °C.
+- **Handbrake:** rear only. Mechanical lever (stock) or hydraulic
+  (drift option, much stronger, instant).
+- **ABS** (§4.13).
+
+### 4.11 Steering
+- **Steering wheel angle θ_sw → rack → road wheels.** Ratio i_s
+  (optional variable ratio table i_s(θ_sw)), lock-to-lock from data
+  (C7 ≈ 2.5 turns, GR86 ≈ 2.5, FD ≈ 2.9, ND ≈ 2.6 [E]).
+- **Ackermann:** per-wheel angles from the centre angle and an Ackermann
+  % (0% = parallel, 100% = true Ackermann; road cars ≈ 30-60% [E]; drift
+  kits use ~0% or anti).
+- **Max road wheel angle** ≈ 32-38° stock [E]; the drift "angle kit"
+  option raises it to 50-60°.
+- **Caster and kingpin:** caster angle 5-7°, mechanical trail 15-30 mm,
+  kingpin inclination 10-14° [E]. They give camber change with steer and
+  the self-centring torque.
+- **Torque at the kingpin:** M_kp = -(t_mech + t_pneu)·F_y + (jacking
+  terms from KPI and caster)·F_z + M_z. Steering wheel torque
+  T_sw = (M_kp,L + M_kp,R)/i_s·(1 - assist(V)) [D].
+- **The virtual steering wheel** [D, the key to "feel" without force
+  feedback]: on touch, keyboard and gamepad the wheel is a small dynamic
+  object (inertia I_sw, friction). The player's input is a **target
+  angle held by a virtual hand** (a stiff spring with a limited force).
+  The aligning torque T_sw pushes back. So:
+  - letting go, the wheel returns to centre by itself, faster at speed
+    (caster, not a fake "return" rule);
+  - in a slide, the self-aligning torque **countersteers on its own**,
+    which is how real cars catch drifts when you relax your grip. Drift
+    becomes controllable on a phone;
+  - when the front tires pass their peak, the pneumatic trail collapses
+    and the wheel "goes light". The HUD can show it (a subtle ring
+    brightness) and the gamepad rumbles.
+  The existing `engine/steering.*` (speed-sensitive limit, rate limits,
+  measured in `steering_test`) becomes the **"assisted" mode** on top of
+  this; "sim" mode is direct. A real steering wheel bypasses the virtual
+  hand and sets θ_sw directly (soft lock at the car's lock).
+
+### 4.12 Aerodynamics
+- Relative air velocity v_rel = v_car - v_wind (wind in free drive).
+- **Drag:** F_D = ½·ρ·C_d·A·|v_rel|², against v_rel, applied at the
+  centre of pressure (h_cp ≈ 0.45 m [E]).
+- **Lift per axle:** F_L,f = ½·ρ·C_L,f·A·V², F_L,r likewise (positive =
+  up), applied over each axle. Road cars produce slight lift; the C7 Z51
+  aero package was made "to reduce lift for high-speed stability" [S],
+  with no published figures, so [E]: C7 Z51 C_L,f ≈ +0.02, C_L,r ≈
+  -0.02; GR86 ≈ +0.05/+0.03; FD ≈ +0.08/+0.02 (wing on the R models
+  reduces the rear); ND ≈ +0.10/+0.05.
+- **Ride height and pitch sensitivity:** C_L(h) = C_L0 +
+  (dC_L/dh)·(h - h₀) per axle, small for road cars [E].
+- **Yaw (sideways, in drifts):** C_d(β) = C_d0·(1 + 1.5·sin²β) and a
+  side force C_y·sin β [E]. A car going sideways has more drag, so drifts
+  scrub speed naturally.
+- **Air density:** ρ = p/(287.05·T): 1.225 kg/m³ at 15 °C at sea
+  level; varies with weather and altitude in free drive.
+- **Slipstream and dirty air** (racing): a wake behind each car. For a
+  car at distance d behind and lateral offset y: drag factor
+  1 - a·exp(-d/d₀)·exp(-(y/w)²), a ≈ 0.35, d₀ ≈ 12 m, w ≈ 1.2 m [E];
+  downforce/lift change by the same shape (little effect on road cars).
+  Gives real drafting on the straights.
+- **Calibration to top speed:** P_wheel = ½ρC_dA·V³ + C_rr·m·g·V at top
+  speed. Example: the C7 with C_d·A = 0.29 × 1.97 m² = 0.57 m² and
+  ≈ 292 kW at the wheels gives ≈ 320 km/h. The real top speed is
+  ≈ 305 km/h, so the calibration raises C_d·A to ≈ 0.63-0.66 m², which is
+  plausible with the Z51 spoiler and cooling drag. Every car is fitted
+  this way (Stage 3).
+
+### 4.13 Electronics and assists
+All optional; each car has its factory set plus "assist" extras.
+- **ABS:** per-wheel slip control, target κ ≈ -0.10 to -0.15 [E], with
+  hysteresis. Pressure modulation at 10-16 Hz, which you can hear and
+  feel as a pulse. The 1993 FD's ABS is slower (≈ 6-8 Hz) [E].
+- **Traction control (TC):** target κ ≈ 0.08-0.12; throttle cut (PI) plus
+  brake on a spinning driven wheel. Levels 0-5.
+- **Stability control (ESC):** yaw-rate reference from the bicycle
+  model r_ref = V·δ/(L·(1 + K_us·V²)), capped at μ·g/V; if
+  |r - r_ref| > threshold: brake the outer front (oversteer) or the
+  inner rear (understeer). Sideslip limit |β| ≤ 8-12° depending on mode.
+- **Drive modes** (C7 Performance Traction Management [S]: Wet, Dry,
+  Sport 1, Sport 2, Race; GR86 Track mode; ND DSC on/off; FD: ABS only
+  [E]) mapped to TC/ESC settings.
+- **Launch control** (C7): holds rpm, manages slip at the start.
+- **Assists for touch players** (game layer [D]): auto clutch, auto
+  gears, rev match, braking assist (brake line), steering assist (§6).
+  Each one shows on the HUD when it acts, so players learn.
+
+### 4.14 Collisions and damage
+- **Car shape:** 3-5 convex hulls per car (made in the asset pipeline
+  from the body mesh), plus the 4 wheel cylinders (for wheel-to-wall
+  rubbing).
+- **World:** static colliders from the road tool (walls, barriers,
+  kerb stones, buildings) in a BVH.
+- **Contacts:** GJK/EPA (or SAT for boxes), up to 4 contact points per
+  pair. **Sequential impulses** with friction (body-on-wall μ 0.3-0.5,
+  scraping) and low restitution (0.1-0.2), Baumgarte position fix-up with
+  slop. Contacts happen at their real points; the old "push at the
+  middle height" hack is removed, and rollovers become possible.
+- **Car vs car:** both masses count (finite mass), as in RESTRUCTURE 7.3.
+- **Damage** (setting: off / visual / full):
+  - visual: body panels pushed in (vertex offsets in zones), broken
+    lights and glass, scratches;
+  - mechanical (full): toe/camber knocked out on the hit corner,
+    steering off-centre, more drag. Repaired by a reset or the pits.
+- **Reset:** stuck > 5 s or upside down > 2 s → a "reset" button
+  (automatic in race mode).
+
+### 4.15 Surfaces and weather
+Material table (μ multiplier, rolling resistance, roughness for vibration
+and sound, sinkage/drag for loose surfaces) [E]:
+| Surface | μ | C_rr extra | Notes |
+|---|---|---|---|
+| New asphalt | 1.00 | 0 | |
+| Old asphalt | 0.95 | +0.002 | rougher sound |
+| Concrete | 0.92 | +0.001 | drift area |
+| Painted lines | 0.85 (wet 0.55) | 0 | |
+| Kerb flat / sausage | 0.90 | 0 | sausage: height bump |
+| Grass | 0.55 | +0.03 | |
+| Gravel trap | 0.45 | +0.15 + speed drag | wheels sink 2-4 cm |
+| Dirt road | 0.70 | +0.02 | free drive |
+| Wet asphalt (weather) | 0.70 | 0 | later: puddles, aquaplaning |
+
+---
+
+## 5. The four cars: data sheets
+These are the starting `car.json` contents. **[S]** values are published;
+where sources disagree, the range is shown and the chosen value is
+**bold**. **[E]** values come from §4 rules and are fitted in Stage 3.
+Everything is checked by `car_spec` validation: static corner loads
+from mass and CG; suspension sag at rest within limits; top speed per
+gear; units.
+
+### 5.1 Chevrolet Corvette C7 Stingray Z51, 7-speed manual
+| Item | Value |
+|---|---|
+| Curb mass | 1,499-1,562 kg [S: 3,298-3,444 lb] → **1,525 kg** |
+| Weight split | ≈ **50/50** [S: "near perfect 50/50"] |
+| Wheelbase | **2,710 mm** [S] |
+| Track F / R | **1,600 / 1,567 mm** [S: one catalog, verify] |
+| Length / width / height | 4,495 / 1,877 / 1,235 mm [E: verify] |
+| CG height | 0.46 m [E] |
+| Engine | LT1 6.2 L V8, NA, front-mid; **460 hp @ 6,000, 465 lb-ft @ 4,600** with performance exhaust [S]; redline 6,600 [E] |
+| Firing order | 1-8-7-2-6-5-4-3 (crossplane V8) [E: GM small-block standard] |
+| Gearbox | Tremec TR-6070, 7-speed: **2.97, 2.07, 1.43, 1.00, 0.71, 0.57, 0.48**, R 2.90 [S] |
+| Final drive | **3.42** (manual) [S] |
+| Differential | Electronic LSD (Z51) [S/E] |
+| Tires | 245/35ZR19 F, 285/30ZR20 R, Michelin Pilot Super Sport [E: verify]; class "extreme summer" |
+| Brakes | 345 mm F (13.6 in, Z51) [S], ≈ 338 mm R [E] |
+| Suspension | double wishbone, transverse composite leaf F/R; Magnetic Ride optional [E] |
+| Aero | C_d 0.29-0.30 [E], A 1.97 m² [E], fit C_d·A to top speed |
+| Electronics | ABS, TC, ESC, PTM modes, launch control, Active Rev Matching [S/E] |
+| Targets | 0-60 mph 3.8 s (GM claim) [S]; 60-0 99-107 ft [S]; skidpad 1.03-1.05 g [S]; slalom 73.5 mph (Edmunds) [S]; top speed ≈ 305 km/h [E: verify] |
+
+### 5.2 Toyota GR86 (2022+), 6-speed manual
+| Item | Value |
+|---|---|
+| Curb mass | 1,270-1,293 kg [S: 2,811-2,868 lb] → **1,280 kg** |
+| Weight split | 53-55 % front [S: owner corner-weights 55/45; makers' figures vary] → **54/46** |
+| Wheelbase | 2,575 mm [E: verify] |
+| Track F / R | **1,520 / 1,550 mm** [S] |
+| Length / width / height | 4,265 / 1,775 / 1,310 mm [E: verify] |
+| CG height | 0.46 m [E] (boxer engine: low) |
+| Engine | FA24 2.4 L flat-4 (boxer), NA; **228 hp @ 7,000, 184 lb-ft @ 3,700** [S]; redline 7,400 [E] |
+| Gearbox | **3.626, 2.189, 1.541, 1.213, 1.000, 0.767**, R 3.438 [S] |
+| Final drive | **4.100** (manual) [S] |
+| Differential | Torsen LSD [E: verify] |
+| Tires | 215/40R18 Michelin Pilot Sport 4 (Premium) [S]; 215/45R17 base [S]; class "UHP summer" |
+| Brakes | ≈ 294 mm F / 290 mm R [E: verify] |
+| Suspension | MacPherson F, double wishbone R [E] |
+| Aero | **C_d 0.276** [S, Toyota brochure], A ≈ 1.98 m² [E] |
+| Electronics | ABS, TC, VSC with Track mode [E] |
+| Targets | 0-60 mph 5.4-6.0 s [S]; 60-0 104 ft [S]; skidpad ≈ 1.0 g [E: verify]; top ≈ 226 km/h [E] |
+
+### 5.3 Mazda RX-7 FD3S (1993 US), 5-speed manual
+| Item | Value |
+|---|---|
+| Curb mass | 1,240-1,310 kg [S: sources vary] → **1,265 kg** (US 1993 manual) |
+| Weight split | ≈ **50/50** [S: commonly cited] |
+| Wheelbase | 2,425 mm [E: verify] |
+| Track F / R | **1,460 / 1,460 mm** [S] |
+| Length / width / height | 4,295 / 1,760 / 1,230 mm [E: verify] |
+| CG height | 0.45 m [E] (rotary: very low, set back) |
+| Engine | 13B-REW 1.3 L twin-rotor Wankel, sequential twin turbo, 9.0:1 [S]; **255 hp, 217 lb-ft @ 5,000** (US) [S]; JDM late: 280 PS [S]; redline 8,000 [E] |
+| Turbo | primary from ≈ 1,800 rpm, secondary ≈ 4,000-4,500 rpm, ≈ 10 psi [S] |
+| Gearbox | **3.483, 2.015, 1.391, 1.000, 0.719** [S] |
+| Final drive | **4.100**, Torsen LSD [S] |
+| Tires | **225/50ZR16** (1993) [S]; 17" on later JDM models [S] |
+| Brakes | ≈ 294 mm F / 294 mm R [E: verify] |
+| Suspension | double wishbone F/R, aluminium arms [E] |
+| Aero | C_d ≈ 0.29-0.31 [E: commonly cited, unverified], A ≈ 1.84 m² [E] |
+| Electronics | ABS (4-channel), no TC/ESC on the US 1993 [E: verify] |
+| Character | pop-up headlights (animated), rotary sound (§8), torque dip at turbo hand-over, flames on overrun (popular mod) |
+| Targets | 0-60 mph ≈ 5.0-5.3 s [E: verify in R-0]; skidpad ≈ 0.90-0.95 g [E]; top ≈ 250 km/h [E] |
+
+### 5.4 Mazda MX-5 Miata ND2 Club (2019+), 6-speed manual
+| Item | Value |
+|---|---|
+| Curb mass | **1,061 kg** [S: 2,339 lb] |
+| Weight split | **52/48** [S] |
+| Wheelbase | **2,310 mm** [S] |
+| Track F / R | 1,495 / 1,505 mm [S: unclear labels, verify] |
+| Length / width / height | 3,915 / **1,730** / **1,235** mm [S width, height; E length] |
+| CG height | 0.45 m [E] |
+| Engine | Skyactiv-G 2.0 L inline-4, NA; **181 hp @ 7,000, 151 lb-ft @ 4,000**, redline **7,500** [S] |
+| Gearbox | **5.087, 2.991, 2.035, 1.594, 1.286, 1.000**, R 4.696 [S] |
+| Final drive | **2.866** [S: one source says 2.87; other figures are for the automatic] |
+| Differential | clutch-type LSD on the Club manual [E: verify] |
+| Tires | 205/45R17 Bridgestone Potenza S001 (Club) [E: verify]; class "UHP summer" |
+| Brakes | ≈ 280 mm F / 280 mm R [E: verify] |
+| Suspension | double wishbone F, multi-link R [E] |
+| Aero | C_d ≈ 0.33-0.35 (roof up) [E: no published ND figure found], A ≈ 1.82 m² [E] |
+| Electronics | ABS, TCS, DSC [E] |
+| Targets | 0-60 mph ≈ 5.7 s [E: verify]; skidpad ≈ 0.90-0.95 g [E]; top ≈ 210 km/h [E] |
+
+**R-0 research list** (fill every "verify" from manufacturer press kits,
+owner/service manuals and instrumented road tests before Stage 3):
+dimensions, brake disc sizes, steering ratios, suspension geometry
+points (from service manual diagrams), spring/damper rates (from
+aftermarket catalogs of stock parts), corner weights, Car and Driver /
+Motor Trend test sheets (0-60, 1/4 mile, 70-0 or 60-0, skidpad, top
+speed) and dyno curves (for T_wot shapes).
+
+---
+
+## 6. Input and the feel layer
+All devices produce the same input frame: **target steering wheel angle**
+(not road wheel angle), throttle, brake, clutch, handbrake (0..1),
+shift up/down, buttons.
+- **Touch (landscape):** today's big steering pad maps to the target
+  wheel angle; pedals are analog (slide up = harder). New buttons:
+  handbrake (big, right thumb, for drift), clutch (optional), shift paddles
+  (in manual mode), camera, look back.
+- **Tilt:** phone as a wheel (DeviceOrientation, needs a permission
+  tap on iOS), with calibrate-centre, dead zone and range options.
+- **Gamepad:** stick → wheel angle through a response curve (expo
+  0.3-0.6) and speed-sensitive range in assisted mode; triggers →
+  pedals; rumble where the browser supports it (kerbs, ABS, "light
+  steering" at the limit). Xbox/PlayStation pads work on iPhone.
+- **Steering wheels** (desktop browsers): direct angle, rotation set
+  in calibration (e.g. 900°), car's lock as soft lock. No force feedback
+  in browsers.
+- **Keyboard:** ramps (existing).
+- **Assist presets:** *Casual* (auto gears, auto clutch, ABS, TC 3, ESC
+  on, steering assist, brake line); *Sport* (auto clutch, ABS, TC 1, ESC
+  sport); *Sim* (everything off except the factory ABS). Drift preset:
+  ESC off, TC off, assisted countersteer on (via §4.11, not a fake
+  force).
+
+---
+
+## 7. Presentation: cameras, visuals, HUD
+**Everything follows the blended (drawn) pose**, never the raw physics
+state (avoids the camera/car mismatch).
+
+### 7.1 Cameras [D]
+- **Chase:** a critically damped spring for position (ω ≈ 7 rad/s) and
+  a faster one for the aim point (ω ≈ 12): x″ = ω²(x_t - x) - 2ω·x′.
+  The direction behind the car blends the car's heading with its
+  velocity direction (more velocity in slides: weight = clamp(|β|/30°)·0.6),
+  so drifts stay readable (the "drift cam"). Body roll is ignored (the
+  horizon stays level); pitch ≤ 1.5°; FOV widens smoothly with speed
+  (+0 to +10°). A sphere cast from the car to the eye keeps it out of
+  walls. It cuts (no swoop) on reset.
+- **Hood / bumper:** fixed to the body, with pitch/roll filtered
+  (comfort option "horizon lock").
+- **Cockpit:** the head is a small mass on a spring-damper at the seat
+  position, pushed by the car's acceleration (±3 cm, ±2°); looks into
+  corners (yaw = k·steer + yaw-rate lead); driver's hands from the avatar
+  system (the bar already has skeletons and IK) on a wheel that turns
+  with θ_sw.
+- **Replay/TV cameras**, **photo mode** (free camera, depth of field, time
+  of day).
+
+### 7.2 Visuals
+- Wheels: spin angle interpolated; above ≈ 60 km/h a blurred disc
+  blends in (no strobing spokes). Suspension travel and steer shown
+  exactly.
+- Brake lights from brake pressure; reverse lights; headlights at night
+  (spot lights); **FD and NA pop-up lights animate**.
+- Tire smoke: emitted ∝ slip power above a threshold, colour by surface
+  (white asphalt smoke, brown dust, grass bits); **skid marks** as
+  ribbons per wheel (ring buffer of ~4,000 segments, fade over time);
+  sparks on body scrapes; glowing brake discs; exhaust flames on
+  overrun (FD, option).
+- Damage visuals (§4.14).
+
+### 7.3 HUD
+Speed, gear, rev bar with shift light, (race) lap/position/delta,
+(drift) score and combo, minimap, small tire widget (temperature colour,
+wear), assist indicators. `?telemetry=1` overlay: g-g circle with the
+car's dot (shows grip used), slip per tire, suspension travel, steering
+torque, frame time.
+
+---
+
+## 8. Sound
+Made in code from the sim's signals (like the piano's synth), no
+recordings needed [D]:
+- **Engine:** a pulse train at the real firing rhythm, through resonators
+  that stand in for the exhaust, plus intake noise; brightness and
+  loudness from load (τ and torque), not just rpm [D; method as in
+  pulse-train engine synthesis research, §20].
+  - C7: crossplane V8, firing order 1-8-7-2-6-5-4-3; the two banks fire
+    unevenly → the V8 burble; 4 pulses per crank turn.
+  - GR86: flat-4, 2 pulses per turn, even (equal-length headers [E]),
+    smooth and a bit "boxer" thrum.
+  - FD: 2-rotor Wankel, each rotor fires once per eccentric-shaft turn
+    → 2 pulses per turn, very short and sharp (peripheral-port rasp),
+    the "brap" stutter at idle and on overrun; turbo whine (pitch from
+    the turbo speed n) and the blow-off "pssh".
+  - ND: inline-4, 2 pulses per turn, light and revvy.
+  - Rev limiter cut, overrun crackle, gear-shift cut, rev-match blip.
+- **Tires:** layers from each tire's slip compared to its peak: scrub
+  starts at ≈ 70% of peak (the warning before it lets go), squeal past
+  the peak (pitch with slip speed), lock-up squeal from κ; per surface
+  (gravel crunch, grass swish).
+- **Road and car:** road roar (surface roughness × speed), wind (∝ V²,
+  louder with windows down/roof off for the ND), kerb rumble (strip
+  spacing → frequency), suspension thumps (damper speed spikes), impact
+  sounds (impulse size), gearbox whine, ABS pulsing, handbrake click.
+- **Other cars:** the 3 nearest get a full engine voice (pooled),
+  the rest a cheap one; 3D placement and Doppler.
+- CPU: ≤ 1 ms per 10 ms of audio for all voices (measured natively).
+
+---
+
+## 9. Car art
+Per car [D]:
+- **Exterior** LOD0 ≤ 80 k triangles (player car, garage), LOD1 ≤ 20 k
+  (nearby), LOD2 ≤ 4 k (far), separate wheels, brake discs/calipers,
+  doors, hood and trunk as separate parts (they open in the garage and
+  in free drive), pop-up lights as moving parts.
+- **Interior:** dashboard with **live gauges** (tachometer and speed
+  needles from the sim; the C7's digital cluster as a texture drawn in
+  code), steering wheel turning with θ_sw, seats, pedals, mirrors
+  (rear-view mirror rendered at low resolution, setting).
+- **Materials:** car paint with clear coat (a base layer + a sharp
+  coat highlight: two GGX lobes, coat roughness ≈ 0.03, F₀ 0.04), metallic
+  flake option, tinted glass, tire rubber with sidewall lettering (our
+  own text, no tire brand without permission), chrome, carbon, plastic
+  trim, lamp lenses with reflectors, emissive lights.
+- **Reflections:** a small sky + scene environment map, made at load and
+  refreshed slowly in free drive (time of day).
+- **Collision hulls** and wheel positions exported with the model.
+- **Pipeline:** `tools/assets/` (Blender, headless). Reference: published
+  dimensions and blueprints/photos. No models ripped from other games.
+  Check: `glb_report.py` budget, garage close-ups with a moving light
+  across the panels (no shading bumps).
+
+---
+
+## 10. Rendering for the driving worlds
+(builds on RESTRUCTURE 7.6)
+- Reverse-Z depth, backface culling, chunked LOD, instanced trees,
+  lights and props, packed vertices.
+- **Sun shadows:** 2 cascades around the car (near detailed, far coarse).
+- **Road:** anisotropic filtering 8-16×, detail normal maps, broad
+  colour/roughness variation, crisp painted lines (distance-aware
+  anti-aliasing), tire marks.
+- **Sky:** analytic sky model with a moving sun (day/night later),
+  fog/haze for depth.
+- **Anti-aliasing:** MSAA 4× (cheap on Apple's tile GPUs) at render
+  scale 1.5 on the iPhone; FXAA fallback.
+- Tone mapping and restrained bloom, the same look as the bar.
+- **Compressed textures (ASTC)** from master list 1b.
+- **Quality levels** (Auto/High/Low): shadows, draw distance, trees,
+  reflections refresh, render scale (§16).
+
+---
+
+## 11. Worlds
+
+### 11.1 Circuits [D]
+Original tracks (real circuits are trademarked and their scans
+licensed), each with real-style kerbs (flat, sausage, serrated), run-off
+(asphalt, gravel, grass), pit lane, sector timing, track-limit sensors:
+1. **Bar3D Ring 2.0**: the existing 2.45 km layout rebuilt on the new
+   road tool.
+2. A **short technical track** (≈ 2 km, tight, the Miata/GR86 home).
+3. A **fast GP track** (≈ 5 km, elevation, long straights for the C7 and
+   slipstream).
+4. Later: a **night street circuit**.
+
+### 11.2 The drift area [D]
+"Drift park":
+- **Skid pads**: 30 m and 50 m radius circles and a figure-8 (learning
+  and setup testing).
+- **Competition course** with D1/Formula Drift-style **clipping
+  points** (inner clips, outer zones) and an initiation zone.
+- A **touge-style downhill** with hairpins.
+- Surfaces: smooth concrete and asphalt; later a wet skid pad.
+- Judges' scoring (§12.3), tandem with another player.
+
+### 11.3 Free drive [D]
+An open map, first ≈ 4 × 4 km, made to grow:
+- a **coastal highway** (fast, long sweepers);
+- a **mountain pass** (touge, both directions);
+- a **small city** grid with intersections, a parking garage roof, an
+  industrial area and big parking lots (drift spots);
+- **meet spots** (gas station, overlook) and **photo spots**;
+- streamed in 256 m tiles (master list 1e), roads + terrain + props;
+- later: traffic (§15), day/night and weather.
+- You can get out and walk (the bar's avatar) at meet spots and get
+  into your car again (a later step).
+
+### 11.4 The road tool [D]
+The roads are data, so they can be built and changed by text:
+- **Road graph JSON:** nodes, edges with spline control points, width
+  per lane, lanes and markings, **banking and crown** per point, surface,
+  kerb and barrier types per side; junction templates (T, crossing,
+  roundabout).
+- **Cross-section formula:** height(s, t) = centreline(s).y + t·bank(s)
+  + crown·(1 - (2t/w)²)·w/2, with every term C1 along s (Hermite
+  splines), so the physics surface (§4.2) is exact and smooth.
+- **Generator** (`engine/road/`, shared by game, tests and tools) →
+  render mesh chunks with LOD, kerbs, lines, barriers, collision walls,
+  terrain blended into the road edges.
+- Preview: screenshots via `tools/shots.mjs` with `CAM=`; later an
+  in-game road editor the user can use on the phone (stays Parked until
+  promoted).
+
+---
+
+## 12. Game modes
+
+### 12.1 Circuit racing
+Practice → qualifying → race (each optional); grid from qualifying;
+standing or rolling start (launch control matters); flags (yellow,
+blue); track limits (3 warnings → time penalty); results with points.
+Race length setting. Bots (§15). Two players on the rigs (§14).
+
+### 12.2 Time trial, ghosts, replays
+Best laps per car and track (leaderboard in D1 with master list 3).
+**Replays and ghosts are input recordings** (the sim is deterministic),
+so a lap is a few KB. Replay with TV cameras.
+
+### 12.3 Drift scoring [D]
+- A drift counts while body slip angle |β| ≥ 12°, speed ≥ 30 km/h and
+  |β| ≤ 110° (beyond that it's a spin).
+- Points per second = speed factor × angle factor × zone multiplier.
+  Angle factor: a smooth curve peaking around 35-50°; speed factor:
+  linear above 30 km/h.
+- **Combo** ×1 → ×5: grows with transitions (left-right swaps) and
+  holding a drift; a drift "banks" its points 0.5 s after it ends;
+  spinning or hitting a wall loses the unbanked points.
+- **Clipping points:** proximity bonus (front bumper to inner clips,
+  rear bumper to outer zones).
+- **Competition runs:** line, angle and style judged separately, in the
+  spirit of D1/Formula Drift judging.
+- **Tandem:** the chase car scores for proximity (1-5 m) and matching
+  angle; the lead for a clean line.
+
+### 12.4 Free drive
+No objectives by default; speed traps and drift zones on the map with
+personal bests; photo mode; meet-ups with other players; fast travel to
+spots.
+
+---
+
+## 13. Tuning garage and customization
+Every setting changes real `car.json` numbers (§4), with the telemetry
+before/after:
+- **Tires:** compound (street, sport, semi-slick, drift), cold pressure.
+- **Alignment:** camber, toe, caster.
+- **Suspension:** spring rate, ride height, dampers (bump/rebound,
+  low/high speed), anti-roll bars, bump stops.
+- **Differential:** type swap, preload, power/coast ramps.
+- **Brakes:** bias, pressure, pad type; hydraulic handbrake.
+- **Gearing:** each ratio and the final drive.
+- **Aero:** wing angle where the car has one.
+- **Engine:** intake, exhaust, ECU; FD: single-turbo conversion; ND/GR86:
+  supercharger kit; weight reduction.
+- **Drift kit:** steering angle kit, welded diff, hydraulic handbrake.
+- Setups saved per car, shareable as a short code.
+- **Looks:** paint (gloss, metallic, pearl, matte), wheels (size and
+  weight change the physics), body kits (aero changes), liveries later,
+  plate text. Ownership and prices tie into the economy (master list 7).
+
+---
+
+## 14. Multiplayer
+(folds in RESTRUCTURE 7.1-7.5)
+- **Snapshots** of the full vehicle state (quantized, ≈ 64 B) and input
+  frames per tick, through the Cloudflare room.
+- **Your car is always simulated locally** (instant controls).
+- **Other cars:** shown at ≈ 100 ms in the past by interpolation for
+  racing and free drive; for **tandem drift** (close, fast), predicted
+  forward with the same physics from their last inputs and corrected
+  smoothly over 150-300 ms.
+- Contacts: finite mass, each phone moves only its own car (7.3).
+- Free drive rooms: interest management (near cars 30 Hz, far 2 Hz,
+  hidden beyond ≈ 1 km); optional "ghost mode" (no collisions with others).
+- Spectator monitors on the bar's rigs (7.5).
+
+---
+
+## 15. Bots and traffic
+- **Racing bots** (rewrite for the new physics): a racing line by
+  minimum curvature inside the track edges; a speed profile from the
+  car's own measured g-g-V map (forward/backward passes); steering by
+  preview control (Stanley/pure pursuit + yaw feed-forward); throttle and
+  brake with their own slip control; overtaking with committed sides, no
+  passes in braking zones; skill = how close to the measured limit.
+  They drive the same physics as the player.
+- **Drift bot** (tandem lead and demo): body-slip controller (β with
+  throttle, path with countersteer).
+- **Traffic** (free drive, later): lane following on the road graph,
+  junction rules, simple cheap physics far from the player.
+
+---
+
+## 16. Performance budget (iPhone 15 Pro Max)
+- **Sim:** ≤ 0.15 ms per car per frame at 60 fps (8 ticks), ≤ 1.5 ms for
+  12 cars; far bots (> 300 m, not visible) on a cheaper path at 120 Hz.
+  Measured natively and in node/wasm by `drive_lab --bench`.
+- **Frame:** GPU ≤ 10 ms, CPU ≤ 4 ms; 1% worst frame ≤ 20 ms; no hitch
+  > 50 ms during a 3-lap race (the phone report shows these).
+- **Memory:** ≤ 64 MB textures with ASTC; a car ≤ 8 MB textures.
+- **Quality Auto:** steps down when frames run late or the phone heats
+  up; back up when it recovers.
+
+---
+
+## 17. Validation: the test catalogue (`tools/native/drive_lab.cpp`)
+Every test prints numbers and fails on limits; run in `run.sh` and CI for
+all 4 cars (assists off unless stated):
+| Test | Pass if |
+|---|---|
+| Static settle | corner loads = spec ±1%; sag within range; ride frequencies ±5% |
+| Energy (drop test) | each bounce lower than the last; no energy gain from the integrator |
+| Frame-rate independence | 60 s of driving at 30/60/120/240 fps → identical states (bit-exact) |
+| Straight acceleration | 0-60 / 0-100 / ¼ mile within ±5% of target |
+| Top speed | ±3% of target |
+| Braking 60-0 / 100-0 (ABS) | ±3% of target; car stays straight (yaw < 1°) |
+| ISO 4138 steady circle (40 m) | max lateral g = skidpad target ±3%; understeer gradient in range |
+| ISO 7401 step steer | yaw-rate rise 0.15-0.30 s; overshoot ≤ 15% |
+| ISO 3888-2 double lane change | passes at target speed with ESC; FD without ESC needs a scripted expert but is possible |
+| FMVSS 126 sine with dwell (ESC on) | yaw rate < 35% of peak at 1 s, < 20% at 1.75 s |
+| Lift-off in a turn | yaw rate change within a band (mild for C7/GR86, lively for FD/ND) |
+| Brake in a turn | no spin with ESC; controllable without |
+| Bump 5 cm at 80 km/h | settles in ≤ 2 bounces (≤ 0.6 s) |
+| Road seam 1 cm | wheel load change ≤ 15% |
+| Kerb strike 80 km/h | no wheel lifts more than 10 cm; no launch |
+| Crest jump 1 m at 120 km/h | lands and settles in ≤ 2 oscillations |
+| Slope 20% | car with brake held moves < 1 cm in 10 s |
+| Through zero | braking 5 km/h into reverse: no speed step > 0.3 m/s |
+| Drift hold | a scripted driver holds 40° on the 30 m pad for 20 s with each drift setup |
+| Clutch kick / handbrake | starts a slide repeatably |
+| Turbo (FD) | boost and dip at the right rpm; BOV on lift |
+| Tire heat | a 3-lap run warms tires into their window; cools when parked |
+| Bench | sim cost per car ≤ budget (§16) |
+Telemetry CSV of each run is saved in `build/drive_lab/` for graphs.
+
+**Calibration tool** (`tools/native/calibrate.cpp`): changes only the
+[E] parameters (tire μ scale, C_d·A, brake torque, driveline loss,
+damping inside physical ranges) to meet the §5 targets. It never
+touches [S] values, and writes a report of what it moved.
+
+---
+
+## 18. Build order (stages; each one ends with a deploy and a phone check)
+Sizes: S (a session), M (2-3), L (4-6), XL (more).
+
+| # | Stage | Size | The user sees |
+|---|---|---|---|
+| R-0 | Research pass: fill every "verify" in §5 and the MF coefficients from Pacejka's book | M | nothing (docs) |
+| 1 | `car_spec` + JSON + validation; telemetry; `drive_lab` skeleton with the old sim as baseline | M | nothing |
+| 2 | Road query + spline cross-sections + multi-probe contact | M | smoother kerbs (old sim on new contact) |
+| 3 | New chassis 480 Hz + unsprung wheels + suspension with kinematics | L | bumps and kerbs feel real |
+| 4 | New tire model (MF, transients, low-speed stick, combined) | L | progressive grip, no creep |
+| 5 | Driveline solver + engine + clutch + gearbox + diffs + brakes | L | real launches, lockups, diffs |
+| 6 | Steering geometry + aligning torque + the virtual steering wheel | M | steering that self-centres and catches slides |
+| 7 | Aero + slipstream; electronics (ABS/TC/ESC/modes) | M | drafting; assists you can turn off |
+| 8 | **GR86 data + calibration + drift skid pad** (first playable slice) | M | **drive the new GR86 on the skid pad** |
+| 9 | Cameras (chase/drift/hood/cockpit) + effects (smoke, marks) + HUD + telemetry overlay | M | calmer camera, smoke, skid marks |
+| 10 | Sound synthesis (4 engines, tires, road, wind, turbo) | L | each car sounds like itself |
+| 11 | C7, RX-7, Miata data + calibration (+ FD turbo) | M | four cars to drive |
+| 12 | Car art: GR86 model + interior + paint shader (benchmark), then the other three | XL | real-looking cars, cockpit view |
+| 13 | Collisions and damage (hulls, GJK, wheel-wall, damage levels) | M | real crashes, rollovers |
+| 14 | Road tool + Bar3D Ring 2.0 + rendering upgrades (shadows, AA, sky) | L | the circuit rebuilt, sharper and shadowed |
+| 15 | Drift park (course, touge, clipping points) + drift scoring + tandem | L | drift mode |
+| 16 | Racing bots rewrite + race weekend + time trial, ghosts, replays | L | full race mode |
+| 17 | Tuning garage + customization | L | tune and paint your car |
+| 18 | Free drive map (highway, pass, city) + streaming | XL | open free drive |
+| 19 | Multiplayer for all modes (snapshots, prediction, tandem, rooms) | L | drive and drift with your brother |
+| 20 | More circuits (technical, GP, night street) | L | new tracks |
+| 21 | Traffic, day/night, weather, getting out of the car | XL | a living world |
+| 22 | Performance and quality levels, phone validation, polish | M | steady 60 fps, cool phone |
+Stages 1-7 run behind the scenes; the old driving stays live until
+stage 8 replaces it (with a switch in settings to compare during
+testing). Bars between stages: every test in §17 for the stages done.
+
+---
+
+## 19. Risks
+- **Tire tuning takes time:** mitigated by the calibration tool and the
+  test catalogue (numbers, not guesses).
+- **Phone heat with many cars:** sim budget measured from stage 3; far
+  bots on the cheaper path.
+- **Art is the biggest job** (stage 12, XL): the GR86 first as the
+  benchmark, the user approves before the other three.
+- **Legal** (§0): names, badges, tire brands, real tracks.
+- **Scope:** each stage ships something the user can feel; nothing waits
+  for "everything".
+
+---
+
+## 20. Sources
+Car data:
+- C7: [Wikipedia, Chevrolet Corvette (C7)](https://en.wikipedia.org/wiki/Chevrolet_Corvette_(C7));
+  [Edmunds 2017 Stingray Z51 specs](https://www.edmunds.com/chevrolet/corvette/2017/coupe/st-401646234/features-specs/);
+  [automobile-catalog 2017 Z51](https://www.automobile-catalog.com/car/2017/1913105/chevrolet_corvette_stingray_7-speed.html);
+  [Wikipedia, Tremec TR-6070](https://en.wikipedia.org/wiki/Tremec_TR-6070_transmission);
+  [The Car Connection 2014 specs (3.42 final drive)](https://www.thecarconnection.com/specifications/chevrolet_corvette_2014);
+  [CorvetteForum: Z51 axle ratios](https://www.corvetteforum.com/forums/c7-tech-performance/4054726-2014-2016-stingray-z51-rear-end-ratio.html);
+  [GM 2014 Stingray details book (aero, Z51)](https://www.corvetteactioncenter.com/specs/c7-corvette/2014-c7-corvette/2014_Corvette_Stingray_Details_Book.pdf);
+  [Edmunds C7 vs Viper test (braking, skidpad, slalom)](https://www.streetmusclemag.com/?p=698611);
+  [GM Authority on the Edmunds comparison](https://gmauthority.com/blog/2013/08/corvette-c7-triumphs-over-srt-viper-in-latest-edmunds-comparison-video/).
+- GR86: [Toyota 2022 GR86 brochure (power, ratios, C_d 0.276)](https://www.toyota.com/content/dam/toyota/brochures/pdf/2022/gr86_ebrochure.pdf);
+  [Toyota UK technical specification (final drive)](https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/220725M-GR86-Tech-Spec.pdf);
+  [KBB 2022 GR86 specs](https://www.kbb.com/toyota/gr86/2022/specs);
+  [Velocity Journal 2022 GR86 (track)](https://www.velocityjournal.com/models/36164/specifications);
+  [Autopadre GR86 tire sizes](https://www.autopadre.com/tire-and-wheel-sizes/toyota-gr86);
+  [FT86Club owner weights](https://www.ft86club.com/forums/showthread.php?t=146547);
+  [Edmunds 2022 GR86 review (0-60, 60-0)](https://www.edmunds.com/toyota/gr86/2022).
+- RX-7 FD: [RX7Club FD3S specs (ratios, final drive, Torsen)](https://www.rx7club.com/3rd-generation-specific-1993-2002-16/rx7-fd3s-specs-all-youll-ever-need-694523/);
+  [RX7.net.nz 1993 US specifications](https://www.rx7.net.nz/usspec.htm);
+  [Carsales 1993 RX-7 (track, tires)](https://www.carsales.com.au/research/mazda/rx-7/1993/no-badge);
+  [Encycarpedia RX-7](https://www.encycarpedia.com/us/mazda/92-rx-7-coupe);
+  [Wikipedia, Mazda RX-7](https://en.wikipedia.org/wiki/Mazda_RX-7);
+  [MotoIQ FD restomod (sequential turbo)](https://motoiq.com/project-fd-rx7-restomod-part-11-engine-disassembly/3/).
+- MX-5 ND2: [Moss Miata 2019 ND specs (ratios, weights, split)](https://mossmiata.com/miata-mx5-2019-nd);
+  [Grassroots Motorsports ND2 details](https://grassrootsmotorsports.com/news/full-details-mazda-mx-5-nd2/);
+  [Wikipedia, Mazda MX-5 (ND)](https://en.wikipedia.org/wiki/Mazda_MX-5_(ND));
+  [Ultimate Specs ND 2.0](https://www.ultimatespecs.com/car-specs/Mazda/114024/Mazda-MX-5-Miata-(ND)-20-SkyActiv-G-184.html).
+Physics and methods:
+- [wassimulator: Programming vehicles in games](https://wassimulator.com/blog/programming/programming_vehicles_in_games.html)
+  (the user's research reference: engine, tires, chassis loop).
+- H. B. Pacejka, *Tire and Vehicle Dynamics* (Magic Formula, combined
+  slip, relaxation; example coefficients); [TNO MF-Tyre presentation](https://publications.tno.nl/publication/34606988/ORSVMS/schmeitz-2013-mftyre-presentatie.pdf);
+  [MathWorks combined-slip wheel](https://www.mathworks.com/help/vdynblks/ref/combinedslipwheel2dof.html).
+- Sim rates: [io-tech forum quoting iRacing (360 Hz) and AC/ACC](https://bbs.io-tech.fi/threads/ajopeliketju.27082/post-11925485);
+  [ACC 400 Hz update](https://traxion.gg/assetto-corsa-competizione-console-update-out-now-adds-new-tyre-model-and-400hz-physics/);
+  [Project Motor Racing tire model (720 Hz / 7,200 Hz)](https://overtake.gg/news/straight-4-studios-surprised-itself-with-project-motor-racing-tire-model.2577);
+  [Live for Speed progress report](https://www.lfs.net/20th-anniversary).
+- Unity's notes the user found (interpolation, wheel friction curves,
+  physics profiling) informed §3 and §16:
+  [interpolation](https://docs.unity3d.com/2022.3/Documentation/Manual/rigidbody-interpolation.html),
+  [wheel collider friction](https://docs.unity3d.com/6000.0/Documentation/Manual/wheel-colliders-friction.html),
+  [physics optimization](https://docs.unity3d.com/2022.3/Documentation/Manual/physics-optimization.html).
+- Engine sound: [f1technical forum on firing intervals and timbre](https://www.f1technical.net/forum/viewtopic.php?p=715979);
+  [pulse-train + resonator engine synthesis (UPF thesis)](https://recercat.cat/handle/10230/72480);
+  [harmonic-plus-noise engine dataset (arXiv)](https://arxiv.org/pdf/2603.07584v1).
+- Drift scoring references: [Absolute Drift player discussion](https://steamcommunity.com/app/320140/discussions/0/535152276584627954);
+  [CW Drifting script (multiplier rules)](https://cw-scripts.tebex.io/package/7143394).
+- Drive Zone: [Google Play](https://play.google.com/store/apps/details?id=com.drivezone.car.race.game&hl=en-US),
+  [App Store](https://apps.apple.com/us/app/drive-zone-car-simulator-game/id6458189799),
+  [Jet Games](https://jetgamesdev.com/drive-zone-online).
