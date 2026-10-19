@@ -78,6 +78,15 @@ window.bar3dAccount = (function () {
       '.acctSwatches{display:flex;gap:8px;flex-wrap:wrap;}',
       '.acctSwatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;}',
       '.acctSwatch.on{border-color:#fff;}',
+      '.acctSlots{margin:12px 16px 0;}',
+      '.acctSlotTitle{font:700 10px system-ui;letter-spacing:2px;color:#b9a7c8;text-align:center;margin-bottom:6px;}',
+      '.acctSlotRow{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}',
+      '.acctSlot{aspect-ratio:1;border-radius:12px;border:2px dashed #4a3a55;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.03);}',
+      '.acctSlot.on{border:2px solid #ff5ab4;background:linear-gradient(160deg,#3a2347,#1f1428);box-shadow:0 0 10px rgba(255,90,180,.35);}',
+      '.acctSlot.mine{cursor:pointer;}',
+      '.acctSlot .ic{font-size:20px;line-height:1;color:#7a6a88;}',
+      '.acctSlot .lb{font:600 8px system-ui;color:#e8dcef;margin-top:3px;text-align:center;line-height:1.1;}',
+      '.acctSlotHint{font:12px system-ui;color:#9a8aa8;text-align:center;margin-top:6px;}',
       '.acctPic{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#2a1f33;display:block;',
       'margin:0 auto;border:3px solid #fff3;}',
       '.acctCard{width:min(88vw,340px);border-radius:22px;overflow:hidden;background:#1a1220;',
@@ -244,11 +253,7 @@ window.bar3dAccount = (function () {
     if (p.joined) facts.appendChild(el('div', { text: '\u{1F4C5}  Regular since ' + p.joined }));
     var d = p.details || {};
     DETAILS.forEach(function (x) { if (d[x[0]]) facts.appendChild(el('div', { text: x[1] + ': ' + d[x[0]] })); });
-    var badges = el('div', { style: 'margin:10px 18px 0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;' });
-    (p.badges || []).forEach(function (b) {
-      badges.appendChild(el('span', { text: BADGE_ICONS[b] || b,
-        style: 'font-size:12px;padding:3px 9px;border-radius:12px;background:#2a1f33;border:1px solid #4a3a55;' }));
-    });
+    var badges = badgeSlots(p, own);
     var btns = el('div', { class: 'btns' });
     if (own) {
       btns.appendChild(el('button', { class: 'acctBtn', text: 'Edit card', onclick: function () { editScreen(false); } }));
@@ -267,6 +272,55 @@ window.bar3dAccount = (function () {
       p.bio ? el('div', { class: 'bio', text: p.bio }) : null,
       badges, facts, btns,
     ]));
+  }
+
+  // The card's badge slots: SLOT_COUNT places for badges, like a showcase.
+  // Filled ones show the badge; on your own card a tap picks which of your
+  // badges goes there (or empties it). Badges not in a slot are listed small.
+  var SLOT_COUNT = 6;
+  function slotsOf(p) {
+    var held = p.badges || [];
+    var s = (p.slots || []).slice(0, SLOT_COUNT);
+    while (s.length < SLOT_COUNT) s.push('');
+    // Nothing chosen yet: the badges you have, in order.
+    if (s.every(function (b) { return !b; })) held.slice(0, SLOT_COUNT).forEach(function (b, i) { s[i] = b; });
+    return s.map(function (b) { return held.indexOf(b) >= 0 ? b : ''; });
+  }
+  function badgeSlots(p, own) {
+    var wrap = el('div', { class: 'acctSlots' });
+    var slots = slotsOf(p);
+    var row = el('div', { class: 'acctSlotRow' });
+    slots.forEach(function (b, i) {
+      var icon = b ? (BADGE_ICONS[b] || b) : '';
+      var parts = icon.split(' ');
+      var cell = el('div', { class: 'acctSlot' + (b ? ' on' : '') + (own ? ' mine' : ''), title: icon || 'Empty slot' }, [
+        el('div', { class: 'ic', text: b ? parts[0] : (own ? '+' : '') }),
+        el('div', { class: 'lb', text: b ? parts.slice(1).join(' ') : '' }),
+      ]);
+      if (own && p.user) cell.onclick = function () { pickSlot(i, slots); };
+      row.appendChild(cell);
+    });
+    wrap.appendChild(el('div', { class: 'acctSlotTitle', text: 'BADGES' }));
+    wrap.appendChild(row);
+    if (!p.user) wrap.appendChild(el('div', { class: 'acctSlotHint', text: own ? 'Make an account to collect badges.' : '' }));
+    else if (own && !(p.badges || []).length) wrap.appendChild(el('div', { class: 'acctSlotHint', text: 'Badges you earn go here.' }));
+    var extra = (p.badges || []).filter(function (b) { return slots.indexOf(b) < 0; });
+    if (extra.length) wrap.appendChild(el('div', { class: 'acctSlotHint', text: 'Also: ' + extra.map(function (b) { return BADGE_ICONS[b] || b; }).join('  ') }));
+    return wrap;
+  }
+  function pickSlot(i, slots) {
+    var choices = [''].concat((me.badges || []));
+    open(el('div', { class: 'acctPanel' }, [el('h2', { text: 'Badge slot ' + (i + 1) })].concat(choices.map(function (b) {
+      return el('button', { class: 'acctBtn' + (b === slots[i] ? '' : ' ghost'), text: b ? (BADGE_ICONS[b] || b) : 'Empty', onclick: function () {
+        var next = slots.slice();
+        var at = next.indexOf(b);
+        if (b && at >= 0) next[at] = '';  // a badge sits in one slot only
+        next[i] = b;
+        call({ a: 'update', token: token, slots: next })
+          .then(function (r) { setSession(token, r.me); cardScreen(me, true); })
+          .catch(function () { cardScreen(me, true); });
+      } });
+    })).concat([el('button', { class: 'acctBtn ghost', text: 'Back', onclick: function () { cardScreen(me, true); } })])));
   }
 
   // Owners: give or take badges (bartender...) by username.

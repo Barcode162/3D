@@ -12,6 +12,8 @@
 //   {"a":"logout","token":".."}
 //   {"a":"profile","id":".."}                               -> {"ok":1,"profile":profile}
 //   {"a":"update", ..., "details":{"pronouns":..,"status":..,...}}  (DETAIL_FIELDS)
+//   {"a":"update", ..., "slots":["owner","", ...]}  badge slots on the card
+//     (up to SLOT_COUNT; each one of your badges, or "" for an empty slot)
 //   {"a":"badge","token":"..","user":"josh","badge":"bartender","on":1}  (owners only)
 //
 // Badges ("bartender", "dj", "vip", "staff") unlock things in the bar (the
@@ -39,6 +41,7 @@ const DETAIL_FIELDS = ['pronouns' => 20, 'status' => 60, 'location' => 40, 'birt
                        'genre' => 40, 'instrument' => 40, 'cocktail' => 40, 'job' => 40, 'languages' => 60,
                        'social' => 60, 'lookingFor' => 60, 'funFact' => 120];
 const BADGES = ['bartender', 'dj', 'vip', 'staff'];
+const SLOT_COUNT = 6;
 
 $base = __DIR__ . '/accounts';
 foreach (['', '/users', '/tokens', '/avatars'] as $d) {
@@ -89,7 +92,10 @@ function public_profile($u) {
   return ['id' => $u['id'], 'user' => $u['user'], 'name' => $u['name'], 'bio' => $u['bio'],
           'drink' => $u['drink'], 'song' => $u['song'], 'color' => $u['color'],
           'avatar' => $u['avatar'], 'joined' => $u['joined'], 'details' => (object)($u['details'] ?? []),
-          'badges' => $badges];
+          'badges' => $badges,
+          // The card's badge slots: only badges still held stay in them.
+          'slots' => array_map(fn($b) => in_array($b, $badges, true) ? $b : '',
+                               array_slice(array_pad($u['slots'] ?? [], SLOT_COUNT, ''), 0, SLOT_COUNT))];
 }
 
 function new_token($id) {
@@ -196,6 +202,14 @@ if ($a === 'update') {
       }
     }
     $u['details'] = $d;
+  }
+  if (isset($in['slots']) && is_array($in['slots'])) {
+    $held = public_profile($u)['badges'];
+    $slots = [];
+    foreach (array_slice($in['slots'], 0, SLOT_COUNT) as $b) {
+      $slots[] = is_string($b) && in_array($b, $held, true) ? $b : '';
+    }
+    $u['slots'] = $slots;
   }
   write_json(user_path($u['id']), $u);
   reply(['ok' => 1, 'me' => public_profile($u)]);

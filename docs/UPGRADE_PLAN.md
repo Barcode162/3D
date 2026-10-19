@@ -51,7 +51,10 @@ user asked: "the race game should actually be fixed".)
       follows your distance to the glass: full within ~1 m, 40% from ~8 m.
       Later, RESTRUCTURE 6.3: a cheaper shader and culling for far things.) high quality for things close to the mirror,
       lower for far away (RESTRUCTURE 6.3; your own avatar always full).
-- [ ] **9. Player cards: badge slots.**
+- [x] **9. Player cards: badge slots.** (done 2026-10-19: 6 slots on every
+      card; on your own card tap a slot to put one of your badges there; saved
+      by `account.php` (`slots`, only badges you hold). Earnable badges for
+      games (180 in darts, SS in 4K Mania, a race win...) would fill them next.)
 - [ ] **10. Pots and plants** have things inside them (clipping); a **lamp
       floats** where a seat's indent is. Look around and fix such things.
 - [ ] **11. Walk-through check:** (started 2026-10-19: `walk_test` finds unreachable
