@@ -69,10 +69,11 @@ user asked: "the race game should actually be fixed".)
       lamps" were the bay window's hanging plants: white pots on 3 mm cords,
       now terracotta pots on visible rope hangers with ceiling hooks.) have things inside them (clipping); a **lamp
       floats** where a seat's indent is. Look around and fix such things.
-- [ ] **11. Walk-through check:** (started 2026-10-19: `walk_test` finds unreachable
-      seats and things; the walkway behind the bar is open now) simulate walking through the whole bar, find
-      what's in the way, move things a little so it all makes sense; be able
-      to walk all around the bar (counter).
+- [x] **11. Walk-through check:** (done 2026-10-19: `walk_test` finds traps,
+      unreachable things and now squeezes (TIGHT=1: floor only reachable by a
+      walker narrower than 0.9 m). Fixed: the way behind the bar (counter end
+      moved 0.3 m, library ladder parked at the rail's end and steeper,
+      doorway B's barricade nudged), stuck seats (item 12), the door plant.)
 - [x] **12. Stuck when sitting:** (2026-10-19: standing up uses `app::standSpot`: behind
       stools/rigs/piano bench, in front of sofas/armchairs, else the nearest floor you
       can walk away from; lounge blockers trimmed; `tools/native/walk_test.cpp` checks

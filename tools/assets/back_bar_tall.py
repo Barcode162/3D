@@ -207,8 +207,10 @@ for i in range(BAYS + 1):
     x = min(max(bay_x(i), X0 + 0.1), X1 - 0.1)
     common.cylinder("Rail bracket", Vector((x, RAIL_Y, (ZB + SHELF_D + RAIL_Z) / 2 + 0.01)), 0.01,
                     RAIL_Z - ZB - SHELF_D + 0.02, "z", brass, segments=8)
-LX = -6.15
-foot_z = ZB + DEPTH + 0.55
+# Parked at the right end of its rail and standing steep, so its feet
+# leave the bartender's aisle free (it was mid-way, its feet 0.55 m out).
+LX = X1 - 0.5
+foot_z = ZB + DEPTH + 0.32
 lean = math.atan2(RAIL_Z - foot_z, RAIL_Y - 0.06)
 lad_len = math.hypot(foot_z - RAIL_Z, RAIL_Y - 0.06)
 ladder_wood = common.pbr_material("Ladder wood", tex_dir, "wood_table_001", tint=(0.75, 0.5, 0.35), size=256,

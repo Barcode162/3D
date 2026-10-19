@@ -127,6 +127,68 @@ int main() {
     }
     std::printf("x %.1f..%.1f (left to right), z %.1f..%.1f (top to bottom)\n", minX, maxX, minZ, maxZ);
   }
+  // Tight spots (TIGHT=1): floor you can reach, but only by squeezing (a
+  // walker 0.9 m wide can't get there). Listed as clusters, for moving
+  // furniture so walking around feels natural.
+  if (std::getenv("TIGHT")) {
+    constexpr float kWide = 0.45f;
+    std::vector<char> wideFree(static_cast<size_t>(W * D)), wideReach(static_cast<size_t>(W * D));
+    for (int k = 0; k < D; ++k) {
+      for (int i = 0; i < W; ++i) {
+        const Vec3 p = at(i, k);
+        const Vec3 r = app::resolveCollisions(scene, p, kWide);
+        wideFree[static_cast<size_t>(k * W + i)] = std::fabs(r.x - p.x) + std::fabs(r.z - p.z) < 1e-3f;
+      }
+    }
+    std::queue<std::pair<int, int>> wq;
+    int wi = si, wk = sk;
+    if (wideFree[static_cast<size_t>(wk * W + wi)]) { wq.push({wi, wk}); wideReach[static_cast<size_t>(wk * W + wi)] = 1; }
+    while (!wq.empty()) {
+      auto [i, k] = wq.front();
+      wq.pop();
+      const int di[4] = {1, -1, 0, 0}, dk[4] = {0, 0, 1, -1};
+      for (int d = 0; d < 4; ++d) {
+        const int ni = i + di[d], nk = k + dk[d];
+        if (ni < 0 || nk < 0 || ni >= W || nk >= D) continue;
+        const size_t c = static_cast<size_t>(nk * W + ni);
+        if (!wideFree[c] || wideReach[c]) continue;
+        wideReach[c] = 1;
+        wq.push({ni, nk});
+      }
+    }
+    // Reachable at 0.3 m, free at 0.45 m, but not reachable at 0.45 m: behind a squeeze.
+    std::vector<char> seen(static_cast<size_t>(W * D));
+    for (int k = 0; k < D; ++k) {
+      for (int i = 0; i < W; ++i) {
+        const size_t c0 = static_cast<size_t>(k * W + i);
+        if (!reach[c0] || !wideFree[c0] || wideReach[c0] || seen[c0]) continue;
+        // Flood the cluster.
+        std::queue<std::pair<int, int>> cq;
+        cq.push({i, k});
+        seen[c0] = 1;
+        int n = 0;
+        float sx = 0, sz = 0;
+        while (!cq.empty()) {
+          auto [a, b] = cq.front();
+          cq.pop();
+          ++n;
+          const Vec3 p = at(a, b);
+          sx += p.x;
+          sz += p.z;
+          const int di[4] = {1, -1, 0, 0}, dk[4] = {0, 0, 1, -1};
+          for (int d = 0; d < 4; ++d) {
+            const int ni = a + di[d], nk = b + dk[d];
+            if (ni < 0 || nk < 0 || ni >= W || nk >= D) continue;
+            const size_t c = static_cast<size_t>(nk * W + ni);
+            if (seen[c] || !reach[c] || !wideFree[c] || wideReach[c]) continue;
+            seen[c] = 1;
+            cq.push({ni, nk});
+          }
+        }
+        if (n >= 4) std::printf("tight: %.2f m2 around (%.2f, %.2f) only reachable by squeezing\n", n * kCell * kCell, sx / n, sz / n);
+      }
+    }
+  }
   std::printf(failed ? "WALK TEST FAILED (%d)\n" : "WALK TEST PASSED\n", failed);
   return failed ? 1 : 0;
 }

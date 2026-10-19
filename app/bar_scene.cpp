@@ -27,7 +27,7 @@ constexpr float kStageX1 = -5.4f, kStageZ0 = 3.8f, kStageH = 0.3f, kStepW = 0.35
 constexpr float kChimneyZ0 = -0.2f, kChimneyZ1 = 1.8f, kChimneyD = 0.45f;
 // The bar counter's customer edge bows along a big circle from x = kBarXA
 // to kBarXB, then the counter turns and runs back to the back wall.
-constexpr float kBarXA = -7.9f, kBarXB = 1.1f, kBarZEnds = -4.75f, kBarZMid = -4.0f;
+constexpr float kBarXA = -7.6f, kBarXB = 1.1f, kBarZEnds = -4.75f, kBarZMid = -4.0f;
 constexpr float kBarInset = 0.36f, kBarTurnR = 0.55f;
 constexpr float kBarTopY = 1.08f;  // where glasses stand on the counter
 
@@ -281,7 +281,7 @@ void buildBar(Builder& b) {
     b.solid({(bx0 + bx1) / 2, y, kZ0 + 0.16f}, {(bx1 - bx0) / 2, 0.0175f, 0.15f}, kDarkWood);
   }
   b.blockRect(bx0 - 0.1f, kZ0 - 1, bx1 + 0.05f, kZ0 + 0.6f);
-  b.blockRect(-6.45f, kZ0 + 0.6f, -5.85f, kZ0 + 1.2f);  // the ladder's feet
+  b.blockRect(0.1f, kZ0 + 0.6f, 0.7f, kZ0 + 0.95f);  // the ladder's feet (parked at the right end)
   // Glow of the back bar's shelves (two halves).
   b.light({-6.3f, 1.9f, kZ0 + 1.2f}, kWarmBulb, 0.8f, 3.8f, 0.6f);
   b.light({-1.8f, 1.9f, kZ0 + 1.2f}, kWarmBulb, 0.8f, 3.8f, 0.6f);
@@ -507,7 +507,7 @@ void buildConstruction(Builder& b) {
   (void)ax;  // (doorway A is the arcade: buildArcade)
   // Barricades in front of room 3 (stopping 0.4 m short of the door on the
   // bar side, so the gap at the counter's end stays open: the way behind the bar).
-  b.blockRect(kX0 - 1, kDoorBZ0 - 0.4f, kX0 + 1.15f, kDoorBZ1 + 1.3f);
+  b.blockRect(kX0 - 1, kDoorBZ0 - 0.15f, kX0 + 1.15f, kDoorBZ1 + 1.3f);
   b.solid({kX0 + 0.7f, 0.5f, bz - 0.1f}, {0.15f, 0.5f, 1.1f}, kDoorWood);
   // A work light inside the unfinished room.
   b.light({kX0 - 1.8f, 1.8f, bz - 0.6f}, {1.0f, 0.92f, 0.75f}, 1.6f, 4.0f, 0.1f);

@@ -242,7 +242,9 @@ def doorway(origin, yaw, width, name):
     tape_strip(m, (-hw - 0.05, 1.6, 0.045), (hw + 0.05, 1.55, 0.045))
     plastic_sheet(m, width - 0.1, L.ARCH_SPRING + hw * 0.9, -0.35)
     sawhorse(m, -0.35, 0.6, 0.12)
-    sawhorse(m, 0.55, 0.75, -0.2)
+    # (Local +x is toward the bar for doorway B: kept 0.3 from the middle so
+    # the way behind the bar stays wide.)
+    sawhorse(m, 0.3 if abs(yaw) > 0.1 else 0.55, 0.75, -0.2)
     cone(m, -hw - 0.35, 0.45)
     cone(m, hw + 0.4, 0.5, 0.85)
     cone(m, 1.15, 0.95, 0.9)

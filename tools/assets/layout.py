@@ -48,7 +48,7 @@ CHIMNEY_Z0, CHIMNEY_Z1, CHIMNEY_D = -0.2, 1.8, 0.45
 
 # The bar counter: its customer edge bows into the room along a big circle
 # from x = BAR_XA to BAR_XB, then turns and runs back to the back wall.
-BAR_XA, BAR_XB = -7.9, 1.1
+BAR_XA, BAR_XB = -7.6, 1.1  # (was -7.9: the way behind the bar was a 0.8 m squeeze)
 BAR_Z_ENDS, BAR_Z_MID = -4.75, -4.0
 BAR_INSET = 0.36        # counter centerline, behind the customer edge
 BAR_TURN_R = 0.55       # radius of the turn (centerline)
