@@ -56,33 +56,34 @@ wins, and those steps are folded in below (Stage 12).
 
 ---
 
-## 0. Decisions needed first
-1. **Real car names and shapes.** Commercial games pay carmakers for
-   names, badges and body shapes, because those are trademarks and trade
-   dress. Technical facts like weights, gear ratios and power curves are
-   free to use. Options:
-   (a) real names and faithful shapes, no logos or badges. Fine as a
-   private hobby, but risky once the game takes money (the master list
-   has a real-money VIP marketplace, item 8);
-   (b) faithful shapes with our own names (e.g. "Vette C7", "86 GR",
-   "Seven FD", "Roadster ND"), no logos;
-   (c) our own designs inspired by each car, with the real physics data.
-   Recommendation [D]: **(b) now**, and if the game ever earns money,
-   either license the cars or move to (c).
-2. **Which version of each car** (the data sheets in §5 use the bold one):
-   - Corvette: **C7 Stingray Z51 coupe, 7-speed manual (2014-2019, 460 hp)**,
-     or the C7 Z06 (650 hp supercharged, real downforce), or both later.
-   - GR86: **2022+ GR86, 6-speed manual (228 hp)**.
-   - RX-7: **FD3S, 1993 US (255 hp)**, or the JDM Spirit R (280 PS, 17" wheels).
-   - Miata: **ND2, 2019+ Club, 6-speed manual (181 hp)**, or the NA
-     (1989, pop-up lights, the classic drift starter).
-3. **Who builds the 3D cars** (§9): Claude with Blender scripts from
-   blueprints and photos (slow, good but not showroom level), licensed
-   models (CC-BY or bought, quality varies, the naming question stays), or
-   a commissioned artist.
-4. **First playable slice** [D, recommended]: the new physics + the GR86 +
-   the drift skidpad, before everything else. It is the fastest way for
-   the user to feel the new physics on the phone.
+## 0. Decisions (user, 2026-10-19)
+1. **Names and looks: changed, so we can't get in trouble.** The user
+   wants to **sell the game and profit** at some point. So every car gets
+   our own maker and model name, no real logos, badges, tire brands or
+   track names. Its shape stays close enough to recognize, but the
+   details are visibly ours (the GTA approach): our own grille, light
+   graphics, vents, wheels and badges, and slightly reshaped proportions
+   where a shape is iconic. Physics numbers (weights, ratios, power) are
+   facts and stay real. **Before anything is sold, a lawyer checks the
+   final cars and names** (iconic car shapes can count as protected
+   "trade dress"; we lower the risk, we can't promise zero). The names
+   below are placeholders until checked.
+2. **The cars.** The user's must-have: the **2017 C7 Corvette Grand
+   Sport**. The other three were left to Claude: **GR86 2022+ 6MT**,
+   **RX-7 FD3S (1993 US, 5MT)**, **MX-5 ND2 Club 6MT (2019+)**, all chosen
+   because their published data is the most complete.
+3. **Models: built by script** in Blender (`tools/assets/`), for now.
+4. **MVP first: simple, playable, made for feel and adjusting** (§18,
+   stage MVP). Everything else in this file follows after it.
+
+| Real car (reference only) | In-game maker and model (placeholder) |
+|---|---|
+| Chevrolet Corvette C7 Grand Sport | **Vance Ridgeback GS** |
+| Toyota GR86 | **Kaito Sora 24** |
+| Mazda RX-7 FD3S | **Hoshi R13 Twin** |
+| Mazda MX-5 ND2 | **Hoshi Kaze 2.0** |
+The real names appear only in this file and the code's comments (as
+references for the data), never in the game.
 
 ---
 
@@ -636,26 +637,28 @@ Everything is checked by `car_spec` validation: static corner loads
 from mass and CG; suspension sag at rest within limits; top speed per
 gear; units.
 
-### 5.1 Chevrolet Corvette C7 Stingray Z51, 7-speed manual
+### 5.1 Chevrolet Corvette C7 Grand Sport coupe (2017), 7-speed manual → "Vance Ridgeback GS"
+The Grand Sport is the Stingray's LT1 engine in the wide Z06 body, with
+Z06 suspension, brakes and wheels.
 | Item | Value |
 |---|---|
-| Curb mass | 1,499-1,562 kg [S: 3,298-3,444 lb] → **1,525 kg** |
-| Weight split | ≈ **50/50** [S: "near perfect 50/50"] |
-| Wheelbase | **2,710 mm** [S] |
-| Track F / R | **1,600 / 1,567 mm** [S: one catalog, verify] |
-| Length / width / height | 4,495 / 1,877 / 1,235 mm [E: verify] |
+| Curb mass | 1,555-1,582 kg [S: 3,428-3,487 lb] → **1,560 kg** |
+| Weight split | ≈ **50/50** [S for the C7 family: "near perfect 50/50"; verify for the GS] |
+| Wheelbase | **2,710 mm** [S, C7] |
+| Track F / R | **1,613 / 1,588 mm** [S: 63.5 / 62.5 in; another source gives 61.8 rear] |
+| Length / width / height | 4,495 / 1,965 / 1,235 mm [E: wide body, verify] |
 | CG height | 0.46 m [E] |
-| Engine | LT1 6.2 L V8, NA, front-mid; **460 hp @ 6,000, 465 lb-ft @ 4,600** with performance exhaust [S]; redline 6,600 [E] |
+| Engine | LT1 6.2 L V8, NA, dry sump, front-mid; **460 hp @ 6,000, 465 lb-ft @ 4,600** [S]; redline 6,600 [E] |
 | Firing order | 1-8-7-2-6-5-4-3 (crossplane V8) [E: GM small-block standard] |
-| Gearbox | Tremec TR-6070, 7-speed: **2.97, 2.07, 1.43, 1.00, 0.71, 0.57, 0.48**, R 2.90 [S] |
-| Final drive | **3.42** (manual) [S] |
-| Differential | Electronic LSD (Z51) [S/E] |
-| Tires | 245/35ZR19 F, 285/30ZR20 R, Michelin Pilot Super Sport [E: verify]; class "extreme summer" |
-| Brakes | 345 mm F (13.6 in, Z51) [S], ≈ 338 mm R [E] |
-| Suspension | double wishbone, transverse composite leaf F/R; Magnetic Ride optional [E] |
-| Aero | C_d 0.29-0.30 [E], A 1.97 m² [E], fit C_d·A to top speed |
+| Gearbox | Tremec TR-6070, 7-speed: **2.97, 2.07, 1.43, 1.00, 0.71, 0.57, 0.48**, R 2.90 (Z51/Grand Sport ratios) [S] |
+| Final drive | **3.42** (manual) [S, C7 manual] |
+| Differential | Electronic LSD [S/E] |
+| Tires | **285/30ZR19 F, 335/25ZR20 R** on 19×10 / 20×12 wheels [S]; Michelin Pilot Super Sport (Z07 option: Sport Cup 2) [E]; class "extreme summer" |
+| Brakes | Brembo ≈ 371 mm F / 366 mm R (14.6 / 14.4 in) [E: verify] |
+| Suspension | double wishbone, transverse composite leaf F/R; Magnetic Ride [E] |
+| Aero | C_d ≈ 0.30-0.32 [E: wide body + splitter + spoiler], A ≈ 2.05 m² [E]; small downforce from the Z06 splitter and spoiler [E]; fit C_d·A to top speed |
 | Electronics | ABS, TC, ESC, PTM modes, launch control, Active Rev Matching [S/E] |
-| Targets | 0-60 mph 3.8 s (GM claim) [S]; 60-0 99-107 ft [S]; skidpad 1.03-1.05 g [S]; slalom 73.5 mph (Edmunds) [S]; top speed ≈ 305 km/h [E: verify] |
+| Targets | 0-60 mph **3.6-3.8 s** [S: 3.8 in a road test]; skidpad ≈ 1.10 g [E: verify]; 60-0 ≈ 95-100 ft [E: verify]; top ≈ 290-300 km/h [E: verify] |
 
 ### 5.2 Toyota GR86 (2022+), 6-speed manual
 | Item | Value |
@@ -1069,6 +1072,7 @@ Sizes: S (a session), M (2-3), L (4-6), XL (more).
 
 | # | Stage | Size | The user sees |
 |---|---|---|---|
+| **MVP** | **The playable slice** (below) | L | **drive the new Ridgeback GS on a skid pad and the Ring, and tune it live** |
 | R-0 | Research pass: fill every "verify" in §5 and the MF coefficients from Pacejka's book | M | nothing (docs) |
 | 1 | `car_spec` + JSON + validation; telemetry; `drive_lab` skeleton with the old sim as baseline | M | nothing |
 | 2 | Road query + spline cross-sections + multi-probe contact | M | smoother kerbs (old sim on new contact) |
@@ -1077,11 +1081,11 @@ Sizes: S (a session), M (2-3), L (4-6), XL (more).
 | 5 | Driveline solver + engine + clutch + gearbox + diffs + brakes | L | real launches, lockups, diffs |
 | 6 | Steering geometry + aligning torque + the virtual steering wheel | M | steering that self-centres and catches slides |
 | 7 | Aero + slipstream; electronics (ABS/TC/ESC/modes) | M | drafting; assists you can turn off |
-| 8 | **GR86 data + calibration + drift skid pad** (first playable slice) | M | **drive the new GR86 on the skid pad** |
+| 8 | Ridgeback GS full calibration to its targets + the drift skid pad set (figure-8, wet pad later) | M | the GS drives like its real numbers |
 | 9 | Cameras (chase/drift/hood/cockpit) + effects (smoke, marks) + HUD + telemetry overlay | M | calmer camera, smoke, skid marks |
 | 10 | Sound synthesis (4 engines, tires, road, wind, turbo) | L | each car sounds like itself |
-| 11 | C7, RX-7, Miata data + calibration (+ FD turbo) | M | four cars to drive |
-| 12 | Car art: GR86 model + interior + paint shader (benchmark), then the other three | XL | real-looking cars, cockpit view |
+| 11 | Sora 24 (GR86), R13 Twin (RX-7, turbo), Kaze 2.0 (Miata): data + calibration | M | four cars to drive |
+| 12 | Car art by script: Ridgeback GS model + interior + paint shader (benchmark), then the other three | XL | real-looking cars, cockpit view |
 | 13 | Collisions and damage (hulls, GJK, wheel-wall, damage levels) | M | real crashes, rollovers |
 | 14 | Road tool + Bar3D Ring 2.0 + rendering upgrades (shadows, AA, sky) | L | the circuit rebuilt, sharper and shadowed |
 | 15 | Drift park (course, touge, clipping points) + drift scoring + tandem | L | drift mode |
@@ -1092,6 +1096,38 @@ Sizes: S (a session), M (2-3), L (4-6), XL (more).
 | 20 | More circuits (technical, GP, night street) | L | new tracks |
 | 21 | Traffic, day/night, weather, getting out of the car | XL | a living world |
 | 22 | Performance and quality levels, phone validation, polish | M | steady 60 fps, cool phone |
+### The MVP (first, before the stages above)
+Goal: the user feels the new physics on the phone as soon as possible
+and can change how the car drives **on the phone**, live. Simple
+versions of the core, built so the later stages replace parts without
+rewrites:
+- `engine/drive/` with: car_spec + JSON; chassis at 480 Hz; spline
+  road + multi-probe contact on the existing Ring; unsprung wheels;
+  springs, dampers, bump stops, anti-roll bars (no kinematics tables
+  yet: fixed camber, simple roll centre); tires with MF pure + combined
+  slip, relaxation and the low-speed stick mode (no heat or wear);
+  engine curve, clutch, gearbox, open/clutch LSD (eLSD later), brakes
+  with bias and ABS; the virtual steering wheel with aligning torque;
+  aero drag and lift.
+- One car: the **Ridgeback GS** (C7 Grand Sport data), drawn with the
+  existing code-built body stretched to its size (the real model comes
+  in stage 12).
+- One new place: a **flat skid pad** (30 m and 50 m circles) next to the
+  Ring, plus the Ring itself.
+- The **live tuning panel** (Menu → Car setup while driving): sliders
+  for tire grip, spring rates, dampers, anti-roll bars, brake bias,
+  diff lock, steering ratio, assist levels, camera distance; changes
+  apply at once; "save" and "reset to stock". This is how the feel gets
+  adjusted together with the user.
+- The `?telemetry=1` overlay (g-g circle, slip per tire, travel).
+- The old driving stays one tap away (setting "Old physics") so the user
+  can compare.
+- Tests: the §17 catalogue's first rows (static settle, frame-rate
+  independence, 0-60, braking, skidpad, slope, through zero, bump).
+- **Phone check:** sit in a rig → the GS on the skid pad: hold a steady
+  circle, feel the grip build and let go progressively, drift it with
+  the handbrake and catch it; then change a slider and feel the difference.
+
 Stages 1-7 run behind the scenes; the old driving stays live until
 stage 8 replaces it (with a switch in settings to compare during
 testing). Bars between stages: every test in §17 for the stages done.
@@ -1103,9 +1139,9 @@ testing). Bars between stages: every test in §17 for the stages done.
   test catalogue (numbers, not guesses).
 - **Phone heat with many cars:** sim budget measured from stage 3; far
   bots on the cheaper path.
-- **Art is the biggest job** (stage 12, XL): the GR86 first as the
+- **Art is the biggest job** (stage 12, XL): the Ridgeback GS first as the
   benchmark, the user approves before the other three.
-- **Legal** (§0): names, badges, tire brands, real tracks.
+- **Legal** (§0): changed names and details, no badges, tire brands or real tracks; a lawyer checks before selling.
 - **Scope:** each stage ships something the user can feel; nothing waits
   for "everything".
 

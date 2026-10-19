@@ -220,3 +220,8 @@ feel of Drive Zone Online. Cars: a C7 Corvette "at least", the Toyota
 GR86, the RX-7 and the Miata. Circuit racing first, plus a drift area and
 open free drive. "Not the least amount of work: the absolute best possible
 detailed plan from A to Z." Plan: `docs/DRIVING_REWORK.md`.
+- Decided the same day: changed names and details on recognizable shapes
+  ("so we can't get in trouble"); the user wants to sell it and profit
+  later. Must-have car: the **2017 C7 Corvette Grand Sport**; the other
+  three are Claude's pick. Models by script for now. MVP first: simple,
+  playable, for feel and adjusting.
