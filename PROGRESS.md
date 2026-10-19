@@ -39,6 +39,11 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      after 2 min walking, incl. into the arcade) vs the baseline.
 2. [ ] **Clean core** (RESTRUCTURE Phase 4): `main.cpp` split into clear parts,
    stable entity ids, one activity/interaction system. Overlaps 1c.
+   - [x] 4.1a (2026-10-19): `app/app_state.h` (the App state, shared helpers),
+     `app/hud.cpp` (on-screen text), `app/local_player.cpp` (camera, walking,
+     held things, your pose). `main.cpp` 1,899 → 1,331 lines. Pure move:
+     activity screenshots identical.
+   - [ ] 4.1b next: the Game object and the phase table (`g_app` gone).
 3. [ ] **Accounts + economy foundation:** accounts move from IONOS PHP to
    Cloudflare D1; age at sign-up (13+ only; teen 13-17 / adult 18+ bands);
    inventory and a currency ledger the server owns (every change a

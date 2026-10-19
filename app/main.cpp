@@ -54,136 +54,11 @@ using engine::Vec3;
 
 void joinRoom();  // below: joins the multiplayer room once you've entered
 
-namespace {
+#include "app/app_state.h"
+#include "app/hud.h"
+#include "app/local_player.h"
 
-constexpr float kWalkSpeed = 2.2f;           // meters per second
-constexpr float kLookSensitivity = 0.0055f;  // radians per CSS pixel (times the setting)
-constexpr float kBodyRadius = 0.3f;          // meters
-constexpr float kLabelShowDistance = 6.0f;   // name tags appear within this range
-constexpr float kPromptDistance = 2.2f;      // ...and their prompt this close
-constexpr float kDirectReach = 2.6f;         // small things: looked at within this range
-constexpr float kTapReach = 4.0f;            // how far away a tap can use things
-constexpr float kHighlightGlow = 0.35f;      // extra glow on the thing you're at
-constexpr double kBannerMs = 7000;           // "now playing" banner duration
-constexpr double kIntroMaxMs = 12000;        // title + controls hint on start...
-constexpr double kIntroAfterInputMs = 1500;  // ...until shortly after you first move
-constexpr float kGrabReach = 2.2f;           // how far away you can pick things up
-constexpr float kPlaceReach = 2.0f;          // ...and put them down
-constexpr float kThrowSpeed = 4.0f;          // meters per second
-constexpr float kSeatTurn = 1.9f;            // how far (radians) you can turn your head while seated
-constexpr double kToastMs = 3500;
-
-using app::Activity;
-using app::Emote;
-using app::slot::kCount;
-
-struct App {
-  engine::Gpu gpu;
-  engine::Input input;
-  engine::FirstPersonCamera camera;
-  app::BarScene scene;
-  app::SceneRenderer renderer;
-  std::vector<app::Avatar> avatars;  // one per look; all share the skeleton
-  app::AvatarMotion avatarMotion;
-  std::vector<Mat4> avatarBones, firstPersonBones;
-  app::OtherPlayers others;  // multiplayer
-  app::SharedWorld shared;   // glasses, jukebox and mirrors, the same for everyone
-  std::vector<Mat4> otherTransforms;
-  std::vector<std::vector<Mat4>> otherBones;
-  std::vector<int> otherLooks;
-  app::Jukebox jukebox;
-  app::JukeboxMenu jukeboxMenu;
-  app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
-  app::ChessGame chess;    // the lounge's chessboard
-  // The avatar customizer: your choices (when `customLook`), the looks built
-  // so far (by AvatarStyle::key, as look indexes after the presets), and
-  // everyone else's choices by room slot.
-  app::AvatarStyle style;
-  bool customLook = false;
-  int selfCustomLook = -1;  // look index of your custom mesh (rebuilt in place)
-  std::map<int, app::AvatarStyle> slotStyles;
-  struct SlotLook { std::string key; int index; };
-  std::map<int, SlotLook> slotLooks;  // a mesh per room slot, rebuilt when its style changes
-  int styleSentSlot = -1;
-  bool avatarPreview = false;  // the customizer is open: the camera shows you from the front
-  Vec3 previewEye;
-  float previewYaw = 0;
-  float previewStartYaw = 0;
-  float previewSpin = 0;  // dragging turns your body (the camera stays)
-  bool previewAimed = false;  // turned toward the open side yet
-  app::Piano piano;
-  app::Darts darts;
-  app::race::Game race;
-  app::Bartender bartender;
-  engine::Sound sfx[static_cast<int>(engine::synth::Effect::kCount)];
-  engine::Sound guitar[6];
-  engine::Sound arcadeMusic;   // the arcade's loop (engine::synth::arcadeLoop)
-  int arcadeVoice = 0;
-  float arcadeGain = 0;
-  engine::TextRenderer text;
-  engine::PictureBillboards pictures;  // profile pictures over other players' heads
-  struct PictureSlot {
-    std::string account;
-    int rev = 0;
-    bool ready = false;
-    double usedMs = 0;
-  };
-  PictureSlot pictureSlots[engine::PictureBillboards::kSlots];
-  engine::PhysicsWorld physics;
-  std::vector<int> bodyOfModel;  // physics body per BarScene::models entry
-  std::vector<engine::Vec3> shownPosition;  // per body, where its model was last drawn
-  std::vector<engine::Quat> shownRotation;
-  int held = -1;                 // body in your hand
-  int aimed = -1;                // body in the middle of the screen, within reach
-  std::vector<app::SceneRenderer::Box> boxes;
-
-  // You: what you're doing.
-  int look = 0;
-  Activity activity = Activity::kNone;
-  int seat = -1;               // the seat you're on
-  int seatClaim = 0;           // the room's answer to "may I sit here?" (engine::net::claim)
-  bool meridianOpen = false;   // Meridian (web/meridian/) covers the screen: the bar stops drawing
-  std::string machineKey;      // the machine you're using (darts, 4K Mania), claimed in the room
-  int machineClaim = 0;
-  double activityStartMs = 0;
-  Emote emote = Emote::kNone;
-  int emoteCount = 0;
-  bool onMic = false;
-  float voiceLevel = 0;
-  double lastVoicePlaceMs = 0;
-
-  // The room.
-  bool lightsDim = false, fireOn = true;
-
-  // Settings (web/menu.js).
-  int settingsVersion = -1;
-  app::TestHooks hooks;  // ?cam, ?still, ?perf, ?sit... (app/test_hooks.h)
-  app::Loader loader;    // the loading screen's stages (app/loader.h)
-  bool warmGpuDone = false;  // the warm-up frame has finished on the GPU
-  bool warmUpFrame = false;  // this frame is the warm-up frame
-  bool pipelinesLogged = false, racePipelinesLogged = false;
-  bool sceneReady = false;  // onGpuReady finished
-  bool joined = false;      // in the multiplayer room
-  float lookSpeed = 1, invertLook = 1;
-  bool showNames = true;
-
-  float eyeHeight = 1.65f;  // eyes above the floor you stand on
-  int focused = -1;      // interactable you're standing at and facing
-  int highlighted = -1;  // interactable currently drawn glowing
-  int focusedSeat = -1;  // seat in the middle of the screen, within reach
-  int highlightedSeatModel = -1;
-  int bannerSong = 0;
-  double bannerEndMs = 0;
-  std::string toast;
-  double toastEndMs = 0;
-
-  double introEndMs = 0;
-  bool entered = false;        // the loading screen has been closed
-  double fpsWindowStartMs = 0;
-  int fpsFrames = 0;
-  size_t infoSongCount = SIZE_MAX;  // piano songs the menu knows (SIZE_MAX: nothing sent yet)
-  std::string infoState;            // what the menu was last told about you
-};
+namespace barapp {
 
 App g_app;
 
@@ -192,7 +67,7 @@ void showToast(const std::string& text) {
   g_app.toastEndMs = engine::frameTime().nowMs + kToastMs;
 }
 
-void playSfx(engine::synth::Effect e, Vec3 where, float gain = 0.8f, bool share = false) {
+void playSfx(engine::synth::Effect e, Vec3 where, float gain, bool share) {
   g_app.sfx[static_cast<int>(e)].play(gain, &where);
   if (share) {
     const double v[4] = {static_cast<double>(e), where.x, where.y, where.z};
@@ -283,7 +158,7 @@ void standUp() {
 }
 
 // The race on the rig you're sitting in.
-void startRace(bool straightIn = false) {
+void startRace(bool straightIn) {
   if (g_app.seat < 0) return;
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
   if (s.kind != app::SeatKind::kSim) return;
@@ -336,371 +211,7 @@ void sitOn(int index) {
   }
 }
 
-// ---- Camera and movement ----
 
-void updateCamera(float dt) {
-  // A menu or account panel covers the game: no looking or walking meanwhile.
-  const bool covered = engine::bridge::frame().modalOpen;
-  const engine::Vec2 look = covered && !g_app.avatarPreview ? engine::Vec2{} : g_app.input.frame().look;
-  const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.race.open();
-  const float sens = kLookSensitivity * g_app.lookSpeed;
-  if (!menu && !g_app.piano.keyboardOpen()) g_app.camera.look(look.x * sens, -look.y * sens * g_app.invertLook);
-  const engine::Vec2 move = covered ? engine::Vec2{} : g_app.input.frame().move;
-  if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
-    if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, engine::frameTime().nowMs + kIntroAfterInputMs);
-  }
-  if (g_app.avatarPreview) {
-    // The customizer is open: the camera stands 1.7 m in front of you and
-    // looks back; dragging turns your body.
-    // The panel covers the lower half, so you're framed in the top half:
-    // up to 3.2 m away (closer if something is in the way). On opening you
-    // turn toward the most open side. Dragging spins your body.
-    const auto room = [&](float yaw) {
-      const Vec3 f{std::sin(yaw), 0, -std::cos(yaw)};
-      float free = 0.5f;
-      for (float d = 0.6f; d <= 3.2f; d += 0.1f) {
-        const Vec3 p{g_app.previewEye.x + f.x * d, g_app.previewEye.y - 0.7f, g_app.previewEye.z + f.z * d};
-        if (engine::length(app::resolveCollisions(g_app.scene, p, 0.12f) - p) > 0.01f) break;
-        free = d;
-      }
-      return free;
-    };
-    if (!g_app.previewAimed) {
-      g_app.previewAimed = true;
-      float best = -1, bestYaw = g_app.previewYaw;
-      for (int k = 0; k < 16; ++k) {
-        const float yaw = g_app.previewYaw + static_cast<float>(k) * engine::kPi / 8;
-        const float r = room(yaw) - (k == 0 ? 0 : 0.05f);  // ties keep the way you face
-        if (r > best) best = r, bestYaw = yaw;
-      }
-      g_app.previewYaw = bestYaw;
-      g_app.previewSpin = engine::radians(g_app.hooks.previewTurn);
-    }
-    g_app.previewSpin += look.x * sens;
-    const float dist = room(g_app.previewYaw);
-    const Vec3 fwd{std::sin(g_app.previewYaw), 0, -std::cos(g_app.previewYaw)};
-    const float feet = g_app.previewEye.y - 1.66f, camY = 1.15f;
-    g_app.camera.position = Vec3{g_app.previewEye.x, feet + camY, g_app.previewEye.z} + fwd * dist;
-    g_app.camera.yaw = g_app.previewYaw + engine::kPi;
-    // The top of your head just under the top of the screen.
-    g_app.camera.pitch = std::atan((1.85f - camY) / dist) - g_app.camera.fovY * 0.5f * 0.88f;
-    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
-    return;
-  }
-  if (g_app.chess.isOpen()) {  // looking down at the chessboard
-    g_app.chess.camera(g_app.camera);
-    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
-    return;
-  }
-  if (g_app.seat >= 0) {
-    // Seated: the eyes stay put; the head turns only so far.
-    const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
-    const float turn = engine::wrapAngle(g_app.camera.yaw - s.yaw);
-    g_app.camera.yaw = s.yaw + engine::clampf(turn, -kSeatTurn, kSeatTurn);
-    g_app.camera.position = app::seatedEye(s.hip, s.yaw, s.lowSeat);
-    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
-    if (engine::length({move.x, 0, move.y}) > 0.6f && !g_app.input.capturing()) standUp();
-    return;
-  }
-  if (menu) {  // stand still in menus and games
-    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
-    return;
-  }
-  Vec3 p = g_app.camera.position;
-  p += g_app.camera.flatForward() * (move.y * kWalkSpeed * dt);
-  p += g_app.camera.flatRight() * (move.x * kWalkSpeed * dt);
-  const Vec3 before = g_app.camera.position;
-  p = app::resolveCollisions(g_app.scene, p, kBodyRadius);
-  // Step up onto (or down from) raised floors smoothly.
-  const float targetY = app::groundHeight(g_app.scene, p) + g_app.eyeHeight;
-  p.y += (targetY - p.y) * std::min(1.0f, dt * 12.0f);
-  g_app.camera.position = p;
-  // Drive the walk animation by how far you actually moved (walls stop it).
-  const Vec3 moved = g_app.camera.position - before;
-  app::advanceWalk(g_app.avatarMotion, engine::dot(moved, g_app.camera.flatForward()),
-                   engine::dot(moved, g_app.camera.flatRight()), dt, kWalkSpeed);
-  // Walking ends an emote, darts, a shift's station.
-  const float walked = engine::length({moved.x, 0, moved.z});
-  if (walked > 0.002f) {
-    if (g_app.activity == Activity::kEmote) setActivity(Activity::kNone);
-    if (g_app.darts.playing() && engine::length(g_app.camera.position - g_app.scene.dartOche) > 0.6f) {
-      g_app.darts.stop();
-      setActivity(Activity::kNone);
-      showToast("You left the darts.");
-    }
-  }
-}
-
-void updateFps(double nowMs) {
-  ++g_app.fpsFrames;
-  const double elapsed = nowMs - g_app.fpsWindowStartMs;
-  if (elapsed < 500) return;
-  char text[128];
-  const std::string online = g_app.others.statusText();
-  std::snprintf(text, sizeof(text), "%.0f fps  |  %ux%u @%.1fx  |  %zu objects%s%s",
-                g_app.fpsFrames * 1000.0 / elapsed, g_app.gpu.width, g_app.gpu.height, g_app.gpu.pixelRatio,
-                g_app.renderer.objectCount(), online.empty() ? "" : "  |  ", online.c_str());
-  engine::setStatus(text);
-  g_app.fpsFrames = 0;
-  g_app.fpsWindowStartMs = nowMs;
-}
-
-// The prompt for whatever you're standing at.
-std::string promptFor(const app::Interactable& it) {
-  using app::Action;
-  if (it.action == Action::kJukebox) return g_app.jukebox.prompt();
-  if (it.action == Action::kMirror) {
-    const app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
-    if (!m.on) return "Mirror: off\nTap: full mirror";
-    if (m.mode == app::MirrorMode::kFull) return "Mirror: full\nTap: avatars only";
-    return "Mirror: avatars only\nTap: turn off";
-  }
-  if (it.action == Action::kMirrorMode) {
-    static const char* kNames[3] = {"Full mirror", "Avatars-only mirror", "Mirror off"};
-    return std::string(kNames[it.value]) + "\nTap to choose";
-  }
-  if (it.action == Action::kDrinkShelf) {
-    const int d = g_app.bartender.drinkAt(it.value);
-    return d ? std::string(app::drinkRecipes()[static_cast<size_t>(d - 1)].name) + "\nTap: take it" : "";
-  }
-  if (it.action == Action::kRhythm) {
-    if (const app::OtherPlayer* o = playerUsing(Activity::kRhythm, 0)) return "4K Mania\n" + o->name + " is playing";
-  }
-  if (it.action == Action::kDarts) {
-    if (const app::OtherPlayer* o = playerUsing(Activity::kDarts, 0)) return "Darts\n" + o->name + " is throwing";
-  }
-  if (it.action == Action::kBartender) {
-    if (g_app.bartender.onShift()) return "Bartender station\nTap: end your shift";
-    return hasBadge("bartender") ? it.prompt : "Bartender station\n(needs the Bartender badge)";
-  }
-  if (it.action == Action::kPianoSongs) {
-    const std::string playing = g_app.piano.nowPlaying();
-    return playing.empty() ? it.prompt : "Playing: " + playing + "\nTap: pick a song";
-  }
-  if (it.action == Action::kMic) return g_app.onMic ? "Microphone (you're on it)\nTap: step off" : it.prompt;
-  if (it.action == Action::kLightSwitch) return g_app.lightsDim ? "Light switch\nTap: lights up" : it.prompt;
-  return it.prompt;
-}
-
-// The picture slot showing this player's profile picture, or -1 (a guest,
-// no picture, or still downloading). Starts the download when needed.
-int pictureSlotFor(const app::OtherPlayer& o, double nowMs) {
-  if (o.account.empty() || o.avatarRev <= 0) return -1;
-  auto& slots = g_app.pictureSlots;
-  int found = -1, oldest = 0;
-  for (int i = 0; i < static_cast<int>(engine::PictureBillboards::kSlots); ++i) {
-    if (slots[i].account == o.account) found = i;
-    if (slots[i].usedMs < slots[oldest].usedMs) oldest = i;
-  }
-  if (found < 0 || slots[found].rev != o.avatarRev) {
-    const int i = found >= 0 ? found : oldest;
-    slots[i] = {o.account, o.avatarRev, false, nowMs};
-    const std::string url = engine::net::avatarUrl(o.account, o.avatarRev);
-    if (url.empty()) return -1;
-    engine::fetchFile(url, [i, account = o.account, rev = o.avatarRev](bool ok, std::vector<uint8_t> bytes) {
-      if (!ok) return;
-      engine::decodeImage(bytes, "image/jpeg", [i, account, rev](bool decoded, engine::Rgba8Image image) {
-        auto& slot = g_app.pictureSlots[i];
-        if (!decoded || slot.account != account || slot.rev != rev) return;
-        g_app.pictures.setPicture(static_cast<uint32_t>(i), image);
-        slot.ready = true;
-      });
-    });
-    return -1;
-  }
-  slots[found].usedMs = nowMs;
-  return slots[found].ready ? found : -1;
-}
-
-// The middle monitor of a sim rig, as world corners (bottom-left,
-// bottom-right, top-right, top-left), slightly in front of the screen.
-void simMonitor(int rig, Vec3 out[4]) {
-  const Vec3 c = g_app.scene.simPosition[rig];
-  // The rig faces +x; the screen is 1.08 m in front of its origin.
-  const float x = c.x + 1.074f, hw = 0.36f, y0 = 1.08f - 0.21f, y1 = 1.08f + 0.21f;
-  out[0] = {x, y0, c.z - hw};
-  out[1] = {x, y0, c.z + hw};
-  out[2] = {x, y1, c.z + hw};
-  out[3] = {x, y1, c.z - hw};
-}
-
-// Others' games on the machines in the bar: the race on the sim monitors,
-// the notes on the rhythm cabinet, darts and the score at the board.
-void queueMachineScreens(double nowMs) {
-  engine::TextRenderer& text = g_app.text;
-  for (const app::OtherPlayer& o : g_app.others.players()) {
-    if (!o.placed) continue;
-    const auto act = static_cast<Activity>(static_cast<int>(o.values[app::slot::kActivity]));
-    const float* d = o.values + app::slot::kData;
-    if (act == Activity::kDrive) {
-      const int seat = static_cast<int>(o.values[app::slot::kParam]);
-      if (seat < 0 || seat >= static_cast<int>(g_app.scene.seats.size())) continue;
-      const int rig = std::max(0, g_app.scene.seats[static_cast<size_t>(seat)].machine);
-      Vec3 c[4];
-      simMonitor(rig, c);
-      // (The live 3D race on the three monitors comes in docs/RACING.md step 4.)
-      text.addWorldQuad(c, {0.02f, 0.03f, 0.06f, 1});
-      engine::TextStyle style;
-      style.align = 0.5f;
-      style.color = {1, 0.85f, 0.3f, 1};
-      char line[64];
-      std::snprintf(line, sizeof(line), "%s IS RACING\n%d KM/H", o.name.c_str(), static_cast<int>(std::fabs(d[3]) * 3.6f));
-      const Vec3 mid = (c[0] + c[1] + c[2] + c[3]) * 0.25f + Vec3{-0.004f, 0.05f, 0};
-      text.addWorld(line, mid, engine::normalize(c[1] - c[0]), {0, 1, 0}, 0.035f, style);
-    } else if (act == Activity::kRhythm) {
-      Vec3 c[4];
-      const Vec3* s = g_app.scene.rhythmScreen;
-      const Vec3 normal = engine::normalize(engine::cross(s[1] - s[0], s[3] - s[0]));
-      for (int i = 0; i < 4; ++i) c[i] = s[i] + normal * 0.006f;
-      app::RhythmGame::drawCabinet(text, c, d, nowMs);
-    } else if (act == Activity::kDarts) {
-      app::Darts::addStuckDarts(g_app.boxes, g_app.scene.dartBoard, d + 1, 3);
-      engine::TextStyle style;
-      style.align = 0.5f;
-      style.color = {1, 1, 1, 1};
-      char line[64];
-      std::snprintf(line, sizeof(line), "%s: %d left", o.name.c_str(), static_cast<int>(d[0]));
-      text.addWorld(line, g_app.scene.dartBoard + Vec3{1.7f, -0.05f, -0.06f}, {-1, 0, 0}, {0, 1, 0}, 0.04f, style);
-    }
-  }
-}
-
-// Queues this frame's text: name tags over things in the bar, the prompt
-// for whatever you're standing at, and the intro title.
-void queueText(double nowMs, const Mat4& viewProj) {
-  engine::TextRenderer& text = g_app.text;
-  const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
-  const float px = g_app.gpu.pixelRatio;  // device pixels per CSS pixel
-  text.begin(viewProj, g_app.gpu.width, g_app.gpu.height);
-  g_app.pictures.begin(viewProj);
-  if (g_app.rhythm.isOpen()) {  // the game covers the screen
-    g_app.rhythm.draw(text, W, H, px, nowMs);
-    engine::profiler().drawOverlay(text, W, H, px);
-    text.upload(g_app.gpu.queue);
-    return;
-  }
-  if (g_app.race.open()) return;  // the race queues its own HUD (app/race/game.cpp)
-  queueMachineScreens(nowMs);
-  if (g_app.chess.isOpen()) g_app.chess.draw(text, W, H, px, nowMs);
-
-  const engine::FirstPersonCamera& cam = g_app.camera;
-  const Vec3 forward = cam.forward();
-  const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
-  const Vec3 up = engine::cross(right, forward);
-  for (size_t i = 0; i < g_app.scene.interactables.size(); ++i) {
-    if (g_app.jukeboxMenu.isOpen() || !g_app.showNames || g_app.darts.playing()) break;  // keep the view uncluttered
-    if (static_cast<int>(i) == g_app.focused) continue;  // its prompt says what it is
-    const app::Interactable& it = g_app.scene.interactables[i];
-    if (it.name.empty()) continue;  // e.g. buttons: their prompt is enough
-    const float dist = engine::length(it.tagPosition - cam.position);
-    if (dist > kLabelShowDistance) continue;
-    // Fade in as you approach; the tag always turns to face you.
-    engine::TextStyle style;
-    style.align = 0.5f;
-    style.color = {1.0f, 0.86f, 0.62f, engine::clampf((kLabelShowDistance - dist) / 1.5f, 0, 1)};
-    style.outline.w *= style.color.w;
-    style.outlineWidth = 0.8f;
-    text.addWorld(it.name, it.tagPosition, right, up, 0.1f, style);
-  }
-  // Other players' names float over their heads (green while they talk,
-  // with their job), with their profile picture above when you're close.
-  for (const app::OtherPlayer& o : g_app.others.players()) {
-    if (!o.placed) continue;
-    const int flags = static_cast<int>(o.values[app::slot::kFlags]);
-    const float talk = std::max(o.voice, engine::clampf(engine::bridge::voiceLevel(o.id), 0, 1));
-    engine::TextStyle style;
-    style.align = 0.5f;
-    style.color = talk > 0.08f ? engine::Vec4{0.45f, 1.0f, 0.55f, 1.0f} : engine::Vec4{0.75f, 0.9f, 1.0f, 1.0f};
-    style.outlineWidth = 0.8f;
-    std::string name = (talk > 0.08f ? "(( " : "") + o.name + (talk > 0.08f ? " ))" : "");
-    if (flags & 1) name += "\nBARTENDER";
-    if (flags & 2) name += "\nON THE MIC";
-    if (flags & app::kFlagAway) {
-      name += "\n(away)";
-      style.color = {0.6f, 0.6f, 0.65f, 0.9f};
-    }
-    text.addWorld(name, o.eye + Vec3{0, 0.32f, 0}, right, up, 0.07f, style);
-    const float near = engine::clampf((7.0f - engine::length(o.eye - cam.position)) / 1.5f, 0, 1);
-    const int slot = pictureSlotFor(o, nowMs);
-    if (near > 0 && slot >= 0) {
-      g_app.pictures.add(static_cast<uint32_t>(slot), o.eye + Vec3{0, 0.6f, 0}, right, up, 0.16f,
-                         {1.0f, 0.42f, 0.78f}, near);
-    }
-  }
-  g_app.pictures.upload(g_app.gpu.queue);
-
-  engine::TextStyle promptStyle;
-  promptStyle.align = 0.5f;
-  promptStyle.outlineWidth = 0.8f;
-  const bool busy = g_app.jukeboxMenu.isOpen() || g_app.piano.keyboardOpen() || g_app.bartender.making() ||
-                    g_app.chess.isOpen();
-  if (!busy && (g_app.held >= 0 || g_app.aimed >= 0)) {
-    const char* prompt = g_app.held >= 0 ? "Tap a table or the bar: put it down\nTap anywhere else: throw"
-                                         : "Glass\nTap: pick up";
-    text.addScreen(prompt, W * 0.5f, H * 0.62f, 14 * px, promptStyle);
-  } else if (!busy && g_app.focusedSeat >= 0) {
-    const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.focusedSeat)];
-    const app::OtherPlayer* o = playerUsing(Activity::kSit, g_app.focusedSeat);
-    std::string prompt = std::string(s.name) + (o ? "\n" + o->name + " is sitting here" : "\nTap: sit");
-    if (!o && s.kind == app::SeatKind::kSim) prompt = "Racing sim\nTap: sit and race";
-    if (!o && s.kind == app::SeatKind::kPianoBench) prompt = "Piano bench\nTap: sit and play";
-    text.addScreen(prompt, W * 0.5f, H * 0.62f, 14 * px, promptStyle);
-  } else if (!busy && g_app.focused >= 0 && g_app.seat < 0) {
-    const app::Interactable& it = g_app.scene.interactables[static_cast<size_t>(g_app.focused)];
-    const std::string prompt = promptFor(it);
-    if (!prompt.empty()) text.addScreen(prompt, W * 0.5f, H * 0.62f, 14 * px, promptStyle);
-  }
-  if (g_app.bartender.held() && !busy) {
-    engine::TextStyle s = promptStyle;
-    s.color = {1.0f, 0.86f, 0.62f, 1};
-    const std::string name = app::drinkRecipes()[static_cast<size_t>(g_app.bartender.held() - 1)].name;
-    text.addScreen("Your " + name + "\nTap an empty spot to sip", W * 0.5f, H * 0.75f, 10 * px, s);
-  }
-
-  // "Now playing" banner with the song credit, whenever a new song starts.
-  const app::Song* song = g_app.jukebox.currentSong();
-  if (song && nowMs < g_app.bannerEndMs) {
-    const float fade = engine::clampf(static_cast<float>((g_app.bannerEndMs - nowMs) / 1000.0), 0, 1);
-    engine::TextStyle style;
-    style.align = 0.5f;
-    style.color = {1.0f, 0.86f, 0.62f, fade};
-    style.outline.w *= fade;
-    style.outlineWidth = 0.8f;
-    text.addScreen("Now playing: " + song->title, W * 0.5f, H * 0.11f, 12 * px, style);
-    style.color = {0.85f, 0.85f, 0.85f, fade};
-    text.addScreen(song->builtIn ? app::kMusicCredit : "Your song (only on this phone)", W * 0.5f,
-                   H * 0.11f + 22 * px, 9 * px, style);
-  }
-
-  if (nowMs < g_app.introEndMs && !g_app.hooks.still) {
-    const float fade = engine::clampf(static_cast<float>((g_app.introEndMs - nowMs) / 1000.0), 0, 1);
-    engine::TextStyle title;
-    title.align = 0.5f;
-    title.color = {1.0f, 0.35f, 0.7f, fade};
-    title.outline.w *= fade;
-    title.outlineWidth = 0.9f;
-    text.addScreen("BAR3D", W * 0.5f, H * 0.2f, 34 * px, title);
-    engine::TextStyle hint;
-    hint.align = 0.5f;
-    hint.color.w = fade;
-    hint.outline.w *= fade;
-    text.addScreen("Left thumb: walk\nRight thumb: look around\nTap things to use them\nMenu (top right): emotes, voice, settings",
-                   W * 0.5f, H * 0.2f + 52 * px, 11 * px, hint);
-  }
-  if (g_app.darts.playing()) g_app.darts.drawHud(text, W, H, px);
-  g_app.bartender.drawHud(text, W, H, px, nowMs);
-  if (g_app.piano.keyboardOpen()) g_app.piano.drawKeyboard(text, W, H, px);
-  if (nowMs < g_app.toastEndMs) {
-    engine::TextStyle s;
-    s.align = 0.5f;
-    s.color = {1, 1, 1, engine::clampf(static_cast<float>((g_app.toastEndMs - nowMs) / 500.0), 0, 1)};
-    s.outlineWidth = 0.8f;
-    text.addScreen(g_app.toast, W * 0.5f, H * 0.2f, 10 * px, s);
-  }
-  g_app.jukeboxMenu.draw(text, g_app.jukebox, W, H, px);  // last, so it's on top
-  engine::profiler().drawOverlay(text, W, H, px);
-  text.upload(g_app.gpu.queue);
-}
 
 // Slab test: distance along the ray to the box, or -1 if it misses.
 float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax) {
@@ -752,7 +263,7 @@ bool tapPerson(Vec3 dir) {
 }
 
 // The seat a ray hits within reach, or -1.
-int seatHit(Vec3 dir, float reach, float* dist = nullptr) {
+int seatHit(Vec3 dir, float reach, float* dist) {
   int best = -1;
   float nearest = reach;
   for (size_t i = 0; i < g_app.scene.seats.size(); ++i) {
@@ -982,50 +493,6 @@ void updateMirrorButtons() {
   }
 }
 
-// Holding something: a tap on a surface within reach puts it down there;
-// a tap anywhere else throws it that way.
-void putDownOrThrow(Vec3 dir) {
-  engine::Body& b = g_app.physics.body(static_cast<size_t>(g_app.held));
-  const Vec3 eye = g_app.camera.position;
-  float dist;
-  Vec3 normal;
-  b.held = false;
-  b.asleep = false;
-  b.sleepTimer = 0;
-  if (g_app.physics.raycastStatic(eye, dir, kPlaceReach, &dist, &normal) && normal.y > 0.7f) {
-    // Stand it upright on the spot.
-    g_app.physics.teleport(static_cast<size_t>(g_app.held), eye + dir * dist + Vec3{0, 0.002f, 0}, {});
-    b.velocity = {};
-    b.angularVelocity = {};
-    LOG_INFO("Put down at %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
-    g_app.shared.letGo(g_app.held, b, true);
-  } else {
-    b.velocity = dir * kThrowSpeed + Vec3{0, 1.0f, 0};
-    b.angularVelocity = {0, 0, 0};
-    LOG_INFO("Thrown from %.2f, %.2f, %.2f.", b.position.x, b.position.y, b.position.z);
-    g_app.shared.letGo(g_app.held, b, false);
-  }
-  g_app.held = -1;
-}
-
-// Picks up the body a tap lands on, if it's within reach and nothing solid
-// is in the way.
-bool tryPickUp(Vec3 dir) {
-  const Vec3 eye = g_app.camera.position;
-  float dist;
-  const int body = g_app.physics.raycastBodies(eye, dir, kGrabReach, &dist);
-  if (body < 0) return false;
-  float wallDist;
-  if (g_app.physics.raycastStatic(eye, dir, dist, &wallDist, nullptr)) return false;
-  if (!g_app.shared.canPickUp(body)) return false;  // in someone else's hand
-  engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
-  b.held = true;
-  b.kinematic = false;
-  b.asleep = false;
-  g_app.held = body;
-  g_app.shared.pickedUp(body);
-  return true;
-}
 
 // Steps physics, keeps a held thing in front of you, and moves the models.
 void updatePhysics(float dt) {
@@ -1369,43 +836,6 @@ void updateInteraction(double nowMs, float dt) {
   updateArcadeMusic(dt);
 }
 
-// Your avatar's activity this frame (and what it means for the pose).
-void updateSelfMotion(double nowMs) {
-  app::AvatarMotion& m = g_app.avatarMotion;
-  // Emotes end by themselves.
-  if (g_app.activity == Activity::kEmote &&
-      (nowMs - g_app.activityStartMs) / 1000.0 > app::emoteLength(g_app.emote)) {
-    setActivity(Activity::kNone);
-  }
-  Activity shown = g_app.activity;
-  float actionTime = static_cast<float>((nowMs - g_app.activityStartMs) / 1000.0);
-  float t;
-  if (g_app.bartender.activity(nowMs, t) == Activity::kBartend) {
-    shown = Activity::kBartend;
-    actionTime = t;
-  } else if (g_app.activity == Activity::kNone && g_app.bartender.held() && g_app.bartender.sipping(nowMs, t)) {
-    shown = Activity::kDrink;
-    actionTime = t;
-  }
-  m.activity = shown;
-  m.emote = g_app.emote;
-  m.actionTime = actionTime;
-  m.headYaw = 0;
-  m.lowSeat = 0;
-  if (g_app.seat >= 0) {
-    const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
-    m.headYaw = engine::wrapAngle(g_app.camera.yaw - s.yaw);
-    m.lowSeat = s.lowSeat;
-  }
-  m.steer = g_app.race.steer();
-  g_app.piano.hands(m.handL, m.handR);
-  if (g_app.hooks.walkPose >= 0) {  // tests: a frozen walking pose
-    m.walkAmount = 1;
-    m.walkPhase = engine::radians(g_app.hooks.walkPose);
-    m.walkDir = engine::radians(g_app.hooks.walkDir);
-    m.walkCycle = 1.3f - 0.5f * std::fabs(std::sin(m.walkDir));
-  }
-}
 
 // The numbers others get about you (players.h slot order after kPitch).
 void selfState(float extra[kCount - app::slot::kActivity]) {
@@ -1868,7 +1298,9 @@ void onGpuReady(bool ok) {
   }, nullptr);
 }
 
-}  // namespace
+}  // namespace barapp
+
+using namespace barapp;
 
 // Joins the multiplayer room: only once you've entered, so others don't
 // see you standing at the door while your bar is still loading.
