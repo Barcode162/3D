@@ -354,44 +354,54 @@ window.bar3dUi = (function () {
   function simPanel() {
     show('Racing rig', [
       el('div', { class: 'mSmall', text: 'Pick a game. You stay in the bar meanwhile: the others see you sitting at the rig.' }),
-      el('button', { class: 'mBtn', text: 'Race (with bots)', onclick: function () { close(); cmd('simRace'); } }),
+      el('button', { class: 'mBtn', text: 'Race: pick a car, race the other rig or bots', onclick: function () { close(); cmd('simRace'); } }),
       el('button', { class: 'mBtn', text: 'Meridian: an endless drive', onclick: function () { close(); openMeridian(); } }),
       el('button', { class: 'mBtn ghost', text: 'Stand up', onclick: function () { close(); cmd('standUp'); } }),
     ]);
     current = 'sim';
   }
 
-  // Meridian (the user's driving game, web/meridian/) full screen over the
-  // bar. The bar keeps its connection; its music and sounds go quiet (voice
-  // chat stays on) and it stops drawing until you come back.
-  var meridian = null;
-  function openMeridian() {
-    if (meridian) return;
+  // Full-screen games over the bar: Meridian (the user's driving game,
+  // web/meridian/, from a racing rig) and the arcade machines (web/arcade/:
+  // the platformer, the user's "Test 2"). The bar keeps its connection; its
+  // music and sounds go quiet (voice chat stays on) and it stops drawing
+  // until you come back.
+  var GAMES = {
+    meridian: { src: 'meridian/index.html', title: 'Meridian', after: function () { simPanel(); } },
+    platformer: { src: 'arcade/platformer/index.html', title: 'Platformer', after: null },
+  };
+  var meridian = null;  // the game that has the screen ({frame, back, kind})
+  function openGame(kind) {
+    var g = GAMES[kind];
+    if (meridian || !g) return;
     var A = window.bar3dAudio;
     if (A) ['music', 'sfx', 'piano'].forEach(function (b) { A.setBusVolume(b, 0); });
-    var frame = el('iframe', { src: 'meridian/index.html?v=' + (document.getElementById('build') || {}).textContent,
-                              allow: 'autoplay; fullscreen; gamepad', title: 'Meridian' });
+    var frame = el('iframe', { src: g.src + '?v=' + (document.getElementById('build') || {}).textContent,
+                              allow: 'autoplay; fullscreen; gamepad', title: g.title });
     frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2000;background:#000;';
-    var back = el('button', { text: '\u2190 Back to the bar', onclick: closeMeridian });
-    // Top middle: Meridian's own displays use the top corners.
+    var back = el('button', { text: '\u2190 Back to the bar', onclick: closeGame });
+    // Top middle: the games' own displays use the top corners.
     back.style.cssText = 'position:fixed;z-index:2001;left:50%;transform:translateX(-50%);top:calc(8px + env(safe-area-inset-top));' +
       'padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(10,8,16,.55);color:#fff;font:600 13px system-ui;';
     document.body.appendChild(frame);
     document.body.appendChild(back);
-    meridian = { frame: frame, back: back };
+    meridian = { frame: frame, back: back, kind: kind };
     cmd('meridianOpen');
-    if (window.bar3dLog) bar3dLog.add('info', 'Meridian: opened.');
+    if (window.bar3dLog) bar3dLog.add('info', g.title + ': opened.');
   }
-  function closeMeridian() {
+  function closeGame() {
     if (!meridian) return;
+    var g = GAMES[meridian.kind];
     meridian.frame.remove();
     meridian.back.remove();
     meridian = null;
     applyVolumes();
     cmd('meridianClosed');
-    if (window.bar3dLog) bar3dLog.add('info', 'Meridian: closed, back in the bar.');
-    simPanel();  // still sitting at the rig: race, drive again or stand up
+    if (window.bar3dLog) bar3dLog.add('info', g.title + ': closed, back in the bar.');
+    if (g.after) g.after();  // (Meridian: still sitting at the rig: race, drive again or stand up)
   }
+  function openMeridian() { openGame('meridian'); }
+  function closeMeridian() { closeGame(); }
 
   function bartenderPanel() {
     var drinks = info.drinks || [];
@@ -498,12 +508,15 @@ window.bar3dUi = (function () {
       var panels = { main: mainPanel, emotes: emotesPanel, avatar: avatarPanel, settings: settingsPanel, voice: voicePanel,
                      piano: pianoPanel, bartender: bartenderPanel, help: helpPanel, sim: simPanel };
       if (name === 'bartenderShift') { info.shift = 1; name = 'bartender'; }
+      if (GAMES[name] && name !== 'meridian') { close(); openGame(name); return; }  // an arcade machine
       if (panels[name]) panels[name]();
     },
     isOpen: function () { return !!current; },
     meridianOpen: function () { return !!meridian; },
     openMeridian: openMeridian,
     closeMeridian: closeMeridian,
+    gameOpen: function () { return meridian ? meridian.kind : ''; },
+    closeGame: closeGame,
     info: function () { return info; },  // tests
     close: close,
     command: cmd,

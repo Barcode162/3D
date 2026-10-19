@@ -696,6 +696,29 @@ back to the middle, "really smooth but race like", reused later. Built as
   `steering_test` checks all three (per-car limits on grip and slide).
 - Not yet: bots in a two-player race, spectators' monitors.
 
+## The arcade (2026-10-19, upgrade items 3-5)
+- "Room 2" (the 2.4 x 3 m taped-off space behind doorway A) is now an 8 x 8 m
+  arcade (x 0.4..8.4, z -15.7..-7.7, 3.4 m high; `layout.py` ARCADE_*), built
+  by `tools/assets/arcade.py` in world space: a glowing "cosmic" carpet made in
+  numpy (neon rings, triangles, squiggles, bolts, dots; seamless), dark walls,
+  neon tubes (floor line, wainscot line, ceiling band, wall shapes), an LED
+  square grid and a ring on the ceiling, a bench, "ARCADE" neon signs over the
+  doorway (bar side and inside). Neon emission strength ~1: higher washes out
+  to white in our tonemapping.
+- 7 coloured point lights (the bar has a hard limit of 32 lights: 29 now).
+  The light grid now reaches the arcade (`lightGridMin.z`).
+- The machine: `tools/assets/arcade_cabinet.py` (reusable: title as an
+  argument). Tap → `web/menu.js` GAMES.platformer, the same full-screen iframe
+  as Meridian (the bar stops drawing, its sounds go quiet). The user's game is
+  in `web/arcade/platformer/` unchanged ("as is"); it loads three.js from
+  unpkg (the user's own code: the second approved three.js use).
+- The music: an original chiptune (A minor, Am F C G, 140 bpm, 16 bars,
+  27 s) made in code at start-up in a background job; one looping voice whose
+  volume follows where you are: 1 inside, 0.85 in the doorway, up to 0.5
+  near the door in the bar (fading out over 6 m), off elsewhere.
+- Test: `tools/arcade_test.mjs`. `draw_text` in the asset scripts takes the
+  TOP row counted from the bottom of the image (row 0 = bottom).
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

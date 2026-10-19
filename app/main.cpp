@@ -34,6 +34,7 @@
 #include "engine/gpu.h"
 #include "engine/frame_time.h"
 #include "engine/input.h"
+#include "engine/jobs.h"
 #include "engine/json.h"
 #include "engine/log.h"
 #include "engine/pipeline_cache.h"
@@ -96,6 +97,9 @@ struct App {
   app::Bartender bartender;
   engine::Sound sfx[static_cast<int>(engine::synth::Effect::kCount)];
   engine::Sound guitar[6];
+  engine::Sound arcadeMusic;   // the arcade's loop (engine::synth::arcadeLoop)
+  int arcadeVoice = 0;
+  float arcadeGain = 0;
   engine::TextRenderer text;
   engine::PictureBillboards pictures;  // profile pictures over other players' heads
   struct PictureSlot {
@@ -843,6 +847,10 @@ void use(const app::Interactable& it) {
         showToast("Ask a bartender for a drink.");
       }
       break;
+    case Action::kArcade:
+      // The machine's game full screen (web/menu.js GAMES), like Meridian.
+      if (it.value == 0) engine::ui::openPanel("platformer");
+      break;
     case Action::kTv:
     case Action::kNone: break;
   }
@@ -1051,6 +1059,8 @@ void handleShared(std::vector<engine::net::WorldEntry>& world, std::vector<engin
   }
 }
 
+void updateArcadeMusic(float dt);
+
 // Works out what you're standing at, handles taps, and keeps the music and
 // your "ears" in sync with the camera.
 void updateInteraction(double nowMs, float dt) {
@@ -1187,6 +1197,7 @@ void updateInteraction(double nowMs, float dt) {
   const Vec3 forward = cam.forward();
   const Vec3 right = engine::normalize(engine::cross(forward, {0, 1, 0}));
   engine::audio::setListener(cam.position, forward, engine::cross(right, forward));
+  updateArcadeMusic(dt);
 }
 
 // Your avatar's activity this frame (and what it means for the pose).
@@ -1568,6 +1579,39 @@ void makeSounds() {
   }
   const float strings[6] = {82.4f, 123.5f, 164.8f, 207.7f, 246.9f, 329.6f};  // an E major chord
   for (int s = 0; s < 6; ++s) g_app.guitar[s].create(engine::synth::pluck(strings[s], 2.5f, 0.6f), engine::synth::kRate);
+  // The arcade's music takes a moment to make: in the background.
+  engine::queueJob([] { g_app.arcadeMusic.create(engine::synth::arcadeLoop(), engine::synth::kRate); },
+                   engine::JobLane::kNormal, "arcade-music");
+}
+
+// The arcade's music: normal inside the arcade, leaking out of its doorway
+// (louder the closer you are to it), silent in the rest of the bar.
+void updateArcadeMusic(float dt) {
+  if (!g_app.arcadeMusic.valid()) return;
+  const app::BarScene& sc = g_app.scene;
+  const Vec3 p = g_app.camera.position;
+  float target = 0;
+  if (p.x > sc.arcadeMin.x && p.x < sc.arcadeMax.x && p.z > sc.arcadeMin.z && p.z < sc.arcadeMax.z) {
+    target = 1;  // inside
+  } else {
+    const Vec3 d = p - sc.arcadeDoor;
+    const float dist = std::sqrt(d.x * d.x + d.z * d.z);
+    if (p.z < sc.arcadeDoor.z) target = 0.85f;                                  // in the doorway
+    else target = 0.5f * std::pow(engine::clampf(1 - dist / 6.0f, 0, 1), 2.0f);  // in the bar, near the door
+  }
+  if (g_app.meridianOpen) target = 0;
+  g_app.arcadeGain += (target - g_app.arcadeGain) * (1 - std::exp(-dt / 0.35f));
+  constexpr float kLevel = 0.55f;
+  if (g_app.arcadeGain > 0.002f) {
+    if (!g_app.arcadeVoice) {
+      g_app.arcadeVoice = g_app.arcadeMusic.play(0.0f, nullptr, 0, 1, engine::Sound::kEffects, true);
+      if (g_app.arcadeVoice) LOG_INFO("Arcade music: on.");
+    }
+    if (g_app.arcadeVoice) engine::Sound::set(g_app.arcadeVoice, g_app.arcadeGain * kLevel, 1);
+  } else if (g_app.arcadeVoice && target == 0) {
+    engine::Sound::stop(g_app.arcadeVoice, 0, 0.2f);
+    g_app.arcadeVoice = 0;
+  }
 }
 
 void onGpuReady(bool ok) {

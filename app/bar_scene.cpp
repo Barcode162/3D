@@ -21,6 +21,8 @@ constexpr float kBayX0 = -2.2f, kBayX1 = 1.8f, kBayDepth = 1.0f;
 constexpr float kEntryX0 = 2.5f, kEntryX1 = 3.9f;
 constexpr float kDoorAX0 = 2.9f, kDoorAX1 = 4.5f;
 constexpr float kDoorBZ0 = -3.3f, kDoorBZ1 = -1.7f;
+// The arcade behind doorway A (tools/assets/arcade.py, layout.py ARCADE_*).
+constexpr float kArcX0 = 0.4f, kArcX1 = 8.4f, kArcZ1 = -7.7f, kArcZ0 = kArcZ1 - 8.0f, kArcH = 3.4f;
 constexpr float kStageX1 = -5.4f, kStageZ0 = 3.8f, kStageH = 0.3f, kStepW = 0.35f, kStepH = 0.15f;
 constexpr float kChimneyZ0 = -0.2f, kChimneyZ1 = 1.8f, kChimneyD = 0.45f;
 // The bar counter's customer edge bows along a big circle from x = kBarXA
@@ -171,8 +173,11 @@ void buildRoom(Builder& b) {
   }
   b.solid({kX0 + kChimneyD / 2, h / 2, (kChimneyZ0 + kChimneyZ1) / 2}, {kChimneyD / 2, h / 2, (kChimneyZ1 - kChimneyZ0) / 2},
           kBrick);
-  // Walls block walking; the doorways are taped off (see buildConstruction).
-  b.blockRect(kX0 - 2, kZ0 - 2, kX1 + 2, kZ0);
+  // Walls block walking; doorway A leads to the arcade (buildArcade), B is
+  // taped off (buildConstruction).
+  b.blockRect(kX0 - 2, kArcZ1, kDoorAX0, kZ0);
+  b.blockRect(kDoorAX1, kArcZ1, kX1 + 2, kZ0);
+  b.blockRect(kX0 - 2, kZ0 - 2, kArcX0, kArcZ1);
   b.blockRect(kX0 - 2, kZ0 - 2, kX0, kZ1 + 2);
   b.blockRect(kX1, kZ0 - 2, kX1 + 2, kZ1 + 2);
   b.blockRect(kX0 - 2, kZ1, kBayX0, kZ1 + 2);
@@ -499,15 +504,64 @@ void buildGames(Builder& b) {
 void buildConstruction(Builder& b) {
   b.model("construction.glb", {0, 0, 0}, kDoorWood);
   const float ax = (kDoorAX0 + kDoorAX1) / 2, bz = (kDoorBZ0 + kDoorBZ1) / 2;
-  b.blockRect(kDoorAX0 - 1.3f, kZ0 - 1, kDoorAX1 + 1.0f, kZ0 + 1.15f);  // barricades in front of room 2
-  // and room 3 (stopping 0.4 m short of the door on the bar side, so the gap
-  // at the counter's end stays open: the way behind the bar)
+  (void)ax;  // (doorway A is the arcade: buildArcade)
+  // Barricades in front of room 3 (stopping 0.4 m short of the door on the
+  // bar side, so the gap at the counter's end stays open: the way behind the bar).
   b.blockRect(kX0 - 1, kDoorBZ0 - 0.4f, kX0 + 1.15f, kDoorBZ1 + 1.3f);
-  b.solid({ax + 0.1f, 0.5f, kZ0 + 0.7f}, {1.1f, 0.5f, 0.15f}, kDoorWood);
   b.solid({kX0 + 0.7f, 0.5f, bz - 0.1f}, {0.15f, 0.5f, 1.1f}, kDoorWood);
-  // Work lights inside the unfinished rooms, and the barricades' amber lamps.
-  b.light({ax + 0.6f, 1.8f, kZ0 - 1.8f}, {1.0f, 0.92f, 0.75f}, 1.6f, 4.0f, 0.1f);
+  // A work light inside the unfinished room.
   b.light({kX0 - 1.8f, 1.8f, bz - 0.6f}, {1.0f, 0.92f, 0.75f}, 1.6f, 4.0f, 0.1f);
+}
+
+// The arcade (upgrade plan items 3-4): an 8 x 8 m room behind doorway A,
+// almost empty: the glowing carpet, neon, an LED ceiling, a bench, and the
+// platformer machine against the back wall (tools/assets/arcade.py,
+// arcade_cabinet.py). Its music: app/arcade_music (main.cpp).
+void buildArcade(Builder& b) {
+  b.model("arcade.glb", {0, 0, 0}, kBlackSteel);
+  b.scene.arcadeMin = {kArcX0, 0, kArcZ0};
+  b.scene.arcadeMax = {kArcX1, kArcH, kArcZ1};
+  b.scene.arcadeDoor = {(kDoorAX0 + kDoorAX1) / 2, 1.2f, kZ0};
+  const float cx = (kArcX0 + kArcX1) / 2, cz = (kArcZ0 + kArcZ1) / 2, t = 0.12f;
+  // Physics: floor, ceiling, walls (the front one is the bar's back wall).
+  b.solid({cx, -0.05f, cz}, {(kArcX1 - kArcX0) / 2 + 0.2f, 0.05f, (kArcZ1 - kArcZ0) / 2 + 0.2f}, kOakFloor);
+  b.solid({cx, kArcH + 0.05f, cz}, {(kArcX1 - kArcX0) / 2 + 0.2f, 0.05f, (kArcZ1 - kArcZ0) / 2 + 0.2f}, kPlaster);
+  b.solid({cx, kArcH / 2, kArcZ0 - t / 2}, {(kArcX1 - kArcX0) / 2 + t, kArcH / 2, t / 2}, kPlaster);
+  b.solid({kArcX0 - t / 2, kArcH / 2, cz}, {t / 2, kArcH / 2, (kArcZ1 - kArcZ0) / 2}, kPlaster);
+  b.solid({kArcX1 + t / 2, kArcH / 2, cz}, {t / 2, kArcH / 2, (kArcZ1 - kArcZ0) / 2}, kPlaster);
+  // Walking: inside the room only (the front wall is blocked in buildRoom).
+  b.blockRect(kArcX0 - 2, kArcZ0 - 2, kArcX1 + 2, kArcZ0);
+  b.blockRect(kArcX0 - 2, kArcZ0, kArcX0, kArcZ1);
+  b.blockRect(kArcX1, kArcZ0, kArcX1 + 2, kZ0);
+  // The platformer machine, facing the door.
+  {
+    const Vec3 at{cx, 0, kArcZ0 + 0.5f};
+    const size_t cabinet = b.model("arcade_cabinet.glb", at, kLacquer);
+    b.solid(at + Vec3{0, 0.93f, 0}, {0.37f, 0.93f, 0.44f}, kLacquer);
+    b.block(at, 0.42f, 0.5f);
+    Interactable game{"PLATFORMER", "Platformer\nTap to play", at + Vec3{0, 2.15f, 0.2f}};
+    game.boundsMin = at + Vec3{-0.45f, 0, -0.45f};
+    game.boundsMax = at + Vec3{0.45f, 1.9f, 0.55f};
+    game.firstModel = cabinet;
+    game.modelCount = 1;
+    game.action = Action::kArcade;
+    game.value = 0;
+    b.scene.interactables.push_back(game);
+    b.scene.arcadeSpeaker = at + Vec3{0, 1.6f, 0.3f};
+  }
+  // The bench along the left wall.
+  b.block({kArcX0 + 0.35f, 0, cz}, 0.3f, 1.05f);
+  b.solid({kArcX0 + 0.35f, 0.23f, cz}, {0.25f, 0.23f, 1.0f}, kLeather);
+  b.seat("Arcade bench", {kArcX0 + 0.38f, 0.48f, cz - 0.5f}, {1, 0, 0}, 1.0f, SeatKind::kSofa);
+  b.seat("Arcade bench", {kArcX0 + 0.38f, 0.48f, cz + 0.5f}, {1, 0, 0}, 1.0f, SeatKind::kSofa);
+  // Lights: coloured washes (the neon itself glows, it doesn't light much).
+  b.light({cx - 2.4f, 3.0f, cz - 2.2f}, {1.0f, 0.2f, 0.7f}, 1.4f, 5.5f, 0.3f);
+  b.light({cx + 2.4f, 3.0f, cz - 2.2f}, {0.2f, 0.8f, 1.0f}, 1.4f, 5.5f, 0.3f);
+  b.light({cx - 2.4f, 3.0f, cz + 2.2f}, {0.25f, 0.85f, 1.0f}, 1.2f, 5.0f, 0.3f);
+  b.light({cx + 2.4f, 3.0f, cz + 2.2f}, {0.8f, 0.3f, 1.0f}, 1.2f, 5.0f, 0.3f);
+  b.light({cx, 2.2f, kArcZ0 + 1.6f}, {1.0f, 0.75f, 0.9f}, 1.0f, 3.5f, 0.3f);    // the machine
+  b.light({cx, 3.1f, cz}, {0.6f, 0.35f, 1.0f}, 0.9f, 4.5f, 0.4f);               // the ring
+  b.light({(kDoorAX0 + kDoorAX1) / 2, 3.1f, kZ0 + 0.5f}, {1.0f, 0.2f, 0.65f}, 0.7f, 2.5f, 0.2f);  // the sign, bar side
 }
 
 // The giant 2-in-1 mirror on the right wall, from just above the floor to
@@ -569,7 +623,7 @@ BarScene buildBarScene() {
   scene.fogDensity = 0.012f;
   scene.spawnPosition = {0.4f, 1.65f, 5.2f};  // just inside the street door
   scene.spawnYaw = 0;
-  scene.lightGridMin = {kX0 - kWall - 3.2f, 0, kZ0 - kWall - 3.2f};
+  scene.lightGridMin = {kX0 - kWall - 3.2f, 0, kArcZ0 - 0.3f};
   scene.lightGridMax = {kX1 + 0.5f, 0, kZ1 + kBayDepth + 0.5f};
 
   Builder b{scene};
@@ -580,6 +634,7 @@ BarScene buildBarScene() {
   buildGames(b);
   buildMirror(b);
   buildConstruction(b);
+  buildArcade(b);
   return scene;
 }
 

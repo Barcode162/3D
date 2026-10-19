@@ -107,6 +107,11 @@ jobs:
         continue-on-error: true
         run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
 
+      # The arcade: tap the platformer machine, the user's game opens and draws.
+      - name: "Test: the arcade's platformer"
+        continue-on-error: true
+        run: node tools/arcade_test.mjs
+
       # Two players race each other on the two rigs (the room starts the race).
       - name: "Test: two-player race"
         continue-on-error: true

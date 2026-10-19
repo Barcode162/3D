@@ -321,3 +321,141 @@ std::vector<float> effect(Effect e) {
 }
 
 }  // namespace engine::synth
+
+// ---- The arcade's music: an original chiptune loop (square-wave lead and
+// arpeggios, a triangle bass, noise drums), 16 bars at 140 bpm in A minor
+// (Am F C G). Notes that ring past the end wrap round to the start, so it
+// loops without a seam.
+namespace engine::synth {
+namespace {
+
+struct Mix {
+  std::vector<float> out;
+  void add(size_t at, const std::vector<float>& s, float gain) {
+    for (size_t i = 0; i < s.size(); ++i) out[(at + i) % out.size()] += s[i] * gain;
+  }
+};
+
+float midiHz(int key) { return 440.0f * std::pow(2.0f, (static_cast<float>(key) - 69) / 12.0f); }
+
+// A pulse wave (duty 0..1) with a quick attack, a decay to `sustain` and a release.
+std::vector<float> pulseNote(float hz, float seconds, float duty, float sustain, float vibrato = 0) {
+  const size_t n = static_cast<size_t>((seconds + 0.06f) * kRate);
+  std::vector<float> s(n);
+  float phase = 0;
+  for (size_t i = 0; i < n; ++i) {
+    const float t = static_cast<float>(i) / kRate;
+    const float f = hz * (1 + vibrato * std::sin(2 * 3.14159265f * 5.5f * t) * std::min(t * 4, 1.0f));
+    phase += f / kRate;
+    phase -= std::floor(phase);
+    const float wave = phase < duty ? 1.0f : -1.0f;
+    float env = t < 0.005f ? t / 0.005f : sustain + (1 - sustain) * std::exp(-(t - 0.005f) * 14);
+    if (t > seconds) env *= std::max(0.0f, 1 - (t - seconds) / 0.06f);
+    s[i] = wave * env;
+  }
+  return s;
+}
+
+std::vector<float> triangleNote(float hz, float seconds) {
+  const size_t n = static_cast<size_t>((seconds + 0.03f) * kRate);
+  std::vector<float> s(n);
+  for (size_t i = 0; i < n; ++i) {
+    const float t = static_cast<float>(i) / kRate;
+    const float p = t * hz - std::floor(t * hz);
+    float env = t < 0.004f ? t / 0.004f : 1.0f;
+    if (t > seconds) env *= std::max(0.0f, 1 - (t - seconds) / 0.03f);
+    s[i] = (4 * std::fabs(p - 0.5f) - 1) * env;
+  }
+  return s;
+}
+
+std::vector<float> drum(int kind, uint32_t& seed) {
+  const float len = kind == 0 ? 0.16f : kind == 1 ? 0.14f : 0.04f;
+  const size_t n = static_cast<size_t>(len * kRate);
+  std::vector<float> s(n);
+  float phase = 0, last = 0;
+  for (size_t i = 0; i < n; ++i) {
+    const float t = static_cast<float>(i) / kRate;
+    seed = seed * 1664525u + 1013904223u;
+    const float noise = static_cast<float>(seed >> 8) / 8388608.0f - 1;
+    if (kind == 0) {  // kick: a falling sine
+      phase += (50 + 120 * std::exp(-t * 30)) / kRate;
+      s[i] = std::sin(2 * 3.14159265f * phase) * std::exp(-t * 18);
+    } else if (kind == 1) {  // snare: noise and a tone
+      phase += 185 / kRate;
+      s[i] = (noise * 0.7f + std::sin(2 * 3.14159265f * phase) * 0.4f) * std::exp(-t * 22);
+    } else {  // hat: bright noise (a crude high-pass)
+      s[i] = (noise - last) * 0.5f * std::exp(-t * 90);
+      last = noise;
+    }
+  }
+  return s;
+}
+
+}  // namespace
+
+std::vector<float> arcadeLoop() {
+  constexpr float kBpm = 140;
+  const float step = 60.0f / kBpm / 4;  // a 16th note
+  constexpr int kBars = 16;
+  Mix m;
+  m.out.assign(static_cast<size_t>(kBars * 16 * step * kRate), 0.0f);
+  const auto at = [&](int bar, float s) { return static_cast<size_t>((static_cast<float>(bar * 16) + s) * step * kRate); };
+  // Chords: root (bass), and the triad for the arpeggio.
+  const int roots[4] = {45, 41, 48, 43};  // A2 F2 C3 G2
+  const int triads[4][3] = {{57, 60, 64}, {53, 57, 60}, {55, 60, 64}, {55, 59, 62}};
+  struct N {
+    float s, len;
+    int key;
+  };
+  const std::vector<N> lead[4] = {
+      {{0, 2, 76}, {2, 2, 81}, {4, 2, 84}, {6, 1, 83}, {7, 1, 81}, {8, 2, 79}, {10, 4, 76}, {14, 1, 74}, {15, 1, 76}},
+      {{0, 2, 77}, {2, 2, 81}, {4, 2, 84}, {6, 2, 81}, {8, 2, 79}, {10, 2, 77}, {12, 2, 76}, {14, 2, 74}},
+      {{0, 2, 76}, {2, 2, 79}, {4, 2, 84}, {6, 2, 88}, {8, 2, 86}, {10, 2, 84}, {12, 4, 79}},
+      {{0, 2, 74}, {2, 2, 79}, {4, 2, 83}, {6, 2, 86}, {8, 1, 84}, {9, 1, 83}, {10, 1, 81}, {11, 1, 79}, {12, 4, 76}},
+  };
+  uint32_t seed = 12345;
+  const std::vector<float> kick = drum(0, seed), snare = drum(1, seed), hat = drum(2, seed);
+  for (int bar = 0; bar < kBars; ++bar) {
+    const int c = bar % 4;
+    const int part = bar / 4;  // 0 intro, 1 melody, 2 breakdown, 3 everything
+    // Bass: eighth notes, root and octave.
+    for (int k = 0; k < 8; ++k) {
+      const int key = roots[c] + ((k % 2 == 1 && part != 2) ? 12 : 0);
+      m.add(at(bar, static_cast<float>(k * 2)), triangleNote(midiHz(key), step * 1.7f), 0.30f);
+    }
+    // Arpeggio: chord tones in 16ths, up and down (not in the breakdown).
+    if (part != 2) {
+      static const int order[8] = {0, 1, 2, 1, 0, 1, 2, 1};
+      for (int k = 0; k < 16; ++k) {
+        const int key = triads[c][order[k % 8]] + 12 * ((k / 8) % 2);
+        m.add(at(bar, static_cast<float>(k)), pulseNote(midiHz(key), step * 0.8f, 0.125f, 0.25f), 0.07f);
+      }
+    }
+    // Lead: the melody (an octave lower and with an echo in the breakdown,
+    // doubled an octave up at the end).
+    if (part >= 1) {
+      for (const N& n : lead[c]) {
+        const int key = part == 2 ? n.key - 12 : n.key;
+        const auto note = pulseNote(midiHz(key), n.len * step * 0.92f, 0.5f, 0.55f, 0.006f);
+        m.add(at(bar, n.s), note, 0.11f);
+        if (part == 2) m.add(at(bar, n.s + 3), note, 0.045f);  // echo, a dotted 8th later
+        if (part == 3) m.add(at(bar, n.s), pulseNote(midiHz(key + 12), n.len * step * 0.92f, 0.25f, 0.4f), 0.04f);
+      }
+    }
+    // Drums: kick on 1 and 3 (four on the floor once it gets going), snare
+    // on 2 and 4, hats on the 8ths.
+    for (int k = 0; k < 16; ++k) {
+      const float s = static_cast<float>(k);
+      const bool kickHere = part == 0 ? (k == 0 || k == 8) : part == 2 ? k == 0 : k % 4 == 0;
+      if (kickHere) m.add(at(bar, s), kick, 0.5f);
+      if (part != 0 && part != 2 && (k == 4 || k == 12)) m.add(at(bar, s), snare, 0.22f);
+      if (k % 2 == 0 && part != 2) m.add(at(bar, s), hat, k % 4 == 2 ? 0.14f : 0.08f);
+    }
+  }
+  // Soft clip and level.
+  for (float& v : m.out) v = std::tanh(v * 1.2f) * 0.8f;
+  return m.out;
+}
+
+}  // namespace engine::synth

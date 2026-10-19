@@ -407,22 +407,8 @@ box("Exit sign box", ((ENTRY_X0 + ENTRY_X1) / 2 - 0.2, ENTRY_H + 0.87, Z1 - 0.07
     ((ENTRY_X0 + ENTRY_X1) / 2 + 0.2, ENTRY_H + 1.03, Z1), steel, 0.004)
 box("Door mat", (ENTRY_X0 - 0.1, 0.0, Z1 - 1.0), (ENTRY_X1 + 0.1, 0.012, Z1 - 0.06), rubber, 0.004)
 
-# ---- The two unfinished rooms behind the arches ----
-# Doorway A: concrete floor, studs on one side, bare drywall on the other,
-# exposed joists, a back wall of plywood.
-ax0, ax1 = DOOR_A_X0 - 0.4, DOOR_A_X1 + 0.4
-az0 = Z0 - T - CORRIDOR_DEPTH
-box("Room 2 floor", (ax0, -0.1, az0), (ax1, 0.0, Z0 - T + 0.01), concrete, 0, grain_axis="z")
-box("Room 2 ceiling", (ax0, CORRIDOR_H, az0), (ax1, CORRIDOR_H + 0.1, Z0 - T), drywall, 0)
-box("Room 2 back", (ax0, 0, az0 - 0.05), (ax1, CORRIDOR_H, az0), studs, 0)
-box("Room 2 drywall", (ax1, 0, az0), (ax1 + 0.03, CORRIDOR_H, Z0 - T), drywall, 0, grain_axis="z")
-box("Room 2 side", (ax0 - 0.1, 0, az0), (ax0 - 0.08, CORRIDOR_H, Z0 - T), drywall, 0, grain_axis="z")
-for zz in np.arange(az0 + 0.1, Z0 - T, 0.4):
-    box("Stud", (ax0 - 0.08, 0, zz), (ax0 + 0.01, CORRIDOR_H, zz + 0.04), studs, 0.002, grain_axis="y")
-    box("Joist", (ax0, CORRIDOR_H - 0.2, zz), (ax1, CORRIDOR_H, zz + 0.05), studs, 0.002)
-box("Sole plate", (ax0 - 0.08, 0, az0), (ax0 + 0.01, 0.04, Z0 - T), studs, 0.002, grain_axis="z")
-box("Top plate", (ax0 - 0.08, CORRIDOR_H - 0.24, az0), (ax0 + 0.01, CORRIDOR_H - 0.2, Z0 - T), studs, 0.002,
-    grain_axis="z")
+# ---- The unfinished room behind arch B (arch A: the arcade) ----
+# Doorway A leads to the arcade (tools/assets/arcade.py).
 # Doorway B (left wall): the same, turned.
 bz0, bz1 = DOOR_B_Z0 - 0.4, DOOR_B_Z1 + 0.4
 bx0 = X0 - T - CORRIDOR_DEPTH

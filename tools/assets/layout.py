@@ -31,6 +31,12 @@ DOOR_B_Z0, DOOR_B_Z1 = -3.3, -1.7
 ARCH_SPRING = 1.95      # where the round top starts
 CORRIDOR_DEPTH = 3.0    # how far you can see into each unfinished room
 CORRIDOR_H = 3.0
+# The arcade behind doorway A (upgrade plan item 3, replaces "room 2"): an
+# 8 x 8 m room, its front wall the back of the bar's back wall.
+ARCADE_X0, ARCADE_X1 = 0.4, 8.4
+ARCADE_Z1 = -7.7          # Z0 - T
+ARCADE_Z0 = ARCADE_Z1 - 8.0
+ARCADE_H = 3.4
 
 # Raised stage (piano) in the front-left corner, with a step along its
 # open sides.

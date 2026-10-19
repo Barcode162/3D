@@ -60,6 +60,7 @@ NODE_PATH=$(npm root -g) node tools/mp_test.mjs     # two/three players + the ro
 NODE_PATH=$(npm root -g) node tools/voice_test.mjs  # voice chat between two players
 NODE_PATH=$(npm root -g) node tools/meridian_test.mjs  # Meridian from a racing rig and back
 NODE_PATH=$(npm root -g) node tools/race_mp_test.mjs   # two players race each other on the rigs
+NODE_PATH=$(npm root -g) node tools/arcade_test.mjs    # the arcade: tap the platformer machine
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:
@@ -161,7 +162,8 @@ judged on the user's phone.
 - Pixel ratio is capped at 2 (`engine/gpu.cpp`) for phone GPU budget.
 - No outside engines or libraries. The engine is written from scratch.
   Exceptions must be discussed with the user first. (Approved so far: three.js,
-  for Meridian only, 2026-10-18.)
+  for Meridian, 2026-10-18, and for the user's platformer "Test 2" in the
+  arcade, `web/arcade/platformer/`, added "as is", 2026-10-19.)
 
 ## iOS Safari constraints to remember
 - WebGPU is available on iOS 26. There's no WebXR (AR would mean exporting USDZ for AR Quick Look).

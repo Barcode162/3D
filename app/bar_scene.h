@@ -104,6 +104,7 @@ enum class Action {
   kDrinkShelf,   // a drink waiting on the counter (value = slot)
   kBell, kGuitar, kMic, kLightSwitch, kFireplace, kDoor, kTv, kBooks, kChess, kTipJar, kTaps, kCoffee,
   kPianoSongs,   // the sheet music on the piano: pick a song to play
+  kArcade,       // an arcade machine (value: 0 = the platformer), full screen
 };
 
 struct Interactable {
@@ -152,6 +153,9 @@ struct BarScene {
   engine::Vec3 fogColor;
   float fogDensity;
   engine::Vec3 jukeboxSpeaker;  // where the music comes from
+  engine::Vec3 arcadeSpeaker;   // the arcade's music (inside, by the machine)
+  engine::Vec3 arcadeMin, arcadeMax;  // the arcade's floor (x, z): its music plays inside
+  engine::Vec3 arcadeDoor;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;
   // Game spots (see app/games.*): the piano, the dartboard, the two sims,

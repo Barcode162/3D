@@ -228,7 +228,7 @@ def doorway(origin, yaw, width, name):
     work_room(m @ Matrix.Translation((0, 0, -L.T)), L.CORRIDOR_DEPTH, width + 0.8)
 
 
-doorway(Vector(((L.DOOR_A_X0 + L.DOOR_A_X1) / 2, 0, L.Z0)), 0.0, L.DOOR_A_X1 - L.DOOR_A_X0, "Room 2")
+# (Doorway A is the arcade now: tools/assets/arcade.py.)
 doorway(Vector((L.X0, 0, (L.DOOR_B_Z0 + L.DOOR_B_Z1) / 2)), math.pi / 2, L.DOOR_B_Z1 - L.DOOR_B_Z0, "Room 3")
 
 common.finish_and_export(out_path, uv_scale={"Lumber": 1.5, "Drop cloth": 1.0})

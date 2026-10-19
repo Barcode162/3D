@@ -24,13 +24,16 @@ user asked: "the race game should actually be fixed".)
       reused later, so the feel has to be nailed.**
 
 ## Arcade room
-- [ ] **3. The room next to 4K Mania becomes an arcade** (the taped-off
+- [x] **3. The room next to 4K Mania becomes an arcade** (done 2026-10-19:
+      `tools/assets/arcade.py`, an 8 x 8 m room behind doorway A) (the taped-off
       "under construction" room). Almost empty: nice carpets, lots of cool
       lights, real 3D modelling (not boxes).
-- [ ] **4. A new arcade machine: a platformer**, running the user's game
+- [x] **4. A new arcade machine: a platformer** (done 2026-10-19: the
+      cabinet `tools/assets/arcade_cabinet.py`, tap → full screen like Meridian), running the user's game
       "Test 2" as is (`web/arcade/platformer/`, three.js, from their zip).
       They loved how it felt; improvements later.
-- [ ] **5. Arcade background music**: only audible around the arcade's door,
+- [x] **5. Arcade background music** (done 2026-10-19: an original
+      chiptune made in code, `engine::synth::arcadeLoop`, main.cpp updateArcadeMusic): only audible around the arcade's door,
       louder inside, normal volume in the room (3D sound zone).
 
 ## Polish in the bar

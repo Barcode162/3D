@@ -30,4 +30,8 @@ enum class Effect {
 };
 std::vector<float> effect(Effect e);
 
+// The arcade's background music: an original chiptune loop, about 27 s,
+// seamless (play it with loop = true).
+std::vector<float> arcadeLoop();
+
 }  // namespace engine::synth
