@@ -97,4 +97,13 @@ user asked: "the race game should actually be fixed".)
       Test `tools/avatar_test.mjs`.) choose gender; top and bottom
       (cool-style tops and bottoms); colors; hairstyle; hair color plus a
       secondary color for highlights, gradients, and more.
-- [ ] **15. More realistic character animations.**
+- [x] **15. More realistic character animations.** (done 2026-10-19: the
+      walk places each foot on the floor and the leg reaches it (two-bone IK):
+      heel strike, toes rolling down, the heel lifting for push-off, the knee
+      folding on the swing; feet stay planted (slide 2% forward, 0% back,
+      measured by `?walkcheck` in `tools/avatar_test.mjs`); slower walks take
+      shorter steps; sideways steps go wide; the pelvis twists and drops, the
+      chest counter-twists, the head stays steady; arms swing more forward
+      than back. Standing: weight shifts from leg to leg (the free knee
+      bends), breathing, glances around. Emotes ease in and out. Later:
+      stepping when turning on the spot, sit-down / stand-up motions.)

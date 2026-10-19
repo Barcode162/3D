@@ -109,6 +109,7 @@ struct App {
   Vec3 previewEye;
   float previewYaw = 0;
   float previewStartYaw = 0;
+  float previewSpin = 0;  // dragging turns your body (the camera stays)
   bool previewAimed = false;  // turned toward the open side yet
   app::Piano piano;
   app::Darts darts;
@@ -353,7 +354,7 @@ void updateCamera(float dt) {
     // looks back; dragging turns your body.
     // The panel covers the lower half, so you're framed in the top half:
     // up to 3.2 m away (closer if something is in the way). On opening you
-    // turn toward the most open side. Dragging turns you.
+    // turn toward the most open side. Dragging spins your body.
     const auto room = [&](float yaw) {
       const Vec3 f{std::sin(yaw), 0, -std::cos(yaw)};
       float free = 0.5f;
@@ -373,8 +374,9 @@ void updateCamera(float dt) {
         if (r > best) best = r, bestYaw = yaw;
       }
       g_app.previewYaw = bestYaw;
+      g_app.previewSpin = engine::radians(g_app.hooks.previewTurn);
     }
-    g_app.previewYaw += look.x * sens;
+    g_app.previewSpin += look.x * sens;
     const float dist = room(g_app.previewYaw);
     const Vec3 fwd{std::sin(g_app.previewYaw), 0, -std::cos(g_app.previewYaw)};
     const float feet = g_app.previewEye.y - 1.66f, camY = 1.15f;
@@ -1397,6 +1399,12 @@ void updateSelfMotion(double nowMs) {
   }
   m.steer = g_app.race.steer();
   g_app.piano.hands(m.handL, m.handR);
+  if (g_app.hooks.walkPose >= 0) {  // tests: a frozen walking pose
+    m.walkAmount = 1;
+    m.walkPhase = engine::radians(g_app.hooks.walkPose);
+    m.walkDir = engine::radians(g_app.hooks.walkDir);
+    m.walkCycle = 1.3f - 0.5f * std::fabs(std::sin(m.walkDir));
+  }
 }
 
 // The numbers others get about you (players.h slot order after kPitch).
@@ -1723,7 +1731,7 @@ void frame(double rafMs) {
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
   g_app.renderer.setBoxes(g_app.boxes);
   Mat4 self = app::avatarTransform(cam.position, cam.yaw, cam.pitch);
-  if (g_app.avatarPreview) self = app::avatarTransform(g_app.previewEye, g_app.previewYaw, 0);
+  if (g_app.avatarPreview) self = app::avatarTransform(g_app.previewEye, g_app.previewYaw + g_app.previewSpin, 0);
   if (g_app.seat >= 0) {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
     self = app::seatedTransform(s.hip, s.yaw);
@@ -1815,6 +1823,7 @@ void onGpuReady(bool ok) {
     meshes.push_back(g_app.avatars.back().mesh());
   }
   engine::profiler().stage("avatars");
+  if (g_app.hooks.walkcheck) LOG_INFO("%s", app::walkReport(g_app.avatars[0]).c_str());
   if (!g_app.renderer.init(g_app.gpu, g_app.scene, meshes) ||
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat) ||
       !g_app.pictures.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {

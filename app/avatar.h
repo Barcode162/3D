@@ -39,6 +39,8 @@ struct AvatarMotion {
   float headYaw = 0;     // head turned left/right of the body (radians, + = to the right)
   float walkPhase = 0;   // position in the walk cycle (radians; one cycle = 2 steps)
   float walkAmount = 0;  // 0 = standing, 1 = full walking speed
+  float walkCycle = 1.3f;  // meters per walk cycle right now (shorter when slow)
+  float walkDir = 0;     // the walk's direction from facing (radians, + = to the right; backward is mirrored)
   float time = 0;        // seconds, for idle breathing and sway
   Activity activity = Activity::kNone;
   Emote emote = Emote::kNone;
@@ -103,6 +105,11 @@ constexpr int kSkinTones = 10, kHairColors = 14, kClothColors = 20, kEyeColors =
 AvatarLook lookFromStyle(const AvatarStyle& s);
 // The colours as "#rrggbb" lists for the menu: "skin", "hair", "cloth", "eyes".
 std::string avatarPaletteJson();
+
+class Avatar;
+// For tests: walks the avatar at full speed forward, sideways and backward
+// and reports how far planted feet slide and how low the ankles go.
+std::string walkReport(const Avatar& avatar);
 
 class Avatar {
  public:

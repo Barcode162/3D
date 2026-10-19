@@ -509,16 +509,36 @@ void Avatar::build(const AvatarLook& look) {
   }
 }
 
+namespace {
+// Meters per full walk cycle (two steps): shorter steps sideways.
+// Slower walks take shorter steps.
+float walkCycle(float dir, float speed) { return (1.3f - 0.5f * std::fabs(std::sin(dir))) * (0.4f + 0.6f * speed); }
+// The turn taking direction a onto b (both length 1), the short way.
+engine::Quat fromTo(Vec3 a, Vec3 b) {
+  const Vec3 c = engine::cross(a, b);
+  const float d = engine::dot(a, b);
+  if (d < -0.9999f) return engine::Quat::axisAngle({1, 0, 0}, engine::kPi);
+  return engine::normalized({c.x, c.y, c.z, 1.0f + d});
+}
+}  // namespace
+
 void advanceWalk(AvatarMotion& m, float forward, float sideways, float dt, float fullSpeed) {
-  constexpr float kCycleLength = 1.5f;  // meters per full cycle (two steps)
   const float distance = std::sqrt(forward * forward + sideways * sideways);
-  // Walking backward plays the cycle in reverse.
-  m.walkPhase += (forward < -0.3f * distance ? -1.0f : 1.0f) * distance / kCycleLength * 2.0f * engine::kPi;
-  m.walkPhase = std::fmod(m.walkPhase, 2.0f * engine::kPi);
+  // Walking backward plays the cycle in reverse (the feet then move the
+  // other way along the same line).
+  const bool back = forward < -0.3f * distance;
+  if (distance > 1e-5f) {
+    const float target = back ? std::atan2(-sideways, -forward) : std::atan2(sideways, forward);
+    const float clamped = engine::clampf(target, -engine::kPi * 0.5f, engine::kPi * 0.5f);
+    m.walkDir += (clamped - m.walkDir) * std::min(1.0f, dt * 10.0f);
+  }
   // Ease in and out of walking instead of snapping.
   const float speed = dt > 0 ? distance / dt : 0;
   const float target = engine::clampf(speed / fullSpeed, 0, 1);
   m.walkAmount += (target - m.walkAmount) * std::min(1.0f, dt * 8.0f);
+  m.walkCycle = walkCycle(m.walkDir, m.walkAmount);
+  m.walkPhase += (back ? -1.0f : 1.0f) * distance / m.walkCycle * 2.0f * engine::kPi;
+  m.walkPhase = std::fmod(m.walkPhase, 2.0f * engine::kPi);
 }
 
 const char* emoteName(Emote e) {
@@ -547,44 +567,104 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   auto Y = [&](float deg) { return Quat::axisAngle(yAxis, radians(deg)); };
   auto Z = [&](float deg) { return Quat::axisAngle(zAxis, radians(deg)); };
 
-  const float w = m.walkAmount;
-  const float phase = m.walkPhase;
-  const float swing = std::sin(phase);  // +1: left leg forward, right leg back
-  // Idle: slow breathing and a gentle sway, fading out while walking.
+  // ---- Standing and walking: the feet are placed on the floor and the legs
+  // reach them (two-bone IK), so planted feet don't slide. ----
+  const float w = engine::smoothstep(0.0f, 1.0f, m.walkAmount);
+  const float wf = engine::smoothstep(0.0f, 0.2f, m.walkAmount);  // the feet: walking ones almost at once
   const float idle = 1.0f - w;
   const float breath = std::sin(m.time * 2.0f * engine::kPi / 4.2f);
   const float sway = std::sin(m.time * 2.0f * engine::kPi / 7.0f);
-  float bob = -0.03f * swing * swing * w + 0.004f * breath * idle;
+  // Idle weight shift: slowly from one leg to the other (and a little extra
+  // wobble so it doesn't look like a metronome).
+  const float shift = std::sin(m.time * 2.0f * engine::kPi / 9.0f) + 0.3f * std::sin(m.time * 2.0f * engine::kPi / 3.7f);
+  // The walk: each leg's cycle from heel strike (0) through stance (to
+  // kStance) and swing (back to 1). The left leg strikes at walkPhase pi/2.
+  constexpr float kStance = 0.56f;
+  const float stride = m.walkCycle * kStance * 0.5f;  // the foot's reach, front and back, along the walk
+  float u[2];
+  for (int i = 0; i < 2; ++i) {
+    float v = (m.walkPhase - engine::kPi * 0.5f) / (2.0f * engine::kPi) + (i == 0 ? 0.0f : 0.5f);
+    u[i] = v - std::floor(v);
+  }
+  const Vec3 dir{std::sin(m.walkDir), 0, -std::cos(m.walkDir)};  // the walk's direction (model space; -z forward)
+  const Vec3 stepAxis{std::cos(m.walkDir), 0, std::sin(m.walkDir)};  // turning about this moves a foot along `dir`
+  float footS[2], footLift[2], ankle[2], legFwd[2], swingAmt[2];
+  for (int i = 0; i < 2; ++i) {
+    if (u[i] < kStance) {
+      const float t = u[i] / kStance;
+      footS[i] = stride * (1.0f - 2.0f * t);
+      footLift[i] = 0;
+      // Toes come down after the heel strikes; the heel lifts before push-off.
+      ankle[i] = 14.0f * (1.0f - engine::smoothstep(0.0f, 0.14f, t)) - 26.0f * engine::smoothstep(0.62f, 1.0f, t);
+      swingAmt[i] = 0;
+    } else {
+      const float t = (u[i] - kStance) / (1.0f - kStance);
+      const float e = t * t * (3.0f - 2.0f * t);
+      footS[i] = stride * (-1.0f + 2.0f * (e + 0.06f * std::sin(t * engine::kPi)));
+      footLift[i] = 0.11f * std::pow(std::sin(engine::kPi * std::pow(t, 0.75f)), 1.4f);
+      ankle[i] = -26.0f + 30.0f * engine::smoothstep(0.0f, 0.45f, t) + 10.0f * engine::smoothstep(0.6f, 1.0f, t);
+      swingAmt[i] = std::sin(engine::kPi * t);
+    }
+    legFwd[i] = footS[i] / stride;
+  }
+  // The body: lowest at each heel strike, highest over the standing leg, and
+  // over that leg sideways.
+  const float strikeDip = 0.5f + 0.5f * std::cos(4.0f * engine::kPi * u[0]);
+  Vec3 offset{-0.022f * std::sin(2.0f * engine::kPi * u[0]) * w + 0.024f * shift * idle, 0, 0};
+  float bob = (-0.045f * strikeDip - 0.01f) * w + (-0.012f + 0.003f * breath) * idle;
+  // Pelvis: twists with the stride, drops on the swinging side; idle: the
+  // hip over the standing leg rises.
+  const float twist = -7.0f * legFwd[0] * w;
+  const float drop = 4.0f * (swingAmt[0] - swingAmt[1]) * w + 2.6f * shift * idle;
+  const Quat hipsRot = Y(twist) * Z(drop);
+  bone("hips") = hipsRot;
+  bone("spine") = Y(-twist) * Z(-0.8f * drop) * X(-4.0f * w);  // back upright, a slight lean into the walk
+  bone("chest") = Y(-0.6f * twist) * X(1.5f * breath * idle + 1.0f * w);
 
-  // Body: hips twist with the stride, chest twists back, slight forward lean.
-  bone("hips") = Quat::axisAngle(yAxis, radians(6.0f) * swing * w) *
-                 Quat::axisAngle(zAxis, radians(1.2f) * sway * idle);
-  bone("spine") = Quat::axisAngle(xAxis, -radians(3.0f) * w);
-  bone("chest") = Quat::axisAngle(yAxis, -radians(9.0f) * swing * w) *
-                  Quat::axisAngle(xAxis, radians(1.5f) * breath * idle);
-
+  const engine::Skeleton& sk = skeleton_;
+  const Vec3 hipsPivot = sk.bones[static_cast<size_t>(sk.find("hips"))].restPosition;
   for (int i = 0; i < 2; ++i) {
     const float s = i == 0 ? -1.0f : 1.0f;  // -1 = left, +1 = right
     const std::string n = i == 0 ? ".L" : ".R";
-    // This leg's swing: forward when positive. The legs are half a cycle apart.
-    const float legSwing = i == 0 ? swing : -swing;
-    const float legSpeed = i == 0 ? std::cos(phase) : -std::cos(phase);  // > 0 while swinging forward
+    const int thighB = sk.find("thigh" + n), shinB = sk.find("shin" + n), footB = sk.find("foot" + n);
+    const Vec3 hipRest = sk.bones[static_cast<size_t>(thighB)].restPosition;
+    const Vec3 kneeRest = sk.bones[static_cast<size_t>(shinB)].restPosition;
+    const Vec3 ankleRest = sk.bones[static_cast<size_t>(footB)].restPosition;
+    const float l1 = engine::length(kneeRest - hipRest), l2 = engine::length(ankleRest - kneeRest);
+    // Where this ankle goes (on the floor, model space): idle at rest, a hair
+    // wider; walking along `dir`, lifted while swinging, raised by the heel.
+    const float heel = 0.12f * std::sin(radians(std::max(0.0f, -ankle[i])));
+    Vec3 walkTarget = ankleRest + dir * footS[i] + Vec3{0, footLift[i] + heel, 0};
+    walkTarget.x += s * 0.06f * std::fabs(dir.x);  // sideways: a wider stance
+    walkTarget.x = s < 0 ? std::min(walkTarget.x, -0.035f) : std::max(walkTarget.x, 0.035f);  // feet don't cross
+    const Vec3 idleTarget = ankleRest + Vec3{s * 0.012f, 0, 0};
+    const Vec3 target = engine::lerp(idleTarget, walkTarget, wf) - offset - Vec3{0, bob, 0};
+    // The leg, in the hips' frame.
+    const Vec3 hip = hipsPivot + hipsRot.rotate(hipRest - hipsPivot);
+    const Vec3 local = conjugate(hipsRot).rotate(target - hip);
+    const float d = engine::clampf(engine::length(local), 0.3f, (l1 + l2) * 0.999f);
+    const float knee = engine::kPi - std::acos(engine::clampf((l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2), -1, 1));
+    const float beta = std::acos(engine::clampf((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1));
+    const Quat aim = fromTo(engine::normalize(ankleRest - hipRest), engine::normalize(local));
+    const Quat thighRot = aim * Quat::axisAngle(xAxis, beta);
+    const Quat shinRot = Quat::axisAngle(xAxis, -knee);
+    bone("thigh" + n) = thighRot;
+    bone("shin" + n) = shinRot;
+    // The foot: flat on the floor (toes a little out), rolling heel to toe.
+    const Quat footWorld = Quat::axisAngle(stepAxis, radians(ankle[i] * wf)) * Y(-s * 6.0f);
+    bone("foot" + n) = conjugate(hipsRot * thighRot * shinRot) * footWorld;
 
-    // Legs: the thigh swings, the knee bends while the leg travels forward,
-    // and the foot stays roughly level with the floor.
-    const float thigh = radians(26.0f) * legSwing * w;
-    const float knee = -radians(5.0f) * w - radians(50.0f) * std::max(0.0f, legSpeed) * w;
-    bone("thigh" + n) = Quat::axisAngle(xAxis, thigh);
-    bone("shin" + n) = Quat::axisAngle(xAxis, knee);
-    bone("foot" + n) = Quat::axisAngle(xAxis, -(thigh + knee) * 0.75f);
-
-    // Arms swing opposite to the legs; elbows bend a little more going forward.
-    const float armSwing = -legSwing;
-    bone("upperArm" + n) = Quat::axisAngle(zAxis, s * radians(9.0f + 1.0f * breath * idle)) *
-                           Quat::axisAngle(xAxis, radians(20.0f) * armSwing * w + radians(2.0f) * sway * idle * s);
-    bone("forearm" + n) =
-        Quat::axisAngle(xAxis, radians(12.0f) + radians(18.0f) * std::max(0.0f, armSwing) * w);
+    // Arms swing opposite to the legs (forward a bit more than back), the
+    // elbows bend more on the way forward; idle: relaxed, breathing.
+    const float armSwing = -legFwd[i] * w;
+    const float armDeg = armSwing > 0 ? 24.0f * armSwing : 16.0f * armSwing;
+    bone("upperArm" + n) = Z(s * (8.0f + 1.0f * breath * idle)) * X(armDeg + 3.0f * idle + 2.0f * sway * idle * s);
+    bone("forearm" + n) = X(14.0f + 2.0f * breath * idle + 22.0f * std::max(0.0f, armSwing));
+    bone("hand" + n) = X(-6.0f - 6.0f * std::max(0.0f, -armSwing)) * Z(s * 4.0f);
   }
+  // Head steady while the chest twists; idle: glances around now and then.
+  const float glance = std::sin(m.time * 0.37f) * std::sin(m.time * 0.23f + 1.0f);
+  bone("neck") = Y(0.6f * twist + 8.0f * glance * idle);
 
   // ---- Activities (crude key poses, see docs/REMASTER.md) ----
   const float t = m.actionTime;
@@ -602,6 +682,7 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
     bone("spine") = X(2 + 4 * breath);
     bone("chest") = X(1.0f * breath);
     bob = 0;
+    offset = {};
   }
   if (m.activity == Activity::kDrive) {
     // Hands at ten and two on the wheel; the wheel turn swings the arms.
@@ -662,7 +743,7 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   if (m.activity == Activity::kEmote) {
     // Fade in over 0.25 s and out at the end, so it doesn't snap.
     const float len = emoteLength(m.emote);
-    const float fade = engine::clampf(std::min(t / 0.25f, (len - t) / 0.3f), 0, 1);
+    const float fade = engine::smoothstep(0.0f, 1.0f, std::min(t / 0.3f, (len - t) / 0.35f));
     auto set = [&](const char* name, Quat q) {
       Quat& b = bone(name);
       // Blend from the walking/idle pose toward the emote pose.
@@ -757,12 +838,12 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   const float look = engine::clampf(m.pitch, radians(-60.0f), radians(60.0f));
   const float turn = engine::clampf(m.headYaw, radians(-75.0f), radians(75.0f));
   const Quat headExtra = bone("head");  // emotes may tilt the head
-  bone("neck") = Quat::axisAngle(yAxis, -turn * 0.4f) * Quat::axisAngle(xAxis, look * 0.35f);
+  bone("neck") = Quat::axisAngle(yAxis, -turn * 0.4f) * Quat::axisAngle(xAxis, look * 0.35f) * bone("neck");
   bone("head") = Quat::axisAngle(yAxis, -turn * 0.6f) * Quat::axisAngle(xAxis, look * 0.65f) * headExtra;
   skeleton_.skinMatrices(rot, out);
 
   // Bob: the body is lowest when the legs are spread, highest mid-step.
-  const engine::Mat4 lift = engine::Mat4::translation({0, bob, 0});
+  const engine::Mat4 lift = engine::Mat4::translation({offset.x, bob, offset.z});
   for (engine::Mat4& mat : out) mat = lift * mat;
 }
 
@@ -892,6 +973,44 @@ std::string avatarPaletteJson() {
   j += ",";
   list("eyes", kEyePalette, kEyeColors);
   return j + "}";
+}
+
+std::string walkReport(const Avatar& avatar) {
+  const engine::Skeleton& sk = avatar.skeleton();
+  const int feet[2] = {sk.find("foot.L"), sk.find("foot.R")};
+  std::string out = "Walk check:";
+  const struct { const char* name; float fwd, side; } kCases[] = {{"forward", 1, 0}, {"sideways", 0, 1}, {"backward", -1, 0}, {"slow", 0.35f, 0}};
+  for (const auto& c : kCases) {
+    AvatarMotion m;
+    std::vector<engine::Mat4> bones;
+    const float dt = 1.0f / 60.0f, speed = 2.2f;
+    Vec3 body{0, 0, 0}, last[2]{};
+    float slide = 0, planted = 0, lowest = 1, travel = 0;
+    for (int f = 0; f < 360; ++f) {
+      const float fwd = c.fwd * speed * dt, side = c.side * speed * dt;
+      advanceWalk(m, fwd, side, dt, speed);
+      body += Vec3{side, 0, -fwd};
+      m.time = static_cast<float>(f) * dt;
+      avatar.pose(m, bones);
+      for (int i = 0; i < 2; ++i) {
+        const size_t b = static_cast<size_t>(feet[i]);
+        const engine::Vec4 p = engine::transformPoint(bones[b], sk.bones[b].restPosition);
+        const Vec3 world = Vec3{p.x, p.y, p.z} + body;
+        lowest = std::min(lowest, p.y);
+        if (f > 120 && p.y < 0.095f) {  // planted (after the walk settles)
+          slide += engine::length(Vec3{world.x - last[i].x, 0, world.z - last[i].z});
+          planted += dt;
+          travel += speed * dt;
+        }
+        last[i] = world;
+      }
+    }
+    char line[160];
+    std::snprintf(line, sizeof(line), " %s: planted feet slide %.0f%% of the walk, ankles down to %.3f m;", c.name,
+                  travel > 0 ? 100.0f * slide / (travel * std::max(0.05f, std::fabs(c.fwd) + std::fabs(c.side))) : 0.0f, lowest);
+    out += line;
+  }
+  return out;
 }
 
 }  // namespace app

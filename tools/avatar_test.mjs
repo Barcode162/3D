@@ -1,10 +1,11 @@
 // Avatar customizer test (upgrade plan item 14): opens Menu → Avatar → Make
 // my own look, tries several styles (screenshots build/avatar-*.png, the
 // camera in front of you), checks the game wears it and tells the menu, and
-// that the look comes back after a reload (remembered on the phone).
+// that the look comes back after a reload (remembered on the phone), and
+// that walking feet stay planted (?walkcheck).
 // Usage: NODE_PATH=$(npm root -g) node tools/avatar_test.mjs
 import { serveSite } from './lib/site.mjs';
-import { launchBrowser, openBar } from './lib/browser.mjs';
+import { launchBrowser, logText, openBar } from './lib/browser.mjs';
 import { SPOTS } from './lib/spots.mjs';
 
 const site = serveSite();
@@ -52,6 +53,16 @@ await page.reload();
 await page.waitForTimeout(1500);
 check(await until((want) => bar3dUi.info().look === -1 && JSON.stringify(bar3dUi.info().avatarStyle) === want, 20000, style),
       'after a reload you still wear your look');
+
+// The walk (upgrade item 15): planted feet barely slide (app/avatar.cpp walkReport).
+await openBar(page, site.url, 'skipintro&server=off&walkcheck');
+const report = (await logText(page)).split('\n').find((l) => l.includes('Walk check')) || '';
+console.log('     ' + report.replace(/;/g, ';\n     '));
+const LIMITS = { forward: 8, backward: 8, slow: 20, sideways: 40 };
+for (const [name, limit] of Object.entries(LIMITS)) {
+  const m = new RegExp(`${name}: planted feet slide (\\d+)%`).exec(report);
+  check(!!m && +m[1] <= limit, `walking ${name}: feet slide ${m ? m[1] : '?'}% (at most ${limit}%)`);
+}
 await browser.close();
 site.close();
 process.exit(failed ? 1 : 0);

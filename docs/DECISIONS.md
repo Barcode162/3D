@@ -807,6 +807,19 @@ back to the middle, "really smooth but race like", reused later. Built as
   you; taps don't use things meanwhile.
 - Saved on the phone (`avCustom`, `av0`..`av16`); picking a preset turns it off.
 
+## Walking animation (2026-10-19, upgrade item 15)
+- Feet first: each ankle's spot is worked out (planted on the floor during
+  stance, moving back exactly as fast as the body moves forward; an arc
+  during swing), then the thigh and shin reach it (two-bone IK in the hips'
+  frame) and the foot is turned flat to the floor with a heel-to-toe roll.
+  The walk cycle's length (`AvatarMotion::walkCycle`) must match what
+  `advanceWalk` advances the phase by, or the feet slide.
+- The standing pose uses the same IK with the feet at rest and the body
+  shifted over one leg, so weight shifts bend the free knee by themselves.
+- `?walkcheck` logs how far planted feet slide; `?walkpose=<deg>` freezes a
+  walking pose, `?previewturn=<deg>` turns you in the customizer's view
+  (side views of the walk).
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float
