@@ -54,6 +54,9 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
 - Mini music studio (DAW).
 - World-simulation engines: sound from physics, heat, smell, day/night.
 - Site on Cloudflare Pages (unlocks threads), voice through a server (SFU).
+- AI dock: a built-in workspace on the user's own site where they talk to the AI
+  and it works on the project there (code, GitHub, deploys, tools inside the
+  program), so they never need to leave the site for GitHub.
 
 ### Asset workflow (for new or changed models)
 1. `bash tools/assets/build_all.sh <scratch dir>` rebuilds every model in one
