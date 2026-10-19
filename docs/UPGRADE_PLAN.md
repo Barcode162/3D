@@ -37,7 +37,10 @@ user asked: "the race game should actually be fixed".)
       louder inside, normal volume in the room (3D sound zone).
 
 ## Polish in the bar
-- [ ] **6. Signs and ladders:** the "under construction" signs, the ladders in
+- [x] **6. Signs and ladders:** (done 2026-10-19: the A-frame sign by the
+      door, the "under construction" sign, the barricades and the step ladder
+      were all built pivoting at the floor, so they opened at the top like a
+      V and their tops poked out; now real A-frames hinged at the top.) the "under construction" signs, the ladders in
       the construction rooms and the "welcome" sign are V-shaped with
       sticks poking out: rework them.
 - [ ] **7. 4K Mania:** more songs, a better menu, look and feel like osu!mania.

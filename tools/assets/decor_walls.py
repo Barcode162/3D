@@ -221,13 +221,22 @@ for i, (line, sc) in enumerate((("TONIGHT", 2), ("", 1), ("LIVE PIANO", 1), ("9 
                          center=True)
 chalkboard = common.image_material("A-frame chalk", cb_px, roughness=0.9)
 af = Matrix.Translation((1.95, 0, L.Z1 - 1.25)) @ Matrix.Rotation(0.5, 4, "Y")
+AF_H = 1.0 / math.cos(0.2)  # each board's length (the sign stands 1 m tall)
 for side in (-1, 1):
-    m = af @ Matrix.Rotation(side * 0.2, 4, "X")
+    # Hinged at the top (like a real A-frame), the feet apart at the bottom.
+    # Built standing from y = 0 to AF_H, then turned about its top edge.
+    m = (af @ Matrix.Translation((0, 1.0, 0)) @ Matrix.Rotation(-side * 0.2, 4, "X") @
+         Matrix.Translation((0, -AF_H, 0)) @ Matrix.Diagonal((1, AF_H, 1, 1)))
     place(common.box("A-frame", (-0.32, 0.0, -0.012), (0.32, 1.0, 0.012), P.mat("wood"), 0.006), m)
     place(common.quad("Chalk", [(0.27, 0.12, side * 0.013), (-0.27, 0.12, side * 0.013), (-0.27, 0.95, side * 0.013),
                                 (0.27, 0.95, side * 0.013)] if side < 0 else
                       [(-0.27, 0.12, 0.013), (0.27, 0.12, 0.013), (0.27, 0.95, 0.013), (-0.27, 0.95, 0.013)],
                       chalkboard), m)
+# The hinge along the top, and a chain holding the feet.
+common.tube("A-frame hinge", [af @ Vector((-0.3, 0.985, 0)), af @ Vector((0.3, 0.985, 0))], 0.012, P.mat("brass"), sides=8)
+for x in (-0.25, 0.25):
+    common.tube("A-frame chain", [af @ Vector((x, 0.35, -0.13)), af @ Vector((x, 0.33, 0.0)), af @ Vector((x, 0.35, 0.13))],
+                0.003, P.mat("steel"), sides=4)
 
 # ---- Plants ----
 P.plant(-1.85, 0.0, L.Z1 - 0.3, size=1.6, pot_r=0.22, pot_h=0.42, leaves=34, seed=21)     # fig by the bay

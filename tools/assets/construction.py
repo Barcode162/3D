@@ -93,13 +93,18 @@ def sawhorse(m, x, z, yaw):
     rail = common.box("Barricade rail", (-0.6, 0.78, -0.012), (0.6, 0.98, 0.012), stripes, 0.004)
     common.set_uvs(rail, lambda co, n: ((co.x + 0.6) / 1.2 * 2, (co.y - 0.78) / 0.2 * 0.5))
     place(rail, mm)
-    low = common.box("Barricade rail", (-0.6, 0.38, -0.012), (0.6, 0.52, 0.012), stripes, 0.004)
+    # Legs: A-frames, meeting under the top rail, the feet apart (a lower
+    # rail on the front pair).
+    foot, top = 0.25, 0.035
+    low_y = 0.45
+    low_z = foot + (top - foot) * (low_y / 0.98) + 0.035
+    low = common.box("Barricade rail", (-0.6, low_y - 0.07, low_z - 0.012), (0.6, low_y + 0.07, low_z + 0.012), stripes, 0.004)
     common.set_uvs(low, lambda co, n: ((co.x + 0.6) / 1.2 * 2, (co.y - 0.38) / 0.14 * 0.35))
     place(low, mm)
     for sx in (-0.5, 0.5):
         for sz in (-1, 1):
-            leg = common.box("Barricade leg", (-0.02, 0, -0.02), (0.02, 1.0, 0.02), steel, 0.004)
-            place(leg, mm @ Matrix.Translation((sx, 0, 0)) @ Matrix.Rotation(sz * 0.22, 4, "X"))
+            common.tube("Barricade leg", [mm @ Vector((sx, 0.0, sz * foot)), mm @ Vector((sx, 0.98, sz * top))], 0.02, steel,
+                        sides=4)
     lamp_c = common.cylinder("Barricade lamp", Vector((0.0, 1.06, 0)), 0.05, 0.03, "z",
                              common.plain_material("Amber lamp", (1, 0.6, 0.1), 0.0, 0.3, emission=(1.0, 0.5, 0.05),
                                                    strength=5.0), segments=14)
@@ -117,17 +122,26 @@ def cone(m, x, z, s=1.0):
 
 
 def easel_sign(m, x, z, yaw):
+    """A sandwich-board sign: two boards hinged at the top, feet apart, the
+    sign on both faces (nothing poking out)."""
     mm = m @ Matrix.Translation((x, 0, z)) @ Matrix.Rotation(yaw, 4, "Y")
+    tall, tilt, w = 1.2, 0.2, 0.84
+    length = tall / math.cos(tilt)
+    for side in (-1, 1):
+        bm = (mm @ Matrix.Translation((0, tall, 0)) @ Matrix.Rotation(-side * tilt, 4, "X") @
+              Matrix.Translation((0, -length, 0)))
+        place(common.box("Sign board", (-w / 2, 0.0, -0.012), (w / 2, length, 0.012), lumber, 0.004), bm)
+        f = side * 0.0125
+        y0, y1 = length - 0.66, length - 0.12  # the upper part of the board (the sign is 3:2)
+        corners = [(-0.4, y0, f), (0.4, y0, f), (0.4, y1, f), (-0.4, y1, f)]
+        if side < 0:  # (facing the other way: seen from there, +x is on the left)
+            corners = [corners[1], corners[0], corners[3], corners[2]]
+        place(common.quad("Sign face", corners, sign_mat), bm)
+    common.tube("Sign hinge", [mm @ Vector((-(w - 0.04) / 2, tall - 0.012, 0)), mm @ Vector(((w - 0.04) / 2, tall - 0.012, 0))],
+                0.012, steel, sides=8)
     for sx in (-0.3, 0.3):
-        leg = common.box("Easel leg", (-0.015, 0, -0.015), (0.015, 1.6, 0.015), lumber, 0.003)
-        place(leg, mm @ Matrix.Translation((sx, 0, 0.1)) @ Matrix.Rotation(-0.12, 4, "X"))
-    back = common.box("Easel back leg", (-0.015, 0, -0.015), (0.015, 1.5, 0.015), lumber, 0.003)
-    place(back, mm @ Matrix.Translation((0, 0, -0.2)) @ Matrix.Rotation(0.2, 4, "X"))
-    board = common.box("Sign board", (-0.42, 0.75, 0.0), (0.42, 1.31, 0.02), lumber, 0.004)
-    place(board, mm @ Matrix.Translation((0, 0, 0.13)) @ Matrix.Rotation(-0.12, 4, "X"))
-    face = common.quad("Sign face", [(-0.4, 0.77, 0.021), (0.4, 0.77, 0.021), (0.4, 1.29, 0.021), (-0.4, 1.29, 0.021)],
-                       sign_mat)
-    place(face, mm @ Matrix.Translation((0, 0, 0.13)) @ Matrix.Rotation(-0.12, 4, "X"))
+        common.tube("Sign chain", [mm @ Vector((sx, 0.4, -0.16)), mm @ Vector((sx, 0.38, 0.0)), mm @ Vector((sx, 0.4, 0.16))],
+                    0.003, steel, sides=4)
 
 
 def plastic_sheet(m, w, h, z):
@@ -171,17 +185,25 @@ def work_room(m, depth, width):
     place(head, m @ Matrix.Translation((tx, 1.75, tz)) @ Matrix.Rotation(0.6, 4, "Y") @ Matrix.Rotation(-0.3, 4, "X"))
     lens = common.box("Work light lens", (-0.12, -0.08, 0.05), (0.12, 0.08, 0.055), lamp, 0.0)
     place(lens, m @ Matrix.Translation((tx, 1.75, tz)) @ Matrix.Rotation(0.6, 4, "Y") @ Matrix.Rotation(-0.3, 4, "X"))
-    # Step ladder (A-frame, aluminum).
+    # Step ladder (A-frame, aluminum): the front rails carry the steps, the
+    # back rails brace it; they meet at the top cap, the feet apart.
     lx, lz = -width * 0.25, -depth * 0.6
     lm = m @ Matrix.Translation((lx, 0, lz)) @ Matrix.Rotation(0.4, 4, "Y")
-    for side in (-1, 1):
-        for sx in (-0.22, 0.22):
-            rail = common.box("Ladder rail", (sx - 0.02, 0, -0.012), (sx + 0.02, 1.6, 0.012), alu, 0.003)
-            place(rail, lm @ Matrix.Rotation(side * 0.18, 4, "X"))
+    H, foot, top = 1.6, 0.42, 0.07
+    for sx in (-0.22, 0.22):
+        common.tube("Ladder rail", [lm @ Vector((sx, 0.0, foot)), lm @ Vector((sx, H, top))], 0.02, alu, sides=4)
+        common.tube("Ladder rail", [lm @ Vector((sx * 0.92, 0.0, -foot)), lm @ Vector((sx * 0.92, H, -top))], 0.017, alu,
+                    sides=4)
+        # Spreader bar holding the two halves.
+        common.tube("Ladder spreader", [lm @ Vector((sx * 1.02, 0.72, foot - (foot - top) * 0.45)),
+                                        lm @ Vector((sx * 1.02, 0.72, -(foot - (foot - top) * 0.45)))], 0.006, steel, sides=4)
+        for zz in (foot, -foot):
+            place(common.box("Ladder foot", (sx - 0.03, 0.0, zz - 0.035), (sx + 0.03, 0.03, zz + 0.035), black, 0.006), lm)
     for k in range(4):
-        step = common.box("Ladder step", (-0.22, 0.3 + k * 0.38, -0.06), (0.22, 0.33 + k * 0.38, 0.06), alu, 0.004)
-        place(step, lm @ Matrix.Translation((0, 0, 0.18 - 0.05 * k)))
-    place(common.box("Ladder top", (-0.25, 1.58, -0.1), (0.25, 1.64, 0.1), alu, 0.008), lm)
+        y = 0.36 + k * 0.36
+        zc = foot + (top - foot) * (y / H) - 0.04
+        place(common.box("Ladder step", (-0.21, y - 0.015, zc - 0.05), (0.21, y + 0.015, zc + 0.05), alu, 0.004), lm)
+    place(common.box("Ladder top", (-0.25, H - 0.01, -0.12), (0.25, H + 0.04, 0.12), alu, 0.008), lm)
     # Paint buckets, one open with a stir stick.
     for k, (bx, bz) in enumerate(((0.1, -0.4), (0.4, -0.55), (0.25, -0.2))):
         bxx, bzz = bx * width, bz * depth

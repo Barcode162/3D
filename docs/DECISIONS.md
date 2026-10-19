@@ -716,6 +716,10 @@ back to the middle, "really smooth but race like", reused later. Built as
   27 s) made in code at start-up in a background job; one looping voice whose
   volume follows where you are: 1 inside, 0.85 in the doorway, up to 0.5
   near the door in the bar (fading out over 6 m), off elsewhere.
+- A-frames in the asset scripts (signs, barricades, ladders): turn each
+  half about its TOP edge (translate up, rotate, translate down), or build the
+  legs as tubes from foot to top. Rotating about the floor makes a V whose
+  tops poke out (what the user saw, item 6).
 - Test: `tools/arcade_test.mjs`. `draw_text` in the asset scripts takes the
   TOP row counted from the bottom of the image (row 0 = bottom).
 
