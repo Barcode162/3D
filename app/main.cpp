@@ -6,6 +6,8 @@
 #include <emscripten/html5.h>
 
 #include <algorithm>
+#include <cctype>
+#include <map>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -93,6 +95,21 @@ struct App {
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   app::ChessGame chess;    // the lounge's chessboard
+  // The avatar customizer: your choices (when `customLook`), the looks built
+  // so far (by AvatarStyle::key, as look indexes after the presets), and
+  // everyone else's choices by room slot.
+  app::AvatarStyle style;
+  bool customLook = false;
+  int selfCustomLook = -1;  // look index of your custom mesh (rebuilt in place)
+  std::map<int, app::AvatarStyle> slotStyles;
+  struct SlotLook { std::string key; int index; };
+  std::map<int, SlotLook> slotLooks;  // a mesh per room slot, rebuilt when its style changes
+  int styleSentSlot = -1;
+  bool avatarPreview = false;  // the customizer is open: the camera shows you from the front
+  Vec3 previewEye;
+  float previewYaw = 0;
+  float previewStartYaw = 0;
+  bool previewAimed = false;  // turned toward the open side yet
   app::Piano piano;
   app::Darts darts;
   app::race::Game race;
@@ -323,13 +340,50 @@ void sitOn(int index) {
 void updateCamera(float dt) {
   // A menu or account panel covers the game: no looking or walking meanwhile.
   const bool covered = engine::bridge::frame().modalOpen;
-  const engine::Vec2 look = covered ? engine::Vec2{} : g_app.input.frame().look;
+  const engine::Vec2 look = covered && !g_app.avatarPreview ? engine::Vec2{} : g_app.input.frame().look;
   const bool menu = g_app.jukeboxMenu.isOpen() || g_app.rhythm.isOpen() || g_app.race.open();
   const float sens = kLookSensitivity * g_app.lookSpeed;
   if (!menu && !g_app.piano.keyboardOpen()) g_app.camera.look(look.x * sens, -look.y * sens * g_app.invertLook);
   const engine::Vec2 move = covered ? engine::Vec2{} : g_app.input.frame().move;
   if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, engine::frameTime().nowMs + kIntroAfterInputMs);
+  }
+  if (g_app.avatarPreview) {
+    // The customizer is open: the camera stands 1.7 m in front of you and
+    // looks back; dragging turns your body.
+    // The panel covers the lower half, so you're framed in the top half:
+    // up to 3.2 m away (closer if something is in the way). On opening you
+    // turn toward the most open side. Dragging turns you.
+    const auto room = [&](float yaw) {
+      const Vec3 f{std::sin(yaw), 0, -std::cos(yaw)};
+      float free = 0.5f;
+      for (float d = 0.6f; d <= 3.2f; d += 0.1f) {
+        const Vec3 p{g_app.previewEye.x + f.x * d, g_app.previewEye.y - 0.7f, g_app.previewEye.z + f.z * d};
+        if (engine::length(app::resolveCollisions(g_app.scene, p, 0.12f) - p) > 0.01f) break;
+        free = d;
+      }
+      return free;
+    };
+    if (!g_app.previewAimed) {
+      g_app.previewAimed = true;
+      float best = -1, bestYaw = g_app.previewYaw;
+      for (int k = 0; k < 16; ++k) {
+        const float yaw = g_app.previewYaw + static_cast<float>(k) * engine::kPi / 8;
+        const float r = room(yaw) - (k == 0 ? 0 : 0.05f);  // ties keep the way you face
+        if (r > best) best = r, bestYaw = yaw;
+      }
+      g_app.previewYaw = bestYaw;
+    }
+    g_app.previewYaw += look.x * sens;
+    const float dist = room(g_app.previewYaw);
+    const Vec3 fwd{std::sin(g_app.previewYaw), 0, -std::cos(g_app.previewYaw)};
+    const float feet = g_app.previewEye.y - 1.66f, camY = 1.15f;
+    g_app.camera.position = Vec3{g_app.previewEye.x, feet + camY, g_app.previewEye.z} + fwd * dist;
+    g_app.camera.yaw = g_app.previewYaw + engine::kPi;
+    // The top of your head just under the top of the screen.
+    g_app.camera.pitch = std::atan((1.85f - camY) / dist) - g_app.camera.fovY * 0.5f * 0.88f;
+    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
+    return;
   }
   if (g_app.chess.isOpen()) {  // looking down at the chessboard
     g_app.chess.camera(g_app.camera);
@@ -711,6 +765,44 @@ int seatHit(Vec3 dir, float reach, float* dist = nullptr) {
   return best;
 }
 
+// Builds a customizer style into look `index` (-1: a new one). Returns the index.
+int buildStyle(const app::AvatarStyle& st, int index) {
+  app::Avatar a;
+  a.build(app::lookFromStyle(st));
+  if (index < 0) return static_cast<int>(g_app.renderer.addAvatarMesh(a.mesh()));
+  g_app.renderer.setAvatarMesh(static_cast<size_t>(index), a.mesh());
+  return index;
+}
+
+// The look index for another player's custom style (room slot `slot`).
+int lookForSlot(int slot) {
+  const auto st = g_app.slotStyles.find(slot);
+  if (st == g_app.slotStyles.end()) return 0;
+  const std::string key = st->second.key();
+  auto it = g_app.slotLooks.find(slot);
+  if (it == g_app.slotLooks.end()) {
+    it = g_app.slotLooks.emplace(slot, App::SlotLook{key, buildStyle(st->second, -1)}).first;
+  } else if (it->second.key != key) {
+    buildStyle(st->second, it->second.index);
+    it->second.key = key;
+  }
+  return it->second.index;
+}
+
+// Puts on your customizer look (and remembers it on this phone).
+void applyStyle(const app::AvatarStyle& st, bool remember) {
+  g_app.style = st;
+  g_app.style.clamp();
+  g_app.customLook = true;
+  g_app.selfCustomLook = buildStyle(g_app.style, g_app.selfCustomLook);
+  g_app.renderer.setSelfAvatar(static_cast<size_t>(g_app.selfCustomLook));
+  g_app.styleSentSlot = -1;  // tell the room again
+  if (remember) {
+    engine::settings::remember("avCustom", 1);
+    for (int k = 0; k < app::AvatarStyle::kFields; ++k) engine::settings::remember(("av" + std::to_string(k)).c_str(), g_app.style.v[k]);
+  }
+}
+
 void setLights(bool dim, bool fire) {
   g_app.lightsDim = dim;
   g_app.fireOn = fire;
@@ -980,6 +1072,8 @@ void handleCommands() {
     if (c.name == "emote") startEmote(static_cast<Emote>(static_cast<int>(c.a)));
     else if (c.name == "look") {
       g_app.look = std::clamp(static_cast<int>(c.a), 0, static_cast<int>(app::avatarLooks().size()) - 1);
+      g_app.customLook = false;
+      engine::settings::remember("avCustom", 0);
       g_app.renderer.setSelfAvatar(static_cast<size_t>(g_app.look));
       showToast(std::string("You're now wearing: ") + app::avatarLooks()[static_cast<size_t>(g_app.look)].name);
     } else if (c.name == "pianoSong") {
@@ -994,6 +1088,27 @@ void handleCommands() {
       if (status == 0x90 && vel > 0) g_app.piano.keyDown(note, static_cast<float>(vel) / 127.0f, true);
       else if (status == 0x80 || status == 0x90) g_app.piano.keyUp(note, true);
       else if (status == 0xb0 && note == 64) g_app.piano.setPedal(vel >= 64, true);  // shared, like the on-screen pedal
+    } else if (c.name == "avatarStyle") {
+      // From the customizer: the 17 choices as a JSON array.
+      app::AvatarStyle st;
+      const engine::Json j = engine::Json::parse(c.text);
+      if (j.isArray()) {
+        for (int k = 0; k < app::AvatarStyle::kFields && k < static_cast<int>(j.size()); ++k)
+          st.v[k] = static_cast<int>(j[static_cast<size_t>(k)].number());
+        applyStyle(st, true);
+      }
+    } else if (c.name == "avatarPreview") {
+      g_app.avatarPreview = c.a != 0;
+      if (g_app.avatarPreview) {
+        g_app.previewEye = g_app.camera.position;
+        g_app.previewYaw = g_app.previewStartYaw = g_app.camera.yaw;
+        g_app.previewAimed = false;
+      } else {
+        g_app.camera.position = g_app.previewEye;
+        g_app.camera.yaw = g_app.previewStartYaw;
+        g_app.camera.pitch = 0;
+      }
+      g_app.renderer.setSelfWhole(g_app.avatarPreview);
     } else if (c.name == "make") {
       g_app.bartender.make(static_cast<int>(c.a));
     } else if (c.name == "endShift") {
@@ -1023,6 +1138,13 @@ void handleCommands() {
       g_app.look = look;
       g_app.renderer.setSelfAvatar(static_cast<size_t>(look));
     }
+    // Or the look you made in the customizer.
+    if (first && engine::settings::remembered("avCustom", 0) != 0) {
+      app::AvatarStyle st;
+      for (int k = 0; k < app::AvatarStyle::kFields; ++k)
+        st.v[k] = static_cast<int>(engine::settings::remembered(("av" + std::to_string(k)).c_str(), st.v[k]));
+      applyStyle(st, false);
+    }
   }
 }
 
@@ -1036,7 +1158,7 @@ void sendInfo() {
     if (g_app.infoSongCount == SIZE_MAX) {
       w.key("looks").beginArray();
       for (const auto& l : app::avatarLooks()) w.value(l.name);
-      w.endArray().key("drinks").beginArray();
+      w.endArray().key("avatarPalette").raw(app::avatarPaletteJson()).key("drinks").beginArray();
       for (const auto& d : app::drinkRecipes()) w.value(d.name);
       w.endArray().key("emotes").beginArray();
       for (int i = 1; i < static_cast<int>(Emote::kCount); ++i) w.value(app::emoteName(static_cast<Emote>(i)));
@@ -1050,7 +1172,10 @@ void sendInfo() {
   }
   engine::JsonWriter w;
   w.beginObject()
-      .key("look").value(g_app.look)
+      .key("look").value(g_app.customLook ? -1 : g_app.look)
+      .key("avatarStyle").beginArray();
+  for (int k = 0; k < app::AvatarStyle::kFields; ++k) w.value(g_app.style.v[k]);
+  w.endArray()
       .key("pianoSong").value(g_app.piano.currentSong())
       .key("shift").value(g_app.bartender.onShift() ? 1 : 0)
       .key("seated").value(g_app.seat >= 0 ? 1 : 0)
@@ -1066,7 +1191,15 @@ void handleShared(std::vector<engine::net::WorldEntry>& world, std::vector<engin
   for (const engine::net::WorldEntry& e : world) {
     if (e.key == "lt" && e.values.size() >= 2) setLights(e.values[0] != 0, e.values[1] != 0);
     if (e.key == "rc") g_app.race.onRoomRace(e.values);
-    if (e.key == "ch") g_app.chess.onRoom(e.values);  // the lounge's chess game  // the racing rigs' lobby (cloud/games/race.js)
+    if (e.key == "ch") g_app.chess.onRoom(e.values);  // the lounge's chess game
+    // Another player's custom avatar (world key a<slot>, app/avatar.h AvatarStyle).
+    if (e.key.size() >= 2 && e.key[0] == 'a' && std::isdigit(static_cast<unsigned char>(e.key[1])) &&
+        e.values.size() >= app::AvatarStyle::kFields) {
+      app::AvatarStyle st;
+      for (int k = 0; k < app::AvatarStyle::kFields; ++k) st.v[k] = static_cast<int>(e.values[static_cast<size_t>(k)]);
+      st.clamp();
+      g_app.slotStyles[std::atoi(e.key.c_str() + 1)] = st;
+    }
   }
   for (const engine::net::Event& e : events) {
     if (e.type != "sfx" || e.values.size() < 4) continue;
@@ -1176,7 +1309,8 @@ void updateInteraction(double nowMs, float dt) {
   // A tap uses what it lands on; tapping anywhere also works while you're
   // standing at something (easier on a small screen).
   // (A copy: using something can switch input modes, which empties the frame's taps.)
-  const std::vector<engine::Vec2> taps = g_app.input.frame().taps;
+  const std::vector<engine::Vec2> taps =
+      g_app.avatarPreview ? std::vector<engine::Vec2>{} : g_app.input.frame().taps;  // the customizer: drags turn you
   for (const engine::Vec2 tap : taps) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, nowMs + kIntroAfterInputMs);
     if (g_app.jukeboxMenu.isOpen()) {
@@ -1272,7 +1406,7 @@ void selfState(float extra[kCount - app::slot::kActivity]) {
   const app::AvatarMotion& m = g_app.avatarMotion;
   e(kActivity) = static_cast<float>(static_cast<int>(m.activity));
   e(kParam) = g_app.seat >= 0 ? static_cast<float>(g_app.seat) : 0;
-  e(kLook) = static_cast<float>(g_app.look);
+  e(kLook) = g_app.customLook ? static_cast<float>(app::kCustomLook) : static_cast<float>(g_app.look);
   g_app.voiceLevel = engine::bridge::frame().myVoiceLevel;
   e(kVoice) = std::round(g_app.voiceLevel * 20) / 20;
   e(kEmote) = static_cast<float>(static_cast<int>(g_app.emote));
@@ -1429,6 +1563,14 @@ void frame(double rafMs) {
     world = g_app.shared.takeOther();
     if (g_app.others.online()) engine::net::receiveEvents(events);
     handleShared(world, events);
+    // Your customizer look, for the others (once per room slot you get).
+    const int slot = g_app.others.online() ? engine::net::mySlot() : -1;
+    if (g_app.customLook && slot >= 0 && slot != g_app.styleSentSlot) {
+      double v[app::AvatarStyle::kFields];
+      for (int k = 0; k < app::AvatarStyle::kFields; ++k) v[k] = g_app.style.v[k];
+      engine::net::setWorld("a" + std::to_string(slot), v, app::AvatarStyle::kFields);
+      g_app.styleSentSlot = slot;
+    }
   }
   {
     PROFILE(Phase::kGames);
@@ -1565,7 +1707,11 @@ void frame(double rafMs) {
     const Mat4 transform = otherTransform(o, motion);
     body.pose(motion, g_app.otherBones[g_app.otherTransforms.size()]);
     g_app.otherTransforms.push_back(transform);
-    g_app.otherLooks.push_back(o.look);
+    int look = o.look;
+    if (look == app::kCustomLook) {  // their own style, sent as world key a<slot>
+      look = lookForSlot(engine::net::slotOfPlayer(o.id));
+    }
+    g_app.otherLooks.push_back(look);
     const int drink = static_cast<int>(o.values[app::slot::kHeldDrink]);
     if (drink > 0) {
       const Vec3 hand = o.eye + Vec3{std::cos(o.yaw) * 0.22f + std::sin(o.yaw) * 0.25f, -0.55f,
@@ -1577,6 +1723,7 @@ void frame(double rafMs) {
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
   g_app.renderer.setBoxes(g_app.boxes);
   Mat4 self = app::avatarTransform(cam.position, cam.yaw, cam.pitch);
+  if (g_app.avatarPreview) self = app::avatarTransform(g_app.previewEye, g_app.previewYaw, 0);
   if (g_app.seat >= 0) {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
     self = app::seatedTransform(s.hip, s.yaw);

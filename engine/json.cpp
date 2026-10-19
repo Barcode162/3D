@@ -312,6 +312,12 @@ JsonWriter& JsonWriter::value(double d) {
   return *this;
 }
 
+JsonWriter& JsonWriter::raw(std::string_view json) {
+  separate();
+  out_ += json;
+  return *this;
+}
+
 JsonWriter& JsonWriter::value(int i) {
   separate();
   out_ += std::to_string(i);

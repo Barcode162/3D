@@ -92,6 +92,18 @@ window.bar3dUi = (function () {
       'background:#0b071066;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));',
       'font:15px/1.4 -apple-system,system-ui,sans-serif;color:#f5ecf8;}',
       '#menuRoot.open{display:flex;}',
+      '#menuRoot.avatarEdit{background:none;pointer-events:none;}',
+      '#menuRoot.avatarEdit .mPanel{pointer-events:auto;max-height:45vh;}',
+      '.avTabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 8px;-webkit-overflow-scrolling:touch;}',
+      '.avTab{flex:none;padding:7px 12px;border-radius:12px;border:2px solid #241a2b;background:#3a74db;color:#fff;font-size:15px;}',
+      '.avTab.on{background:#f5b400;color:#241a2b;}',
+      '.avChips{display:flex;flex-wrap:wrap;gap:6px;}',
+      '.avChip{padding:8px 11px;border-radius:12px;border:2px solid #241a2b;background:#6aa8ff;color:#fff;font-size:14px;}',
+      '.avChip.on{background:#ffe066;color:#241a2b;}',
+      '.avSwatches{display:flex;flex-wrap:wrap;gap:7px;}',
+      '.avSwatch{width:38px;height:38px;border-radius:50%;border:3px solid #241a2b;box-shadow:inset 0 3px 0 #fff6,0 3px 0 #241a2b;}',
+      '.avSwatch.on{outline:3px solid #ffe066;outline-offset:2px;}',
+      '.avDot{display:block;width:34px;height:34px;border-radius:50%;margin:4px auto 6px;border:3px solid #241a2b;}',
       '.mPanel{width:min(94vw,420px);max-height:78vh;overflow:auto;background:#1a1220f2;border-radius:20px;',
       'box-shadow:0 10px 40px #000a;padding:16px 16px 12px;-webkit-overflow-scrolling:touch;}',
       '.mPanel h2{margin:0 0 10px;font-size:20px;display:flex;justify-content:space-between;align-items:center;}',
@@ -131,13 +143,16 @@ window.bar3dUi = (function () {
   }
 
   function close() {
-    if (root) { root.classList.remove('open'); root.innerHTML = ''; }
+    if (current === 'avatar') cmd('avatarPreview', 0);
+    if (root) { root.classList.remove('open', 'avatarEdit'); root.innerHTML = ''; }
     current = '';
     stopMeter();
     if (window.bar3dModal) bar3dModal.closed('menu');
   }
   function show(title, children) {
     if (window.bar3dModal) bar3dModal.open('menu', close);
+    if (current === 'avatar' && title !== 'Avatar') cmd('avatarPreview', 0);
+    root.classList.remove('avatarEdit');
     root.innerHTML = '';
     var panel = el('div', { class: 'mPanel' }, [
       el('h2', {}, [title, el('button', { class: 'mX', text: '✕', onclick: close })]),
@@ -186,17 +201,97 @@ window.bar3dUi = (function () {
     current = 'emotes';
   }
 
+  // ---- Avatar: presets and the customizer (app/avatar.h AvatarStyle) ----
+  // The 17 choices, in the game's order.
+  var AV = { body: 0, skin: 1, hair: 2, hairColor: 3, hiColor: 4, hi: 5, top: 6, topColor: 7, topColor2: 8, topPattern: 9,
+             bottom: 10, bottomColor: 11, bottomColor2: 12, bottomPattern: 13, shoes: 14, eyes: 15, facial: 16 };
+  var AV_DEFAULT = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1];
+  var AV_TABS = [
+    ['Presets', null],
+    ['Body', [['Body', 'body', 'opt', ['Masculine', 'Feminine']], ['Skin', 'skin', 'skin'], ['Eyes', 'eyes', 'eyes'],
+              ['Facial hair', 'facial', 'opt', ['None', 'Stubble', 'Beard']]]],
+    ['Hair', [['Style', 'hair', 'opt', ['Curly', 'Short', 'Long', 'Bun', 'Bald', 'Ponytail', 'Bob', 'Mohawk', 'Afro', 'Buzz']],
+              ['Colour', 'hairColor', 'hair'], ['Highlights', 'hi', 'opt', ['None', 'Tips', 'Streaks', 'Roots']],
+              ['Highlight colour', 'hiColor', 'hair']]],
+    ['Top', [['Style', 'top', 'opt', ['T-shirt', 'Long sleeve', 'Tank top', 'Hoodie', 'Jacket']], ['Colour', 'topColor', 'cloth'],
+             ['Pattern', 'topPattern', 'opt', ['Solid', 'Stripes', 'Gradient', 'Two-tone']], ['Second colour', 'topColor2', 'cloth']]],
+    ['Bottom', [['Style', 'bottom', 'opt', ['Jeans', 'Shorts', 'Skirt', 'Joggers']], ['Colour', 'bottomColor', 'cloth'],
+                ['Pattern', 'bottomPattern', 'opt', ['Solid', 'Stripes', 'Gradient', 'Two-tone']],
+                ['Second colour', 'bottomColor2', 'cloth'], ['Shoes', 'shoes', 'cloth']]],
+  ];
+  var avatarTab = 'Presets';
+  function avatarStyle() {
+    var st = (info.avatarStyle && info.avatarStyle.length === AV_DEFAULT.length) ? info.avatarStyle.slice() : AV_DEFAULT.slice();
+    return st;
+  }
   function avatarPanel() {
-    var names = info.looks || ['Josh'];
-    show('Avatar', [el('div', { class: 'mGrid' }, names.map(function (n, i) {
-      var swatch = el('span', { class: 'big', style: 'width:34px;height:34px;border-radius:50%;margin:0 auto 6px;border:2px solid #fff4;background:' + (LOOK_COLORS[i] || '#888') });
-      return el('button', { class: 'mTile' + (S.get('look') === i ? ' on' : ''), onclick: function () {
-        S.set('look', i);  // remembered for next time; the game changes it from the command
-        cmd('look', i);
+    var custom = info.look === -1;
+    var tabs = el('div', { class: 'avTabs' }, AV_TABS.map(function (t) {
+      return el('button', { class: 'avTab' + (avatarTab === t[0] ? ' on' : ''), text: t[0], onclick: function () {
+        avatarTab = t[0];
         avatarPanel();
-      } }, [swatch, n]);
-    })), el('div', { class: 'mSmall', text: 'Look in the giant mirror to see it. Everyone else sees your new look too.' })]);
+      } });
+    }));
+    var body = [];
+    var tab = AV_TABS.filter(function (t) { return t[0] === avatarTab; })[0] || AV_TABS[0];
+    if (!tab[1]) {
+      var names = info.looks || ['Josh'];
+      body.push(el('div', { class: 'mGrid' }, names.map(function (n, i) {
+        var swatch = el('span', { class: 'avDot', style: 'background:' + (LOOK_COLORS[i] || '#888') });
+        return el('button', { class: 'mTile' + (!custom && S.get('look') === i ? ' on' : ''), onclick: function () {
+          S.set('look', i);  // remembered for next time; the game changes it from the command
+          cmd('look', i);
+          info.look = i;
+          avatarPanel();
+        } }, [swatch, n]);
+      })));
+      body.push(el('button', { class: 'mBtn', text: custom ? 'Edit my own look' : 'Make my own look', onclick: function () {
+        avatarTab = 'Body';
+        if (!custom) setStyle(avatarStyle());
+        avatarPanel();
+      } }));
+    } else {
+      var st = avatarStyle();
+      var pal = info.avatarPalette || {};
+      tab[1].forEach(function (row) {
+        var field = AV[row[1]], kind = row[2];
+        // Second colours only matter with a pattern; highlight colour only with highlights.
+        if (row[1] === 'topColor2' && !st[AV.topPattern]) return;
+        if (row[1] === 'bottomColor2' && !st[AV.bottomPattern]) return;
+        if (row[1] === 'hiColor' && !st[AV.hi]) return;
+        body.push(el('h3', { text: row[0] }));
+        var items;
+        if (kind === 'opt') {
+          items = row[3].map(function (n, i) {
+            return el('button', { class: 'avChip' + (st[field] === i ? ' on' : ''), text: n, onclick: function () { pick(field, i); } });
+          });
+        } else {
+          items = (pal[kind] || []).map(function (c, i) {
+            return el('button', { class: 'avSwatch' + (st[field] === i ? ' on' : ''), style: 'background:' + c,
+                                  'aria-label': row[0] + ' ' + (i + 1), onclick: function () { pick(field, i); } });
+          });
+        }
+        body.push(el('div', { class: kind === 'opt' ? 'avChips' : 'avSwatches' }, items));
+      });
+      body.push(el('div', { class: 'mSmall', text: 'Drag on the game to turn around. Everyone sees your look.' }));
+    }
+    show('Avatar', [tabs, el('div', { class: 'avBody' }, body)]);
+    root.classList.add('avatarEdit');
+    if (current !== 'avatar') cmd('avatarPreview', 1);
     current = 'avatar';
+  }
+  function setStyle(st) {
+    info.avatarStyle = st;
+    info.look = -1;
+    cmd('avatarStyle', 0, 0, JSON.stringify(st));
+  }
+  function pick(field, value) {
+    var st = avatarStyle();
+    st[field] = value;
+    // A beard on the feminine body by default goes away; pick it again if wanted.
+    if (field === AV.body && value === 1 && st[AV.facial] === 1) st[AV.facial] = 0;
+    setStyle(st);
+    avatarPanel();
   }
 
   function profilePanel() {

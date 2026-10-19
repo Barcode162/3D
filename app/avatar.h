@@ -2,6 +2,7 @@
 // Your body in the bar: a skeleton (18 bones) plus one smooth "skinned" mesh
 // that bends with it. It stands where you stand, turns with you, and tilts
 // its head as you look up and down. Seen in the mirrors.
+#include <string>
 #include <vector>
 
 #include "engine/math.h"
@@ -51,17 +52,57 @@ struct AvatarMotion {
 // and the feet don't skate. `forwardDistance` is signed (backward < 0).
 void advanceWalk(AvatarMotion& motion, float forwardDistance, float sideDistance, float dt, float fullSpeed);
 
-enum class HairStyle { kCurly, kShort, kLong, kBun, kNone };
+enum class HairStyle { kCurly, kShort, kLong, kBun, kNone, kPonytail, kBob, kMohawk, kAfro, kBuzz, kCount };
+enum class TopStyle { kAuto = -1, kTee, kLongSleeve, kTank, kHoodie, kJacket, kCount };
+enum class BottomStyle { kJeans, kShorts, kSkirt, kJoggers, kCount };
+// Patterns: solid, stripes (tops), a gradient from colour 1 to colour 2 down
+// the body, two-tone (tops: sleeves in colour 2).
+enum class Pattern { kSolid, kStripes, kGradient, kTwoTone, kCount };
+enum class Highlight { kNone, kTips, kStreaks, kRoots, kCount };
 
-// One avatar look you can pick in the menu.
+// One avatar look: the presets in the menu, or one made in the customizer
+// (lookFromStyle). Fields after `stubble` have defaults, so the presets only
+// fill the first ones.
 struct AvatarLook {
   const char* name;
   engine::Vec3 skin, top, pants, shoes, hair, iris;
   HairStyle hairStyle;
   bool longSleeves;
   bool stubble;
+  int body = 0;                       // 0 = masculine, 1 = feminine
+  engine::Vec3 hair2{0, 0, 0};        // highlight colour
+  Highlight highlight = Highlight::kNone;
+  TopStyle topStyle = TopStyle::kAuto;  // kAuto = tee or long sleeve from longSleeves
+  engine::Vec3 top2{0, 0, 0};
+  Pattern topPattern = Pattern::kSolid;
+  BottomStyle bottomStyle = BottomStyle::kJeans;
+  engine::Vec3 pants2{0, 0, 0};
+  Pattern bottomPattern = Pattern::kSolid;
+  int facialHair = -1;                // -1 = from stubble, 0 none, 1 stubble, 2 beard
 };
 const std::vector<AvatarLook>& avatarLooks();
+
+// The customizer's choices (web/menu.js avatar panel): small numbers, each an
+// index into a palette or a style list. Sent to the room as world key
+// a<slot> (the same order), so everyone builds the same avatar.
+// The look number sent to others for "my own style" (world key a<slot>).
+constexpr int kCustomLook = 255;
+
+struct AvatarStyle {
+  static constexpr int kFields = 17;
+  int v[kFields] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 1};
+  // body, skin, hairStyle, hairColor, highlightColor, highlight, topStyle,
+  // topColor, topColor2, topPattern, bottomStyle, bottomColor, bottomColor2,
+  // bottomPattern, shoes, eyes, facialHair
+  bool operator==(const AvatarStyle& o) const;
+  void clamp();  // each field into its range
+  std::string key() const;  // e.g. "0.3.1..." (to share built meshes)
+};
+// Palette sizes (and the menu's swatches use the same colours: avatarPalette).
+constexpr int kSkinTones = 10, kHairColors = 14, kClothColors = 20, kEyeColors = 8;
+AvatarLook lookFromStyle(const AvatarStyle& s);
+// The colours as "#rrggbb" lists for the menu: "skin", "hair", "cloth", "eyes".
+std::string avatarPaletteJson();
 
 class Avatar {
  public:

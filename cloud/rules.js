@@ -14,6 +14,8 @@
 //   ch     the lounge's chess game: board (8 numbers), turn, castling, en
 //          passant, halfmoves, fullmove, last move, two players, move number.
 //          Only a player at the board (claim machine.chess.w / .b) writes it.
+//   a<n>   player in slot n's custom avatar (17 small numbers, app/avatar.h
+//          AvatarStyle). Only that player writes it.
 //   rc     the racing rigs: lobby, picks, start time, results. Written only
 //          by the room (cloud/games/race.js); phones use `race` intents.
 //   dk<n>  drink on counter spot n (0..7): drink type + 1, 0 = empty.
@@ -53,6 +55,11 @@ export function checkWrite(key, values, ctx) {
     return { ok: false, why: 'the room moves the glasses' };
   }
   if (key === 'rc') return { ok: false, why: 'the room runs the race' };
+  if ((m = /^a(\d{1,3})$/.exec(key))) {  // a player's custom avatar: only they write it
+    if (+m[1] !== ctx.slot) return { ok: false, why: 'that is someone else\'s avatar' };
+    if (v.length !== 17 || !v.every((x) => isInt(x, 0, 63))) return { ok: false, why: 'an avatar is 17 small numbers' };
+    return { ok: true, values: v };
+  }
   if (key === 'ch') {
     if (v.length !== 17 || !v.every(Number.isInteger)) return { ok: false, why: 'a chess state is 17 whole numbers' };
     if (ctx.owner('machine.chess.w') !== ctx.slot && ctx.owner('machine.chess.b') !== ctx.slot) {

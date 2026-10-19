@@ -89,6 +89,8 @@ class JsonWriter {
   JsonWriter& value(int i);
   JsonWriter& value(bool b);
   JsonWriter& null();
+  // Already-written JSON, put in as one value.
+  JsonWriter& raw(std::string_view json);
   const std::string& str() const { return out_; }
   std::string take() { return std::move(out_); }
 

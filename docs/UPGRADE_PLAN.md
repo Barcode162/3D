@@ -86,7 +86,15 @@ user asked: "the race game should actually be fixed".)
       machine.chess.w/.b). Later: the room checking each move's legality.)
 
 ## Avatars
-- [ ] **14. Real avatar customization:** choose gender; top and bottom
+- [x] **14. Real avatar customization:** (done 2026-10-19: Menu → Avatar →
+      Make my own look; tabs Body / Hair / Top / Bottom; masculine or feminine
+      body, 10 skins, 8 eye colours, stubble/beard; 10 hairstyles, 14 hair
+      colours, highlights (tips, streaks, roots) in a second colour; T-shirt,
+      long sleeve, tank, hoodie, jacket; jeans, shorts, skirt, joggers; 20
+      clothing colours with stripes, gradient or two-tone in a second colour;
+      shoes. The camera shows you from the front while you edit (drag to turn).
+      Saved on the phone; others see it through the room (world key `a<slot>`).
+      Test `tools/avatar_test.mjs`.) choose gender; top and bottom
       (cool-style tops and bottoms); colors; hairstyle; hair color plus a
       secondary color for highlights, gradients, and more.
 - [ ] **15. More realistic character animations.**

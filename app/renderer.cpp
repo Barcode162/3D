@@ -686,6 +686,15 @@ void SceneRenderer::drawSkinned(const wgpu::RenderPassEncoder& pass, const engin
   engine::prof::draw(mesh.indexCount);
 }
 
+size_t SceneRenderer::addAvatarMesh(const engine::SkinnedMeshData& mesh) {
+  avatarMeshes_.push_back(engine::SkinnedMesh::upload(gpu_->device, mesh));
+  return avatarMeshes_.size() - 1;
+}
+
+void SceneRenderer::setAvatarMesh(size_t index, const engine::SkinnedMeshData& mesh) {
+  if (index < avatarMeshes_.size()) avatarMeshes_[index] = engine::SkinnedMesh::upload(gpu_->device, mesh);
+}
+
 void SceneRenderer::drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const {
   if (avatarMeshes_.empty()) return;
   pass.SetBindGroup(1, objectBindGroup_, 1, &avatarOffset_);
@@ -926,7 +935,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   pass.SetPipeline(modelPipeline_);
   drawModels(pass, false, eye);
   pass.SetPipeline(skinnedPipeline_);
-  drawAvatar(pass, firstPersonBonesBindGroup_);  // your body, minus the head
+  drawAvatar(pass, selfWhole_ ? bonesBindGroup_ : firstPersonBonesBindGroup_);  // your body, minus the head (in first person)
   drawOthers(pass);
   pass.SetPipeline(modelBlendPipeline_);
   drawModels(pass, true, eye);  // glass, after everything solid

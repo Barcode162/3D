@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 #include "app/bar_scene.h"
 
@@ -21,7 +22,6 @@ namespace {
 // The other looks change colors, sleeves and hair.
 const Paint kEyeWhite{{0.95f, 0.94f, 0.92f}, 0.8f, -1};
 const Paint kLips{{0.74f, 0.47f, 0.43f}, 0.5f, -1};
-const Paint kBelt{{0.12f, 0.08f, 0.05f}, 0.7f, -1};
 const Paint kSock{{0.12f, 0.12f, 0.14f}, 0.2f, kTexFabric};
 
 // Small deterministic random numbers (the same hair every time).
@@ -89,15 +89,43 @@ const std::vector<AvatarLook>& avatarLooks() {
 }
 
 void Avatar::build(const AvatarLook& look) {
+  const bool fem = look.body == 1;
+  const TopStyle topStyle = look.topStyle != TopStyle::kAuto ? look.topStyle
+                            : look.longSleeves ? TopStyle::kLongSleeve : TopStyle::kTee;
+  const int facial = fem ? 0 : look.facialHair >= 0 ? look.facialHair : (look.stubble ? 1 : 0);
   const Paint kSkinPaint{look.skin, 0.35f, -1};
   const Paint kShirt{look.top, 0.25f, kTexFabric};
-  const Paint kJeans{look.pants, 0.25f, kTexDenim};
+  const Paint kJeans{look.pants, 0.25f, look.bottomStyle == BottomStyle::kJoggers ? kTexFabric : kTexDenim};
   const Paint kShoes{look.shoes, 0.45f, -1};
   const Paint kSole{look.shoes * 0.7f, 0.3f, -1};
   const Paint kHair{look.hair, 0.55f, kTexHair};
+  const Paint kHair2{look.highlight != Highlight::kNone ? look.hair2 : look.hair, 0.6f, kTexHair};
   const Paint kStubble{look.skin * 0.55f + look.hair * 0.15f, 0.15f, kTexHair};
+  const Paint kBeard{look.hair * 0.9f, 0.3f, kTexHair};
   const Paint kIris{look.iris, 0.95f, -1};
   const Paint kBrow{look.hair * 0.85f, 0.2f, kTexHair};
+  const Paint kLash{{0.03f, 0.02f, 0.02f}, 0.3f, -1};
+  const Paint kLipsPaint = fem ? Paint{{0.72f, 0.32f, 0.36f}, 0.6f, -1} : kLips;
+  // Clothes colour at a height: the patterns.
+  const auto topAt = [&](float y, bool sleeve) {
+    Paint p = kShirt;
+    switch (look.topPattern) {
+      case Pattern::kStripes:
+        if (static_cast<int>(std::floor((y - 1.0f) / 0.055f)) % 2 != 0) p.color = look.top2;
+        break;
+      case Pattern::kGradient: p.color = engine::lerp(look.top, look.top2, engine::clampf((1.47f - y) / 0.47f, 0, 1)); break;
+      case Pattern::kTwoTone: if (sleeve) p.color = look.top2; break;
+      default: break;
+    }
+    return p;
+  };
+  const auto pantsAt = [&](float y) {
+    Paint p = kJeans;
+    if (look.bottomPattern == Pattern::kGradient) p.color = engine::lerp(look.pants, look.pants2, engine::clampf((0.98f - y) / 0.88f, 0, 1));
+    if (look.bottomPattern == Pattern::kStripes && static_cast<int>(std::floor(y / 0.08f)) % 2 != 0) p.color = look.pants2;
+    if (look.bottomPattern == Pattern::kTwoTone) p.color = look.pants2;
+    return p;
+  };
   engine::Skeleton& sk = skeleton_;
   Bones b{};
   b.root = sk.add("root", -1, {0, 0, 0});
@@ -107,9 +135,12 @@ void Avatar::build(const AvatarLook& look) {
   b.neck = sk.add("neck", b.chest, {0, 1.45f, 0});
   b.head = sk.add("head", b.neck, {0, 1.54f, 0});
   const char* sideName[2] = {".L", ".R"};
+  const float sh = fem ? 0.92f : 1.0f;  // shoulder width
   for (int i = 0; i < 2; ++i) {
     const float s = i == 0 ? -1.0f : 1.0f;
     const std::string n = sideName[i];
+    // (The same joints for every body: the poses share one skeleton. A
+    // feminine body's narrower shoulders are in the mesh only.)
     b.upperArm[i] = sk.add("upperArm" + n, b.chest, {s * 0.2f, 1.41f, 0});
     b.forearm[i] = sk.add("forearm" + n, b.upperArm[i], {s * 0.215f, 1.13f, 0});
     b.hand[i] = sk.add("hand" + n, b.forearm[i], {s * 0.225f, 0.87f, 0});
@@ -121,164 +152,335 @@ void Avatar::build(const AvatarLook& look) {
   engine::SkinnedMeshData& m = mesh_;
   const Vec3 side{1, 0, 0};
 
-  // --- Torso: elliptical cross-sections from the hips to the shoulders.
+  // --- Torso: elliptical cross-sections from the hips to the shoulders,
+  // sampled finely so stripes and gradients follow it; hard edges where one
+  // paint meets another (belt, stripes, the top's hem).
   auto torsoSkin = [&](float y) {
     return y < 1.13f ? Skin{b.hips, b.spine, engine::smoothstep(0.98f, 1.12f, y)}
                      : Skin{b.spine, b.chest, engine::smoothstep(1.16f, 1.30f, y)};
   };
   struct Section {
     float y, rx, rz;
-    const Paint* paint;
   };
-  const Section torso[] = {
-      {0.80f, 0.10f, 0.08f, &kJeans},   {0.86f, 0.160f, 0.105f, &kJeans}, {0.95f, 0.170f, 0.110f, &kJeans},
-      {0.975f, 0.163f, 0.104f, &kJeans}, {0.975f, 0.166f, 0.107f, &kBelt}, {1.015f, 0.158f, 0.102f, &kBelt},
-      {1.015f, 0.154f, 0.100f, &kShirt}, {1.08f, 0.144f, 0.097f, &kShirt}, {1.18f, 0.154f, 0.106f, &kShirt},
-      {1.27f, 0.172f, 0.121f, &kShirt},  {1.35f, 0.186f, 0.114f, &kShirt}, {1.41f, 0.180f, 0.098f, &kShirt},
-      {1.45f, 0.128f, 0.077f, &kShirt},  {1.47f, 0.064f, 0.058f, &kShirt},
+  const Section torso[] = {{0.80f, 0.10f, 0.08f},    {0.86f, 0.160f, 0.105f}, {0.95f, 0.170f, 0.110f},
+                           {0.975f, 0.164f, 0.105f}, {1.015f, 0.156f, 0.101f}, {1.08f, 0.144f, 0.097f},
+                           {1.18f, 0.154f, 0.106f},  {1.27f, 0.172f, 0.121f},  {1.35f, 0.186f, 0.114f},
+                           {1.41f, 0.180f, 0.098f},  {1.45f, 0.128f, 0.077f},  {1.47f, 0.064f, 0.058f}};
+  const auto chestBump = [&](float y) {
+    return engine::smoothstep(1.15f, 1.27f, y) * engine::smoothstep(1.39f, 1.29f, y);
   };
+  // The torso's middle moves forward with the bust (its back stays put).
+  const auto centerZ = [&](float y) { return fem ? 0.005f - 0.03f * chestBump(y) : 0.005f; };
+  const auto shape = [&](float y, float& rx, float& rz) {
+    const int n = static_cast<int>(sizeof(torso) / sizeof(torso[0]));
+    rx = torso[n - 1].rx;
+    rz = torso[n - 1].rz;
+    for (int i = 0; i + 1 < n; ++i) {
+      if (y <= torso[i + 1].y) {
+        const float t = engine::clampf((y - torso[i].y) / (torso[i + 1].y - torso[i].y), 0, 1);
+        rx = torso[i].rx + (torso[i + 1].rx - torso[i].rx) * t;
+        rz = torso[i].rz + (torso[i + 1].rz - torso[i].rz) * t;
+        break;
+      }
+    }
+    if (fem) {  // narrower shoulders and waist, wider hips
+      rx *= y > 1.3f ? 0.9f : y > 1.03f ? 0.9f + 0.02f * engine::smoothstep(1.2f, 1.3f, y) : 1.0f + 0.07f * engine::smoothstep(1.03f, 0.92f, y);
+    }
+    if (fem) rz += 0.03f * chestBump(y);  // the bust, part of the torso's shape
+    const float grow = topStyle == TopStyle::kHoodie && y > 1.02f ? 0.01f : topStyle == TopStyle::kJacket && y > 1.0f ? 0.007f : 0.0f;
+    rx += grow;
+    rz += grow;
+  };
+  const bool belt = look.bottomStyle == BottomStyle::kJeans || look.bottomStyle == BottomStyle::kShorts;
+  const float hem = topStyle == TopStyle::kHoodie || topStyle == TopStyle::kJacket ? 0.97f : 1.015f;
+  const auto paintAt = [&](float y) {
+    if (y < 0.975f || (!belt && y < hem)) return pantsAt(y);
+    if (y < hem) return Paint{{0.12f, 0.08f, 0.05f}, 0.7f, -1};
+    return topAt(y, false);
+  };
+  std::vector<float> ys;
+  for (float y = 0.80f; y < 1.47f; y += 0.02f) ys.push_back(y);
+  ys.push_back(1.47f);
+  // Edges: the waist, the hem, stripe edges.
+  std::vector<float> edges = {0.975f, hem};
+  if (look.topPattern == Pattern::kStripes) {
+    for (float y = 1.0f + 0.055f; y < 1.45f; y += 0.055f) edges.push_back(y);
+  }
   std::vector<Ring> rings;
-  for (const Section& s : torso) rings.push_back({{0, s.y, 0.005f}, s.rx, s.rz, torsoSkin(s.y), *s.paint});
+  std::sort(ys.begin(), ys.end());
+  size_t e = 0;
+  std::sort(edges.begin(), edges.end());
+  for (float y : ys) {
+    while (e < edges.size() && edges[e] <= y) {
+      const float ey = edges[e++];
+      float rx, rz;
+      shape(ey, rx, rz);
+      rings.push_back({{0, ey, centerZ(ey)}, rx, rz, torsoSkin(ey), paintAt(ey - 0.0005f)});
+      rings.push_back({{0, ey, centerZ(ey)}, rx, rz, torsoSkin(ey), paintAt(ey + 0.0005f)});
+    }
+    float rx, rz;
+    shape(y, rx, rz);
+    rings.push_back({{0, y, centerZ(y)}, rx, rz, torsoSkin(y), paintAt(y)});
+  }
   engine::addTube(m, rings, side, 20);
+  // Hoodie: a hood folded behind the neck, a front pocket, strings.
+  if (topStyle == TopStyle::kHoodie) {
+    engine::addEllipsoid(m, {0, 1.46f, 0.075f}, {0.12f, 0.075f, 0.065f}, Skin{b.chest, b.chest, 0}, topAt(1.46f, false), 16, 10);
+    Paint pocket = topAt(1.09f, false);
+    pocket.color = pocket.color * 0.85f;
+    engine::addEllipsoid(m, {0, 1.09f, -0.1f}, {0.1f, 0.045f, 0.014f}, Skin{b.spine, b.spine, 0}, pocket, 14, 6);
+    for (float s : {-1.0f, 1.0f}) {
+      engine::addEllipsoid(m, {s * 0.03f, 1.36f, -0.124f}, {0.005f, 0.05f, 0.005f}, Skin{b.chest, b.chest, 0},
+                           Paint{{0.92f, 0.92f, 0.9f}, 0.3f, -1}, 6, 6);
+    }
+  }
+  // Jacket: open at the front over a shirt in colour 2, with lapels.
+  if (topStyle == TopStyle::kJacket) {
+    engine::addEllipsoid(m, {0, 1.25f, -0.098f}, {0.068f, 0.19f, 0.026f}, Skin{b.spine, b.chest, 0.5f},
+                         Paint{look.top2, 0.25f, kTexFabric}, 12, 12);
+    for (float s : {-1.0f, 1.0f}) {
+      engine::addEllipsoid(m, {s * 0.07f, 1.35f, -0.1f}, {0.032f, 0.085f, 0.02f}, Skin{b.chest, b.chest, 0},
+                           Paint{look.top * 0.8f, 0.3f, kTexFabric}, 8, 8);
+    }
+  }
 
   // --- Neck.
   rings.clear();
   for (float y : {1.42f, 1.48f, 1.53f, 1.58f}) {
     const Skin skin = y < 1.5f ? Skin{b.chest, b.neck, engine::smoothstep(1.43f, 1.48f, y)}
                                : Skin{b.neck, b.head, engine::smoothstep(1.51f, 1.56f, y)};
-    rings.push_back({{0, y, 0.01f}, 0.057f, 0.054f, skin, kSkinPaint});
+    rings.push_back({{0, y, 0.01f}, fem ? 0.05f : 0.057f, fem ? 0.048f : 0.054f, skin, kSkinPaint});
   }
   engine::addTube(m, rings, side, 14);
 
   // --- Head and face (all follow the head bone).
   const Skin head{b.head, b.head, 0};
   const Vec3 skull{0, 1.645f, -0.005f}, skullR{0.083f, 0.108f, 0.098f};
-  const Vec3 jaw{0, 1.60f, -0.02f}, jawR{0.071f, 0.056f, 0.067f};
+  const Vec3 jaw{0, 1.60f, -0.02f}, jawR = fem ? Vec3{0.064f, 0.05f, 0.062f} : Vec3{0.071f, 0.056f, 0.067f};
   engine::addEllipsoid(m, skull, skullR, head, kSkinPaint, 24, 18);
   engine::addEllipsoid(m, jaw, jawR, head, kSkinPaint, 18, 12);
-  engine::addEllipsoid(m, {0, 1.548f, -0.052f}, {0.03f, 0.018f, 0.024f}, head, kSkinPaint, 12, 8);  // chin
-  engine::addEllipsoid(m, {0, 1.634f, -0.098f}, {0.015f, 0.027f, 0.018f}, head, kSkinPaint, 10, 8);  // nose
-  engine::addEllipsoid(m, {0, 1.615f, -0.108f}, {0.012f, 0.01f, 0.011f}, head, kSkinPaint, 10, 8);   // nose tip
-  engine::addEllipsoid(m, {0, 1.591f, -0.084f}, {0.023f, 0.0065f, 0.008f}, head, kLips, 10, 6);     // mouth
+  engine::addEllipsoid(m, {0, 1.548f, -0.052f}, fem ? Vec3{0.025f, 0.016f, 0.021f} : Vec3{0.03f, 0.018f, 0.024f}, head, kSkinPaint, 12, 8);
+  engine::addEllipsoid(m, {0, 1.634f, -0.098f}, fem ? Vec3{0.012f, 0.024f, 0.016f} : Vec3{0.015f, 0.027f, 0.018f}, head, kSkinPaint, 10, 8);
+  engine::addEllipsoid(m, {0, 1.615f, -0.108f}, {0.011f, 0.009f, 0.01f}, head, kSkinPaint, 10, 8);  // nose tip
+  engine::addEllipsoid(m, {0, 1.591f, -0.084f}, fem ? Vec3{0.022f, 0.0085f, 0.009f} : Vec3{0.023f, 0.0065f, 0.008f}, head, kLipsPaint, 10, 6);
   for (float s : {-1.0f, 1.0f}) {
     engine::addEllipsoid(m, {s * 0.032f, 1.66f, -0.086f}, {0.017f, 0.011f, 0.01f}, head, kEyeWhite, 12, 8);
     engine::addEllipsoid(m, {s * 0.032f, 1.659f, -0.094f}, {0.008f, 0.009f, 0.004f}, head, kIris, 10, 6);
-    // Relaxed upper lids and low, thick brows.
     engine::addEllipsoid(m, {s * 0.032f, 1.667f, -0.087f}, {0.019f, 0.006f, 0.011f}, head, kSkinPaint, 12, 6);
-    engine::addEllipsoid(m, {s * 0.026f, 1.681f, -0.088f}, {0.016f, 0.0065f, 0.007f}, head, kBrow, 10, 6);
-    engine::addEllipsoid(m, {s * 0.044f, 1.682f, -0.083f}, {0.014f, 0.0055f, 0.007f}, head, kBrow, 10, 6);
+    if (fem) {  // lashes, thinner and higher brows
+      engine::addEllipsoid(m, {s * 0.034f, 1.6695f, -0.095f}, {0.018f, 0.0022f, 0.004f}, head, kLash, 10, 4);
+      engine::addEllipsoid(m, {s * 0.032f, 1.686f, -0.088f}, {0.02f, 0.0035f, 0.006f}, head, kBrow, 10, 6);
+    } else {
+      engine::addEllipsoid(m, {s * 0.026f, 1.681f, -0.088f}, {0.016f, 0.0065f, 0.007f}, head, kBrow, 10, 6);
+      engine::addEllipsoid(m, {s * 0.044f, 1.682f, -0.083f}, {0.014f, 0.0055f, 0.007f}, head, kBrow, 10, 6);
+    }
     engine::addEllipsoid(m, {s * 0.083f, 1.645f, 0.0f}, {0.012f, 0.026f, 0.018f}, head, kSkinPaint, 10, 8);  // ear
   }
 
-  // Stubble: thin shells over the jaw and lower face, skipping the lips,
-  // plus a light mustache.
+  // Facial hair: stubble (thin shells over the jaw, skipping the lips, and a
+  // light mustache) or a full beard.
   auto stubble = [](Vec3 p) {
     if (std::abs(p.x) < 0.03f && std::abs(p.y - 1.591f) < 0.0075f) return false;  // lips
     if (std::abs(p.x) > 0.062f) return p.y < 1.665f && p.z > -0.05f && p.z < 0.02f;  // sideburns, jawline
     return p.y < 1.612f && p.z < 0.0f;
   };
   constexpr float kShell = 0.0022f;
-  if (look.stubble) {
-  engine::addEllipsoid(m, skull, skullR + Vec3{kShell, kShell, kShell}, head, kStubble, 24, 18, stubble);
-  engine::addEllipsoid(m, jaw, jawR + Vec3{kShell, kShell, kShell}, head, kStubble, 18, 12, stubble);
-  engine::addEllipsoid(m, {0, 1.548f, -0.052f}, {0.033f, 0.021f, 0.027f}, head, kStubble, 12, 8,
-                       [](Vec3 p) { return p.z < -0.04f || p.y < 1.545f; });
-  engine::addEllipsoid(m, {0, 1.601f, -0.09f}, {0.025f, 0.0055f, 0.007f}, head, kStubble, 10, 6);
+  if (facial >= 1) {
+    const float sh2 = facial == 2 ? 0.009f : kShell;
+    const Paint fp = facial == 2 ? kBeard : kStubble;
+    engine::addEllipsoid(m, skull, skullR + Vec3{sh2, sh2, sh2}, head, fp, 24, 18, stubble);
+    engine::addEllipsoid(m, jaw, jawR + Vec3{sh2, sh2 * 1.6f, sh2}, head, fp, 18, 12, stubble);
+    engine::addEllipsoid(m, {0, 1.548f, -0.052f}, {0.033f + sh2, 0.021f + sh2 * 1.5f, 0.027f + sh2}, head, fp, 12, 8,
+                         [](Vec3 p) { return p.z < -0.04f || p.y < 1.545f; });
+    engine::addEllipsoid(m, {0, 1.601f, -0.09f}, {0.025f, 0.0055f + (facial == 2 ? 0.003f : 0.0f), 0.007f}, head, fp, 10, 6);
   }
 
-  // Hair: a cap where it grows, then (curly) a few hundred curls over it
-  // for the volume, or (long) a fall down the back, or (bun) a knot on top.
+  // --- Hair. A cap where it grows, then the style's shape. Highlights:
+  // tips (the ends lighter), streaks (some strands), roots (the reverse).
   const Vec3 hairCenter{0, 1.655f, 0.004f}, capR{0.092f, 0.116f, 0.106f};
-  if (look.hairStyle != HairStyle::kNone) {
-    const float grow = look.hairStyle == HairStyle::kCurly ? 0.08f : 0.0f;
-    engine::addEllipsoid(m, hairCenter, capR, head, kHair, 24, 18, [&](Vec3 p) {
+  const auto strand = [&](float t, uint32_t seed) {  // t: 0 at the root .. 1 at the tip
+    Paint p = kHair;
+    switch (look.highlight) {
+      case Highlight::kTips: p.color = engine::lerp(look.hair, look.hair2, engine::smoothstep(0.35f, 1.0f, t)); break;
+      case Highlight::kRoots: p.color = engine::lerp(look.hair2, look.hair, engine::smoothstep(0.0f, 0.6f, t)); break;
+      case Highlight::kStreaks: if (hash01(seed) < 0.28f) p.color = look.hair2; break;
+      default: break;
+    }
+    return p;
+  };
+  const HairStyle hs = look.hairStyle;
+  if (hs != HairStyle::kNone) {
+    const float grow = hs == HairStyle::kCurly || hs == HairStyle::kAfro ? 0.08f : 0.0f;
+    const Paint capPaint = hs == HairStyle::kBuzz ? Paint{look.hair * 0.7f + look.skin * 0.3f, 0.2f, kTexHair}
+                           : look.highlight == Highlight::kRoots ? kHair2 : kHair;
+    const Vec3 cap = hs == HairStyle::kBuzz || hs == HairStyle::kMohawk ? skullR + Vec3{0.004f, 0.004f, 0.004f} : capR;
+    engine::addEllipsoid(m, hairCenter + (hs == HairStyle::kBuzz || hs == HairStyle::kMohawk ? Vec3{0, -0.01f, -0.009f} : Vec3{}),
+                         cap, head, hs == HairStyle::kMohawk ? Paint{look.skin * 0.8f + look.hair * 0.2f, 0.2f, kTexHair} : capPaint,
+                         24, 18, [&](Vec3 p) {
       const Vec3 d = engine::normalize(Vec3{(p.x - hairCenter.x) / capR.x, (p.y - hairCenter.y) / capR.y,
                                             (p.z - hairCenter.z) / capR.z});
       return hairGrows(d + Vec3{0, grow, 0});  // the curly cap stops a bit inside the curls
     });
   }
-  if (look.hairStyle == HairStyle::kCurly) {
-    constexpr int kCurlDirections = 600;
-    for (int k = 0; k < kCurlDirections; ++k) {
+  if (hs == HairStyle::kCurly || hs == HairStyle::kAfro) {
+    const bool afro = hs == HairStyle::kAfro;
+    const int count = afro ? 900 : 600;
+    for (int k = 0; k < count; ++k) {
       // Even directions over the sphere (Fibonacci spiral), jittered.
-      const float y = 1.0f - 2.0f * (k + 0.5f) / kCurlDirections;
+      const float y = 1.0f - 2.0f * (k + 0.5f) / static_cast<float>(count);
       const float r = std::sqrt(std::max(0.0f, 1.0f - y * y));
-      const float a = k * 2.39996323f + hash01(k * 7u + 1u) * 0.3f;
+      const float a = static_cast<float>(k) * 2.39996323f + hash01(static_cast<uint32_t>(k) * 7u + 1u) * 0.3f;
       const Vec3 d{r * std::cos(a), y, r * std::sin(a)};
-      if (!hairGrows(d) || hash01(k * 7u + 2u) < 0.35f) continue;
-      const float lift = 1.0f + 0.12f * std::max(0.0f, d.y) + 0.05f * hash01(k * 7u + 3u);
-      const float size = 0.019f + 0.012f * hash01(k * 7u + 4u);
+      if (!hairGrows(d) || hash01(static_cast<uint32_t>(k) * 7u + 2u) < 0.35f) continue;
+      const float lift = afro ? 1.35f + 0.25f * std::max(0.0f, d.y) + 0.08f * hash01(k * 7u + 3u)
+                              : 1.0f + 0.12f * std::max(0.0f, d.y) + 0.05f * hash01(k * 7u + 3u);
+      const float size = (afro ? 0.026f : 0.019f) + 0.012f * hash01(k * 7u + 4u);
       const Vec3 c = hairCenter + Vec3{d.x * capR.x, d.y * capR.y, d.z * capR.z} * lift;
       const float shade = 0.75f + 0.5f * hash01(k * 7u + 5u);
-      Paint curl = kHair;
-      curl.color = kHair.color * shade;
+      Paint curl = strand(engine::clampf((lift - 1.0f) / (afro ? 0.6f : 0.17f) * 0.7f + 0.3f * hash01(k * 7u + 8u), 0, 1), k * 7u + 9u);
+      curl.color = curl.color * shade;
       engine::addEllipsoid(m, c, {size, size * (0.8f + 0.4f * hash01(k * 7u + 6u)), size}, head, curl, 8, 6);
     }
-    // A few loose curls falling onto the forehead, more on the right side.
-    const Vec3 fringe[] = {{0.035f, 1.735f, -0.088f}, {0.058f, 1.725f, -0.078f}, {0.015f, 1.742f, -0.09f},
-                           {-0.03f, 1.745f, -0.088f}};
-    for (const Vec3& c : fringe) engine::addEllipsoid(m, c, {0.02f, 0.024f, 0.017f}, head, kHair, 8, 6);
-  } else if (look.hairStyle == HairStyle::kLong) {
-    // Falls from the crown to the shoulders behind the head.
-    engine::addEllipsoid(m, {0, 1.6f, 0.035f}, {0.1f, 0.15f, 0.085f}, head, kHair, 18, 12);
-    engine::addEllipsoid(m, {0, 1.47f, 0.06f}, {0.095f, 0.08f, 0.05f}, Skin{b.neck, b.chest, 0.5f}, kHair, 14, 8);
-  } else if (look.hairStyle == HairStyle::kBun) {
-    engine::addEllipsoid(m, {0, 1.76f, 0.06f}, {0.045f, 0.04f, 0.045f}, head, kHair, 14, 10);
+    if (!afro) {  // a few loose curls falling onto the forehead, more on the right side
+      const Vec3 fringe[] = {{0.035f, 1.735f, -0.088f}, {0.058f, 1.725f, -0.078f}, {0.015f, 1.742f, -0.09f},
+                             {-0.03f, 1.745f, -0.088f}};
+      for (const Vec3& c : fringe) engine::addEllipsoid(m, c, {0.02f, 0.024f, 0.017f}, head, strand(0.8f, 3u), 8, 6);
+    }
+  } else if (hs == HairStyle::kLong) {
+    // Falls from the crown to the shoulders behind the head (rings, so the
+    // highlight can fade along it).
+    engine::addEllipsoid(m, {0, 1.62f, 0.035f}, {0.1f, 0.13f, 0.085f}, head, strand(0.2f, 1u), 18, 12);
+    rings.clear();
+    const float ys2[] = {1.66f, 1.58f, 1.52f, 1.47f, 1.42f, 1.38f};
+    for (int i = 0; i < 6; ++i) {
+      const float t = static_cast<float>(i) / 5.0f;
+      const Skin sk2 = ys2[i] > 1.52f ? head : Skin{b.neck, b.chest, engine::smoothstep(1.52f, 1.4f, ys2[i])};
+      rings.push_back({{0, ys2[i], 0.06f + 0.01f * t}, 0.1f - 0.01f * t, 0.05f, sk2, strand(0.2f + 0.8f * t, 2u)});
+    }
+    engine::addTube(m, rings, side, 16);
+    // Side locks framing the face.
+    for (float sx : {-1.0f, 1.0f}) {
+      rings.clear();
+      for (int i = 0; i < 4; ++i) {
+        const float t = static_cast<float>(i) / 3.0f;
+        rings.push_back({{sx * 0.085f, 1.68f - 0.17f * t, -0.03f + 0.02f * t}, 0.022f, 0.03f, head, strand(t, 4u)});
+      }
+      engine::addTube(m, rings, side, 10);
+    }
+  } else if (hs == HairStyle::kBun) {
+    engine::addEllipsoid(m, {0, 1.76f, 0.06f}, {0.045f, 0.04f, 0.045f}, head, strand(1.0f, 5u), 14, 10);
+  } else if (hs == HairStyle::kPonytail) {
+    engine::addEllipsoid(m, {0, 1.70f, 0.1f}, {0.025f, 0.022f, 0.022f}, head, Paint{{0.1f, 0.1f, 0.12f}, 0.4f, -1}, 8, 6);  // the tie
+    rings.clear();
+    for (int i = 0; i < 6; ++i) {
+      const float t = static_cast<float>(i) / 5.0f;
+      const Skin sk2 = t < 0.4f ? head : Skin{b.head, b.neck, engine::smoothstep(0.4f, 1.0f, t)};
+      rings.push_back({{0, 1.70f - 0.24f * t, 0.11f + 0.03f * std::sin(t * 3.0f)}, 0.03f * (1 - 0.5f * t) + 0.006f,
+                       0.028f * (1 - 0.5f * t) + 0.006f, sk2, strand(t, 6u)});
+    }
+    engine::addTube(m, rings, side, 12);
+  } else if (hs == HairStyle::kBob) {
+    // Chin length all round, a fringe at the front.
+    rings.clear();
+    const float ys2[] = {1.74f, 1.68f, 1.62f, 1.57f};
+    for (int i = 0; i < 4; ++i) {
+      const float t = static_cast<float>(i) / 3.0f;
+      rings.push_back({{0, ys2[i], 0.012f}, 0.1f + 0.008f * t, 0.112f + 0.004f * t, head, strand(0.3f + 0.7f * t, 7u)});
+    }
+    engine::addTube(m, rings, side, 24);
+    engine::addEllipsoid(m, {0, 1.715f, -0.085f}, {0.07f, 0.03f, 0.025f}, head, strand(0.6f, 8u), 14, 8);  // fringe
+  } else if (hs == HairStyle::kMohawk) {
+    for (int k = 0; k < 9; ++k) {
+      const float t = static_cast<float>(k) / 8.0f;
+      const float a = -1.1f + 2.4f * t;  // from the forehead over to the back
+      const Vec3 c = hairCenter + Vec3{0, std::cos(a) * 0.118f, std::sin(a) * 0.112f};
+      engine::addEllipsoid(m, c, {0.016f, 0.045f - 0.012f * std::abs(t - 0.4f), 0.026f}, head, strand(0.5f + 0.5f * t, 9u + k), 8, 8);
+    }
+  } else if (hs == HairStyle::kShort && look.highlight != Highlight::kNone) {
+    // Highlights on short hair: a few lighter tufts on top.
+    for (int k = 0; k < 14; ++k) {
+      const float a = hash01(k * 3u + 1u) * 6.283f, rr = 0.35f + 0.5f * hash01(k * 3u + 2u);
+      const Vec3 d = engine::normalize(Vec3{std::cos(a) * rr, 0.85f, std::sin(a) * rr - 0.15f});
+      if (!hairGrows(d)) continue;
+      engine::addEllipsoid(m, hairCenter + Vec3{d.x * capR.x, d.y * capR.y, d.z * capR.z} * 1.02f, {0.018f, 0.008f, 0.018f},
+                           head, look.highlight == Highlight::kRoots ? kHair : kHair2, 8, 6);
+    }
   }
 
   for (int i = 0; i < 2; ++i) {
     const float s = i == 0 ? -1.0f : 1.0f;
     // --- Arm: one tube from the shoulder to the fingertips.
-    const std::vector<Vec3> armJoints = {
-        {s * 0.19f, 1.45f, 0}, {s * 0.2f, 1.41f, 0}, {s * 0.215f, 1.13f, 0}, {s * 0.225f, 0.87f, 0}, {s * 0.228f, 0.70f, 0}};
+    const std::vector<Vec3> armJoints = {{s * 0.19f * sh, 1.45f, 0}, {s * 0.2f * sh, 1.41f, 0}, {s * 0.215f * sh, 1.13f, 0},
+                                         {s * 0.225f * sh, 0.87f, 0}, {s * 0.228f * sh, 0.70f, 0}};
     struct ArmRing {
       float y, r1, r2;
-      const Paint* paint;
+      bool cloth;
     };
     const ArmRing arm[] = {
-        {1.41f, 0.053f, 0.053f, &kShirt}, {1.39f, 0.06f, 0.06f, &kShirt}, {1.33f, 0.061f, 0.061f, &kShirt},
-        {1.265f, 0.058f, 0.058f, &kShirt}, {1.26f, 0.049f, 0.051f, &kSkinPaint}, {1.20f, 0.047f, 0.05f, &kSkinPaint},
-        {1.15f, 0.041f, 0.042f, &kSkinPaint}, {1.13f, 0.038f, 0.039f, &kSkinPaint}, {1.11f, 0.040f, 0.041f, &kSkinPaint},
-        {1.05f, 0.044f, 0.043f, &kSkinPaint}, {0.95f, 0.035f, 0.034f, &kSkinPaint}, {0.89f, 0.028f, 0.03f, &kSkinPaint},
-        {0.87f, 0.024f, 0.034f, &kSkinPaint}, {0.84f, 0.022f, 0.044f, &kSkinPaint}, {0.78f, 0.022f, 0.046f, &kSkinPaint},
-        {0.74f, 0.018f, 0.036f, &kSkinPaint}, {0.715f, 0.012f, 0.02f, &kSkinPaint},
+        {1.41f, 0.053f, 0.053f, true}, {1.39f, 0.06f, 0.06f, true}, {1.33f, 0.061f, 0.061f, true},
+        {1.265f, 0.058f, 0.058f, true}, {1.26f, 0.049f, 0.051f, false}, {1.20f, 0.047f, 0.05f, false},
+        {1.15f, 0.041f, 0.042f, false}, {1.13f, 0.038f, 0.039f, false}, {1.11f, 0.040f, 0.041f, false},
+        {1.05f, 0.044f, 0.043f, false}, {0.95f, 0.035f, 0.034f, false}, {0.89f, 0.028f, 0.03f, false},
+        {0.87f, 0.024f, 0.034f, false}, {0.84f, 0.022f, 0.044f, false}, {0.78f, 0.022f, 0.046f, false},
+        {0.74f, 0.018f, 0.036f, false}, {0.715f, 0.012f, 0.02f, false},
     };
     auto armSkin = [&](float y) {
       if (y > 1.3f) return Skin{b.chest, b.upperArm[i], engine::smoothstep(1.47f, 1.38f, y)};
       if (y > 1.0f) return Skin{b.upperArm[i], b.forearm[i], engine::smoothstep(1.17f, 1.09f, y)};
       return Skin{b.forearm[i], b.hand[i], engine::smoothstep(0.90f, 0.85f, y)};
     };
+    const bool longArm = topStyle == TopStyle::kLongSleeve || topStyle == TopStyle::kHoodie || topStyle == TopStyle::kJacket;
+    const float thin = fem ? 0.9f : 1.0f;
     rings.clear();
     for (const ArmRing& r : arm) {
-      // Long sleeves reach the wrist, a little wider than the arm.
-      const bool sleeve = look.longSleeves && r.y > 0.9f;
-      const float grow = sleeve && r.paint == &kSkinPaint ? 0.006f : 0.0f;
-      rings.push_back({{limbX(r.y, armJoints), r.y, 0}, r.r1 + grow, r.r2 + grow, armSkin(r.y), sleeve ? kShirt : *r.paint});
+      // Sleeves: short (tee), to the wrist (long, hoodie, jacket: a little
+      // wider than the arm), none (tank).
+      const bool sleeve = topStyle != TopStyle::kTank && (r.cloth || (longArm && r.y > 0.9f));
+      const float grow = sleeve && !r.cloth ? 0.006f + (topStyle == TopStyle::kHoodie ? 0.006f : 0.0f) : 0.0f;
+      rings.push_back({{limbX(r.y, armJoints), r.y, 0}, r.r1 * thin + grow, r.r2 * thin + grow, armSkin(r.y),
+                       sleeve ? topAt(r.y, true) : kSkinPaint});
     }
     engine::addTube(m, rings, side, 14);
     // Rounded shoulder, bridging the torso and the top of the arm.
-    engine::addEllipsoid(m, {s * 0.19f, 1.405f, 0.004f}, {0.068f, 0.058f, 0.064f},
-                         Skin{b.chest, b.upperArm[i], 0.5f}, kShirt, 16, 10);
+    engine::addEllipsoid(m, {s * 0.19f * sh, 1.405f, 0.004f}, Vec3{0.068f, 0.058f, 0.064f} * thin,
+                         Skin{b.chest, b.upperArm[i], 0.5f}, topStyle == TopStyle::kTank ? kSkinPaint : topAt(1.405f, true), 16, 10);
+    if (topStyle == TopStyle::kTank) {  // the tank's strap over the shoulder
+      engine::addEllipsoid(m, {s * 0.12f * sh, 1.445f, 0.0f}, {0.022f, 0.012f, 0.06f}, Skin{b.chest, b.chest, 0}, topAt(1.44f, false), 8, 6);
+    }
 
-    // --- Leg: hip to ankle, jeans with a hem, then a sock.
+    // --- Leg: hip to ankle. Jeans and joggers to the ankle (joggers with a
+    // cuff in colour 2), shorts to above the knee, a skirt (legs bare under it).
     const std::vector<Vec3> legJoints = {{s * 0.095f, 0.98f, 0}, {s * 0.1f, 0.5f, 0}, {s * 0.1f, 0.05f, 0}};
     struct LegRing {
       float y, r;
-      const Paint* paint;
     };
-    const LegRing leg[] = {
-        {0.98f, 0.080f, &kJeans}, {0.93f, 0.089f, &kJeans}, {0.85f, 0.086f, &kJeans}, {0.70f, 0.075f, &kJeans},
-        {0.56f, 0.061f, &kJeans}, {0.50f, 0.057f, &kJeans}, {0.44f, 0.059f, &kJeans}, {0.36f, 0.061f, &kJeans},
-        {0.22f, 0.054f, &kJeans}, {0.12f, 0.052f, &kJeans}, {0.105f, 0.054f, &kJeans}, {0.105f, 0.037f, &kSock},
-        {0.06f, 0.036f, &kSock},
-    };
+    const LegRing leg[] = {{0.98f, 0.080f}, {0.93f, 0.089f}, {0.85f, 0.086f}, {0.70f, 0.075f}, {0.62f, 0.066f},
+                           {0.56f, 0.061f}, {0.50f, 0.057f}, {0.44f, 0.059f}, {0.36f, 0.061f}, {0.22f, 0.054f},
+                           {0.12f, 0.052f}, {0.105f, 0.054f}, {0.105f, 0.037f}, {0.06f, 0.036f}};
     auto legSkin = [&](float y) {
       if (y > 0.8f) return Skin{b.hips, b.thigh[i], engine::smoothstep(1.0f, 0.88f, y)};
       if (y > 0.25f) return Skin{b.thigh[i], b.shin[i], engine::smoothstep(0.56f, 0.44f, y)};
       return Skin{b.shin[i], b.foot[i], engine::smoothstep(0.11f, 0.07f, y)};
     };
+    const BottomStyle bs = look.bottomStyle;
     rings.clear();
-    for (const LegRing& r : leg) rings.push_back({{limbX(r.y, legJoints), r.y, 0}, r.r, r.r, legSkin(r.y), *r.paint});
+    for (const LegRing& r : leg) {
+      float rr = r.r * (fem && r.y > 0.6f ? 1.04f : 1.0f);
+      Paint p = pantsAt(r.y);
+      const bool sock = r.y < 0.105f || (&r != &leg[0] && r.y == 0.105f && rr < 0.04f);
+      if (sock) p = kSock;
+      if (bs == BottomStyle::kShorts && r.y < 0.62f && !sock) p = kSkinPaint, rr *= 0.94f;
+      if (bs == BottomStyle::kSkirt && !sock) p = kSkinPaint, rr *= 0.94f;
+      if (bs == BottomStyle::kJoggers && !sock && r.y < 0.2f) {
+        p = Paint{look.pants2, 0.25f, kTexFabric};  // the cuff
+        rr = r.y < 0.13f ? 0.046f : rr;
+      }
+      rings.push_back({{limbX(r.y, legJoints), r.y, 0}, rr, rr, legSkin(r.y), p});
+      if (bs == BottomStyle::kShorts && r.y == 0.62f) {  // the hem, a hard edge
+        rings.back().paint = pantsAt(0.62f);
+        rings.push_back({{limbX(0.6f, legJoints), 0.6f, 0}, rr * 0.94f, rr * 0.94f, legSkin(0.6f), kSkinPaint});
+      }
+    }
     engine::addTube(m, rings, side, 16);
 
     // --- Shoe: a rounded tube from heel to toe.
@@ -293,6 +495,17 @@ void Avatar::build(const AvatarLook& look) {
     rings.push_back({{x, 0.034f, -0.172f}, 0.025f, 0.02f, foot, kShoes});
     engine::addTube(m, rings, side, 14);
     engine::addEllipsoid(m, {x, 0.012f, -0.05f}, {0.054f, 0.014f, 0.13f}, foot, kSole, 14, 6);
+  }
+  // The skirt: a cone from the waist to above the knees, moving with the hips.
+  if (look.bottomStyle == BottomStyle::kSkirt) {
+    rings.clear();
+    const float ys2[] = {0.99f, 0.93f, 0.84f, 0.74f, 0.64f, 0.62f};
+    for (int k = 0; k < 6; ++k) {
+      const float t = static_cast<float>(k) / 5.0f;
+      const float rx = (fem ? 0.18f : 0.17f) + 0.08f * t, rz = 0.115f + 0.05f * t;
+      rings.push_back({{0, ys2[k], 0.005f}, rx, rz, Skin{b.hips, b.hips, 0}, k == 5 ? Paint{look.pants * 0.8f, 0.3f, kTexFabric} : pantsAt(ys2[k])});
+    }
+    engine::addTube(m, rings, side, 24);
   }
 }
 
@@ -597,6 +810,88 @@ Vec3 seatedEye(Vec3 hip, float bodyYaw, float lowSeat) {
   // low seats).
   const float forward = 0.09f - 0.05f * lowSeat;
   return {hip.x + std::sin(bodyYaw) * forward, hip.y + 0.71f, hip.z - std::cos(bodyYaw) * forward};
+}
+
+}  // namespace app
+
+// ---- The customizer (AvatarStyle) ----
+namespace app {
+namespace {
+
+const Vec3 kSkinPalette[kSkinTones] = {{0.98f, 0.84f, 0.74f}, {0.95f, 0.76f, 0.64f}, {0.90f, 0.69f, 0.57f}, {0.85f, 0.62f, 0.48f},
+                                       {0.78f, 0.56f, 0.42f}, {0.66f, 0.45f, 0.32f}, {0.55f, 0.36f, 0.25f}, {0.42f, 0.27f, 0.18f},
+                                       {0.32f, 0.2f, 0.13f},  {0.62f, 0.64f, 0.68f}};
+const Vec3 kHairPalette[kHairColors] = {{0.04f, 0.035f, 0.03f}, {0.13f, 0.085f, 0.06f}, {0.3f, 0.17f, 0.08f}, {0.55f, 0.32f, 0.14f},
+                                        {0.85f, 0.68f, 0.35f}, {0.95f, 0.88f, 0.65f}, {0.62f, 0.15f, 0.06f}, {0.85f, 0.85f, 0.88f},
+                                        {1.0f, 0.4f, 0.75f},   {0.55f, 0.25f, 0.95f}, {0.15f, 0.55f, 1.0f},  {0.1f, 0.85f, 0.75f},
+                                        {0.4f, 0.9f, 0.25f},   {1.0f, 0.55f, 0.1f}};
+const Vec3 kClothPalette[kClothColors] = {
+    {0.06f, 0.06f, 0.07f}, {0.92f, 0.92f, 0.9f},  {0.45f, 0.46f, 0.5f},  {0.13f, 0.13f, 0.14f}, {0.75f, 0.1f, 0.1f},
+    {1.0f, 0.42f, 0.1f},   {0.98f, 0.8f, 0.15f},  {0.25f, 0.65f, 0.2f},  {0.08f, 0.35f, 0.2f},  {0.1f, 0.75f, 0.85f},
+    {0.2f, 0.24f, 0.38f},  {0.08f, 0.1f, 0.22f},  {0.25f, 0.45f, 0.95f}, {0.45f, 0.2f, 0.75f},  {1.0f, 0.25f, 0.65f},
+    {0.98f, 0.7f, 0.78f},  {0.72f, 0.64f, 0.5f},  {0.45f, 0.28f, 0.15f}, {0.55f, 0.08f, 0.15f}, {0.7f, 0.9f, 1.0f}};
+const Vec3 kEyePalette[kEyeColors] = {{0.24f, 0.14f, 0.07f}, {0.12f, 0.07f, 0.03f}, {0.25f, 0.4f, 0.55f}, {0.2f, 0.45f, 0.25f},
+                                      {0.45f, 0.35f, 0.15f}, {0.35f, 0.38f, 0.42f}, {0.6f, 0.2f, 0.75f}, {0.1f, 0.9f, 1.0f}};
+constexpr int kRanges[AvatarStyle::kFields] = {2, kSkinTones, static_cast<int>(HairStyle::kCount), kHairColors, kHairColors,
+                                               static_cast<int>(Highlight::kCount), static_cast<int>(TopStyle::kCount),
+                                               kClothColors, kClothColors, static_cast<int>(Pattern::kCount),
+                                               static_cast<int>(BottomStyle::kCount), kClothColors, kClothColors,
+                                               static_cast<int>(Pattern::kCount), kClothColors, kEyeColors, 3};
+
+std::string hex(Vec3 c) {
+  char b[8];
+  std::snprintf(b, sizeof(b), "#%02x%02x%02x", static_cast<int>(engine::clampf(c.x, 0, 1) * 255),
+                static_cast<int>(engine::clampf(c.y, 0, 1) * 255), static_cast<int>(engine::clampf(c.z, 0, 1) * 255));
+  return b;
+}
+
+}  // namespace
+
+bool AvatarStyle::operator==(const AvatarStyle& o) const { return std::equal(std::begin(v), std::end(v), std::begin(o.v)); }
+
+void AvatarStyle::clamp() {
+  for (int i = 0; i < kFields; ++i) v[i] = std::clamp(v[i], 0, kRanges[i] - 1);
+}
+
+std::string AvatarStyle::key() const {
+  std::string k;
+  for (int i = 0; i < kFields; ++i) k += std::to_string(v[i]) + ".";
+  return k;
+}
+
+AvatarLook lookFromStyle(const AvatarStyle& in) {
+  AvatarStyle s = in;
+  s.clamp();
+  AvatarLook l{"Custom", kSkinPalette[s.v[1]], kClothPalette[s.v[7]], kClothPalette[s.v[11]], kClothPalette[s.v[14]],
+               kHairPalette[s.v[3]], kEyePalette[s.v[15]], static_cast<HairStyle>(s.v[2]), false, false};
+  l.body = s.v[0];
+  l.hair2 = kHairPalette[s.v[4]];
+  l.highlight = static_cast<Highlight>(s.v[5]);
+  l.topStyle = static_cast<TopStyle>(s.v[6]);
+  l.top2 = kClothPalette[s.v[8]];
+  l.topPattern = static_cast<Pattern>(s.v[9]);
+  l.bottomStyle = static_cast<BottomStyle>(s.v[10]);
+  l.pants2 = kClothPalette[s.v[12]];
+  l.bottomPattern = static_cast<Pattern>(s.v[13]);
+  l.facialHair = s.v[16];
+  return l;
+}
+
+std::string avatarPaletteJson() {
+  std::string j = "{";
+  const auto list = [&](const char* name, const Vec3* c, int n) {
+    j += std::string("\"") + name + "\":[";
+    for (int i = 0; i < n; ++i) j += (i ? ",\"" : "\"") + hex(c[i]) + "\"";
+    j += "]";
+  };
+  list("skin", kSkinPalette, kSkinTones);
+  j += ",";
+  list("hair", kHairPalette, kHairColors);
+  j += ",";
+  list("cloth", kClothPalette, kClothColors);
+  j += ",";
+  list("eyes", kEyePalette, kEyeColors);
+  return j + "}";
 }
 
 }  // namespace app

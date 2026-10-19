@@ -789,6 +789,24 @@ back to the middle, "really smooth but race like", reused later. Built as
   players holding machine.chess.w / .b may write it (rules.js).
 - Test: `tools/chess_test.mjs` (?chess, taps e2-e4 by projecting the squares).
 
+## Avatar customizer (2026-10-19, upgrade item 14)
+- A custom look is 17 small numbers (`app/avatar.h` AvatarStyle: body,
+  skin, hair style/colour/highlight, top style/colours/pattern, bottom
+  style/colours/pattern, shoes, eyes, facial hair). The same Avatar::build
+  makes the presets and custom looks; all share avatars[0]'s skeleton, so the
+  feminine body changes the mesh only (narrower shoulders/waist, wider hips,
+  a bust shaped into the torso: separate spheres looked like balls).
+- Others see it: you send look 255 (`kCustomLook`) in your state and the
+  numbers as world key `a<your slot>` (rules.js: only that slot writes it).
+  Each slot gets one mesh, rebuilt in place when its numbers change
+  (`setAvatarMesh`), and your own look is one mesh rebuilt on every tap, so
+  editing never piles up GPU buffers.
+- While the customizer is open the camera stands up to 3.2 m in front of
+  you (it turns you to the most open side first, and stops before walls),
+  the panel is short and lets touches through above it, so dragging turns
+  you; taps don't use things meanwhile.
+- Saved on the phone (`avCustom`, `av0`..`av16`); picking a preset turns it off.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

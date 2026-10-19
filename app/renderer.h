@@ -47,6 +47,13 @@ class SceneRenderer {
   void setLightScale(size_t light, float scale);
   // Which avatar look you (and each other player, see setOthers) wear.
   void setSelfAvatar(size_t look) { selfLook_ = look < avatarMeshes_.size() ? look : 0; }
+  // A look made at runtime (the avatar customizer): returns its look index.
+  size_t addAvatarMesh(const engine::SkinnedMeshData& mesh);
+  // Replaces a look's mesh (the customizer: the same slot is reused).
+  void setAvatarMesh(size_t index, const engine::SkinnedMeshData& mesh);
+  // Draw your own body whole (with the head) in the main view: the
+  // customizer's preview, when the camera looks at you from the front.
+  void setSelfWhole(bool whole) { selfWhole_ = whole; }
 
   // Extra glow on an interactable's parts (0 = normal).
   void setGlow(const Interactable& it, float glow);
@@ -204,6 +211,7 @@ class SceneRenderer {
   std::vector<DrawItem> sceneDraws_;
   std::vector<ObjectUniforms> objectUniforms_;  // CPU copy of the scene objects
   std::vector<engine::SkinnedMesh> avatarMeshes_;
+  bool selfWhole_ = false;
   size_t selfLook_ = 0;
   engine::Mesh boxMesh_;
   uint32_t boxOffset_ = 0;  // first box slot in objectBuffer_

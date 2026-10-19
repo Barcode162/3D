@@ -82,6 +82,9 @@ int claimResult(int request);
 // A room slot (as the room's own games write them, e.g. world key rc) as a
 // player number: -1 nobody / not known, 0 you, else that player.
 int playerOfSlot(int slot);
+// Your own room slot (-1 = not in a room), and another player's.
+int mySlot();
+int slotOfPlayer(int player);
 // A world write the room makes only if `key` still holds `expect` (e.g.
 // taking a drink: the first one to ask gets it). Returns a request id for
 // claimResult() (0 when offline).

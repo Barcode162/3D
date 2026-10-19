@@ -279,6 +279,14 @@ try {
   await wait(300);
   check(rb.all('K').every((m) => m.body.w.every((e) => !['zz', 'g0'].includes(e[1]) && !(e[1] === 'lt' && e[3][0] === 5))) && ra.all('K').length === okBefore,
     'out-of-range values, unknown keys and glasses outside the bar are refused');
+  // Custom avatars (a<slot>): only your own, 17 small numbers.
+  const sBo = rb.find('W').body.slot;
+  const look = [1, 2, 3, 4, 5, 1, 3, 7, 8, 2, 1, 9, 10, 1, 2, 3, 0];
+  ra.send('K', { w: { ['a' + sAna]: look, ['a' + sBo]: look } });
+  const mine = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'a' + sAna));
+  await wait(300);
+  check(!!mine && JSON.stringify(mine[3]) === JSON.stringify(look) && !rb.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 'a' + sBo),
+    'a player sets their own avatar, not someone else\'s');
   ra.send('K', { w: { jb: [2, 1000] } });
   const jb = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'jb'));
   check(jb && Math.abs(jb[3][1] - Date.now() / 1000) < 5, 'a song start time far from the room\'s clock is set by the room');

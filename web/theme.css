@@ -26,7 +26,7 @@
 
 /* Outlined game text. */
 body .mPanel h2, body .acctPanel h2, body .acctCard .nm, body .mTile, body .mBtn, body .acctBtn,
-body .acctSlotTitle, body #menuToast, body .mPanel h3 {
+body .acctSlotTitle, body #menuToast, body .mPanel h3, body .avTab, body .avChip {
   font-family: var(--cr-font);
   font-weight: 400;
   letter-spacing: 0.3px;
