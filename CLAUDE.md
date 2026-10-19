@@ -5,14 +5,24 @@ VRChat-style **3D hangout bar**: walkable, every object interactive, an avatar
 visible in a mirror, and real music.
 
 ## Start of every session (the user often starts fresh chats to save tokens)
-1. Read **`PROGRESS.md`** (roadmap, what's done, and the "Next up" list),
-   **`docs/VISION.md`** (the user's full dream for the project) and
+1. Read **`PROGRESS.md`** (the master list and Parked), **`docs/VISION.md`**
+   (the user's dream; "The product" is the current direction) and
    **`docs/DECISIONS.md`** (what was chosen, why, and what failed).
 2. The SessionStart hook (`.claude/settings.json` → `tools/setup.sh`)
    installs Emscripten. If it didn't run, run `bash tools/setup.sh`.
-3. Build and run the smoke test (below) to confirm everything works.
-4. When the user says "continue", pick the first unchecked item in "Next up"
-   and go. Don't re-ask questions already answered in these files.
+3. Don't build or run headless tests until the user says "go" (tokens).
+
+## The routine (user, 2026-10-19: fewer, deeper passes; save tokens)
+- **"start"**: read the docs, show a short menu: the master list + Parked, one
+  line each. No builds, no tests. The user picks one.
+- **"plan"**: a short plan for the picked item: what changes, what they'll see
+  on the phone, open questions. No code yet. The user says "go" or edits it.
+- **"go"**: build it in steps; test and deploy **once at the end** (not after
+  each small step), then the "How to check it worked" list.
+- **"park: <idea>"**: add one line to Parked in `PROGRESS.md`. No work, no debate.
+- **"talk"**: conversation only, no tools.
+- **"wrap up"**: write decisions and progress into the docs, commit, push.
+- Never add ideas to the master list on your own; they go to Parked.
 
 ## Working with the user
 - The user works **only from an iPhone 15 Pro Max (iOS 26, Safari)** through the
@@ -41,8 +51,8 @@ visible in a mirror, and real music.
   "Site build <sha>" commit (or poll `version.txt` on the site), then run
   `NODE_PATH=$(npm root -g) node tools/check_live.mjs` to load the live
   site headlessly, and tell the user the build code to look for.
-- Before pushing: the build passes and the smoke test passes. Look at the
-  screenshot.
+- Before pushing code: the build passes and the smoke test passes. Look at the
+  screenshot. Docs-only commits need no build or tests.
 
 ## Build and test
 ```sh

@@ -169,3 +169,46 @@ feel like osu!mania with more songs; real avatar customization (gender,
 clothes, hairstyles, hair highlights and gradients) and more realistic
 animations; a working chessboard; and a pass over the whole bar so nothing
 clips, floats or traps you.
+
+## The product (user, 2026-10-19): a virtual life in the browser
+The direction that answers "The business goal" above. Gameplay and
+smoothness come first; money never gets in the way of play.
+- **Core loop:** you start at your **home**, jump to one of a **few main hubs**
+  (the bar is one; few on purpose, because repetition builds habit), play,
+  watch or queue, earn currency, grow your home and your look, show off.
+  Progress is the point: socialize *and* grow your account.
+- **Ages:** 13+ only. Teens (13-17) and adults (18+) are kept apart in lobbies,
+  voice and messages. Under 13 would be a separate kids' edition (parked).
+- **Lobbies:** smart matchmaking by age band, game preferences and skill (so you
+  don't always lose). Every machine screen shows the real game live, simplified
+  and pixelated (combos, speed). A fair **queue**: when your turn comes you get
+  20 s to reach the machine, else the next person goes. A "Happening now" list
+  makes it easy to reach the social part. A **no-friends lobby** for people
+  who want to be left alone.
+- **Homes:** invite-only, customizable on a smooth grid, expand up to 3x, levels
+  1-3 (everything nicer). You can buy things like arcade machines for it.
+- **Currency:** a made-up name (with the world's new name), valued like the
+  dollar so prices are intuitive. Earn 5-50 per game (by length/difficulty),
+  daily caps.
+- **The mall:** an in-game store like IKEA: walk in, pick items up, cart,
+  checkout, delivered home, install on the grid. Furniture etc. comes from here.
+- **Casino (18+ only):** high risk, high reward (a rare 1k win). Earned currency
+  only: never bought with real money, never cashed out (gambling law). Lawyer
+  review before launch.
+- **VIP marketplace (real money):** its own special place that screams "big
+  baller", 5-star treatment. Any first purchase unlocks its door forever;
+  others see the closed door and the glow. Rarity has real value: numbered
+  items, seasonal collections that never return, event-only items (yearly and
+  hosted events). Not daily rotations. Real money buys items directly, never
+  currency. Payer must be 18+ (parents for teens).
+- **Trading:** only items made to be tradeable (a small special set, so they're
+  worth more); trade window both confirm, checked by the server, cooldown.
+- **Events:** anyone can create one: date, time, RSVP, a clean invite card.
+- **Memory book:** in-game camera only (no real photo uploads); a picture book
+  you're proud of; likes, no comments; per-photo privacy; you can hide yourself
+  from others' photos.
+- **Talking:** voice is the main way. Teens: quick phrases + a phrase builder
+  (fixed words and patterns, no hidden messages). Adults: free text, filtered.
+  Block, mute and report everywhere.
+- **Later:** a street and a city outside; homes as your "real home" there.
+  Characters from the user's own character builder (in progress).

@@ -948,3 +948,24 @@ back to the middle, "really smooth but race like", reused later. Built as
   vector inputs off rounding edges that float vs double could flip. Native
   wasm tests are built with `-sNODERAWFS=1` so they can read repo files.
 
+
+## Product direction and its tech (2026-10-19)
+The product is in `docs/VISION.md` → "The product". What it changes:
+- **Stays:** C++ → wasm → WebGPU engine; Cloudflare rooms (each home, lobby
+  instance and event is its own Durable Object).
+- **Accounts, currency, inventory, trades move to Cloudflare D1** (from IONOS
+  PHP/MySQL): money needs transactions in one place, owned by the server.
+- **Stripe** for real-money purchases on the web (no App Store cut).
+- **Cloudflare R2** for memory-book photos.
+- **Later:** site on Cloudflare Pages (can send COOP/COEP → threads), voice
+  through a server (SFU) for big lobbies and reliable reports.
+- Gambling: earned currency only, 18+ only, never sold or cashed out.
+- Performance first: homes, mall and VIP all add content, so the performance
+  pass (master list 1) comes before them. Measured 2026-10-19: ≈ 250 MB GPU
+  textures (uncompressed), ≈ 1,000 draws at the mirror, no culling, all
+  models loaded at start; scored ≈ 35/100 against a well-optimized ≈ 85-90.
+
+## Working routine (2026-10-19)
+The user wants fewer, deeper passes to save tokens. Commands: "start" (menu),
+"plan", "go", "park:", "talk", "wrap up". See `CLAUDE.md` → "The routine".
+No builds or headless runs outside "go".
