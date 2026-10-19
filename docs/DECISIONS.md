@@ -224,6 +224,16 @@ interactable", all crude but working, with a remaster list
   from the repo alone. Keep `PROGRESS.md` current in every commit.
 
 ## Measured results
+- **Performance baseline on iPhone 15 Pro Max** (build `f934850`, 2026-10-19,
+  reports UZ98JK / RQRDEB / QCZQTX, 2 online, Low Power Mode off): **60 fps
+  in all three** (avg 16.67 ms, p95 17). CPU only ≈ 1-2 ms/frame (draw calls
+  are cheap on the phone). **GPU is the limit:** 10.6 ms after entering,
+  10.2 ms at the mirror (1,280 draws, 1.34 M triangles with the mirror), 14.9 ms
+  after 5 min walking (worst 22-23 ms). ≈ 669 k triangles in the main view, no
+  culling. Hitches 21-49 ms ≈ 2/s while walking, mostly GPU-bound; one 16 ms CPU
+  hitch was the chess computer thinking on the main thread. Models finish
+  loading ≈ 4-8 s after "running". So the perf pass targets GPU work first
+  (culling, triangles, mirror, lights), then texture memory.
 - Mirrors + skinned avatar + walk animation (`fa20592`): **60 fps on iPhone**,
   even standing at the full mirror (room drawn twice).
 - Triangle (1.1): 60 fps on iPhone 15 Pro Max, Apple GPU, 860x1422 @2x.
