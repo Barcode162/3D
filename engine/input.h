@@ -24,6 +24,9 @@ struct RawPress {
   int id = 0;     // finger (or key) id, to pair downs with ups
   bool down = true;
   int key = -1;   // -1 = a touch or click
+  // The phone took the touch away (Safari's own gesture, an edge swipe):
+  // the finger may still be down. Games that hold notes keep them held.
+  bool cancelled = false;
 };
 
 // A finger currently down (or the mouse while a button is held), with where

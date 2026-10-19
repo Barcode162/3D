@@ -109,7 +109,8 @@ bool handleTouch(int type, const EmscriptenTouchEvent* e, void* user) {
                    {static_cast<float>(t.targetX / canvasW), static_cast<float>(t.targetY / canvasH)}, type, false);
       if (type == EMSCRIPTEN_EVENT_TOUCHMOVE) continue;
       in.rawPresses.push_back({{static_cast<float>(t.targetX / canvasW), static_cast<float>(t.targetY / canvasH)}, now,
-                               static_cast<int>(t.identifier), type == EMSCRIPTEN_EVENT_TOUCHSTART, -1});
+                               static_cast<int>(t.identifier), type == EMSCRIPTEN_EVENT_TOUCHSTART, -1,
+                               type == EMSCRIPTEN_EVENT_TOUCHCANCEL});
     }
     return true;
   }

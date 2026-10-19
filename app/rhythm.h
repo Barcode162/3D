@@ -7,8 +7,11 @@
 // its own (assets/music/rhythm/, see CREDITS.md) plus the jukebox's
 // (including ones loaded from your phone). Each song is analyzed into a
 // chart (app/rhythm_chart.*) and played with exact timing (engine::Track).
-// Tap a column (anywhere on screen) as a note reaches the keys; hold a hold
-// note until its end. On a computer: D F J K, Escape to leave.
+// Tap a column as a note reaches the keys (sideways, the screen is split
+// into four tall zones, one per finger); hold a hold note until its end.
+// On a computer: D F J K, Escape to leave. Skins change the notes (bars,
+// circles, bubbles, neon rings, arrows) and the menus' colours; the song
+// select plays the picked song's preview.
 #include <map>
 #include <string>
 #include <vector>
@@ -78,7 +81,7 @@ class RhythmGame {
   };
   // The song select's layout (device pixels), portrait or landscape.
   struct MenuLayout {
-    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn;
+    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin;
     float card = 0;  // a wheel card's height
   };
 
@@ -103,7 +106,30 @@ class RhythmGame {
   float stars(int song, Difficulty d, bool* known = nullptr) const;
   double approachSeconds() const { return 13.72 / scrollSpeed_; }
 
+  struct Particle {
+    float x, y, vx, vy, age, life, size, gravity;
+    engine::Vec4 color;
+  };
+  struct TouchFx {
+    float x, y;
+    double ms;
+    int lane;
+  };
+  void spawn(float x, float y, float vx, float vy, float life, float size, engine::Vec4 color, float gravity = 0);
+  float rand01();  // 0..1
+  void updateEffects(double nowMs, float W, float H);
+  void burst(int lane, Judge j, float W, float H, double nowMs);
+
   State state_ = State::kClosed;
+  int skin_ = 2;               // see kSkins in rhythm.cpp (kept on the phone: rhSkin)
+  std::vector<Particle> particles_;
+  std::vector<TouchFx> touchFx_;
+  double effectsMs_ = 0;
+  float spawnDebt_ = 0, bubbleDebt_ = 0;
+  uint32_t rng_ = 12345;
+  int previewSong_ = -1, lastPicked_ = -1;  // the song select's music
+  double pickedMs_ = 0;
+  int comboMilestone_ = 0;
   std::vector<SongChoice> songs_;
   int song_ = 0;
   Difficulty difficulty_ = Difficulty::kNormal;

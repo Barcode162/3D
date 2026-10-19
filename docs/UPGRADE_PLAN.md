@@ -14,6 +14,23 @@ user asked: "the race game should actually be fixed".)
 - [ ] Next for the UI: the in-game HUD text (pixel font) and 4K Mania / race
       screens in the same style; better emote faces.
 
+## Added 2026-10-19 (user): 4K Mania, round 2
+- [x] Skins for the notes and menus (`kSkins` in `app/rhythm.cpp`): CLASSIC
+      bars, CIRCLES, BUBBLE (default, glossy), NEON rings, ARROWS. Tap the
+      SKIN button in the song select.
+- [x] Bubbly menus: rounded glossy buttons, bobbing picked card, rising bubbles.
+- [x] Songs failing to load: the chart's copy of the song is now made at
+      ~11 kHz in the page (a quarter of the memory) and a failed load retries once.
+- [x] No arcade music while a machine is open; the song select plays the
+      picked song's preview (streamed, `engine::audio::previewPlay`).
+- [x] Particles: sparkles from the picked card, sparks from hits and held
+      notes, a shower every 100 combo.
+- [x] Sideways: the whole screen is four tall tap zones (anywhere in a zone counts).
+- [x] A tiny ring where each finger lands.
+- [x] Combo in the middle, dark blue → blue → green → yellow → orange → red at 1000.
+- [x] Hold notes letting go by themselves: Safari cancelling a long touch
+      (its own gestures) no longer counts as letting go.
+
 ## Racing
 - [x] **1. Two-player racing on the two rigs, like Mario Kart:** (done
       2026-10-19: garage with 3 cars, 12 paints, 8 rim colours; the room runs

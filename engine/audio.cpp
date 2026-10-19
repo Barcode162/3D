@@ -60,6 +60,11 @@ double now() {
   return f.audioTime + (emscripten_get_now() - f.pulledMs) / 1000.0;  // (engine code: measures elapsed time)
 }
 
+void previewPlay(const std::string& url, double offsetSeconds) {
+  EM_ASM({ window['bar3dAudio']['previewPlay'](UTF8ToString($0), $1); }, url.c_str(), offsetSeconds);
+}
+
+void previewStop() { EM_ASM({ window['bar3dAudio']['previewStop'](); }); }
 }  // namespace audio
 
 void Sound::create(const std::vector<float>& samples, float rate) {

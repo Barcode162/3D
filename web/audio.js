@@ -17,6 +17,7 @@ window.bar3dAudio = (function () {
   // The rhythm game's song: decoded fully (so it plays with sample-exact
   // timing) and played through its own gain, not placed in 3D.
   var track = { state: 0, buffer: null, mono: null, node: null, start: 0, url: '' };
+  var preview = null;  // the song select's preview {el, gain}
 
   // Sound problems never stop the game: logged as warnings (no badge).
   function report(text) {
@@ -334,6 +335,44 @@ window.bar3dAudio = (function () {
       if (musicGain) musicGain.gain.setTargetAtTime(g * busLevel.music, ctx.currentTime, 0.15);
     },
 
+    // ---- The rhythm game's song preview (song select): streamed ----
+    previewPlay: function (url, offset) {
+      this.previewStop();
+      var el = new Audio();
+      el.loop = true;
+      el.preload = 'auto';
+      el.src = url;
+      var p = { el: el, gain: null };
+      if (ctx) {
+        try {
+          var src = ctx.createMediaElementSource(el);
+          p.gain = ctx.createGain();
+          p.gain.gain.value = 0;
+          src.connect(p.gain);
+          p.gain.connect(bus('music'));
+          p.gain.gain.setTargetAtTime(0.7, ctx.currentTime + 0.05, 0.25);
+        } catch (e) { p.gain = null; }
+      }
+      var seek = function () {
+        el.removeEventListener('loadedmetadata', seek);
+        if (offset > 0 && isFinite(el.duration)) { try { el.currentTime = Math.min(offset, el.duration * 0.8); } catch (e) {} }
+      };
+      el.addEventListener('loadedmetadata', seek);
+      el.play().catch(function () {});
+      preview = p;
+    },
+    previewStop: function () {
+      var p = preview;
+      preview = null;
+      if (!p) return;
+      if (p.gain && ctx) {
+        p.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
+        setTimeout(function () { p.el.pause(); p.el.removeAttribute('src'); p.el.load(); }, 600);
+      } else {
+        p.el.pause();
+      }
+    },
+
     // ---- The rhythm game's track ----
     // state: 0 nothing, 1 loading, 2 ready, 3 failed.
     trackLoad: function (url) {
@@ -350,23 +389,41 @@ window.bar3dAudio = (function () {
         });
       }).then(function (buffer) {
         if (t !== track) return;
-        var n = buffer.length, mono = new Float32Array(n);
+        // The chart only needs ~11 kHz mono: average channels and samples
+        // here, so the game's memory gets a quarter of the samples (a long
+        // song at full rate could run a phone out of memory).
+        var factor = Math.max(1, Math.round(buffer.sampleRate / 11025));
+        var n = Math.floor(buffer.length / factor), mono = new Float32Array(n);
+        var scale = 1 / (factor * buffer.numberOfChannels);
         for (var c = 0; c < buffer.numberOfChannels; c++) {
           var d = buffer.getChannelData(c);
-          for (var i = 0; i < n; i++) mono[i] += d[i] / buffer.numberOfChannels;
+          for (var i = 0, j = 0; i < n; i++) {
+            var sum = 0;
+            for (var k = 0; k < factor; k++) sum += d[j++];
+            mono[i] += sum * scale;
+          }
         }
         t.buffer = buffer;
         t.mono = mono;
+        t.monoRate = buffer.sampleRate / factor;
         t.state = 2;
       }).catch(function (e) {
         if (t !== track) return;
+        // Once more after a moment (memory may be free by then).
+        if (!t.retried) {
+          t.retried = true;
+          report('Rhythm game: loading the song failed (' + e + '), trying again.');
+          var url2 = t.url;
+          setTimeout(function () { if (t === track) { window.bar3dAudio.trackLoad(url2); track.retried = true; } }, 600);
+          return;
+        }
         report('Could not load the song for the rhythm game: ' + e);
         t.state = 3;
       });
     },
     trackState: function () { return track.state; },
     trackLength: function () { return track.mono ? track.mono.length : 0; },
-    trackRate: function () { return track.buffer ? track.buffer.sampleRate : 44100; },
+    trackRate: function () { return track.monoRate || (track.buffer ? track.buffer.sampleRate : 44100); },
     // Hands over the mono samples once (C++ copies them into its memory);
     // the buffer itself stays for playing.
     trackTakeMono: function () {

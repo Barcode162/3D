@@ -58,7 +58,10 @@ TestHooks TestHooks::parse() {
   if (param(query, "sit", v) && !v.empty()) h.sit = std::atoi(v.c_str());
   if (param(query, "emote", v) && !v.empty()) h.emote = std::atoi(v.c_str());
   if (param(query, "pianosong", v) && !v.empty()) h.pianoSong = std::atoi(v.c_str());
-  if (param(query, "rhythm", v)) std::sscanf(v.c_str(), "%d,%d", &h.rhythmSong, &h.rhythmDifficulty);
+  if (param(query, "rhythm", v)) {
+    if (v == "menu") h.rhythmSong = -2;  // just the song select
+    else std::sscanf(v.c_str(), "%d,%d", &h.rhythmSong, &h.rhythmDifficulty);
+  }
   if (param(query, "cam", v)) {
     h.hasCam = std::sscanf(v.c_str(), "%f,%f,%f,%f,%f", &h.cam[0], &h.cam[1], &h.cam[2], &h.cam[3], &h.cam[4]) == 5;
   }

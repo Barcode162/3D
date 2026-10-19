@@ -13,7 +13,7 @@ Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`), 1 (two-player
 racing with a garage), 3-5 (the arcade, its platformer machine and music).
 6 (A-frame signs, barricades, ladder), 7 (4K Mania like osu!mania). 8 (mirror sharp up
 close), 9 (badge slots), the Clash Royale style UI, 10 (pots, hanging plants). 11 (walk-through).
-13 (chess). 14 (avatar customizer). 15 (walk and idle animations). All 15 done;
+13 (chess). 14 (avatar customizer). 15 (walk and idle animations). All 15 done; 4K Mania round 2 (skins, bubbly UI, particles, preview music) done;
 next: the UI polish left in UPGRADE_PLAN (HUD and game screens in the Clash style).
 
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now

@@ -820,6 +820,17 @@ back to the middle, "really smooth but race like", reused later. Built as
   walking pose, `?previewturn=<deg>` turns you in the customizer's view
   (side views of the walk).
 
+## 4K Mania round 2 (2026-10-19)
+- Song memory: the page decodes the whole song (needed for exact timing)
+  but hands the game only an ~11 kHz mono copy for the chart; before, a
+  full-rate copy in the wasm heap (and its growth) could run the phone out
+  of memory on long songs.
+- iOS can send `touchcancel` for a finger that is still down (long holds,
+  edge gestures). `Input::RawPress::cancelled` marks it; the rhythm game
+  keeps a held note held to its end then.
+- `?rhythm=menu` opens the song select (screenshots of skins: set
+  localStorage `bar3d.game.rhSkin`).
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

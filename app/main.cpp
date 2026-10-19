@@ -1470,12 +1470,12 @@ void updateVoice(double nowMs) {
 void applyTestHooks() {
   const app::TestHooks& h = g_app.hooks;
   g_app.rhythm.autoplay = h.autoplay;
-  if (h.rhythmSong >= 0) {
+  if (h.rhythmSong >= 0 || h.rhythmSong == -2) {
     std::vector<app::RhythmGame::SongChoice> songs;
     for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, "", s.url});
     g_app.rhythm.open(std::move(songs));
     g_app.input.setCapture(true);
-    g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, app::kDifficultyCount - 1)));
+    if (h.rhythmSong >= 0) g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, app::kDifficultyCount - 1)));
     setActivity(Activity::kRhythm);
   }
   if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);
@@ -1788,7 +1788,7 @@ void updateArcadeMusic(float dt) {
     if (p.z < sc.arcadeDoor.z) target = 0.85f;                                  // in the doorway
     else target = 0.5f * std::pow(engine::clampf(1 - dist / 6.0f, 0, 1), 2.0f);  // in the bar, near the door
   }
-  if (g_app.meridianOpen) target = 0;
+  if (g_app.meridianOpen || g_app.rhythm.isOpen()) target = 0;  // playing a machine: only its own sound
   g_app.arcadeGain += (target - g_app.arcadeGain) * (1 - std::exp(-dt / 0.35f));
   constexpr float kLevel = 0.55f;
   if (g_app.arcadeGain > 0.002f) {

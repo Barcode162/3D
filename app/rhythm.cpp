@@ -31,7 +31,6 @@ const Vec4 kJudgeColor[6] = {{1.0f, 1.0f, 0.95f, 1}, {1.0f, 0.82f, 0.28f, 1}, {0
 // Columns like the osu!mania 4K default: white outside, blue inside.
 const Vec4 kLaneColor[4] = {{0.92f, 0.94f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1},
                             {0.92f, 0.94f, 1.0f, 1}};
-const Vec4 kPink{1.0f, 0.4f, 0.75f, 1};
 constexpr const char* kDifficultyName[kDifficultyCount] = {"EASY", "NORMAL", "HARD", "INSANE"};
 const Vec4 kDifficultyColor[kDifficultyCount] = {{0.45f, 0.9f, 0.5f, 1}, {0.45f, 0.75f, 1.0f, 1},
                                                  {1.0f, 0.72f, 0.28f, 1}, {1.0f, 0.35f, 0.55f, 1}};
@@ -74,16 +73,142 @@ std::string timeText(float s) {
   return b;
 }
 
-void button(engine::TextRenderer& text, float x, float y, float w, float h, const char* label, float px, bool active,
-            Vec4 color = kPink) {
-  text.addRect(x, y, w, h, active ? withAlpha(color, 0.85f) : Vec4{0.1f, 0.08f, 0.14f, 0.9f});
-  text.addRect(x, y + h - 2 * px, w, 2 * px, withAlpha(color, active ? 1.0f : 0.6f));
+// ---- Skins: how the notes look, and the menus' colours ----
+enum NoteStyle { kBars, kCircles, kBubbles, kNeon, kArrows };
+struct Skin {
+  const char* name;
+  NoteStyle notes;
+  Vec4 lane[4];
+  Vec4 stage;              // the playfield behind the notes
+  Vec4 accent, accent2;    // buttons, highlights
+  Vec4 bgTop, bgBottom;    // the menus' background
+  Vec4 card, ink;          // song cards; outlines
+};
+const Skin kSkins[] = {
+    {"CLASSIC", kBars, {{0.92f, 0.94f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.92f, 0.94f, 1.0f, 1}},
+     {0, 0, 0, 0.9f}, {1.0f, 0.4f, 0.75f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.1f, 0.06f, 0.16f, 1}, {0.03f, 0.02f, 0.06f, 1},
+     {0.12f, 0.1f, 0.18f, 0.95f}, {0.02f, 0.01f, 0.04f, 1}},
+    {"CIRCLES", kCircles, {{0.97f, 0.97f, 1.0f, 1}, {1.0f, 0.42f, 0.72f, 1}, {1.0f, 0.42f, 0.72f, 1}, {0.97f, 0.97f, 1.0f, 1}},
+     {0.02f, 0.02f, 0.05f, 0.9f}, {1.0f, 0.42f, 0.72f, 1}, {0.55f, 0.85f, 1.0f, 1}, {0.08f, 0.1f, 0.24f, 1},
+     {0.02f, 0.03f, 0.08f, 1}, {0.12f, 0.14f, 0.3f, 0.95f}, {0.02f, 0.02f, 0.06f, 1}},
+    {"BUBBLE", kBubbles, {{1.0f, 0.5f, 0.75f, 1}, {0.4f, 0.95f, 0.72f, 1}, {1.0f, 0.88f, 0.35f, 1}, {0.42f, 0.74f, 1.0f, 1}},
+     {0.06f, 0.04f, 0.14f, 0.88f}, {1.0f, 0.5f, 0.8f, 1}, {0.45f, 0.8f, 1.0f, 1}, {0.32f, 0.16f, 0.5f, 1},
+     {0.1f, 0.2f, 0.45f, 1}, {0.25f, 0.2f, 0.5f, 0.95f}, {0.12f, 0.05f, 0.22f, 1}},
+    {"NEON", kNeon, {{0.2f, 1.0f, 1.0f, 1}, {1.0f, 0.25f, 0.9f, 1}, {1.0f, 0.25f, 0.9f, 1}, {0.2f, 1.0f, 1.0f, 1}},
+     {0.0f, 0.0f, 0.02f, 0.93f}, {0.2f, 1.0f, 1.0f, 1}, {1.0f, 0.25f, 0.9f, 1}, {0.05f, 0.0f, 0.12f, 1},
+     {0.0f, 0.02f, 0.06f, 1}, {0.06f, 0.04f, 0.14f, 0.95f}, {0.0f, 0.0f, 0.0f, 1}},
+    {"ARROWS", kArrows, {{0.78f, 0.45f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.35f, 1.0f, 0.5f, 1}, {1.0f, 0.42f, 0.38f, 1}},
+     {0.03f, 0.02f, 0.05f, 0.9f}, {1.0f, 0.8f, 0.25f, 1}, {0.35f, 1.0f, 0.5f, 1}, {0.14f, 0.06f, 0.1f, 1},
+     {0.03f, 0.02f, 0.05f, 1}, {0.18f, 0.1f, 0.16f, 0.95f}, {0.02f, 0.01f, 0.02f, 1}},
+};
+constexpr int kSkinCount = static_cast<int>(sizeof(kSkins) / sizeof(kSkins[0]));
+
+Vec4 darker(Vec4 c, float k) { return {c.x * k, c.y * k, c.z * k, c.w}; }
+Vec4 lighter(Vec4 c, float k) { return {c.x + (1 - c.x) * k, c.y + (1 - c.y) * k, c.z + (1 - c.z) * k, c.w}; }
+
+// A rounded rectangle, as a fan of triangles (no overlaps, so see-through
+// colours stay even).
+void roundRect(engine::TextRenderer& text, float x, float y, float w, float h, float r, Vec4 c) {
+  r = std::max(0.0f, std::min({r, w / 2, h / 2}));
+  if (r < 1) return text.addRect(x, y, w, h, c);
+  constexpr int kSeg = 5;
+  Vec2 pts[4 * (kSeg + 1)];
+  const Vec2 centers[4] = {{x + w - r, y + r}, {x + w - r, y + h - r}, {x + r, y + h - r}, {x + r, y + r}};
+  int n = 0;
+  for (int k = 0; k < 4; ++k) {
+    for (int i = 0; i <= kSeg; ++i) {
+      const float a = (static_cast<float>(k) - 1 + static_cast<float>(i) / kSeg) * 1.5707963f;
+      pts[n++] = {centers[k].x + std::cos(a) * r, centers[k].y + std::sin(a) * r};
+    }
+  }
+  const Vec2 mid{x + w / 2, y + h / 2};
+  for (int i = 0; i < n; ++i) {
+    const Vec2 q[4] = {mid, pts[i], pts[(i + 1) % n], pts[(i + 1) % n]};
+    text.addScreenQuad(q, c);
+  }
+}
+
+// A glossy "bubble" button: dark outline, a drop shadow, the body, a
+// shine across its top.
+void bubble(engine::TextRenderer& text, float x, float y, float w, float h, const char* label, float px, Vec4 color,
+            bool active, Vec4 ink, float textScale = 1) {
+  const float r = std::min(h * 0.5f, 18 * px), o = 2 * px;
+  roundRect(text, x - o, y - o + 3 * px, w + 2 * o, h + 2 * o, r + o, withAlpha(ink, 0.55f));
+  roundRect(text, x - o, y - o, w + 2 * o, h + 2 * o, r + o, ink);
+  const Vec4 body = active ? color : mix(darker(color, 0.45f), Vec4{0.12f, 0.1f, 0.2f, 1}, 0.4f);
+  roundRect(text, x, y, w, h, r, body);
+  roundRect(text, x + 2 * px, y + h * 0.55f, w - 4 * px, h * 0.45f - 2 * px, r * 0.8f, withAlpha(darker(body, 0.7f), 0.6f));
+  roundRect(text, x + w * 0.07f, y + h * 0.1f, w * 0.86f, h * 0.3f, r * 0.6f, Vec4{1, 1, 1, active ? 0.38f : 0.16f});
+  if (!label || !*label) return;
   engine::TextStyle s;
   s.align = 0.5f;
-  s.color = active ? Vec4{0.05f, 0.03f, 0.08f, 1} : Vec4{1, 1, 1, 1};
-  s.outline.w = active ? 0 : 0.6f;
-  const float cap = std::min(h * 0.4f, 13 * px);
+  s.color = {1, 1, 1, 1};
+  s.outline = ink;
+  s.outlineWidth = 0.8f;
+  const float cap = std::min(h * 0.38f, 13 * px) * textScale;
   text.addScreen(label, x + w / 2, y + (h - cap) / 2, cap, s);
+}
+
+// The combo counter's colour: dark blue at the start, brighter blue, green,
+// yellow, orange, and red from 1000.
+Vec4 comboColor(int combo) {
+  static const struct { float at; Vec4 c; } kStops[] = {
+      {0, {0.12f, 0.22f, 0.62f, 1}},   {100, {0.3f, 0.7f, 1.0f, 1}},   {250, {0.3f, 1.0f, 0.45f, 1}},
+      {450, {1.0f, 0.95f, 0.3f, 1}},   {700, {1.0f, 0.58f, 0.15f, 1}}, {1000, {1.0f, 0.18f, 0.18f, 1}}};
+  const float c = static_cast<float>(combo);
+  for (size_t i = 1; i < sizeof(kStops) / sizeof(kStops[0]); ++i) {
+    if (c <= kStops[i].at) return mix(kStops[i - 1].c, kStops[i].c, (c - kStops[i - 1].at) / (kStops[i].at - kStops[i - 1].at));
+  }
+  return kStops[5].c;
+}
+
+// An arrow for the ARROWS skin, pointing left, down, up or right by lane.
+void arrow(engine::TextRenderer& text, float cx, float cy, float size, int lane, Vec4 c) {
+  static const float kAngle[4] = {3.14159265f, 1.5707963f, -1.5707963f, 0};  // screen y points down
+  const float a = kAngle[lane & 3], ca = std::cos(a), sa = std::sin(a);
+  const auto P = [&](float u, float v) { return Vec2{cx + (u * ca - v * sa) * size, cy + (u * sa + v * ca) * size}; };
+  const Vec2 head[4] = {P(1.0f, 0), P(0.05f, 0.9f), P(0.05f, -0.9f), P(0.05f, -0.9f)};
+  text.addScreenQuad(head, c);
+  const Vec2 shaft[4] = {P(-0.85f, -0.36f), P(0.1f, -0.36f), P(0.1f, 0.36f), P(-0.85f, 0.36f)};
+  text.addScreenQuad(shaft, c);
+}
+
+// One note head (or a receptor's fill) in the skin's style, centred.
+void noteHead(engine::TextRenderer& text, const Skin& sk, int lane, float cx, float cy, float cw, float px, Vec4 c,
+              double nowMs) {
+  const float r = cw * 0.4f;
+  switch (sk.notes) {
+    case kBars: {
+      const float nh = cw * 0.3f;
+      text.addRect(cx - cw / 2 + 2 * px, cy - nh / 2, cw - 4 * px, nh, c);
+      text.addRect(cx - cw / 2 + 2 * px, cy - nh / 2, cw - 4 * px, nh * 0.28f, {1, 1, 1, 0.45f * c.w});
+      text.addRect(cx - cw / 2 + 2 * px, cy + nh / 2 - 2 * px, cw - 4 * px, 2 * px, {0, 0, 0, 0.35f * c.w});
+      break;
+    }
+    case kCircles:
+      text.addShape(engine::font::kShapeDisc, cx, cy, r, c, withAlpha(sk.ink, c.w), 0.5f);
+      text.addShape(engine::font::kShapeDisc, cx, cy, r * 0.55f, withAlpha(lighter(c, 0.6f), c.w));
+      break;
+    case kBubbles:
+      text.addShape(engine::font::kShapeDisc, cx, cy + 2 * px, r * 1.04f, withAlpha(darker(c, 0.5f), 0.6f * c.w));
+      text.addShape(engine::font::kShapeDisc, cx, cy, r, c, withAlpha(sk.ink, 0.9f * c.w), 0.45f);
+      text.addShape(engine::font::kShapeDisc, cx, cy + r * 0.2f, r * 0.72f, withAlpha(darker(c, 0.85f), 0.8f * c.w));
+      text.addShape(engine::font::kShapeDisc, cx - r * 0.32f, cy - r * 0.34f, r * 0.26f, {1, 1, 1, 0.75f * c.w});
+      text.addShape(engine::font::kShapeDisc, cx + r * 0.05f, cy - r * 0.52f, r * 0.1f, {1, 1, 1, 0.6f * c.w});
+      break;
+    case kNeon: {
+      const float pulse = 0.85f + 0.15f * static_cast<float>(std::sin(nowMs / 140.0 + lane));
+      text.addShape(engine::font::kShapeDisc, cx, cy, r * 1.35f, withAlpha(c, 0.12f * c.w * pulse));
+      text.addShape(engine::font::kShapeRing, cx, cy, r, c);
+      text.addShape(engine::font::kShapeDisc, cx, cy, r * 0.28f, withAlpha(lighter(c, 0.7f), c.w));
+      break;
+    }
+    case kArrows:
+      arrow(text, cx, cy + 2 * px, r * 1.08f, lane, withAlpha(sk.ink, c.w));
+      arrow(text, cx, cy, r, lane, c);
+      arrow(text, cx - r * 0.06f, cy - r * 0.08f, r * 0.55f, lane, withAlpha(lighter(c, 0.55f), c.w));
+      break;
+  }
 }
 
 // A row of little star discs (filled up to `stars`, out of 7).
@@ -133,6 +258,7 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
   song_ = std::clamp(song_, 0, std::max(0, static_cast<int>(songs_.size()) - 1));
   wheel_ = static_cast<float>(song_);
   scrollSpeed_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSpeed", 18)), 8, 40);
+  skin_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSkin", 2)), 0, kSkinCount - 1);
   // Bests and star ratings kept on this phone.
   for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
     for (int d = 0; d < kDifficultyCount; ++d) {
@@ -144,6 +270,9 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
     }
   }
   state_ = State::kMenu;
+  particles_.clear();
+  touchFx_.clear();
+  previewSong_ = lastPicked_ = -1;
   engine::audio::setMusicGain(0.15f);  // turn the jukebox down while you play
   engine::ui::setBodyClass("racing", true);  // (hides the page's top bar: the game has the whole screen)
   LOG_INFO("Rhythm game opened (%zu songs).", songs_.size());
@@ -151,12 +280,15 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
 
 void RhythmGame::close() {
   engine::Track::stop();
+  engine::audio::previewStop();
+  previewSong_ = -1;
   engine::audio::setMusicGain(1.0f);
   engine::ui::setBodyClass("racing", false);
   state_ = State::kClosed;
 }
 
-float RhythmGame::columnWidth(float W, float H) const { return std::min(W * 0.22f, H * 0.13f); }
+// Sideways the playfield is wider (taps use the whole screen anyway).
+float RhythmGame::columnWidth(float W, float H) const { return H >= W ? W * 0.22f : std::min(W * 0.11f, H * 0.2f); }
 
 float RhythmGame::laneX(int lane, float W, float H) const {
   const float cw = columnWidth(W, H);
@@ -178,6 +310,8 @@ float RhythmGame::stars(int song, Difficulty d, bool* known) const {
 void RhythmGame::startSong() {
   if (songs_.empty()) return;
   song_ = std::clamp(song_, 0, static_cast<int>(songs_.size()) - 1);
+  engine::audio::previewStop();
+  previewSong_ = -1;
   engine::Track::load(songs_[static_cast<size_t>(song_)].url);
   state_ = State::kLoading;
   analyzeShown_ = false;
@@ -195,10 +329,13 @@ void RhythmGame::beginPlay(const Chart& chart) {
   firstOpen_ = 0;
   std::fill(std::begin(counts_), std::end(counts_), 0);
   combo_ = maxCombo_ = judgements_ = 0;
+  comboMilestone_ = 0;
   points_ = scorePoints_ = 0;
   health_ = 1;
   bursts_.clear();
   ticks_.clear();
+  particles_.clear();
+  touchFx_.clear();
   lastJudgeMs_ = -1e9;
   std::fill(std::begin(lanePressed_), std::end(lanePressed_), 0);
   fingerLane_.clear();
@@ -218,6 +355,7 @@ void RhythmGame::judge(Note& n, Judge j, double nowMs, double errorMs, bool tail
   health_ = std::clamp(health_ + kHealthGain[j], 0.0f, 1.0f);
   if (j == kMiss) {
     combo_ = 0;
+    comboMilestone_ = 0;
   } else {
     maxCombo_ = std::max(maxCombo_, ++combo_);
     bursts_.push_back({n.lane, j, nowMs});
@@ -245,6 +383,92 @@ void RhythmGame::finish() {
   finishMs_ = engine::clockMs();
 }
 
+// ---- Effects: particles and tap rings ----
+
+float RhythmGame::rand01() {
+  rng_ = rng_ * 1664525u + 1013904223u;
+  return static_cast<float>(rng_ >> 8) / 16777216.0f;
+}
+
+void RhythmGame::spawn(float x, float y, float vx, float vy, float life, float size, Vec4 color, float gravity) {
+  if (particles_.size() >= 420) return;
+  particles_.push_back({x, y, vx, vy, 0, life, size, gravity, color});
+}
+
+// Sparks shooting up from a lane's keys when a note is hit.
+void RhythmGame::burst(int lane, Judge j, float W, float H, double nowMs) {
+  const float u = std::min(W, H) / 430.0f, cw = columnWidth(W, H);
+  const float x = laneX(lane, W, H), y = H * 0.83f;
+  const Skin& sk = kSkins[skin_];
+  const int n = j == kMax ? 12 : j == k300 ? 9 : 6;
+  for (int k = 0; k < n; ++k) {
+    const Vec4 c = k % 3 == 0 ? Vec4{1, 1, 1, 1} : (j == kMax ? maxColor(nowMs + k * 90.0) : sk.lane[lane]);
+    spawn(x + (rand01() - 0.5f) * cw * 0.6f, y, (rand01() - 0.5f) * 260 * u, -(160 + rand01() * 340) * u,
+          0.35f + rand01() * 0.3f, (1.6f + rand01() * 2.2f) * u, c, 900 * u);
+  }
+}
+
+void RhythmGame::updateEffects(double nowMs, float W, float H) {
+  const float dt = effectsMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - effectsMs_) / 1000.0)) : 0;
+  effectsMs_ = nowMs;
+  const float u = std::min(W, H) / 430.0f;
+  const Skin& sk = kSkins[skin_];
+  for (Particle& p : particles_) {
+    p.age += dt;
+    p.vy += p.gravity * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+  }
+  particles_.erase(std::remove_if(particles_.begin(), particles_.end(), [](const Particle& p) { return p.age >= p.life; }),
+                   particles_.end());
+  touchFx_.erase(std::remove_if(touchFx_.begin(), touchFx_.end(), [nowMs](const TouchFx& t) { return nowMs - t.ms > 220; }),
+                 touchFx_.end());
+  if (state_ == State::kMenu && !songs_.empty()) {
+    // Sparkles flowing out of the picked song's card, and bubbles rising
+    // slowly behind everything.
+    const MenuLayout m = menuLayout(W, H);
+    const float mid = m.wheel.y + m.wheel.h / 2 + (static_cast<float>(song_) - wheel_) * m.card * 1.12f;
+    const float x0 = m.wheel.x + m.wheel.w * 0.04f, w = m.wheel.w * 0.92f;
+    spawnDebt_ += dt * 45;
+    while (spawnDebt_ >= 1) {
+      spawnDebt_ -= 1;
+      const float side = rand01();
+      float x, y, vx, vy;
+      if (side < 0.5f) {  // along the top and bottom edges
+        x = x0 + rand01() * w;
+        y = mid + (side < 0.25f ? -0.5f : 0.5f) * m.card;
+        vx = (rand01() - 0.5f) * 40 * u;
+        vy = (side < 0.25f ? -1.0f : 1.0f) * (20 + rand01() * 40) * u;
+      } else {  // out of the ends
+        const bool leftEnd = side < 0.75f;
+        x = leftEnd ? x0 : x0 + w;
+        y = mid + (rand01() - 0.5f) * m.card;
+        vx = (leftEnd ? -1.0f : 1.0f) * (30 + rand01() * 60) * u;
+        vy = (rand01() - 0.5f) * 30 * u;
+      }
+      const float pick = rand01();
+      spawn(x, y, vx, vy, 0.7f + rand01() * 0.7f, (1.2f + rand01() * 1.8f) * u,
+            pick < 0.4f ? sk.accent : pick < 0.8f ? sk.accent2 : Vec4{1, 1, 1, 1});
+    }
+  }
+  if (state_ != State::kPlaying) {
+    bubbleDebt_ += dt * 3;
+    while (bubbleDebt_ >= 1) {
+      bubbleDebt_ -= 1;
+      spawn(rand01() * W, H + 20 * u, (rand01() - 0.5f) * 10 * u, -(25 + rand01() * 35) * u, 9, (6 + rand01() * 16) * u,
+            withAlpha(rand01() < 0.5f ? sk.accent : sk.accent2, 0.12f));
+    }
+  } else {
+    // Sparks streaming from a hold note being held.
+    for (const Note& n : notes_) {
+      if (n.time > songTime_ + 0.2) break;
+      if (!n.holding || rand01() > dt * 30) continue;
+      spawn(laneX(n.lane, W, H) + (rand01() - 0.5f) * columnWidth(W, H) * 0.5f, H * 0.83f, (rand01() - 0.5f) * 80 * u,
+            -(80 + rand01() * 160) * u, 0.3f + rand01() * 0.2f, (1.2f + rand01()) * u, lighter(sk.lane[n.lane], 0.4f), 300 * u);
+    }
+  }
+}
+
 // ---- Song select ----
 
 RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
@@ -253,24 +477,26 @@ RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
     m.info = {W * 0.05f, H * 0.035f, W * 0.9f, H * 0.2f};
     const float dy = H * 0.25f, dw = (W * 0.9f - 3 * W * 0.02f) / 4;
     for (int d = 0; d < kDifficultyCount; ++d) m.diff[d] = {W * 0.05f + static_cast<float>(d) * (dw + W * 0.02f), dy, dw, H * 0.065f};
-    m.speedDown = {W * 0.05f, H * 0.33f, W * 0.13f, H * 0.045f};
-    m.speedUp = {W * 0.52f, H * 0.33f, W * 0.13f, H * 0.045f};
-    m.autoBtn = {W * 0.7f, H * 0.33f, W * 0.25f, H * 0.045f};
-    m.wheel = {0, H * 0.395f, W, H * 0.47f};
+    m.speedDown = {W * 0.05f, H * 0.335f, W * 0.11f, H * 0.045f};
+    m.speedUp = {W * 0.5f, H * 0.335f, W * 0.11f, H * 0.045f};
+    m.autoBtn = {W * 0.67f, H * 0.335f, W * 0.28f, H * 0.045f};
+    m.wheel = {0, H * 0.4f, W, H * 0.465f};
     m.card = H * 0.068f;
-    m.back = {W * 0.05f, H * 0.89f, W * 0.2f, H * 0.065f};
-    m.play = {W * 0.3f, H * 0.89f, W * 0.65f, H * 0.065f};
+    m.back = {W * 0.05f, H * 0.89f, W * 0.18f, H * 0.065f};
+    m.skin = {W * 0.27f, H * 0.89f, W * 0.3f, H * 0.065f};
+    m.play = {W * 0.61f, H * 0.89f, W * 0.34f, H * 0.065f};
   } else {  // sideways: the info on the left, the wheel on the right
     m.info = {W * 0.03f, H * 0.05f, W * 0.43f, H * 0.36f};
     const float dw = (W * 0.43f - 3 * W * 0.01f) / 4;
     for (int d = 0; d < kDifficultyCount; ++d) m.diff[d] = {W * 0.03f + static_cast<float>(d) * (dw + W * 0.01f), H * 0.45f, dw, H * 0.12f};
-    m.speedDown = {W * 0.03f, H * 0.62f, W * 0.06f, H * 0.09f};
-    m.speedUp = {W * 0.25f, H * 0.62f, W * 0.06f, H * 0.09f};
-    m.autoBtn = {W * 0.34f, H * 0.62f, W * 0.12f, H * 0.09f};
+    m.speedDown = {W * 0.03f, H * 0.625f, W * 0.055f, H * 0.09f};
+    m.speedUp = {W * 0.245f, H * 0.625f, W * 0.055f, H * 0.09f};
+    m.autoBtn = {W * 0.33f, H * 0.625f, W * 0.13f, H * 0.09f};
     m.wheel = {W * 0.49f, 0, W * 0.51f, H};
     m.card = H * 0.125f;
-    m.back = {W * 0.03f, H * 0.8f, W * 0.1f, H * 0.13f};
-    m.play = {W * 0.15f, H * 0.8f, W * 0.31f, H * 0.13f};
+    m.back = {W * 0.03f, H * 0.8f, W * 0.09f, H * 0.13f};
+    m.skin = {W * 0.14f, H * 0.8f, W * 0.13f, H * 0.13f};
+    m.play = {W * 0.29f, H * 0.8f, W * 0.17f, H * 0.13f};
   }
   return m;
 }
@@ -288,6 +514,10 @@ void RhythmGame::menuPress(Vec2 p, float W, float H) {
   if (m.speedDown.contains(p.x, p.y) || m.speedUp.contains(p.x, p.y)) {
     scrollSpeed_ = std::clamp(scrollSpeed_ + (m.speedUp.contains(p.x, p.y) ? 1 : -1), 8, 40);
     engine::settings::remember("rhSpeed", scrollSpeed_);
+  }
+  if (m.skin.contains(p.x, p.y)) {
+    skin_ = (skin_ + 1) % kSkinCount;
+    engine::settings::remember("rhSkin", skin_);
   }
   if (m.autoBtn.contains(p.x, p.y)) autoplay = !autoplay;
   if (m.play.contains(p.x, p.y)) startSong();
@@ -337,6 +567,24 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   const float dt = wheelMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - wheelMs_) / 1000.0)) : 0;
   wheelMs_ = nowMs;
   wheel_ += (static_cast<float>(song_) - wheel_) * (1 - std::exp(-dt * 12));
+  updateEffects(nowMs, W, H);
+
+  // The song select (and results) play the picked song's preview, a moment
+  // after you stop scrolling.
+  if ((state_ == State::kMenu || state_ == State::kResults) && !songs_.empty()) {
+    if (song_ != lastPicked_) {
+      lastPicked_ = song_;
+      pickedMs_ = nowMs;
+    }
+    if (previewSong_ != song_ && nowMs - pickedMs_ > 350) {
+      previewSong_ = song_;
+      const SongChoice& s = songs_[static_cast<size_t>(song_)];
+      engine::audio::previewPlay(s.url, s.seconds > 0 ? s.seconds * 0.4 : 40);
+    }
+  } else if (previewSong_ >= 0) {
+    engine::audio::previewStop();
+    previewSong_ = -1;
+  }
 
   if (state_ == State::kMenu || state_ == State::kResults) {
     for (const engine::Input::RawPress& r : presses) {
@@ -351,6 +599,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       if (r.key >= 0) continue;
       if (r.down) {
         fingerDown_[r.id] = p;
+        touchFx_.push_back({p.x, p.y, nowMs, -1});
         continue;
       }
       // A finger lifted: a swipe on the wheel scrolls, else it's a tap.
@@ -358,6 +607,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       if (it == fingerDown_.end()) continue;
       const Vec2 start = it->second;
       fingerDown_.erase(it);
+      if (r.cancelled) continue;
       const float dy = p.y - start.y;
       if (state_ == State::kMenu && std::fabs(dy) > H * 0.03f && menuLayout(W, H).wheel.contains(start.x, start.y)) {
         menuSwipe(dy, W, H);
@@ -394,7 +644,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       std::vector<float> samples = engine::Track::takeSamples(rate);
       const double t0 = engine::clockMs();
       Chart chart = makeChart(samples.data(), samples.size(), rate, difficulty_);
-      LOG_INFO("Chart made in %.0f ms.", engine::clockMs() - t0);
+      LOG_INFO("Chart made in %.0f ms (%zu samples at %.0f Hz).", engine::clockMs() - t0, samples.size(), rate);
       // Star rating: mostly notes per second, plus chords and holds.
       if (chart.length > 0 && !chart.notes.empty()) {
         int chords = 0, holds = 0;
@@ -429,6 +679,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   songTime_ = engine::Track::time();
   const float cw = columnWidth(W, H);
   const float x0 = (W - 4 * cw) / 2;
+  const bool sideways = W > H;
   const auto release = [&](int lane, double t) {
     for (size_t i = firstOpen_; i < notes_.size(); ++i) {
       Note& n = notes_[i];
@@ -452,7 +703,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   };
   for (const engine::Input::RawPress& r : presses) {
     const Vec2 p{r.pos.x * W, r.pos.y * H};
-    if (r.down && r.key < 0 && p.x < W * 0.16f && p.y < H * 0.1f) {  // the pause / quit button
+    if (r.down && r.key < 0 && p.x < W * 0.12f && p.y < H * 0.09f) {  // the pause / quit button
       engine::Track::stop();
       state_ = State::kMenu;
       return;
@@ -464,14 +715,23 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
         const int lane = it->second;
         lanePressed_[lane] = std::max(0, lanePressed_[lane] - 1);
         fingerLane_.erase(it);
-        if (lanePressed_[lane] == 0 && !autoplay) release(lane, t);
+        // The phone cancelling a touch (its own gestures) isn't you letting
+        // go: a hold note being held then counts as held to its end.
+        if (lanePressed_[lane] == 0 && !autoplay && !r.cancelled) release(lane, t);
       }
       continue;
     }
-    const int lane = r.key >= 0 && r.key < 4 ? r.key : std::clamp(static_cast<int>(std::floor((p.x - x0) / cw)), 0, 3);
+    // Which lane: sideways the whole screen is four tall zones (anywhere in
+    // a zone counts, above or below the keys); upright, the column under
+    // the finger.
+    int lane;
+    if (r.key >= 0 && r.key < 4) lane = r.key;
+    else if (sideways) lane = std::clamp(static_cast<int>(p.x / (W / 4)), 0, 3);
+    else lane = std::clamp(static_cast<int>(std::floor((p.x - x0) / cw)), 0, 3);
     fingerLane_[r.id] = lane;
     ++lanePressed_[lane];
     laneDownMs_[lane] = nowMs;
+    if (r.key < 0) touchFx_.push_back({p.x, p.y, nowMs, lane});
     if (autoplay) continue;
     Note* hit = nullptr;
     for (size_t i = firstOpen_; i < notes_.size(); ++i) {
@@ -491,6 +751,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       }
     }
     judge(*hit, j, nowMs, err);
+    if (j != kMiss) burst(lane, j, W, H, nowMs);
     if (hit->end > 0) {
       if (j == kMiss) hit->tailDone = true, judge(*hit, kMiss, nowMs, 0, true);
       else hit->holding = true;
@@ -502,6 +763,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
     if (!n.judged) {
       if (autoplay && n.time <= songTime_) {
         judge(n, kMax, nowMs, 0);
+        burst(n.lane, kMax, W, H, nowMs);
         laneDownMs_[n.lane] = nowMs;
         if (n.end > 0) n.holding = true;
       } else if ((songTime_ - n.time) * 1000 > kMissMs) {
@@ -518,7 +780,19 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
         n.holding = false;
         n.tailDone = true;
         judge(n, n.headJudge == kMax ? kMax : k300, nowMs, 0, true);
+        burst(n.lane, n.headJudge == kMax ? kMax : k300, W, H, nowMs);
       }
+    }
+  }
+  // Every 100 combo: a shower of sparks from the counter.
+  if (combo_ / 100 > comboMilestone_) {
+    comboMilestone_ = combo_ / 100;
+    const float u = std::min(W, H) / 430.0f;
+    const Vec4 c = comboColor(combo_);
+    for (int k = 0; k < 36; ++k) {
+      const float a = static_cast<float>(k) / 36 * 6.2831853f, sp = (120 + rand01() * 160) * u;
+      spawn(W / 2, H * 0.4f, std::cos(a) * sp, std::sin(a) * sp, 0.6f + rand01() * 0.3f, (1.5f + rand01() * 2) * u,
+            k % 2 ? c : Vec4{1, 1, 1, 1}, 200 * u);
     }
   }
   while (firstOpen_ < notes_.size() && notes_[firstOpen_].judged &&
@@ -536,15 +810,55 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
 
 // ---- Drawing ----
 
+namespace {
+// The menus' background: the skin's colours top to bottom.
+void backdrop(engine::TextRenderer& text, const Skin& sk, float W, float H, float alpha) {
+  constexpr int kBands = 24;
+  for (int b = 0; b < kBands; ++b) {
+    const float t = static_cast<float>(b) / (kBands - 1);
+    text.addRect(0, H * static_cast<float>(b) / kBands, W, H / kBands + 1, withAlpha(mix(sk.bgTop, sk.bgBottom, t), alpha));
+  }
+}
+}  // namespace
+
 void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
   if (state_ == State::kClosed) return;
-  // Dim the bar behind the game.
-  text.addRect(0, 0, W, H, {0.015f, 0.01f, 0.03f, state_ == State::kPlaying ? 0.86f : 0.9f});
-  if (state_ == State::kMenu) return drawMenu(text, W, H, px, nowMs);
-  if (state_ == State::kResults) return drawResults(text, W, H, px);
+  const Skin& sk = kSkins[skin_];
+  if (state_ == State::kPlaying) text.addRect(0, 0, W, H, {0.015f, 0.01f, 0.03f, 0.86f});  // dim the bar behind
+  else backdrop(text, sk, W, H, 0.96f);
+  // Particles behind the menus (bubbles) and over the play (sparks).
+  const auto drawParticles = [&]() {
+    for (const Particle& p : particles_) {
+      const float k = p.age / p.life;
+      const float a = std::min(1.0f, (1 - k) * 2.5f) * std::min(1.0f, p.age * 12);
+      text.addShape(engine::font::kShapeDisc, p.x, p.y, p.size * (1 - 0.4f * k), withAlpha(p.color, p.color.w * a));
+    }
+  };
+  if (state_ != State::kPlaying) drawParticles();
+  // Tap rings: a tiny flash where a finger lands.
+  const auto drawTaps = [&]() {
+    for (const TouchFx& t : touchFx_) {
+      const float k = static_cast<float>((nowMs - t.ms) / 220.0);
+      const Vec4 c = t.lane >= 0 ? sk.lane[t.lane] : sk.accent;
+      text.addShape(engine::font::kShapeRing, t.x, t.y, (10 + 26 * k) * px, withAlpha(lighter(c, 0.3f), 0.8f * (1 - k)));
+      text.addShape(engine::font::kShapeDisc, t.x, t.y, (7 - 5 * k) * px, withAlpha(Vec4{1, 1, 1, 1}, 0.6f * (1 - k)));
+    }
+  };
+  if (state_ == State::kMenu) {
+    drawMenu(text, W, H, px, nowMs);
+    drawTaps();
+    return;
+  }
+  if (state_ == State::kResults) {
+    drawResults(text, W, H, px);
+    drawTaps();
+    return;
+  }
   if (state_ == State::kLoading || state_ == State::kAnalyzing || state_ == State::kWaitTap) {
     engine::TextStyle center;
     center.align = 0.5f;
+    center.outline = sk.ink;
+    center.outlineWidth = 0.8f;
     const SongChoice& s = songs_[static_cast<size_t>(song_)];
     text.addScreen(clip(s.title, 26), W / 2, H * 0.3f, 14 * px, center);
     center.color = kDifficultyColor[static_cast<int>(difficulty_)];
@@ -552,65 +866,84 @@ void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, do
     center.color = {1, 1, 1, 0.9f};
     const char* msg = state_ == State::kLoading ? "Loading the song..." : state_ == State::kAnalyzing ?
                       "Making the chart..." : "Tap to start";
-    text.addScreen(msg, W / 2, H * 0.52f, 11 * px, center);
-    for (int k = 0; k < 8; ++k) {  // spinner
-      const float a = static_cast<float>(nowMs / 160.0) + static_cast<float>(k) * 0.785f;
-      text.addShape(engine::font::kShapeDisc, W / 2 + std::cos(a) * 24 * px, H * 0.45f + std::sin(a) * 24 * px,
-                    (2.0f + static_cast<float>(k) * 0.5f) * px, withAlpha(k % 2 ? kPink : kLaneColor[1], 0.3f + 0.08f * static_cast<float>(k)));
+    text.addScreen(msg, W / 2, H * 0.55f, 11 * px, center);
+    for (int k = 0; k < 4; ++k) {  // four bouncing notes in the skin's style
+      const float bounce = std::fabs(std::sin(static_cast<float>(nowMs / 260.0) + static_cast<float>(k) * 0.7f));
+      noteHead(text, sk, k, W / 2 + (static_cast<float>(k) - 1.5f) * 34 * px, H * 0.47f - bounce * 16 * px, 34 * px, px,
+               sk.lane[k], nowMs);
     }
     return;
   }
   drawPlay(text, W, H, px, nowMs);
+  drawParticles();
+  drawTaps();
 }
 
 void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
   const MenuLayout m = menuLayout(W, H);
+  const Skin& sk = kSkins[skin_];
   engine::TextStyle st;
-  // The wheel: cards above and below the picked song; the picked one slides out.
+  st.outline = sk.ink;
+  st.outlineWidth = 0.75f;
+  // The wheel: bubbly cards above and below the picked song; the picked one
+  // slides out, glows and bobs gently.
   if (!songs_.empty()) {
     const float step = m.card * 1.12f, mid = m.wheel.y + m.wheel.h / 2;
     for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
       const float off = static_cast<float>(i) - wheel_;
-      const float y = mid + off * step - m.card / 2;
-      if (y + m.card < m.wheel.y || y > m.wheel.y + m.wheel.h) continue;
       const bool sel = i == song_;
+      const float bob = sel ? std::sin(static_cast<float>(nowMs / 420.0)) * 2 * px : 0;
+      const float y = mid + off * step - m.card / 2 + bob;
+      if (y + m.card < m.wheel.y || y > m.wheel.y + m.wheel.h) continue;
       const float slide = std::clamp(std::fabs(off), 0.0f, 3.0f) * m.wheel.w * 0.025f;
       const float x = m.wheel.x + m.wheel.w * 0.04f + slide, w = m.wheel.w * 0.92f - slide;
-      text.addRect(x, y, w, m.card, sel ? Vec4{0.22f, 0.1f, 0.25f, 0.95f} : Vec4{0.08f, 0.07f, 0.12f, 0.85f});
-      text.addRect(x, y, 4 * px, m.card, sel ? kPink : withAlpha(kLaneColor[1], 0.5f));
-      if (sel) text.addRect(x, y + m.card - 2 * px, w, 2 * px, kPink);
+      const float r = m.card * 0.45f;
+      if (sel) {
+        const float glow = 0.5f + 0.5f * std::sin(static_cast<float>(nowMs / 300.0));
+        roundRect(text, x - 6 * px, y - 6 * px, w + 12 * px, m.card + 12 * px, r + 6 * px, withAlpha(sk.accent, 0.18f + 0.12f * glow));
+      }
+      roundRect(text, x - 2 * px, y - 2 * px + 3 * px, w + 4 * px, m.card + 4 * px, r + 2 * px, withAlpha(sk.ink, 0.5f));
+      roundRect(text, x - 2 * px, y - 2 * px, w + 4 * px, m.card + 4 * px, r + 2 * px, sel ? sk.accent : sk.ink);
+      roundRect(text, x, y, w, m.card, r, sel ? mix(sk.card, sk.accent, 0.35f) : sk.card);
+      roundRect(text, x + w * 0.03f, y + m.card * 0.08f, w * 0.94f, m.card * 0.3f, r * 0.6f, {1, 1, 1, sel ? 0.16f : 0.07f});
+      // A bubble on the left in the lane colours.
+      noteHead(text, sk, i % 4, x + m.card * 0.5f, y + m.card / 2, m.card * 0.9f, px, sk.lane[i % 4], nowMs);
       const SongChoice& s = songs_[static_cast<size_t>(i)];
       st.align = 0;
-      st.color = {1, 1, 1, sel ? 1.0f : 0.8f};
-      const float big = std::min(m.card * 0.3f, 12 * px);
-      text.addScreen(clip(s.title, 24), x + 12 * px, y + m.card * 0.18f, big, st);
-      st.color = {0.75f, 0.75f, 0.85f, 0.85f};
+      st.color = {1, 1, 1, sel ? 1.0f : 0.85f};
+      const float big = std::min(m.card * 0.28f, 12 * px);
+      text.addScreen(clip(s.title, 22), x + m.card * 1.05f, y + m.card * 0.2f, big, st);
+      st.color = {0.85f, 0.85f, 0.95f, 0.9f};
       std::string sub = s.artist;
       if (s.seconds > 0) sub += "  " + timeText(s.seconds);
-      text.addScreen(clip(sub, 34), x + 12 * px, y + m.card * 0.6f, big * 0.6f, st);
-      // Best grade on this difficulty.
+      text.addScreen(clip(sub, 30), x + m.card * 1.05f, y + m.card * 0.6f, big * 0.6f, st);
+      // Best grade on this difficulty, in a badge.
       const auto it = best_.find(bestKey(i, difficulty_));
       if (it != best_.end()) {
         const std::string g = gradeOf(it->second.acc, it->second.acc < 0.999);
-        st.align = 1;
+        const float gr = m.card * 0.32f, gx = x + w - gr - 8 * px, gy = y + m.card / 2;
+        text.addShape(engine::font::kShapeDisc, gx, gy, gr, withAlpha(darker(gradeColor(g), 0.45f), 0.95f), sk.ink, 0.5f);
+        st.align = 0.5f;
         st.color = gradeColor(g);
-        text.addScreen(g, x + w - 10 * px, y + m.card * 0.22f, m.card * 0.5f, st);
+        text.addScreen(g, gx, gy - gr * 0.45f, gr * 0.9f, st);
       }
     }
   }
-  // The picked song's details.
-  text.addRect(m.info.x, m.info.y, m.info.w, m.info.h, {0.06f, 0.05f, 0.1f, 0.92f});
-  text.addRect(m.info.x, m.info.y, m.info.w, 3 * px, kPink);
+  // The picked song's details, on a rounded panel.
+  roundRect(text, m.info.x - 2 * px, m.info.y - 2 * px + 4 * px, m.info.w + 4 * px, m.info.h + 4 * px, 18 * px, withAlpha(sk.ink, 0.5f));
+  roundRect(text, m.info.x - 2 * px, m.info.y - 2 * px, m.info.w + 4 * px, m.info.h + 4 * px, 18 * px, sk.ink);
+  roundRect(text, m.info.x, m.info.y, m.info.w, m.info.h, 16 * px, mix(sk.card, sk.bgTop, 0.3f));
+  roundRect(text, m.info.x + 6 * px, m.info.y + 5 * px, m.info.w - 12 * px, m.info.h * 0.22f, 12 * px, {1, 1, 1, 0.07f});
   st.align = 0;
-  st.color = kPink;
-  const float pad = 10 * px;
+  st.color = sk.accent;
+  const float pad = 12 * px;
   text.addScreen("4K MANIA", m.info.x + pad, m.info.y + pad, 9 * px, st);
   if (!songs_.empty()) {
     const SongChoice& s = songs_[static_cast<size_t>(song_)];
     st.color = {1, 1, 1, 1};
     const float tsize = std::min(m.info.h * 0.17f, 17 * px);
     text.addScreen(clip(s.title, 22), m.info.x + pad, m.info.y + pad + 16 * px, tsize, st);
-    st.color = {0.8f, 0.8f, 0.9f, 1};
+    st.color = {0.85f, 0.85f, 0.95f, 1};
     text.addScreen(s.artist, m.info.x + pad, m.info.y + pad + 20 * px + tsize, 8 * px, st);
     char line[96];
     bool known = false;
@@ -627,62 +960,98 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
       st.color = gradeColor(g);
       text.addScreen(g + "  " + line, m.info.x + pad, y3 + 30 * px, 8 * px, st);
     } else {
-      st.color = {0.7f, 0.7f, 0.8f, 0.8f};
+      st.color = {0.8f, 0.8f, 0.9f, 0.85f};
       text.addScreen("NOT PLAYED YET", m.info.x + pad, y3 + 30 * px, 7 * px, st);
     }
+    // A little note playing along with the preview.
+    const float beat = std::fabs(std::sin(static_cast<float>(nowMs / 300.0)));
+    noteHead(text, sk, song_ % 4, m.info.x + m.info.w - 26 * px, m.info.y + 24 * px - beat * 5 * px, 30 * px, px,
+             sk.lane[song_ % 4], nowMs);
   }
-  // Difficulties, with their stars.
+  // Difficulties, as bubble pills with their stars.
   for (int d = 0; d < kDifficultyCount; ++d) {
     const Rect& r = m.diff[d];
     const bool on = static_cast<int>(difficulty_) == d;
-    text.addRect(r.x, r.y, r.w, r.h, on ? withAlpha(kDifficultyColor[d], 0.9f) : Vec4{0.1f, 0.08f, 0.14f, 0.9f});
-    text.addRect(r.x, r.y + r.h - 2 * px, r.w, 2 * px, kDifficultyColor[d]);
+    const float lift = on ? 3 * px : 0;
+    bubble(text, r.x, r.y - lift, r.w, r.h, "", px, kDifficultyColor[d], on, sk.ink);
     engine::TextStyle s;
     s.align = 0.5f;
-    s.color = on ? Vec4{0.05f, 0.03f, 0.08f, 1} : Vec4{1, 1, 1, 1};
-    s.outline.w = on ? 0 : 0.6f;
+    s.outline = sk.ink;
+    s.outlineWidth = 0.8f;
     const float cap = std::min(r.h * 0.28f, 9 * px);
-    text.addScreen(kDifficultyName[d], r.x + r.w / 2, r.y + r.h * 0.18f, cap, s);
+    text.addScreen(kDifficultyName[d], r.x + r.w / 2, r.y - lift + r.h * 0.16f, cap, s);
     char b[16];
     bool known = false;
     const float sr = songs_.empty() ? kTypicalStars[d] : stars(song_, static_cast<Difficulty>(d), &known);
     std::snprintf(b, sizeof(b), known ? "%.1f*" : "~%.1f*", sr);
-    text.addScreen(b, r.x + r.w / 2, r.y + r.h * 0.58f, cap * 0.8f, s);
+    text.addScreen(b, r.x + r.w / 2, r.y - lift + r.h * 0.56f, cap * 0.8f, s);
   }
   // Scroll speed and auto.
-  button(text, m.speedDown.x, m.speedDown.y, m.speedDown.w, m.speedDown.h, "-", px, false);
-  button(text, m.speedUp.x, m.speedUp.y, m.speedUp.w, m.speedUp.h, "+", px, false);
+  bubble(text, m.speedDown.x, m.speedDown.y, m.speedDown.w, m.speedDown.h, "-", px, sk.accent2, true, sk.ink, 1.4f);
+  bubble(text, m.speedUp.x, m.speedUp.y, m.speedUp.w, m.speedUp.h, "+", px, sk.accent2, true, sk.ink, 1.4f);
   {
     char b[32];
     std::snprintf(b, sizeof(b), "SPEED %d", scrollSpeed_);
     engine::TextStyle s;
     s.align = 0.5f;
+    s.outline = sk.ink;
+    s.outlineWidth = 0.8f;
     const float cx = (m.speedDown.x + m.speedDown.w + m.speedUp.x) / 2;
     text.addScreen(b, cx, m.speedDown.y + m.speedDown.h * 0.3f, std::min(m.speedDown.h * 0.4f, 9 * px), s);
   }
-  button(text, m.autoBtn.x, m.autoBtn.y, m.autoBtn.w, m.autoBtn.h, autoplay ? "AUTO: ON" : "AUTO: OFF", px, autoplay,
-         kLaneColor[1]);
-  button(text, m.back.x, m.back.y, m.back.w, m.back.h, "BACK", px, false);
-  button(text, m.play.x, m.play.y, m.play.w, m.play.h, "PLAY", px, true);
+  bubble(text, m.autoBtn.x, m.autoBtn.y, m.autoBtn.w, m.autoBtn.h, autoplay ? "AUTO: ON" : "AUTO: OFF", px, sk.accent2,
+         autoplay, sk.ink);
+  bubble(text, m.back.x, m.back.y, m.back.w, m.back.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
+  // The skin button shows the skin's name and its four notes.
+  bubble(text, m.skin.x, m.skin.y, m.skin.w, m.skin.h, "", px, mix(sk.card, sk.accent2, 0.5f), true, sk.ink);
+  {
+    engine::TextStyle s;
+    s.align = 0.5f;
+    s.outline = sk.ink;
+    s.outlineWidth = 0.8f;
+    const float cap = std::min(m.skin.h * 0.22f, 8 * px);
+    text.addScreen(std::string("SKIN: ") + sk.name, m.skin.x + m.skin.w / 2, m.skin.y + m.skin.h * 0.12f, cap, s);
+    const float ns = std::min(m.skin.w / 5.2f, m.skin.h * 0.42f);
+    for (int l = 0; l < 4; ++l) {
+      noteHead(text, sk, l, m.skin.x + m.skin.w / 2 + (static_cast<float>(l) - 1.5f) * ns * 1.05f, m.skin.y + m.skin.h * 0.66f,
+               ns, px, sk.lane[l], nowMs);
+    }
+  }
+  const float playPulse = 1 + 0.03f * std::sin(static_cast<float>(nowMs / 250.0));
+  const float pw = m.play.w * playPulse, ph = m.play.h * playPulse;
+  bubble(text, m.play.x - (pw - m.play.w) / 2, m.play.y - (ph - m.play.h) / 2, pw, ph, "PLAY", px, sk.accent, true, sk.ink, 1.3f);
   if (songs_.empty()) {
     engine::TextStyle s;
     s.align = 0.5f;
     text.addScreen("No songs", m.wheel.x + m.wheel.w / 2, m.wheel.y + m.wheel.h / 2, 12 * px, s);
   }
-  (void)nowMs;
 }
 
 void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
+  const Skin& sk = kSkins[skin_];
   const float cw = columnWidth(W, H), x0 = (W - 4 * cw) / 2;
   const float hitY = H * 0.83f, keyH = cw * 0.5f, topY = -cw;
   const double approach = approachSeconds();
-  const float noteH = cw * 0.3f;
+  const bool round = sk.notes != kBars;
+  const float noteH = round ? cw * 0.8f : cw * 0.3f;
   const auto yOf = [&](double t) { return hitY - static_cast<float>((t - songTime_) / approach) * (hitY - topY); };
-  // Stage: black columns, thin separators, bright edges, the hit line.
-  text.addRect(x0 - 3 * px, 0, 4 * cw + 6 * px, H, {0, 0, 0, 0.9f});
+  // Sideways: the four tall tap zones across the whole screen, lit while held.
+  if (W > H) {
+    for (int l = 0; l < 4; ++l) {
+      const float since = static_cast<float>(nowMs - laneDownMs_[l]);
+      const float on = lanePressed_[l] ? 1.0f : std::clamp(1.0f - since / 160.0f, 0.0f, 1.0f);
+      if (on > 0) text.addRect(W / 4 * static_cast<float>(l), 0, W / 4, H, withAlpha(sk.lane[l], 0.07f * on));
+      if (l > 0) text.addRect(W / 4 * static_cast<float>(l) - 0.5f * px, H * 0.1f, px, H * 0.9f, {1, 1, 1, 0.05f});
+      // A soft pad at the bottom of each zone.
+      roundRect(text, W / 4 * static_cast<float>(l) + 10 * px, H - 26 * px, W / 4 - 20 * px, 16 * px, 8 * px,
+                withAlpha(sk.lane[l], 0.12f + 0.3f * on));
+    }
+  }
+  // Stage: the skin's background, thin separators, bright edges.
+  text.addRect(x0 - 3 * px, 0, 4 * cw + 6 * px, H, sk.stage);
   for (int l = 1; l < 4; ++l) text.addRect(x0 + static_cast<float>(l) * cw - 0.5f * px, 0, px, hitY, {1, 1, 1, 0.07f});
-  text.addRect(x0 - 3 * px, 0, 2 * px, H, {1, 1, 1, 0.35f});
-  text.addRect(x0 + 4 * cw + px, 0, 2 * px, H, {1, 1, 1, 0.35f});
+  text.addRect(x0 - 3 * px, 0, 2 * px, H, withAlpha(sk.accent2, 0.45f));
+  text.addRect(x0 + 4 * cw + px, 0, 2 * px, H, withAlpha(sk.accent2, 0.45f));
   // Column lights: a glow rising from a key while it's held (and a moment after).
   for (int l = 0; l < 4; ++l) {
     const float since = static_cast<float>(nowMs - laneDownMs_[l]);
@@ -692,65 +1061,101 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
     for (int k = 0; k < 10; ++k) {
       const float h = H * 0.034f;
       text.addRect(x + px, hitY - static_cast<float>(k + 1) * h, cw - 2 * px, h,
-                   withAlpha(kLaneColor[l], on * 0.22f * (1.0f - static_cast<float>(k) / 10.0f)));
+                   withAlpha(sk.lane[l], on * 0.22f * (1.0f - static_cast<float>(k) / 10.0f)));
     }
   }
-  // Notes: bars, and hold notes (a body up to the end, with a cap).
+  // Receptors (round skins): rings where the notes land, filled while pressed.
+  if (round) {
+    text.addRect(x0, hitY - 0.5f * px, 4 * cw, px, {1, 1, 1, 0.25f});
+    for (int l = 0; l < 4; ++l) {
+      const float cx = x0 + (static_cast<float>(l) + 0.5f) * cw;
+      const float since = static_cast<float>(nowMs - laneDownMs_[l]);
+      const bool down = lanePressed_[l] > 0 || since < 60;
+      const float pop = down ? 0.9f : 1.0f + 0.06f * std::clamp(1 - (since - 60) / 120, 0.0f, 1.0f);
+      if (sk.notes == kArrows) {
+        arrow(text, cx, hitY, cw * 0.44f * pop, l, withAlpha(sk.lane[l], down ? 0.9f : 0.35f));
+        arrow(text, cx, hitY, cw * 0.3f * pop, l, down ? lighter(sk.lane[l], 0.5f) : withAlpha(sk.stage, 1));
+      } else {
+        if (down) text.addShape(engine::font::kShapeDisc, cx, hitY, cw * 0.4f * pop, withAlpha(sk.lane[l], 0.45f));
+        text.addShape(engine::font::kShapeRing, cx, hitY, cw * 0.42f * pop, withAlpha(lighter(sk.lane[l], 0.2f), down ? 1.0f : 0.6f));
+      }
+    }
+  }
+  // Notes: heads, and hold notes (a body up to the end, with a cap).
   for (size_t i = firstOpen_; i < notes_.size(); ++i) {
     const Note& n = notes_[i];
     if (n.time - songTime_ > approach * 1.1) break;
     const bool hold = n.end > 0;
     if (n.judged && !hold) continue;
     if (hold && n.tailDone && !n.holding) continue;
-    const Vec4 c = kLaneColor[n.lane];
-    const float x = x0 + static_cast<float>(n.lane) * cw;
+    const Vec4 c = sk.lane[n.lane];
+    const float x = x0 + static_cast<float>(n.lane) * cw, cx = x + cw / 2;
     const float headY = n.holding ? hitY : yOf(n.time);
     const bool dead = hold && n.judged && !n.holding;  // missed head: greyed
     if (hold) {
       const float endY = yOf(n.end);
       if (endY < H && headY > -noteH) {
-        const float bw = cw * 0.78f, bx = x + (cw - bw) / 2;
+        const float bw = round ? cw * 0.5f : cw * 0.78f, bx = x + (cw - bw) / 2;
         const float top = std::max(endY, -noteH), bottom = std::min(headY, H);
         const Vec4 body = dead ? Vec4{0.35f, 0.35f, 0.4f, 0.5f} : withAlpha(c, n.holding ? 0.85f : 0.6f);
-        text.addRect(bx, top, bw, bottom - top, body);
-        text.addRect(bx, top, bw, noteH * 0.45f, dead ? body : withAlpha(c, 1));  // the end cap
+        if (round) {
+          roundRect(text, bx, top - bw / 2, bw, bottom - top + bw / 2, bw / 2, body);
+          roundRect(text, bx + bw * 0.2f, top - bw / 2 + 2 * px, bw * 0.25f, std::max(0.0f, bottom - top), bw * 0.12f,
+                    {1, 1, 1, dead ? 0.05f : 0.22f});
+          if (!dead) text.addShape(engine::font::kShapeDisc, cx, top, bw * 0.62f, withAlpha(lighter(c, 0.3f), 1), sk.ink, 0.4f);
+        } else {
+          text.addRect(bx, top, bw, bottom - top, body);
+          text.addRect(bx, top, bw, noteH * 0.45f, dead ? body : withAlpha(c, 1));  // the end cap
+        }
       }
     }
     if (n.judged && !n.holding) continue;
     if (headY < -noteH || headY > H + noteH) continue;
-    const Vec4 head = dead ? Vec4{0.4f, 0.4f, 0.45f, 0.7f} : c;
-    text.addRect(x + 2 * px, headY - noteH / 2, cw - 4 * px, noteH, head);
-    text.addRect(x + 2 * px, headY - noteH / 2, cw - 4 * px, noteH * 0.28f, {1, 1, 1, 0.45f});
-    text.addRect(x + 2 * px, headY + noteH / 2 - 2 * px, cw - 4 * px, 2 * px, {0, 0, 0, 0.35f});
+    noteHead(text, sk, n.lane, cx, headY, cw, px, dead ? Vec4{0.4f, 0.4f, 0.45f, 0.7f} : c, nowMs);
   }
-  // The hit line and the keys under it (lit while pressed).
-  text.addRect(x0, hitY - 1.5f * px, 4 * cw, 3 * px, {1, 1, 1, 0.75f});
-  for (int l = 0; l < 4; ++l) {
-    const float x = x0 + static_cast<float>(l) * cw;
-    const bool down = lanePressed_[l] > 0 || nowMs - laneDownMs_[l] < 60;
-    text.addRect(x + 3 * px, hitY + 4 * px, cw - 6 * px, keyH, down ? withAlpha(kLaneColor[l], 0.9f) : Vec4{0.1f, 0.1f, 0.14f, 1});
-    text.addRect(x + 3 * px, hitY + 4 * px, cw - 6 * px, 3 * px, withAlpha(kLaneColor[l], down ? 1.0f : 0.5f));
-    text.addRect(x + cw * 0.3f, hitY + 4 * px + keyH * 0.45f, cw * 0.4f, keyH * 0.15f, down ? Vec4{1, 1, 1, 0.9f} : Vec4{1, 1, 1, 0.18f});
+  // Bar skin: the hit line and the keys under it (lit while pressed).
+  if (!round) {
+    text.addRect(x0, hitY - 1.5f * px, 4 * cw, 3 * px, {1, 1, 1, 0.75f});
+    for (int l = 0; l < 4; ++l) {
+      const float x = x0 + static_cast<float>(l) * cw;
+      const bool down = lanePressed_[l] > 0 || nowMs - laneDownMs_[l] < 60;
+      text.addRect(x + 3 * px, hitY + 4 * px, cw - 6 * px, keyH, down ? withAlpha(sk.lane[l], 0.9f) : Vec4{0.1f, 0.1f, 0.14f, 1});
+      text.addRect(x + 3 * px, hitY + 4 * px, cw - 6 * px, 3 * px, withAlpha(sk.lane[l], down ? 1.0f : 0.5f));
+      text.addRect(x + cw * 0.3f, hitY + 4 * px + keyH * 0.45f, cw * 0.4f, keyH * 0.15f, down ? Vec4{1, 1, 1, 0.9f} : Vec4{1, 1, 1, 0.18f});
+    }
   }
   // Hit flashes over the hit line.
   for (const Burst& b : bursts_) {
     const float t = static_cast<float>((nowMs - b.ms) / 300.0);
     const float x = x0 + static_cast<float>(b.lane) * cw;
     const Vec4 c = b.judge == kMax ? maxColor(nowMs) : kJudgeColor[b.judge];
-    const float grow = cw * 0.15f * t;
-    text.addRect(x - grow, hitY - noteH * (0.6f + t), cw + 2 * grow, noteH * (1.2f + 2 * t), withAlpha(c, 0.45f * (1 - t)));
+    if (round) {
+      text.addShape(engine::font::kShapeRing, x + cw / 2, hitY, cw * (0.42f + 0.35f * t), withAlpha(c, 0.8f * (1 - t)));
+      text.addShape(engine::font::kShapeDisc, x + cw / 2, hitY, cw * (0.4f + 0.1f * t), withAlpha(c, 0.3f * (1 - t)));
+    } else {
+      const float grow = cw * 0.15f * t;
+      text.addRect(x - grow, hitY - noteH * (0.6f + t), cw + 2 * grow, noteH * (1.2f + 2 * t), withAlpha(c, 0.45f * (1 - t)));
+    }
   }
-  // Combo and judgement (osu!mania puts them in the stage's middle).
+  // Combo in the middle of the stage: its colour climbs from dark blue to
+  // red at 1000; the judgement under it.
   engine::TextStyle center;
   center.align = 0.5f;
-  center.outlineWidth = 0.7f;
+  center.outlineWidth = 0.85f;
+  center.outline = {0, 0, 0, 0.95f};
   const double sinceJudge = nowMs - lastJudgeMs_;
   if (combo_ >= 2) {
     char c[16];
     std::snprintf(c, sizeof(c), "%d", combo_);
-    const float pop = 1.0f + 0.18f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 80.0));
-    center.color = {1, 1, 1, 0.92f};
-    text.addScreen(c, W / 2, H * 0.36f, std::min(cw * 0.42f, 30 * px) * pop, center);
+    const float pop = 1.0f + 0.22f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 90.0));
+    Vec4 col = comboColor(combo_);
+    if (combo_ >= 1000) col = lighter(col, 0.25f * (0.5f + 0.5f * std::sin(static_cast<float>(nowMs / 120.0))));
+    const float size = std::min(cw * 0.75f, 44 * px) * pop;
+    text.addShape(engine::font::kShapeDisc, W / 2, H * 0.4f + size * 0.5f, size * 1.3f, withAlpha(col, 0.12f));
+    center.color = col;
+    text.addScreen(c, W / 2, H * 0.4f, size, center);
+    center.color = withAlpha(lighter(col, 0.4f), 0.85f);
+    text.addScreen("COMBO", W / 2, H * 0.4f + size + 4 * px, 6 * px, center);
   }
   if (sinceJudge < 500) {
     const Vec4 c = lastJudge_ == kMax ? maxColor(nowMs) : kJudgeColor[lastJudge_];
@@ -758,14 +1163,15 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
     center.color = withAlpha(c, fade);
     center.outline.w = 0.85f * fade;
     const float pop = 1.0f + 0.3f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 90.0));
-    text.addScreen(kJudgeName[lastJudge_], W / 2, H * 0.47f, std::min(cw * 0.3f, 20 * px) * pop, center);
-    center.outline.w = 0.85f;
+    const float js = std::min(cw * 0.3f, 18 * px);
+    text.addScreen(kJudgeName[lastJudge_], W / 2, H * 0.4f - js * 1.6f - 6 * px, js * pop, center);
+    center.outline.w = 0.95f;
   }
   // Timing-error bar under the keys: the windows' colours and recent hits
   // (left = early, right = late).
   {
-    const float bw = std::min(cw * 3.0f, W * 0.8f), bx = W / 2 - bw / 2;
-    const float by = std::min(hitY + keyH + 14 * px, H - 8 * px);
+    const float bw = std::min(cw * 3.0f, W * 0.8f);
+    const float by = std::min(hitY + (round ? cw * 0.55f : keyH + 14 * px), H - 8 * px);
     const float scale = bw / 2 / static_cast<float>(kWindowMs[4]);
     for (int k = 4; k >= 0; --k) {
       const float hw = static_cast<float>(kWindowMs[k]) * scale;
@@ -777,32 +1183,31 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
       text.addRect(x - px, by - 5 * px, 2 * px, 13 * px, withAlpha(t.judge == kMax ? Vec4{1, 1, 1, 1} : kJudgeColor[t.judge], a));
     }
     text.addRect(W / 2 - px, by - 7 * px, 2 * px, 17 * px, {1, 1, 1, 0.9f});
-    (void)bx;
   }
-  // Health (right of the stage, rising from the hit line).
+  // Health (right of the stage, rising from the hit line), a rounded tube.
   {
-    const float hx = x0 + 4 * cw + 6 * px, hy = H * 0.12f, hh = hitY - hy;
-    text.addRect(hx, hy, 6 * px, hh, {1, 1, 1, 0.1f});
+    const float hx = x0 + 4 * cw + 7 * px, hy = H * 0.12f, hh = hitY - hy;
+    roundRect(text, hx - px, hy - px, 8 * px, hh + 2 * px, 4 * px, withAlpha(sk.ink, 0.8f));
     const Vec4 c = mix(Vec4{1, 0.25f, 0.25f, 1}, Vec4{0.4f, 1, 0.5f, 1}, health_);
-    text.addRect(hx, hy + hh * (1 - health_), 6 * px, hh * health_, c);
+    roundRect(text, hx, hy + hh * (1 - health_), 6 * px, hh * health_, 3 * px, c);
   }
   // Score, accuracy, progress, the pause button, the song's name.
   char line[64];
   engine::TextStyle right;
   right.align = 1;
-  right.outlineWidth = 0.7f;
+  right.outlineWidth = 0.75f;
   std::snprintf(line, sizeof(line), "%07d", score());
   text.addScreen(line, W - 10 * px, 12 * px, 15 * px, right);
   std::snprintf(line, sizeof(line), "%.2f%%", accuracy() * 100);
   text.addScreen(line, W - 10 * px, 32 * px, 9 * px, right);
   const float progress = duration_ > 0 ? std::clamp(static_cast<float>(songTime_ / duration_), 0.0f, 1.0f) : 0;
   text.addRect(0, 0, W, 3 * px, {1, 1, 1, 0.12f});
-  text.addRect(0, 0, W * progress, 3 * px, kPink);
+  text.addRect(0, 0, W * progress, 3 * px, sk.accent);
   engine::TextStyle left;
   left.outlineWidth = 0.7f;
-  text.addRect(10 * px, 10 * px, 30 * px, 30 * px, {0.15f, 0.12f, 0.2f, 0.85f});
-  text.addRect(19 * px, 18 * px, 4 * px, 14 * px, {1, 1, 1, 0.9f});
-  text.addRect(27 * px, 18 * px, 4 * px, 14 * px, {1, 1, 1, 0.9f});
+  text.addShape(engine::font::kShapeDisc, 25 * px, 25 * px, 15 * px, withAlpha(sk.card, 0.95f), sk.ink, 0.5f);
+  text.addRect(20 * px, 19 * px, 3.5f * px, 12 * px, {1, 1, 1, 0.9f});
+  text.addRect(27 * px, 19 * px, 3.5f * px, 12 * px, {1, 1, 1, 0.9f});
   left.color = {1, 1, 1, 0.75f};
   text.addScreen(clip(songs_[static_cast<size_t>(song_)].title, 20), 48 * px, 14 * px, 7 * px, left);
   left.color = kDifficultyColor[static_cast<int>(difficulty_)];
@@ -810,48 +1215,57 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
   if (songTime_ < 0) {
     std::snprintf(line, sizeof(line), "%d", static_cast<int>(std::ceil(-songTime_)));
     center.color = {1, 1, 1, 1};
-    text.addScreen(songTime_ < -kLeadIn + 0.5 ? "READY" : line, W / 2, H * 0.3f, std::min(cw * 0.4f, 28 * px), center);
+    text.addScreen(songTime_ < -kLeadIn + 0.5 ? "READY" : line, W / 2, H * 0.22f, std::min(cw * 0.4f, 28 * px), center);
   }
 }
 
 void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float px) const {
+  const Skin& sk = kSkins[skin_];
   const double acc = accuracy();
   const std::string grade = gradeOf(acc, counts_[kMiss] > 0);
   engine::TextStyle st;
   st.align = 0.5f;
-  st.outlineWidth = 0.7f;
-  // Header: the song and difficulty.
-  text.addRect(0, 0, W, H * 0.12f, {0.06f, 0.05f, 0.1f, 0.95f});
-  text.addRect(0, H * 0.12f, W, 3 * px, kPink);
+  st.outline = sk.ink;
+  st.outlineWidth = 0.8f;
+  // Header: the song and difficulty, on a rounded banner.
+  roundRect(text, W * 0.04f, H * 0.015f, W * 0.92f, H * 0.1f, 16 * px, sk.ink);
+  roundRect(text, W * 0.04f + 2 * px, H * 0.015f + 2 * px, W * 0.92f - 4 * px, H * 0.1f - 4 * px, 14 * px, mix(sk.card, sk.accent, 0.25f));
   st.color = {1, 1, 1, 1};
   text.addScreen(clip(songs_[static_cast<size_t>(song_)].title, 30), W / 2, H * 0.03f, 13 * px, st);
   st.color = kDifficultyColor[static_cast<int>(difficulty_)];
   text.addScreen(std::string(kDifficultyName[static_cast<int>(difficulty_)]) + (autoplay ? "  (AUTO)" : ""), W / 2,
                  H * 0.03f + 20 * px, 7 * px, st);
   const bool upright = H >= W;
-  // The grade, big.
+  // The grade, big, in a bubble.
+  const float gs = std::min(H * 0.2f, W * 0.3f);
   const float gx = upright ? W / 2 : W * 0.27f, gy = upright ? H * 0.16f : H * 0.2f;
+  const float gr = gs * 0.85f, gcy = gy + gs / 2;
+  text.addShape(engine::font::kShapeDisc, gx, gcy + 4 * px, gr, withAlpha(sk.ink, 0.6f));
+  text.addShape(engine::font::kShapeDisc, gx, gcy, gr, withAlpha(darker(gradeColor(grade), 0.4f), 1), sk.ink, 0.4f);
+  text.addShape(engine::font::kShapeDisc, gx - gr * 0.35f, gcy - gr * 0.4f, gr * 0.22f, {1, 1, 1, 0.3f});
   st.color = gradeColor(grade);
-  text.addScreen(grade, gx, gy, std::min(H * 0.2f, W * 0.3f), st);
+  text.addScreen(grade, gx, gy + gs * 0.1f, gs * 0.8f, st);
   if (newBest_) {
-    st.color = kPink;
-    text.addScreen("NEW BEST!", gx, gy + std::min(H * 0.2f, W * 0.3f) + 10 * px, 10 * px, st);
+    st.color = sk.accent;
+    text.addScreen("NEW BEST!", gx, gy + gs + gr * 0.2f + 6 * px, 10 * px, st);
   }
   // Score, accuracy, combo, the count of each judgement.
   const float cx = upright ? W / 2 : W * 0.68f;
-  float y = upright ? H * 0.42f : H * 0.18f;
+  float y = upright ? H * 0.44f : H * 0.18f;
   char line[64];
   st.color = {1, 1, 1, 1};
   std::snprintf(line, sizeof(line), "%07d", score());
   text.addScreen(line, cx, y, 20 * px, st);
   y += 30 * px;
   std::snprintf(line, sizeof(line), "ACCURACY %.2f%%   MAX COMBO %d", acc * 100, maxCombo_);
-  st.color = {0.85f, 0.85f, 0.95f, 1};
+  st.color = {0.9f, 0.9f, 1.0f, 1};
   text.addScreen(line, cx, y, 8 * px, st);
+  st.color = comboColor(maxCombo_);
   y += 20 * px;
   const float colW = std::min(W * 0.4f, 150 * px);
   for (int j = 0; j < kJudgeCount; ++j) {
-    const float rx = cx + (j % 2 == 0 ? -colW / 2 : colW / 2), ry = y + static_cast<float>(j / 2) * 22 * px;
+    const float rx = cx + (j % 2 == 0 ? -colW / 2 : colW / 2), ry = y + static_cast<float>(j / 2) * 24 * px;
+    roundRect(text, rx - colW * 0.45f, ry - 5 * px, colW * 0.9f, 20 * px, 10 * px, withAlpha(sk.card, 0.85f));
     st.color = j == kMax ? Vec4{1, 1, 0.9f, 1} : kJudgeColor[j];
     std::snprintf(line, sizeof(line), "%-4s %d", kJudgeName[j], counts_[j]);
     text.addScreen(line, rx, ry, 10 * px, st);
@@ -859,9 +1273,10 @@ void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float
   // Buttons.
   const float bw = std::min(W * 0.28f, H * 0.4f), bh = std::min(H * 0.07f, 60.0f * 3), by = H * 0.88f;
   const char* labels[3] = {"RETRY", "SONGS", "LEAVE"};
+  const Vec4 colors[3] = {sk.accent, sk.accent2, {1.0f, 0.4f, 0.4f, 1}};
   for (int i = 0; i < 3; ++i) {
     const float x = W / 2 + (static_cast<float>(i) - 1.5f) * (bw + W * 0.02f) + W * 0.01f;
-    button(text, x, by, bw, bh, labels[i], px, i == 0);
+    bubble(text, x, by, bw, bh, labels[i], px, colors[i], true, sk.ink);
   }
 }
 

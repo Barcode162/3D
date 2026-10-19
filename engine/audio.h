@@ -25,6 +25,10 @@ std::string userSongUrl(int index);
 
 // Turns all music sources (the jukebox) up or down, 0..1.
 void setMusicGain(float gain);
+// A song's preview (the rhythm game's song select): streamed, looping,
+// faded in from `offsetSeconds`; another call cross-fades to the new one.
+void previewPlay(const std::string& url, double offsetSeconds);
+void previewStop();
 
 // The sound clock (seconds), for scheduling notes ahead of time.
 double now();
