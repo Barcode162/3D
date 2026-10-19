@@ -1,0 +1,93 @@
+# Project: 3D First-Person Room Scene (dHP)
+
+Main project doc. Save as Doc.txt.
+
+Type: iPhone 15 Pro Max, dHP app, copy-paste only, no terminal/npm/build.
+
+Files:
+index.html: shell + UI DOM (hud hp/mp/sp fills, stick, knob, look, jump, sprint, interact, flash)
+style.css: touch UI overlay (bars, joystick radial fade, buttons, damage vignette)
+game.js: three.js scene + player + input + loop, inline TUNE, BLOCK-marked 01-35
+
+State: COMPLETE. All 15 steps built + tested on iPhone. Zero known issues.
+
+To-do:
+none (project done)
+future ideas only if requested
+
+Rules:
+edits = BLOCK # format (file, section, find-anchor, replace scope)
+full file only when required
+dHP fallback: paste full file content, replace all, same folder
+iOS autocorrect OFF before pasting JS
+one import only at top — never paste file over itself
+cactus at (8,0,8), range 0.9m, tick 0.5s, -2 hp floor-level (y<0.5)
+cactus run-into (hSpeed>4 first contact) -5 hp + big flash, resets tick
+cactus interact tap -2 hp, resets tick
+USE button block-only when in cactus range
+particles: 40 points, y 0.15-1.4, size 0.05, opacity 0.55, calm drift + sway
+bars: width transition 0.25s; hp pulses brightness 2.4x on damage, exp(-8t)
+flash: JS opacity 1, radial vignette, flashColor+flashAmp, decay exp(-2.5t)
+floor 20x20m, walls 4m, no ceiling
+light grey floor/walls #d9d9d9, black 1m grid ~0.05m
+pillar 3x3x1.4m center, ramp 1.5 wide 2m run atan(1.4/2.0)
+health pack 0.45 box + cross, spins+bobs, +30 HP, respawn 20s
+swipe-jump: RUN hold + drag into JUMP rect → jump, re-enter = new jump
+120fps: Add to Home Screen → standalone → rAF 120Hz
+lighting natural, ACES, exposure 0.85, sun (60,90,40) 0.85
+touch: left stick move, right drag look, jump + sprint + interact
+HUD top-left, HP starts 50
+interact yellow, hidden until in range
+player eye 1.6m, radius 0.3m, walk 3 / run 6 m/s, grav -18, jump 7.4
+accel pow(mag,1.5)
+FOV stick 90->110 from 10%, sprint bump +7.5%
+tilt snappy in slow out
+running shake >55% speed
+landing shake on impact, decays
+bob amplitude scales speedNorm^2, BOB_RATE 1.4
+joystick 176px pad, 64px knob, soft radial fade
+all tunables inline TUNE block in game.js
+BLOCK markers 01-35
+
+Changelog:
+new project, plan locked, dHP workflow confirmed
+step 1: index.html + style.css + game.js shell
+step 2: full UI overlay css
+step 2 fix: UI DOM added
+step 3: renderer + scene + camera + resize + temp box
+step 4: floor 20x20, walls 4m, 1m grid
+step 5: sun + ambient + hemisphere, shadows
+step 6: player + gravity + wall clamp + joystick + drag look
+step 6b: accel curve + velocity smoothing + FOV 90->103 past stick 0.5
+step 6c: natural lighting, ACES, exposure 0.85
+step 6d: asymmetric FOV K_OUT 8 / K_IN 2.2
+step 6e: FOV_RUN 110, FOV_K_IN 3.0
+step 6f: FOV in-rate 3 held / 2.2 released
+step 6g: DEAD->ZONE (iOS autocorrect fix)
+step 7: camera smoothing CAM_K 16 + walk bob
+step 7b: joystick 176/64 soft radial fade no backdrop-filter
+step 7c: STICK_K_DOWN 26->12, STICK_K_UP 12->9
+step 7d: FOV_RUN_MAG 0.5->0.1
+step 7e: sprint button + running shake
+step 7f: FOV 90->110 stick-driven + camera tilt
+step 7g: BOB_RATE 2.6->1.4
+step 7h: ACCEL_K 6->16, STICK_K 12/9 -> 22/18
+step 7i: FOV_SPRINT_BUMP 0.075
+step 7j: reverted tuning.js, TUNE inline
+step 8: jump JUMP_VEL 7.4 (~1.5m arc) + landing dip LAND_DIP 0.14
+step 8b: landing shake AMP 0.025 / FREQ 22 / DECAY 9
+step 8c: BLOCK 01-25 markers added
+step 9: pillar 3x3x1.4m + ramp 1.5x2.0 + groundHeightAt + pillar side push-out
+step 10: HUD state+refs, health pack mesh, pickup + flash
+step 10b: sprint BLOCK 11 replaced — RUN hold + drag into JUMP = jump
+step 11: cactus at (8,0,8) + proximity tick -2 hp / 0.5s
+step 12: BLOCK 12 interact-queued + BLOCK 32 replaced — USE toggle, tap -2, run-into -5
+step 12 err: duplicate import + doubled file (paste-on-self)
+step 12 fix: full clean rewrite, single import, BLOCK 01-32, one frame()
+step 13: floating particles 40 pts (BLOCK 33 setup, BLOCK 34 frame)
+step 14: bars animate + hp pulse (BLOCK 28 replaced, BLOCK 35 added)
+step 14b: flash boost (BLOCK 30 decay exp(-3), BLOCK 32 amps up)
+step 14c: flash root-cause fix — CSS opacity:0 never overridden. BLOCK 28 forces opacity 1. BLOCK 30 drives radial gradient. Heal green.
+step 15: full iPhone test pass — all features pass, zero issues
+
+Next: project complete. New project = tell me what we're making, I build new DOC.

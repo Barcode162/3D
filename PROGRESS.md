@@ -4,6 +4,13 @@
 **Current focus:** The **racing sim** (`docs/RACING.md`): a real driving sim on the two rigs (1-2 players + bots, real physics, full-screen game, race on the rigs' monitors for everyone), then a realtime sync server
 
 ## Next up (start here in a new session)
+**2026-10-19, NEW TOP PRIORITY (user): `docs/UPGRADE_PLAN.md`**, 15 items
+(two-player racing with car choice + real steering feel, an arcade room with
+the user's platformer "Test 2", signs/ladders, 4K Mania like osu!mania, mirror
+quality, badge slots, clipping props, walk-through fixes, stuck seats, chess,
+avatar customization, animations). Work through it top to bottom; tick boxes
+there. The server-run bot race (below) is replaced by its items 1-2.
+
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now
 goes through the Cloudflare room (build after `173f06d`; `docs/DECISIONS.md` →
 "Cloudflare room is the multiplayer server"). The user's order: (1) the connection

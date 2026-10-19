@@ -157,3 +157,15 @@ Next: a frank review of what exists, then a business + tech roadmap
   as a goal. The user sees the current bar as a small sandbox, is fine with
   restarting or changing the tech stack, and now wants a serious, clear
   direction: something that makes money and that they're proud of.
+
+## The upgrade list (user, 2026-10-19)
+Full checklist: `docs/UPGRADE_PLAN.md`. The big ideas in it: the two racing
+rigs are for racing each other like Mario Kart (pick and customize your car);
+steering must feel like a real car's wheel (self-centering, a real turning
+circle, not slippery) and will be reused by later games; the second room
+becomes an arcade (carpets, lights, arcade music that grows as you walk in)
+with a platformer machine running the user's game "Test 2"; 4K Mania should
+feel like osu!mania with more songs; real avatar customization (gender,
+clothes, hairstyles, hair highlights and gradients) and more realistic
+animations; a working chessboard; and a pass over the whole bar so nothing
+clips, floats or traps you.
