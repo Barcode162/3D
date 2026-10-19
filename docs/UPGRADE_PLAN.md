@@ -64,7 +64,10 @@ user asked: "the race game should actually be fixed".)
       card; on your own card tap a slot to put one of your badges there; saved
       by `account.php` (`slots`, only badges you hold). Earnable badges for
       games (180 in darts, SS in 4K Mania, a race win...) would fill them next.)
-- [ ] **10. Pots and plants** have things inside them (clipping); a **lamp
+- [x] **10. Pots and plants** (done 2026-10-19: the plant by the street door
+      shared its spot with the umbrella stand (moved to x 5.35); the "floating
+      lamps" were the bay window's hanging plants: white pots on 3 mm cords,
+      now terracotta pots on visible rope hangers with ceiling hooks.) have things inside them (clipping); a **lamp
       floats** where a seat's indent is. Look around and fix such things.
 - [ ] **11. Walk-through check:** (started 2026-10-19: `walk_test` finds unreachable
       seats and things; the walkway behind the bar is open now) simulate walking through the whole bar, find

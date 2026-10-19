@@ -240,12 +240,21 @@ for x in (-0.25, 0.25):
 
 # ---- Plants ----
 P.plant(-1.85, 0.0, L.Z1 - 0.3, size=1.6, pot_r=0.22, pot_h=0.42, leaves=34, seed=21)     # fig by the bay
-P.plant(4.5, 0.0, L.Z1 - 0.35, size=1.3, pot_r=0.2, pot_h=0.38, leaves=26, seed=22)       # by the door
+P.plant(5.35, 0.0, L.Z1 - 0.35, size=1.3, pot_r=0.2, pot_h=0.38, leaves=26, seed=22)      # by the door (clear of the umbrella stand)
 P.plant(-5.15, L.STEP_H, L.Z1 - 0.35, size=1.1, pot_r=0.18, pot_h=0.34, leaves=22, seed=23)
 P.plant(8.55, 0.0, 6.6, size=1.2, pot_r=0.2, pot_h=0.4, leaves=24, seed=24)
 for (x, z) in ((-1.2, 7.55), (0.8, 7.55)):  # hanging in the bay window
-    common.tube("Plant hanger", [(x, L.BAY_H, z), (x, 2.35, z)], 0.003, cord, sides=4)
-    common.lathe("Hanging pot", [(0, 0), (0.1, 0.02), (0.13, 0.16), (0.0, 0.16)], P.mat("white"), 16).data.transform(
+    # A rope hanger you can see (three ropes from the rim to a ring on a
+    # ceiling hook), so the pot clearly hangs and doesn't look like a lamp.
+    rope = common.plain_material("Hanger rope", (0.62, 0.5, 0.34), 0.0, 0.9)
+    top = (x, L.BAY_H - 0.12, z)
+    common.torus("Hanger ring", top, 0.025, 0.006, P.mat("brass"), axis="z", segments=14, sides=6)
+    common.tube("Ceiling hook", [(x, L.BAY_H, z), (x, top[1] + 0.025, z)], 0.008, P.mat("brass"), sides=6)
+    for k in range(3):
+        a = k * 2 * math.pi / 3
+        rim = (x + 0.125 * math.cos(a), 2.35, z + 0.125 * math.sin(a))
+        common.tube("Hanger rope", [rim, (x, top[1] - 0.02, z)], 0.007, rope, sides=5)
+    common.lathe("Hanging pot", [(0, 0), (0.1, 0.02), (0.13, 0.16), (0.0, 0.16)], P.mat("terracotta"), 16).data.transform(
         Matrix.Translation((x, 2.2, z)))
     P.plant(x, 2.36, z, size=0.8, leaves=14, seed=int(x * 10) + 40, hanging=True)
 

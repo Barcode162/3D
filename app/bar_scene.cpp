@@ -320,7 +320,7 @@ void buildHall(Builder& b) {
   b.model("decor_walls.glb", {0, 0, 0}, kDarkWood);
   b.blockRect(4.7f, kZ0, 5.95f, kZ0 + 1.0f);  // crates and the keg
   b.block({1.95f, 0, kZ1 - 1.25f}, 0.3f, 0.3f);  // chalkboard A-frame
-  for (Vec3 p : {Vec3{-1.85f, 0, kZ1 - 0.3f}, Vec3{4.5f, 0, kZ1 - 0.35f}, Vec3{8.55f, 0, 6.6f}}) b.block(p, 0.3f, 0.3f);
+  for (Vec3 p : {Vec3{-1.85f, 0, kZ1 - 0.3f}, Vec3{5.35f, 0, kZ1 - 0.35f}, Vec3{4.6f, 0, kZ1 - 0.3f}, Vec3{8.55f, 0, 6.6f}}) b.block(p, 0.3f, 0.3f);
   // The string lights' warm glow over the middle of the hall.
   for (int k = 0; k < 3; ++k) b.scene.roomLights.push_back(static_cast<int>(b.scene.lights.size()) + k);
   b.light({-1.8f, 3.2f, 0.4f}, kWarmBulb, 1.7f, 6.5f, 0.8f);
