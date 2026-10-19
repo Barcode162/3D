@@ -8,7 +8,8 @@
 (two-player racing with car choice + real steering feel, an arcade room with
 the user's platformer "Test 2", signs/ladders, 4K Mania like osu!mania, mirror
 quality, badge slots, clipping props, walk-through fixes, stuck seats, chess,
-avatar customization, animations). Work through it top to bottom; tick boxes
+there. The server-run bot race (below) is replaced by its items 1-2.
+Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`). Next: 1.
 there. The server-run bot race (below) is replaced by its items 1-2.
 
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now

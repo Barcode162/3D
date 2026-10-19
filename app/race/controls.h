@@ -18,6 +18,7 @@
 
 #include "engine/gamepad.h"
 #include "engine/input.h"
+#include "engine/steering.h"
 #include "engine/vehicle.h"
 
 namespace app::race {
@@ -32,9 +33,11 @@ class Controls {
   enum Button { kLeave, kCamera, kReset, kLookBack, kHandbrake, kGearDown, kGearUp, kButtonCount };
 
   void reset();
-  // speed in m/s; `aspect` = width / height of the screen.
-  void update(float dt, const engine::InputFrame& input, float speed, const engine::CarSpec& spec, bool manualGears,
-              float aspect);
+  // `car` = the car you drive (steering feel needs its speed and slide);
+  // `aspect` = width / height of the screen.
+  void update(float dt, const engine::InputFrame& input, const engine::Vehicle& car, bool manualGears, float aspect);
+  // The steering wheel in your hands, -1..1 (engine/steering: self-centring).
+  float wheel() const { return steering_.wheel(); }
 
   engine::CarInput car;          // what goes to the car this frame
   bool pressed[kButtonCount] = {};  // buttons pressed this frame
@@ -65,6 +68,7 @@ class Controls {
 
  private:
   float steer_ = 0, targetSteer_ = 0, gas_ = 0, brake_ = 0;
+  engine::Steering steering_;
   int steerFinger_ = -1, gasFinger_ = -1, brakeFinger_ = -1;
   float anchorX_ = 0;
   float safeL_ = 0, safeR_ = 0, safeB_ = 0;

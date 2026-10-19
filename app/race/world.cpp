@@ -21,12 +21,12 @@ const char* kBotNames[] = {"Rossi", "Kimi", "Nina", "Ayrton", "Mika", "Lena", "J
 
 engine::CarSpec sportsCar() {
   engine::CarSpec s;
-  s.front = {.z = 1.25f, .halfTrack = 0.79f, .spring = 62000, .bump = 3600, .rebound = 5600, .antiRoll = 26000,
+  s.front = {.z = 1.25f, .halfTrack = 0.79f, .spring = 62000, .bump = 3600, .rebound = 5600, .antiRoll = 34000,
              .travel = 0.12f, .restLength = 0.3f, .driven = false, .steered = true, .brakeShare = 0.64f,
              .downforce = 0.18f, .rollCenter = 0.08f};
-  s.rear = {.z = -1.3f, .halfTrack = 0.78f, .spring = 58000, .bump = 3400, .rebound = 5200, .antiRoll = 16000,
+  s.rear = {.z = -1.3f, .halfTrack = 0.78f, .spring = 58000, .bump = 3400, .rebound = 5200, .antiRoll = 10000,
             .travel = 0.12f, .restLength = 0.3f, .driven = true, .steered = false, .brakeShare = 0.36f,
-            .downforce = 0.24f, .rollCenter = 0.12f, .grip = 1.06f};
+            .downforce = 0.24f, .rollCenter = 0.12f, .grip = 1.2f};
   return s;
 }
 

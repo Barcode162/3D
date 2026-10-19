@@ -9,6 +9,7 @@ RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp engine/vehicle.cpp
 declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
   [race_test]="tools/native/race_test.cpp $RACE"
+  [steering_test]="tools/native/steering_test.cpp engine/steering.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"

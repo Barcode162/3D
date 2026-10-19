@@ -15,13 +15,13 @@ float curve(float x, float power) { return std::copysign(std::pow(std::fabs(x), 
 float deadzone(float x, float dz) { return std::fabs(x) < dz ? 0 : std::copysign((std::fabs(x) - dz) / (1 - dz), x); }
 
 constexpr float kSteerSpan = 0.2f;  // screen widths of slide for full lock
-constexpr float kSteerSmoothing = 0.025f;  // seconds (touch and gamepad)
 
 }  // namespace
 
 void Controls::reset() {
   car = {};
   steer_ = targetSteer_ = gas_ = brake_ = 0;
+  steering_.reset();
   steerFinger_ = gasFinger_ = brakeFinger_ = -1;
   for (bool& h : held_) h = false;
   for (bool& p : pressed) p = false;
@@ -58,7 +58,7 @@ Controls::Rect Controls::buttonRect(Button b, float aspect, bool manual) const {
   }
 }
 
-void Controls::update(float dt, const engine::InputFrame& input, float speed, const engine::CarSpec& spec, bool manual,
+void Controls::update(float dt, const engine::InputFrame& input, const engine::Vehicle& vehicle, bool manual,
                       float aspect) {
   for (bool& p : pressed) p = false;
   bool wasHeld[kButtonCount];
@@ -181,25 +181,29 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
     source = Source::kMouse;
   }
 
-  // --- Mix: whatever was used last drives.
-  float steerTarget = 0, steerRateUp = 30, steerRateDown = 30;
+  // --- Mix: whatever was used last drives. The wheel itself (holding,
+  // turning with keys, or let go and coming back to the middle) and how it
+  // turns the road wheels are engine/steering's job, the same for every input
+  // except a real steering wheel (your own hands).
+  using Hands = engine::Steering::Hands;
+  float steerTarget = 0;
+  Hands hands = Hands::kFree;
   switch (source) {
     case Source::kTouch:
-      steerTarget = steerAlive ? targetSteer_ : 0;
+      steerTarget = targetSteer_;
+      hands = steerAlive ? Hands::kHolding : Hands::kFree;
       gasTarget = touchGas ? gasTarget : 0;
       brakeTarget = touchBrake ? brakeTarget : 0;
       break;
-    case Source::kKeyboard: {
-      // Keys ramp the wheel in (slower at speed) and let it return faster.
+    case Source::kKeyboard:
       steerTarget = (kRight ? 1.0f : 0.0f) - (kLeft ? 1.0f : 0.0f);
-      steerRateUp = 3.2f / (1 + std::max(speed, 0.0f) / 40);
-      steerRateDown = 6;
+      hands = (kLeft || kRight) ? Hands::kKeys : Hands::kFree;
       gasTarget = kGas ? 1.0f : 0.0f;
       brakeTarget = kBrake ? 1.0f : 0.0f;
       break;
-    }
     case Source::kMouse:
       steerTarget = curve(engine::clampf((input.mousePos.x - 0.5f) / 0.32f, -1, 1), 1.2f);
+      hands = Hands::kHolding;
       gasTarget = (input.mouseButtons & 1) ? 1.0f : 0.0f;
       brakeTarget = (input.mouseButtons & 2) ? 1.0f : 0.0f;
       if (kGas) gasTarget = 1;
@@ -208,6 +212,7 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
     case Source::kGamepad:
     case Source::kWheel:
       steerTarget = padSteer;
+      hands = std::fabs(padSteer) > 0.02f ? Hands::kHolding : Hands::kFree;
       gasTarget = padGas;
       brakeTarget = padBrake;
       break;
@@ -221,26 +226,14 @@ void Controls::update(float dt, const engine::InputFrame& input, float speed, co
     gas_ = gasTarget;
     brake_ = brakeTarget;
   }
+  float steerOut;
   if (source == Source::kWheel) {
-    steer_ = steerTarget;
-  } else if (source == Source::kTouch || source == Source::kGamepad) {
-    // A light filter (25 ms): removes thumb jitter without feeling laggy,
-    // the same at any frame rate.
-    steer_ += (steerTarget - steer_) * (1.0f - std::exp(-dt / kSteerSmoothing));
+    steer_ = steerTarget;  // a real wheel: your hands, its own centring spring
+    steerOut = steer_;
+    steering_.reset();
   } else {
-    steer_ = std::fabs(steerTarget) > std::fabs(steer_) && steerTarget * steer_ >= 0
-                 ? approach(steer_, steerTarget, steerRateUp, steerRateUp, dt)
-                 : approach(steer_, steerTarget, steerRateDown, steerRateDown, dt);
-  }
-
-  // Steering assist: at speed, full input = the steering angle that gives
-  // the most grip (about the tires' peak slip plus the turn itself).
-  float steerOut = steer_;
-  if (source != Source::kWheel) {
-    const float v = std::max(std::fabs(speed), 1.0f);
-    const float wheelbase = spec.front.z - spec.rear.z;
-    const float best = wheelbase * 1.15f * 9.81f / (v * v) + spec.tire.peakSlipAngle * 0.95f;
-    steerOut *= engine::clampf(best / (spec.maxSteer * 0.85f), 0.22f, 1.0f);
+    steerOut = steering_.update(dt, steerTarget, hands, vehicle);
+    steer_ = steering_.wheel();
   }
 
   // Button presses (touch: on release-to-press edge).

@@ -10,7 +10,9 @@ user asked: "the race game should actually be fixed".)
       player chooses a car and customizes it (paint, maybe parts), then
       races the other rig's player (bots optional). Synced through the
       Cloudflare room.
-- [ ] **2. Steering that feels like a real car:** today it's "so slippery" with
+- [x] **2. Steering that feels like a real car:** (done 2026-10-19:
+      `engine/steering.*`, measured by `tools/native/steering_test.cpp`;
+      see DECISIONS → Steering feel.) today it's "so slippery" with
       "no turn radius". Map the steering like a real steering wheel: you turn
       left, it comes back to the middle by itself, but feels like a real car
       would (self-aligning, speed-sensitive, a real turning circle, grip).

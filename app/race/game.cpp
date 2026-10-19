@@ -110,7 +110,7 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
     controls_.setSafeArea(page.safe[0] / static_cast<float>(page.cssW), page.safe[2] / static_cast<float>(page.cssW),
                           page.safe[3] / static_cast<float>(page.cssH));
   }
-  controls_.update(dt, input, me.car.speed(), me.car.spec(), manualGears_, W / std::max(H, 1.0f));
+  controls_.update(dt, input, me.car, manualGears_, W / std::max(H, 1.0f));
   const bool* pressed = controls_.pressed;
   if (pressed[Controls::kLeave]) return true;
   if (pressed[Controls::kCamera]) cameraMode_ = (cameraMode_ + 1) % 4;

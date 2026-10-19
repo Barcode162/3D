@@ -654,6 +654,24 @@ was answered by the user on 2026-10-17.
 - **Gotcha:** test probes must send the `ping` keepalive, or the room (correctly)
   closes them as ghosts after 15 s while a slow headless page loads.
 
+## Steering feel (2026-10-19, upgrade item 2)
+The user: "so slippery", "no turn radius", wants a real wheel that comes
+back to the middle, "really smooth but race like", reused later. Built as
+`engine/steering.*` (any game can use it), measured by
+`tools/native/steering_test.cpp` (in run.sh; `FEEL=old` compares the old one).
+- Two layers: the wheel in your hands (holding = light 35 ms follow; keys =
+  rate-limited, back to centre 2x faster; let go = self-centres, 0.30 s
+  standing → 0.14 s at speed, no overshoot), then wheel → road wheels: full
+  lock at walking pace (10.4 m turning circle), at speed full wheel asks for
+  about 1 g of curve (+75% of the tires' peak slip) instead of an angle that
+  slides. Plus one-sided yaw damping and a small countersteer catch past 2°
+  body slip (sign matters: `angle -= ...`; the wrong sign spun the car 64°).
+- Car tune changed with it (sportsCar): rear grip 1.06 → 1.2, rear anti-roll
+  16000 → 10000, front 26000 → 34000 (a planted rear; slides only when pushed).
+- Measured: 1.14 g at 80 km/h, 1.18 g at 120, body slip ≤ 3°, answer 0.09 s,
+  11% overshoot, straight again 0.64 s after letting go with no wobble.
+- A real steering wheel (gamepad API "wheel") is passed straight through.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float
