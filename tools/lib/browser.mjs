@@ -26,11 +26,18 @@ export function logErrors(page) {
 }
 
 // Opens the bar with page options (query without "?") and waits until every
-// model is in (or startup failed). Returns true if everything loaded.
+// model is in (or startup failed). Returns true if everything loaded. With
+// `skipintro` it also waits until you're in the bar (past the warm-up, which
+// is slow here: the software GPU unpacks compressed textures itself).
 export async function openBar(page, url, query, timeoutMs = 120000) {
   await page.goto(`${url}?${query}`);
-  return page.waitForFunction(() => /Everything loaded|Startup failed/.test(document.getElementById('log').textContent),
-                              null, { timeout: timeoutMs })
+  const loaded = await page.waitForFunction(() => /Everything loaded|Startup failed/.test(document.getElementById('log').textContent),
+                                            null, { timeout: timeoutMs })
     .then(() => page.evaluate(() => /Everything loaded/.test(document.getElementById('log').textContent)))
     .catch(() => false);
+  if (loaded && /(^|&)skipintro(&|$)/.test(query)) {
+    await page.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null,
+                               { timeout: timeoutMs }).catch(() => {});
+  }
+  return loaded;
 }

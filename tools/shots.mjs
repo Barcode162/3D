@@ -38,9 +38,6 @@ for (let i = 0; i < args.length; ++i) {
   page.on('websocket', (w) => outside.push(w.url()));
   const serverOpt = /(^|&)server=/.test(args[i]) ? '' : 'server=off&';
   await openBar(page, site.url, `skipintro&${serverOpt}${args[i]}`);
-  // Past the warm-up (slow here: the software GPU unpacks compressed textures).
-  await page.waitForFunction(() => /Stage entered|Startup failed/.test(document.getElementById('log').textContent),
-                             null, { timeout: 120000 }).catch(() => {});
   // A click unlocks sound (piano notes need it). Not for still shots: the
   // tap would count as input.
   if (!/(^|&)still/.test(args[i])) await page.mouse.click(5, vh - 32);
