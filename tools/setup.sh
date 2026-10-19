@@ -17,6 +17,20 @@ if [ ! -f "$EMSDK_DIR/.installed-$EMSDK_VERSION" ]; then
 fi
 echo "Emscripten $EMSDK_VERSION ready. Run: source $EMSDK_DIR/emsdk_env.sh"
 
+# astcenc (ARM, Apache 2.0): compresses model textures at build time
+# (tools/assets/astc_pack.py, run by CMake). A build tool only.
+ASTCENC_VERSION=5.2.0
+if [ ! -x /opt/astcenc/bin/astcenc-avx2 ]; then
+  tmp=$(mktemp -d)
+  if curl -sSL -o "$tmp/astcenc.zip" "https://github.com/ARM-software/astc-encoder/releases/download/$ASTCENC_VERSION/astcenc-$ASTCENC_VERSION-linux-x64.zip" &&
+     mkdir -p /opt/astcenc && unzip -o -q "$tmp/astcenc.zip" -d /opt/astcenc; then
+    echo "astcenc $ASTCENC_VERSION installed."
+  else
+    echo "Note: astcenc download failed (builds will skip compressed textures)."
+  fi
+  rm -rf "$tmp"
+fi
+
 # The Cloudflare room's local dev server (wrangler dev, used by
 # tools/room_test.mjs). Skipped if already installed; never fails the setup.
 cd "$(dirname "$0")/.."

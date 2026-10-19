@@ -50,6 +50,21 @@ jobs:
           ./emsdk/emsdk install $EMSDK_VERSION
           ./emsdk/emsdk activate $EMSDK_VERSION
 
+      # Compressed textures (tools/assets/astc_pack.py, run by the build):
+      # ARM's astcenc, and the textures already encoded (only new or changed
+      # images are encoded again).
+      - name: Cache compressed textures
+        uses: actions/cache@v4
+        with:
+          path: build/astc_cache
+          key: astc-${{ hashFiles('tools/assets/astc_pack.py') }}-${{ hashFiles('assets/models/*.glb') }}
+          restore-keys: astc-${{ hashFiles('tools/assets/astc_pack.py') }}-
+
+      - name: Install astcenc
+        run: |
+          curl -sSL -o /tmp/astcenc.zip https://github.com/ARM-software/astc-encoder/releases/download/5.2.0/astcenc-5.2.0-linux-x64.zip
+          mkdir -p .astcenc && unzip -o -q /tmp/astcenc.zip -d .astcenc
+
       - name: Build
         run: |
           source ./emsdk/emsdk_env.sh

@@ -35,6 +35,13 @@ void loadImageTexture(const wgpu::Device& device, std::vector<uint8_t> bytes, co
                       std::vector<wgpu::TextureFormat> formats, const char* label,
                       std::function<void(std::vector<wgpu::Texture> textures)> done, int maxSize = 1024);
 
+// Downloads a compressed texture made by tools/assets/astc_pack.py (a
+// .ba3c(.gz) file: ASTC blocks with all mipmaps) and creates it as a color
+// (sRGB) texture, a data (linear) one, or both: `done` gets them in that
+// order (empty on failure). Needs a GPU with ASTC (Gpu::astc).
+void loadAstcTexture(const wgpu::Device& device, const std::string& url, bool asSrgb, bool asLinear,
+                     std::function<void(std::vector<wgpu::Texture> textures)> done);
+
 // Fills mip levels 1.. of `texture` from level 0 (each level averages the
 // one above, in linear light for sRGB formats). The texture needs
 // TextureBinding and RenderAttachment usage.

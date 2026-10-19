@@ -135,8 +135,8 @@ judged on the user's phone.
   connection and stops drawing. Test: `tools/meridian_test.mjs`.
 - `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
 - `docs/REMASTER.md` lists every crude first version to redo properly.
-- `server/report.php` stores phone reports (Menu → Settings → Send report gives
-  a code; read it with `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`).
+- `server/report.php` stores phone reports (Menu → Settings → Send report, or
+  tap the build code 3 times, gives a code; read it with `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`).
 - `docs/PROTOCOL.md` is the room protocol (Cloudflare room ↔ game); its two
   codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
   `proto/vectors.json`. `cloud/` is the Cloudflare Worker (`worker.js`:
@@ -159,6 +159,8 @@ judged on the user's phone.
   (menus ↔ game through the mailbox), `mp_test.mjs`
   (two players through the room on local wrangler dev), `voice_test.mjs` (WebRTC voice
   between two players, handshake through the room), `shots.mjs` (screenshots with page options).
+  `tools/assets/astc_pack.py` makes the phone's compressed textures at build time
+  (`assets/tex/`, see DECISIONS → Compressed textures).
   `tools/assets/` builds the 3D models in headless Blender (see
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes

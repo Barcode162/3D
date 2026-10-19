@@ -1,5 +1,6 @@
 #include "engine/gpu.h"
 
+#include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 
 #include <algorithm>
@@ -10,6 +11,9 @@
 
 #include "engine/bridge.h"
 #include "engine/log.h"
+
+// ?astc=0 turns compressed textures off (to test the PNG/JPEG path).
+EM_JS(int, js_astcDisabled, (), { return /[?&]astc=0(&|$)/.test(window['location']['search']) ? 1 : 0; });
 
 namespace engine {
 namespace {
@@ -65,6 +69,14 @@ void Gpu::onAdapter(wgpu::Adapter adapter) {
 
   wgpu::DeviceDescriptor desc;
   desc.label = "main device";
+  // Compressed textures: 4-16x less GPU memory than plain RGBA.
+  static const wgpu::FeatureName kAstc = wgpu::FeatureName::TextureCompressionASTC;
+  astc = adapter_.HasFeature(kAstc) && !js_astcDisabled();
+  if (astc) {
+    desc.requiredFeatureCount = 1;
+    desc.requiredFeatures = &kAstc;
+  }
+  LOG_INFO("GPU: compressed textures (ASTC) %s.", astc ? "on" : "off");
   desc.SetUncapturedErrorCallback(
       [](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) {
         // The same error often repeats every frame: log each one 3 times,

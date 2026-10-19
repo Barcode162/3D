@@ -596,6 +596,16 @@ void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::ve
   }
 }
 
+// A model's file on the site: "x.glb" → its compressed-texture twin
+// "x.astc.glb" (made by the build, tools/assets/astc_pack.py) on GPUs that
+// read ASTC, else the original. Both gzipped.
+static std::string modelUrl(const std::string& file, bool astc) {
+  if (astc && file.size() > 4 && file.compare(file.size() - 4, 4, ".glb") == 0) {
+    return "assets/models/" + file.substr(0, file.size() - 4) + ".astc.glb.gz";
+  }
+  return "assets/models/" + file + ".gz";
+}
+
 // Each placement gets an object slot (its position/rotation/scale) right
 // away; the model itself streams in and is drawn once it's ready. Each file
 // is downloaded once, however many times it's placed.
@@ -628,7 +638,7 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
   fileNames_ = files;
   for (size_t f = 0; f < files.size(); ++f) {
     engine::GpuModel::load(
-        gpu_->device, modelLayout_, modelSampler_, "assets/models/" + files[f] + ".gz",
+        gpu_->device, modelLayout_, modelSampler_, modelUrl(files[f], gpu_->astc),
         [this, f, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
           fileProgress_[f] = 1.0f;
           ++filesDone_;
@@ -642,7 +652,8 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
           modelsLoaded_ += placements.size();
         },
         // Downloading is most of the wait; decoding textures is the rest.
-        [this, f](float fraction) { fileProgress_[f] = std::max(fileProgress_[f], 0.85f * fraction); });
+        [this, f](float fraction) { fileProgress_[f] = std::max(fileProgress_[f], 0.85f * fraction); },
+        gpu_->astc ? modelUrl(files[f], false) : "");
   }
 }
 

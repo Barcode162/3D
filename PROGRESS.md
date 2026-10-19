@@ -15,7 +15,9 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
    ceiling before adding homes, mall and VIP. Today ≈ 35/100.
    - a. Baseline: 3 phone reports (after "Tap to enter", at the big mirror,
      after 2 min walking; Menu → Settings → Send report).
-   - b. Compressed textures (ASTC): ≈ 250 MB GPU textures → ≈ 50 MB.
+   - [x] b. Compressed textures (ASTC, 2026-10-19): GPU texture memory 145 MB →
+     16 MB, loading ≈ 2x faster (nothing to decode); first download 11 → 18 MB.
+     Made at build time (`tools/assets/astc_pack.py`); PNG/JPEG fallback.
    - [x] c. Frustum culling (2026-10-19): big models cut into 3 m chunks at load,
      only chunks on screen drawn. Triangles 690 k → 60-270 k per view; at the
      mirror 1.38 M → 357 k. Instancing not needed (CPU is ≈ 1 ms on the phone).
@@ -23,6 +25,10 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      left out (2026-10-19); [ ] nearest 3-4 lights per pixel; [ ] rooms you're
      not in (walls hide them; a room/portal check).
    - [x] Chess computer thinks a slice per frame (no more 16 ms freeze).
+   - [x] Quick report: tap the build code 3 times (works with a stuck menu;
+     copies the code; reports list the last taps and what they hit).
+   - [ ] Open bug: the menu stops answering after some games (wait for a
+     quick report from the phone, then fix).
    - e. Stream rooms as you approach them.
 2. [ ] **Clean core** (RESTRUCTURE Phase 4): `main.cpp` split into clear parts,
    stable entity ids, one activity/interaction system. Overlaps 1c.

@@ -65,6 +65,12 @@ void runJobs(double deadlineMs) {
         ++ran;
         const double took = emscripten_get_now() - now;
         maxJob = std::max(maxJob, took);
+        // Slow jobs show up in reports (the first few only).
+        static int slowLogged = 0;
+        if (took > 50 && slowLogged < 8) {
+          ++slowLogged;
+          LOG_INFO("Slow job: %s took %.0f ms.", job.kind ? job.kind : "?", took);
+        }
         double& e = g_estimate.try_emplace(job.kind, took).first->second;
         e = std::max(took, 0.8 * e + 0.2 * took);  // quick to rise, slow to fall
       }

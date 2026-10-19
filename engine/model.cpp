@@ -303,6 +303,8 @@ uint64_t imageKey(const std::vector<uint8_t>& bytes, bool srgb, bool linear, int
          (static_cast<uint64_t>(maxSize) << 3);
 }
 
+constexpr const char* kAstcMime = "image/x-bar3d-astc";
+
 static void afterParse(const std::shared_ptr<Loading>& l) {
   // Which images are colors and which are data (both is possible).
   const size_t count = l->data.images.size();
@@ -356,19 +358,33 @@ static void afterParse(const std::shared_ptr<Loading>& l) {
     }
     entry = std::make_shared<SharedImage>();
     entry->waiting.push_back(use);
-    loadImageTexture(l->device, std::move(img.bytes), img.mimeType, formats, l->url.c_str(),
-                     [entry](std::vector<wgpu::Texture> textures) {
+    const auto ready = [entry](std::vector<wgpu::Texture> textures) {
       entry->ready = true;
       entry->textures = textures;
       for (auto& w : entry->waiting) w(textures);
       entry->waiting.clear();
-    }, maxSize[i]);
+    };
+    if (img.mimeType == kAstcMime) {
+      // The phone version (tools/assets/astc_pack.py): the image is only a
+      // reference, "BA3R" + key; the texture is a shared file in tex/.
+      const std::string key = img.bytes.size() == 20 ? std::string(img.bytes.begin() + 4, img.bytes.end()) : "";
+      if (key.empty() || std::memcmp(img.bytes.data(), "BA3R", 4) != 0) {
+        ready({});
+        continue;
+      }
+      const size_t models = l->url.rfind("models/");
+      const std::string base = models == std::string::npos ? "" : l->url.substr(0, models);
+      loadAstcTexture(l->device, base + "tex/" + key + ".ba3c.gz", asSrgb[i], asLinear[i], ready);
+      continue;
+    }
+    loadImageTexture(l->device, std::move(img.bytes), img.mimeType, formats, l->url.c_str(),
+                     ready, maxSize[i]);
   }
 }
 
 void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& layout, const wgpu::Sampler& sampler,
                     const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done,
-                    std::function<void(float)> progress) {
+                    std::function<void(float)> progress, const std::string& fallbackUrl) {
   auto l = std::make_shared<Loading>();
   l->device = device;
   l->layout = layout;
@@ -376,7 +392,12 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
   l->url = url;
   l->done = std::move(done);
   l->startMs = emscripten_get_now();
-  fetchFile(url, [l](bool ok, std::vector<uint8_t> bytes) {
+  fetchFile(url, [l, device, layout, sampler, progress, fallbackUrl](bool ok, std::vector<uint8_t> bytes) {
+    if (!ok && !fallbackUrl.empty()) {
+      LOG_INFO("Model %s: not found, loading %s instead.", l->url.c_str(), fallbackUrl.c_str());
+      load(device, layout, sampler, fallbackUrl, std::move(l->done), progress);
+      return;
+    }
     if (!ok) {
       LOG_ERROR("Model %s: download failed.", l->url.c_str());
       l->done(nullptr);

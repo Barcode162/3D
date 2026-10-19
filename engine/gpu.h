@@ -31,6 +31,9 @@ class Gpu {
   uint32_t width = 0;
   uint32_t height = 0;
   float pixelRatio = 1.0f;
+  // The GPU reads ASTC compressed textures (Apple GPUs: iPhone, Mac). Off
+  // with ?astc=0 (tests the plain PNG/JPEG path).
+  bool astc = false;
   double cssWidth = 0, cssHeight = 0;
   uint32_t pendingW_ = 0, pendingH_ = 0;  // a new size waiting to settle
   double pendingSinceMs_ = 0;  // the canvas in CSS pixels (measured once per frame)

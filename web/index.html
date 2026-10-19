@@ -213,7 +213,8 @@
           view: [innerWidth, innerHeight], params: location.search.replace(/([?&]name=)[^&]*/g, '$1-'),
           settings: settings, room: net && net.room ? net.room() : '',
           online: net && net.status ? net.status() : 0, players: net && net.names ? net.names().length : 0,
-          errors: errors, perf: window.bar3dPerf || null, log: ring,
+          errors: errors, perf: window.bar3dPerf || null, log: ring, taps: tapRing,
+          modal: window.bar3dModal ? bar3dModal.name() : '',
         };
         var names = [];
         try {
@@ -259,6 +260,68 @@
         return req;
       },
     };
+    // The last taps and what they landed on, for reports: when a button
+    // stops answering, this shows what was on top of it.
+    var tapRing = [];
+    function describe(n) {
+      if (!n || !n.tagName) return '';
+      var s = n.tagName.toLowerCase() + (n.id ? '#' + n.id : '');
+      if (typeof n.className === 'string' && n.className) s += '.' + n.className.trim().split(/\s+/).join('.');
+      return s;
+    }
+    // Quick report: tap the build code (top right) 3 times. The tap is read
+    // here, before anything on the page can swallow it, so it works even
+    // when the menu is stuck. The code is copied to the clipboard.
+    var quickTaps = [];
+    function quickReport() {
+      var box = document.getElementById('quickReport');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'quickReport';
+        box.style.cssText = 'position:fixed;left:50%;top:calc(44px + env(safe-area-inset-top));transform:translateX(-50%);' +
+          'z-index:3000;background:#1a1220f0;color:#f5ecf8;padding:10px 16px;border-radius:14px;' +
+          'font:600 16px -apple-system,system-ui,sans-serif;-webkit-user-select:text;user-select:text;text-align:center;';
+        document.body.appendChild(box);
+      }
+      box.style.display = 'block';
+      box.textContent = 'Sending report…';
+      var sent = window.bar3dReport.send(false);
+      var copied = false;
+      try {  // Safari: the copy must start during the tap, so it waits on the code.
+        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          navigator.clipboard.write([new ClipboardItem({ 'text/plain': sent.then(function (c) {
+            return new Blob([c], { type: 'text/plain' });
+          }) })]).then(function () { copied = true; }, function () {});
+        }
+      } catch (e) {}
+      sent.then(function (code) {
+        setTimeout(function () {
+          box.textContent = 'Report ' + code + (copied ? ' (copied)' : '');
+        }, 300);
+        setTimeout(function () { box.style.display = 'none'; }, 12000);
+      }, function (e) {
+        box.textContent = 'Report not sent: ' + e.message;
+        setTimeout(function () { box.style.display = 'none'; }, 6000);
+      });
+    }
+    document.addEventListener('pointerup', function (e) {
+      tapRing.push({ t: Math.round(performance.now()), x: Math.round(e.clientX), y: Math.round(e.clientY),
+                     on: describe(e.target), top: describe(document.elementFromPoint(e.clientX, e.clientY)),
+                     modal: window.bar3dModal ? bar3dModal.name() : '' });
+      if (tapRing.length > 12) tapRing.shift();
+      var b = document.getElementById('build');
+      if (!b) return;
+      var r = b.getBoundingClientRect();
+      if (e.clientX < r.left - 16 || e.clientX > r.right + 16 || e.clientY < r.top - 16 || e.clientY > r.bottom + 16) {
+        quickTaps = [];
+        return;
+      }
+      var now = performance.now();
+      quickTaps = quickTaps.filter(function (t) { return now - t < 1500; });
+      quickTaps.push(now);
+      if (quickTaps.length >= 3) { quickTaps = []; quickReport(); }
+    }, true);
+
     // Test hook (restructure 0.3): ?testerror logs an error after start.
     if (/[?&]testerror/.test(location.search)) setTimeout(function () { append('Test error (from ?testerror).', true); }, 500);
 

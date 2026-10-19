@@ -5,9 +5,11 @@
 
 #include <algorithm>
 #include <bit>
+#include <cstring>
 #include <deque>
 #include <map>
 
+#include "engine/fetch.h"
 #include "engine/log.h"
 #include "engine/pipeline_cache.h"
 #include "engine/profiler.h"
@@ -255,6 +257,81 @@ void loadImageTexture(const wgpu::Device& device, std::vector<uint8_t> bytes, co
   pendingImages()[id] = {std::move(formats), label ? label : "", device, std::move(done)};
   waitingDecodes().push_back({id, std::move(bytes), mimeType, maxSize});
   startDecodes();
+}
+
+namespace {
+uint32_t readU32(const std::vector<uint8_t>& b, size_t at) {
+  return static_cast<uint32_t>(b[at]) | static_cast<uint32_t>(b[at + 1]) << 8 |
+         static_cast<uint32_t>(b[at + 2]) << 16 | static_cast<uint32_t>(b[at + 3]) << 24;
+}
+wgpu::TextureFormat astcFormat(uint32_t block, bool srgb) {
+  if (block == 8) return srgb ? wgpu::TextureFormat::ASTC8x8UnormSrgb : wgpu::TextureFormat::ASTC8x8Unorm;
+  return srgb ? wgpu::TextureFormat::ASTC4x4UnormSrgb : wgpu::TextureFormat::ASTC4x4Unorm;
+}
+}  // namespace
+
+void loadAstcTexture(const wgpu::Device& device, const std::string& url, bool asSrgb, bool asLinear,
+                     std::function<void(std::vector<wgpu::Texture>)> done) {
+  fetchFile(url, [device, url, asSrgb, asLinear, done = std::move(done)](bool ok, std::vector<uint8_t> bytes) {
+    if (!ok) {
+      LOG_ERROR("Texture %s: download failed.", url.c_str());
+      done({});
+      return;
+    }
+    queueJob([device, url, asSrgb, asLinear, done, bytes = std::move(bytes)] {
+      // Header: "BA3C", width, height, mips, block width, block height.
+      if (bytes.size() < 24 || std::memcmp(bytes.data(), "BA3C", 4) != 0) {
+        LOG_ERROR("Texture %s: not a compressed texture.", url.c_str());
+        done({});
+        return;
+      }
+      const uint32_t width = readU32(bytes, 4), height = readU32(bytes, 8), mips = readU32(bytes, 12);
+      const uint32_t block = readU32(bytes, 16);
+      if ((block != 4 && block != 8) || readU32(bytes, 20) != block || width % block || height % block || mips == 0 ||
+          mips > 16) {
+        LOG_ERROR("Texture %s: unsupported layout.", url.c_str());
+        done({});
+        return;
+      }
+      std::vector<wgpu::Texture> textures;
+      for (int pass = 0; pass < 2; ++pass) {
+        const bool srgb = pass == 0;
+        if (srgb ? !asSrgb : !asLinear) continue;
+        wgpu::TextureDescriptor desc;
+        desc.label = url.c_str();
+        desc.size = {width, height, 1};
+        desc.format = astcFormat(block, srgb);
+        desc.mipLevelCount = mips;
+        desc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst;
+        wgpu::Texture texture = device.CreateTexture(&desc);
+        size_t at = 24;
+        for (uint32_t mip = 0; mip < mips; ++mip) {
+          // Small levels still take whole blocks (a 1x1 level is one block).
+          const uint32_t w = std::max(1u, width >> mip), h = std::max(1u, height >> mip);
+          const uint32_t bw = (w + block - 1) / block, bh = (h + block - 1) / block;
+          const size_t size = static_cast<size_t>(bw) * bh * 16;
+          if (at + 4 > bytes.size() || readU32(bytes, at) != size || at + 4 + size > bytes.size()) {
+            LOG_ERROR("Texture %s: mip %u is damaged.", url.c_str(), mip);
+            done({});
+            return;
+          }
+          wgpu::TexelCopyTextureInfo dst;
+          dst.texture = texture;
+          dst.mipLevel = mip;
+          wgpu::TexelCopyBufferLayout layout;
+          layout.bytesPerRow = bw * 16;
+          layout.rowsPerImage = bh;
+          const wgpu::Extent3D extent{bw * block, bh * block, 1};
+          device.GetQueue().WriteTexture(&dst, bytes.data() + at + 4, size, &layout, &extent);
+          at += 4 + size;
+          g_textureBytes += static_cast<double>(size);
+        }
+        ++g_textureCount;
+        textures.push_back(texture);
+      }
+      done(std::move(textures));
+    }, JobLane::kNormal, "texture-astc");
+  });
 }
 
 }  // namespace engine

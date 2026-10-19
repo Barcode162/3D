@@ -74,6 +74,27 @@ foreach(src ${ASSET_FILES})
     list(APPEND SITE_OUTPUTS ${SITE}/${rel})
   endif()
 endforeach()
+# The phone version of the models: compressed (ASTC) textures, made by
+# tools/assets/astc_pack.py with ARM's astcenc (tools/setup.sh installs it).
+# Unchanged images are kept in build/astc_cache, so only new ones are encoded.
+# Without astcenc the site still works (the game falls back to the PNG/JPEG
+# models), but the phone loses the memory savings.
+find_program(ASTCENC NAMES astcenc-avx2 astcenc-sse4.1 astcenc-sse2 astcenc
+             PATHS /opt/astcenc/bin ${CMAKE_SOURCE_DIR}/.astcenc/bin)
+find_package(Python3 COMPONENTS Interpreter)
+if(ASTCENC AND Python3_FOUND)
+  file(GLOB MODEL_FILES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/models/*.glb)
+  add_custom_command(OUTPUT ${SITE}/assets/tex/.stamp
+                     DEPENDS ${MODEL_FILES} ${CMAKE_SOURCE_DIR}/tools/assets/astc_pack.py
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/assets/astc_pack.py ${ASTCENC}
+                             ${CMAKE_BINARY_DIR}/astc_cache ${SITE}/assets ${MODEL_FILES}
+                     COMMAND ${CMAKE_COMMAND} -E touch ${SITE}/assets/tex/.stamp
+                     COMMENT "Compressing model textures (ASTC)" VERBATIM)
+  list(APPEND SITE_OUTPUTS ${SITE}/assets/tex/.stamp)
+else()
+  message(WARNING "astcenc not found (run tools/setup.sh): no compressed textures in this build")
+endif()
+
 # The room protocol codec (cloud/proto.js, an ES module shared with the
 # server) as a plain page script that sets window.bar3dProto (web/net.js).
 add_custom_command(OUTPUT ${SITE}/proto.js DEPENDS ${CMAKE_SOURCE_DIR}/cloud/proto.js

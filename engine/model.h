@@ -49,10 +49,12 @@ class GpuModel {
 
   // Starts loading `url`. `done` gets the model, or nullptr on failure
   // (the reason is logged). `progress` (optional) hears the download
-  // progress, 0..1.
+  // progress, 0..1. If `url` can't be downloaded and `fallbackUrl` is
+  // given (the PNG/JPEG version of a compressed-texture model), that's
+  // loaded instead.
   static void load(const wgpu::Device& device, const wgpu::BindGroupLayout& layout, const wgpu::Sampler& sampler,
                    const std::string& url, std::function<void(std::shared_ptr<GpuModel>)> done,
-                   std::function<void(float)> progress = nullptr);
+                   std::function<void(float)> progress = nullptr, const std::string& fallbackUrl = "");
 
   std::vector<Part> parts;
   bool hasBlend = false;

@@ -1006,3 +1006,31 @@ No builds or headless runs outside "go".
 - Chess: `chess::MoveSearch` runs the root moves a few ms per frame (same move
   as `bestMove`, tested in `tools/native/chess_test.cpp`).
 
+## Compressed textures (2026-10-19, master list 1b)
+- Phones (and any GPU with `texture-compression-astc`) load `x.astc.glb.gz`;
+  others the original `x.glb.gz`. If the ASTC file is missing the game loads
+  the original (`GpuModel::load` fallbackUrl). `?astc=0` forces the PNG/JPEG path.
+- `tools/assets/astc_pack.py` (run by CMake when astcenc is found; `setup.sh` and
+  CI install ARM's astcenc 5.2.0 as a build tool): each image is scaled like the
+  runtime did (1024 colors/normals, 256 roughness/occlusion), mipmapped here (sRGB
+  in linear light) and encoded. Each image becomes its own shared file
+  `assets/tex/<key>.ba3c.gz` (the glb only holds "BA3R"+key), so the 78 images
+  that several models share download once. Key = hash of the source + use, and
+  `build/astc_cache` keeps encodes (CI caches it): unchanged images never re-encode.
+- **Block size per image:** 8x8 (2 bits/pixel) when the image still measures
+  ≥ 40 dB PSNR against the original, else 4x4 (8 bits/pixel). 112 of 168 images
+  pass. 6x6/5x5 can't be used: WebGPU needs sizes that are whole blocks, and
+  our textures are powers of two.
+- Results: GPU texture memory 145 MB → 16 MB; headless load 5.2 s → 2.6 s;
+  download 11.3 → 18.1 MB (ASTC doesn't shrink like JPEG; all-4x4 was 28 MB).
+  Screenshots match within imgdiff's tolerance.
+- Headless gotcha: SwiftShader decodes ASTC in software, so frames (and the
+  warm-up) are slower there; `tools/shots.mjs` now waits for "Stage entered".
+
+## Quick report (2026-10-19)
+- Tap the build code 3 times: a report is sent and its code copied (Safari:
+  `ClipboardItem` with a promise, started inside the tap). Read in a capture
+  `pointerup` listener by position, so it works even if something covers the page.
+- Reports now include `taps` (the last 12: where, the element hit, the element on
+  top, the open panel) and `modal`, to find what blocks a stuck button.
+
