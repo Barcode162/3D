@@ -248,42 +248,20 @@ def build_lounge():
             cb_px[i * 16:(i + 1) * 16, j * 16:(j + 1) * 16] = common.srgb((0.85, 0.75, 0.55)) if (i + j) % 2 else \
                 common.srgb((0.3, 0.18, 0.1))
     chess = common.image_material("Chess board", cb_px, roughness=0.3)
-    CB = 0.36
-    box("Board base", (TX - CB / 2 - 0.02, TY, TZ - 0.22 - CB / 2 - 0.02), (TX + CB / 2 + 0.02, TY + 0.02,
-                                                                          TZ - 0.22 + CB / 2 + 0.02), mantel_wood, 0.004)
-    common.quad("Chess squares", [(TX - CB / 2, TY + 0.0205, TZ - 0.22 + CB / 2), (TX + CB / 2, TY + 0.0205, TZ - 0.22 + CB / 2),
-                                  (TX + CB / 2, TY + 0.0205, TZ - 0.22 - CB / 2), (TX - CB / 2, TY + 0.0205, TZ - 0.22 - CB / 2)],
+    # The board is played on (app/chess.cpp moves the pieces, models from
+    # tools/assets/chess.py): 0.44 m, centred on the table, rank 1 toward +z
+    # (the armchair at +z plays white). Keep in step with kBoard* there.
+    CB, BZC = 0.44, TZ
+    box("Board base", (TX - CB / 2 - 0.025, TY, BZC - CB / 2 - 0.025), (TX + CB / 2 + 0.025, TY + 0.02, BZC + CB / 2 + 0.025),
+        mantel_wood, 0.004)
+    common.quad("Chess squares", [(TX - CB / 2, TY + 0.0205, BZC + CB / 2), (TX + CB / 2, TY + 0.0205, BZC + CB / 2),
+                                  (TX + CB / 2, TY + 0.0205, BZC - CB / 2), (TX - CB / 2, TY + 0.0205, BZC - CB / 2)],
                 chess, uvs=((0, 0), (1, 0), (1, 1), (0, 1)))
-    white_p = common.plain_material("White pieces", (0.85, 0.82, 0.72), 0.0, 0.3)
-    black_p = common.plain_material("Black pieces", (0.04, 0.035, 0.03), 0.0, 0.3)
-    shapes = {
-        "pawn": [(0, 0), (0.011, 0), (0.011, 0.004), (0.006, 0.01), (0.004, 0.022), (0.007, 0.026), (0.0, 0.034)],
-        "rook": [(0, 0), (0.012, 0), (0.012, 0.005), (0.008, 0.01), (0.008, 0.03), (0.011, 0.034), (0.011, 0.042),
-                 (0, 0.042)],
-        "knight": [(0, 0), (0.012, 0), (0.012, 0.005), (0.008, 0.012), (0.009, 0.03), (0.005, 0.045), (0, 0.045)],
-        "bishop": [(0, 0), (0.012, 0), (0.012, 0.005), (0.006, 0.012), (0.005, 0.03), (0.008, 0.04), (0.003, 0.05),
-                   (0, 0.054)],
-        "queen": [(0, 0), (0.013, 0), (0.013, 0.005), (0.007, 0.014), (0.005, 0.04), (0.01, 0.052), (0.006, 0.058),
-                  (0, 0.062)],
-        "king": [(0, 0), (0.013, 0), (0.013, 0.005), (0.007, 0.014), (0.005, 0.045), (0.01, 0.055), (0.004, 0.062),
-                 (0.004, 0.07), (0, 0.072)],
-    }
-    back_row = ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"]
-    sq = CB / 8
-    moved = {(1, 4): (3, 4), (6, 3): (4, 3), (0, 6): (2, 5), (7, 1): (5, 2)}
-    for (row, kinds, mat) in ((0, back_row, white_p), (1, ["pawn"] * 8, white_p), (7, back_row, black_p),
-                              (6, ["pawn"] * 8, black_p)):
-        for col, kind in enumerate(kinds):
-            r2, c2 = moved.get((row, col), (row, col))
-            x = TX - CB / 2 + (c2 + 0.5) * sq
-            z = TZ - 0.22 + CB / 2 - (r2 + 0.5) * sq
-            pc = common.lathe("Chess piece", shapes[kind], mat, 10)
-            pc.data.transform(Matrix.Translation((x, TY + 0.0205, z)))
-    P.glass(TX + 0.15, TY, TZ + 0.25, "rocks", "whiskey", ice=True)
-    P.glass(TX - 0.18, TY, TZ + 0.3, "snifter", "whiskey")
-    P.bottle(TX + 0.05, TY, TZ + 0.45, "square", color=0)
-    for k in range(3):
-        P.book(TX - 0.1, TY + k * 0.035, TZ + 0.05, 0.035, 0.24, 0.17, yaw=0.2 * k, lying=True)
+    P.glass(TX + 0.2, TY, TZ + 0.42, "rocks", "whiskey", ice=True)
+    P.glass(TX - 0.2, TY, TZ - 0.42, "snifter", "whiskey")
+    P.bottle(TX + 0.02, TY, TZ + 0.48, "square", color=0)
+    for k in range(2):
+        P.book(TX - 0.15, TY + k * 0.035, TZ + 0.45, 0.035, 0.2, 0.14, yaw=0.2 * k, lying=True)
     P.candle(TX + 0.2, TY, TZ - 0.5, h=0.1, r=0.03)
 
     # ---- Bookshelf on the left wall between the chimney and the stage ----

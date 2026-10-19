@@ -11,6 +11,9 @@
 //   jb     jukebox: song (-1 = off), server time it started (s)
 //   pso    piano song: song (-1 = none), server time it starts (s)
 //   lt     lights: dim (0/1), fire on (0/1)
+//   ch     the lounge's chess game: board (8 numbers), turn, castling, en
+//          passant, halfmoves, fullmove, last move, two players, move number.
+//          Only a player at the board (claim machine.chess.w / .b) writes it.
 //   rc     the racing rigs: lobby, picks, start time, results. Written only
 //          by the room (cloud/games/race.js); phones use `race` intents.
 //   dk<n>  drink on counter spot n (0..7): drink type + 1, 0 = empty.
@@ -50,6 +53,13 @@ export function checkWrite(key, values, ctx) {
     return { ok: false, why: 'the room moves the glasses' };
   }
   if (key === 'rc') return { ok: false, why: 'the room runs the race' };
+  if (key === 'ch') {
+    if (v.length !== 17 || !v.every(Number.isInteger)) return { ok: false, why: 'a chess state is 17 whole numbers' };
+    if (ctx.owner('machine.chess.w') !== ctx.slot && ctx.owner('machine.chess.b') !== ctx.slot) {
+      return { ok: false, why: 'only the players at the chessboard move its pieces' };
+    }
+    return { ok: true, values: v };
+  }
   if ((m = /^m(\d)$/.exec(key))) {
     if (v.length !== 2 || !isBit(v[0]) || !isBit(v[1])) return { ok: false, why: 'a mirror is two 0/1 values' };
     return { ok: true, values: v };

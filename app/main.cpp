@@ -22,6 +22,7 @@
 #include "app/loader.h"
 #include "app/renderer.h"
 #include "app/test_hooks.h"
+#include "app/chess.h"
 #include "app/rhythm.h"
 #include "app/shared_world.h"
 #include "engine/gpu_upload.h"
@@ -91,6 +92,7 @@ struct App {
   app::Jukebox jukebox;
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
+  app::ChessGame chess;    // the lounge's chessboard
   app::Piano piano;
   app::Darts darts;
   app::race::Game race;
@@ -329,6 +331,11 @@ void updateCamera(float dt) {
   if (look.x != 0 || look.y != 0 || move.x != 0 || move.y != 0) {
     if (g_app.entered) g_app.introEndMs = std::min(g_app.introEndMs, engine::frameTime().nowMs + kIntroAfterInputMs);
   }
+  if (g_app.chess.isOpen()) {  // looking down at the chessboard
+    g_app.chess.camera(g_app.camera);
+    app::advanceWalk(g_app.avatarMotion, 0, 0, dt, kWalkSpeed);
+    return;
+  }
   if (g_app.seat >= 0) {
     // Seated: the eyes stay put; the head turns only so far.
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
@@ -518,6 +525,7 @@ void queueText(double nowMs, const Mat4& viewProj) {
   }
   if (g_app.race.open()) return;  // the race queues its own HUD (app/race/game.cpp)
   queueMachineScreens(nowMs);
+  if (g_app.chess.isOpen()) g_app.chess.draw(text, W, H, px, nowMs);
 
   const engine::FirstPersonCamera& cam = g_app.camera;
   const Vec3 forward = cam.forward();
@@ -568,7 +576,8 @@ void queueText(double nowMs, const Mat4& viewProj) {
   engine::TextStyle promptStyle;
   promptStyle.align = 0.5f;
   promptStyle.outlineWidth = 0.8f;
-  const bool busy = g_app.jukeboxMenu.isOpen() || g_app.piano.keyboardOpen() || g_app.bartender.making();
+  const bool busy = g_app.jukeboxMenu.isOpen() || g_app.piano.keyboardOpen() || g_app.bartender.making() ||
+                    g_app.chess.isOpen();
   if (!busy && (g_app.held >= 0 || g_app.aimed >= 0)) {
     const char* prompt = g_app.held >= 0 ? "Tap a table or the bar: put it down\nTap anywhere else: throw"
                                          : "Glass\nTap: pick up";
@@ -831,10 +840,17 @@ void use(const app::Interactable& it) {
       playSfx(engine::synth::Effect::kClick, where, 0.4f);
       break;
     }
-    case Action::kChess:
-      showToast("You move a pawn. Your turn is over.");
+    case Action::kChess: {
+      if (g_app.seat >= 0) standUp();
+      const std::string why = g_app.chess.open(g_app.others.online());
+      if (!why.empty()) {
+        showToast(why);
+        break;
+      }
+      g_app.input.setCapture(true);
       playSfx(engine::synth::Effect::kClick, where, 0.6f, true);
       break;
+    }
     case Action::kTipJar:
       playSfx(engine::synth::Effect::kClink, where, 0.6f, true);
       showToast("You drop a coin in the tip jar. The bartenders thank you!");
@@ -942,6 +958,7 @@ void updatePhysics(float dt) {
     shownQ = q;
     g_app.renderer.setModelTransform(i, shownP, shownQ);
   }
+  g_app.chess.pose(g_app.renderer);
 }
 
 // Makes one interactable's parts glow (or stop glowing).
@@ -1048,7 +1065,8 @@ void sendInfo() {
 void handleShared(std::vector<engine::net::WorldEntry>& world, std::vector<engine::net::Event>& events) {
   for (const engine::net::WorldEntry& e : world) {
     if (e.key == "lt" && e.values.size() >= 2) setLights(e.values[0] != 0, e.values[1] != 0);
-    if (e.key == "rc") g_app.race.onRoomRace(e.values);  // the racing rigs' lobby (cloud/games/race.js)
+    if (e.key == "rc") g_app.race.onRoomRace(e.values);
+    if (e.key == "ch") g_app.chess.onRoom(e.values);  // the lounge's chess game  // the racing rigs' lobby (cloud/games/race.js)
   }
   for (const engine::net::Event& e : events) {
     if (e.type != "sfx" || e.values.size() < 4) continue;
@@ -1124,6 +1142,21 @@ void updateInteraction(double nowMs, float dt) {
   }
 
   const float W = static_cast<float>(g_app.gpu.width), H = static_cast<float>(g_app.gpu.height);
+  {
+    // The chessboard: taps while playing (presses, the game captures input);
+    // the pieces move for everyone else too.
+    std::vector<engine::Vec2> chessTaps;
+    if (g_app.chess.isOpen()) {
+      for (const engine::RawPress& p : g_app.input.frame().presses) {
+        if (p.down && p.key < 0) chessTaps.push_back(p.pos);
+        if (p.down && p.key == 4) chessTaps.push_back({0.2f, 0.92f});  // Escape: the leave button
+      }
+    }
+    if (g_app.chess.update(nowMs, dt, chessTaps, g_app.camera, W / std::max(H, 1.0f))) {
+      g_app.chess.close();
+      g_app.input.setCapture(false);
+    }
+  }
   if (g_app.rhythm.isOpen()) {
     g_app.rhythm.update(nowMs, g_app.input.frame().presses, W, H);
     if (!g_app.rhythm.isOpen()) {
@@ -1304,6 +1337,7 @@ void applyTestHooks() {
     setActivity(Activity::kRhythm);
   }
   if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);
+  if (h.chess && g_app.chess.open(g_app.others.online()).empty()) g_app.input.setCapture(true);
   if (h.emote > 0 && h.emote < static_cast<int>(Emote::kCount)) startEmote(static_cast<Emote>(h.emote));
   if (h.pianoSong >= 0) g_app.piano.playSong(h.pianoSong);
   for (const app::Interactable& it : g_app.scene.interactables) {
@@ -1625,6 +1659,7 @@ void onGpuReady(bool ok) {
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   g_app.scene = app::buildBarScene();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
+  g_app.chess.init(g_app.scene);
   engine::profiler().stage("scene");
   std::vector<engine::SkinnedMeshData> meshes;
   for (const app::AvatarLook& look : app::avatarLooks()) {

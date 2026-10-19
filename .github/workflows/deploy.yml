@@ -114,6 +114,11 @@ jobs:
           command -v ffmpeg >/dev/null || sudo apt-get install -y -q ffmpeg >/dev/null
           node tools/rhythm_test.mjs
 
+      # The lounge's chessboard: tap e2, e4 on the 3D board; the computer answers.
+      - name: "Test: chess"
+        continue-on-error: true
+        run: node tools/chess_test.mjs
+
       # The arcade: tap the platformer machine, the user's game opens and draws.
       - name: "Test: the arcade's platformer"
         continue-on-error: true

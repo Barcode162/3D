@@ -368,7 +368,32 @@ void buildLounge(Builder& b) {
   b.thing("Fireplace\nTap: fire on/off", {kX0 + 0.5f, 0.6f, fz}, {0.4f, 0.5f, 0.8f}, Action::kFireplace);
   b.thing("Bookshelf\nTap: read a book", {kX0 + 0.2f, 1.2f, (kChimneyZ1 + kStageZ0 - kStepW) / 2}, {0.25f, 1.0f, 0.6f},
           Action::kBooks);
-  b.thing("Chess game\nTap: make a move", {-6.95f, 0.5f, fz}, {0.3f, 0.12f, 0.3f}, Action::kChess);
+  b.thing("Chess\nTap: play a game", {-6.95f, 0.5f, fz}, {0.3f, 0.12f, 0.3f}, Action::kChess);
+  // The chess pieces (tools/assets/chess.py), one model each, plus two spare
+  // queens a side for promotions (under the table until needed). The board is
+  // 0.44 m on the coffee table, rank 1 toward +z (tools/assets/lounge.py).
+  {
+    b.scene.chessCenter = {-6.95f, 0.45f + 0.0205f, fz};
+    const char* names[7] = {"", "pawn", "knight", "bishop", "rook", "queen", "king"};
+    const int backRow[8] = {4, 2, 3, 5, 6, 3, 2, 4};
+    const auto add = [&](int kind, int color, int sq) {
+      const Vec3 c = b.scene.chessCenter;
+      const Vec3 p = sq < 0 ? c + Vec3{0, -0.6f, 0}
+                            : c + Vec3{(static_cast<float>(sq % 8) - 3.5f) * 0.055f, 0, (3.5f - static_cast<float>(sq / 8)) * 0.055f};
+      const std::string file = std::string("chess_") + names[kind] + (color ? "_b.glb" : "_w.glb");
+      b.scene.chessPieces.push_back({b.model(file.c_str(), p, kDarkWood), static_cast<int8_t>(kind | (color ? 8 : 0))});
+    };
+    for (int f = 0; f < 8; ++f) {
+      add(backRow[f], 0, f);
+      add(1, 0, 8 + f);
+      add(1, 1, 48 + f);
+      add(backRow[f], 1, 56 + f);
+    }
+    for (int k = 0; k < 2; ++k) {
+      add(5, 0, -1);
+      add(5, 1, -1);
+    }
+  }
   b.scene.fireLight = static_cast<int>(b.scene.lights.size());
   b.light({kX0 + 0.9f, 0.6f, fz}, kFire, 1.8f, 5.0f, 0.4f);
   b.light({-6.3f, 1.5f, fz + 1.95f}, kWarmBulb, 1.1f, 4.0f, 0.2f);

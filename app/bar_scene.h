@@ -43,6 +43,12 @@ struct SceneObject {
 // Movable things: their physics shape (see app/props.cpp).
 enum class Prop { kNone, kPintGlass, kRocksGlass };
 
+// A chess piece's model on the lounge's board (app/chess.cpp moves it).
+struct ChessPiece {
+  size_t model = 0;   // index into BarScene::models
+  int8_t piece = 0;   // app::chess::make(kind, color)
+};
+
 struct ModelPlacement {
   std::string file;  // e.g. "bar_counter.glb"
   engine::Vec3 position;
@@ -155,7 +161,11 @@ struct BarScene {
   engine::Vec3 jukeboxSpeaker;  // where the music comes from
   engine::Vec3 arcadeSpeaker;   // the arcade's music (inside, by the machine)
   engine::Vec3 arcadeMin, arcadeMax;  // the arcade's floor (x, z): its music plays inside
-  engine::Vec3 arcadeDoor;      // the middle of its doorway (bar side): the music leaks out here
+  engine::Vec3 arcadeDoor;
+  // The chessboard: its middle (on the surface), one square's size, the pieces.
+  engine::Vec3 chessCenter;
+  float chessSquare = 0.055f;
+  std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;
   // Game spots (see app/games.*): the piano, the dartboard, the two sims,
