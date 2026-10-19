@@ -97,6 +97,7 @@ const carolConsole = [];
 carol.on('console', (m) => carolConsole.push(m.text()));
 await waitLog(carol, /connected to room/);
 await waitLog(carol, /Everything loaded/, 180000);  // the loading screen covers the canvas until then
+await waitLog(carol, /Stage entered/, 180000);  // and the warm-up (slow here with compressed textures)
 await carol.waitForTimeout(3000);
 const vw = 430, vh = 932;
 await carol.mouse.click(vw / 2, vh / 2);
