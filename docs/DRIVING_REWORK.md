@@ -27,7 +27,7 @@ wins, and those steps are folded in below (Stage 12).
 ---
 
 ## Contents
-0. Decisions needed first (legal, car versions, art)
+0. Decisions (names, cars, art, MVP)
 1. Conventions (units, axes, signs)
 2. Architecture and files
 3. Timing and update order

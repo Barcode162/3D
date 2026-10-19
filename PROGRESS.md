@@ -53,7 +53,7 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
 ### Parked (not now; the user promotes items at "start")
 - **Driving rework (full):** new physics from scratch (tires, suspension, driveline, aero,
   steering, electronics), C7 Corvette, GR86, RX-7 FD, Miata ND; circuit racing, drift area,
-  free drive. Full spec and build order: `docs/DRIVING_REWORK.md` (22 stages; §0 has the user's decisions).
+  free drive. Full spec and build order: `docs/DRIVING_REWORK.md` (MVP first: Ridgeback GS = 2017 C7 Grand Sport, live tuning panel; then 22 stages).
 - Kids edition: a separate, simpler game in the same universe (under 13).
 - New name for the world and its currency (Bar3D is a working name).
 - The street and city outside.
