@@ -43,7 +43,10 @@ user asked: "the race game should actually be fixed".)
       V and their tops poked out; now real A-frames hinged at the top.) the "under construction" signs, the ladders in
       the construction rooms and the "welcome" sign are V-shaped with
       sticks poking out: rework them.
-- [ ] **7. 4K Mania:** more songs, a better menu, look and feel like osu!mania.
+- [x] **7. 4K Mania:** (done 2026-10-19: 12 more songs, an osu!-style song
+      select, INSANE difficulty, hold notes, osu!mania judgements and HUD,
+      results with grades; `tools/rhythm_test.mjs`. Later: song previews in
+      the menu, hand-made charts.) more songs, a better menu, look and feel like osu!mania.
 - [ ] **8. Mirror quality:** high quality for things close to the mirror,
       lower for far away (RESTRUCTURE 6.3; your own avatar always full).
 - [ ] **9. Player cards: badge slots.**

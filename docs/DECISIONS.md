@@ -723,6 +723,30 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Test: `tools/arcade_test.mjs`. `draw_text` in the asset scripts takes the
   TOP row counted from the bottom of the image (row 0 = bottom).
 
+## 4K Mania like osu!mania (2026-10-19, upgrade item 7)
+- 12 upbeat Kevin MacLeod songs (CC BY 4.0, credited in
+  `assets/music/CREDITS.md` and on screen) only for the rhythm game, in
+  `assets/music/rhythm/` (AAC 96 kbps, ~26 MB). Plus the jukebox's songs.
+- Song select: a wheel of cards (tap to pick, tap again or PLAY to play,
+  swipe to scroll; D/F/J/K on a keyboard), the picked song's details, four
+  difficulties with star ratings (estimated "~" until the chart was made
+  once; then from notes per second, chords and holds), the best grade per
+  song and difficulty, scroll speed (osu!-like, 8-40: time on screen =
+  13.72 s / speed), AUTO. Bests, stars and speed are kept on the phone
+  (localStorage `bar3d.game.rh*`).
+- Play: osu!mania 4K look (white/blue/blue/white bar notes, hold notes with
+  a body and an end cap, lit keys, column lights), judgements MAX 16 ms, 300
+  40, 200 73, 100 103, 50 127, miss after 150 (tails get 1.5x the windows),
+  accuracy like osu! (MAX = 300), score out of 1,000,000 (MAX worth a bit
+  more), a timing-error bar, a health bar (no failing). The page's top bar is
+  hidden while it's open (body class `racing`).
+- Charts (`app/rhythm_chart.cpp`): INSANE (16ths, more chords, triples on
+  the biggest hits), hold notes where the sound keeps ringing a beat later
+  (12/20/25% of notes at most on normal/hard/insane). Made once per song and
+  difficulty per session.
+- Headless Chromium can't decode AAC: `tools/rhythm_test.mjs` serves an Ogg
+  copy of the song instead (ffmpeg). Safari plays the .m4a fine.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

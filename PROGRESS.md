@@ -11,7 +11,8 @@ quality, badge slots, clipping props, walk-through fixes, stuck seats, chess,
 there. The server-run bot race (below) is replaced by its items 1-2.
 Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`), 1 (two-player
 racing with a garage), 3-5 (the arcade, its platformer machine and music).
-6 (A-frame signs, barricades, ladder). Next: 7 (4K Mania like osu!mania).
+6 (A-frame signs, barricades, ladder), 7 (4K Mania like osu!mania). Next: 8
+(mirror: sharp up close, cheaper far away).
 there. The server-run bot race (below) is replaced by its items 1-2.
 
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now

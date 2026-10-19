@@ -5,14 +5,16 @@
 // estimated, notes snap to the beat grid (beats, eighths or sixteenths by
 // difficulty), and each note's lane follows the pitch of the sound (low
 // sounds to the left, high to the right) while avoiding awkward repeats.
+// Sounds that keep ringing become hold notes (normal and up).
 #include <cstddef>
 #include <vector>
 
 namespace app {
 
 struct ChartNote {
-  double time;  // seconds into the song
-  int lane;     // 0..3
+  double time;     // seconds into the song
+  int lane;        // 0..3
+  double end = 0;  // a hold note: held until this time (0 = a tap)
 };
 
 struct Chart {
@@ -21,7 +23,8 @@ struct Chart {
   double length = 0;  // seconds
 };
 
-enum class Difficulty { kEasy = 0, kNormal = 1, kHard = 2 };
+enum class Difficulty { kEasy = 0, kNormal = 1, kHard = 2, kInsane = 3 };
+constexpr int kDifficultyCount = 4;
 
 // `samples` is the song in mono at `rate` samples per second.
 Chart makeChart(const float* samples, size_t count, float rate, Difficulty difficulty);

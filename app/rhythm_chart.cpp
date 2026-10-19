@@ -74,7 +74,7 @@ Chart makeChart(const float* samples, size_t count, float rate, Difficulty diffi
     bandBin[b] = std::clamp(static_cast<int>(kBandEdges[b] / srate * kFrame), 1, kFrame / 2);
   }
   std::vector<float> prev(kFrame / 2, 0), mag(kFrame / 2);
-  std::vector<float> novelty(frames, 0), centroid(frames, 0);
+  std::vector<float> novelty(frames, 0), centroid(frames, 0), level(frames, 0);
   std::vector<std::array<float, kBands>> bandFlux(frames);
   std::vector<std::complex<float>> buf(kFrame);
   for (size_t f = 0; f < frames; ++f) {
@@ -88,6 +88,7 @@ Chart makeChart(const float* samples, size_t count, float rate, Difficulty diffi
       den += mag[static_cast<size_t>(i)];
     }
     centroid[f] = num / den;
+    level[f] = den;
     float total = 0;
     for (int b = 0; b < kBands; ++b) {
       float flux = 0;
@@ -146,9 +147,15 @@ Chart makeChart(const float* samples, size_t count, float rate, Difficulty diffi
 
   // 5. Candidate notes on the beat grid: beats (easy), eighths (normal) or
   // sixteenths (hard). Off-beat spots must be clearly louder to count.
-  const int subdiv = difficulty == Difficulty::kEasy ? 1 : difficulty == Difficulty::kNormal ? 2 : 4;
-  const double targetPerSec = difficulty == Difficulty::kEasy ? 1.5 : difficulty == Difficulty::kNormal ? 2.8 : 4.8;
-  const double minGap = difficulty == Difficulty::kEasy ? 0.28 : difficulty == Difficulty::kNormal ? 0.14 : 0.09;
+  const int d = static_cast<int>(difficulty);
+  static constexpr int kSubdiv[4] = {1, 2, 4, 4};
+  static constexpr double kPerSec[4] = {1.5, 2.8, 4.8, 6.8}, kMinGap[4] = {0.28, 0.14, 0.09, 0.07};
+  static constexpr float kChord[4] = {1.0f, 0.97f, 0.9f, 0.82f};
+  static constexpr double kHoldShare[4] = {0, 0.12, 0.2, 0.25};
+  static constexpr const char* kName[4] = {"easy", "normal", "hard", "insane"};
+  const int subdiv = kSubdiv[d];
+  const double targetPerSec = kPerSec[d];
+  const double minGap = kMinGap[d];
   struct Candidate {
     double t;
     float strength;
@@ -182,7 +189,8 @@ Chart makeChart(const float* samples, size_t count, float rate, Difficulty diffi
   const double duration = cands.back().t - cands.front().t;
   const float keepFraction = static_cast<float>(std::clamp(targetPerSec * duration / static_cast<double>(cands.size()), 0.05, 0.95));
   const float threshold = std::max(quantile(strengths, 1.0f - keepFraction), quantile(strengths, 0.5f) * 0.25f + 1e-4f);
-  const float chordLevel = quantile(strengths, difficulty == Difficulty::kHard ? 0.9f : 0.97f);
+  const float chordLevel = quantile(strengths, kChord[d]);
+  const float tripleLevel = quantile(strengths, 0.97f);  // insane: three keys on the biggest hits
 
   // 6. Lanes follow the pitch (spectral centroid), spread evenly by
   // quantiles so all four lanes get used.
@@ -208,12 +216,45 @@ Chart makeChart(const float* samples, size_t count, float rate, Difficulty diffi
     chart.notes.push_back({c.t, lane});
     if (difficulty != Difficulty::kEasy && c.strength >= chordLevel) {
       chart.notes.push_back({c.t, (lane + 2) % 4});  // a two-key chord on the loud hits
+      if (difficulty == Difficulty::kInsane && c.strength >= tripleLevel) chart.notes.push_back({c.t, (lane + 1) % 4});
     }
     lastLane = lane;
     lastTime = c.t;
   }
-  LOG_INFO("Rhythm chart: %.0f BPM, %zu notes in %.0f s (%s).", chart.bpm, chart.notes.size(), chart.length,
-           difficulty == Difficulty::kEasy ? "easy" : difficulty == Difficulty::kNormal ? "normal" : "hard");
+  // 7. Hold notes: a note whose sound keeps ringing (the level a beat later
+  // is still most of what it was) and whose lane is free long enough is
+  // held until just before the next note in that lane (at most two beats).
+  int holds = 0;
+  if (difficulty != Difficulty::kEasy) {
+    std::sort(chart.notes.begin(), chart.notes.end(), [](const ChartNote& a, const ChartNote& b) { return a.time < b.time; });
+    const double maxShare = kHoldShare[d];
+    for (size_t i = 0; i < chart.notes.size(); ++i) {
+      ChartNote& n = chart.notes[i];
+      if (static_cast<double>(holds) > maxShare * static_cast<double>(chart.notes.size())) break;
+      double next = chart.length;
+      bool chord = false;
+      for (size_t j = i + 1; j < chart.notes.size(); ++j) {
+        if (chart.notes[j].time - n.time < 1e-6) chord = true;
+        if (chart.notes[j].lane == n.lane) {
+          next = chart.notes[j].time;
+          break;
+        }
+      }
+      if (i > 0 && n.time - chart.notes[i - 1].time < 1e-6) chord = true;
+      if (chord && difficulty != Difficulty::kInsane) continue;
+      const double room = next - n.time;
+      if (room < period * 1.5) continue;
+      const size_t f0 = static_cast<size_t>(n.time / frameSec);
+      const size_t f1 = std::min(frames - 1, f0 + static_cast<size_t>(period / frameSec));
+      if (f0 >= frames || level[f1] < 0.82f * level[f0]) continue;
+      const double len = std::min(room - period * 0.5, period * 2.0);
+      n.end = n.time + std::floor(len / step + 1e-6) * step;
+      if (n.end - n.time < period * 0.5) n.end = 0;
+      else ++holds;
+    }
+  }
+  LOG_INFO("Rhythm chart: %.0f BPM, %zu notes (%d held) in %.0f s (%s).", chart.bpm, chart.notes.size(), holds, chart.length,
+           kName[d]);
   return chart;
 }
 

@@ -1,11 +1,14 @@
 #pragma once
-// The playable 4-key rhythm game on the "4K MANIA" cabinet (osu!mania /
-// Quaver style, with a circle skin). Tap the cabinet to open it: pick a
-// song (the jukebox's songs, including ones loaded from your phone) and a
-// difficulty; the song is analyzed into a chart (app/rhythm_chart.*) and
-// played with exact timing (engine::Track). Notes fall in four lanes;
-// tap the lane's column (anywhere on screen) as a note reaches its ring.
-// On a computer: D F J K, Escape to leave.
+// The playable 4-key rhythm game on the "4K MANIA" cabinet, made to look and
+// play like osu!mania: a song select with a scrolling song wheel, four
+// difficulties with star ratings, your best grade per song; then bar notes
+// and hold notes falling to lit keys, MAX/300/200/100/50/MISS judgements,
+// a timing-error bar, a health bar and an osu!-style results screen. Songs:
+// its own (assets/music/rhythm/, see CREDITS.md) plus the jukebox's
+// (including ones loaded from your phone). Each song is analyzed into a
+// chart (app/rhythm_chart.*) and played with exact timing (engine::Track).
+// Tap a column (anywhere on screen) as a note reaches the keys; hold a hold
+// note until its end. On a computer: D F J K, Escape to leave.
 #include <map>
 #include <string>
 #include <vector>
@@ -19,11 +22,15 @@ namespace app {
 class RhythmGame {
  public:
   struct SongChoice {
-    std::string title, url;
+    std::string title, artist, url;
+    float seconds = 0;  // length (0 = not known)
   };
+  // The game's own songs (assets/music/rhythm/).
+  static std::vector<SongChoice> builtInSongs();
 
   bool isOpen() const { return state_ != State::kClosed; }
-  void open(std::vector<SongChoice> songs);
+  // Opens the song select with its own songs plus `extra` (the jukebox's).
+  void open(std::vector<SongChoice> extra);
   void close();
   // Starts a song directly (tests: ?rhythm=song,difficulty).
   void start(int song, Difficulty difficulty) {
@@ -47,46 +54,91 @@ class RhythmGame {
 
  private:
   enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults };
-  enum Judge { kPerfect, kGreat, kGood, kMiss, kJudgeCount };
+  enum Judge { kMax, k300, k200, k100, k50, kMiss, kJudgeCount };
   struct Note {
-    double time;
+    double time, end;  // end > 0: a hold note
     int lane;
-    bool judged = false;
+    bool judged = false;      // the head (or the tap)
+    bool holding = false;     // a hold note being held now
+    bool tailDone = false;    // a hold note's end judged
+    Judge headJudge = kMiss;
   };
   struct Burst {
     int lane;
     Judge judge;
     double ms;
   };
+  struct Best {
+    double acc = 0;
+    int score = 0;
+  };
+  struct Rect {
+    float x, y, w, h;
+    bool contains(float px, float py) const { return px >= x && px <= x + w && py >= y && py <= y + h; }
+  };
+  // The song select's layout (device pixels), portrait or landscape.
+  struct MenuLayout {
+    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn;
+    float card = 0;  // a wheel card's height
+  };
 
   void startSong();
-  void judge(Note& n, Judge j, double nowMs);
+  void beginPlay(const Chart& chart);
+  void judge(Note& n, Judge j, double nowMs, double errorMs, bool tail = false);
   void finish();
   void menuPress(engine::Vec2 p, float W, float H);
+  void menuSwipe(float dy, float W, float H);
   void resultsPress(engine::Vec2 p, float W, float H);
+  void pickSong(int index);
+  MenuLayout menuLayout(float W, float H) const;
+  void drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  void drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  void drawResults(engine::TextRenderer& text, float W, float H, float px) const;
   // Playfield layout in device pixels.
-  float laneX(int lane, float W, float H) const;
-  float laneWidth(float W, float H) const;
+  float columnWidth(float W, float H) const;
+  float laneX(int lane, float W, float H) const;  // the column's middle
+  double accuracy() const;
+  int score() const;
+  std::string bestKey(int song, Difficulty d) const;
+  float stars(int song, Difficulty d, bool* known = nullptr) const;
+  double approachSeconds() const { return 13.72 / scrollSpeed_; }
 
   State state_ = State::kClosed;
   std::vector<SongChoice> songs_;
   int song_ = 0;
   Difficulty difficulty_ = Difficulty::kNormal;
+  int scrollSpeed_ = 18;      // like osu!mania's scroll speed (higher = faster notes)
+  float wheel_ = 0;           // the song wheel's scroll position (in cards), eases to song_
+  double wheelMs_ = 0;
   bool analyzeShown_ = false;  // the "making the chart" text was drawn once
   std::vector<Note> notes_;
   size_t firstOpen_ = 0;       // first note that may still be unjudged
   double songTime_ = -1000;
   double duration_ = 0;
+  double bpm_ = 0;
   int counts_[kJudgeCount] = {};
   int combo_ = 0, maxCombo_ = 0;
-  double points_ = 0;          // sum of judgement values
+  int judgements_ = 0, totalJudgements_ = 0;
+  double points_ = 0;          // sum of accuracy values (300 for MAX/300...)
+  double scorePoints_ = 0;     // sum of score values (320 for MAX)
+  float health_ = 1;
   int lanePressed_[4] = {};    // fingers held per lane
+  double laneDownMs_[4] = {};  // when each lane was last pressed (for the light)
   std::map<int, int> fingerLane_;
+  std::map<int, engine::Vec2> fingerDown_;  // menu: where each finger came down (swipes)
   std::vector<Burst> bursts_;
+  struct Tick {
+    double errorMs, ms;
+    Judge judge;
+  };
+  std::vector<Tick> ticks_;    // the timing-error bar's recent hits
   Judge lastJudge_ = kMiss;
   double lastJudgeMs_ = -1e9;
   double finishMs_ = 0;
-  std::map<std::string, double> best_;  // best accuracy per song + difficulty
+  bool newBest_ = false;
+  std::map<std::string, Best> best_;            // per song + difficulty (also kept on the phone)
+  std::map<std::string, Chart> charts_;         // made this session (url + difficulty)
+  std::map<std::string, float> starCache_;      // star rating per song + difficulty, once charted
 };
 
 }  // namespace app

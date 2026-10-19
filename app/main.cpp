@@ -736,7 +736,7 @@ void use(const app::Interactable& it) {
       }
       if (!claimMachine("machine.rhythm", "playing")) break;
       std::vector<app::RhythmGame::SongChoice> songs;
-      for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
+      for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, "", s.url});
       g_app.rhythm.open(std::move(songs));
       g_app.input.setCapture(true);
       setActivity(Activity::kRhythm);
@@ -1297,10 +1297,10 @@ void applyTestHooks() {
   g_app.rhythm.autoplay = h.autoplay;
   if (h.rhythmSong >= 0) {
     std::vector<app::RhythmGame::SongChoice> songs;
-    for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, s.url});
+    for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, "", s.url});
     g_app.rhythm.open(std::move(songs));
     g_app.input.setCapture(true);
-    g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, 2)));
+    g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, app::kDifficultyCount - 1)));
     setActivity(Activity::kRhythm);
   }
   if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);

@@ -107,6 +107,13 @@ jobs:
         continue-on-error: true
         run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
 
+      # 4K Mania: the song select opens, a song is charted and played (autoplay).
+      - name: "Test: 4K Mania"
+        continue-on-error: true
+        run: |
+          command -v ffmpeg >/dev/null || sudo apt-get install -y -q ffmpeg >/dev/null
+          node tools/rhythm_test.mjs
+
       # The arcade: tap the platformer machine, the user's game opens and draws.
       - name: "Test: the arcade's platformer"
         continue-on-error: true
