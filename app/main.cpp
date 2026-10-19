@@ -249,10 +249,8 @@ void standUp() {
     g_app.piano.closeKeyboard();
     g_app.input.setCapture(false);
   }
-  // Step off in front of the seat.
-  const Vec3 forward{std::sin(s.yaw), 0, -std::cos(s.yaw)};
-  Vec3 p = s.hip + forward * 0.65f;
-  p = app::resolveCollisions(g_app.scene, p, kBodyRadius);
+  // Step off where you can walk away (app::standSpot).
+  Vec3 p = app::standSpot(g_app.scene, s);
   p.y = app::groundHeight(g_app.scene, p) + 1.65f;
   g_app.camera.position = p;
   g_app.eyeHeight = 1.65f;

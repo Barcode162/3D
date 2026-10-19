@@ -12,6 +12,7 @@ declare -A TESTS=(
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"
+  [walk_test]="tools/native/walk_test.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp engine/mesh_data.cpp"
   [physics_test]="tools/native/physics_test.cpp engine/physics.cpp engine/mesh_data.cpp app/props.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp"
 )
 for t in "${!TESTS[@]}"; do

@@ -176,6 +176,15 @@ std::vector<engine::MaterialImages> buildBarTextures();
 // Moves a walker (circle of `radius` on the floor) out of any blocker.
 engine::Vec3 resolveCollisions(const BarScene& scene, engine::Vec3 position, float radius);
 
+// Whether a point on the floor can be walked to from the door (a 0.1 m grid
+// built the first time it's asked, for a 0.3 m walker).
+bool reachableOnFoot(const BarScene& scene, engine::Vec3 position);
+
+// Where you stand after getting up from a seat: in front of sofas and
+// armchairs, behind stools, the piano bench and the racing rigs; if that
+// spot is boxed in, the nearest floor you can walk away from (y = 0).
+engine::Vec3 standSpot(const BarScene& scene, const Seat& seat);
+
 // How high the floor is under a point (0, or a raised FloorArea).
 float groundHeight(const BarScene& scene, engine::Vec3 position);
 

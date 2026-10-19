@@ -37,10 +37,14 @@ user asked: "the race game should actually be fixed".)
 - [ ] **9. Player cards: badge slots.**
 - [ ] **10. Pots and plants** have things inside them (clipping); a **lamp
       floats** where a seat's indent is. Look around and fix such things.
-- [ ] **11. Walk-through check:** simulate walking through the whole bar, find
+- [ ] **11. Walk-through check:** (started 2026-10-19: `walk_test` finds unreachable
+      seats and things; the walkway behind the bar is open now) simulate walking through the whole bar, find
       what's in the way, move things a little so it all makes sense; be able
       to walk all around the bar (counter).
-- [ ] **12. Stuck when sitting:** you get trapped after sitting at the
+- [x] **12. Stuck when sitting:** (2026-10-19: standing up uses `app::standSpot`: behind
+      stools/rigs/piano bench, in front of sofas/armchairs, else the nearest floor you
+      can walk away from; lounge blockers trimmed; `tools/native/walk_test.cpp` checks
+      every seat) you get trapped after sitting at the
       **fireplace** and in the **left racing rig**: standing up must let you walk.
 - [ ] **13. The chessboard works** (a real game of chess you can play).
 

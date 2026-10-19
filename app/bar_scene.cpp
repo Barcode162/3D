@@ -341,10 +341,13 @@ void buildLounge(Builder& b) {
   b.model("lounge.glb", {0, 0, 0}, kLeather);
   b.model("fire_flames.glb", {0, 0, 0}, kGlowGlass);
   b.blockRect(kX0, fz - 1.15f, -8.05f, fz + 1.15f);               // hearth
-  b.blockRect(-6.25f, fz - 1.2f, -5.25f, fz + 1.2f);              // sofa
+  // Walking blockers a bit smaller than the furniture (you stand with your
+  // shins at the sofa's seat and the coffee table's top under your hands),
+  // so you fit between the sofa and the coffee table (walk_test).
+  b.blockRect(-5.95f, fz - 1.2f, -5.25f, fz + 1.2f);              // sofa
   b.solid({-5.75f, 0.27f, fz}, {0.45f, 0.27f, 1.2f}, kLeather);
   b.solid({-5.4f, 0.45f, fz}, {0.1f, 0.33f, 1.2f}, kLeather);
-  b.blockRect(-7.35f, fz - 0.62f, -6.55f, fz + 0.62f);            // coffee table
+  b.blockRect(-7.25f, fz - 0.5f, -6.85f, fz + 0.5f);              // coffee table
   b.solid({-6.95f, 0.43f, fz}, {0.38f, 0.02f, 0.6f}, kDarkWood);
   for (float dz : {-1.3f, 1.3f}) {
     b.block({-7.25f, 0, fz + dz}, 0.45f, 0.45f);                   // armchairs
@@ -497,7 +500,9 @@ void buildConstruction(Builder& b) {
   b.model("construction.glb", {0, 0, 0}, kDoorWood);
   const float ax = (kDoorAX0 + kDoorAX1) / 2, bz = (kDoorBZ0 + kDoorBZ1) / 2;
   b.blockRect(kDoorAX0 - 1.3f, kZ0 - 1, kDoorAX1 + 1.0f, kZ0 + 1.15f);  // barricades in front of room 2
-  b.blockRect(kX0 - 1, kDoorBZ0 - 1.0f, kX0 + 1.15f, kDoorBZ1 + 1.3f);  // and room 3
+  // and room 3 (stopping 0.4 m short of the door on the bar side, so the gap
+  // at the counter's end stays open: the way behind the bar)
+  b.blockRect(kX0 - 1, kDoorBZ0 - 0.4f, kX0 + 1.15f, kDoorBZ1 + 1.3f);
   b.solid({ax + 0.1f, 0.5f, kZ0 + 0.7f}, {1.1f, 0.5f, 0.15f}, kDoorWood);
   b.solid({kX0 + 0.7f, 0.5f, bz - 0.1f}, {0.15f, 0.5f, 1.1f}, kDoorWood);
   // Work lights inside the unfinished rooms, and the barricades' amber lamps.
@@ -576,6 +581,107 @@ BarScene buildBarScene() {
   buildMirror(b);
   buildConstruction(b);
   return scene;
+}
+
+namespace {
+// Where you can walk: a 0.1 m grid over the floor, flood-filled from the
+// door (cells where a 0.3 m walker isn't pushed by any blocker).
+struct WalkMap {
+  float minX = 0, minZ = 0, cell = 0.1f;
+  int w = 0, d = 0;
+  std::vector<uint8_t> reach;
+  bool cellOf(Vec3 p, int& i, int& k) const {
+    i = static_cast<int>(std::floor((p.x - minX) / cell));
+    k = static_cast<int>(std::floor((p.z - minZ) / cell));
+    return i >= 0 && k >= 0 && i < w && k < d;
+  }
+  Vec3 center(int i, int k) const {
+    return {minX + (static_cast<float>(i) + 0.5f) * cell, 0, minZ + (static_cast<float>(k) + 0.5f) * cell};
+  }
+};
+
+WalkMap buildWalkMap(const BarScene& scene) {
+  constexpr float kRadius = 0.3f;
+  WalkMap m;
+  float maxX = -1e9f, maxZ = -1e9f;
+  m.minX = m.minZ = 1e9f;
+  for (const Blocker& b : scene.blockers) {
+    m.minX = std::min(m.minX, b.minX);
+    m.minZ = std::min(m.minZ, b.minZ);
+    maxX = std::max(maxX, b.maxX);
+    maxZ = std::max(maxZ, b.maxZ);
+  }
+  m.w = static_cast<int>((maxX - m.minX) / m.cell) + 1;
+  m.d = static_cast<int>((maxZ - m.minZ) / m.cell) + 1;
+  std::vector<uint8_t> open(static_cast<size_t>(m.w * m.d));
+  for (int k = 0; k < m.d; ++k) {
+    for (int i = 0; i < m.w; ++i) {
+      const Vec3 p = m.center(i, k);
+      const Vec3 q = resolveCollisions(scene, p, kRadius);
+      open[static_cast<size_t>(k * m.w + i)] = std::fabs(q.x - p.x) + std::fabs(q.z - p.z) < 1e-3f;
+    }
+  }
+  m.reach.assign(open.size(), 0);
+  int si, sk;
+  if (!m.cellOf(scene.spawnPosition, si, sk)) return m;
+  std::vector<int> queue;
+  // Start from the nearest open cell to the door.
+  for (int r = 0; r < 10 && queue.empty(); ++r) {
+    for (int dk = -r; dk <= r && queue.empty(); ++dk) {
+      for (int di = -r; di <= r && queue.empty(); ++di) {
+        const int i = si + di, k = sk + dk;
+        if (i >= 0 && k >= 0 && i < m.w && k < m.d && open[static_cast<size_t>(k * m.w + i)]) queue.push_back(k * m.w + i);
+      }
+    }
+  }
+  for (int c : queue) m.reach[static_cast<size_t>(c)] = 1;
+  for (size_t q = 0; q < queue.size(); ++q) {
+    const int c = queue[q], i = c % m.w, k = c / m.w;
+    const int ni[4] = {i + 1, i - 1, i, i}, nk[4] = {k, k, k + 1, k - 1};
+    for (int n = 0; n < 4; ++n) {
+      if (ni[n] < 0 || nk[n] < 0 || ni[n] >= m.w || nk[n] >= m.d) continue;
+      const int nc = nk[n] * m.w + ni[n];
+      if (!open[static_cast<size_t>(nc)] || m.reach[static_cast<size_t>(nc)]) continue;
+      m.reach[static_cast<size_t>(nc)] = 1;
+      queue.push_back(nc);
+    }
+  }
+  return m;
+}
+}  // namespace
+
+bool reachableOnFoot(const BarScene& scene, Vec3 p) {
+  static const BarScene* built = nullptr;
+  static WalkMap map;
+  if (built != &scene) { map = buildWalkMap(scene); built = &scene; }
+  int i, k;
+  return map.cellOf(p, i, k) && map.reach[static_cast<size_t>(k * map.w + i)];
+}
+
+Vec3 standSpot(const BarScene& scene, const Seat& s) {
+  constexpr float kRadius = 0.3f;
+  // Sofas and armchairs: stand up in front. Stools, the piano bench and the
+  // racing rigs face a counter, a piano or screens: step off behind you.
+  const Vec3 forward{std::sin(s.yaw), 0, -std::cos(s.yaw)};
+  const bool front = s.kind == SeatKind::kSofa || s.kind == SeatKind::kChair;
+  Vec3 want = s.hip + forward * (front ? 0.65f : -0.6f);
+  want.y = 0;
+  const Vec3 p = resolveCollisions(scene, want, kRadius);
+  if (reachableOnFoot(scene, p)) return p;
+  // Boxed in there: the nearest floor you can walk away from (rings out to 3 m).
+  Vec3 best = p;
+  float bestD = 1e9f;
+  for (float r = 0.1f; r <= 3.0f && bestD > 1e8f; r += 0.1f) {
+    for (int a = 0; a < 48; ++a) {
+      const float t = engine::kPi * 2 * static_cast<float>(a) / 48.0f;
+      const Vec3 c = want + Vec3{std::cos(t) * r, 0, std::sin(t) * r};
+      if (!reachableOnFoot(scene, c)) continue;
+      const Vec3 q = resolveCollisions(scene, c, kRadius);
+      const float d = engine::length(q - want);
+      if (reachableOnFoot(scene, q) && d < bestD) { bestD = d; best = q; }
+    }
+  }
+  return best;
 }
 
 float groundHeight(const BarScene& scene, Vec3 p) {
