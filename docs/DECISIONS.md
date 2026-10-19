@@ -1034,3 +1034,23 @@ No builds or headless runs outside "go".
 - Reports now include `taps` (the last 12: where, the element hit, the element on
   top, the open panel) and `modal`, to find what blocks a stuck button.
 
+## Lights, rooms and streaming (2026-10-19, master list 1d-1e)
+- **Lights per pixel:** the shader skips a listed light when the pixel is out
+  of its range or faces away (exact: those add nothing), and `pow(x, 4)` became
+  `q * q`. Per grid cell at most `kLightsPerCell` = 6 lights, brightest first
+  (8 vs 6: ≤ 0.55% of pixels change by more than 4/255; 4 changed the bar's
+  look, 1.8-3.8%). Views can take fewer: `FrameUniforms.ambient.w` = most
+  lights per pixel; the mirror uses 4 (`kMirrorLights`).
+- **Rooms (portal culling):** `BarScene::rooms` (the bar, the arcade, room 3)
+  and `doorways` (generous rectangles). Each scene object, model and chunk gets
+  the room it's wholly inside (else -1 = always tested). Per view
+  (`SceneRenderer::roomView`): your room uses the full view; another room only
+  if its doorway is on screen, narrowed to the doorway's screen box; if you
+  stand in a doorway (corners behind you) the whole view. The mirror's view
+  counts as being in the mirror's room. Carried glasses get their room again
+  on every move.
+- **Streaming:** `ModelPlacement::room` (Builder::room while building a room).
+  Files used only in a room other than the spawn room aren't part of the
+  loading screen; `streamRooms(eye, now)` loads them within 8 m of the room or
+  after 20 s in the bar ("Room N: loading ..." / "Room N streamed in" in the log).
+

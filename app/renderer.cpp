@@ -143,6 +143,8 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
     desc.entries = &entry;
     objectBindGroup_ = device.CreateBindGroup(&desc);
   }
+  rooms_ = scene.rooms;
+  doorways_ = scene.doorways;
   std::vector<uint8_t> objectData(total * kObjectStride);
   for (size_t i = 0; i < objects.size(); ++i) {
     const SceneObject& o = objects[i];
@@ -164,6 +166,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
     if (o.mesh.vertices.empty()) local = {};
     sceneDraws_.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride),
                            engine::transformAabb(u.model, local)});
+    sceneDraws_.back().room = roomOf(sceneDraws_.back().bounds);
   }
   {
     ObjectUniforms u = {};
@@ -278,7 +281,7 @@ void SceneRenderer::buildLighting(const BarScene& scene) {
   lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
   gpu_->queue.WriteBuffer(lightingBuffer_, 0, l.get(), sizeof(LightingUniforms));
   LOG_INFO("Lights: %zu in a %ux%u grid of %.2f m cells%s.", count, nx, nz, cell,
-           crowded ? " (some cells have more than 8; the faintest are left out)" : "");
+           crowded ? " (some cells have more than 6; the faintest are left out)" : "");
   if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
 }
 
@@ -585,9 +588,9 @@ void SceneRenderer::resizeMirrorTargets() {
 }
 
 void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items,
-                              const engine::Frustum& view) const {
+                              const RoomView& view) const {
   for (const DrawItem& d : items) {
-    if (!view.visible(d.bounds)) continue;
+    if (!seen(view, d.bounds, d.room)) continue;
     pass.SetBindGroup(1, objectBindGroup_, 1, &d.uniformOffset);
     pass.SetVertexBuffer(0, d.mesh.vertexBuffer);
     pass.SetIndexBuffer(d.mesh.indexBuffer, wgpu::IndexFormat::Uint32);
@@ -632,28 +635,80 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
   modelBaseGlow_.assign(models_.size(), 0.0f);
   modelHighlight_.assign(models_.size(), 0.0f);
-  // Files are requested in placement order, so the room shell (placed
-  // first) arrives first.
-  fileProgress_.assign(files.size(), 0.0f);
   fileNames_ = files;
+  fileUsers_ = users;
+  // Files used only in a room other than where you start wait until you come
+  // near it (streamRooms); the rest load now, in placement order, so the
+  // room shell (placed first) arrives first.
+  const int spawnRoom = roomAt(scene.spawnPosition);
   for (size_t f = 0; f < files.size(); ++f) {
-    engine::GpuModel::load(
-        gpu_->device, modelLayout_, modelSampler_, modelUrl(files[f], gpu_->astc),
-        [this, f, placements = users[f]](std::shared_ptr<engine::GpuModel> model) {
-          fileProgress_[f] = 1.0f;
+    int room = scene.models[users[f][0]].room;
+    for (size_t i : users[f]) {
+      if (scene.models[i].room != room) room = -1;
+    }
+    if (room < 0 || room == spawnRoom) continue;
+    auto it = std::find_if(streamRooms_.begin(), streamRooms_.end(), [room](const StreamRoom& r) { return r.room == room; });
+    if (it == streamRooms_.end()) it = streamRooms_.insert(streamRooms_.end(), StreamRoom{room, {}});
+    it->files.push_back(f);
+  }
+  fileSlot_.assign(files.size(), 0);
+  for (const StreamRoom& r : streamRooms_) {
+    for (size_t f : r.files) fileSlot_[f] = -1;
+  }
+  int slots = 0;
+  for (int& slot : fileSlot_) slot = slot < 0 ? -1 : slots++;
+  fileProgress_.assign(static_cast<size_t>(slots), 0.0f);
+  for (size_t f = 0; f < files.size(); ++f) {
+    if (fileSlot_[f] >= 0) requestFile(f, true);
+  }
+}
+
+void SceneRenderer::requestFile(size_t f, bool atStart) {
+  const int slot = fileSlot_[f];
+  engine::GpuModel::load(
+      gpu_->device, modelLayout_, modelSampler_, modelUrl(fileNames_[f], gpu_->astc),
+      [this, f, slot, atStart](std::shared_ptr<engine::GpuModel> model) {
+        if (atStart) {
+          fileProgress_[static_cast<size_t>(slot)] = 1.0f;
           ++filesDone_;
-          if (!model) {
-            ++filesFailed_;
-            // The room shell: without it there's no bar to enter.
-            if (fileNames_[f].find("hall") != std::string::npos) criticalFailed_ = true;
-            return;
+          if (!model) ++filesFailed_;
+        } else {
+          for (StreamRoom& r : streamRooms_) {
+            if (std::count(r.files.begin(), r.files.end(), f) && ++r.done == r.files.size()) {
+              LOG_INFO("Room %d streamed in (%zu model files).", r.room, r.files.size());
+            }
           }
-          for (size_t i : placements) models_[i].gpu = model;
-          modelsLoaded_ += placements.size();
-        },
-        // Downloading is most of the wait; decoding textures is the rest.
-        [this, f](float fraction) { fileProgress_[f] = std::max(fileProgress_[f], 0.85f * fraction); },
-        gpu_->astc ? modelUrl(files[f], false) : "");
+        }
+        if (!model) {
+          // The room shell: without it there's no bar to enter.
+          if (atStart && fileNames_[f].find("hall") != std::string::npos) criticalFailed_ = true;
+          return;
+        }
+        for (size_t i : fileUsers_[f]) {
+          models_[i].gpu = model;
+          assignRooms(models_[i]);
+        }
+        modelsLoaded_ += fileUsers_[f].size();
+      },
+      // Downloading is most of the wait; decoding textures is the rest.
+      [this, slot, atStart](float fraction) {
+        if (atStart) fileProgress_[static_cast<size_t>(slot)] = std::max(fileProgress_[static_cast<size_t>(slot)], 0.85f * fraction);
+      },
+      gpu_->astc ? modelUrl(fileNames_[f], false) : "");
+}
+
+void SceneRenderer::streamRooms(Vec3 eye, double nowMs) {
+  if (streamStartMs_ < 0) streamStartMs_ = nowMs;
+  const bool idle = nowMs - streamStartMs_ > kStreamIdleMs;
+  for (StreamRoom& r : streamRooms_) {
+    if (r.requested) continue;
+    const engine::Aabb& box = rooms_[static_cast<size_t>(r.room)];
+    const float dx = eye.x - std::clamp(eye.x, box.min.x, box.max.x);
+    const float dz = eye.z - std::clamp(eye.z, box.min.z, box.max.z);
+    if (!idle && dx * dx + dz * dz > kStreamDistance * kStreamDistance) continue;
+    r.requested = true;
+    LOG_INFO("Room %d: loading its %zu model files (%s).", r.room, r.files.size(), idle ? "in the background" : "you're near");
+    for (size_t f : r.files) requestFile(f, false);
   }
 }
 
@@ -670,20 +725,94 @@ void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat 
   m.position = position;
   const Mat4 model = modelMatrix(position, rotation, m.scale);
   m.world = model;
+  if (m.gpu) assignRooms(m);  // it may have been carried into another room
   // Only the matrix (the start of ObjectUniforms) changes.
   gpu_->queue.WriteBuffer(objectBuffer_, m.uniformOffset, &model, sizeof(model));
+}
+
+int SceneRenderer::roomAt(Vec3 p) const {
+  for (size_t i = 0; i < rooms_.size(); ++i) {
+    if (rooms_[i].contains(p)) return static_cast<int>(i);
+  }
+  return -1;
+}
+
+int SceneRenderer::roomOf(const engine::Aabb& box) const {
+  for (size_t i = 0; i < rooms_.size(); ++i) {
+    const engine::Aabb& r = rooms_[i];
+    if (box.min.x >= r.min.x && box.min.y >= r.min.y && box.min.z >= r.min.z && box.max.x <= r.max.x &&
+        box.max.y <= r.max.y && box.max.z <= r.max.z) {
+      return static_cast<int>(i);
+    }
+  }
+  return -1;
+}
+
+void SceneRenderer::assignRooms(ModelDraw& m) const {
+  m.room = roomOf(engine::transformAabb(m.world, {m.gpu->boundsMin, m.gpu->boundsMax}));
+  m.clusterRoom.resize(m.gpu->parts.size());
+  for (size_t p = 0; p < m.gpu->parts.size(); ++p) {
+    const auto& clusters = m.gpu->parts[p].clusters;
+    m.clusterRoom[p].resize(clusters.size());
+    for (size_t c = 0; c < clusters.size(); ++c) {
+      // Inside the model's room already, or check the chunk itself.
+      m.clusterRoom[p][c] = static_cast<int8_t>(
+          m.room >= 0 ? m.room : roomOf(engine::transformAabb(m.world, clusters[c].bounds)));
+    }
+  }
+}
+
+SceneRenderer::RoomView SceneRenderer::roomView(const Mat4& viewProj, int eyeRoom, float x0, float x1, float y0,
+                                                float y1) const {
+  RoomView v;
+  v.all = engine::Frustum::fromViewProj(viewProj, x0, x1, y0, y1);
+  v.room.assign(rooms_.size(), v.all);
+  v.roomSeen.assign(rooms_.size(), eyeRoom < 0);  // between rooms: all of them
+  if (eyeRoom < 0) return v;
+  v.roomSeen[static_cast<size_t>(eyeRoom)] = true;
+  for (const BarScene::Doorway& d : doorways_) {
+    if (d.a != eyeRoom && d.b != eyeRoom) continue;
+    const auto other = static_cast<size_t>(d.a == eyeRoom ? d.b : d.a);
+    // The doorway on screen: the other room shows only through it.
+    float nx0 = 1, nx1 = -1, ny0 = 1, ny1 = -1;
+    int behind = 0;
+    for (const Vec3& c : d.corners) {
+      const engine::Vec4 q = engine::transformPoint(viewProj, c);
+      if (q.w <= 0.01f) {
+        ++behind;
+        continue;
+      }
+      nx0 = std::min(nx0, q.x / q.w);
+      nx1 = std::max(nx1, q.x / q.w);
+      ny0 = std::min(ny0, q.y / q.w);
+      ny1 = std::max(ny1, q.y / q.w);
+    }
+    if (behind == 4) continue;  // the doorway is behind you
+    if (behind > 0) {           // you're right at it: the whole view
+      v.roomSeen[other] = true;
+      continue;
+    }
+    nx0 = std::max(nx0, x0);
+    nx1 = std::min(nx1, x1);
+    ny0 = std::max(ny0, y0);
+    ny1 = std::min(ny1, y1);
+    if (nx0 >= nx1 || ny0 >= ny1) continue;  // off screen
+    v.roomSeen[other] = true;
+    v.room[other] = engine::Frustum::fromViewProj(viewProj, nx0, nx1, ny0, ny1);
+  }
+  return v;
 }
 
 // Solid parts in any order; see-through parts sorted farthest first so
 // nearer glass blends over farther glass. Only chunks inside `view` are
 // drawn; neighbouring visible chunks go out as one draw.
-void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye, const engine::Frustum& view,
+void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye, const RoomView& view,
                                float minSize) const {
   std::vector<const ModelDraw*> order;
   for (const ModelDraw& m : models_) {
     if (!m.gpu || (blend && !m.gpu->hasBlend)) continue;
     const engine::Aabb box = engine::transformAabb(m.world, {m.gpu->boundsMin, m.gpu->boundsMax});
-    if (!view.visible(box)) continue;
+    if (!seen(view, box, m.room)) continue;
     if (minSize > 0) {
       const Vec3 half = (box.max - box.min) * 0.5f;
       const Vec3 d = (box.min + box.max) * 0.5f - eye;
@@ -699,9 +828,11 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
   }
   for (const ModelDraw* m : order) {
     bool boundObject = false;
-    for (const engine::GpuModel::Part& part : m->gpu->parts) {
+    for (size_t pi = 0; pi < m->gpu->parts.size(); ++pi) {
+      const engine::GpuModel::Part& part = m->gpu->parts[pi];
       if (part.blend != blend) continue;
-      if (part.clusters.size() > 1 && !view.visible(engine::transformAabb(m->world, part.bounds))) continue;
+      if (part.clusters.size() > 1 && !view.all.visible(engine::transformAabb(m->world, part.bounds))) continue;
+      const std::vector<int8_t>* rooms = pi < m->clusterRoom.size() ? &m->clusterRoom[pi] : nullptr;
       // Runs of visible chunks.
       uint32_t runFirst = 0, runCount = 0;
       bool partBound = false;
@@ -721,9 +852,12 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
         engine::prof::draw(runCount);
         runCount = 0;
       };
-      for (const engine::GpuModel::Cluster& c : part.clusters) {
-        const bool seen = part.clusters.size() == 1 || view.visible(engine::transformAabb(m->world, c.bounds));
-        if (!seen) {
+      for (size_t ci = 0; ci < part.clusters.size(); ++ci) {
+        const engine::GpuModel::Cluster& c = part.clusters[ci];
+        const int room = rooms && ci < rooms->size() ? (*rooms)[ci] : -1;
+        const bool visible = (part.clusters.size() == 1 && room == m->room) ||
+                             seen(view, engine::transformAabb(m->world, c.bounds), room);
+        if (!visible) {
           flush();
           continue;
         }
@@ -881,6 +1015,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
     // Like a photo studio: avatars get extra even light on the plain backdrop.
     for (int c = 0; c < 3; ++c) f.ambient[c] = f.ambient[c] * 3.0f + 0.12f;
   }
+  f.ambient[3] = kMirrorLights;  // a cheaper reflection: fewer lights per pixel
   const View& view = views_[1 + index];
   gpu_->queue.WriteBuffer(view.buffer, 0, &f, sizeof(f));
 
@@ -900,9 +1035,11 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   passDesc.depthStencilAttachment = &depth;
   // Only what shows through the glass: the reflected camera's view, narrowed
   // to the glass's box on screen (its near plane is the glass itself).
-  const engine::Frustum cull = engine::Frustum::fromViewProj(
-      f.viewProj, 2.0f * static_cast<float>(x0) / W - 1.0f, 2.0f * static_cast<float>(x1) / W - 1.0f,
-      1.0f - 2.0f * static_cast<float>(y1) / H, 1.0f - 2.0f * static_cast<float>(y0) / H);
+  // Rooms: the reflection is seen from the mirror's own room.
+  const RoomView cull = roomView(
+      f.viewProj, roomAt(mirror.center + mirror.normal * 0.2f), 2.0f * static_cast<float>(x0) / W - 1.0f,
+      2.0f * static_cast<float>(x1) / W - 1.0f, 1.0f - 2.0f * static_cast<float>(y1) / H,
+      1.0f - 2.0f * static_cast<float>(y0) / H);
   // Props smaller than ~2% of their distance (a glass 5 m away) are left
   // out of the reflection: they'd be a few pixels.
   constexpr float kMirrorMinSize = 0.02f;
@@ -993,7 +1130,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
-  const engine::Frustum cull = engine::Frustum::fromViewProj(viewProj);
+  const RoomView cull = roomView(viewProj, roomAt(eye));
   drawItems(pass, sceneDraws_, cull);
   drawBoxes(pass);
   pass.SetPipeline(modelPipeline_);

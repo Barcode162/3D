@@ -18,7 +18,7 @@ struct Light {
 struct Frame {
   viewProj: mat4x4f,
   cameraPos: vec4f,
-  ambient: vec4f,     // rgb = ambient light color
+  ambient: vec4f,     // rgb = ambient light color, w = most lights per pixel (0 = all listed)
   fog: vec4f,         // rgb = haze color, w = density
   // Mirror views: drop anything behind the glass (dot(xyz, p) + w < 0).
   // The normal view uses (0, 0, 0, 1), which keeps everything.
@@ -346,17 +346,27 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let cx = u32(clamp(floor((worldPos.x - g.x) * g.z), 0.0, f32(lighting.gridSize.x - 1u)));
   let cz = u32(clamp(floor((worldPos.z - g.y) * g.z), 0.0, f32(lighting.gridSize.y - 1u)));
   let cell = lighting.cells[cz * lighting.gridSize.x + cx];
-  for (var k = 0u; k < cell.z; k++) {
+  // Each cell's lights are listed brightest first, so a view can take only
+  // the strongest few (the mirror: its reflection doesn't need them all).
+  let lightCount = select(cell.z, min(cell.z, u32(frame.ambient.w)), frame.ambient.w > 0.5);
+  for (var k = 0u; k < lightCount; k++) {
     let packed = select(cell.y, cell.x, k < 4u);
     let l = lighting.lights[(packed >> (8u * (k % 4u))) & 0xffu];
     let toLight = l.position.xyz - worldPos;
-    let dist = length(toLight);
+    // A cell lists every light that reaches any part of it, so many of them
+    // don't reach this pixel, or light it from behind: those add nothing,
+    // so skip the math (same picture, less work).
+    let d2 = dot(toLight, toLight);
+    if (d2 >= l.position.w * l.position.w) { continue; }
+    let dist = sqrt(d2);
     let dir = toLight / dist;
+    let nl = dot(n, dir);
+    if (nl <= 0.0) { continue; }
     // Inverse-square falloff that fades smoothly to zero at the light's range.
-    let window = clamp(1.0 - pow(dist / l.position.w, 4.0), 0.0, 1.0);
-    let atten = window * window / (dist * dist + 0.25);
+    let q = d2 / (l.position.w * l.position.w);
+    let window = clamp(1.0 - q * q, 0.0, 1.0);
+    let atten = window * window / (d2 + 0.25);
     let radiance = l.color.rgb * l.color.w * atten;
-    let nl = max(dot(n, dir), 0.0);
     diffuse += radiance * nl;
 
     // Bulbs aren't points: a bigger glowing part makes a wider, softer

@@ -93,13 +93,21 @@ class SceneRenderer {
   size_t modelFiles() const { return fileProgress_.size(); }
   float loadProgress() const;
 
+  // Rooms you're not in load when you come within kStreamDistance of them,
+  // or after kStreamIdleMs in the bar anyway (so walking in finds them ready).
+  // Call every frame once in the bar.
+  void streamRooms(engine::Vec3 eye, double nowMs);
+  static constexpr float kStreamDistance = 8.0f;
+  static constexpr double kStreamIdleMs = 20000;
+
   // Moves placed model `index` (BarScene::models order), e.g. a glass that
   // physics is moving.
   void setModelTransform(size_t index, engine::Vec3 position, engine::Quat rotation);
 
  private:
   static constexpr uint32_t kMaxLights = 32;       // matches shaders/scene.wgsl
-  static constexpr uint32_t kLightsPerCell = 8;    // ...and so on
+  static constexpr uint32_t kLightsPerCell = 6;    // brightest first; 8 fit (2 x 4 bytes)
+  static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
   static constexpr uint32_t kMaxGridCells = 256;
   static constexpr uint32_t kMaxBones = 32;
   static constexpr size_t kMaxModels = 512;
@@ -146,11 +154,14 @@ class SceneRenderer {
     engine::Vec3 position;  // for sorting see-through models back to front
     float scale = 1;
     engine::Mat4 world;     // position, rotation and scale (for culling)
+    int room = -1;          // the room it's wholly inside (-1 = none)
+    std::vector<std::vector<int8_t>> clusterRoom;  // per part, per chunk
   };
   struct DrawItem {
     engine::Mesh mesh;
     uint32_t uniformOffset;
     engine::Aabb bounds;  // world space
+    int room = -1;
   };
   // One camera's frame uniforms (the main view, or a mirror's view).
   struct View {
@@ -173,12 +184,32 @@ class SceneRenderer {
   bool createGlassPipeline();
   void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler);
   void resizeMirrorTargets();
-  // Both skip what's outside `view`. `minSize` (mirrors): also skip models
+  // What one camera can see: its view, and per room the part of it that
+  // looks into that room (none = the room is hidden: you're not in it and
+  // can't see its doorway).
+  struct RoomView {
+    engine::Frustum all;
+    std::vector<engine::Frustum> room;
+    std::vector<bool> roomSeen;
+  };
+  // `eyeRoom` = the room the camera is in (-1 = between rooms: everything
+  // counts). `x0..y1` narrow the view to part of the screen (-1..1).
+  RoomView roomView(const engine::Mat4& viewProj, int eyeRoom, float x0 = -1, float x1 = 1, float y0 = -1,
+                    float y1 = 1) const;
+  bool seen(const RoomView& view, const engine::Aabb& box, int room) const {
+    if (room < 0) return view.all.visible(box);
+    return view.roomSeen[static_cast<size_t>(room)] && view.room[static_cast<size_t>(room)].visible(box);
+  }
+  int roomAt(engine::Vec3 p) const;              // -1 = in no room (a doorway)
+  int roomOf(const engine::Aabb& box) const;     // -1 = not wholly inside one room
+  void assignRooms(ModelDraw& m) const;   // after loading or moving
+  // Both skip what the view can't see. `minSize` (mirrors): also skip models
   // smaller than this fraction of their distance (tiny far props).
-  void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items,
-                 const engine::Frustum& view) const;
-  void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye, const engine::Frustum& view,
+  void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items, const RoomView& view) const;
+  void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye, const RoomView& view,
                   float minSize = 0) const;
+  std::vector<engine::Aabb> rooms_;
+  std::vector<BarScene::Doorway> doorways_;
   void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
   void drawOthers(const wgpu::RenderPassEncoder& pass) const;
@@ -200,7 +231,18 @@ class SceneRenderer {
   wgpu::Sampler modelSampler_;
   std::vector<ModelDraw> models_;
   size_t modelsLoaded_ = 0;
-  std::vector<float> fileProgress_;  // per model file, 0..1
+  std::vector<float> fileProgress_;  // per model file loaded at start, 0..1
+  void requestFile(size_t file, bool atStart);
+  std::vector<std::vector<size_t>> fileUsers_;  // per file, its placements
+  struct StreamRoom {
+    int room;
+    std::vector<size_t> files;
+    bool requested = false;
+    size_t done = 0;
+  };
+  std::vector<StreamRoom> streamRooms_;
+  std::vector<int> fileSlot_;  // per file: its place in fileProgress_ (-1 = streamed later)
+  double streamStartMs_ = -1;
   std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
   size_t filesDone_ = 0;
   size_t filesFailed_ = 0;

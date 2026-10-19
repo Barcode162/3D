@@ -1730,6 +1730,7 @@ void frame(double rafMs) {
   g_app.otherBones.resize(g_app.otherTransforms.size());
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
   g_app.renderer.setBoxes(g_app.boxes);
+  g_app.renderer.streamRooms(cam.position, nowMs);  // nearby rooms' models
   Mat4 self = app::avatarTransform(cam.position, cam.yaw, cam.pitch);
   if (g_app.avatarPreview) self = app::avatarTransform(g_app.previewEye, g_app.previewYaw + g_app.previewSpin, 0);
   if (g_app.seat >= 0) {

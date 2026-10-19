@@ -38,6 +38,7 @@ constexpr Vec3 kFire{1.0f, 0.45f, 0.15f};
 
 struct Builder {
   BarScene& scene;
+  int room = -1;  // models placed now belong to this room (streamed in when near)
 
   // Places a mesh made of material `m`.
   SceneObject& add(engine::MeshData mesh, Vec3 pos, MaterialId m, Quat rot = {}) {
@@ -48,7 +49,7 @@ struct Builder {
 
   // Places a .glb model (assets/models/<file>); returns its index.
   size_t model(const char* file, Vec3 pos, MaterialId m, Quat rot = {}, Prop prop = Prop::kNone) {
-    scene.models.push_back({file, pos, rot, 1, m, prop});
+    scene.models.push_back({file, pos, rot, 1, m, prop, room});
     return scene.models.size() - 1;
   }
 
@@ -543,6 +544,7 @@ void buildConstruction(Builder& b) {
 // platformer machine against the back wall (tools/assets/arcade.py,
 // arcade_cabinet.py). Its music: app/arcade_music (main.cpp).
 void buildArcade(Builder& b) {
+  b.room = 1;  // its models load as you come near (SceneRenderer::streamRooms)
   b.model("arcade.glb", {0, 0, 0}, kBlackSteel);
   b.scene.arcadeMin = {kArcX0, 0, kArcZ0};
   b.scene.arcadeMax = {kArcX1, kArcH, kArcZ1};
@@ -651,6 +653,23 @@ BarScene buildBarScene() {
   scene.lightGridMin = {kX0 - kWall - 3.2f, 0, kArcZ0 - 0.3f};
   scene.lightGridMax = {kX1 + 0.5f, 0, kZ1 + kBayDepth + 0.5f};
 
+  // Rooms and doorways for drawing (see BarScene::rooms): the bar, the
+  // arcade behind doorway A, and the taped-off room behind doorway B.
+  scene.rooms = {
+      {{kX0 - kWall - 0.01f, -0.2f, kZ0 - 0.05f}, {kX1 + 0.45f, 4.2f, kZ1 + kBayDepth + 1.2f}},  // 0: the bar
+      {{kArcX0 - 0.15f, -0.2f, kArcZ0 - 0.15f}, {kArcX1 + 0.15f, kArcH + 0.2f, kArcZ1 + 0.1f}},  // 1: the arcade
+      {{kX0 - kWall - 3.3f, -0.2f, kDoorBZ0 - 0.7f}, {kX0 - kWall, 3.0f, kDoorBZ1 + 1.4f}},  // 2: room 3
+  };
+  {
+    constexpr float kTop = 2.6f, kPad = 0.1f;
+    const float za = kZ0 - kWall / 2;  // doorway A, in the back wall
+    scene.doorways.push_back({0, 1, {{kDoorAX0 - kPad, 0, za}, {kDoorAX1 + kPad, 0, za},
+                                     {kDoorAX1 + kPad, kTop, za}, {kDoorAX0 - kPad, kTop, za}}});
+    const float xb = kX0 - kWall / 2;  // doorway B, in the left wall
+    scene.doorways.push_back({0, 2, {{xb, 0, kDoorBZ0 - kPad}, {xb, 0, kDoorBZ1 + kPad},
+                                     {xb, kTop, kDoorBZ1 + kPad}, {xb, kTop, kDoorBZ0 - kPad}}});
+  }
+
   Builder b{scene};
   buildRoom(b);
   buildBar(b);
@@ -660,6 +679,7 @@ BarScene buildBarScene() {
   buildMirror(b);
   buildConstruction(b);
   buildArcade(b);
+  b.room = -1;
   return scene;
 }
 

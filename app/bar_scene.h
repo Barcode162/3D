@@ -56,6 +56,7 @@ struct ModelPlacement {
   float scale = 1;
   MaterialId material = kDarkWood;
   Prop prop = Prop::kNone;  // kNone = fixed in place
+  int room = -1;  // a room it belongs to (BarScene::rooms): loaded when you come near
 };
 
 // An invisible solid box for physics, where the visible shape is a model
@@ -168,6 +169,16 @@ struct BarScene {
   std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;
+  // Rooms, for drawing (SceneRenderer): a room is drawn only when you're in
+  // it or can see into it through a doorway, and then only what shows
+  // through the doorway. Anything not wholly inside one room (walls between
+  // rooms, things in doorways) is always considered.
+  std::vector<engine::Aabb> rooms;
+  struct Doorway {
+    int a = 0, b = 0;           // the rooms it joins (indices into rooms)
+    engine::Vec3 corners[4];    // the opening, a rectangle (a little generous)
+  };
+  std::vector<Doorway> doorways;
   // Game spots (see app/games.*): the piano, the dartboard, the two sims,
   // the rhythm cabinet's screen, the bartender's station.
   engine::Vec3 pianoPosition;
