@@ -79,7 +79,11 @@ user asked: "the race game should actually be fixed".)
       can walk away from; lounge blockers trimmed; `tools/native/walk_test.cpp` checks
       every seat) you get trapped after sitting at the
       **fireplace** and in the **left racing rig**: standing up must let you walk.
-- [ ] **13. The chessboard works** (a real game of chess you can play).
+- [x] **13. The chessboard works** (done 2026-10-19: full rules,
+      `app/chess_rules.*`, perft-tested; 3D pieces `tools/assets/chess.py`
+      that hop between squares; tap the board to play the computer, or black
+      against whoever plays white; shared through the room (`ch`, claims
+      machine.chess.w/.b). Later: the room checking each move's legality.)
 
 ## Avatars
 - [ ] **14. Real avatar customization:** choose gender; top and bottom

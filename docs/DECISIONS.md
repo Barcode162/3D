@@ -770,6 +770,25 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Gotcha: a loop variable named `size` (the lights') shadowed the render
   size: 4x4 pixel pictures.
 
+## Chess in the lounge (2026-10-19, upgrade item 13)
+- Rules in plain C++ (`app/chess_rules.*`): legal moves with castling, en
+  passant, promotion; check/mate/stalemate/50 moves/bare kings. Checked by
+  `tools/native/chess_test.cpp` with perft on the 5 standard positions (exact
+  counts). Computer: alpha-beta 3 plies + captures, piece-square tables (~6 ms
+  a move natively), a seeded shuffle so games differ.
+- The pieces are 36 models (16 a side + 2 spare queens each for promotions)
+  on the 0.44 m board on the coffee table (`BarScene::chessPieces`), moved
+  with `setModelTransform` (only when they change). Which model stands where
+  is worked out from the position each time (the moved piece keeps its
+  model), so a position from the room is placed the same way.
+- Playing: tap the board → the camera looks down from your side, taps are
+  rays onto the board's plane (from the camera's fov), highlights are world
+  quads. You get white vs the computer, or black against the player at white
+  (a new two-player game). Room key `ch` (17 whole numbers, 8 squares per
+  number: 32-bit words survive net.js's 4-decimal rounding); only the
+  players holding machine.chess.w / .b may write it (rules.js).
+- Test: `tools/chess_test.mjs` (?chess, taps e2-e4 by projecting the squares).
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

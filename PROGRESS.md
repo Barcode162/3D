@@ -13,7 +13,7 @@ Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`), 1 (two-player
 racing with a garage), 3-5 (the arcade, its platformer machine and music).
 6 (A-frame signs, barricades, ladder), 7 (4K Mania like osu!mania). 8 (mirror sharp up
 close), 9 (badge slots), the Clash Royale style UI, 10 (pots, hanging plants). 11 (walk-through).
-Next: 13 (chess), 14 (avatar customization), 15 (animations).
+13 (chess). Next: 14 (avatar customization), 15 (animations).
 there. The server-run bot race (below) is replaced by its items 1-2.
 
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now
