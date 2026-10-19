@@ -5,7 +5,7 @@ for one or two players (left rig and right rig), with bots you race and
 bump into like Need for Speed, physics in the spirit of Assetto Corsa, and
 it must end up looking amazing. **Build the best possible shell and
 structure first, details later**: the driving feel comes first, art last.
-This file is the master list; tick items off as they land. Every mini game
+This file is the master list; tick items off as they land. The next feel pass (camera, sound, car, track, tuning) is planned in `docs/RACING_FEEL.md`. Every mini game
 should eventually get the same treatment ("make each mini game really
 powerful").
 
