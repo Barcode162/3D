@@ -51,6 +51,7 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
 - The street and city outside.
 - Avatar from a face scan (the user is building their own character builder).
 - More arcade games; bots in two-player races.
+- Chess: bots with selectable Elo difficulty; a chess menu to find a 1v1 or pick a bot.
 - Mini music studio (DAW).
 - World-simulation engines: sound from physics, heat, smell, day/night.
 - Site on Cloudflare Pages (unlocks threads), voice through a server (SFU).
