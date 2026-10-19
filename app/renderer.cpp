@@ -540,8 +540,10 @@ void SceneRenderer::resizeMirrorTargets() {
   if (targetW_ == gpu_->width && targetH_ == gpu_->height) return;
   targetW_ = gpu_->width;
   targetH_ = gpu_->height;
-  mirrorW_ = std::max(1u, (targetW_ + 1) / 2);
-  mirrorH_ = std::max(1u, (targetH_ + 1) / 2);
+  // Screen-sized: up close a mirror renders at full resolution; farther
+  // away only part of the texture is used (renderMirror's scale).
+  mirrorW_ = std::max(1u, targetW_);
+  mirrorH_ = std::max(1u, targetH_);
   {
     wgpu::TextureDescriptor dd;
     dd.label = "mirror depth";
@@ -750,9 +752,21 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
                                  const Mat4& viewProj, Vec3 eye) {
   // Only when you're in front of the glass and it's on screen.
   if (!mirror.on || engine::dot(mirror.normal, eye - mirror.center) <= 0.01f) return;
+  // How sharp: full resolution within about a metre of the glass, falling to
+  // 40% from about 8 m (in 5% steps, so it doesn't flicker). The far
+  // reflection costs much less; up close it's as sharp as the screen.
+  float dist;
+  {
+    const Vec3 d = eye - mirror.center;
+    const float u = std::clamp(engine::dot(d, mirror.right), -mirror.halfWidth, mirror.halfWidth);
+    const float v = std::clamp(engine::dot(d, mirror.up), -mirror.halfHeight, mirror.halfHeight);
+    dist = engine::length(d - mirror.right * u - mirror.up * v);
+  }
+  const float scale = std::round(std::clamp(1.1f - 0.085f * dist, 0.4f, 1.0f) * 20.0f) / 20.0f;
+  mirrorTargets_[index].scale = scale;
   // The glass on screen: its corners clipped against the near plane (so a
-  // mirror partly behind you still gets a tight box), in half-res pixels.
-  const float W = static_cast<float>(mirrorW_), H = static_cast<float>(mirrorH_);
+  // mirror partly behind you still gets a tight box), in the reflection's pixels.
+  const float W = static_cast<float>(mirrorW_) * scale, H = static_cast<float>(mirrorH_) * scale;
   Vec4 poly[8];
   int count = 0;
   {
@@ -821,6 +835,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   passDesc.colorAttachments = &color;
   passDesc.depthStencilAttachment = &depth;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
+  pass.SetViewport(0, 0, W, H, 0, 1);
   pass.SetScissorRect(x0, y0, x1 - x0, y1 - y0);
   engine::prof::setPass(engine::prof::kMirror);
   pass.SetPipeline(mirroredPipeline_);
@@ -928,6 +943,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     g.params[0] = m.on ? 1.0f : 0.0f;
     g.params[1] = 1.0f / static_cast<float>(targetW_);
     g.params[2] = 1.0f / static_cast<float>(targetH_);
+    g.params[3] = mirrorTargets_[i].scale;
     queue.WriteBuffer(mirrorTargets_[i].glassBuffer, 0, &g, sizeof(g));
     pass.SetBindGroup(0, mirrorTargets_[i].glassBindGroup);
     pass.Draw(6);

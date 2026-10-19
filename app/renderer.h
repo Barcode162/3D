@@ -152,8 +152,9 @@ class SceneRenderer {
     wgpu::TextureView view;
     wgpu::Buffer glassBuffer;
     wgpu::BindGroup glassBindGroup;
+    float scale = 0.5f;  // the part of the texture used this frame (sharper when you're close)
   };
-  wgpu::Texture mirrorDepth_;  // half resolution, shared by the mirrors
+  wgpu::Texture mirrorDepth_;  // screen-sized, shared by the mirrors
   wgpu::TextureView mirrorDepthView_;
   wgpu::Sampler mirrorSampler_;
   uint32_t mirrorW_ = 0, mirrorH_ = 0;

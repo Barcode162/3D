@@ -47,7 +47,9 @@ user asked: "the race game should actually be fixed".)
       select, INSANE difficulty, hold notes, osu!mania judgements and HUD,
       results with grades; `tools/rhythm_test.mjs`. Later: song previews in
       the menu, hand-made charts.) more songs, a better menu, look and feel like osu!mania.
-- [ ] **8. Mirror quality:** high quality for things close to the mirror,
+- [x] **8. Mirror quality:** (done 2026-10-19: the reflection's resolution
+      follows your distance to the glass: full within ~1 m, 40% from ~8 m.
+      Later, RESTRUCTURE 6.3: a cheaper shader and culling for far things.) high quality for things close to the mirror,
       lower for far away (RESTRUCTURE 6.3; your own avatar always full).
 - [ ] **9. Player cards: badge slots.**
 - [ ] **10. Pots and plants** have things inside them (clipping); a **lamp

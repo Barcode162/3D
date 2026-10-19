@@ -747,6 +747,15 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Headless Chromium can't decode AAC: `tools/rhythm_test.mjs` serves an Ogg
   copy of the song instead (ffmpeg). Safari plays the .m4a fine.
 
+## Mirror sharpness by distance (2026-10-19, upgrade item 8)
+- The mirror textures are screen-sized now; each frame the reflection is
+  drawn into the top-left part at scale = clamp(1.1 - 0.085 * distance to the
+  glass, 0.4, 1) (5% steps, no flicker; viewport + scissor scaled) and the
+  glass samples uv * scale. Up close it's as sharp as the screen (it was
+  always half resolution); far away it costs less than before. Watch the
+  phone's frame rate right at the mirror: full resolution there costs about
+  4x the old half-res reflection's pixels.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

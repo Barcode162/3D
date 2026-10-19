@@ -1,13 +1,14 @@
 // Mirror glass. The reflection was already rendered into a texture covering
-// the screen at half resolution, from a camera mirrored across the glass, so
-// each pixel of the glass shows the matching (filtered) spot of that texture.
+// the screen (into its top-left part at `params.w` of full resolution:
+// sharp when you're close, cheaper far away), from a camera mirrored across
+// the glass, so each pixel of the glass shows the matching (filtered) spot.
 
 struct Mirror {
   viewProj: mat4x4f,
   center: vec4f,
   right: vec4f,   // xyz = half the width, along the glass
   up: vec4f,      // xyz = half the height
-  params: vec4f,  // x = 1 when on (0 = dark glass), yz = 1 / screen size in pixels
+  params: vec4f,  // x = 1 when on (0 = dark glass), yz = 1 / screen size in pixels, w = resolution scale
 };
 
 @group(0) @binding(0) var<uniform> mirror: Mirror;
@@ -32,7 +33,7 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VsOut {
 
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f {
-  let image = textureSampleLevel(reflection, reflectionSampler, in.clip.xy * mirror.params.yz, 0.0).rgb;
+  let image = textureSampleLevel(reflection, reflectionSampler, in.clip.xy * mirror.params.yz * mirror.params.w, 0.0).rgb;
   // A faint sheen toward the edges, like real glass.
   let edge = max(abs(in.local.x), abs(in.local.y));
   let sheen = smoothstep(0.85, 1.0, edge) * 0.05;
