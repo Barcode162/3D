@@ -9,15 +9,26 @@
 #include <string>
 #include <vector>
 
+#include "engine/culling.h"
 #include "engine/gltf.h"
 
 namespace engine {
 
 class GpuModel {
  public:
+  // A chunk of a part: its triangles are a run in the index buffer, and
+  // its box (model space) lets the renderer skip it when it's off screen.
+  // Big parts (a whole room's walls) are cut into floor-grid chunks at
+  // load time; small parts are one chunk.
+  struct Cluster {
+    uint32_t firstIndex = 0, indexCount = 0;
+    Aabb bounds;
+  };
   struct Part {
     wgpu::Buffer vertexBuffer, indexBuffer;
     uint32_t indexCount = 0;
+    Aabb bounds;                    // model space, the whole part
+    std::vector<Cluster> clusters;  // in index-buffer order
     size_t material = 0;  // index into bindGroups
     bool blend = false;   // see-through: drawn after everything solid
   };

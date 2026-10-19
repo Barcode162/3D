@@ -9,6 +9,7 @@
 // REQUESTS=1 prints every request to a host other than this test server.
 //
 // node tools/shots.mjs spots   captures the standard spots (tools/lib/spots.mjs)
+// PERF=1 also prints each shot's draw calls and triangles (main / mirror).
 // with ?still into OUT (default build/shots/), named <spot>.png, for the
 // "looks the same" check: node tools/imgdiff.mjs build/before build/after.
 import { mkdirSync } from 'node:fs';
@@ -53,6 +54,10 @@ for (let i = 0; i < args.length; ++i) {
   const log = await logText(page);
   const lines = log.split('\n').filter((l) => /Piano|Bartender|Darts|Voice|seat|Seats|Race|Multiplayer|DBG/i.test(l));
   console.log(`--- ${outFor(i)}: ${args[i]}\n${lines.slice(-(+(process.env.LINES ?? 4))).join('\n')}`);
+  if (process.env.PERF) {
+    const p = await page.evaluate(() => window.bar3dPerf);
+    if (p) console.log(`draws ${JSON.stringify(p.draws)} tris ${JSON.stringify(p.tris)}`);
+  }
   if (process.env.REQUESTS) console.log('requests outside: ' + (outside.length ? [...new Set(outside)].join(' ') : 'none'));
   if (errors.length) { failed = true; console.log('ERRORS:\n' + errors.join('\n')); }
   await page.close();

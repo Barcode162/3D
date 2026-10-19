@@ -74,7 +74,8 @@ class ChessGame {
   int selected_ = -1;
   std::vector<chess::Move> legal_;
   int lastFrom_ = -1, lastTo_ = -1;
-  double computerAtMs_ = 0;   // when the computer will move (0 = not waiting)
+  double computerAtMs_ = 0;
+  chess::MoveSearch search_;  // the computer thinking, a slice per frame   // when the computer will move (0 = not waiting)
   double nowMs_ = 0;
   int seq_ = 0;               // moves played (orders the room's updates)
   std::string message_;

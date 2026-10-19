@@ -20,6 +20,7 @@ using namespace chess;
 constexpr double kHopMs = 380;          // a piece's move, lifted in an arc
 constexpr double kComputerDelayMs = 700;
 constexpr int kComputerDepth = 3;
+constexpr double kThinkMsPerFrame = 3.0;
 
 // The room's "ch": board in 8 numbers (8 squares x 4 bits each), then turn,
 // castling, en passant, halfmoves, fullmove, last from, last to, two players,
@@ -183,6 +184,7 @@ void ChessGame::close() {
   open_ = false;
   selected_ = -1;
   computerAtMs_ = 0;
+  search_.cancel();
   engine::ui::setBodyClass("racing", false);
   if (online_) {
     engine::net::release(mySide_ == kWhite ? "machine.chess.w" : "machine.chess.b");
@@ -199,6 +201,7 @@ void ChessGame::newGame(double nowMs, bool twoPlayers) {
   lastFrom_ = lastTo_ = -1;
   selected_ = -1;
   computerAtMs_ = 0;
+  search_.cancel();
   ++seq_;
   place(nullptr, nowMs);
   send();
@@ -314,10 +317,14 @@ bool ChessGame::update(double nowMs, float dt, const std::vector<Vec2>& taps, co
   // The computer's move (white's phone plays it).
   if (!twoPlayers_ && pos_.turn != mySide_ && pos_.result() == Result::kPlaying) {
     if (computerAtMs_ == 0) computerAtMs_ = nowMs + kComputerDelayMs;
-    if (nowMs >= computerAtMs_) {
-      computerAtMs_ = 0;
+    if (nowMs >= computerAtMs_ && !search_.running()) {
       seed_ = seed_ * 1664525u + 1013904223u + static_cast<uint32_t>(nowMs);
-      const Move m = bestMove(pos_, kComputerDepth, seed_);
+      search_.start(pos_, kComputerDepth, seed_);
+    }
+    // A few milliseconds of thinking per frame, so the game never freezes.
+    if (search_.running() && search_.step(kThinkMsPerFrame)) {
+      computerAtMs_ = 0;
+      const Move m = search_.best();
       LOG_INFO("Chess: the computer plays %s.", toText(m).c_str());
       playMove(m, nowMs, true);
     }

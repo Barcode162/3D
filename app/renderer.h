@@ -16,6 +16,7 @@
 #include "app/avatar.h"
 #include "app/bar_scene.h"
 #include "engine/billboard.h"
+#include "engine/culling.h"
 #include "engine/gpu.h"
 #include "engine/math.h"
 #include "engine/mesh.h"
@@ -144,10 +145,12 @@ class SceneRenderer {
     uint32_t uniformOffset;
     engine::Vec3 position;  // for sorting see-through models back to front
     float scale = 1;
+    engine::Mat4 world;     // position, rotation and scale (for culling)
   };
   struct DrawItem {
     engine::Mesh mesh;
     uint32_t uniformOffset;
+    engine::Aabb bounds;  // world space
   };
   // One camera's frame uniforms (the main view, or a mirror's view).
   struct View {
@@ -170,8 +173,12 @@ class SceneRenderer {
   bool createGlassPipeline();
   void createMaterials(wgpu::TextureView& colorMaps, wgpu::TextureView& bumpMaps, wgpu::Sampler& sampler);
   void resizeMirrorTargets();
-  void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items) const;
-  void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye) const;
+  // Both skip what's outside `view`. `minSize` (mirrors): also skip models
+  // smaller than this fraction of their distance (tiny far props).
+  void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items,
+                 const engine::Frustum& view) const;
+  void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye, const engine::Frustum& view,
+                  float minSize = 0) const;
   void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
   void drawOthers(const wgpu::RenderPassEncoder& pass) const;

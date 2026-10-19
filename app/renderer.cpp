@@ -156,7 +156,14 @@ bool SceneRenderer::init(engine::Gpu& gpu, const BarScene& scene, const std::vec
     u.material[3] = o.textureScale;
     std::memcpy(objectData.data() + i * kObjectStride, &u, sizeof(u));
     objectUniforms_.push_back(u);
-    sceneDraws_.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride)});
+    engine::Aabb local = engine::Aabb::empty();
+    for (const engine::Vertex& v : o.mesh.vertices) {
+      local.min = engine::minComponents(local.min, v.position);
+      local.max = engine::maxComponents(local.max, v.position);
+    }
+    if (o.mesh.vertices.empty()) local = {};
+    sceneDraws_.push_back({engine::Mesh::upload(device, o.mesh), static_cast<uint32_t>(i * kObjectStride),
+                           engine::transformAabb(u.model, local)});
   }
   {
     ObjectUniforms u = {};
@@ -577,8 +584,10 @@ void SceneRenderer::resizeMirrorTargets() {
   }
 }
 
-void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items) const {
+void SceneRenderer::drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items,
+                              const engine::Frustum& view) const {
   for (const DrawItem& d : items) {
+    if (!view.visible(d.bounds)) continue;
     pass.SetBindGroup(1, objectBindGroup_, 1, &d.uniformOffset);
     pass.SetVertexBuffer(0, d.mesh.vertexBuffer);
     pass.SetIndexBuffer(d.mesh.indexBuffer, wgpu::IndexFormat::Uint32);
@@ -597,9 +606,9 @@ void SceneRenderer::loadModels(const BarScene& scene, std::vector<uint8_t>& obje
   for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
     const ModelPlacement& p = scene.models[i];
     const auto offset = static_cast<uint32_t>((firstSlot + i) * kObjectStride);
-    models_.push_back({nullptr, offset, p.position, p.scale});
     ObjectUniforms u = {};
     u.model = modelMatrix(p.position, p.rotation, p.scale);
+    models_.push_back({nullptr, offset, p.position, p.scale, u.model});
     setVec4(u.color, {1, 1, 1}, 0);
     std::memcpy(objectData.data() + offset, &u, sizeof(u));
     const auto it = std::find(files.begin(), files.end(), p.file);
@@ -649,16 +658,27 @@ void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat 
   ModelDraw& m = models_[index];
   m.position = position;
   const Mat4 model = modelMatrix(position, rotation, m.scale);
+  m.world = model;
   // Only the matrix (the start of ObjectUniforms) changes.
   gpu_->queue.WriteBuffer(objectBuffer_, m.uniformOffset, &model, sizeof(model));
 }
 
 // Solid parts in any order; see-through parts sorted farthest first so
-// nearer glass blends over farther glass.
-void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye) const {
+// nearer glass blends over farther glass. Only chunks inside `view` are
+// drawn; neighbouring visible chunks go out as one draw.
+void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye, const engine::Frustum& view,
+                               float minSize) const {
   std::vector<const ModelDraw*> order;
   for (const ModelDraw& m : models_) {
-    if (m.gpu && (!blend || m.gpu->hasBlend)) order.push_back(&m);
+    if (!m.gpu || (blend && !m.gpu->hasBlend)) continue;
+    const engine::Aabb box = engine::transformAabb(m.world, {m.gpu->boundsMin, m.gpu->boundsMax});
+    if (!view.visible(box)) continue;
+    if (minSize > 0) {
+      const Vec3 half = (box.max - box.min) * 0.5f;
+      const Vec3 d = (box.min + box.max) * 0.5f - eye;
+      if (engine::dot(half, half) < minSize * minSize * engine::dot(d, d)) continue;
+    }
+    order.push_back(&m);
   }
   if (blend) {
     std::sort(order.begin(), order.end(), [eye](const ModelDraw* a, const ModelDraw* b) {
@@ -667,18 +687,42 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
     });
   }
   for (const ModelDraw* m : order) {
-    pass.SetBindGroup(1, objectBindGroup_, 1, &m->uniformOffset);
+    bool boundObject = false;
     for (const engine::GpuModel::Part& part : m->gpu->parts) {
       if (part.blend != blend) continue;
-      pass.SetBindGroup(2, m->gpu->bindGroups[part.material]);
-      pass.SetVertexBuffer(0, part.vertexBuffer);
-      pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
-      pass.DrawIndexed(part.indexCount);
-      engine::prof::draw(part.indexCount);
+      if (part.clusters.size() > 1 && !view.visible(engine::transformAabb(m->world, part.bounds))) continue;
+      // Runs of visible chunks.
+      uint32_t runFirst = 0, runCount = 0;
+      bool partBound = false;
+      const auto flush = [&] {
+        if (runCount == 0) return;
+        if (!boundObject) {
+          pass.SetBindGroup(1, objectBindGroup_, 1, &m->uniformOffset);
+          boundObject = true;
+        }
+        if (!partBound) {
+          pass.SetBindGroup(2, m->gpu->bindGroups[part.material]);
+          pass.SetVertexBuffer(0, part.vertexBuffer);
+          pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
+          partBound = true;
+        }
+        pass.DrawIndexed(runCount, 1, runFirst);
+        engine::prof::draw(runCount);
+        runCount = 0;
+      };
+      for (const engine::GpuModel::Cluster& c : part.clusters) {
+        const bool seen = part.clusters.size() == 1 || view.visible(engine::transformAabb(m->world, c.bounds));
+        if (!seen) {
+          flush();
+          continue;
+        }
+        if (runCount == 0) runFirst = c.firstIndex;
+        runCount += c.indexCount;
+      }
+      flush();
     }
   }
 }
-
 void SceneRenderer::drawSkinned(const wgpu::RenderPassEncoder& pass, const engine::SkinnedMesh& mesh) const {
   pass.SetVertexBuffer(0, mesh.vertexBuffer);
   pass.SetIndexBuffer(mesh.indexBuffer, wgpu::IndexFormat::Uint32);
@@ -843,6 +887,14 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   passDesc.colorAttachmentCount = 1;
   passDesc.colorAttachments = &color;
   passDesc.depthStencilAttachment = &depth;
+  // Only what shows through the glass: the reflected camera's view, narrowed
+  // to the glass's box on screen (its near plane is the glass itself).
+  const engine::Frustum cull = engine::Frustum::fromViewProj(
+      f.viewProj, 2.0f * static_cast<float>(x0) / W - 1.0f, 2.0f * static_cast<float>(x1) / W - 1.0f,
+      1.0f - 2.0f * static_cast<float>(y1) / H, 1.0f - 2.0f * static_cast<float>(y0) / H);
+  // Props smaller than ~2% of their distance (a glass 5 m away) are left
+  // out of the reflection: they'd be a few pixels.
+  constexpr float kMirrorMinSize = 0.02f;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetViewport(0, 0, W, H, 0, 1);
   pass.SetScissorRect(x0, y0, x1 - x0, y1 - y0);
@@ -850,17 +902,17 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   pass.SetPipeline(mirroredPipeline_);
   pass.SetBindGroup(0, view.bindGroup);
   if (full) {
-    drawItems(pass, sceneDraws_);
+    drawItems(pass, sceneDraws_, cull);
     drawBoxes(pass);
     pass.SetPipeline(modelMirroredPipeline_);
-    drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
+    drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, kMirrorMinSize);
   }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
   drawOthers(pass);
   if (full) {
     pass.SetPipeline(modelBlendMirroredPipeline_);
-    drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z});
+    drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, kMirrorMinSize);
   }
   pass.End();
   engine::prof::setPass(engine::prof::kMain);
@@ -930,15 +982,16 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
-  drawItems(pass, sceneDraws_);
+  const engine::Frustum cull = engine::Frustum::fromViewProj(viewProj);
+  drawItems(pass, sceneDraws_, cull);
   drawBoxes(pass);
   pass.SetPipeline(modelPipeline_);
-  drawModels(pass, false, eye);
+  drawModels(pass, false, eye, cull);
   pass.SetPipeline(skinnedPipeline_);
   drawAvatar(pass, selfWhole_ ? bonesBindGroup_ : firstPersonBonesBindGroup_);  // your body, minus the head (in first person)
   drawOthers(pass);
   pass.SetPipeline(modelBlendPipeline_);
-  drawModels(pass, true, eye);  // glass, after everything solid
+  drawModels(pass, true, eye, cull);  // glass, after everything solid
 
   // Mirror glass.
   pass.SetPipeline(glassPipeline_);

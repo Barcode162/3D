@@ -979,3 +979,24 @@ The product is in `docs/VISION.md` → "The product". What it changes:
 The user wants fewer, deeper passes to save tokens. Commands: "start" (menu),
 "plan", "go", "park:", "talk", "wrap up". See `CLAUDE.md` → "The routine".
 No builds or headless runs outside "go".
+
+## Frustum culling (2026-10-19, master list 1c)
+- The phone baseline showed the GPU is the limit, not draw calls, so the goal
+  is fewer triangles, not fewer draws.
+- `engine/culling.h`: frustum planes from a view-projection matrix (optionally
+  narrowed to part of the screen), box test, box transform.
+- Big .glb parts (≥ 1,500 triangles spanning more than one cell) are cut at load
+  (`engine/model.cpp` buildClusters) into 3 m floor-grid chunks: indices
+  reordered so each chunk is one run, with its own box. Neighbouring visible
+  chunks are drawn as one `DrawIndexed`. Room-wide models (back bar, counter,
+  walls) are why whole-model culling alone wouldn't help.
+- Mirrors cull with the reflected camera narrowed to the glass's scissor box
+  (its oblique near plane is the glass, so things behind the mirror drop too),
+  and skip props smaller than 2% of their distance.
+- Measured headless at the 5 standard spots: 641 draws / 690 k triangles →
+  145-283 draws / 151-269 k; at the mirror 1,280 / 1.38 M → 346 / 357 k.
+  Screenshots identical (imgdiff 0.000%). `PERF=1 node tools/shots.mjs spots`
+  prints the counts.
+- Chess: `chess::MoveSearch` runs the root moves a few ms per frame (same move
+  as `bestMove`, tested in `tools/native/chess_test.cpp`).
+

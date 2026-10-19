@@ -55,6 +55,28 @@ struct Position {
 // choice among equal moves so games differ.
 Move bestMove(const Position& p, int depth, uint32_t seed);
 
+// The same search, done a little at a time (a few root moves per call), so
+// the computer thinks across several frames instead of freezing one.
+// Gives exactly the move bestMove would.
+class MoveSearch {
+ public:
+  void start(const Position& p, int depth, uint32_t seed);
+  // Searches for about `budgetMs`; true once the move is chosen.
+  bool step(double budgetMs);
+  void cancel() { running_ = false; }
+  bool running() const { return running_; }
+  Move best() const { return best_; }
+
+ private:
+  Position root_;
+  std::vector<Move> moves_;
+  size_t next_ = 0;
+  Move best_{};
+  int bestScore_ = 0;
+  int depth_ = 0;
+  bool running_ = false;
+};
+
 // "e2e4"-style text for a move (and back).
 std::string toText(const Move& m);
 bool fromText(const std::string& s, Move& out);

@@ -2,6 +2,7 @@
 // must match the known numbers exactly (every legal move: castling, en
 // passant, promotions, pins, checks), then checkmate / stalemate detection
 // and that the computer finds a mate in one and doesn't hang its queen.
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 
@@ -69,6 +70,31 @@ int main() {
     bestMove(Position::start(), 3, 1);
     std::printf("     one computer move from the start (depth 3): %.0f ms\n",
                 std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t1).count());
+  }
+  {
+    // Thinking in slices (a frame at a time) picks the same move, and no
+    // slice runs much past its budget.
+    Position p;
+    Position::fromFen("r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4", p);
+    bool same = true;
+    double worstSlice = 0;
+    int slices = 0;
+    for (uint32_t seed = 1; seed <= 4; ++seed) {
+      MoveSearch s;
+      s.start(p, 3, seed);
+      bool done = false;
+      while (!done) {
+        const auto t0 = std::chrono::steady_clock::now();
+        done = s.step(3.0);
+        worstSlice = std::max(
+            worstSlice, std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
+        ++slices;
+      }
+      same = same && toText(s.best()) == toText(bestMove(p, 3, seed));
+    }
+    char what[96];
+    std::snprintf(what, sizeof(what), "sliced search = whole search (%d slices, worst %.1f ms)", slices, worstSlice);
+    check(same, what);
   }
   std::printf(failed ? "CHESS TEST FAILED (%d)\n" : "CHESS TEST PASSED\n", failed);
   return failed ? 1 : 0;

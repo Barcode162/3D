@@ -1,6 +1,7 @@
 #include "app/chess_rules.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <sstream>
 
@@ -346,27 +347,48 @@ Result Position::result() const {
   return Result::kPlaying;
 }
 
-Move bestMove(const Position& p, int depth, uint32_t seed) {
-  std::vector<Move> moves;
-  p.legalMoves(moves);
-  if (moves.empty()) return {};
+void MoveSearch::start(const Position& p, int depth, uint32_t seed) {
+  root_ = p;
+  moves_.clear();
+  p.legalMoves(moves_);
   // Shuffle first (seeded), so equal moves aren't always picked the same way.
-  for (size_t i = moves.size(); i > 1; --i) {
+  for (size_t i = moves_.size(); i > 1; --i) {
     seed = seed * 1664525u + 1013904223u;
-    std::swap(moves[i - 1], moves[(seed >> 8) % i]);
+    std::swap(moves_[i - 1], moves_[(seed >> 8) % i]);
   }
-  Move best = moves[0];
-  int bestScore = -kMate * 2;
-  for (const Move& m : moves) {
-    Position q = p;
+  next_ = 0;
+  best_ = moves_.empty() ? Move{} : moves_[0];
+  bestScore_ = -kMate * 2;
+  depth_ = depth;
+  running_ = true;
+}
+
+bool MoveSearch::step(double budgetMs) {
+  if (!running_) return false;
+  const auto t0 = std::chrono::steady_clock::now();
+  while (next_ < moves_.size()) {
+    const Move& m = moves_[next_++];
+    Position q = root_;
     q.play(m);
-    const int s = -search(q, depth - 1, -kMate * 2, -bestScore, 1);
-    if (s > bestScore) {
-      bestScore = s;
-      best = m;
+    const int s = -search(q, depth_ - 1, -kMate * 2, -bestScore_, 1);
+    if (s > bestScore_) {
+      bestScore_ = s;
+      best_ = m;
     }
+    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+    if (ms >= budgetMs) break;
   }
-  return best;
+  if (next_ < moves_.size()) return false;
+  running_ = false;
+  return true;
+}
+
+Move bestMove(const Position& p, int depth, uint32_t seed) {
+  MoveSearch s;
+  s.start(p, depth, seed);
+  while (!s.step(1e9)) {
+  }
+  return s.best();
 }
 
 std::string squareName(int sq) {

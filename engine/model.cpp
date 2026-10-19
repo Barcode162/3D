@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <map>
@@ -127,6 +128,60 @@ void queueBufferWrites(const std::shared_ptr<Loading>& l, const wgpu::Buffer& bu
   }
 }
 
+// Cuts a part into chunks on a floor grid (by each triangle's middle) and
+// reorders its indices so each chunk is one run. Parts with few triangles,
+// or that fit in one cell, stay one chunk.
+void buildClusters(ModelPrimitive& p, GpuModel::Part& part) {
+  constexpr float kCell = 3.0f;         // metres
+  constexpr size_t kMinTriangles = 1500;  // below this, splitting isn't worth a draw call
+  Aabb all = Aabb::empty();
+  for (const ModelVertex& v : p.vertices) {
+    all.min = minComponents(all.min, v.position);
+    all.max = maxComponents(all.max, v.position);
+  }
+  if (p.vertices.empty()) all = {};
+  part.bounds = all;
+  const size_t triangles = p.indices.size() / 3;
+  const int nx = std::clamp(static_cast<int>(std::ceil((all.max.x - all.min.x) / kCell)), 1, 64);
+  const int nz = std::clamp(static_cast<int>(std::ceil((all.max.z - all.min.z) / kCell)), 1, 64);
+  if (triangles < kMinTriangles || nx * nz == 1) {
+    part.clusters.push_back({0, static_cast<uint32_t>(p.indices.size()), all});
+    return;
+  }
+  const size_t cells = static_cast<size_t>(nx * nz);
+  std::vector<uint32_t> cellOf(triangles), start(cells + 1, 0);
+  for (size_t t = 0; t < triangles; ++t) {
+    Vec3 c{};
+    for (int k = 0; k < 3; ++k) c = c + p.vertices[p.indices[t * 3 + static_cast<size_t>(k)]].position;
+    c = c * (1.0f / 3.0f);
+    const int cx = std::clamp(static_cast<int>((c.x - all.min.x) / kCell), 0, nx - 1);
+    const int cz = std::clamp(static_cast<int>((c.z - all.min.z) / kCell), 0, nz - 1);
+    cellOf[t] = static_cast<uint32_t>(cz * nx + cx);
+    ++start[cellOf[t] + 1];
+  }
+  for (size_t i = 0; i < cells; ++i) start[i + 1] += start[i];
+  std::vector<uint32_t> sorted(p.indices.size());
+  std::vector<uint32_t> fill(start.begin(), start.end() - 1);
+  for (size_t t = 0; t < triangles; ++t) {
+    const size_t at = fill[cellOf[t]]++ * 3;
+    for (size_t k = 0; k < 3; ++k) sorted[at + k] = p.indices[t * 3 + k];
+  }
+  p.indices.swap(sorted);
+  for (size_t i = 0; i < cells; ++i) {
+    if (start[i + 1] == start[i]) continue;
+    GpuModel::Cluster c;
+    c.firstIndex = start[i] * 3;
+    c.indexCount = (start[i + 1] - start[i]) * 3;
+    c.bounds = Aabb::empty();
+    for (uint32_t k = c.firstIndex; k < c.firstIndex + c.indexCount; ++k) {
+      const Vec3 v = p.vertices[p.indices[k]].position;
+      c.bounds.min = minComponents(c.bounds.min, v);
+      c.bounds.max = maxComponents(c.bounds.max, v);
+    }
+    part.clusters.push_back(c);
+  }
+}
+
 // Builds the GPU model in small jobs: the materials, then each part's
 // buffers in slices, then hands it over.
 void finish(const std::shared_ptr<Loading>& l) {
@@ -189,8 +244,9 @@ void finish(const std::shared_ptr<Loading>& l) {
     l->linearTextures.clear();
 
     // Each part: empty buffers now, filled by slice jobs.
-    for (const ModelPrimitive& p : l->data.primitives) {
+    for (ModelPrimitive& p : l->data.primitives) {
       GpuModel::Part part;
+      buildClusters(p, part);  // reorders p.indices, so before the upload
       const size_t vbytes = p.vertices.size() * sizeof(ModelVertex), ibytes = p.indices.size() * sizeof(uint32_t);
       wgpu::BufferDescriptor vd;
       vd.size = (vbytes + 3) & ~size_t{3};
