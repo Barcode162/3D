@@ -18,8 +18,11 @@ window.bar3dAccount = (function () {
     ['social', 'Find me at', 'e.g. @josh on Instagram', 60], ['lookingFor', 'Looking for', 'e.g. a darts rival', 60],
     ['funFact', 'Fun fact', 'Something surprising about you', 120],
   ];
-  var BADGE_ICONS = { owner: '\u{1F451} Owner', bartender: '\u{1F378} Bartender', dj: '\u{1F3A7} DJ', vip: '\u2B50 VIP',
-                      staff: '\u{1F6E0} Staff' };
+  // Badge names; each one's picture is badges/<id>.png (3D-rendered,
+  // tools/assets/badges.py).
+  var BADGE_NAMES = { owner: 'Owner', bartender: 'Bartender', dj: 'DJ', vip: 'VIP', staff: 'Staff', race: 'Race winner',
+                      darts: 'Darts ace', mania: '4K Mania star' };
+  function badgeImg(b) { return el('img', { src: 'badges/' + b + '.png', alt: BADGE_NAMES[b] || b, draggable: 'false' }); }
   var COLORS = ['#ff5ab4', '#ffb35a', '#5ad1ff', '#7dff8a', '#b38bff', '#ff6b5a', '#f5d9a8', '#5affd2'];
   var server = '';     // account.php URL ('' = no accounts on this page)
   var token = null, me = null;
@@ -248,11 +251,12 @@ window.bar3dAccount = (function () {
   // A person's card. `own` adds Edit / Log out.
   function cardScreen(p, own) {
     var facts = el('div', { class: 'facts' });
-    if (p.drink) facts.appendChild(el('div', { text: '\u{1F378}  Favorite drink: ' + p.drink }));
-    if (p.song) facts.appendChild(el('div', { text: '\u{1F3B5}  Favorite song: ' + p.song }));
-    if (p.joined) facts.appendChild(el('div', { text: '\u{1F4C5}  Regular since ' + p.joined }));
+    var fact = function (k, v) { facts.appendChild(el('div', {}, [el('span', { class: 'k', text: k }), el('span', { text: v })])); };
+    if (p.drink) fact('Favorite drink', p.drink);
+    if (p.song) fact('Favorite song', p.song);
+    if (p.joined) fact('Regular since', p.joined);
     var d = p.details || {};
-    DETAILS.forEach(function (x) { if (d[x[0]]) facts.appendChild(el('div', { text: x[1] + ': ' + d[x[0]] })); });
+    DETAILS.forEach(function (x) { if (d[x[0]]) fact(x[1], d[x[0]]); });
     var badges = badgeSlots(p, own);
     var btns = el('div', { class: 'btns' });
     if (own) {
@@ -291,12 +295,8 @@ window.bar3dAccount = (function () {
     var slots = slotsOf(p);
     var row = el('div', { class: 'acctSlotRow' });
     slots.forEach(function (b, i) {
-      var icon = b ? (BADGE_ICONS[b] || b) : '';
-      var parts = icon.split(' ');
-      var cell = el('div', { class: 'acctSlot' + (b ? ' on' : '') + (own ? ' mine' : ''), title: icon || 'Empty slot' }, [
-        el('div', { class: 'ic', text: b ? parts[0] : (own ? '+' : '') }),
-        el('div', { class: 'lb', text: b ? parts.slice(1).join(' ') : '' }),
-      ]);
+      var cell = el('div', { class: 'acctSlot' + (b ? ' on' : '') + (own ? ' mine' : ''), title: b ? (BADGE_NAMES[b] || b) : 'Empty slot' },
+        b ? [badgeImg(b)] : [el('div', { class: 'ic', text: own ? '+' : '' })]);
       if (own && p.user) cell.onclick = function () { pickSlot(i, slots); };
       row.appendChild(cell);
     });
@@ -305,13 +305,13 @@ window.bar3dAccount = (function () {
     if (!p.user) wrap.appendChild(el('div', { class: 'acctSlotHint', text: own ? 'Make an account to collect badges.' : '' }));
     else if (own && !(p.badges || []).length) wrap.appendChild(el('div', { class: 'acctSlotHint', text: 'Badges you earn go here.' }));
     var extra = (p.badges || []).filter(function (b) { return slots.indexOf(b) < 0; });
-    if (extra.length) wrap.appendChild(el('div', { class: 'acctSlotHint', text: 'Also: ' + extra.map(function (b) { return BADGE_ICONS[b] || b; }).join('  ') }));
+    if (extra.length) wrap.appendChild(el('div', { class: 'acctSlotHint', text: 'Also: ' + extra.map(function (b) { return BADGE_NAMES[b] || b; }).join('  ') }));
     return wrap;
   }
   function pickSlot(i, slots) {
     var choices = [''].concat((me.badges || []));
     open(el('div', { class: 'acctPanel' }, [el('h2', { text: 'Badge slot ' + (i + 1) })].concat(choices.map(function (b) {
-      return el('button', { class: 'acctBtn' + (b === slots[i] ? '' : ' ghost'), text: b ? (BADGE_ICONS[b] || b) : 'Empty', onclick: function () {
+      var btn = el('button', { class: 'acctBtn acctBadgeChoice' + (b === slots[i] ? '' : ' ghost'), onclick: function () {
         var next = slots.slice();
         var at = next.indexOf(b);
         if (b && at >= 0) next[at] = '';  // a badge sits in one slot only
@@ -319,7 +319,8 @@ window.bar3dAccount = (function () {
         call({ a: 'update', token: token, slots: next })
           .then(function (r) { setSession(token, r.me); cardScreen(me, true); })
           .catch(function () { cardScreen(me, true); });
-      } });
+      } }, b ? [badgeImg(b), el('span', { text: BADGE_NAMES[b] || b })] : [el('span', { text: 'Empty' })]);
+      return btn;
     })).concat([el('button', { class: 'acctBtn ghost', text: 'Back', onclick: function () { cardScreen(me, true); } })])));
   }
 
@@ -327,7 +328,7 @@ window.bar3dAccount = (function () {
   function badgeScreen() {
     var user = el('input', { autocapitalize: 'none', placeholder: 'their username' });
     var badge = el('select', { style: 'width:100%;font:16px -apple-system,system-ui;padding:10px;border-radius:10px;background:#2a1f33;color:#fff;border:1px solid #4a3a55;' },
-                   ['bartender', 'dj', 'vip', 'staff'].map(function (b) { return el('option', { value: b, text: BADGE_ICONS[b] }); }));
+                   ['bartender', 'dj', 'vip', 'staff'].map(function (b) { return el('option', { value: b, text: BADGE_NAMES[b] }); }));
     var msg = el('div', { class: 'acctErr' });
     function go(on) {
       msg.textContent = '';

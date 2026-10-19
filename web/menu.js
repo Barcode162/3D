@@ -68,8 +68,9 @@ window.bar3dUi = (function () {
   'use strict';
   var S = window.bar3dSettings;
   var info = {}, root = null, toastEl = null, toastTimer = 0, current = '';
-  var EMOJI = ['\u{1F44B}', '\u{1F483}', '\u{1F44F}', '\u{1F64C}', '\u{1F647}', '\u{1F449}', '\u{1F937}', '\u{1F602}',
-               '\u{1FAE1}', '\u{1F44D}', '\u{1F926}'];
+  // 3D-rendered icons (tools/assets/icons.py), in the emote list's order.
+  var EMOTE_ICONS = ['wave', 'dance', 'clap', 'cheer', 'bow', 'point', 'shrug', 'laugh', 'salute', 'thumbsup', 'facepalm'];
+  function icon(name) { return el('img', { class: 'crIcon', src: 'icons/' + name + '.png', alt: '', draggable: 'false' }); }
   var LOOK_COLORS = ['#232326', '#ececE6', '#0d0d0d', '#bf1a1a', '#141a38', '#ff40a6', '#2e6138', '#5a5e6b'];
 
   function cmd(name, a, b, text, text2) { if (window.bar3dBridge) bar3dBridge.command(name, a, b, text, text2); }
@@ -165,13 +166,13 @@ window.bar3dUi = (function () {
   // ---- Panels ----
   function mainPanel() {
     var tiles = [
-      ['\u{1F44B}', 'Emotes', emotesPanel], ['\u{1F9CD}', 'Avatar', avatarPanel], ['\u{1FAAA}', 'Profile', profilePanel],
-      ['\u{1F3A4}', 'Voice chat', voicePanel], ['⚙️', 'Settings', settingsPanel], ['\u{1F3B9}', 'Piano', pianoPanel],
-      ['\u{1F378}', 'Bartender', bartenderPanel], ['❓', 'Help', helpPanel],
+      ['menu_emotes', 'Emotes', emotesPanel], ['menu_avatar', 'Avatar', avatarPanel], ['menu_profile', 'Profile', profilePanel],
+      ['menu_voice', 'Voice chat', voicePanel], ['menu_settings', 'Settings', settingsPanel], ['menu_piano', 'Piano', pianoPanel],
+      ['menu_bartender', 'Bartender', bartenderPanel], ['menu_help', 'Help', helpPanel],
     ];
-    if (info.seated) tiles.push(['\u{1FA91}', 'Stand up', function () { cmd('standUp'); close(); }]);
+    if (info.seated) tiles.push(['menu_standup', 'Stand up', function () { cmd('standUp'); close(); }]);
     show('Menu', [el('div', { class: 'mGrid' }, tiles.map(function (t) {
-      return el('button', { class: 'mTile', onclick: t[2] }, [el('span', { class: 'big', text: t[0] }), t[1]]);
+      return el('button', { class: 'mTile', onclick: t[2] }, [icon(t[0]), t[1]]);
     }))]);
     current = 'main';
   }
@@ -180,7 +181,7 @@ window.bar3dUi = (function () {
     var names = info.emotes || ['Wave', 'Dance', 'Clap', 'Cheer', 'Bow', 'Point', 'Shrug', 'Laugh', 'Salute', 'Thumbs up', 'Facepalm'];
     show('Emotes', [el('div', { class: 'mGrid' }, names.map(function (n, i) {
       return el('button', { class: 'mTile', onclick: function () { cmd('emote', i + 1); close(); } },
-                [el('span', { class: 'big', text: EMOJI[i] || '⭐' }), n]);
+                [icon('emote_' + (EMOTE_ICONS[i] || 'wave')), n]);
     })), el('div', { class: 'mSmall', text: 'Others see your emote. Dancing goes on until you walk.' })]);
     current = 'emotes';
   }
@@ -308,7 +309,7 @@ window.bar3dUi = (function () {
     var songs = info.songs || [];
     var list = el('div', { class: 'mList' }, songs.map(function (n, i) {
       return el('button', { class: info.pianoSong === i ? 'on' : '', onclick: function () { cmd('pianoSong', i); close(); toast('The piano plays: ' + n); } },
-                [el('span', { text: (i < 10 ? (i + 1) + '. ' : '\u{1F4C1} ') + n }), el('span', { text: '▶' })]);
+                [el('span', { text: (i < 10 ? (i + 1) + '. ' : 'MY SONG: ') + n }), el('span', { text: '▶' })]);
     }));
     var file = el('input', { type: 'file', accept: '.mid,.midi,audio/midi,audio/x-midi', id: 'midiPicker', style: 'display:none' });
     file.onchange = function () {
@@ -417,7 +418,7 @@ window.bar3dUi = (function () {
       return;
     }
     show('Make a drink', [el('div', { class: 'mList' }, drinks.map(function (n, i) {
-      return el('button', { onclick: function () { cmd('make', i); close(); } }, [el('span', { text: n }), el('span', { text: '\u{1F378}' })]);
+      return el('button', { onclick: function () { cmd('make', i); close(); } }, [el('span', { text: n }), el('img', { class: 'crIcon', src: 'icons/menu_bartender.png', alt: '', style: 'width:28px;height:28px;margin:0' })]);
     })), el('button', { class: 'mBtn ghost', text: 'End my shift', onclick: function () { cmd('endShift'); close(); } })]);
     current = 'bartender';
   }
@@ -449,7 +450,7 @@ window.bar3dUi = (function () {
     var logBtn = document.getElementById('logToggle');
     if (logBtn) {
       var menuBtn = el('button', { id: 'hudMenu', text: '☰ Menu', onclick: function () { current ? close() : mainPanel(); } });
-      var micBtn = el('button', { id: 'hudMic', text: '\u{1F3A4} off' });
+      var micBtn = el('button', { id: 'hudMic', text: 'MIC OFF' });
       // Tap: mic on/off. With push to talk: hold it to talk.
       micBtn.addEventListener('click', function () {
         var V = window.bar3dVoice;
@@ -472,7 +473,7 @@ window.bar3dUi = (function () {
         var V = window.bar3dVoice;
         if (!V) return;
         var on = V.micOn(), live = on && V.gateOpen();
-        var text = on ? (live ? '\u{1F3A4} talking' : '\u{1F3A4} on') : '\u{1F3A4} off';
+        var text = on ? (live ? 'TALKING' : 'MIC ON') : 'MIC OFF';
         var cls = on ? (live ? 'live' : '') : 'muted';
         if (text !== micText) micBtn.textContent = micText = text;
         if (cls !== micClass) micBtn.className = micClass = cls;

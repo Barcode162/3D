@@ -1,0 +1,161 @@
+/* The game's menus and cards in a Clash Royale-like style (the user's
+   wish): a chunky rounded font with dark outlines, blue panels with bevels,
+   bright buttons that press in, 3D-rendered icons and badges
+   (tools/assets/icons.py, badges.py). Overrides the plain styles that
+   web/menu.js and web/account.js add (hence the "body" in front). */
+@font-face {
+  font-family: "Lilita One";
+  src: url("fonts/LilitaOne-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+:root {
+  --cr-font: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --cr-ink: #10172e;
+  --cr-panel-top: #4f8ff0;
+  --cr-panel-bottom: #2d5fc4;
+  --cr-panel-deep: #1d3f8f;
+  --cr-gold: #ffd43b;
+  --cr-gold-deep: #e08a00;
+  --cr-blue: #45b2ff;
+  --cr-blue-deep: #1a6fd0;
+  --cr-green: #6ee05a;
+  --cr-green-deep: #2f9a2a;
+  --cr-red: #ff5a52;
+  --cr-red-deep: #b5221d;
+}
+
+/* Outlined game text. */
+body .mPanel h2, body .acctPanel h2, body .acctCard .nm, body .mTile, body .mBtn, body .acctBtn,
+body .acctSlotTitle, body #menuToast, body .mPanel h3 {
+  font-family: var(--cr-font);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  color: #fff;
+  -webkit-text-stroke: 1.2px var(--cr-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 var(--cr-ink);
+}
+
+/* Panels: a blue slab with a light top edge and a dark bottom edge. */
+body .mPanel, body .acctPanel {
+  background: linear-gradient(180deg, var(--cr-panel-top) 0%, var(--cr-panel-bottom) 100%);
+  border: 3px solid var(--cr-ink);
+  border-radius: 22px;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), inset 0 -5px 0 rgba(0, 0, 0, 0.22), 0 8px 0 rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
+body .mPanel h2, body .acctPanel h2 { font-size: 26px; }
+body .mPanel h3 { color: #d8e8ff; font-size: 15px; text-transform: none; }
+body .mSmall, body .acctSmall, body .acctPanel label { color: #e3eeff; font-weight: 600; }
+body .mX {
+  font-family: var(--cr-font); width: 36px; height: 36px; border-radius: 10px; padding: 0;
+  background: linear-gradient(180deg, var(--cr-red), var(--cr-red-deep)); border: 2px solid var(--cr-ink);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 3px 0 var(--cr-ink); color: #fff; font-size: 20px;
+}
+
+/* Buttons: bright, glossy, press in when tapped. */
+body .mBtn, body .acctBtn {
+  border: 2px solid var(--cr-ink);
+  border-radius: 14px;
+  font-size: 18px;
+  padding: 12px;
+  background: linear-gradient(180deg, #ffe066 0%, var(--cr-gold) 45%, #f5b400 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55), inset 0 -4px 0 var(--cr-gold-deep), 0 4px 0 var(--cr-ink);
+  transform: translateY(0);
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+body .mBtn.ghost, body .acctBtn.ghost {
+  background: linear-gradient(180deg, #7cc9ff 0%, var(--cr-blue) 50%, #2f93ea 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5), inset 0 -4px 0 var(--cr-blue-deep), 0 4px 0 var(--cr-ink);
+  color: #fff;
+}
+body .mBtn:active, body .acctBtn:active, body .mTile:active, body .acctSlot.mine:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), 0 1px 0 var(--cr-ink);
+}
+
+/* Menu tiles: chunky cards with a 3D icon. */
+body .mGrid { gap: 10px; }
+body .mTile {
+  border: 2px solid var(--cr-ink);
+  border-radius: 16px;
+  padding: 8px 4px 10px;
+  font-size: 14px;
+  background: linear-gradient(180deg, #6aa8ff 0%, #3a74db 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), inset 0 -4px 0 var(--cr-panel-deep), 0 4px 0 var(--cr-ink);
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+body .mTile.on {
+  background: linear-gradient(180deg, #ffe066 0%, #f5b400 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55), inset 0 -4px 0 var(--cr-gold-deep), 0 4px 0 var(--cr-ink);
+}
+body .mTile .big { font-size: 0; }
+body .mTile .crIcon { width: 64px; height: 64px; display: block; margin: 0 auto 2px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35)); }
+body .mList button {
+  font-family: var(--cr-font); font-size: 16px; color: #fff; -webkit-text-stroke: 1px var(--cr-ink); paint-order: stroke fill;
+  border: 2px solid var(--cr-ink); border-radius: 12px;
+  background: linear-gradient(180deg, #6aa8ff, #3a74db);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 var(--cr-ink);
+}
+body .mList button.on { background: linear-gradient(180deg, #ffe066, #f5b400); }
+body .mToggle { border: 2px solid var(--cr-ink); background: #1d3f8f; }
+body .mToggle.on { background: var(--cr-green); }
+body .mToggle::after { box-shadow: 0 2px 0 var(--cr-ink); }
+body #menuToast {
+  background: linear-gradient(180deg, var(--cr-panel-top), var(--cr-panel-bottom));
+  border: 3px solid var(--cr-ink); border-radius: 14px; font-size: 16px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+body .acctPanel input, body .acctPanel textarea, body .acctPanel select {
+  background: #fff; color: var(--cr-ink); border: 2px solid var(--cr-ink); border-radius: 12px;
+  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.12); font-weight: 600;
+}
+
+/* The player card. */
+body .acctCard {
+  border: 3px solid var(--cr-ink);
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--cr-panel-top) 0%, var(--cr-panel-bottom) 70%, var(--cr-panel-deep) 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 8px 0 rgba(0, 0, 0, 0.35);
+}
+body .acctCardTop { height: 92px; border-bottom: 3px solid var(--cr-ink); }
+body .acctCard .acctPic { border: 4px solid var(--cr-ink); box-shadow: 0 0 0 4px var(--cr-gold), 0 5px 0 4px var(--cr-ink); }
+body .acctCard .nm { font-size: 28px; }
+body .acctCard .un { color: #d8e8ff; font-weight: 700; }
+body .acctCard .bio { color: #fff; font-weight: 600; }
+body .acctCard .facts { color: #fff; font-weight: 600; }
+body .acctCard .facts div { background: rgba(16, 23, 46, 0.25); border-radius: 10px; padding: 6px 10px; }
+body .acctCard .facts .k { font-family: var(--cr-font); color: var(--cr-gold); -webkit-text-stroke: 0.8px var(--cr-ink); paint-order: stroke fill; margin-right: 6px; }
+
+/* Badge slots: dark sockets; a badge sits in one as a 3D shield. */
+body .acctSlotTitle { font-size: 15px; letter-spacing: 1px; color: var(--cr-gold); margin-bottom: 8px; }
+body .acctSlotRow { gap: 7px; }
+body .acctSlot {
+  border: 2px solid var(--cr-ink);
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 40%, #2b4f9e 0%, #16306e 75%);
+  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.45), 0 2px 0 rgba(255, 255, 255, 0.25);
+  position: relative;
+  transition: transform 0.06s;
+}
+body .acctSlot.on {
+  background: radial-gradient(circle at 50% 35%, #3a64c4 0%, #16306e 80%);
+  border-color: var(--cr-ink);
+  box-shadow: inset 0 0 0 2px var(--cr-gold), inset 0 4px 6px rgba(0, 0, 0, 0.35), 0 3px 0 var(--cr-ink);
+}
+body .acctSlot img { width: 92%; height: 92%; object-fit: contain; filter: saturate(1.35) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
+body .acctSlot .ic { font-family: var(--cr-font); color: #6f8fd6; font-size: 22px; }
+body .acctSlot .lb { display: none; }
+body .acctSlotHint { color: #e3eeff; font-weight: 600; }
+body .acctBadgeChoice { display: flex; align-items: center; gap: 12px; }
+body .acctBadgeChoice img { width: 44px; height: 44px; }
+
+/* The HUD buttons (top right). */
+body #hudMenu, body #hudMic, body #acctMe {
+  font-family: var(--cr-font); color: #fff; -webkit-text-stroke: 1px var(--cr-ink); paint-order: stroke fill;
+  border: 2px solid var(--cr-ink); border-radius: 10px;
+  background: linear-gradient(180deg, #6aa8ff, #3a74db);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 var(--cr-ink);
+}
+body #hudMic.live { background: linear-gradient(180deg, #8af07a, #2f9a2a); }
+body #hudMic.muted { background: linear-gradient(180deg, #ff8a84, #b5221d); }

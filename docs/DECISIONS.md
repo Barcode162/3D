@@ -756,6 +756,20 @@ back to the middle, "really smooth but race like", reused later. Built as
   phone's frame rate right at the mirror: full resolution there costs about
   4x the old half-res reflection's pixels.
 
+## Clash Royale style UI (2026-10-19)
+- The user wants the UI "like Clash Royale": smooth, badges easy to tell
+  apart, no emojis ("they look cheap"), everything 3D modelled.
+- `web/theme.css` skins the HTML menus (`web/menu.js`) and cards
+  (`web/account.js`) by overriding their classes (`body .mPanel` etc.). Font:
+  Lilita One (SIL OFL, `web/fonts/`, from Google Fonts).
+- Icons and badges are Blender models rendered with Cycles to transparent
+  PNGs (`tools/assets/toy.py` helpers: glossy enamel/gold, bevelled slabs,
+  tubes, studio lights, `Medium High Contrast`). badges.py: owner, bartender,
+  dj, vip, staff, plus race, darts, mania for game badges to come. icons.py:
+  9 menu icons and 11 emote smileys. ~1 min to render all.
+- Gotcha: a loop variable named `size` (the lights') shadowed the render
+  size: 4x4 pixel pictures.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float

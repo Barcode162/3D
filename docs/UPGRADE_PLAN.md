@@ -5,6 +5,15 @@ when it's done and deployed. Work top to bottom unless the user reorders.
 (The server-run bot race was started and then replaced by item 1-2, as the
 user asked: "the race game should actually be fixed".)
 
+## Added 2026-10-19 (user): Clash Royale style UI
+- [x] **UI like Clash Royale:** chunky outlined font (Lilita One, OFL), blue
+      bevelled panels, glossy buttons that press in (`web/theme.css`, over the
+      menus and cards). No emojis: 3D-modelled badges (`tools/assets/badges.py`
+      → `web/badges/`) and menu/emote icons (`tools/assets/icons.py` →
+      `web/icons/`), shared toy look in `tools/assets/toy.py`.
+- [ ] Next for the UI: the in-game HUD text (pixel font) and 4K Mania / race
+      screens in the same style; better emote faces.
+
 ## Racing
 - [x] **1. Two-player racing on the two rigs, like Mario Kart:** (done
       2026-10-19: garage with 3 cars, 12 paints, 8 rim colours; the room runs
