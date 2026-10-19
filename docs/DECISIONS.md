@@ -997,6 +997,12 @@ No builds or headless runs outside "go".
   145-283 draws / 151-269 k; at the mirror 1,280 / 1.38 M → 346 / 357 k.
   Screenshots identical (imgdiff 0.000%). `PERF=1 node tools/shots.mjs spots`
   prints the counts.
+- **On the phone** (build `8c70c18`, reports KXGWUJ / EXXDHL / FJTXPM): GPU time
+  10.6 → 7.2 ms after entering, 10.2 → 7.9 ms at the mirror (triangles 669 k →
+  270 k; mirror 1.34 M → 332 k), 60 fps; the user: "EXTREMELY responsive".
+- Open bug (2026-10-19): after playing several games, the Menu button and the
+  bartender panel's ✕ stopped responding (until reload). Not reproduced; no
+  report from that session (the menu was needed to send one).
 - Chess: `chess::MoveSearch` runs the root moves a few ms per frame (same move
   as `bestMove`, tested in `tools/native/chess_test.cpp`).
 
