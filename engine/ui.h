@@ -36,4 +36,8 @@ namespace engine::settings {
 // Changes every time the player changes a setting.
 int version();
 double number(const char* key, double fallback);
+// Small numbers the game itself remembers on this phone (e.g. the car you
+// picked), kept in the browser's storage. Not shown in the settings menu.
+void remember(const char* key, double value);
+double remembered(const char* key, double fallback);
 }  // namespace engine::settings

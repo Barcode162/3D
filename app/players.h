@@ -56,6 +56,13 @@ struct OtherPlayer {
     float yaw, pitch;
   };
   std::deque<Sample> samples;
+  // Their activity numbers (slot::kData, e.g. a race car) with times, for
+  // smooth playback of fast things (dataAt).
+  struct DataSample {
+    double time;
+    float v[5];
+  };
+  std::deque<DataSample> data;
   double clockOffset = 0;  // their clock minus ours, estimated
   bool placed = false;     // has a position yet
 };
@@ -69,6 +76,11 @@ class OtherPlayers {
   void sendSelf(double nowMs, engine::Vec3 eye, float yaw, float pitch, const float* extra);
   void update(double nowMs, float dt, float walkSpeed);
   const std::vector<OtherPlayer>& players() const { return players_; }
+  // Player `id`'s activity numbers `delayMs` in the past, between the two
+  // states around then (`angleIndex`: that number is an angle, turned the
+  // short way). Returns how far past their newest state that moment is
+  // (ms; 0 = between two states, for the caller to extrapolate), or -1.
+  double dataAt(int id, double nowMs, double delayMs, float out[5], int angleIndex = -1) const;
   // For the status line, e.g. "online: 2"; empty when multiplayer is off.
   std::string statusText() const;
 

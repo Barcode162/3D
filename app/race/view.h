@@ -6,6 +6,7 @@
 
 #include <vector>
 
+#include "app/race/cars.h"
 #include "app/race/track.h"
 #include "engine/gpu.h"
 #include "engine/math.h"
@@ -23,17 +24,19 @@ struct Camera {
 struct CarDraw {
   engine::Mat4 body;
   engine::Mat4 wheels[4];
-  engine::Vec3 paint;
+  engine::Vec3 paint, rim{0.7f, 0.7f, 0.72f};
+  int model = 0;    // app::race::carModel
   float brake = 0;  // 0..1: tail light glow
 };
 
 class View {
  public:
   bool preparePipelines(engine::Gpu& gpu);  // early, while the bar loads
-  bool init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spec);
+  bool init(engine::Gpu& gpu, const Track& track);  // (every car model's meshes too)
   bool pipelinesReady() const { return pipeline_ && skyPipeline_; }
   // Where a car's parts are this frame.
-  static CarDraw carDraw(const engine::Vehicle& car, engine::Vec3 paint, float brake);
+  static CarDraw carDraw(const engine::Vehicle& car, engine::Vec3 paint, float brake, int model = 0,
+                         engine::Vec3 rim = {0.7f, 0.7f, 0.72f});
   // Draws one frame into `target` (with `depth`, both width x height). Lights:
   // how many start lights are on (0..5). `text` (optional) is drawn on top.
   void render(const wgpu::TextureView& target, const wgpu::TextureView& depth, uint32_t width, uint32_t height,
@@ -71,7 +74,7 @@ class View {
   wgpu::Buffer frameBuffer_, objectBuffer_;
   wgpu::BindGroup frameGroup_, objectGroup_;
   std::vector<Part> chunks_;
-  Part body_, tailLights_, wheel_, lightPod_;
+  Part bodies_[kCarCount], tailLights_[kCarCount], wheel_, lightPod_;
   std::vector<uint8_t> objectData_;
   engine::Vec3 lightsPos_, lightsRight_;
   float lightsHeading_ = 0;

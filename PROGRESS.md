@@ -9,7 +9,8 @@
 the user's platformer "Test 2", signs/ladders, 4K Mania like osu!mania, mirror
 quality, badge slots, clipping props, walk-through fixes, stuck seats, chess,
 there. The server-run bot race (below) is replaced by its items 1-2.
-Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`). Next: 1.
+Done so far: 12 (stuck seats), 2 (steering, `engine/steering.*`), 1 (two-player
+racing with a garage). Next: 3-5 (the arcade room + platformer machine + music).
 there. The server-run bot race (below) is replaced by its items 1-2.
 
 **2026-10-18, NEW TOP PRIORITY (user): the server runs the game.** Multiplayer now

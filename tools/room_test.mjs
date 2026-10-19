@@ -321,6 +321,48 @@ try {
   check((await db.until(() => db.find('R', (r) => r.r === 9)))?.body.ok === 0, 'someone else can\'t throw on your turn');
   [da, db].forEach((c) => c.ws.close(1000));
 
+  // ---- The racing rigs run by the room (cloud/games/race.js) ----
+  {
+    const R = await import('../cloud/games/race.js');
+    const rr = R.empty(), holdsAll = () => true;
+    R.act(rr, 5, { op: 'join', rig: 0, car: 1, paint: 2, rim: 3 }, 0, holdsAll);
+    R.act(rr, 6, { op: 'join', rig: 1, car: 0, paint: 0, rim: 0 }, 0, holdsAll);
+    R.act(rr, 5, { op: 'ready', rig: 0, car: 1, paint: 2, rim: 3 }, 0, holdsAll);
+    check(rr.phase === 0, 'race: one ready player waits for the other rig');
+    R.act(rr, 6, { op: 'ready', rig: 1, car: 2, paint: 1, rim: 0 }, 1000, holdsAll, () => 0.5);
+    check(rr.phase === 1 && rr.rigs.every((e) => e.state === R.RACING) && rr.goAt >= 1000 + R.LIGHTS_MS, 'race: both ready → racing, lights out later');
+    check(R.act(rr, 5, { op: 'finish', rig: 0, ms: 1000 }, rr.goAt + 2000, holdsAll).ok === 0, 'race: an impossible time is refused');
+    check(R.act(rr, 5, { op: 'finish', rig: 0, ms: 100000 }, rr.goAt + 100000, holdsAll).ok === 1 && rr.phase === 1, 'race: first finisher, race still on');
+    check(R.check(rr, rr.goAt + 100000 + 61000) && rr.phase === 0 && rr.rigs[1].state === R.DNF, 'race: a minute after the first finish the rest did not finish');
+    const back = R.restore(R.values(rr));
+    check(JSON.stringify(R.values(back)) === JSON.stringify(R.values(rr)), 'race: survives the room sleeping (values ↔ restore)');
+    R.act(rr, 6, { op: 'ready', rig: 1, car: 0, paint: 0, rim: 0, solo: 1 }, 0, holdsAll);
+    check(rr.phase === 1 && rr.rigs[1].state === R.RACING && rr.rigs[0].state !== R.RACING, 'race: "race the bots" starts without the other rig');
+
+    const r14 = room('race');
+    const ra = await joined(r14, { name: 'Ana' }), rb = await joined(r14, { name: 'Ben' });
+    ra.send('I', { i: 1, k: 'race', op: 'join', rig: 0, car: 0, paint: 0, rim: 0 });
+    check((await ra.until(() => ra.find('R', (r) => r.r === 1)))?.body.ok === 0, 'race: not without sitting in the rig (its claim)');
+    ra.send('I', { i: 2, k: 'claim', key: 'machine.rig0' });
+    rb.send('I', { i: 2, k: 'claim', key: 'machine.rig1' });
+    await ra.until(() => ra.find('R', (r) => r.r === 2));
+    await rb.until(() => rb.find('R', (r) => r.r === 2));
+    rb.send('I', { i: 3, k: 'race', op: 'join', rig: 1, car: 1, paint: 0, rim: 0 });
+    await rb.until(() => rb.find('R', (r) => r.r === 3));
+    ra.send('I', { i: 3, k: 'race', op: 'ready', rig: 0, car: 2, paint: 4, rim: 1 });
+    await ra.until(() => ra.find('R', (r) => r.r === 3));
+    rb.send('I', { i: 4, k: 'race', op: 'ready', rig: 1, car: 1, paint: 0, rim: 0 });
+    const rc = await ra.until(() => ra.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'rc' && e[3][0] === 1));
+    const slotA = ra.find('W').body.slot, slotB = rb.find('W').body.slot;
+    check(rc && rc[3][4] === slotA && rc[3][5] === 2 && rc[3][10] === slotB && rc[3][8] === R.RACING && rc[3][14] === R.RACING &&
+      Math.abs(rc[3][1] - (Date.now() + R.LIGHTS_MS) / 1000) < 3, 'race: both phones get the start (rigs, cars, one server time for the lights)');
+    rb.send('K', { w: { rc: [0] } });
+    rb.send('I', { i: 5, k: 'release', key: 'machine.rig1' });
+    const after = await ra.until(() => ra.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 'rc' && e[3][10] === -1));
+    check(after && after[3][0] === 1 && after[3][8] === R.RACING, 'race: getting up leaves the race (the other keeps racing); phones can\'t write rc');
+    [ra, rb].forEach((c) => c.ws.close(1000));
+  }
+
   const { SONGS } = await import('../cloud/games/jukebox.js');
   const { readFileSync } = await import('node:fs');
   const cppSongs = [...readFileSync(new URL('../app/jukebox.cpp', import.meta.url), 'utf8').matchAll(/\{"([a-z0-9-]+\.m4a)"/g)].map((m) => m[1]);

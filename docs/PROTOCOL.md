@@ -136,6 +136,7 @@ props that changed since the previous TICK.
 | `drop` | `g`, `pos` [x,y,z]: put it down there (stood upright) | `ok:1`, or `ok:0` (`not in your hand`, `too far`, `bad spot`) | DELTA `claim.glass.<g>` = -1; it settles in the room's physics |
 | `throw` | `g`, `vel` [x,y,z] m/s (capped at 12) | as `drop` | as `drop`; it flies in the room's physics |
 | `dart` | `u`, `v`: where you aimed on the board (m from the centre, u = right, v = up) | needs the claim `machine.darts`. `ok:1` + `u`, `v` (where it landed: the room adds the hand's wobble), `pts`, `label` ("T20"...), `left`, `bust`, `won`, `turnOver`, `games` | DELTA `darts` = that same result, to the others |
+| `race` | `op` (`join`, `ready`, `unready`, `finish`, `leave`), `rig` 0/1, `car` 0..2, `paint` 0..11, `rim` 0..7; `solo:1` with `ready` = race the bots now; `ms` with `finish` = your race time | needs the claim `machine.rig<rig>`. `ok:1`, or `ok:0` (`not on that rig`, `bad car`, `you are racing`, `too fast`, `too soon`) | world key `rc` (by -1) |
 | other | | `ok:0 why:"unknown intent"` | |
 
 **Glasses** (`cloud/games/glasses.js`) are simulated by the room with the bar's own C++
@@ -147,6 +148,14 @@ key `g<n>` (state 2) right after that TICK. Phones never write `g<n>`.
 Games the room runs live in `cloud/games/` (darts: `darts.js`, 301 rules as in
 `app/darts.cpp`). A game's state is kept in its player's socket attachment (survives the
 room sleeping) and ends when they release the machine or leave.
+
+**The racing rigs** (`cloud/games/race.js`): the garage lobby. When everyone on the rigs
+is ready (or one says `solo`), the room starts a race: `rc` gets phase 1, a start time
+(`goAt`, server s: the start lights go out then, on every phone) and each racer's car.
+Each phone drives its own car and sends it in its activity data (x, z, heading, speed,
+steer); the others play it back 100 ms in the past. Finish times are checked (not faster
+than 25 s a lap, not before that much time passed); a minute after the first finisher
+the rest don't finish. Getting up from the rig (releasing its claim) leaves the race.
 
 A player's claims are freed when they leave (after the grace period), as DELTAs with
 value -1, by -1. Claims are in WELCOME (`claims`).
@@ -162,6 +171,7 @@ back). Counted as `refused` in the usage on `/health`.
 | `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock. `jb`: when a built-in song ends the room writes the next one itself (`by` -1, `cloud/games/jukebox.js`); nobody connected → `[-1, 0]` |
 | `lt` | lights dim, fire on (two 0/1) | |
 | `dk<n>` (0..7) | drink type + 1, 0 = empty | serving (non-zero) needs the `bartender` or `owner` badge; taking (0) only through a `set` intent that expects the drink |
+| `rc` | the racing rigs: phase, goAt (server s), laps, seed, then per rig slot, car, paint, rim, state (0 garage, 1 ready, 2 racing, 3 finished, 4 didn't finish), time (s) (16) | written only by the room (`race` intents) |
 | anything else | | refused |
 
 Positions in STATE outside the bar (|x| or |z| > 40 m, y outside -2..12) are ignored.

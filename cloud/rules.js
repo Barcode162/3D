@@ -11,6 +11,8 @@
 //   jb     jukebox: song (-1 = off), server time it started (s)
 //   pso    piano song: song (-1 = none), server time it starts (s)
 //   lt     lights: dim (0/1), fire on (0/1)
+//   rc     the racing rigs: lobby, picks, start time, results. Written only
+//          by the room (cloud/games/race.js); phones use `race` intents.
 //   dk<n>  drink on counter spot n (0..7): drink type + 1, 0 = empty.
 //          Serving one (non-zero) needs the bartender badge; taking one is a
 //          `set` intent that expects the drink still there (first one wins).
@@ -47,6 +49,7 @@ export function checkWrite(key, values, ctx) {
     // ask with grab / drop / throw intents and never write g<n> themselves.
     return { ok: false, why: 'the room moves the glasses' };
   }
+  if (key === 'rc') return { ok: false, why: 'the room runs the race' };
   if ((m = /^m(\d)$/.exec(key))) {
     if (v.length !== 2 || !isBit(v[0]) || !isBit(v[1])) return { ok: false, why: 'a mirror is two 0/1 values' };
     return { ok: true, values: v };

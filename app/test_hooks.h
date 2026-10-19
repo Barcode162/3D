@@ -6,12 +6,14 @@
 //   ?perf=1               performance overlay on
 //   ?sit=N  ?emote=N  ?pianosong=N  ?rhythm=song,difficulty  ?autoplay
 //   ?shift  ?darts        start a bartending shift / the darts game
+//   ?garage               with ?sit= on a racing rig: open its garage
 // (?skipintro, ?server=, ?cloud=, ?room=, ?name=, ?testerror are read by
 // the page's JavaScript.) The game applies them once it's ready.
 namespace app {
 
 struct TestHooks {
   bool still = false, perf = false, autoplay = false, shift = false, darts = false;
+  bool garage = false;  // with ?sit= on a racing rig: the garage instead of straight into a race
   int sit = -1, emote = -1, pianoSong = -1;
   int rhythmSong = -1, rhythmDifficulty = 1;
   bool hasCam = false;

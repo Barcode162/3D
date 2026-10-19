@@ -6,7 +6,11 @@ when it's done and deployed. Work top to bottom unless the user reorders.
 user asked: "the race game should actually be fixed".)
 
 ## Racing
-- [ ] **1. Two-player racing on the two rigs, like Mario Kart:** each rig's
+- [x] **1. Two-player racing on the two rigs, like Mario Kart:** (done
+      2026-10-19: garage with 3 cars, 12 paints, 8 rim colours; the room runs
+      the lobby and the start, `cloud/games/race.js`; test
+      `tools/race_mp_test.mjs`. Two players race without bots for now; bots in
+      a two-player race would need one phone or the room to drive them.) each rig's
       player chooses a car and customizes it (paint, maybe parts), then
       races the other rig's player (bots optional). Synced through the
       Cloudflare room.

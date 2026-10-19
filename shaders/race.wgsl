@@ -173,7 +173,8 @@ fn surfaceLook(material: u32, color: vec3f, p: vec3f, n: vec3f) -> Look {
       l.clearcoat = 1.0;
     }
     case 8u: { l.roughness = 0.85; }  // rubber
-    case 9u: {  // metal
+    case 9u: {  // metal (rims: tinted per car when the object has a tint)
+      if (object.tint.a > 0.0) { l.base = object.tint.rgb; }
       l.roughness = 0.32;
       l.metallic = 1.0;
     }

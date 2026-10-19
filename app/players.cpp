@@ -71,6 +71,9 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
       LOG_INFO("Multiplayer: %s is %s.", o.name.empty() ? "a player" : o.name.c_str(), away ? "away" : "back");
     }
     o.samples.push_back({p.time, {p.values[0], p.values[1], p.values[2]}, p.values[3], p.values[4]});
+    OtherPlayer::DataSample d{p.time, {}};
+    for (int k = 0; k < 5; ++k) d.v[k] = o.values[slot::kData + k];
+    o.data.push_back(d);
   }
 
   // Gone players disappear; the rest are played back a little in the past.
@@ -83,6 +86,7 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
       o.avatarRev = e->avatarRev;
     }
     while (o.samples.size() > 2 && o.samples[1].time < nowMs + o.clockOffset - kKeepMs) o.samples.pop_front();
+    while (o.data.size() > 2 && o.data[1].time < nowMs + o.clockOffset - kKeepMs) o.data.pop_front();
     if (o.samples.empty()) continue;
     const double t = nowMs + o.clockOffset - kPlaybackDelayMs;
     size_t i = 0;
@@ -118,6 +122,26 @@ std::string OtherPlayers::statusText() const {
     case engine::net::Status::kConnected: break;
   }
   return "online: " + std::to_string(players_.size() + 1);
+}
+
+double OtherPlayers::dataAt(int id, double nowMs, double delayMs, float out[5], int angleIndex) const {
+  auto it = std::find_if(players_.begin(), players_.end(), [&](const OtherPlayer& o) { return o.id == id; });
+  if (it == players_.end() || it->data.empty()) return -1;
+  const auto& d = it->data;
+  const double t = nowMs + it->clockOffset - delayMs;
+  if (t >= d.back().time || d.size() == 1) {
+    for (int k = 0; k < 5; ++k) out[k] = d.back().v[k];
+    return std::max(0.0, t - d.back().time);
+  }
+  size_t i = 0;
+  while (i + 2 < d.size() && d[i + 1].time <= t) ++i;
+  const auto& a = d[i];
+  const auto& b = d[i + 1];
+  const float f = static_cast<float>(std::clamp((t - a.time) / std::max(b.time - a.time, 1.0), 0.0, 1.0));
+  for (int k = 0; k < 5; ++k) {
+    out[k] = k == angleIndex ? engine::angleLerp(a.v[k], b.v[k], f) : a.v[k] + (b.v[k] - a.v[k]) * f;
+  }
+  return 0;
 }
 
 }  // namespace app

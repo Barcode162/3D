@@ -37,7 +37,8 @@ Section bodyAt(float z) {
 
 }  // namespace
 
-MeshBuilder buildCarBody(const engine::CarSpec& spec) {
+MeshBuilder buildCarBody(const CarStyle& style) {
+  const engine::CarSpec spec = carModel(0).spec;
   MeshBuilder m;
   const float ground = -spec.cgHeight;
   const float floorY = ground + 0.12f;
@@ -144,16 +145,24 @@ MeshBuilder buildCarBody(const engine::CarSpec& spec) {
   for (float s : {-1.0f, 1.0f}) {
     m.box({s * 0.98f, 0.33f, -0.62f}, {0.08f, 0.05f, 0.07f}, paint, kCarPaint);
     m.box({s * 0.62f, 0.02f, -2.27f}, {0.2f, 0.06f, 0.02f}, {3.0f, 2.9f, 2.6f}, kGlow);  // headlights
-    m.box({s * 0.55f, 0.47f, 2.05f}, {0.03f, 0.1f, 0.05f}, dark, kPlain);                // wing posts
+    if (style.wing) m.box({s * 0.55f, 0.47f, 2.05f}, {0.03f, 0.1f, 0.05f}, dark, kPlain);  // wing posts
   }
   m.box({0, ground + 0.16f, -2.25f}, {0.85f, 0.015f, 0.12f}, dark, kPlain);
-  m.box({0, 0.58f, 2.08f}, {0.86f, 0.02f, 0.16f}, dark, kPlain);
+  if (style.wing) m.box({0, 0.58f, 2.08f}, {0.86f, 0.02f, 0.16f}, dark, kPlain);
+  else m.box({0, 0.36f, 2.18f}, {0.8f, 0.015f, 0.06f}, paint, kCarPaint);  // a small lip spoiler
+  // The model's size (normals stay close enough for these small scales).
+  for (Vertex& v : m.vertices) {
+    v.position.x *= style.width;
+    v.position.z *= style.length;
+  }
   return m;
 }
 
-MeshBuilder buildTailLights() {
+MeshBuilder buildTailLights(const CarStyle& style) {
   MeshBuilder m;
-  for (float s : {-1.0f, 1.0f}) m.box({s * 0.62f, 0.2f, 2.245f}, {0.2f, 0.045f, 0.01f}, {1.0f, 0.03f, 0.02f}, kGlow);
+  for (float s : {-1.0f, 1.0f}) {
+    m.box({s * 0.62f * style.width, 0.2f, 2.245f * style.length}, {0.2f, 0.045f, 0.01f}, {1.0f, 0.03f, 0.02f}, kGlow);
+  }
   return m;
 }
 

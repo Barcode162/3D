@@ -148,6 +148,10 @@ int claimOwner(const std::string& key) {
                     key.c_str());
 }
 
+int playerOfSlot(int slot) {
+  return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['slotIndex'] ? n['slotIndex']($0) : -1; }, slot);
+}
+
 int claimResult(int request) {
   if (request <= 0) return -1;
   return EM_ASM_INT({ var n = window['bar3dNet']; return n && n['result'] ? n['result']($0) : -1; }, request);

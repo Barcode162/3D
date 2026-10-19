@@ -59,6 +59,7 @@ node tools/room_test.mjs             # Cloudflare room via its own wrangler dev 
 NODE_PATH=$(npm root -g) node tools/mp_test.mjs     # two/three players + the room (wrangler dev)
 NODE_PATH=$(npm root -g) node tools/voice_test.mjs  # voice chat between two players
 NODE_PATH=$(npm root -g) node tools/meridian_test.mjs  # Meridian from a racing rig and back
+NODE_PATH=$(npm root -g) node tools/race_mp_test.mjs   # two players race each other on the rigs
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:

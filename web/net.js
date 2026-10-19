@@ -673,6 +673,13 @@ window.bar3dNet = (function () {
       var p = players[pidOf(claims[key])];
       return p ? p.index : -1;
     },
+    // A room slot as the game's player number: -1 nobody, 0 you, else theirs.
+    slotIndex: function (slot) {
+      if (slot < 0) return -1;
+      if (slot === mySlot) return 0;
+      var p = players[pidOf(slot)];
+      return p ? p.index : -1;
+    },
     // The room's answer to a claim: 1 yes, 0 no, -1 not yet.
     result: function (id) {
       var r = results[id];

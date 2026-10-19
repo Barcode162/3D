@@ -66,4 +66,20 @@ double number(const char* key, double fallback) {
   }, key, fallback);
 }
 
+void remember(const char* key, double value) {
+  EM_ASM({
+    try { window['localStorage']['setItem']('bar3d.game.' + UTF8ToString($0), String($1)); } catch (e) {}
+  }, key, value);
+}
+
+double remembered(const char* key, double fallback) {
+  return EM_ASM_DOUBLE({
+    try {
+      var v = window['localStorage']['getItem']('bar3d.game.' + UTF8ToString($0));
+      if (v !== null && isFinite(+v)) return +v;
+    } catch (e) {}
+    return $1;
+  }, key, fallback);
+}
+
 }  // namespace engine::settings

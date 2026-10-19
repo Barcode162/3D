@@ -166,7 +166,7 @@ bool View::preparePipelines(engine::Gpu& gpu) {
   return true;
 }
 
-bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spec) {
+bool View::init(engine::Gpu& gpu, const Track& track) {
   if (!preparePipelines(gpu)) return false;
   const wgpu::Device& device = gpu.device;
 
@@ -201,9 +201,11 @@ bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spe
     chunks_.push_back(p);
     triangles += c.mesh.indices.size() / 3;
   }
-  body_ = upload(buildCarBody(spec));
-  tailLights_ = upload(buildTailLights());
-  wheel_ = upload(buildWheel(spec.tire.radius));
+  for (int k = 0; k < kCarCount; ++k) {
+    bodies_[k] = upload(buildCarBody(carModel(k).style));
+    tailLights_[k] = upload(buildTailLights(carModel(k).style));
+  }
+  wheel_ = upload(buildWheel(carModel(0).spec.tire.radius));
   MeshBuilder pod;
   pod.box({0, 0, 0}, {0.22f, 0.22f, 0.06f}, {1.0f, 0.02f, 0.01f}, kGlow);
   lightPod_ = upload(pod);
@@ -215,8 +217,10 @@ bool View::init(engine::Gpu& gpu, const Track& track, const engine::CarSpec& spe
   return true;  // the pipelines may still be compiling: render() waits for them
 }
 
-CarDraw View::carDraw(const engine::Vehicle& car, Vec3 paint, float brake) {
+CarDraw View::carDraw(const engine::Vehicle& car, Vec3 paint, float brake, int model, Vec3 rim) {
   CarDraw d;
+  d.model = std::clamp(model, 0, kCarCount - 1);
+  d.rim = rim;
   d.body = Mat4::transform(car.position, car.rotation);
   d.paint = paint;
   d.brake = brake;
@@ -296,7 +300,7 @@ void View::render(const wgpu::TextureView& target, const wgpu::TextureView& dept
     const CarDraw& c = cars[i];
     carSlots.push_back(put(c.body, c.paint, 1, 1.0f));
     put(c.body, {1, 1, 1}, 0, 1.2f + 5.0f * c.brake);
-    for (const Mat4& w : c.wheels) put(w, {1, 1, 1}, 0, 0);
+    for (const Mat4& w : c.wheels) put(w, c.rim, 1, 0);  // (the tint colours the rims)
   }
   const uint32_t lightSlot = slot;
   const Quat lightRot = Quat::axisAngle({0, 1, 0}, lightsHeading_);
@@ -344,8 +348,8 @@ void View::render(const wgpu::TextureView& target, const wgpu::TextureView& dept
     const Vec3 p{m.at(3, 0), m.at(3, 1), m.at(3, 2)};
     if (!visible(viewProj, p - Vec3{2.6f, 1.2f, 2.6f}, p + Vec3{2.6f, 1.5f, 2.6f})) continue;
     const uint32_t s = carSlots[i];
-    draw(pass, body_, s);
-    draw(pass, tailLights_, s + 1);
+    draw(pass, bodies_[cars[i].model], s);
+    draw(pass, tailLights_[cars[i].model], s + 1);
     for (uint32_t w = 0; w < 4; ++w) draw(pass, wheel_, s + 2 + w);
   }
   for (uint32_t k = 0; k < 5; ++k) draw(pass, lightPod_, lightSlot + k);

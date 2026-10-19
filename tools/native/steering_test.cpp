@@ -9,6 +9,7 @@
 #include <cstring>
 #include <functional>
 
+#include "app/race/cars.h"
 #include "app/race/world.h"
 #include "engine/steering.h"
 #include "engine/vehicle.h"
@@ -49,10 +50,11 @@ struct Run {
   Flat ground;
   CarAssists assists;
   bool old = false;
+  int model = 0;  // app::race::carModel (CAR=n)
   const float dt = 1.0f / 240;
   float t = 0;
   void start(float kmh) {
-    car.setup(app::race::sportsCar());
+    car.setup(app::race::carModel(model).spec);
     car.place({0, 0, 0}, 0);
     for (int i = 0; i < 240; ++i) step(0, Steering::Hands::kFree, 0, 0);
     if (kmh > 0) car.setSpeed(kmh / 3.6f);
@@ -87,10 +89,16 @@ struct Run {
 
 int main() {
   const bool compare = std::getenv("FEEL") && std::strcmp(std::getenv("FEEL"), "old") == 0;
-  for (int pass = 0; pass < (compare ? 2 : 1); ++pass) {
+  const int only = std::getenv("CAR") ? std::atoi(std::getenv("CAR")) : -1;
+  for (int pass = 0; pass < (compare ? 2 : app::race::kCarCount); ++pass) {
+    if (only >= 0 && !compare && pass != only) continue;
     Run r;
-    r.old = pass == 1;
-    std::printf("== %s steering\n", r.old ? "OLD" : "new");
+    r.old = compare && pass == 1;
+    r.model = compare ? std::max(only, 0) : pass;
+    // Each car has its character: the roadster grips harder, the muscle car
+    // slides a little more. The GT is the reference.
+    const float gripMax = r.model == 2 ? 1.32f : 1.2f, slideMax = r.model == 1 ? 4.5f : 3.5f;
+    std::printf("== %s steering, car %s\n", r.old ? "OLD" : "new", app::race::carModel(r.model).name);
     using H = Steering::Hands;
 
     // A. Turning circle at 12 km/h, full lock.
@@ -114,9 +122,9 @@ int main() {
       }
       char what[64];
       std::snprintf(what, sizeof(what), "full wheel at %.0f km/h: sideways grip", kmh);
-      band(what, g, 0.85f, 1.2f, "g");
+      band(what, g, 0.85f, gripMax, "g");
       std::snprintf(what, sizeof(what), "full wheel at %.0f km/h: slide (body slip max)", kmh);
-      band(what, slipMax, 0.0f, 3.5f, "deg");
+      band(what, slipMax, 0.0f, slideMax, "deg");
     }
     // C. Half wheel at 100 km/h: how fast the car answers, and overshoot.
     {

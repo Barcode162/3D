@@ -107,6 +107,11 @@ jobs:
         continue-on-error: true
         run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
 
+      # Two players race each other on the two rigs (the room starts the race).
+      - name: "Test: two-player race"
+        continue-on-error: true
+        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/race_mp_test.mjs
+
       # Prints only whether the Cloudflare secrets exist, whether wrangler
       # accepts the token, and whether a workers.dev subdomain is registered.
       - name: "Check: Cloudflare"

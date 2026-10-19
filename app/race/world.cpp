@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "app/race/cars.h"
+
 using engine::Vec3;
 
 namespace app::race {
@@ -90,23 +92,39 @@ void World::buildRacingLine() {
 }
 
 void World::start(int yourSlot, int bots, int laps, uint32_t seed) {
+  RacerSetup me;
+  me.grid = std::clamp(yourSlot, 0, bots);
+  start({me}, bots, laps, seed);
+}
+
+void World::start(const std::vector<RacerSetup>& people, int bots, int laps, uint32_t seed, double goInMs) {
   racers_.clear();
   laps_ = laps;
-  const int total = bots + 1;
-  you_ = std::clamp(yourSlot, 0, total - 1);
-  const engine::CarSpec spec = sportsCar();
+  const int total = bots + static_cast<int>(people.size());
+  you_ = 0;
   for (int k = 0; k < total; ++k) {
+    const RacerSetup* who = nullptr;
+    for (const RacerSetup& p : people) {
+      if (std::clamp(p.grid, 0, total - 1) == k) who = &p;
+    }
     Racer r;
-    r.car.setup(spec);
+    r.model = who ? who->model : 0;
+    r.car.setup(carModel(r.model).spec);
     Vec3 p;
     float heading;
     track_.gridSlot(k, p, heading);
     r.car.place(p, heading);
-    r.bot = k != you_;
-    r.name = r.bot ? kBotNames[k % 10] : "You";
+    r.bot = who == nullptr;
+    r.remote = who && !who->you;
+    if (who && who->you) you_ = k;
+    r.name = r.bot ? kBotNames[k % 10] : who->name;
     r.paint = kPaints[k % 10];
-    if (!r.bot) r.paint = {0.75f, 0.02f, 0.02f};
-    else if (k % 10 == 0) r.paint = kPaints[(k + 3) % 10];
+    if (who) {
+      r.paint = who->paint;
+      r.rim = who->rim;
+    } else if (k % 10 == 0) {
+      r.paint = kPaints[(k + 3) % 10];
+    }
     // Front-runners are a little quicker, like a real grid.
     r.skill = 0.9f + 0.08f * static_cast<float>(total - k) / static_cast<float>(total);
     r.car.wheels[0].groundHint = -1;
@@ -117,6 +135,10 @@ void World::start(int yourSlot, int bots, int laps, uint32_t seed) {
   tick_ = 0;
   lightsTick_ = ticks(1500);
   goTick_ = lightsTick_ + ticks(5 * 900 + 400 + seed % 700);  // lights out after a random hold
+  if (goInMs >= 0) {  // the room's start: the same moment on every phone
+    goTick_ = ticks(goInMs);
+    lightsTick_ = goTick_ > ticks(5 * 900 + 400 + seed % 700) ? goTick_ - ticks(5 * 900 + 400 + seed % 700) : 0;
+  }
   accumulator_ = 0;
   alpha_ = 0;
   for (Racer& r : racers_) {
@@ -138,9 +160,46 @@ engine::Vehicle World::shownCar(const Racer& r) const {
   return v;
 }
 
+void World::setRemote(int index, float x, float z, float heading, float speed, float steer, float dt) {
+  if (index < 0 || index >= static_cast<int>(racers_.size())) return;
+  Racer& r = racers_[static_cast<size_t>(index)];
+  engine::Vehicle& car = r.car;
+  const float oldHeading = engine::Vehicle::headingOf(car.forward());
+  int hint = r.hint;
+  float s, lat;
+  track_.locate({x, car.position.y, z}, s, lat, hint);
+  Vec3 n;
+  const Vec3 ground = track_.surfacePoint(s, lat, &n);
+  // Sitting on the road there, facing `heading`, tilted with the surface.
+  const engine::Quat yaw = engine::Quat::axisAngle({0, 1, 0}, heading);
+  const Vec3 up = engine::normalize(n), axis = engine::cross(Vec3{0, 1, 0}, up);
+  const float tiltAngle = std::asin(std::min(engine::length(axis), 1.0f));
+  const engine::Quat tilt = tiltAngle > 1e-4f ? engine::Quat::axisAngle(engine::normalize(axis), tiltAngle) : engine::Quat{};
+  car.rotation = tilt * yaw;
+  car.position = Vec3{x, ground.y, z} + car.up() * car.spec().cgHeight;
+  car.velocity = car.forward() * speed;
+  car.angularVelocity = {0, dt > 0 ? engine::wrapAngle(heading - oldHeading) / dt : 0, 0};
+  for (auto& w : car.wheels) {
+    w.steer = w.front ? steer * car.spec().maxSteer * 0.85f : 0;
+    w.spin = speed / car.spec().tire.radius;
+    w.angle += w.spin * dt;
+    w.compression = 0.04f;
+  }
+  r.prevPosition = car.position;
+  r.prevRotation = car.rotation;
+}
+
+void World::setGoIn(double ms) {
+  if (tick_ >= goTick_) return;  // already racing
+  const uint32_t hold = goTick_ - lightsTick_;
+  goTick_ = tick_ + ticks(std::max(ms, 0.0));
+  lightsTick_ = goTick_ > hold ? goTick_ - hold : 0;
+  for (Racer& r : racers_) r.lapStartMs = ticksToMs(goTick_);
+}
+
 bool World::allFinished() const {
   for (const Racer& r : racers_) {
-    if (!r.finished && !r.remote) return false;
+    if (!r.finished && !r.remote && !r.hidden) return false;
   }
   return true;
 }
@@ -203,6 +262,7 @@ void World::update(float dt) {
   std::vector<Racer*> order;
   for (Racer& r : racers_) order.push_back(&r);
   std::stable_sort(order.begin(), order.end(), [](const Racer* a, const Racer* b) {
+    if (a->hidden != b->hidden) return b->hidden;
     if (a->finished != b->finished) return a->finished;
     if (a->finished) return a->finishMs < b->finishMs;
     return a->distance > b->distance;
@@ -305,6 +365,7 @@ void World::driveBot(Racer& r, int index) {
 void World::collideWalls(Racer& r) {
   // The deepest corner of the body past a barrier gets one push and one
   // impulse per step (several corners at once would add up and explode).
+  if (r.remote || r.hidden) return;  // (a remote car hits walls on its own phone)
   engine::Vehicle& car = r.car;
   const Vec3 h = car.spec().halfExtents;
   const Vec3 o = car.spec().boxOffset;
@@ -360,6 +421,7 @@ void World::collideWalls(Racer& r) {
 
 void World::collideCars(Racer& A, Racer& B) {
   if (A.ghost(tick_) || B.ghost(tick_)) return;  // just reset: passes through
+  if (A.hidden || B.hidden) return;
   engine::Vehicle& a = A.car;
   engine::Vehicle& b = B.car;
   const Vec3 d = b.position - a.position;
@@ -414,15 +476,18 @@ void World::collideCars(Racer& A, Racer& B) {
   const Vec3 pb = deepest(ba, bb, normal);
   Vec3 p = (pa + pb) * 0.5f;
   p.y = (a.position.y + b.position.y) * 0.5f - 0.05f;
-  // Push apart (remote cars don't move here; theirs does on their side).
-  const float shareA = B.remote ? 1.0f : A.remote ? 0.0f : 0.5f;
+  // Push apart. A remote car doesn't move here (it does on its own phone,
+  // which sees the same contact): this side takes a bit more than half.
+  const float shareA = B.remote ? 0.6f : A.remote ? 0.4f : 0.5f;
   a.position += normal * (-best * shareA);
   b.position += normal * (best * (1 - shareA));
   const Vec3 vrel = b.pointVelocity(p) - a.pointVelocity(p);
   const float vn = engine::dot(vrel, normal);
   if (vn >= 0) return;
-  const float ka = A.remote ? 0 : a.inverseMassAt(p, normal);
-  const float kb = B.remote ? 0 : b.inverseMassAt(p, normal);
+  // Both masses count (a remote car is as heavy as it is), so a bump from
+  // the other player shoves you about as much as it shoves them.
+  const float ka = a.inverseMassAt(p, normal);
+  const float kb = b.inverseMassAt(p, normal);
   if (ka + kb <= 0) return;
   const float j = -(1 + 0.3f) * vn / (ka + kb);
   if (!A.remote) a.applyImpulse(p, normal * -j);
@@ -433,7 +498,7 @@ void World::collideCars(Racer& A, Racer& B) {
   const float st = engine::length(vt);
   if (st > 0.01f) {
     const Vec3 t = vt * (1 / st);
-    const float kt = (A.remote ? 0 : a.inverseMassAt(p, t)) + (B.remote ? 0 : b.inverseMassAt(p, t));
+    const float kt = a.inverseMassAt(p, t) + b.inverseMassAt(p, t);
     const float jt = std::min(st / std::max(kt, 1e-6f), 0.35f * j);
     if (!A.remote) a.applyImpulse(p, t * jt);
     if (!B.remote) b.applyImpulse(p, t * -jt);
@@ -458,7 +523,7 @@ void World::updateProgress(Racer& r) {
       ++r.lap;
       r.lapStartMs = nowMs;
       r.halfway = false;
-      if (r.lap >= laps_ && !r.finished) {
+      if (r.lap >= laps_ && !r.finished && !r.remote) {  // (a remote finish comes from the room)
         r.finished = true;
         r.finishMs = nowMs - goMs();
       }

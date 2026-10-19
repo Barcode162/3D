@@ -18,9 +18,12 @@ struct Racer {
   engine::CarInput input;
   engine::CarAssists assists;
   engine::Vec3 paint{0.7f, 0.05f, 0.04f};
+  engine::Vec3 rim{0.7f, 0.7f, 0.72f};
+  int model = 0;            // app::race::carModel
   std::string name;
   bool bot = true;
   bool remote = false;      // another player's car (moved by the network)
+  bool hidden = false;      // a player who left: not drawn, no contact
   // Track progress.
   float s = 0, lateral = 0;
   int hint = -1;
@@ -46,6 +49,16 @@ struct Racer {
   bool ghost(uint32_t tick) const { return tick < ghostUntil; }
 };
 
+// A person in the race (you or the other rig's player): who, which car,
+// where on the grid.
+struct RacerSetup {
+  int grid = 0;
+  int model = 0;
+  engine::Vec3 paint{0.75f, 0.02f, 0.02f}, rim{0.7f, 0.7f, 0.72f};
+  std::string name = "You";
+  bool you = true;  // else remote
+};
+
 class World {
  public:
   void init();  // builds the track and the bots' racing line
@@ -55,6 +68,16 @@ class World {
   // A new race: `you` = your grid slot, `bots` = how many bots. `seed`
   // picks how long the lights stay on (the same seed gives the same race).
   void start(int yourSlot, int bots, int laps, uint32_t seed);
+  // The same with people on chosen grid slots (bots fill the others).
+  // `goInMs` >= 0: the lights go out that long from now (a race whose start
+  // the room set), else after the usual sequence with a random hold.
+  void start(const std::vector<RacerSetup>& people, int bots, int laps, uint32_t seed, double goInMs = -1);
+  // Moves another player's car to where the network says it is (on the
+  // road surface there), with its speed for contact. `dt` = frame time.
+  void setRemote(int index, float x, float z, float heading, float speed, float steer, float dt);
+  // Before the start: the lights go out `ms` from now (keeps a room race's
+  // start on the server's clock even if this phone hitched or slept).
+  void setGoIn(double ms);
   // Advances the race by a frame of `dt` seconds (fixed 240 Hz steps inside).
   void update(float dt);
   // The race clock: ticks since start(), and the same in ms.

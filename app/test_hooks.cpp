@@ -49,6 +49,7 @@ TestHooks TestHooks::parse() {
   h.autoplay = param(query, "autoplay", v);
   h.shift = param(query, "shift", v);
   h.darts = param(query, "darts", v);
+  h.garage = param(query, "garage", v);
   if (param(query, "sit", v) && !v.empty()) h.sit = std::atoi(v.c_str());
   if (param(query, "emote", v) && !v.empty()) h.emote = std::atoi(v.c_str());
   if (param(query, "pianosong", v) && !v.empty()) h.pianoSong = std::atoi(v.c_str());

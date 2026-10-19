@@ -25,6 +25,7 @@ import { PROTO, MAX_SLOTS, BIN, decodeText, decodeBinary, propBytes } from './pr
 import { checkWrite } from './rules.js';
 import * as darts from './games/darts.js';
 import * as jukebox from './games/jukebox.js';
+import * as race from './games/race.js';
 import { Glasses, eyesOf } from './games/glasses.js';
 import { Sim } from './sim/sim.js';
 import simWasm from './sim/room_sim.wasm';
@@ -110,6 +111,7 @@ export class Room {
     this.lastActive = new Map(); // slot → ms of their last movement, intent or event
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
     this.games = {};             // games the room runs: darts → {owner slot, session}
+    this.race = race.empty();    // the racing rigs (cloud/games/race.js), shared as world key rc
     this.glasses = new Glasses(new Sim(simWasm));  // the bar's physics: every glass
     this.lastSimMs = 0;
     this.lastSeq = 0;
@@ -166,6 +168,9 @@ export class Room {
       if (m) this.glasses.grab(+m[1], slot, this.eyes(slot));
     }
     this.scheduleSongEnd();
+    const rc = this.kv.get('rc');
+    this.race = race.restore(rc ? rc.values : null);
+    this.setDeadline('race', race.deadline(this.race));
     this.reschedule();
   }
 
@@ -441,6 +446,7 @@ export class Room {
       return { ok: 1, seq };
     }
     if (body.k === 'dart') return this.throwDart(slot, body);
+    if (body.k === 'race') return this.raceIntent(slot, body);
     if (body.k === 'grab' || body.k === 'drop' || body.k === 'throw') return this.glassIntent(slot, body);
     if (body.k === 'set') {
       // A world write that only happens if the key still holds `expect`
@@ -473,6 +479,23 @@ export class Room {
     return { ok: 1, ...r };
   }
 
+  // The racing rigs (cloud/games/race.js): garage, ready, finish. Being on a
+  // rig is the claim machine.rig0 / machine.rig1.
+  raceIntent(slot, body) {
+    const r = race.act(this.race, slot, body, Date.now(), (rig) => this.claims.get('machine.rig' + rig) === slot);
+    if (r.changed) this.raceChanged();
+    const { changed, ...out } = r;
+    return out;
+  }
+
+  raceChanged() {
+    race.maybeStart(this.race, Date.now());
+    const entry = this.storeKv(-1, 'rc', race.values(this.race));
+    this.broadcast(text('K', { w: [entry] }));
+    this.scheduleFlush();
+    this.setDeadline('race', race.deadline(this.race));
+  }
+
   // Glasses (cloud/games/glasses.js): grab, put down (`pos`) or throw (`vel`).
   // The room's physics moves them; holding one is the claim `glass.<n>`.
   glassIntent(slot, body) {
@@ -499,6 +522,10 @@ export class Room {
   // Leaving a machine ends your game on it (the next player starts fresh).
   endGamesOf(slot, key) {
     if (key === 'machine.darts' && this.games.darts && this.games.darts.owner === slot) delete this.games.darts;
+    if (/^machine\.rig[01]$/.test(key) && this.race.rigs.some((e) => e && e.slot === slot)) {
+      race.leave(this.race, slot);
+      this.raceChanged();
+    }
   }
 
   claimsOf(slot) {
@@ -798,6 +825,7 @@ export class Room {
       await this.ctx.storage.deleteAll();
       this.schemaMarked = false;
       this.kv.clear();
+      this.race = race.empty();
       this.dirtyKv.clear();
       this.deadlines.clear();
       this.alarmAt = 0;
@@ -812,6 +840,7 @@ export class Room {
   async forgetWorld() {
     const keys = [...this.kv.keys()].map((k) => 'kv:' + k);
     this.kv.clear();
+    this.race = race.empty();
     this.dirtyKv.clear();
     for (let i = 0; i < keys.length; i += 128) await this.ctx.storage.delete(keys.slice(i, i + 128));
   }
@@ -908,6 +937,11 @@ export class Room {
     if ((this.deadlines.get('song') || Infinity) <= now) {
       this.deadlines.delete('song');
       this.nextSong();
+    }
+    if ((this.deadlines.get('race') || Infinity) <= now) {
+      this.deadlines.delete('race');
+      if (race.check(this.race, now)) this.raceChanged();
+      else this.setDeadline('race', race.deadline(this.race));
     }
     if ((this.deadlines.get('flush') || Infinity) <= now) await this.flush();
     if ((this.deadlines.get('ghost') || Infinity) <= now) {

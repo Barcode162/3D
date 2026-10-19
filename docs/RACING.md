@@ -138,7 +138,9 @@ app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
       a computed racing line, car-car and barrier contact, 5 start
       lights, 3 laps, standings, results, tap to race again.
 - [ ] 4. The three monitors on each rig show the race for spectators.
-- [ ] 5. Two players (left/right rig) racing each other + bots.
+- [x] 5. Two players (left/right rig) racing each other (2026-10-19: garage,
+      the room's lobby `cloud/games/race.js`, one start time for both, each
+      car shown 100 ms in the past on the other phone; no bots in a duel yet).
 - [ ] 6. Realtime server (Cloudflare) for the race and the whole bar.
 - [ ] 7. Polish passes: car model and cockpit (Blender), track art,
       shadows, sky, sounds (engine from rpm and load, tires, wind),

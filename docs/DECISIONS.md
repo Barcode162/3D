@@ -672,6 +672,30 @@ back to the middle, "really smooth but race like", reused later. Built as
   11% overshoot, straight again 0.64 s after letting go with no wobble.
 - A real steering wheel (gamepad API "wheel") is passed straight through.
 
+## Two-player racing (2026-10-19, upgrade item 1)
+- Sitting in a rig opens the **garage** (car, paint, rims; remembered on the
+  phone in localStorage `bar3d.game.race*`). READY: alone → race the bots;
+  with someone on the other rig → wait until they're ready too ("RACE THE BOTS
+  NOW" skips waiting). Offline: straight to the bots.
+- The **room runs the lobby** (`cloud/games/race.js`, world key `rc`, written
+  only by the room): who's on which rig (claim `machine.rig0/1`), picks,
+  ready, one start time on the server clock, finish times (checked), results.
+  Each phone drives its own car (instant response); the other car comes from
+  their activity data (x, z, heading, speed, steer at 20 Hz), played 100 ms in
+  the past and carried on along its heading when a state is late, placed on
+  the road surface there.
+- **Start sync**: before the lights go out each frame sets the go moment from
+  the server clock (`World::setGoIn`), so a phone that hitched (or a
+  background tab in tests) still starts at the same moment.
+- **Contact** with the other player: both masses count, each phone moves only
+  its own car (a bit more than half the overlap). The other phone sees the
+  same bump and does the same.
+- Three cars (`app/race/cars.*`): GT (the tuned one), MUSCLE (1.35x torque,
+  heavy, slides more), ROADSTER (light, 0.78x torque, more grip). The body
+  mesh is the GT's scaled per model; their axles are scaled the same way.
+  `steering_test` checks all three (per-car limits on grip and slide).
+- Not yet: bots in a two-player race, spectators' monitors.
+
 ## Gotchas hit so far
 - **Loading stutter (fixed 2026-10-16):** model textures used to be
   decoded to pixels on the main thread (getImageData), converted to float
