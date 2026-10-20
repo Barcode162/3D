@@ -1,11 +1,10 @@
 #include "app/loader.h"
 
-#include <emscripten/emscripten.h>
-
 #include <string>
 
 #include "engine/log.h"
 #include "engine/profiler.h"
+#include "engine/ui.h"
 
 namespace app {
 
@@ -16,8 +15,7 @@ void Loader::enter(Stage s, const char* text) {
   // the bar up to 85%, see index.html barLoading.set).
   static const float kBar[] = {0.05f, 0.85f, 0.9f, 0.94f, 0.97f, 1.0f, 1.0f};
   engine::profiler().stage(std::string("load:") + kNames[static_cast<int>(s)]);
-  EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage'](UTF8ToString($0), $1); },
-         text, kBar[static_cast<int>(s)]);
+  engine::ui::loadingStage(text, kBar[static_cast<int>(s)]);
 }
 
 bool Loader::update(const LoaderInputs& in, double nowMs) {
@@ -25,8 +23,7 @@ bool Loader::update(const LoaderInputs& in, double nowMs) {
     case Stage::kModels:
       if (in.progress != shownProgress_) {
         shownProgress_ = in.progress;
-        EM_ASM({ if (window['barLoading']) window['barLoading']['set']($0, $1, $2); }, static_cast<int>(in.filesDone),
-               static_cast<int>(in.files), in.progress);
+        engine::ui::loadingProgress(static_cast<int>(in.filesDone), static_cast<int>(in.files), in.progress);
       }
       if (in.filesDone < in.files) return false;
       LOG_INFO("Everything loaded (%zu model files).", in.files);
@@ -44,7 +41,7 @@ bool Loader::update(const LoaderInputs& in, double nowMs) {
     case Stage::kWarmUp:
       if (!in.warmUpDone) return false;
       stage_ = Stage::kSteady;
-      EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage']('', 0.97); });
+      engine::ui::loadingStage("", 0.97f);
       steadySinceMs_ = prevFrameMs_ = nowMs;
       return false;
     case Stage::kSteady: {
@@ -58,9 +55,7 @@ bool Loader::update(const LoaderInputs& in, double nowMs) {
         LOG_ERROR("Loading: %zu part%s of the bar failed to download.", in.filesFailed, in.filesFailed == 1 ? "" : "s");
         const std::string text =
             std::to_string(in.filesFailed) + (in.filesFailed == 1 ? " part failed" : " parts failed");
-        EM_ASM({ if (window['barLoading'] && window['barLoading']['fail'])
-                   window['barLoading']['fail'](UTF8ToString($0), $1); },
-               text.c_str(), in.criticalFailed ? 1 : 0);
+        engine::ui::loadingFailed(text, in.criticalFailed);
         if (in.criticalFailed) {
           stage_ = Stage::kFailed;
           engine::profiler().stage("load:failed");
@@ -69,7 +64,7 @@ bool Loader::update(const LoaderInputs& in, double nowMs) {
       }
       stage_ = Stage::kReady;
       engine::profiler().stage("ready");
-      EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
+      engine::ui::loadingReady();
       return true;
     }
     case Stage::kReady:

@@ -16,7 +16,7 @@ void joinRoom() {
   g_app.joined = true;
   g_app.others.start();
   g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
-  EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
+  engine::ui::entered();
   g_app.piano.prepareSamples();  // note samples in background jobs
   g_app.race.prepare();          // the race track, so sitting in a rig is instant
 }

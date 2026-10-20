@@ -29,6 +29,22 @@ void openPanel(const std::string& name);
 void setBodyClass(const std::string& name, bool on);
 // The build code shown on the page ("build 1a2b3c4").
 std::string buildLabel();
+// The page address's options (after "?"), each value decoded and with any
+// "&" inside a value removed, so splitting on "&" is safe.
+std::string pageQuery();
+// The logged-in player has this badge (web/account.js; on this computer
+// also ?badge=<name>, for tests). Asked at most once a second per badge.
+bool hasBadge(const std::string& badge);
+// You're in the bar (past the loading screen): voice chat may start.
+void entered();
+
+// The loading screen (web/index.html barLoading): the downloads so far
+// (`progress` 0..1), a stage starting (`text`, the bar at `fill` 0..1),
+// files that failed (`critical`: the bar can't open), and ready.
+void loadingProgress(int done, int total, float progress);
+void loadingStage(const char* text, float fill);
+void loadingFailed(const std::string& text, bool critical);
+void loadingReady();
 
 }  // namespace engine::ui
 

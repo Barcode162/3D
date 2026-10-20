@@ -1,11 +1,11 @@
 #include "app/test_hooks.h"
 
-#include <emscripten/emscripten.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+
+#include "engine/ui.h"
 
 namespace app {
 namespace {
@@ -31,17 +31,8 @@ bool param(const std::string& query, const char* name, std::string& value) {
 }  // namespace
 
 TestHooks TestHooks::parse() {
-  char buffer[512] = {};
   // name=value pairs, each value decoded (so "&" inside one can't split it).
-  EM_ASM({
-    var q = location.search.slice(1).split("&").map(function(p) {
-      var i = p.indexOf("=");
-      try { return i < 0 ? p : p.slice(0, i) + "=" + decodeURIComponent(p.slice(i + 1)).replace(/&/g, ""); }
-      catch (e) { return p; }
-    }).join("&");
-    stringToUTF8(q, $0, $1);
-  }, buffer, sizeof(buffer));
-  const std::string query = buffer;
+  const std::string query = engine::ui::pageQuery();
   TestHooks h;
   std::string v;
   h.still = param(query, "still", v);

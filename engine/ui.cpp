@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 
 #include <cstdlib>
+#include <map>
 
 #include "engine/bridge.h"
 #include "engine/json.h"
@@ -31,6 +32,54 @@ void setInfo(const std::string& jsonObject) { bridge::op("[\"info\"," + jsonObje
 void toast(const std::string& text) { bridge::op("[\"toast\"," + jsonQuote(text) + "]"); }
 
 void openPanel(const std::string& name) { bridge::op("[\"panel\"," + jsonQuote(name) + "]"); }
+
+std::string pageQuery() {
+  char buffer[512] = {};
+  EM_ASM({
+    var q = location.search.slice(1).split("&").map(function(p) {
+      var i = p.indexOf("=");
+      try { return i < 0 ? p : p.slice(0, i) + "=" + decodeURIComponent(p.slice(i + 1)).replace(/&/g, ""); }
+      catch (e) { return p; }
+    }).join("&");
+    stringToUTF8(q, $0, $1);
+  }, buffer, sizeof(buffer));
+  return buffer;
+}
+
+bool hasBadge(const std::string& badge) {
+  struct Cached { bool has; double atMs; };
+  static std::map<std::string, Cached> cache;
+  const double now = emscripten_get_now();
+  const auto it = cache.find(badge);
+  if (it != cache.end() && now - it->second.atMs < 1000) return it->second.has;
+  const bool has = EM_ASM_INT({
+    var a = window['bar3dAccount'];
+    if (a && a['hasBadge'] && a['hasBadge'](UTF8ToString($0))) return 1;
+    var local = /^localhost$|^127[.]/.test(location.hostname);
+    return local && new RegExp('[?&]badge=' + UTF8ToString($0)).test(location.search) ? 1 : 0;
+  }, badge.c_str()) != 0;
+  cache[badge] = {has, now};
+  return has;
+}
+
+void entered() {
+  EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
+}
+
+void loadingProgress(int done, int total, float progress) {
+  EM_ASM({ if (window['barLoading']) window['barLoading']['set']($0, $1, $2); }, done, total, progress);
+}
+void loadingStage(const char* text, float fill) {
+  EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage'](UTF8ToString($0), $1); },
+         text, fill);
+}
+void loadingFailed(const std::string& text, bool critical) {
+  EM_ASM({ if (window['barLoading'] && window['barLoading']['fail']) window['barLoading']['fail'](UTF8ToString($0), $1); },
+         text.c_str(), critical ? 1 : 0);
+}
+void loadingReady() {
+  EM_ASM({ if (window['barLoading']) window['barLoading']['ready'](); });
+}
 
 void setBodyClass(const std::string& name, bool on) {
   bridge::op("[\"bodyClass\"," + jsonQuote(name) + "," + (on ? "1" : "0") + "]");

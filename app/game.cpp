@@ -58,6 +58,7 @@ void joinRoom();  // main.cpp: joins the multiplayer room once you've entered
 #include "app/app_state.h"
 #include "app/interaction.h"
 #include "app/hud.h"
+#include "app/presentation.h"
 #include "app/local_player.h"
 
 namespace barapp {
@@ -89,21 +90,7 @@ void strum(Vec3 where, bool share) {
 // Badges come from your account (web/account.js). Asked at most once a
 // second per badge (the prompts ask every frame), so logging in or out
 // shows within a second.
-bool hasBadge(const char* badge) {
-  auto& cache = g_app.badgeCache;
-  const double now = engine::clockMs();
-  auto it = cache.find(badge);
-  if (it != cache.end() && now - it->second.atMs < 1000) return it->second.has;
-  const bool has = EM_ASM_INT({
-    var a = window['bar3dAccount'];
-    if (a && a['hasBadge'] && a['hasBadge'](UTF8ToString($0))) return 1;
-    // Tests on this computer: ?badge=bartender
-    var local = /^localhost$|^127[.]/.test(location.hostname);
-    return local && new RegExp('[?&]badge=' + UTF8ToString($0)).test(location.search) ? 1 : 0;
-  }, badge) != 0;
-  cache[badge] = {has, now};
-  return has;
-}
+bool hasBadge(const char* badge) { return engine::ui::hasBadge(badge); }
 
 // ---- Who's using what ----
 
@@ -903,22 +890,6 @@ void selfState(float extra[kCount - app::slot::kActivity]) {
   e(kFlags) = static_cast<float>((g_app.bartender.onShift() ? 1 : 0) | (g_app.onMic ? 2 : 0));
 }
 
-// Seated others sit on their seat; everyone else stands where their eyes are.
-Mat4 otherTransform(const app::OtherPlayer& o, app::AvatarMotion& motion) {
-  const auto act = static_cast<Activity>(static_cast<int>(o.values[app::slot::kActivity]));
-  const int seat = static_cast<int>(o.values[app::slot::kParam]);
-  const bool seated = act == Activity::kSit || act == Activity::kDrive || act == Activity::kPiano;
-  if (seated && seat >= 0 && seat < static_cast<int>(g_app.scene.seats.size())) {
-    const app::Seat& s = g_app.scene.seats[static_cast<size_t>(seat)];
-    motion.headYaw = engine::wrapAngle(o.yaw - s.yaw);
-    motion.lowSeat = s.lowSeat;
-    motion.steer = o.values[app::slot::kData + 4];
-    if (act == Activity::kPiano) g_app.piano.hands(motion.handL, motion.handR);
-    return app::seatedTransform(s.hip, s.yaw);
-  }
-  motion.headYaw = 0;
-  return app::avatarTransform(o.eye, o.yaw, o.pitch);
-}
 
 // Talks to the voice chat (web/voice.js): where each player's voice comes
 // from, who's on the mic.
@@ -1113,60 +1084,6 @@ void phaseNetOut(FrameIn& f) {
   g_app.others.update(f.nowMs, f.dt, kWalkSpeed);
   updateVoice(f.nowMs);
   sendInfo();
-}
-
-// Moving shapes (piano lights, darts, drinks) and every avatar's pose.
-void presentScene(double nowMs) {
-  const engine::FirstPersonCamera& cam = g_app.camera;
-  // Moving shapes: piano lights, darts, drinks.
-  g_app.boxes.clear();
-  g_app.piano.addBoxes(g_app.boxes, nowMs);
-  g_app.darts.addBoxes(g_app.boxes, nowMs);
-  g_app.bartender.addBoxes(g_app.boxes);
-  if (g_app.bartender.held()) {
-    float t;
-    const bool sip = g_app.bartender.sipping(nowMs, t);
-    const float lift = sip ? std::pow(std::max(0.0f, std::sin(t * 1.4f)), 4.0f) : 0.0f;
-    const Vec3 hand = cam.position + cam.flatForward() * (0.38f - 0.15f * lift) + cam.flatRight() * (0.18f - 0.1f * lift) +
-                      Vec3{0, -0.35f + 0.25f * lift, 0};
-    app::Bartender::addHeldDrink(g_app.boxes, g_app.bartender.held(), hand, cam.yaw);
-  }
-}
-
-void presentAvatars(double nowMs) {
-  const engine::FirstPersonCamera& cam = g_app.camera;
-  g_app.avatarMotion.pitch = cam.pitch;
-  g_app.avatarMotion.time = g_app.hooks.still ? 0.0f : static_cast<float>(nowMs / 1000.0);
-  const app::Avatar& body = g_app.avatars[0];  // the skeleton is the same for every look
-  body.pose(g_app.avatarMotion, g_app.avatarBones);
-  body.hideHead(g_app.avatarBones, g_app.firstPersonBones);
-  const auto& others = g_app.others.players();
-  g_app.otherTransforms.clear();
-  g_app.otherLooks.clear();
-  g_app.otherBones.resize(others.size());
-  for (size_t i = 0; i < others.size(); ++i) {
-    const app::OtherPlayer& o = others[i];
-    if (!o.placed) continue;
-    app::AvatarMotion motion = o.motion;
-    const Mat4 transform = otherTransform(o, motion);
-    body.pose(motion, g_app.otherBones[g_app.otherTransforms.size()]);
-    g_app.otherTransforms.push_back(transform);
-    int look = o.look;
-    if (look == app::kCustomLook) {  // their own style, sent as world key a<slot>
-      look = lookForSlot(engine::net::slotOfPlayer(o.id));
-    }
-    g_app.otherLooks.push_back(look);
-    const int drink = static_cast<int>(o.values[app::slot::kHeldDrink]);
-    if (drink > 0) {
-      const Vec3 hand = o.eye + Vec3{std::cos(o.yaw) * 0.22f + std::sin(o.yaw) * 0.25f, -0.55f,
-                                     std::sin(o.yaw) * 0.22f - std::cos(o.yaw) * 0.25f};
-      app::Bartender::addHeldDrink(g_app.boxes, drink, hand, o.yaw);
-    }
-  }
-  g_app.otherBones.resize(g_app.otherTransforms.size());
-  g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
-  g_app.renderer.setBoxes(g_app.boxes);
-  g_app.renderer.streamRooms(cam.position, nowMs);  // nearby rooms' models
 }
 
 // Drawing: the race, the text layer alone (loading, 4K Mania), or the bar.
