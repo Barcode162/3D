@@ -18,7 +18,20 @@
 // Claude, with the key (header X-Hub-Key, or "key" in the body):
 //   {"a":"queue"}                              the "Ready for Claude" cards, in order
 //   {"a":"inbox"}                              cards where the owner wrote since Claude last did
-//   {"a":"report","id":"..","stage":..,"report":..,"question":..,"build":..}
+//   {"a":"report","id":"..","stage":..,"report":..,"question":..,"build":..,"choices":["Yes","Not now"]}
+// Hub v3 (docs/LOOPED.md C): the map, the news feed, one-tap answers.
+//   {"a":"spots"}                    -> {"ok":1,"spots":[..],"rules":[..],"map":{..}} the project's places
+//        (hub/projects/<project>-spots.json, + what Claude wrote: about, status, the talk)
+//   {"a":"spot","id":"..","about"?:..,"status"?:"live|building|planned|idea"}   a place's line
+//   {"a":"spotsay","id":"..","text":".."}    a message in a place's talk
+//   {"a":"posts"}                    -> {"ok":1,"posts":[{id,build,title,text,shots:[{name,url}],at,published}]}
+//   {"a":"post","post":{id?,build,title,text,shots:[names]}}   a news post (Claude or the owner)
+//   {"a":"publish","id":"..","on":1}  owner: show it on the public news board (joshuavelasco.com/news)
+//   {"a":"unpost","id":".."}          owner: delete a post
+//   {"a":"shot","build":"abc1234","name":"door","image":"data:image/jpeg;base64,.."}  a screenshot
+//   GET hub.php?shot=<project>/<file>  the picture (the owner's login cookie, or the Claude key)
+//   A card's "spot" (save) puts it on a place; "choices" (report) are the
+//   one-tap answers to its question.
 // A card: notes (the owner's own words: what they want), plan (Claude's
 // structured plan, docs/HUB_MAP.md), report/question/build (Claude's latest),
 // thread (the conversation: questions, answers, reports, messages), unread
@@ -37,6 +50,8 @@ const TEXT_MAX = 6000;
 const HISTORY_MAX = 40;
 const THREAD_MAX = 80;
 const IMAGE_MAX = 400000;
+const SHOT_MAX = 900000;
+const POSTS_MAX = 200;
 
 $accounts = getenv('HUB_ACCOUNTS') ?: dirname(__DIR__) . '/bar/accounts';
 $data = getenv('HUB_DATA') ?: dirname(__DIR__, 2) . '/private/hub';
@@ -64,6 +79,20 @@ function clean($s, $max) {
   if (!is_string($s)) return '';
   $s = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $s);
   return trim(mb_substr($s, 0, $max, 'UTF-8'));
+}
+
+// The owner's account for a bar login token, or null.
+function owner_of_token($token) {
+  global $accounts;
+  if (!is_string($token) || !preg_match('/^[0-9a-f]{48}$/', $token)) return null;
+  $t = read_json("$accounts/tokens/" . hash('sha256', $token) . '.json');
+  $u = $t ? read_json("$accounts/users/{$t['id']}.json") : null;
+  if (!$u) return null;
+  $admins = read_json("$accounts/admins.json");
+  $names = read_json("$accounts/names.json") ?? [];
+  $owner = is_array($admins) ? in_array($u['user'], $admins, true)
+                             : (count($names) && array_key_first($names) === $u['user']);
+  return $owner ? $u : null;
 }
 
 // Who's asking: the owner (bar login), or Claude (the key).
@@ -134,7 +163,7 @@ function with_board($pid, $fn) {
   }
   foreach ($board['cards'] as &$c) {  // fields added later (v2: notes, thread, unread)
     $c += ['notes' => '', 'plan' => '', 'report' => '', 'question' => '', 'build' => '', 'thread' => [],
-           'unread' => false, 'history' => [], 'updated' => time(), 'order' => 0];
+           'unread' => false, 'history' => [], 'updated' => time(), 'order' => 0, 'spot' => '', 'choices' => []];
   }
   unset($c);
   $result = $fn($board);
@@ -178,6 +207,26 @@ function in_board_order($b, $cards) {
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'OPTIONS') exit;
+// A screenshot of a news post: for the owner (login cookie) or Claude.
+if ($method === 'GET' && isset($_GET['shot'])) {
+  $f = is_string($_GET['shot']) ? $_GET['shot'] : '';
+  if (!preg_match('#^([a-z0-9-]{1,24})/([A-Za-z0-9_-]{1,60}\.(jpg|png))$#', $f, $m)) fail('No such picture.', 404);
+  $ok = false;
+  $key = $_SERVER['HTTP_X_HUB_KEY'] ?? '';
+  if (is_string($key) && $key !== '') {
+    $k = read_json("$data/key.json");
+    $ok = $k && hash_equals($k['hash'], hash('sha256', $key));
+  } else {
+    $ok = owner_of_token($_COOKIE['bar_t'] ?? '') !== null;
+  }
+  if (!$ok) fail('This hub is private.', 403);
+  $path = "$data/shots/{$m[1]}/{$m[2]}";
+  if (!is_file($path)) fail('No such picture.', 404);
+  header('Content-Type: ' . ($m[3] === 'png' ? 'image/png' : 'image/jpeg'));
+  header('Cache-Control: private, max-age=86400');
+  readfile($path);
+  exit;
+}
 if ($method !== 'POST') fail('POST only', 405);
 $in = json_decode(file_get_contents('php://input'), true);
 if (!is_array($in)) fail('Bad request.');
@@ -256,7 +305,11 @@ if ($a === 'queue') {
 }
 
 if ($a === 'inbox') {
-  reply(with_board($pid, fn(&$b) => ['ok' => 1, 'cards' => in_board_order($b, array_filter($b['cards'], fn($c) => $c['unread']))]));
+  $spots = [];
+  $extra = read_json("$data/spots-$pid.json") ?? [];
+  foreach ($extra as $sid => $x) if (!empty($x['unread'])) $spots[] = ['id' => $sid] + $x;
+  reply(with_board($pid, fn(&$b) => ['ok' => 1, 'cards' => in_board_order($b, array_filter($b['cards'], fn($c) => $c['unread'])),
+                                     'spots' => $spots]));
 }
 
 if ($a === 'save') {
@@ -271,7 +324,8 @@ if ($a === 'save') {
       $orders = array_map(fn($c) => $c['order'], $b['cards']);
       $b['cards'][] = ['id' => bin2hex(random_bytes(5)), 'section' => $section, 'title' => 'New card', 'stage' => 'idea',
                        'notes' => '', 'plan' => '', 'report' => '', 'question' => '', 'build' => '', 'thread' => [],
-                       'unread' => false, 'order' => $orders ? max($orders) + 1 : 0, 'history' => [], 'updated' => time()];
+                       'unread' => false, 'order' => $orders ? max($orders) + 1 : 0, 'history' => [], 'updated' => time(),
+                       'spot' => '', 'choices' => []];
       $i = count($b['cards']) - 1;
       note($b['cards'][$i], $me['name'], 'made this card');
     }
@@ -298,6 +352,11 @@ if ($a === 'save') {
         if ($me['role'] === 'owner') $c['unread'] = true;
       }
     }
+    if (isset($in_card['spot']) && is_string($in_card['spot']) && preg_match('/^[a-z0-9-]{0,24}$/', $in_card['spot'])
+        && $in_card['spot'] !== $c['spot']) {
+      $c['spot'] = $in_card['spot'];
+      $changes[] = 'place: ' . ($c['spot'] ?: 'none');
+    }
     if (isset($in_card['plan'])) {
       $p = clean($in_card['plan'], TEXT_MAX);
       if ($p !== $c['plan']) { $c['plan'] = $p; $changes[] = 'plan'; }
@@ -307,6 +366,7 @@ if ($a === 'save') {
       if ($ans !== '') {
         say($c, $me, 'answer', $ans);
         $c['question'] = '';
+        $c['choices'] = [];
         $changes[] = 'answered the question';
       }
     }
@@ -327,6 +387,7 @@ if ($a === 'say') {
     if ($me['role'] === 'owner' && $c['question'] !== '') {  // a message while a question is open answers it
       say($c, $me, 'answer', $text);
       $c['question'] = '';
+      $c['choices'] = [];
       note($c, $me['name'], 'answered the question');
     } else {
       say($c, $me, 'note', $text);
@@ -357,10 +418,171 @@ if ($a === 'report') {
         }
       }
     }
+    if (isset($in['choices']) && is_array($in['choices'])) {
+      $c['choices'] = array_values(array_filter(array_map(fn($x) => clean($x, 30), array_slice($in['choices'], 0, 4)),
+                                                fn($x) => $x !== ''));
+    }
+    if (isset($in['question']) && $c['question'] === '') $c['choices'] = [];
     $c['unread'] = false;
     if ($changes) note($c, $me['name'], implode(', ', $changes));
     return ['ok' => 1, 'card' => $c, '_save' => true];
   }));
+}
+
+// ---- Places (the map) ----
+function spots_seed($pid) {
+  return read_json(__DIR__ . "/projects/$pid-spots.json") ?? ['spots' => [], 'rules' => []];
+}
+function with_spots($pid, $fn) {
+  global $data;
+  $f = fopen("$data/spots-$pid.json", 'c+');
+  flock($f, LOCK_EX);
+  $extra = json_decode(stream_get_contents($f), true);
+  if (!is_array($extra)) $extra = [];
+  $result = $fn($extra);
+  if ($result['_save'] ?? false) {
+    ftruncate($f, 0);
+    rewind($f);
+    fwrite($f, json_encode($extra, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    fflush($f);
+  }
+  unset($result['_save']);
+  flock($f, LOCK_UN);
+  fclose($f);
+  return $result;
+}
+function spot_ids($pid) { return array_map(fn($s) => $s['id'], spots_seed($pid)['spots']); }
+const SPOT_STATUS = ['live', 'building', 'planned', 'idea'];
+
+if ($a === 'spots') {
+  $seed = spots_seed($pid);
+  reply(with_spots($pid, function (&$extra) use ($seed, $pid) {
+    $out = [];
+    foreach ($seed['spots'] as $sp) {
+      $x = $extra[$sp['id']] ?? [];
+      $sp['about'] = $x['about'] ?? ($sp['about'] ?? '');
+      $sp['status'] = $x['status'] ?? ($sp['status'] ?? 'live');
+      $sp['thread'] = $x['thread'] ?? [];
+      $sp['unread'] = !empty($x['unread']);
+      $out[] = $sp;
+    }
+    return ['ok' => 1, 'spots' => $out, 'rules' => $seed['rules'] ?? [],
+            'map' => read_json(__DIR__ . "/projects/$pid-map.json") ?? (object)[]];
+  }));
+}
+
+if ($a === 'spot' || $a === 'spotsay') {
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  if (!in_array($id, spot_ids($pid), true)) fail('No such place.', 404);
+  reply(with_spots($pid, function (&$extra) use ($a, $id, $in, $me) {
+    $x = $extra[$id] ?? ['thread' => [], 'unread' => false];
+    if ($a === 'spot') {
+      if (isset($in['about'])) $x['about'] = clean($in['about'], 300);
+      if (isset($in['status']) && in_array($in['status'], SPOT_STATUS, true)) $x['status'] = $in['status'];
+    } else {
+      $text = clean($in['text'] ?? '', TEXT_MAX);
+      if ($text === '') fail('Nothing to send.');
+      $x['thread'][] = ['at' => time(), 'who' => $me['name'], 'role' => $me['role'], 'kind' => 'note', 'text' => $text];
+      if (count($x['thread']) > THREAD_MAX) $x['thread'] = array_slice($x['thread'], -THREAD_MAX);
+      $x['unread'] = $me['role'] === 'owner';
+    }
+    $x['updated'] = time();
+    $extra[$id] = $x;
+    return ['ok' => 1, 'spot' => ['id' => $id] + $x, '_save' => true];
+  }));
+}
+
+// ---- News posts (Home's feed; published ones on joshuavelasco.com/news) ----
+function with_posts($pid, $fn) {
+  global $data;
+  $f = fopen("$data/posts-$pid.json", 'c+');
+  flock($f, LOCK_EX);
+  $posts = json_decode(stream_get_contents($f), true);
+  if (!is_array($posts)) $posts = [];
+  $result = $fn($posts);
+  if ($result['_save'] ?? false) {
+    ftruncate($f, 0);
+    rewind($f);
+    fwrite($f, json_encode(array_values($posts), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    fflush($f);
+  }
+  unset($result['_save']);
+  flock($f, LOCK_UN);
+  fclose($f);
+  return $result;
+}
+function post_out($pid, $p) {
+  $p['shots'] = array_map(fn($n) => ['name' => $n, 'url' => "hub.php?shot=$pid/" . rawurlencode($n)], $p['shots'] ?? []);
+  return $p;
+}
+
+if ($a === 'posts') {
+  reply(with_posts($pid, function (&$posts) use ($pid) {
+    $out = array_map(fn($p) => post_out($pid, $p), $posts);
+    usort($out, fn($x, $y) => $y['at'] <=> $x['at']);
+    return ['ok' => 1, 'posts' => $out];
+  }));
+}
+
+if ($a === 'post') {
+  $in_p = is_array($in['post'] ?? null) ? $in['post'] : fail('No post.');
+  reply(with_posts($pid, function (&$posts) use ($in_p, $pid, $me) {
+    $id = is_string($in_p['id'] ?? null) ? $in_p['id'] : '';
+    $i = -1;
+    foreach ($posts as $k => $p) if ($p['id'] === $id) $i = $k;
+    if ($id !== '' && $i < 0) fail('That post is gone.', 404);
+    if ($i < 0) {
+      $posts[] = ['id' => bin2hex(random_bytes(5)), 'build' => '', 'title' => '', 'text' => '', 'shots' => [],
+                  'at' => time(), 'published' => false, 'by' => $me['name']];
+      $i = count($posts) - 1;
+      if (count($posts) > POSTS_MAX) { array_shift($posts); $i--; }
+    }
+    $p = &$posts[$i];
+    if (isset($in_p['build'])) $p['build'] = preg_replace('/[^0-9a-f]/', '', strtolower(clean($in_p['build'], 12)));
+    if (isset($in_p['title'])) $p['title'] = clean($in_p['title'], TITLE_MAX);
+    if (isset($in_p['text'])) $p['text'] = clean($in_p['text'], TEXT_MAX);
+    if (isset($in_p['shots']) && is_array($in_p['shots'])) {
+      $p['shots'] = array_values(array_filter(array_slice($in_p['shots'], 0, 12),
+                                              fn($n) => is_string($n) && preg_match('/^[A-Za-z0-9_-]{1,60}\.(jpg|png)$/', $n)));
+    }
+    if ($p['title'] === '') $p['title'] = $p['build'] !== '' ? "Build {$p['build']}" : 'Update';
+    $p['updated'] = time();
+    $out = post_out($pid, $p);
+    unset($p);
+    return ['ok' => 1, 'post' => $out, '_save' => true];
+  }));
+}
+
+if ($a === 'publish' || $a === 'unpost') {
+  if ($me['role'] !== 'owner') fail('Only the owner publishes news.', 403);
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  reply(with_posts($pid, function (&$posts) use ($a, $id, $in, $pid) {
+    foreach ($posts as $k => &$p) {
+      if ($p['id'] !== $id) continue;
+      if ($a === 'unpost') { array_splice($posts, $k, 1); return ['ok' => 1, '_save' => true]; }
+      $p['published'] = !empty($in['on']);
+      $p['publishedAt'] = $p['published'] ? time() : 0;
+      return ['ok' => 1, 'post' => post_out($pid, $p), '_save' => true];
+    }
+    fail('That post is gone.', 404);
+  }));
+}
+
+if ($a === 'shot') {
+  $build = preg_replace('/[^0-9a-f]/', '', strtolower(is_string($in['build'] ?? null) ? $in['build'] : ''));
+  $name = is_string($in['name'] ?? null) ? $in['name'] : '';
+  if (!preg_match('/^[a-z0-9_-]{1,40}$/', $name) || strlen($build) > 12) fail('Bad picture name.');
+  $img = $in['image'] ?? '';
+  if (!is_string($img) || strlen($img) > SHOT_MAX * 4 / 3 + 64
+      || !preg_match('#^data:image/(jpeg|png);base64,([A-Za-z0-9+/=]+)$#', $img, $m)) fail('That picture is too big or not a JPEG/PNG.');
+  $bytes = base64_decode($m[2], true);
+  $info = $bytes !== false ? @getimagesizefromstring($bytes) : false;
+  if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) fail('That isn\'t a picture.');
+  $dir = "$data/shots/$pid";
+  if (!is_dir($dir)) @mkdir($dir, 0755, true);
+  $file = ($build !== '' ? "$build-" : '') . $name . ($info[2] === IMAGETYPE_PNG ? '.png' : '.jpg');
+  file_put_contents("$dir/$file", $bytes);
+  reply(['ok' => 1, 'file' => $file, 'url' => "hub.php?shot=$pid/$file"]);
 }
 
 // A section: the owner adds or renames one; Claude writes its "what goes here" line (docs/HUB_MAP.md).

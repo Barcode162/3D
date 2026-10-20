@@ -140,12 +140,42 @@ tools/  hub/  cloud/  server/  docs/  (unchanged)
   looks repeated; touch → react → blend back. Everyone sees the same loop
   without the server sending it. Hub controls: list, on/off, speed.
 
-## The plug (written in B3)
-To be filled in when the projects move.
+## The plug (B3, 2026-10-20): how a project fits into the bar
+Every project is a folder `bar/projects/<id>/` with a `project.json`:
+`name`, `about`, `kind`, `opens_from` (where in the bar), `credits`/`docs`.
+- **kind "web"** (Meridian, the platformer: any tech, three.js allowed for
+  these): `site` is where its files go on the site (CMake copies the folder
+  there, so addresses never change), `entry` its page. The bar opens it full
+  screen in an iframe from `bar/web/menu.js` (`GAMES`: `src` = site/entry),
+  mutes its own music and sounds (voice stays), stops drawing, keeps the
+  room connection, and shows "← Back to the bar". New web project = folder +
+  project.json + one `GAMES` line + the machine or spot that opens it
+  (`bar/bar_scene.cpp`, an Interactable with its action).
+- **kind "native"** (4K Mania, chess, racing): C++ built into the game
+  (`code` lists its files); it uses Looped directly and the bar's activity
+  system (`bar/activity.*`) to start, take the input and end.
+- **Who the player is:** same site, so a web project can read the login the
+  bar keeps (`localStorage` `bar3dToken`, `bar3dProfile`) and call
+  `account.php`; native ones use the App's account state.
+- **What it gives back** (next, when a web project first needs it): a small
+  message from the iframe to the bar (`postMessage({bar3d: 'earn' | 'score' |
+  'close', ...})`), checked by the bar and the room (money only through the
+  Ledger, never trusted from the page). Native games already report through
+  the room (darts pays this way).
+- **Friends:** native games share through the room (`cloud/games/`); web
+  projects don't join multiplayer yet.
 
 ## Progress
 - [x] Plan written (2026-10-20).
-- [ ] A1-A5 built, A6 the user's taps.
-- [ ] B1-B4.
+- [x] A1-A5 built (2026-10-20, `fc02cc1`): gate.php + gate.html, invites and
+  admins in account.php, room "looped", classic.yml (the `classic` branch
+  holds build 105f593), gh-pages a signpost; `tools/gate_test.mjs`.
+  [ ] A6: the user's taps (repo → private) after the deploy works.
+- [x] B2-B4 (2026-10-20): the layout above; `looped/` namespace stays
+  `engine`; CI fails if looped/ includes bar/. Screenshots identical.
+- [x] B1 (part): the scene renderer is Looped's (`looped/scene_renderer.*`,
+  fed a `RenderScene` from `bar/bar_scene.cpp` → `renderSceneOf`). Left in
+  bar/ on purpose: avatar.cpp (the bar's body; the skeleton system is
+  already looped/), loader, interaction, materials (the bar's own data).
 - [ ] C1-C5.
 - [ ] D1, D2.

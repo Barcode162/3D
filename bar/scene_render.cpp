@@ -1,0 +1,36 @@
+// The bar's layout as Looped's renderer sees it (looped/render_scene.h).
+// Its own file: bar_scene.cpp stays free of GPU headers (the native tests
+// build it with g++).
+#include "bar/avatar.h"
+#include "bar/bar_scene.h"
+
+namespace app {
+
+engine::RenderScene renderSceneOf(const BarScene& scene) {
+  engine::RenderScene r;
+  r.objects.reserve(scene.objects.size());
+  for (const SceneObject& o : scene.objects) {
+    const engine::Material& m = material(o.material);
+    r.objects.push_back({o.mesh, o.position, o.rotation, o.color, m.metallic, m.roughness, m.texture, o.emissive,
+                         o.textureScale});
+  }
+  for (const ModelPlacement& p : scene.models) {
+    // The room shell: without it there's no bar to enter.
+    r.models.push_back({p.file, p.position, p.rotation, p.scale, p.room, p.file.find("hall") != std::string::npos});
+  }
+  r.lights = scene.lights;
+  r.mirrorCount = scene.mirrors.size();
+  r.rooms = scene.rooms;
+  r.doorways = scene.doorways;
+  r.lightGridMin = scene.lightGridMin;
+  r.lightGridMax = scene.lightGridMax;
+  r.ambient = scene.ambient;
+  r.fogColor = scene.fogColor;
+  r.fogDensity = scene.fogDensity;
+  r.spawnPosition = scene.spawnPosition;
+  r.makeTextures = buildBarTextures;
+  r.avatarTextureScale = kAvatarTextureScale;
+  return r;
+}
+
+}  // namespace app

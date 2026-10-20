@@ -30,7 +30,19 @@ questions, answers, reports, messages). Claude reads and updates it with
   order. For each: `report <id> --stage doing` when starting; when deployed,
   `--stage check --build <sha> --report "<what changed + How to check it>"`.
 - A decision only the user can make: `--question "<question, with your
-  recommendation>"` on the card, leave it in its stage, and go on to the next card.
+  recommendation>" --choices "<rec>|<other>"` on the card (the hub shows it as
+  a bubble with one-tap answers), leave it in its stage, go on to the next card.
+- **Hub v3 (2026-10-20, docs/LOOPED.md C): no cards on screen.** Home = what
+  needs you (questions, reviews, checks as one-tap bubbles) + the **news feed**;
+  Explore = the bar's map of **places** (`hub/projects/bar3d-spots.json`:
+  world, beyond, engine "under the floor", tools; cards land on a place by
+  its `spot` or the rules there; `hub.mjs place <card> <spot>`); the old board
+  is `hub/list.html` ("Everything"). `hub.mjs inbox` also lists places the
+  user wrote about (answer with `spotsay`).
+- **After every deploy, one news post:** `node tools/hub.mjs post --build <sha>
+  --title "<plain words>" --text "<what changed, for anyone>" --shots
+  build/after/door.png,...` (screenshots of what changed + a hero shot). It's
+  private; the user's Publish switch puts it on joshuavelasco.com/news.
 - New ideas from the user in chat: `add ideas "<title>"` (not the master list).
 - **What goes where** is `docs/HUB_MAP.md`: the sorting questions, one card per
   deliverable, the card format (WHAT / NOW / STEPS / NEEDS / NOT HERE / DETAILS).

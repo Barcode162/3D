@@ -3,10 +3,15 @@
 // (<root>/home/bar, <root>/home/hub, <root>/private). The owner logs in on the
 // page, adds a card, makes a Claude key; "Claude" reads the queue and reports;
 // someone else is kept out; passwords change and a recovery code resets one.
-// Screenshots: build/hub-projects.png, build/hub.png (a section), build/hub-card.png (a card's Talk), build/hub-status.png.
+// The old board is list.html; the hub v3 (index.html, docs/LOOPED.md C):
+// Home answers a question in one tap, the news feed shows a post with its
+// screenshot, Publish puts it on the public news board (news/), Explore's
+// map opens a place with its things, a new idea and a message land there.
+// Screenshots: build/hub-projects.png, build/hub.png (a section), build/hub-card.png (a card's Talk), build/hub-status.png,
+// build/hub3-home.png, build/hub3-explore.png, build/hub3-spot.png, build/hub3-engine.png, build/news.png.
 //   NODE_PATH=$(npm root -g) node tools/hub_test.mjs
 import { spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, copyFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -23,9 +28,11 @@ const root = mkdtempSync(join(tmpdir(), 'bar3d-hub-'));
 mkdirSync(join(root, 'home/bar'), { recursive: true });
 mkdirSync(join(root, 'home/hub'), { recursive: true });
 copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
-for (const f of ['index.html', 'hub.php', 'seed.json']) copyFileSync(join('hub', f), join(root, 'home/hub', f));
+for (const f of ['index.html', 'list.html', 'hub.php', 'seed.json']) copyFileSync(join('hub', f), join(root, 'home/hub', f));
 mkdirSync(join(root, 'home/hub/projects'));
-copyFileSync('hub/projects/bar3d.jpg', join(root, 'home/hub/projects/bar3d.jpg'));
+for (const f of ['bar3d.jpg', 'bar3d-spots.json', 'bar3d-map.json']) copyFileSync(join('hub/projects', f), join(root, 'home/hub/projects', f));
+mkdirSync(join(root, 'home/news'));
+copyFileSync('news/index.php', join(root, 'home/news/index.php'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore' });
 
 const post = async (path, body, headers = {}) => {
@@ -44,7 +51,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(base + '/hub/');
+  await page.goto(base + '/hub/list.html');
   await page.fill('input[autocomplete=username]', 'josh');
   await page.fill('input[type=password]', 'secret1');
   await page.click('button.primary');
@@ -133,7 +140,7 @@ try {
         '"What you want" saves, and Claude can\'t overwrite it');
 
   // Drag to reorder: the first card of a Games group, dragged below the next one.
-  await page.goto(base + '/hub/#/p/bar3d/s/games');
+  await page.goto(base + '/hub/list.html#/p/bar3d/s/games');
   await page.waitForFunction(() => [...document.querySelectorAll('.content .list')].some((l) => l.querySelectorAll(':scope > .item .grip').length > 1),
                              null, { timeout: 5000 });
   const ids = await page.evaluate(() => {
@@ -157,7 +164,7 @@ try {
   check(placed.status === 403 && back.find((c) => c.id === ids[0]).order === o(ids[0]), 'only the owner reorders (Claude\'s key is refused)');
 
   // A second project, with its own board.
-  await page.goto(base + '/hub/#/');
+  await page.goto(base + '/hub/list.html#/');
   await page.waitForSelector('.tile.add', { timeout: 5000 });
   await page.click('.tile.add');
   await page.fill('.sheetBody input', 'Kids Game');
@@ -178,6 +185,85 @@ try {
 
   const stranger = await post('/hub/hub.php', { a: 'board', token: other.token });
   check(stranger.status === 403 && /private/.test(stranger.error), 'someone else is kept out ("This hub is private.")');
+
+  // ---- Hub v3: Home, the news, Explore (docs/LOOPED.md C) ----
+  const spots = await post('/hub/hub.php', { a: 'spots' }, { 'X-Hub-Key': key });
+  check(spots.ok === 1 && spots.spots.some((x) => x.id === 'jukebox') && spots.map.rooms.length >= 2 && spots.rules.length > 10,
+        `the places, their rules and the bar's floor plan (${spots.spots.length} places)`);
+  const pool = (await post('/hub/hub.php', { a: 'save', card: { section: 'games', title: 'Pool table', stage: 'idea' } }, { 'X-Hub-Key': key })).card;
+  await post('/hub/hub.php', { a: 'report', id: pool.id, question: 'Pool table in the arcade or the lounge?', choices: ['Arcade', 'Lounge'] }, { 'X-Hub-Key': key });
+  const jpg = 'data:image/jpeg;base64,' + readFileSync('hub/projects/bar3d.jpg').toString('base64');
+  const shot = await post('/hub/hub.php', { a: 'shot', build: 'abc1234', name: 'door', image: jpg }, { 'X-Hub-Key': key });
+  check(shot.ok === 1 && shot.file === 'abc1234-door.jpg', 'Claude uploads a screenshot');
+  check((await post('/hub/hub.php', { a: 'shot', build: 'abc1234', name: 'bad', image: 'data:image/jpeg;base64,aGVsbG8=' }, { 'X-Hub-Key': key })).status === 400,
+        'something that isn\'t a picture is refused');
+  const news = await post('/hub/hub.php', { a: 'post', post: { build: 'abc1234', title: 'Neon lanes', text: 'Two bowling lanes in the arcade.', shots: [shot.file] } },
+                          { 'X-Hub-Key': key });
+  check(news.ok === 1 && news.post.shots[0].url.includes('abc1234-door.jpg') && !news.post.published, 'Claude writes a news post (private until published)');
+  check((await post('/hub/hub.php', { a: 'publish', id: news.post.id, on: 1 }, { 'X-Hub-Key': key })).status === 403, 'only the owner publishes');
+  check((await fetch(base + '/hub/hub.php?shot=bar3d/abc1234-door.jpg')).status === 403, 'a screenshot needs a login');
+
+  // Home: the question as a bubble; one tap answers it.
+  await page.goto(base + '/hub/');
+  await page.waitForSelector('.bubble:has-text("Pool table in the arcade")', { timeout: 10000 });
+  await wait(1200);
+  await page.screenshot({ path: 'build/hub3-home.png' });
+  await page.click('.bubble:has-text("Pool table in the arcade") .chip:has-text("Lounge")');
+  await wait(900);
+  const ans = (await post('/hub/hub.php', { a: 'inbox' }, { 'X-Hub-Key': key })).cards.find((c) => c.id === pool.id);
+  check(!!ans && ans.question === '' && ans.choices.length === 0 && ans.thread.at(-1).text === 'Lounge', 'one tap answers Claude\'s question (in Claude\'s inbox)');
+  // The news feed: the post with its picture (the login cookie lets it load).
+  await page.waitForSelector('.post h3:has-text("Neon lanes")', { timeout: 5000 });
+  await page.waitForFunction(() => { const i = document.querySelector('.post img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 })
+    .catch(() => {});
+  check(await page.$eval('.post img', (i) => i.naturalWidth > 0), 'the news feed shows the post with its screenshot');
+  check((await fetch(base + '/news/?json').then((r) => r.json())).posts.length === 0, 'nothing on the public board before Publish');
+  await page.click('.post .switch');
+  await wait(800);
+  const pub = (await fetch(base + '/news/?json').then((r) => r.json())).posts;
+  check(pub.length === 1 && pub[0].title === 'Neon lanes', 'Publish puts the post on the public news board');
+  check((await fetch(base + '/news/' + pub[0].shots[0])).status === 200 && (await fetch(base + '/news/?shot=bar3d/abc1234-other.jpg')).status === 404,
+        'the board shows the published post\'s picture, nothing else');
+  const newsPage = await browser.newPage({ viewport: { width: 430, height: 932 } });
+  await newsPage.goto(base + '/news/');
+  check((await newsPage.textContent('main')).includes('Neon lanes'), 'the public page lists it');
+  await wait(900);
+  await newsPage.screenshot({ path: 'build/news.png' });
+  await newsPage.close();
+
+  // Explore: the bar's map; a place opens with its things.
+  await post('/hub/hub.php', { a: 'save', card: { section: 'bar', title: 'Jukebox glow', stage: 'ready' } }, { 'X-Hub-Key': key });
+  await page.reload();
+  await page.waitForSelector('.hello', { timeout: 5000 });
+  await page.click('nav [data-tab=explore]');
+  await page.waitForSelector('svg.map .spot', { timeout: 5000 });
+  const places = await page.$$eval('svg.map .spot', (g) => g.map((x) => x.getAttribute('aria-label')));
+  check(places.includes('Jukebox') && places.includes('Arcade') && places.length >= 12, `the map shows the places (${places.length})`);
+  await wait(900);
+  await page.screenshot({ path: 'build/hub3-explore.png', fullPage: true });
+  await page.click('svg.map .spot[aria-label=Jukebox]');
+  await page.waitForSelector('.sheet.on .sheetHead h3:has-text("Jukebox")', { timeout: 5000 });
+  check((await page.textContent('.sheet')).includes('Jukebox glow'), 'the Jukebox opens with its things (from the rules)');
+  await wait(600);
+  await page.screenshot({ path: 'build/hub3-spot.png' });
+  await page.fill('.sheet .row input', 'A neon sign over the jukebox');
+  await page.click('.sheet .row button:has-text("Add")');
+  await wait(900);
+  const idea = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards.find((c) => c.title === 'A neon sign over the jukebox');
+  check(!!idea && idea.spot === 'jukebox' && idea.stage === 'idea', 'a new idea lands on the place');
+  await page.fill('.sheet textarea', 'Make it louder at night');
+  await page.click('.sheet button:has-text("Send")');
+  await wait(900);
+  const spotInbox = (await post('/hub/hub.php', { a: 'inbox' }, { 'X-Hub-Key': key })).spots || [];
+  check(spotInbox.some((x) => x.id === 'jukebox' && x.thread.at(-1).text === 'Make it louder at night'), 'a message about a place reaches Claude\'s inbox');
+  const reply = await post('/hub/hub.php', { a: 'spotsay', id: 'jukebox', text: 'Noted: louder after 9 pm.' }, { 'X-Hub-Key': key });
+  check(reply.ok === 1 && !reply.spot.unread, 'Claude answers on the place');
+  await page.goto(base + '/hub/#/explore/engine');
+  await page.waitForSelector('svg.circuit .spot', { timeout: 5000 });
+  const engine = await page.$$eval('svg.circuit .spot', (g) => g.map((x) => x.getAttribute('aria-label')));
+  check(engine.includes('Loops') && engine.includes('Light & drawing'), `under the floor: Looped's parts (${engine.join(', ')})`);
+  await wait(900);
+  await page.screenshot({ path: 'build/hub3-engine.png' });
 
   // Passwords: change, recovery code, reset.
   check((await post('/bar/account.php', { a: 'password', token: owner.token, old: 'wrong', new: 'newpass1' })).status === 401,

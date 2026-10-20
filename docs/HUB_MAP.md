@@ -1,5 +1,12 @@
 # The hub map: what goes where, and how the cards connect (2026-10-20)
 
+**Hub v3 (2026-10-20, docs/LOOPED.md C):** the user no longer sees cards.
+Cards are still the data (one per deliverable, the rules below still hold),
+but the page shows them on **places** (Explore's map; `hub/projects/
+bar3d-spots.json` holds the places and the rules that put a section/title on
+one, a card's own `spot` wins) and as one-tap bubbles on Home. Keep titles
+short and plain: they are what the user reads on the map.
+
 The hub (joshuavelasco.com/hub) is the board of the whole world. This file is
 the set of rules that keeps it organised, so nothing is planned twice, nothing
 gets lost between sections, and every card knows what it waits on.

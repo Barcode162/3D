@@ -1,0 +1,370 @@
+{
+ "about": "Places on the hub's map (Explore). layer: world (on the bar's floor plan, x/z in metres from hub/projects/bar3d-map.json), beyond (outside the walls), engine (Looped, under the floor), tools (how we work). A card goes to its own \"spot\" if set, else to the first rule that matches its section and title.",
+ "spots": [
+  {
+   "id": "door",
+   "name": "Front door",
+   "icon": "🚪",
+   "layer": "world",
+   "x": 3.2,
+   "z": 7.6,
+   "about": "Arriving: the loading screen, the first screen, menus and the HUD."
+  },
+  {
+   "id": "you",
+   "name": "You",
+   "icon": "🧍",
+   "layer": "world",
+   "x": 0.6,
+   "z": 3.6,
+   "about": "Your character: your look, walking, poses, what you wear."
+  },
+  {
+   "id": "room",
+   "name": "The room",
+   "icon": "✨",
+   "layer": "world",
+   "x": 1.6,
+   "z": 0.4,
+   "about": "The bar itself: the room, the little things you can touch, how it all feels."
+  },
+  {
+   "id": "counter",
+   "name": "Bar counter",
+   "icon": "🍸",
+   "layer": "world",
+   "x": -2.6,
+   "z": -5.4,
+   "about": "Bartending, drinks, the bell, the taps, glasses and bottles."
+  },
+  {
+   "id": "jukebox",
+   "name": "Jukebox",
+   "icon": "🎵",
+   "layer": "world",
+   "x": -3.8,
+   "z": 6.3,
+   "about": "The music: the playlist, your own songs, 3D sound."
+  },
+  {
+   "id": "piano",
+   "name": "Piano",
+   "icon": "🎹",
+   "layer": "world",
+   "x": -7.6,
+   "z": 5.4,
+   "about": "Play it yourself or pick a song from the sheet music."
+  },
+  {
+   "id": "lounge",
+   "name": "Lounge",
+   "icon": "♟️",
+   "layer": "world",
+   "x": -7.0,
+   "z": 1.2,
+   "about": "The fireplace, the books and the chessboard."
+  },
+  {
+   "id": "darts",
+   "name": "Darts",
+   "icon": "🎯",
+   "layer": "world",
+   "x": 6.0,
+   "z": 5.6,
+   "about": "301 against friends; a finished game pays credits."
+  },
+  {
+   "id": "mirror",
+   "name": "Mirror",
+   "icon": "🪞",
+   "layer": "world",
+   "x": 8.2,
+   "z": 2.6,
+   "about": "See yourself: full reflection, avatars only, or off."
+  },
+  {
+   "id": "rigs",
+   "name": "Racing rigs",
+   "icon": "🏎️",
+   "layer": "world",
+   "x": 7.4,
+   "z": -2.0,
+   "about": "The two sims: races, the new driving physics, and Meridian."
+  },
+  {
+   "id": "mania",
+   "name": "4K Mania",
+   "icon": "🥁",
+   "layer": "world",
+   "x": 6.6,
+   "z": -5.6,
+   "about": "The rhythm cabinet."
+  },
+  {
+   "id": "arcade",
+   "name": "Arcade",
+   "icon": "🕹️",
+   "layer": "world",
+   "x": 4.4,
+   "z": -12.4,
+   "about": "The arcade room and its machines (the platformer)."
+  },
+  {
+   "id": "room3",
+   "name": "Room 3",
+   "icon": "🚧",
+   "layer": "world",
+   "x": -11.0,
+   "z": -2.2,
+   "status": "planned",
+   "about": "Taped off for now."
+  },
+  {
+   "id": "people",
+   "name": "People",
+   "icon": "💬",
+   "layer": "world",
+   "x": -1.2,
+   "z": 1.8,
+   "about": "Friends: voice, profiles, lobbies, events, photos, safety."
+  },
+  {
+   "id": "street",
+   "name": "Street & city",
+   "icon": "🌆",
+   "layer": "beyond",
+   "status": "idea",
+   "about": "Outside the door, one day: a street, a city, homes."
+  },
+  {
+   "id": "home",
+   "name": "Your home",
+   "icon": "🏠",
+   "layer": "beyond",
+   "status": "idea",
+   "about": "Your own place: invite-only, furniture on a grid, levels."
+  },
+  {
+   "id": "shops",
+   "name": "Shops & money",
+   "icon": "💳",
+   "layer": "beyond",
+   "about": "Credits, the mall, the casino, VIP, trading."
+  },
+  {
+   "id": "ideas",
+   "name": "Ideas",
+   "icon": "💡",
+   "layer": "beyond",
+   "status": "idea",
+   "about": "Not sorted yet."
+  },
+  {
+   "id": "light",
+   "name": "Light & drawing",
+   "icon": "🌟",
+   "layer": "engine",
+   "col": 0,
+   "row": 0,
+   "status": "building",
+   "about": "How everything looks: baked light, reflections, glow, mood (next up)."
+  },
+  {
+   "id": "loops",
+   "name": "Loops",
+   "icon": "🔁",
+   "layer": "engine",
+   "col": 1,
+   "row": 0,
+   "status": "planned",
+   "about": "Everything plays its own pattern on one shared clock, locked to the music."
+  },
+  {
+   "id": "speed",
+   "name": "Speed",
+   "icon": "⚡",
+   "layer": "engine",
+   "col": 2,
+   "row": 0,
+   "about": "60 fps on your phone: loading, culling, textures, quality."
+  },
+  {
+   "id": "core",
+   "name": "Core",
+   "icon": "🧩",
+   "layer": "engine",
+   "col": 0,
+   "row": 1,
+   "about": "How the code is put together: Looped, the bar, the bar's projects."
+  },
+  {
+   "id": "physics",
+   "name": "Physics & sound",
+   "icon": "🌊",
+   "layer": "engine",
+   "col": 1,
+   "row": 1,
+   "about": "Things that fall, roll, clink; cars; sound from what happens."
+  },
+  {
+   "id": "server",
+   "name": "Multiplayer room",
+   "icon": "🛰️",
+   "layer": "engine",
+   "col": 2,
+   "row": 1,
+   "about": "The room on Cloudflare: everyone sees the same thing."
+  },
+  {
+   "id": "accounts",
+   "name": "Accounts & money",
+   "icon": "🔐",
+   "layer": "engine",
+   "col": 1,
+   "row": 2,
+   "about": "Logins, invites, ages, the ledger (money and owned things)."
+  },
+  {
+   "id": "hub",
+   "name": "This hub",
+   "icon": "🧭",
+   "layer": "tools",
+   "col": 0,
+   "row": 0,
+   "about": "Where you plan and Claude reports."
+  },
+  {
+   "id": "tests",
+   "name": "Tests & deploys",
+   "icon": "🧪",
+   "layer": "tools",
+   "col": 1,
+   "row": 0,
+   "about": "How every change is checked and shipped."
+  }
+ ],
+ "rules": [
+  {
+   "spot": "ideas",
+   "section": "ideas"
+  },
+  {
+   "spot": "speed",
+   "section": "perf"
+  },
+  {
+   "spot": "server",
+   "section": "server"
+  },
+  {
+   "spot": "accounts",
+   "section": "accounts"
+  },
+  {
+   "spot": "core",
+   "section": "engine",
+   "title": "core"
+  },
+  {
+   "spot": "hub",
+   "section": "tools",
+   "title": "hub|dock"
+  },
+  {
+   "spot": "tests",
+   "section": "tools"
+  },
+  {
+   "spot": "shops",
+   "title": "credits|currency"
+  },
+  {
+   "spot": "light",
+   "title": "light|shadow|bloom|reflection"
+  },
+  {
+   "spot": "loops",
+   "title": "loop"
+  },
+  {
+   "spot": "physics",
+   "title": "physics prop|world simulation"
+  },
+  {
+   "spot": "room3",
+   "title": "room 3"
+  },
+  {
+   "spot": "street",
+   "title": "street|city"
+  },
+  {
+   "spot": "arcade",
+   "title": "arcade|platformer|machine screens|pool"
+  },
+  {
+   "spot": "rigs",
+   "title": "driving|racing|meridian"
+  },
+  {
+   "spot": "mania",
+   "title": "4k mania|rhythm"
+  },
+  {
+   "spot": "lounge",
+   "title": "lounge|chess"
+  },
+  {
+   "spot": "piano",
+   "title": "piano"
+  },
+  {
+   "spot": "darts",
+   "title": "darts"
+  },
+  {
+   "spot": "jukebox",
+   "title": "jukebox|music studio|daw"
+  },
+  {
+   "spot": "counter",
+   "title": "bartend|bar counter|drink"
+  },
+  {
+   "spot": "mirror",
+   "title": "mirror"
+  },
+  {
+   "spot": "door",
+   "section": "arriving"
+  },
+  {
+   "spot": "you",
+   "section": "character"
+  },
+  {
+   "spot": "people",
+   "section": "social"
+  },
+  {
+   "spot": "home",
+   "section": "home"
+  },
+  {
+   "spot": "shops",
+   "section": "shops"
+  },
+  {
+   "spot": "room",
+   "section": "bar"
+  },
+  {
+   "spot": "room",
+   "section": "games"
+  },
+  {
+   "spot": "core",
+   "section": "engine"
+  }
+ ]
+}
