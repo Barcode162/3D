@@ -217,7 +217,7 @@ class SceneRenderer {
   std::vector<BarScene::Doorway> doorways_;
   void loadModels(const BarScene& scene, std::vector<uint8_t>& objectData);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
-  void drawOthers(const wgpu::RenderPassEncoder& pass) const;
+  void drawOthers(const wgpu::RenderPassEncoder& pass, const RoomView& view) const;  // the ones the view can see
   wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
   void renderMirror(const wgpu::CommandEncoder& encoder, size_t index, const Mirror& mirror,
                     const engine::Mat4& viewProj, engine::Vec3 eye);
@@ -282,6 +282,7 @@ class SceneRenderer {
     wgpu::Buffer bonesBuffer;
     wgpu::BindGroup bonesBindGroup;
     int look = 0;
+    engine::Aabb bounds;  // around where they stand (for culling)
   };
   std::vector<OtherSlot> others_;
   size_t othersShown_ = 0;

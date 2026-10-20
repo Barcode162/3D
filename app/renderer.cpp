@@ -903,11 +903,15 @@ void SceneRenderer::setOthers(const std::vector<Mat4>& transforms, const std::ve
     if (count) gpu_->queue.WriteBuffer(others_[i].bonesBuffer, 0, bones[i].data(), count * sizeof(Mat4));
     const int look = i < looks.size() ? looks[i] : 0;
     others_[i].look = look >= 0 && static_cast<size_t>(look) < avatarMeshes_.size() ? look : 0;
+    // Generous: arms out, emotes, a little scale.
+    const Vec3 at{transforms[i].at(3, 0), transforms[i].at(3, 1), transforms[i].at(3, 2)};
+    others_[i].bounds = {at - Vec3{1.0f, 0.4f, 1.0f}, at + Vec3{1.0f, 2.4f, 1.0f}};
   }
 }
 
-void SceneRenderer::drawOthers(const wgpu::RenderPassEncoder& pass) const {
+void SceneRenderer::drawOthers(const wgpu::RenderPassEncoder& pass, const RoomView& view) const {
   for (size_t i = 0; i < othersShown_ && !avatarMeshes_.empty(); ++i) {
+    if (!view.all.visible(others_[i].bounds)) continue;
     pass.SetBindGroup(1, objectBindGroup_, 1, &others_[i].offset);
     pass.SetBindGroup(2, others_[i].bonesBindGroup);
     drawSkinned(pass, avatarMeshes_[static_cast<size_t>(others_[i].look)]);
@@ -1062,7 +1066,7 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
   }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
-  drawOthers(pass);
+  drawOthers(pass, cull);
   if (full) {
     pass.SetPipeline(modelBlendMirroredPipeline_);
     drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, mirrorMinSize);
@@ -1143,7 +1147,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   drawModels(pass, false, eye, cull);
   pass.SetPipeline(skinnedPipeline_);
   drawAvatar(pass, selfWhole_ ? bonesBindGroup_ : firstPersonBonesBindGroup_);  // your body, minus the head (in first person)
-  drawOthers(pass);
+  drawOthers(pass, cull);
   pass.SetPipeline(modelBlendPipeline_);
   drawModels(pass, true, eye, cull);  // glass, after everything solid
 
