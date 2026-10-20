@@ -8,6 +8,7 @@ mkdir -p build/native
 RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp app/race/cars.cpp engine/vehicle.cpp"
 declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
+  [drive_lab]="tools/native/drive_lab.cpp engine/drive/car_spec.cpp engine/drive/tire.cpp engine/drive/vehicle_sim.cpp engine/json.cpp"
   [race_test]="tools/native/race_test.cpp $RACE"
   [steering_test]="tools/native/steering_test.cpp engine/steering.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
