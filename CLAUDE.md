@@ -65,7 +65,8 @@ questions, answers, reports, messages). Claude reads and updates it with
   failed). They can't always tell what changed, so be concrete.
 - Testing loop: push to `main` (once per "go", see below) → GitHub Actions builds and force-pushes the site
   to the `gh-pages` branch (Pages serves it) → user opens
-  **https://barcode162.github.io/3D/** in Safari. The `build xxxxxxx` label in
+  **https://joshuavelasco.com/bar/** in Safari (private since 2026-10-20: sign-in,
+  invites; github.io is only a signpost, docs/LOOPED.md A). The `build xxxxxxx` label in
   the top-right shows which commit is live, so the user can confirm they have
   the newest version.
 
@@ -86,7 +87,7 @@ that changed get rebuilt (docs/DECISIONS.md → Deploys by system).
   skips the game when only the hub, `docs/` or Markdown notes changed;
   `hub.yml` deploys the hub alone (~2 min). Runs queue, they don't cancel.
 - **Tests per system** (before the push to `main`):
-  hub → `hub_test.mjs` · server PHP → `php -l` + `hub_test.mjs` ·
+  hub → `hub_test.mjs` · server PHP → `php -l` + `hub_test.mjs` + `gate_test.mjs` ·
   cloud room/ledger → `proto_test`, `room_test`, `ledger_test`, `mp_test` ·
   game (engine/, app/, shaders/, web/, assets/) → build + `smoke.mjs` +
   `tools/native/run.sh` + the feature's own test (arcade, rhythm, chess...) ·
@@ -123,6 +124,7 @@ NODE_PATH=$(npm root -g) node tools/race_mp_test.mjs   # two players race each o
 NODE_PATH=$(npm root -g) node tools/arcade_test.mjs    # the arcade: tap the platformer machine
 NODE_PATH=$(npm root -g) node tools/rhythm_test.mjs    # 4K Mania: song select + a song on autoplay (needs ffmpeg)
 NODE_PATH=$(npm root -g) node tools/chess_test.mjs     # the lounge's chessboard: a move and the computer's reply
+NODE_PATH=$(npm root -g) node tools/gate_test.mjs      # the private bar's door: sign-in, invites, admins, file streaming
 ```
 CI runs all of these before publishing (smoke is non-blocking until it has
 passed once on GitHub's runners). "Looks the same" checks:

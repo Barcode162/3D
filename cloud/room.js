@@ -43,6 +43,10 @@ const SCHEMA_VERSION = 1;        // docs/PROTOCOL.md §9: bump when stored keys 
 const TOKEN_CACHE_MS = 10 * 60 * 1000;
 const TOKEN_TIMEOUT_MS = 2000;
 const PERSISTENT_ROOM = 'main';
+// Rooms that keep their world while empty, and the private bar's room: only
+// logins account.php says may play get in (docs/LOOPED.md A5).
+const PERSISTENT_ROOMS = new Set(['main', 'looped']);
+const PRIVATE_ROOMS = new Set(['looped']);
 const MAX_SOCKETS = MAX_SLOTS * 2;  // players + sockets still saying hello
 const MAX_KV_KEYS = 96;
 const MAX_CLAIMS_PER_PLAYER = 8;
@@ -589,6 +593,7 @@ export class Room {
     const who = await this.checkToken(ticket);
     const p = this.players.get(slot);
     if (!p || p.ws !== ws) return;
+    if (PRIVATE_ROOMS.has(this.name) && (!who || !who.play)) { this.close(ws, 4006, 'invite only'); return; }
     if (who) Object.assign(p, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [] });
     else Object.assign(p, { acct: '', av: 0, badges: [] });
     this.saveAttachment(slot);
@@ -601,6 +606,10 @@ export class Room {
     if (h.proto < this.proto - 1 || h.proto > this.proto) {
       this.close(ws, 4002, `protocol mismatch: the room speaks ${this.proto}`);
       return;
+    }
+    if (PRIVATE_ROOMS.has(this.name)) {
+      const who = h.ticket ? await this.checkToken(h.ticket) : null;
+      if (!who || !who.play) { this.close(ws, 4006, 'invite only'); return; }
     }
     // Same resume token → same slot (the old socket, if still open, is replaced).
     let slot = -1, resumed = false;
@@ -851,7 +860,7 @@ export class Room {
     if (this.players.size || this.ctx.getWebSockets().some((w) => w.readyState === 1)) return;
     if (this.ticker) { clearInterval(this.ticker); this.ticker = null; }
     // Only "main" keeps anything; other rooms leave no trace.
-    if (this.name && this.name !== PERSISTENT_ROOM) {
+    if (this.name && !PERSISTENT_ROOMS.has(this.name)) {
       await this.ctx.storage.deleteAll();
       this.schemaMarked = false;
       this.kv.clear();
@@ -1010,7 +1019,7 @@ export class Room {
     let who = null;
     if (this.dev && tok.startsWith('test:')) {
       const [acct, ...badges] = tok.slice(5).split(':');  // test:<acct>[:badge...]
-      who = { acct: clip(acct, 32), name: clip(acct, 24) || 'Tester', av: 1, badges };
+      who = { acct: clip(acct, 32), name: clip(acct, 24) || 'Tester', av: 1, badges, play: !badges.includes('noplay') };
     } else if (/^[0-9a-f]{48}$/.test(tok) && this.env.ACCOUNT_URL) {
       try {
         const r = await fetch(this.env.ACCOUNT_URL, {
@@ -1022,7 +1031,8 @@ export class Room {
         const j = await r.json();
         if (j && j.ok && j.me) {
           who = { acct: clip(String(j.me.id), 32), name: clip(String(j.me.name), 24) || 'Guest', av: Math.max(0, j.me.avatar | 0),
-            badges: Array.isArray(j.me.badges) ? j.me.badges.filter((b) => typeof b === 'string').slice(0, 16).map((b) => clip(b, 16)) : [] };
+            badges: Array.isArray(j.me.badges) ? j.me.badges.filter((b) => typeof b === 'string').slice(0, 16).map((b) => clip(b, 16)) : [],
+            play: j.me.play === 1 };
         }
       } catch (e) {}
     }

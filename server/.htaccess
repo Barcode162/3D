@@ -3,3 +3,10 @@ RedirectMatch 403 ^.*/rooms/
 # Accounts (passwords as hashes, tokens, profiles) are private too;
 # account.php serves what may be public.
 RedirectMatch 403 ^.*/accounts/
+# The private bar (gate.php, docs/LOOPED.md A1): every request goes through
+# the gate except the servers and the build code.
+DirectoryIndex index.html
+RewriteEngine On
+RewriteRule ^(account|report|relay|gate)\.php$ - [L]
+RewriteRule ^version\.txt$ - [L]
+RewriteRule ^ gate.php [L,QSA]

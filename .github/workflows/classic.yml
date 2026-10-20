@@ -1,0 +1,54 @@
+# Bar3D classic (docs/LOOPED.md A4): the last public build from before the
+# bar went private, kept on the `classic` branch (gh-pages "Site build
+# 105f593"), uploaded once to joshuavelasco.com/classic/. Run by hand
+# (Actions → Classic → Run workflow), or on a push that changes this file.
+name: Classic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/classic.yml']
+
+concurrency:
+  group: classic
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+      IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: classic
+          path: site
+      - name: Name it "Bar3D classic"
+        run: |
+          cd site
+          rm -rf .git
+          python3 - <<'PY'
+          import json
+          p = json.load(open('project.json'))
+          p.update(name='Bar3D classic', description='The public version of the bar (October 2026)', order=2)
+          json.dump(p, open('project.json', 'w'))
+          PY
+          cat project.json
+      - name: Upload to IONOS
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          sudo apt-get install -y lftp >/dev/null
+          cd site
+          lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<LFTP
+          set cmd:fail-exit yes
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 30
+          mkdir -p -f home/classic
+          mirror -R --no-perms --parallel=4 . home/classic
+          bye
+          LFTP

@@ -4,15 +4,22 @@
 // The url can carry ?cam=x,y,z,yaw,pitch to look at a specific spot.
 // EXPECT_SHA=abc1234 exits 1 unless that build is the one live. The test
 // player stays offline (doesn't show up in the real room) unless NET=1.
+// The bar is private (docs/LOOPED.md A3): HUB_KEY (the hub's Claude key) is
+// given to joshuavelasco.com only, as the gate's cookie bar_k.
 import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
 
-const url = process.argv[2] ?? 'https://barcode162.github.io/3D/';
+const url = process.argv[2] ?? 'https://joshuavelasco.com/bar/';
 const shot = process.argv[3] ?? 'build/live.png';
 const [base, query = ''] = url.split('?');
 const options = ['skipintro', process.env.NET ? '' : 'server=off', query].filter(Boolean).join('&');
 
 const browser = await launchBrowser();
-const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
+const context = await browser.newContext({ viewport: { width: 430, height: 932 } });
+const host = new URL(base).hostname;
+if (process.env.HUB_KEY && /(^|\.)joshuavelasco\.com$/.test(host)) {
+  await context.addCookies([{ name: 'bar_k', value: process.env.HUB_KEY, domain: host, path: '/', secure: true, httpOnly: true, sameSite: 'Lax' }]);
+}
+const page = await context.newPage();
 const loaded = await openBar(page, base, options);
 if (!loaded) console.log('(still loading after 120 s, or startup failed)');
 await page.waitForTimeout(2000);

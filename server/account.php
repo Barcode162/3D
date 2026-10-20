@@ -23,6 +23,17 @@
 //   {"a":"update", ..., "slots":["owner","", ...]}  badge slots on the card
 //     (up to SLOT_COUNT; each one of your badges, or "" for an empty slot)
 //   {"a":"badge","token":"..","user":"josh","badge":"bartender","on":1}  (owners only)
+//   {"a":"people","token":".."}  (admins) -> {"ok":1,"people":[{user,name,joined,id,avatar,status}]}
+//     status: "owner" | "admin" | "player" (invited) | "waiting" (not invited yet)
+//   {"a":"invite","token":"..","user":"mia","on":1}  (admins) invite / remove a player
+//   {"a":"admin","token":"..","user":"mia","on":1}   (the owner only) make / remove an admin
+//
+// The private bar (docs/LOOPED.md A1-A2): gate.php lets in the owner, the
+// admins and the invited (accounts/players.json). Your own profile carries
+// "play" (1 = you may play) and "admin". Logging in, signing up, a reset and
+// "me" also set the cookie bar_t (HttpOnly) that gate.php reads; logout
+// clears it. The owner is the first name in admins.json (or, without it, the
+// first account made); every name in admins.json is an admin.
 //
 // Badges ("bartender", "dj", "vip", "staff") unlock things in the bar (the
 // bartender's station). Owners give them; the owners are the usernames in
@@ -84,13 +95,27 @@ function write_json($path, $data) {
 
 function user_path($id) { global $base; return "$base/users/$id.json"; }
 
-// Owners can give badges (see the top of this file).
-function is_owner($u) {
+// The admins: admins.json, or, while it doesn't exist, the first account.
+// The first of them is the owner.
+function admin_list() {
   global $base;
   $admins = read_json("$base/admins.json");
-  if (is_array($admins)) return in_array($u['user'], $admins, true);
+  if (is_array($admins)) return array_values($admins);
   $names = read_json("$base/names.json");
-  return is_array($names) && count($names) && array_key_first($names) === $u['user'];
+  return is_array($names) && count($names) ? [array_key_first($names)] : [];
+}
+// Owners (admins) can give badges (see the top of this file).
+function is_owner($u) { return in_array($u['user'], admin_list(), true); }
+function is_top_owner($u) { return (admin_list()[0] ?? null) === $u['user']; }
+function player_list() { global $base; return array_values(read_json("$base/players.json") ?? []); }
+function may_play($u) { return is_owner($u) || in_array($u['user'], player_list(), true); }
+
+// The login cookie for gate.php (same site only; the classic page on other
+// sites keeps using the token in localStorage).
+function set_login_cookie($token) {
+  $https = ($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off';
+  setcookie('bar_t', $token, ['expires' => $token === '' ? time() - 3600 : time() + 400 * 86400, 'path' => '/',
+                              'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
 }
 
 // Age group from the private birth date: "teen" (13-17), "adult", or ""
@@ -101,7 +126,10 @@ function age_band($u) {
   $age = (new DateTime($b))->diff(new DateTime('today'))->y;
   return $age >= 18 ? 'adult' : 'teen';
 }
-function own_profile($u) { return public_profile($u) + ['band' => age_band($u), 'hasRecovery' => !empty($u['recovery']) ? 1 : 0]; }
+function own_profile($u) {
+  return public_profile($u) + ['band' => age_band($u), 'hasRecovery' => !empty($u['recovery']) ? 1 : 0,
+                               'play' => may_play($u) ? 1 : 0, 'admin' => is_owner($u) ? 1 : 0];
+}
 // What others may see.
 function public_profile($u) {
   $badges = $u['badges'] ?? [];
@@ -196,6 +224,7 @@ if ($a === 'signup' || $a === 'login') {
   $u['tokens'][] = hash('sha256', $token);
   while (count($u['tokens']) > MAX_TOKENS_PER_USER) @unlink("$base/tokens/" . array_shift($u['tokens']) . '.json');
   write_json(user_path($u['id']), $u);
+  set_login_cookie($token);
   reply(['ok' => 1, 'token' => $token, 'me' => own_profile($u)]);
 }
 
@@ -227,6 +256,7 @@ if ($a === 'reset') {
   $token = new_token($u['id']);
   $u['tokens'][] = hash('sha256', $token);
   write_json(user_path($u['id']), $u);
+  set_login_cookie($token);
   reply(['ok' => 1, 'token' => $token, 'me' => own_profile($u)]);
 }
 
@@ -255,7 +285,53 @@ if ($a === 'recovery') {
   reply(['ok' => 1, 'code' => substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4)]);
 }
 
-if ($a === 'me') reply(['ok' => 1, 'me' => own_profile($u)]);
+if ($a === 'me') {
+  // The page's own request (same site, not the room asking): refresh the cookie.
+  if (!empty($in['cookie'])) set_login_cookie($in['token']);
+  reply(['ok' => 1, 'me' => own_profile($u)]);
+}
+
+// ---- The private bar's people (admins) ----
+function find_user($who) {
+  global $base;
+  $who = strtolower(is_string($who) ? trim($who) : '');
+  $names = read_json("$base/names.json") ?? [];
+  $id = $names[$who] ?? null;
+  return $id ? read_json(user_path($id)) : null;
+}
+if ($a === 'people') {
+  if (!is_owner($u)) fail('Only admins can see this.', 403);
+  $admins = admin_list();
+  $players = player_list();
+  $out = [];
+  foreach (read_json("$base/names.json") ?? [] as $name => $id) {
+    $p = read_json(user_path($id));
+    if (!$p) continue;
+    $status = ($admins[0] ?? '') === $name ? 'owner' : (in_array($name, $admins, true) ? 'admin'
+            : (in_array($name, $players, true) ? 'player' : 'waiting'));
+    $out[] = ['user' => $name, 'name' => $p['name'], 'joined' => $p['joined'], 'id' => $p['id'],
+              'avatar' => $p['avatar'] ?? 0, 'status' => $status];
+  }
+  reply(['ok' => 1, 'people' => $out]);
+}
+if ($a === 'invite' || $a === 'admin') {
+  if ($a === 'invite' && !is_owner($u)) fail('Only admins can invite people.', 403);
+  if ($a === 'admin' && !is_top_owner($u)) fail('Only the owner can choose admins.', 403);
+  $t = find_user($in['user'] ?? '');
+  if (!$t) fail('No player with that username.');
+  $on = !empty($in['on']);
+  if ($a === 'invite') {
+    $list = player_list();
+    $list = $on ? array_values(array_unique(array_merge($list, [$t['user']]))) : array_values(array_diff($list, [$t['user']]));
+    write_json("$base/players.json", $list);
+  } else {
+    $list = admin_list();
+    if ($t['user'] === $list[0]) fail('The owner stays an admin.');
+    $list = $on ? array_values(array_unique(array_merge($list, [$t['user']]))) : array_values(array_diff($list, [$t['user']]));
+    write_json("$base/admins.json", $list);
+  }
+  reply(['ok' => 1]);
+}
 
 if ($a === 'update') {
   if (isset($in['name'])) {
@@ -323,6 +399,7 @@ if ($a === 'logout') {
   @unlink("$base/tokens/$h.json");
   $u['tokens'] = array_values(array_filter($u['tokens'], function ($t) use ($h) { return $t !== $h; }));
   write_json(user_path($u['id']), $u);
+  set_login_cookie('');
   reply(['ok' => 1]);
 }
 

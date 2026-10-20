@@ -161,6 +161,7 @@ window.bar3dNet = (function () {
     if (code === 4002) { stop('A new version is out: reloading when it\'s ready.'); waitForNewVersion(); return; }
     if (code === 4003) return stop('This bar is open in another tab.');
     if (code === 4005) return stop('Disconnected (too many messages).');
+    if (code === 4006) return stop('Multiplayer is for invited accounts: log in with yours.');
     if (code === 4004) {
       // Idle too long: rejoin on the next tap (no automatic retry).
       stop(/away/.test(reason || '') ? 'Away for a while: tap to rejoin.' : 'Connection went quiet: tap to rejoin.');
@@ -535,6 +536,10 @@ window.bar3dNet = (function () {
     fetch('config.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
       if (!c || !c.ws) { status = 0; info('Multiplayer: no room server in this build.'); return; }
       url = c.ws;
+      // The private build's room (docs/LOOPED.md A5), unless ?room= chose one.
+      if (param('room') === null && typeof c.room === 'string' && c.room) {
+        room = c.room.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || room;
+      }
       connect();
     }).catch(function () { status = 3; info('Multiplayer: couldn\'t read config.json.'); });
   }

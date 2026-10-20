@@ -488,6 +488,18 @@ try {
   m.ws.close(3001);
   await wait(500);
   check((await debug('main')).storageKeys.includes('schemaVersion'), 'room "main" records its schemaVersion');
+
+  // The private bar's room "looped" (docs/LOOPED.md A5): only logins that may play.
+  for (const [ticket, what] of [[undefined, 'a guest'], ['test:mia:noplay', 'a login without an invite']]) {
+    const x = client('looped');
+    await x.open;
+    x.hello(ticket ? { ticket } : {});
+    await x.until(() => x.closed);
+    check(x.closed?.code === 4006 && !x.find('W'), `room "looped" turns away ${what} (4006, got ${x.closed?.code})`);
+  }
+  const inv = await joined('looped', { name: 'Josh', ticket: 'test:josh' });
+  check(!!inv.find('W'), 'room "looped" lets an invited login in');
+  inv.ws.close(1000);
   b.ws.close(1000);
 } catch (e) {
   check(false, 'test crashed: ' + (e.stack || e));

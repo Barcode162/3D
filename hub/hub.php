@@ -94,7 +94,7 @@ function default_projects() {
   return ['projects' => [[
     'id' => 'bar3d', 'name' => 'Bar3D',
     'about' => 'A from-scratch 3D engine (C++ → WebAssembly → WebGPU) building a VRChat-style hangout bar: walk around, play games, music, friends.',
-    'link' => 'https://barcode162.github.io/3D/', 'repo' => 'barcode162/3D', 'image' => 'projects/bar3d.jpg', 'created' => time()]]];
+    'link' => 'https://joshuavelasco.com/bar/', 'repo' => 'barcode162/3D', 'image' => 'projects/bar3d.jpg', 'created' => time()]]];
 }
 function projects_list() {
   global $data;
