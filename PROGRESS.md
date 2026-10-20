@@ -14,7 +14,9 @@ password change + recovery code). 2026-10-20: every card rewritten from the docs
 shot of the bar), sharper page, Needs you view, sections in the nav, cards
 split into Status / Your plan / Talk / Details with an answer box, Claude's
 inbox (`hub.mjs inbox`), the board copied into `docs/hub/bar3d.md`
-(`hub.mjs snapshot`). Next for the hub: v2 members (the user's
+(`hub.mjs snapshot`). **v2.1:** Home with a map of every section, bottom
+tabs, "new from Claude" dots, drag to reorder, smooth animations
+(DECISIONS → Hub v2.1). Next for the hub: v2 members (the user's
 brothers, their cards wait for the owner's review), v3 activity feed.
 
 ## Deploys (2026-10-20)

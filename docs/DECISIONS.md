@@ -1147,6 +1147,32 @@ No builds or headless runs outside "go".
 - **The repo's copy:** `hub.mjs snapshot` → `docs/hub/<project>.md`; the page
   can also download the board as Markdown (Sections drawer).
 
+## Hub v2.1: finding things, motion, drag (2026-10-20, hub cards "This hub" + "The Hub update.")
+- The user couldn't find things: sections lived in a sideways-scrolling strip,
+  mostly off screen. Now a project opens on **Home**: what needs you (only the
+  non-empty groups), New from Claude, Claude is working on, then **the map**: a
+  tile per section (name, what goes there, open/done counts, a bar of its
+  cards' stages, a badge when something there needs you), then Recently
+  changed. **Bottom tabs** on phones: Home, Queue, Sections (the drawer), All.
+  The section strip shows only on section and All views. Old `#/.../needs`
+  addresses still open Home. Search also matches section names and the Talk.
+- **New from Claude:** a blue dot when Claude wrote last after you last opened
+  the card. Kept per phone in localStorage (`hubSeen:<project>:<id>`, and
+  `hubSeenBase:<project>` = the first visit, so old messages don't all light
+  up). The Home tab's badge and the page title count them.
+- **Drag to reorder:** a grip (⋮⋮) on each card in a section view; the server's
+  `place` action puts a card before/after another of its section (owner only).
+  Up/Down in Details stays.
+- **Motion:** pure CSS + a few lines of JS, no library. Lists, tiles, stats
+  and blocks rise in with a stagger (`--i`, 35 ms apart), headings wipe in,
+  stat numbers count up, stage bars grow, a card slides in from the right and
+  out on back, its tab highlight slides, sheets slide up, buttons press in,
+  open questions glow, "In progress" dots breathe. Animations use
+  `fill-mode: backwards`, never `both`, so they don't override the inline
+  transforms dragging sets. The 30-second refresh, refreshes behind an open
+  card and typing in search render with `state.quiet` (no animation).
+  `prefers-reduced-motion` turns it all off.
+
 ## Driving rework MVP (2026-10-20, hub card "Driving rework")
 The first slice of `docs/DRIVING_REWORK.md`: the new physics in
 `engine/drive/` (car_spec, tire, vehicle_sim), the Vance Ridgeback GS (C7
