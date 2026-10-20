@@ -1,4 +1,4 @@
-# Driving rework: the full plan, A to Z (2026-10-19, not started)
+# Driving rework: the full plan, A to Z (2026-10-19; MVP built 2026-10-20)
 
 The user (2026-10-19): a **full rework of the driving**, not a polish pass.
 The physics first and in full: tires, suspension, drivetrain, brakes,
@@ -1097,6 +1097,9 @@ Sizes: S (a session), M (2-3), L (4-6), XL (more).
 | 21 | Traffic, day/night, weather, getting out of the car | XL | a living world |
 | 22 | Performance and quality levels, phone validation, polish | M | steady 60 fps, cool phone |
 ### The MVP (first, before the stages above)
+**Built 2026-10-20** (what was done and how it differs: `docs/DECISIONS.md`
+→ Driving rework MVP). The tire coefficients below were replaced by
+peak/slip parameters until the R-0 pass.
 Goal: the user feels the new physics on the phone as soon as possible
 and can change how the car drives **on the phone**, live. Simple
 versions of the core, built so the later stages replace parts without

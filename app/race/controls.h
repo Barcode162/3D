@@ -30,7 +30,7 @@ class Controls {
     float x, y, w, h;  // screen fractions
     bool contains(engine::Vec2 p) const { return p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h; }
   };
-  enum Button { kLeave, kCamera, kReset, kLookBack, kHandbrake, kGearDown, kGearUp, kButtonCount };
+  enum Button { kLeave, kCamera, kReset, kLookBack, kHandbrake, kGearDown, kGearUp, kSetup, kPlace, kButtonCount };
 
   void reset();
   // `car` = the car you drive (steering feel needs its speed and slide);
@@ -43,6 +43,8 @@ class Controls {
   bool pressed[kButtonCount] = {};  // buttons pressed this frame
   bool lookingBack = false;
   bool mouseSteering = false;    // toggled with M on a computer
+  bool showSetup = false;        // the SETUP button (cars on the new physics)
+  bool showPlace = false;        // the PAD / RING button (practice)
   Source source = Source::kTouch;
 
   // For drawing the touch controls.
@@ -55,6 +57,7 @@ class Controls {
     safeR_ = right;
     safeB_ = bottom;
   }
+  float safeRight() const { return safeR_; }
   Rect steerZone() const { return {safeL_ + 0.02f, 0.16f, 0.48f - safeL_, 0.84f - safeB_}; }
   Rect brakePedal(float aspect) const;
   Rect gasPedal(float aspect) const;

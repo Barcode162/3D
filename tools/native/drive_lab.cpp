@@ -285,7 +285,7 @@ int main() {
     settle(c, flat, 0.5f);
     c.setSpeed(14);
     Input in;
-    in.steer = -0.25f;
+    in.steer = -0.35f;
     in.throttle = 0.2f;
     settle(c, flat, 0.8f, in);
     in.handbrake = 1;

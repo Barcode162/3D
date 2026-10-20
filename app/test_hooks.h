@@ -8,6 +8,8 @@
 //   ?shift  ?darts        start a bartending shift / the darts game
 //   ?garage               with ?sit= on a racing rig: open its garage
 //   ?chess                play chess at the lounge's board
+//   ?pad                  with ?sit= on a racing rig: the skid pad (new physics)
+//   ?telemetry=1          the race's telemetry overlay
 // (?skipintro, ?server=, ?cloud=, ?room=, ?name=, ?testerror are read by
 // the page's JavaScript.) The game applies them once it's ready.
 namespace app {
@@ -15,6 +17,7 @@ namespace app {
 struct TestHooks {
   bool still = false, perf = false, autoplay = false, shift = false, darts = false;
   bool garage = false;
+  bool pad = false, telemetry = false;
   bool walkcheck = false;
   float walkPose = -1;  // ?walkpose=<degrees>: frozen mid-walk at that phase (with ?walkdir=<degrees>)
   float walkDir = 0;

@@ -47,7 +47,7 @@ class Game {
   // straight into a race with bots, for the ?sit= test option). Returns
   // false while the track is still being built: it then opens by itself
   // once it's ready (pending() until then; call tryPending each frame).
-  bool start(int rig, double nowMs, bool straightIn = false);
+  bool start(int rig, double nowMs, bool straightIn = false, bool pad = false);
   bool pending() const { return pendingRig_ >= 0; }
   bool tryPending(double nowMs);
   void close();
@@ -58,6 +58,11 @@ class Game {
   // Draws the race full screen, with the HUD (queued into `text`, which
   // must be begun for this frame) on top.
   void render(const wgpu::TextureView& target, engine::TextRenderer& text, double nowMs);
+
+  // The Car setup panel's numbers (web/menu.js "carSetup", JSON): applied at once.
+  void setCarSetup(const std::string& json);
+  // ?telemetry=1: the telemetry overlay on (also a switch in Car setup).
+  void setTelemetry(bool on) { telemetryHook_ = on; }
 
   float steer() const;  // for your avatar's hands
   // What others need: x, z, heading, speed (m/s), steer.
@@ -92,6 +97,8 @@ class Game {
   void garageCamera(double nowMs);
   void queueHud(engine::TextRenderer& text, float W, float H, float px, double nowMs);
   void queueGarage(engine::TextRenderer& text, float W, float H, double nowMs);
+  void queueTelemetry(engine::TextRenderer& text, float W, float H, float u);
+  void beginPractice(double nowMs, bool pad);
   // The garage's buttons this frame (pixels), for drawing and for taps.
   struct Hit {
     float x, y, w, h;
@@ -106,7 +113,10 @@ class Game {
   int humVoice_ = 0;
   bool ready_ = false, open_ = false, prepared_ = false;
   int pendingRig_ = -1;
-  bool pendingStraight_ = false;
+  bool pendingStraight_ = false, pendingPad_ = false;
+  bool practice_ = false;     // the skid pad / Ring practice with the Ridgeback GS
+  bool telemetryHook_ = false;
+  engine::Vec3 gSmooth_;      // the g meter, lightly smoothed
   Screen screen_ = Screen::kGarage;
   World world_;
   View view_;

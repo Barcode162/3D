@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p build/native
-RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp app/race/cars.cpp engine/vehicle.cpp"
+RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp app/race/cars.cpp engine/vehicle.cpp engine/drive/car_spec.cpp engine/drive/tire.cpp engine/drive/vehicle_sim.cpp engine/json.cpp"
 declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
   [drive_lab]="tools/native/drive_lab.cpp engine/drive/car_spec.cpp engine/drive/tire.cpp engine/drive/vehicle_sim.cpp engine/json.cpp"

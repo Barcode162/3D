@@ -5,16 +5,23 @@
 // a tick counter (240 per second), never on the wall clock, so a race comes
 // out the same at any frame rate.
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "app/race/track.h"
+#include "engine/drive/car_spec.h"
+#include "engine/drive/vehicle_sim.h"
 #include "engine/vehicle.h"
 
 namespace app::race {
 
 struct Racer {
+  // The car as everything else sees it (drawing, collisions, network). On
+  // the new physics (`drive`), it mirrors the drive sim after every step.
   engine::Vehicle car;
+  std::shared_ptr<engine::drive::Car> drive;  // the new physics (your Ridgeback GS)
+  float wheel = 0;          // your steering wheel, -1..1 (the new physics' direct mode)
   engine::CarInput input;
   engine::CarAssists assists;
   engine::Vec3 paint{0.7f, 0.05f, 0.04f};
@@ -78,6 +85,16 @@ class World {
   // Before the start: the lights go out `ms` from now (keeps a room race's
   // start on the server's clock even if this phone hitched or slept).
   void setGoIn(double ms);
+  // Practice: just your car, on the skid pad (`pad`) or the Ring's grid; no
+  // lights, laps or bots.
+  void startPractice(const RacerSetup& me, bool pad);
+  bool practice() const { return practice_; }
+  bool practiceOnPad() const { return practicePad_; }
+  // The live Car setup panel (new physics): applied at once to your car.
+  void setSetup(const engine::drive::Setup& setup);
+  const engine::drive::Setup& setup() const { return setup_; }
+  // The ground's height under a point (track or pad), for the camera.
+  float groundY(engine::Vec3 p, int& hint) const;
   // Advances the race by a frame of `dt` seconds (fixed 240 Hz steps inside).
   void update(float dt);
   // The race clock: ticks since start(), and the same in ms.
@@ -115,8 +132,22 @@ class World {
   void collideCars(Racer& a, Racer& b);
   void updateProgress(Racer& r);
   void buildRacingLine();
+  // The new physics for a racer whose car has it (or not, with Old physics).
+  void attachDrive(Racer& r);
+  static void syncFromDrive(Racer& r);
+  static void syncToDrive(Racer& r);
+  bool collidePadWall(Racer& r);
+
+  // The ground for the new physics: the track and the pad as a height field.
+  struct Road : engine::drive::Road {
+    const Track* track = nullptr;
+    bool query(engine::Vec3 p, engine::drive::RoadHit& hit, int& hint) const override;
+  };
 
   Track track_;
+  Road road_;
+  engine::drive::Setup setup_;
+  bool practice_ = false, practicePad_ = false;
   std::vector<Racer> racers_;
   std::vector<float> line_, lineSpeed_;
   int you_ = 0, laps_ = 3;

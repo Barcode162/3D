@@ -11,6 +11,8 @@
 #include "app/players.h"
 #include "app/race/cars.h"
 #include "engine/bridge.h"
+#include "engine/drive/car_spec.h"
+#include "engine/font.h"
 #include "engine/net.h"
 #include "engine/frame_time.h"
 #include "engine/jobs.h"
@@ -69,11 +71,12 @@ void Game::prepare() {
 
 bool Game::online() const { return engine::net::status() == engine::net::Status::kConnected; }
 
-bool Game::start(int rig, double nowMs, bool straightIn) {
+bool Game::start(int rig, double nowMs, bool straightIn, bool pad) {
   if (!ready_) {
     prepare();  // (normally already done after you entered)
     pendingRig_ = rig;
     pendingStraight_ = straightIn;
+    pendingPad_ = pad;
     LOG_INFO("Race: warming up.");
     return false;
   }
@@ -90,13 +93,45 @@ bool Game::start(int rig, double nowMs, bool straightIn) {
   // The page's top bar (menu, mic, log) would sit on the race buttons.
   engine::ui::setBodyClass("racing", true);
   build_ = engine::ui::buildLabel();
-  if (straightIn) beginRace(nowMs, false);
+  if (pad) beginPractice(nowMs, true);
+  else if (straightIn) beginRace(nowMs, false);
   else openGarage(nowMs);
   return true;
 }
 
 bool Game::tryPending(double nowMs) {
-  return pendingRig_ >= 0 && ready_ && start(pendingRig_, nowMs, pendingStraight_);
+  return pendingRig_ >= 0 && ready_ && start(pendingRig_, nowMs, pendingStraight_, pendingPad_);
+}
+
+void Game::setCarSetup(const std::string& json) {
+  engine::drive::Setup s;
+  if (!engine::drive::parseSetup(json, s)) {
+    LOG_ERROR("Car setup: not a JSON object.");
+    return;
+  }
+  world_.setSetup(s);
+}
+
+// Practice with the Ridgeback GS (the new physics): the skid pad or the Ring,
+// just you, no lights or laps. Your paint and rims from the garage.
+void Game::beginPractice(double nowMs, bool pad) {
+  RacerSetup me;
+  me.model = kRidgeback;
+  me.paint = paintColor(choice_.paint);
+  me.rim = rimColor(choice_.rim);
+  world_.startPractice(me, pad);
+  screen_ = Screen::kRace;
+  practice_ = true;
+  roomRace_ = false;
+  remoteRacer_ = remotePlayer_ = -1;
+  resultsMs_ = 0;
+  startMs_ = nowMs;
+  controls_.reset();
+  const Racer& r = world_.racers()[static_cast<size_t>(world_.you())];
+  camYaw_ = engine::Vehicle::headingOf(r.car.forward());
+  camPos_ = r.car.position;
+  LOG_INFO("Practice: Ridgeback GS on the %s (%s physics).", pad ? "skid pad" : "Ring",
+           world_.setup().oldPhysics ? "old" : "new");
 }
 
 void Game::close() {
@@ -115,6 +150,7 @@ void Game::close() {
 
 void Game::openGarage(double nowMs) {
   screen_ = Screen::kGarage;
+  practice_ = false;
   garageMs_ = nowMs;
   wantReady_ = false;
   roomRace_ = false;
@@ -260,6 +296,7 @@ void Game::beginRace(double nowMs, bool fromRoom) {
     if (world_.racers()[i].remote) remoteRacer_ = static_cast<int>(i);
   }
   screen_ = Screen::kRace;
+  practice_ = false;
   roomRace_ = fromRoom;
   finishSent_ = false;
   wantReady_ = false;
@@ -298,7 +335,8 @@ std::vector<Game::Hit> Game::garageButtons(float W, float H) const {
   const float u = std::min(W, H) / 400.0f;
   const float x0 = 0.05f * W;
   out.push_back({x0, 8 * u, 60 * u, 24 * u, 6, 0});  // leave
-  for (int k = 0; k < kCarCount; ++k) out.push_back({x0 + static_cast<float>(k) * 84 * u, 58 * u, 78 * u, 60 * u, 1, k});
+  for (int k = 0; k < kCarCount; ++k) out.push_back({x0 + static_cast<float>(k) * 64 * u, 58 * u, 60 * u, 60 * u, 1, k});
+  out.push_back({x0, 264 * u, 250 * u, 26 * u, 7, 0});  // skid pad practice (the new physics)
   for (int k = 0; k < kPaintCount; ++k) {
     out.push_back({x0 + static_cast<float>(k % 6) * 26 * u, 140 * u + static_cast<float>(k / 6) * 26 * u, 22 * u, 22 * u, 2, k});
   }
@@ -350,6 +388,11 @@ bool Game::updateGarage(double nowMs, float dt, const engine::InputFrame& input)
       else beginRace(nowMs, false);
       break;
     case 6: return true;
+    case 7:
+      if (wantReady_ && online() && joined_) sendRace("unready");
+      wantReady_ = false;
+      beginPractice(nowMs, true);
+      return false;
     default: break;
   }
   world_.update(dt);  // (the car settles on its springs)
@@ -387,12 +430,20 @@ bool Game::update(double nowMs, float dt, const engine::InputFrame& input) {
     controls_.setSafeArea(page.safe[0] / static_cast<float>(page.cssW), page.safe[2] / static_cast<float>(page.cssW),
                           page.safe[3] / static_cast<float>(page.cssH));
   }
+  controls_.showSetup = carModel(me.model).newPhysics;
+  controls_.showPlace = practice_;
   controls_.update(dt, input, me.car, manualGears_, W / std::max(H, 1.0f));
   const bool* pressed = controls_.pressed;
   if (pressed[Controls::kLeave]) return true;
   if (pressed[Controls::kCamera]) cameraMode_ = (cameraMode_ + 1) % 4;
   if (pressed[Controls::kReset] && world_.started()) world_.requestReset(world_.you());
+  if (pressed[Controls::kSetup]) engine::ui::openPanel("carSetup");
+  if (pressed[Controls::kPlace]) {
+    beginPractice(nowMs, !world_.practiceOnPad());
+    return false;
+  }
   me.input = controls_.car;
+  me.wheel = controls_.wheel();
   me.assists.autoGears = !manualGears_;
   // Your time goes to the room (it checks it and tells the other rig).
   if (roomRace_ && me.finished && !finishSent_ && me.finishMs > 0) {
@@ -460,14 +511,13 @@ void Game::updateCamera(float dt) {
     const float lag = 1 - std::exp(-dt * 6.0f);
     camYaw_ += wrapAngle(heading - camYaw_) * lag;
     const Vec3 back{std::sin(camYaw_), 0, std::cos(camYaw_)};  // behind = opposite of forward
-    const float distance = cameraMode_ == 0 ? 5.4f : 8.5f, height = cameraMode_ == 0 ? 1.65f : 2.6f;
+    const float zoom = world_.setup().cameraDistance;
+    const float distance = (cameraMode_ == 0 ? 5.4f : 8.5f) * zoom, height = (cameraMode_ == 0 ? 1.65f : 2.6f) * zoom;
     Vec3 eye = car.position + back * distance + Vec3{0, height, 0};
     const Vec3 target = car.position + Vec3{-back.x, 0, -back.z} * 2.5f + Vec3{0, 0.75f, 0};
     // Keep above the ground.
-    float s, lat;
     int hint = me.hint;
-    world_.track().locate(eye, s, lat, hint);
-    const float ground = world_.track().surfacePoint(s, lat).y;
+    const float ground = world_.groundY(eye, hint);
     eye.y = std::max(eye.y, ground + 0.6f);
     camera_.eye = eye;
     camera_.target = target;
@@ -521,7 +571,7 @@ void Game::queueGarage(engine::TextRenderer& text, float W, float H, double nowM
   engine::TextStyle st;
   st.color = {1, 1, 1, 1};
   // A dark panel behind the picks, so they read over the 3D.
-  text.addRect(0, 0, x0 + 262 * u, H, {0, 0, 0, 0.5f});
+  text.addRect(0, 0, x0 + 262 * u, H, {0, 0, 0, 0.5f});  // (picks, then the skid pad button at the bottom)
   st.color = {1, 0.85f, 0.3f, 1};
   text.addScreen("GARAGE", x0 + 70 * u, 14 * u, 14 * u, st);
   st.color = {1, 1, 1, 0.8f};
@@ -548,16 +598,22 @@ void Game::queueGarage(engine::TextRenderer& text, float W, float H, double nowM
         if (on) text.addRect(h.x, h.y + h.h - 3 * u, h.w, 3 * u, {1, 0.85f, 0.3f, 1});
         engine::TextStyle t;
         t.align = 0.5f;
-        text.addScreen(m.name, h.x + h.w * 0.5f, h.y + 5 * u, 8 * u, t);
+        text.addScreen(m.name, h.x + h.w * 0.5f, h.y + 5 * u, 7 * u, t);
         const char* labels[3] = {"SPD", "HND", "WGT"};
         const float bars[3] = {m.speed, m.handling, m.weight};
         engine::TextStyle l;
         l.color = {1, 1, 1, 0.7f};
         for (int k = 0; k < 3; ++k) {
           const float y = h.y + 20 * u + static_cast<float>(k) * 12 * u;
-          text.addScreen(labels[k], h.x + 4 * u, y, 5 * u, l);
-          text.addRect(h.x + 24 * u, y + 1 * u, 48 * u, 4 * u, {0, 0, 0, 0.5f});
-          text.addRect(h.x + 24 * u, y + 1 * u, 48 * u * bars[k], 4 * u, {0.3f, 0.9f, 1, 0.95f});
+          text.addScreen(labels[k], h.x + 3 * u, y, 4.5f * u, l);
+          text.addRect(h.x + 19 * u, y + 1 * u, 37 * u, 4 * u, {0, 0, 0, 0.5f});
+          text.addRect(h.x + 19 * u, y + 1 * u, 37 * u * bars[k], 4 * u, {0.3f, 0.9f, 1, 0.95f});
+        }
+        if (m.newPhysics) {
+          engine::TextStyle n;
+          n.align = 0.5f;
+          n.color = {1, 0.85f, 0.3f, 1};
+          text.addScreen("NEW", h.x + h.w * 0.5f, h.y + h.h - 9 * u, 5 * u, n);
         }
         break;
       }
@@ -576,6 +632,13 @@ void Game::queueGarage(engine::TextRenderer& text, float W, float H, double nowM
         t.align = 0.5f;
         text.addScreen(wantReady_ ? "WAITING..." : "READY", h.x + h.w * 0.5f, h.y + 9 * u, 14 * u, t);
         if (wantReady_) text.addScreen("TAP TO CANCEL", h.x + h.w * 0.5f, h.y + 30 * u, 5.5f * u, t);
+        break;
+      }
+      case 7: {  // skid pad
+        text.addRect(h.x, h.y, h.w, h.h, {0.1f, 0.35f, 0.75f, 0.8f});
+        engine::TextStyle t;
+        t.align = 0.5f;
+        text.addScreen("SKID PAD: TRY THE NEW PHYSICS (GS)", h.x + h.w * 0.5f, h.y + h.h * 0.5f - 3.5f * u, 7 * u, t);
         break;
       }
       case 5: {  // race the bots instead
@@ -623,18 +686,45 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
     text.addScreen(s, (r.x + r.w * 0.5f) * W, (r.y + r.h * 0.5f) * H - size * 0.5f, size, t);
   };
 
-  // Position, lap, times (top middle).
   char line[96];
   st.align = 0.5f;
-  std::snprintf(line, sizeof(line), "P%d/%d   LAP %d/%d", me.place, static_cast<int>(world_.racers().size()),
-                std::min(me.lap + 1, world_.laps()), world_.laps());
-  text.addRect(W * 0.5f - 95 * u, 6 * u, 190 * u, 40 * u, {0, 0, 0, 0.45f});
-  text.addScreen(line, W * 0.5f, 11 * u, 13 * u, st);
-  // Lap time on the race clock (physics steps), not the wall clock.
-  const double lapMs = world_.started() && !me.finished ? world_.clockMs() - me.lapStartMs : 0;
-  std::snprintf(line, sizeof(line), "%s   BEST %s", timeText(lapMs).c_str(), timeText(me.bestLapMs).c_str());
-  st.color = {1, 0.9f, 0.6f, 1};
-  text.addScreen(line, W * 0.5f, 30 * u, 8 * u, st);
+  // The g meter (smoothed a little so it reads).
+  if (me.drive) {
+    const Vec3 a = me.drive->accelLocal;
+    gSmooth_ = gSmooth_ + (Vec3{a.x, a.y, a.z} * (1 / 9.81f) - gSmooth_) * 0.15f;
+  }
+  if (practice_) {
+    // Practice: where you are, which physics, the g you pull.
+    text.addRect(W * 0.5f - 95 * u, 6 * u, 190 * u, 40 * u, {0, 0, 0, 0.45f});
+    text.addScreen(world_.practiceOnPad() ? "SKID PAD" : "THE RING", W * 0.5f, 11 * u, 13 * u, st);
+    if (me.drive) {
+      std::snprintf(line, sizeof(line), "NEW PHYSICS   %.2f G", std::hypot(gSmooth_.x, gSmooth_.z));
+    } else {
+      std::snprintf(line, sizeof(line), "OLD PHYSICS (SETUP TO SWITCH)");
+    }
+    st.color = {1, 0.9f, 0.6f, 1};
+    text.addScreen(line, W * 0.5f, 30 * u, 8 * u, st);
+    if (nowMs - startMs_ < 9000 && world_.practiceOnPad()) {
+      engine::TextStyle t;
+      t.align = 0.5f;
+      t.color = {1, 1, 1, 0.8f};
+      text.addRect(W * 0.5f - 150 * u, 52 * u, 300 * u, 30 * u, {0, 0, 0, 0.4f});
+      text.addScreen("DRIVE THE PAINTED RING. HANDBRAKE TO SLIDE.\nSETUP CHANGES HOW THE CAR DRIVES, LIVE.", W * 0.5f, 56 * u,
+                     7 * u, t);
+    }
+  } else {
+    // Position, lap, times (top middle).
+    std::snprintf(line, sizeof(line), "P%d/%d   LAP %d/%d", me.place, static_cast<int>(world_.racers().size()),
+                  std::min(me.lap + 1, world_.laps()), world_.laps());
+    text.addRect(W * 0.5f - 95 * u, 6 * u, 190 * u, 40 * u, {0, 0, 0, 0.45f});
+    text.addScreen(line, W * 0.5f, 11 * u, 13 * u, st);
+    // Lap time on the race clock (physics steps), not the wall clock.
+    const double lapMs = world_.started() && !me.finished ? world_.clockMs() - me.lapStartMs : 0;
+    std::snprintf(line, sizeof(line), "%s   BEST %s", timeText(lapMs).c_str(), timeText(me.bestLapMs).c_str());
+    st.color = {1, 0.9f, 0.6f, 1};
+    text.addScreen(line, W * 0.5f, 30 * u, 8 * u, st);
+  }
+  if (world_.setup().telemetry || telemetryHook_) queueTelemetry(text, W, H, u);
 
   // Speed, gear and revs (bottom middle, between the thumbs).
   const float cx = W * 0.5f + W * 0.06f, by = H - 18 * u;
@@ -656,7 +746,7 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
   text.addScreen(manualGears_ ? "MAN" : "AUTO", cx + 44 * u, by - 18 * u, 6 * u, st);
 
   // Standings (top left, under the leave button): the cars around you.
-  {
+  if (!practice_) {
     std::vector<const Racer*> order;
     for (const Racer& r : world_.racers()) {
       if (!r.hidden) order.push_back(&r);
@@ -676,7 +766,9 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
 
   // Start: lights are on the gantry; a big GO when they go out.
   const double go = world_.goMs(), raceNow = world_.clockMs();
-  if (raceNow < go) {
+  if (practice_) {
+    // (no lights)
+  } else if (raceNow < go) {
     const int lit = world_.lightsOn();
     for (int k = 0; k < 5; ++k) {
       text.addShape(0, W * 0.5f + (static_cast<float>(k) - 2) * 26 * u, H * 0.3f, 10 * u,
@@ -723,8 +815,10 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
     if (r.w <= 0) continue;
     if (!touch && b != Controls::kLeave) continue;
     rect(r, controls_.buttonHeld(button) ? Vec4{1, 0.42f, 0.78f, 0.6f} : Vec4{0.05f, 0.05f, 0.08f, 0.45f});
-    static const char* kLabels[] = {"LEAVE", "CAM", "RESET", "BACK", "HANDBRAKE", "GEAR -", "GEAR +"};
-    label(r, b == Controls::kCamera ? kCameraNames[cameraMode_] : kLabels[b], 7 * u);
+    static const char* kLabels[] = {"LEAVE", "CAM", "RESET", "BACK", "HANDBRAKE", "GEAR -", "GEAR +", "SETUP", "PAD"};
+    const char* name = b == Controls::kCamera ? kCameraNames[cameraMode_] : kLabels[b];
+    if (b == Controls::kPlace) name = world_.practiceOnPad() ? "TO RING" : "TO PAD";
+    label(r, name, 7 * u);
   }
   if (touch) {
     const Controls::Rect gas = controls_.gasPedal(aspect), brake = controls_.brakePedal(aspect);
@@ -753,7 +847,7 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
     engine::TextStyle t;
     t.color = {1, 1, 1, 0.6f};
     const std::string help = controls_.source == Controls::Source::kKeyboard || controls_.source == Controls::Source::kMouse
-                                 ? "W/S gas brake  A/D steer  SPACE handbrake  E/Q gears  C camera  R reset  M mouse steer"
+                                 ? "W/S gas brake  A/D steer  SPACE handbrake  E/Q gears  C camera  R reset  M mouse steer  T setup  P pad/ring"
                                  : controls_.deviceName();
     text.addScreen(help, 0.012f * W, H - 14 * u, 6 * u, t);
   }
@@ -771,6 +865,43 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
     text.addScreen("TURN YOUR PHONE SIDEWAYS", W * 0.5f, H * 0.42f + 12 * u, 12 * u, t);
   }
   (void)px;
+}
+
+// The telemetry overlay (Car setup → Telemetry, or ?telemetry=1): the g-g
+// circle with the car's dot (how much grip you use), and per tire its load,
+// slip ratio, slip angle and suspension travel.
+void Game::queueTelemetry(engine::TextRenderer& text, float W, float H, float u) {
+  const Racer& me = world_.racers()[static_cast<size_t>(world_.you())];
+  const float boxW = 132 * u, x0 = W - boxW - 8 * u - controls_.safeRight() * W;
+  const float cx = x0 + boxW * 0.5f, cy = H * 0.36f, R = 30 * u;  // the circle is 1.5 g
+  text.addRect(x0, cy - 36 * u, boxW, 132 * u, {0, 0, 0, 0.45f});
+  text.addShape(engine::font::kShapeRing, cx, cy, R, {1, 1, 1, 0.35f});
+  text.addShape(engine::font::kShapeRing, cx, cy, R * (1 / 1.5f), {1, 1, 1, 0.25f});  // 1 g
+  // The dot goes where your body is pushed: braking = up, a left turn = right.
+  const float gx = engine::clampf(gSmooth_.x, -1.5f, 1.5f), gz = engine::clampf(gSmooth_.z, -1.5f, 1.5f);
+  text.addShape(engine::font::kShapeDisc, cx - gx / 1.5f * R, cy - gz / 1.5f * R, 3.5f * u, {1, 0.42f, 0.78f, 1});
+  engine::TextStyle t;
+  t.color = {1, 1, 1, 0.85f};
+  char line[64];
+  std::snprintf(line, sizeof(line), "%.2f G", std::hypot(gSmooth_.x, gSmooth_.z));
+  t.align = 0.5f;
+  text.addScreen(line, cx, cy + R + 4 * u, 6 * u, t);
+  t.align = 0;
+  static const char* kCorner[4] = {"FL", "FR", "RL", "RR"};
+  for (int i = 0; i < 4; ++i) {
+    const engine::Vehicle::Wheel& w = me.car.wheels[static_cast<size_t>(i)];
+    const float travel = me.drive ? me.drive->wheels[static_cast<size_t>(i)].travel : w.compression;
+    std::snprintf(line, sizeof(line), "%s %4.1fKN S%+.2f A%+3.0f %2.0fMM", kCorner[i], w.load / 1000, w.slipRatio,
+                  std::atan(w.slipAngle) * 57.3f, travel * 1000);
+    t.color = w.slide > 1 ? Vec4{1, 0.5f, 0.3f, 1} : Vec4{1, 1, 1, 0.85f};
+    text.addScreen(line, x0 + 4 * u, cy + R + 14 * u + static_cast<float>(i) * 9 * u, 5 * u, t);
+  }
+  if (me.drive) {
+    std::snprintf(line, sizeof(line), "WHEEL %+4.0f  %s%s", me.drive->wheelAngle * 57.3f, me.drive->absActive ? "ABS " : "",
+                  me.drive->tcActive ? "TC" : "");
+    t.color = {0.7f, 0.95f, 1, 0.9f};
+    text.addScreen(line, x0 + 4 * u, cy + R + 52 * u, 5 * u, t);
+  }
 }
 
 }  // namespace app::race

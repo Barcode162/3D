@@ -83,7 +83,7 @@ struct CarSpec {
   // Brakes.
   float handbrakeTorque = 1600;  // N m on the rear axle
   // Steering.
-  float steeringRatio = 13.5f;   // steering wheel / road wheel
+  float steeringRatio = 15.5f;   // steering wheel / road wheel
   float lockDeg = 450;           // steering wheel from centre to full lock
   float ackermann = 0.4f;        // 0 parallel .. 1 true Ackermann
   float mechTrail = 0.02f;       // caster trail, m

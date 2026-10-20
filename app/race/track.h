@@ -50,6 +50,22 @@ class Track : public engine::Ground {
   bool cast(engine::Vec3 origin, engine::Vec3 dir, float maxDistance, engine::GroundHit& hit,
             int& hint) const override;
 
+  // The skid pad in the infield (docs/DRIVING_REWORK.md, the MVP): a flat
+  // asphalt circle with painted 30 m and 50 m rings, grass to a round tire
+  // wall. Its own ground: inside the wall, the track doesn't count.
+  struct Pad {
+    engine::Vec3 centre;      // on the surface
+    float asphalt = 60;       // radius of the asphalt
+    float wall = 66;          // radius of the tire wall
+  };
+  const Pad& pad() const { return pad_; }
+  bool onPad(engine::Vec3 p) const;  // inside the pad's wall (+ a little margin)
+  // Where the car starts on the pad: on the 50 m ring, facing along it.
+  void padStart(engine::Vec3& position, float& heading) const;
+  // The ground under a point anywhere (track or pad): point, normal, surface.
+  engine::Vec3 groundAt(engine::Vec3 p, int& hint, engine::Vec3* normal = nullptr,
+                        engine::Surface* surface = nullptr) const;
+
   // Starting grid slot k (0 = pole): ground position and heading.
   void gridSlot(int k, engine::Vec3& position, float& heading) const;
 
@@ -61,8 +77,11 @@ class Track : public engine::Ground {
   std::vector<Chunk> buildMeshes() const;
 
  private:
+  void placePad();
+
   std::vector<Sample> samples_;
   float length_ = 0;
+  Pad pad_;
 };
 
 }  // namespace app::race

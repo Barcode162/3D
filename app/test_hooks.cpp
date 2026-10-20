@@ -51,6 +51,8 @@ TestHooks TestHooks::parse() {
   h.darts = param(query, "darts", v);
   h.garage = param(query, "garage", v);
   h.chess = param(query, "chess", v);
+  h.pad = param(query, "pad", v);
+  h.telemetry = param(query, "telemetry", v) && v == "1";
   h.walkcheck = param(query, "walkcheck", v);
   if (param(query, "walkpose", v) && !v.empty()) h.walkPose = static_cast<float>(std::atof(v.c_str()));
   if (param(query, "previewturn", v) && !v.empty()) h.previewTurn = static_cast<float>(std::atof(v.c_str()));

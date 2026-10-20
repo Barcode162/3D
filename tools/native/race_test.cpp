@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <string>
 
+#include "app/race/cars.h"
 #include "app/race/world.h"
 
 using namespace app::race;
@@ -81,5 +82,67 @@ int main() {
     }
   }
   std::printf("frame-rate independent: %s\n", same ? "OK" : "FAILED");
+
+  // The Ridgeback GS on the new physics (engine/drive), driven round the
+  // Ring by the bots' driver: it finishes, in a sane time, the same at any
+  // frame rate.
+  const auto gsRace = [&](double fps) {
+    RacerSetup me;
+    me.model = kRidgeback;
+    me.grid = 0;
+    w.start({me}, 0, 2, 0);
+    Racer& you = w.racers()[w.you()];
+    if (!you.drive) std::printf("GS: no new physics attached!\n");
+    you.bot = true;  // the bots' driver drives it (on the new physics)
+    for (int frame = 0; frame < static_cast<int>(fps * 300) && !w.allFinished(); ++frame) w.update(static_cast<float>(1.0 / fps));
+    char line[160];
+    std::snprintf(line, sizeof(line), "laps %d best %.3f s finish %.3f s", you.lap, you.bestLapMs / 1000,
+                  you.finishMs / 1000);
+    return std::string(line);
+  };
+  const std::string gs60 = gsRace(60);
+  std::printf("GS on the new physics, 2 laps: %s\n", gs60.c_str());
+  {
+    const Racer& you = w.racers()[w.you()];
+    if (you.lap < 2 || !(you.bestLapMs > 50000 && you.bestLapMs < 120000)) {
+      std::printf("GS RACE FAILED\n");
+      ++failures;
+    }
+  }
+  for (double fps : {30.0, 144.0}) {
+    const std::string r = gsRace(fps);
+    if (r != gs60) {
+      same = false;
+      std::printf("GS at %.0f fps differs: %s\n", fps, r.c_str());
+    }
+  }
+  // The skid pad: circles for 30 s, stays on the pad, nothing blows up.
+  {
+    RacerSetup me;
+    me.model = kRidgeback;
+    w.startPractice(me, true);
+    Racer& you = w.racers()[0];
+    float maxV = 0;
+    for (int frame = 0; frame < 60 * 30; ++frame) {
+      you.input.steer = you.wheel = -0.35f;
+      you.input.throttle = 0.35f;
+      w.update(1.0f / 60);
+      maxV = std::max(maxV, you.car.speed());
+    }
+    const bool ok = w.track().onPad(you.car.position) && std::isfinite(you.car.position.x) && maxV > 8;
+    std::printf("skid pad: %.0f km/h top, on the pad: %s\n", maxV * 3.6f, ok ? "yes" : "NO");
+    if (!ok) ++failures;
+    // Old physics, the same car (the comparison switch).
+    engine::drive::Setup st;
+    st.oldPhysics = true;
+    w.setSetup(st);
+    if (you.drive) ++failures;
+    for (int frame = 0; frame < 60 * 5; ++frame) w.update(1.0f / 60);
+    st.oldPhysics = false;
+    w.setSetup(st);
+    if (!you.drive) ++failures;
+    std::printf("old physics switch: %s\n", you.drive ? "ok" : "FAILED");
+  }
+  std::printf("GS frame-rate independent: %s\n", same ? "OK" : "FAILED");
   return failures || !same ? 1 : 0;
 }

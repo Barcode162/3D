@@ -109,10 +109,18 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
 - **Ongoing, when wanted:** UI polish (HUD, 4K Mania and race screens in the
   Clash style, emote faces), the remaster list (`docs/REMASTER.md`).
 
+### Driving rework (hub card, started 2026-10-20)
+Spec and build order: `docs/DRIVING_REWORK.md`.
+- [x] MVP (2026-10-20): new physics `engine/drive/` (480 Hz chassis, unsprung
+  wheels, 15-probe contact, MF tires with relaxation and low-speed anchor,
+  driveline with clutch/7 gears/LSD, brakes, ABS, TC, launch control, aero,
+  virtual steering wheel); the Ridgeback GS (car 4 "GS" in the garage); the
+  skid pad in the Ring's infield (garage button, rig menu, PAD/RING button);
+  live Car setup panel (SETUP button) with Old physics switch and telemetry;
+  tests `tools/native/drive_lab.cpp` + race_test. Waiting for the phone check.
+- [ ] Next: R-0 research pass, then stages 1-22 (the spec's table).
+
 ### Parked (not now; the user promotes items at "start")
-- **Driving rework (full):** new physics from scratch (tires, suspension, driveline, aero,
-  steering, electronics), C7 Corvette, GR86, RX-7 FD, Miata ND; circuit racing, drift area,
-  free drive. Full spec and build order: `docs/DRIVING_REWORK.md` (MVP first: Ridgeback GS = 2017 C7 Grand Sport, live tuning panel; then 22 stages).
 - Kids edition: a separate, simpler game in the same universe (under 13).
 - New name for the world and its currency (Bar3D is a working name).
 - The street and city outside.

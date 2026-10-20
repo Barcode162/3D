@@ -76,7 +76,7 @@ source /opt/emsdk/emsdk_env.sh
 emcmake cmake -B build -G Ninja      # once
 cmake --build build                  # output: build/site/
 NODE_PATH=$(npm root -g) node tools/smoke.mjs   # headless Chromium + software WebGPU
-bash tools/native/run.sh             # car, race, JSON, math, physics tests (g++ and em++ + node)
+bash tools/native/run.sh             # car (old + new: drive_lab), race, JSON, math, physics tests (g++ and em++ + node)
 node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
 node tools/proto_test.mjs            # room protocol codec on proto/vectors.json (C++ twin in run.sh)
 node tools/room_test.mjs             # Cloudflare room via its own wrangler dev (setup.sh installs it)
@@ -106,7 +106,7 @@ accepts `?cam=x,y,z,yaw,pitch` (see `docs/DECISIONS.md` → Gotchas for
 testing music and the song picker). `tools/shots.mjs` takes `VIEW=932x430`
 (landscape), `HOLD=ArrowUp:9000` (hold a key, e.g. to drive) and
 `REQUESTS=1` (print requests to outside hosts); `sit=30`
-sits in a racing rig. Car physics and whole races also run natively
+sits in a racing rig (`&pad` the skid pad, `&telemetry=1` the overlay). Car physics and whole races also run natively
 (no browser): see `tools/native/*.cpp`. Software WebGPU (SwiftShader) works in this
 container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
@@ -115,7 +115,7 @@ judged on the user's phone.
 - `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
   (incl. taps), logging, files, text (own pixel font), procedural textures,
   audio bridge, skeletons and skinned meshes, physics, car physics
-  (`vehicle.*`), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
+  (`vehicle.*`; the new driving physics in `drive/`, docs/DRIVING_REWORK.md), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
   (`jobs.*`), async pipelines (`pipeline_cache.*`), the room protocol codec
   (`netproto.*`), the frame
   profiler and performance overlay (`profiler.*`, `?perf=1`).

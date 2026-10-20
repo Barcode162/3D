@@ -54,6 +54,12 @@ Controls::Rect Controls::buttonRect(Button b, float aspect, bool manual) const {
       const Rect gas = gasPedal(aspect);
       return {b == kGearUp ? gas.x : gas.x - bw - 0.012f, 0.17f, b == kGearUp ? gas.w : bw, 0.12f};
     }
+    case kSetup:
+      if (!showSetup) return {-1, -1, 0, 0};
+      return {0.012f + safeL_ + bw + 0.01f, 0.02f, bw, bh};
+    case kPlace:
+      if (!showPlace) return {-1, -1, 0, 0};
+      return {0.012f + safeL_ + 2 * (bw + 0.01f), 0.02f, bw, bh};
     default: return {-1, -1, 0, 0};
   }
 }
@@ -123,6 +129,8 @@ void Controls::update(float dt, const engine::InputFrame& input, const engine::V
     if (k == "KeyM") mouseSteering = !mouseSteering;
     if (k == "KeyC") pressed[kCamera] = true;
     if (k == "KeyR") pressed[kReset] = true;
+    if (k == "KeyT" && showSetup) pressed[kSetup] = true;
+    if (k == "KeyP" && showPlace) pressed[kPlace] = true;
     if (k == "Escape") pressed[kLeave] = true;
     if (k == "KeyE" || k == "ShiftLeft" || k == "ShiftRight") pressed[kGearUp] = true;
     if (k == "KeyQ" || k == "ControlLeft" || k == "ControlRight") pressed[kGearDown] = true;

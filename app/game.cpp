@@ -163,11 +163,11 @@ void standUp() {
 }
 
 // The race on the rig you're sitting in.
-void startRace(bool straightIn) {
+void startRace(bool straightIn, bool pad) {
   if (g_app.seat < 0) return;
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
   if (s.kind != app::SeatKind::kSim) return;
-  if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs, straightIn)) {
+  if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs, straightIn, pad)) {
     g_app.input.setCapture(true);
   } else {
     showToast("Warming up the race...");  // it starts by itself in a moment
@@ -204,7 +204,7 @@ void sitOn(int index) {
     setActivity(Activity::kDrive);
     // Pick a game: the race with bots or Meridian (web/menu.js "sim"). The
     // ?sit= test option goes straight into the race.
-    if (g_app.hooks.sit == index) startRace(!g_app.hooks.garage);
+    if (g_app.hooks.sit == index) startRace(!g_app.hooks.garage, g_app.hooks.pad);
     else engine::ui::openPanel("sim");
   } else if (s.kind == app::SeatKind::kPianoBench) {
     setActivity(Activity::kPiano);
@@ -594,6 +594,10 @@ void handleCommands() {
       standUp();
     } else if (c.name == "simRace") {
       startRace();
+    } else if (c.name == "simPad") {
+      startRace(false, true);  // the skid pad with the Ridgeback GS (the new physics)
+    } else if (c.name == "carSetup") {
+      g_app.race.setCarSetup(c.text);
     } else if (c.name == "meridianOpen") {
       g_app.meridianOpen = true;
       LOG_INFO("Meridian: open (the bar pauses drawing).");
@@ -1356,6 +1360,7 @@ void onGpuReady(bool ok) {
   const auto sfx = [](Effect e) { return g_app.sfx[static_cast<int>(e)]; };
   g_app.darts.init(g_app.scene.dartBoard, sfx(Effect::kThunk), sfx(Effect::kWhoosh), sfx(Effect::kCheer));
   g_app.race.init(&g_app.gpu, sfx(Effect::kEngine), &g_app.others);
+  g_app.race.setTelemetry(g_app.hooks.telemetry);
   const engine::Sound barSounds[app::Bartender::kSfxCount] = {sfx(Effect::kClink), sfx(Effect::kPour),
                                                               sfx(Effect::kShake), sfx(Effect::kClick)};
   g_app.bartender.init(g_app.scene.barTopFront, barSounds);

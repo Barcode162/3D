@@ -197,7 +197,7 @@ const app::OtherPlayer* playerUsing(Activity a, int param);
 void setActivity(Activity a);
 void startEmote(Emote e);
 void standUp();
-void startRace(bool straightIn = false);
+void startRace(bool straightIn = false, bool pad = false);
 void sitOn(int index);
 float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax);
 Vec3 screenRay(engine::Vec2 tap);

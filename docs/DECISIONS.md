@@ -1096,3 +1096,53 @@ No builds or headless runs outside "go".
   shown once, stored hashed; resets the password once and signs out every
   login), in the bar (your card → Password & recovery) and in the hub.
 
+## Driving rework MVP (2026-10-20, hub card "Driving rework")
+The first slice of `docs/DRIVING_REWORK.md`: the new physics in
+`engine/drive/` (car_spec, tire, vehicle_sim), the Vance Ridgeback GS (C7
+Grand Sport data), the skid pad, the live Car setup panel, telemetry.
+- **Plugged in beside the old physics, not instead of it.** A racer with
+  the new physics keeps its old `engine::Vehicle` as a mirror: after every
+  step `World::syncFromDrive` copies the body, wheels (travel, spin, steer),
+  rpm and gear into it, so drawing, cameras, collisions, the network, the
+  sound and the old steering assist all work unchanged. Collisions change
+  the mirror's body; `syncToDrive` copies it back. Bots and remote cars stay
+  on the old physics. The GS is car 4 in the garage (`kRidgeback`; the room
+  accepts `CARS = 4`).
+- **480 Hz:** the race world ticks at 240 Hz, the drive sim steps twice per
+  tick; the driveline twice per drive tick (960 Hz). Results are identical
+  at 30/60/144 fps (race_test).
+- **Tires:** the Magic Formula coefficients in the spec (§4.5.4, "check in
+  R-0") put the lateral peak at ~18 degrees, far too late. So the curves are
+  given as peak grip, peak slip, C and E, and B is solved from them
+  (`tire.cpp`); combined slip uses the spec's G weighting, and far past the
+  peak blends into plain sliding friction against the slip direction (with
+  pure G weighting a locked tire had no side grip at all).
+- **Low speed:** each tire's anchor (stick) model takes over below 2 m/s:
+  parked cars don't creep (4 µm in 10 s), a braked car holds on 20%.
+- **Launch:** the auto clutch is a controller: it passes the engine's torque
+  plus a pull toward a launch speed, capped at what the rear tires can
+  take; with TC on, launch control holds ~3,400 rpm. Without that, TC and
+  the clutch fought (wheelspin bursts, 0-60 in 4.9 s). Traction control
+  compares the driven wheels with the free-rolling fronts (like the real
+  sensors), cuts at once, gives back over 0.15 s. Pulling the handbrake
+  opens the auto clutch (else the engine keeps the rears turning).
+- **Measured** (drive_lab, in run.sh and CI): 0-60 mph 4.1 s (real 3.6-3.8
+  with US 1 ft rollout), top 312 km/h, 60-0 mph 30.4 m (real ~29-30.5),
+  skid pad 40 m 1.08 g (target ~1.10), 5 cm bump settles in 0.47 s, sim
+  cost ~9-15 µs per tick (<1% of a core).
+- **Steering:** the virtual steering wheel (a hand spring toward your
+  target, the tires' aligning torque pushing back). Car setup's "Steering
+  assist" blends the old speed-sensitive assist (1, default) with your
+  thumb's wheel position straight to the wheel (0). Ratio 15.5:1, 29 degree
+  lock, so the turning circle matches the real car's ~11.5 m.
+- **Car setup** (`web/menu.js` carSetup, SETUP button on the race screen
+  for the GS): only changed keys are stored (localStorage `bar3dCarSetup`)
+  and sent as JSON (`carSetup` command → `engine::drive::parseSetup`).
+  "Old physics" switches the GS to the old physics on the spot.
+- **Skid pad:** in the Ring's infield (`Track::Pad`, placed clear of every
+  barrier), its own flat ground inside its round tire wall: `Track::groundAt`
+  and `cast` know it, the walls code skips the track's barriers there.
+- Not done yet (later stages): car.json files (the data is in
+  `ridgebackGS()`), kinematics tables, tire heat and wear, ESC, the drift
+  skid pad set, sounds per car, the real car model.
+

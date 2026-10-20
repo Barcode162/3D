@@ -472,10 +472,73 @@ window.bar3dUi = (function () {
     show('Racing rig', [
       el('div', { class: 'mSmall', text: 'Pick a game. You stay in the bar meanwhile: the others see you sitting at the rig.' }),
       el('button', { class: 'mBtn', text: 'Race: pick a car, race the other rig or bots', onclick: function () { close(); cmd('simRace'); } }),
+      el('button', { class: 'mBtn', text: 'Skid pad: try the new driving physics (Ridgeback GS)', onclick: function () { close(); cmd('simPad'); } }),
       el('button', { class: 'mBtn', text: 'Meridian: an endless drive', onclick: function () { close(); openMeridian(); } }),
       el('button', { class: 'mBtn ghost', text: 'Stand up', onclick: function () { close(); cmd('standUp'); } }),
     ]);
     current = 'sim';
+  }
+
+  // Car setup: the Ridgeback GS on the new driving physics (engine/drive),
+  // changed live while you drive. Only what you changed is kept (localStorage
+  // bar3dCarSetup) and sent; everything else stays stock.
+  var CAR_SETUP_KEY = 'bar3dCarSetup';
+  var times = function (v) { return Math.round(v * 100) + '%'; };
+  var CAR_SETUP = [  // [group, key, label, min, max, step, stock, format]
+    ['Tires', 'grip', 'Grip', 0.6, 1.4, 0.02, 1, times],
+    ['Springs', 'springF', 'Front springs', 0.5, 2, 0.05, 1, times],
+    ['Springs', 'springR', 'Rear springs', 0.5, 2, 0.05, 1, times],
+    ['Dampers', 'damperF', 'Front dampers', 0.5, 2, 0.05, 1, times],
+    ['Dampers', 'damperR', 'Rear dampers', 0.5, 2, 0.05, 1, times],
+    ['Anti-roll bars', 'arbF', 'Front bar (more = less front grip)', 0, 2.5, 0.05, 1, times],
+    ['Anti-roll bars', 'arbR', 'Rear bar (more = looser rear)', 0, 2.5, 0.05, 1, times],
+    ['Brakes', 'brakeBias', 'Brake bias (front share)', 0.5, 0.75, 0.01, 0.62, times],
+    ['Brakes', 'handbrake', 'Handbrake strength', 0.5, 3, 0.05, 1, times],
+    ['Differential', 'diffLock', 'Diff lock (0 = open)', 0, 1, 0.02, 0.4, times],
+    ['Steering', 'steerRatio', 'Steering ratio (lower = quicker)', 10, 20, 0.1, 15.5, function (v) { return (+v).toFixed(1) + ':1'; }],
+    ['Steering', 'steerAssist', 'Steering assist (0 = direct)', 0, 1, 0.05, 1, times],
+    ['Steering', 'steerWeight', 'Self-centring force', 0, 2, 0.05, 1, times],
+    ['Steering', 'handStrength', 'Your grip on the wheel', 0.4, 2.5, 0.05, 1, times],
+    ['Assists', 'tc', 'Traction control (0 = off)', 0, 1, 0.05, 0.6, times],
+    ['View', 'cameraDistance', 'Camera distance', 0.7, 1.6, 0.05, 1, times],
+  ];
+  var CAR_SWITCHES = [  // [key, label, stock]
+    ['abs', 'ABS', true], ['telemetry', 'Telemetry (grip circle, tires)', false], ['oldPhysics', 'Old physics (to compare)', false],
+  ];
+  function carSetupLoad() {
+    try {
+      var v = JSON.parse(localStorage.getItem(CAR_SETUP_KEY) || '{}');
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+    } catch (e) { return {}; }
+  }
+  function carSetupSend(v) { cmd('carSetup', 0, 0, JSON.stringify(v)); }
+  function carSetupPanel() {
+    var v = carSetupLoad();
+    function save() {
+      try { localStorage.setItem(CAR_SETUP_KEY, JSON.stringify(v)); } catch (e) {}
+      carSetupSend(v);
+    }
+    var rows = [el('div', { class: 'mSmall', text: 'Ridgeback GS, new physics. Changes apply at once and are saved on this phone.' })];
+    var group = '';
+    CAR_SETUP.forEach(function (d) {
+      if (d[0] !== group) { group = d[0]; rows.push(el('h3', { text: group })); }
+      var key = d[1], cur = key in v ? v[key] : d[6];
+      var val = el('span', { class: 'val', text: d[7](cur) });
+      var r = el('input', { type: 'range', min: d[3], max: d[4], step: d[5], value: cur });
+      r.oninput = function () { v[key] = +r.value; val.textContent = d[7](+r.value); save(); };
+      rows.push(el('div', { class: 'mRow' }, [el('label', { text: d[2] }), r, val]));
+    });
+    rows.push(el('h3', { text: 'Switches' }));
+    CAR_SWITCHES.forEach(function (d) {
+      var key = d[0], on = key in v ? !!v[key] : d[2];
+      var b = el('button', { class: 'mToggle' + (on ? ' on' : '') });
+      b.onclick = function () { on = !on; v[key] = on; b.classList.toggle('on', on); save(); };
+      rows.push(el('div', { class: 'mRow' }, [el('label', { text: d[1] }), b]));
+    });
+    rows.push(el('button', { class: 'mBtn ghost', text: 'Reset to stock', onclick: function () { v = {}; save(); carSetupPanel(); } }));
+    rows.push(el('button', { class: 'mBtn', text: 'Back to driving', onclick: close }));
+    show('Car setup', rows);
+    current = 'carSetup';
   }
 
   // Full-screen games over the bar: Meridian (the user's driving game,
@@ -597,6 +660,13 @@ window.bar3dUi = (function () {
     }
     S.onChange(applyVolumes);
     applyVolumes();
+    // Your saved car setup goes to the game (again a little later, in case
+    // the game wasn't listening yet).
+    var setup = carSetupLoad();
+    if (Object.keys(setup).length) {
+      carSetupSend(setup);
+      setTimeout(function () { carSetupSend(carSetupLoad()); }, 4000);
+    }
   }
   // Volumes follow the settings (not while Meridian has the screen).
   function applyVolumes() {
@@ -623,7 +693,7 @@ window.bar3dUi = (function () {
     toast: toast,
     open: function (name) {
       var panels = { main: mainPanel, emotes: emotesPanel, avatar: avatarPanel, settings: settingsPanel, voice: voicePanel,
-                     piano: pianoPanel, bartender: bartenderPanel, help: helpPanel, sim: simPanel };
+                     piano: pianoPanel, bartender: bartenderPanel, help: helpPanel, sim: simPanel, carSetup: carSetupPanel };
       if (name === 'bartenderShift') { info.shift = 1; name = 'bartender'; }
       if (GAMES[name] && name !== 'meridian') { close(); openGame(name); return; }  // an arcade machine
       if (panels[name]) panels[name]();

@@ -34,7 +34,139 @@ engine::CarSpec sportsCar() {
 
 void World::init() {
   track_.build();
+  road_.track = &track_;
   buildRacingLine();
+}
+
+bool World::Road::query(Vec3 p, engine::drive::RoadHit& hit, int& hint) const {
+  Vec3 n;
+  engine::Surface surf;
+  const Vec3 g = track->groundAt(p, hint, &n, &surf);
+  hit.height = g.y;
+  hit.normal = n;
+  hit.mu = surf.grip;
+  hit.rolling = std::max(0.0f, surf.rolling - 0.012f);  // (asphalt's own is in the tire)
+  hit.drag = surf.drag;
+  return true;
+}
+
+float World::groundY(Vec3 p, int& hint) const { return track_.groundAt(p, hint).y; }
+
+void World::attachDrive(Racer& r) {
+  const CarModel& m = carModel(r.model);
+  if (!m.newPhysics || r.bot || r.remote || setup_.oldPhysics) {
+    r.drive.reset();
+    return;
+  }
+  auto d = std::make_shared<engine::drive::Car>();
+  d->setup(engine::drive::applySetup(engine::drive::ridgebackGS(), setup_));
+  const Vec3 up = r.car.up();
+  d->place(r.car.position - up * r.car.spec().cgHeight, engine::Vehicle::headingOf(r.car.forward()), up);
+  const float v = r.car.speed();
+  if (std::fabs(v) > 0.5f) d->setSpeed(v);
+  r.drive = d;
+  syncFromDrive(r);
+}
+
+void World::syncFromDrive(Racer& r) {
+  const engine::drive::Car& d = *r.drive;
+  engine::Vehicle& v = r.car;
+  v.position = d.position;
+  v.rotation = d.rotation;
+  v.velocity = d.velocity;
+  v.angularVelocity = d.angularVelocity;
+  v.rpm = d.rpm;
+  v.gear = d.gear;
+  v.clutchEngage = d.clutchEngage;
+  v.throttleUsed = d.throttleUsed;
+  v.brakeUsed = d.brakeUsed;
+  v.shiftTimer = d.shiftTimer;
+  for (size_t i = 0; i < 4; ++i) {
+    engine::Vehicle::Wheel& w = v.wheels[i];
+    const engine::drive::Car::Wheel& dw = d.wheels[i];
+    const engine::AxleSpec& a = i < 2 ? v.spec().front : v.spec().rear;
+    // (The old drawing puts the wheel at mount - restLength + compression.)
+    w.mount = dw.mount + Vec3{0, a.restLength, 0};
+    w.compression = dw.travel;
+    w.compressionSpeed = dw.travelSpeed;
+    w.spin = dw.spin;
+    w.angle = dw.angle;
+    w.steer = -dw.steer;  // (old: + = right)
+    w.slipRatio = dw.kappa;
+    w.slipAngle = std::tan(dw.alpha);
+    w.load = dw.load;
+    w.fx = dw.fx;
+    w.fy = dw.fy;
+    w.slide = dw.slide;
+    w.contact = dw.contact;
+    w.contactPoint = dw.contactPoint;
+    w.contactNormal = dw.contactNormal;
+  }
+}
+
+void World::syncToDrive(Racer& r) {
+  engine::drive::Car& d = *r.drive;
+  d.position = r.car.position;
+  d.rotation = r.car.rotation;
+  d.velocity = r.car.velocity;
+  d.angularVelocity = r.car.angularVelocity;
+}
+
+void World::setSetup(const engine::drive::Setup& setup) {
+  const bool toggled = setup.oldPhysics != setup_.oldPhysics;
+  setup_ = setup;
+  for (Racer& r : racers_) {
+    if (!carModel(r.model).newPhysics || r.bot || r.remote) continue;
+    if (!toggled) {
+      if (r.drive) r.drive->setSpec(engine::drive::applySetup(engine::drive::ridgebackGS(), setup_));
+      continue;
+    }
+    // Switching physics: the same spot, heading and speed.
+    const Vec3 p = r.car.position;
+    const engine::Quat q = r.car.rotation;
+    const float v = r.car.speed();
+    if (setup_.oldPhysics) {
+      r.drive.reset();
+      r.car.setup(carModel(r.model).spec);
+      r.car.place(p, 0);  // (resets the old car's insides; the pose is put back below)
+      r.car.position = p;
+      r.car.rotation = q;
+      if (std::fabs(v) > 0.5f) r.car.setSpeed(v);
+    } else {
+      attachDrive(r);
+    }
+    r.prevPosition = r.car.position;
+    r.prevRotation = r.car.rotation;
+  }
+}
+
+void World::startPractice(const RacerSetup& me, bool pad) {
+  racers_.clear();
+  practice_ = true;
+  practicePad_ = pad;
+  laps_ = 1;
+  you_ = 0;
+  Racer r;
+  r.model = me.model;
+  r.car.setup(carModel(r.model).spec);
+  Vec3 p;
+  float heading;
+  if (pad) track_.padStart(p, heading);
+  else track_.gridSlot(0, p, heading);
+  r.car.place(p, heading);
+  r.bot = false;
+  r.name = me.name;
+  r.paint = me.paint;
+  r.rim = me.rim;
+  r.prevPosition = r.car.position;
+  r.prevRotation = r.car.rotation;
+  racers_.push_back(r);
+  attachDrive(racers_.back());
+  tick_ = goTick_ = lightsTick_ = 0;
+  accumulator_ = 0;
+  alpha_ = 0;
+  Racer& you = racers_.back();
+  track_.locate(you.car.position, you.s, you.lateral, you.hint);
 }
 
 void World::buildRacingLine() {
@@ -99,6 +231,7 @@ void World::start(int yourSlot, int bots, int laps, uint32_t seed) {
 
 void World::start(const std::vector<RacerSetup>& people, int bots, int laps, uint32_t seed, double goInMs) {
   racers_.clear();
+  practice_ = practicePad_ = false;
   laps_ = laps;
   const int total = bots + static_cast<int>(people.size());
   you_ = 0;
@@ -131,6 +264,7 @@ void World::start(const std::vector<RacerSetup>& people, int bots, int laps, uin
     r.prevPosition = r.car.position;
     r.prevRotation = r.car.rotation;
     racers_.push_back(r);
+    attachDrive(racers_.back());
   }
   tick_ = 0;
   lightsTick_ = ticks(1500);
@@ -213,6 +347,24 @@ bool World::requestReset(int index) {
 
 void World::resetCar(int index) {
   Racer& r = racers_[static_cast<size_t>(index)];
+  if (practice_ && practicePad_) {
+    // On the pad: upright where you are (or back at the start, near the wall).
+    Vec3 p = r.car.position;
+    float heading = engine::Vehicle::headingOf(r.car.forward());
+    const Vec3 c = track_.pad().centre;
+    if (std::hypot(p.x - c.x, p.z - c.z) > track_.pad().asphalt - 4) track_.padStart(p, heading);
+    p.y = c.y;
+    r.car.place(p, heading);
+    if (r.drive) {
+      r.drive->place(p, heading);
+      syncFromDrive(r);
+    }
+    r.prevPosition = r.car.position;
+    r.prevRotation = r.car.rotation;
+    r.stuckTime = r.flipTime = 0;
+    r.lastResetTick = std::max(tick_, 1u);
+    return;
+  }
   // A free spot: here or a little further back, across the road, at least
   // 6 m from every other car (else here, and the ghost time sorts it out).
   const auto c = track_.at(r.s);
@@ -241,6 +393,12 @@ void World::resetCar(int index) {
     if (found) break;
   }
   r.car.place(track_.surfacePoint(bestS, bestLat), engine::Vehicle::headingOf(track_.at(bestS).tangent));
+  if (r.drive) {
+    Vec3 n;
+    const Vec3 g = track_.surfacePoint(bestS, bestLat, &n);
+    r.drive->place(g, engine::Vehicle::headingOf(track_.at(bestS).tangent), n);
+    syncFromDrive(r);
+  }
   r.ghostUntil = tick_ + ticks(2000);
   r.lastResetTick = std::max(tick_, 1u);
   r.prevPosition = r.car.position;  // no streak in the drawing
@@ -286,7 +444,30 @@ void World::stepPhysics(float dt) {
     if (r.finished && r.bot) {
       in.throttle = std::min(in.throttle, 0.3f);
     }
-    r.car.step(dt, in, r.assists, track_);
+    if (r.drive) {
+      // The new physics: two 480 Hz ticks per race step.
+      engine::drive::Input d;
+      d.steer = r.wheel + (in.steer - r.wheel) * setup_.steerAssist;
+      d.throttle = in.throttle;
+      d.brake = in.brake;
+      d.handbrake = in.handbrake;
+      d.clutch = in.clutch;
+      d.shift = in.shift;
+      d.hold = in.hold;
+      d.autoGears = r.assists.autoGears;
+      d.autoClutch = r.assists.autoClutch;
+      d.abs = setup_.abs;
+      d.tc = setup_.tc;
+      d.handStrength = setup_.handStrength;
+      d.steerWeight = setup_.steerWeight;
+      for (int k = 0; k < 2; ++k) {
+        r.drive->step(d, road_);
+        d.shift = 0;
+      }
+      syncFromDrive(r);
+    } else {
+      r.car.step(dt, in, r.assists, track_);
+    }
     // On its side or roof: back on the wheels after a moment.
     r.flipTime = r.car.up().y < 0.3f ? r.flipTime + dt : 0;
     if (r.flipTime > 1.5f) resetCar(static_cast<int>(i));
@@ -295,7 +476,14 @@ void World::stepPhysics(float dt) {
     collideWalls(racers_[i]);
     for (size_t j = i + 1; j < racers_.size(); ++j) collideCars(racers_[i], racers_[j]);
   }
-  for (Racer& r : racers_) updateProgress(r);
+  for (Racer& r : racers_) {
+    if (r.drive) syncToDrive(r);  // (collisions moved the shared body)
+    if (practice_) {
+      if (!practicePad_) track_.locate(r.car.position, r.s, r.lateral, r.hint);
+    } else {
+      updateProgress(r);
+    }
+  }
 }
 
 void World::driveBot(Racer& r, int index) {
@@ -366,6 +554,10 @@ void World::collideWalls(Racer& r) {
   // The deepest corner of the body past a barrier gets one push and one
   // impulse per step (several corners at once would add up and explode).
   if (r.remote || r.hidden) return;  // (a remote car hits walls on its own phone)
+  if (track_.onPad(r.car.position)) {
+    collidePadWall(r);
+    return;
+  }
   engine::Vehicle& car = r.car;
   const Vec3 h = car.spec().halfExtents;
   const Vec3 o = car.spec().boxOffset;
@@ -417,6 +609,45 @@ void World::collideWalls(Racer& r) {
     const float jt = std::min(speedT / car.inverseMassAt(hitCorner, t), 0.4f * j);
     car.applyImpulse(hitCorner, t * -jt);
   }
+}
+
+// The pad's round tire wall: the deepest body corner past it gets a push
+// back toward the middle and one impulse (as for the track's barriers).
+bool World::collidePadWall(Racer& r) {
+  engine::Vehicle& car = r.car;
+  const Vec3 h = car.spec().halfExtents, o = car.spec().boxOffset;
+  const Vec3 c = track_.pad().centre;
+  const float wall = track_.pad().wall;
+  float deepest = 0;
+  Vec3 hit, normal;
+  for (float x : {-1.0f, 1.0f}) {
+    for (float z : {-1.0f, 1.0f}) {
+      const Vec3 corner = car.worldPoint({o.x + x * h.x, o.y - h.y * 0.5f, o.z + z * h.z});
+      const Vec3 d{corner.x - c.x, 0, corner.z - c.z};
+      const float pen = engine::length(d) - wall;
+      if (pen > deepest) {
+        deepest = pen;
+        hit = corner;
+        normal = engine::normalize(d) * -1.0f;
+      }
+    }
+  }
+  if (deepest <= 0) return false;
+  car.position += normal * std::min(deepest, 0.08f);
+  hit.y = car.position.y;
+  const float vn = engine::dot(car.pointVelocity(hit), normal);
+  if (vn >= 0) return true;
+  const float j = -(1 + 0.15f) * vn / car.inverseMassAt(hit, normal);
+  car.applyImpulse(hit, normal * j);
+  Vec3 vt = car.pointVelocity(hit);
+  vt = vt - normal * engine::dot(vt, normal);
+  vt.y = 0;
+  const float st = engine::length(vt);
+  if (st > 0.01f) {
+    const Vec3 t = vt * (1 / st);
+    car.applyImpulse(hit, t * -std::min(st / car.inverseMassAt(hit, t), 0.4f * j));
+  }
+  return true;
 }
 
 void World::collideCars(Racer& A, Racer& B) {

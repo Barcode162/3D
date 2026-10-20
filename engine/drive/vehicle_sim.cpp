@@ -326,7 +326,11 @@ void Car::driveline(const Input& in, float thr, float /*brake*/, Patch* P) {
       const float shaft = std::fabs(speed() / spec_.rear.tire.radius * gearRatioOf(gear)) * kRadToRpm;
       const float pedal = throttleLag_;  // the driver's foot (not traction control's cut)
       const float launch = spec_.idleRpm + (3200 - spec_.idleRpm) * clampf(pedal * 1.4f, 0, 1);
-      if (shaft > std::max(launch * 0.92f, spec_.idleRpm + 350.0f)) {
+      if (in.handbrake > 0.3f) {
+        // Handbrake: clutch in, like a driver does (the engine would keep
+        // the rear wheels turning).
+        autoClutch_ = std::max(0.0f, autoClutch_ - kTick * 25);
+      } else if (shaft > std::max(launch * 0.92f, spec_.idleRpm + 350.0f)) {
         autoClutch_ = std::min(1.0f, autoClutch_ + kTick * 8);
       } else if (pedal < 0.02f && shaft < spec_.idleRpm + 300) {
         autoClutch_ = std::max(0.0f, autoClutch_ - kTick * 6);

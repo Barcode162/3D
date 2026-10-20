@@ -185,6 +185,57 @@ void Track::build() {
       samples_[static_cast<size_t>(i)].wallRight = r[static_cast<size_t>(i)];
     }
   }
+  placePad();
+}
+
+void Track::placePad() {
+  // The middle of the infield, nudged until every barrier is clear of the
+  // pad's wall by a margin.
+  Vec3 best{-20, 0, -215};
+  float bestClear = -1e9f;
+  for (float dx = -60; dx <= 60; dx += 10) {
+    for (float dz = -60; dz <= 60; dz += 10) {
+      const Vec3 c{-20 + dx, 0, -215 + dz};
+      float clear = 1e9f;
+      for (const Sample& o : samples_) {
+        const float d = std::hypot(o.pos.x - c.x, o.pos.z - c.z) - std::max(o.wallLeft, o.wallRight);
+        clear = std::min(clear, d);
+      }
+      if (clear > bestClear) {
+        bestClear = clear;
+        best = c;
+      }
+    }
+  }
+  pad_.centre = {best.x, 4.0f, best.z};
+}
+
+bool Track::onPad(Vec3 p) const {
+  const float dx = p.x - pad_.centre.x, dz = p.z - pad_.centre.z;
+  return dx * dx + dz * dz < (pad_.wall + 4) * (pad_.wall + 4);
+}
+
+void Track::padStart(Vec3& position, float& heading) const {
+  // On the 50 m ring's south side, driving east: a left (counter-clockwise) lap.
+  position = pad_.centre + Vec3{0, 0, 50};
+  heading = engine::Vehicle::headingOf({1, 0, 0});
+}
+
+Vec3 Track::groundAt(Vec3 p, int& hint, Vec3* normal, engine::Surface* surface) const {
+  if (onPad(p)) {
+    const float r = std::hypot(p.x - pad_.centre.x, p.z - pad_.centre.z);
+    if (normal) *normal = {0, 1, 0};
+    if (surface) *surface = r <= pad_.asphalt ? kAsphaltSurface : kGrassSurface;
+    return {p.x, pad_.centre.y, p.z};
+  }
+  float s, lat;
+  locate(p, s, lat, hint);
+  Vec3 n;
+  const Vec3 q = surfacePoint(s, lat, &n, surface);
+  if (normal) *normal = n;
+  // The surface's plane there, at exactly (p.x, p.z).
+  const float y = q.y + (n.x * (q.x - p.x) + n.z * (q.z - p.z)) / std::max(n.y, 0.2f);
+  return {p.x, y, p.z};
 }
 
 Track::Sample Track::at(float s) const {
@@ -295,11 +346,9 @@ float Track::wallLeft(float s) const { return at(s).wallLeft; }
 float Track::wallRight(float s) const { return at(s).wallRight; }
 
 bool Track::cast(Vec3 origin, Vec3 dir, float maxDistance, engine::GroundHit& hit, int& hint) const {
-  float s, lateral;
-  locate(origin, s, lateral, hint);
   Vec3 n;
   engine::Surface surf;
-  const Vec3 p = surfacePoint(s, lateral, &n, &surf);
+  const Vec3 p = groundAt(origin, hint, &n, &surf);
   const float denom = engine::dot(dir, n);
   if (denom > -1e-3f) return false;
   const float t = engine::dot(p - origin, n) / denom;
@@ -486,7 +535,14 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
         const float hills = 6 + 7 * std::sin(x * 0.006f + 1.0f) * std::cos(z * 0.005f) + 3 * std::sin(x * 0.017f + z * 0.013f);
         const float t = engine::clampf((d - 25) / 140, 0, 1);
         const float near = c.pos.y - 2.5f;
-        heights[static_cast<size_t>(zi * nx + xi)] = d < 25 ? near - 1.0f : near + (hills - near) * (t * t * (3 - 2 * t));
+        float hgt = d < 25 ? near - 1.0f : near + (hills - near) * (t * t * (3 - 2 * t));
+        // Flat ground around the skid pad, easing back into the hills.
+        const float dp = std::hypot(x - pad_.centre.x, z - pad_.centre.z) - pad_.wall;
+        if (dp < 90) {
+          const float u = engine::clampf((dp - 14) / 76, 0, 1);
+          hgt = pad_.centre.y - 0.25f + (hgt - (pad_.centre.y - 0.25f)) * (u * u * (3 - 2 * u));
+        }
+        heights[static_cast<size_t>(zi * nx + xi)] = hgt;
       }
     }
     MeshBuilder& m = terrain.mesh;
@@ -516,6 +572,7 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
       const Sample c = at(s);
       const float d = std::fabs(lat) - (lat >= 0 ? c.wallRight : c.wallLeft);
       if (d < 18 || d > 260) continue;
+      if (std::hypot(x - pad_.centre.x, z - pad_.centre.z) < pad_.wall + 22) continue;  // the pad's clearing
       if (std::sin(x * 0.011f) * std::cos(z * 0.013f) < -0.15f) continue;  // clearings
       const int xi = static_cast<int>((x - (lo.x - margin)) / cell), zi = static_cast<int>((z - (lo.z - margin)) / cell);
       const float fx = (x - (lo.x - margin)) / cell - static_cast<float>(xi), fz = (z - (lo.z - margin)) / cell - static_cast<float>(zi);
@@ -532,6 +589,55 @@ std::vector<Track::Chunk> Track::buildMeshes() const {
     }
   }
   chunks.push_back(std::move(terrain));
+  // The skid pad: asphalt disc, painted rings, grass, a round tire wall.
+  {
+    Chunk padChunk;
+    MeshBuilder& m = padChunk.mesh;
+    const Vec3 c = pad_.centre;
+    const Vec3 up{0, 1, 0};
+    constexpr int kSeg = 96;
+    const auto at = [&](float r, int k, float lift = 0) {
+      const float a = 2 * engine::kPi * static_cast<float>(k) / kSeg;
+      return c + Vec3{std::cos(a) * r, lift, std::sin(a) * r};
+    };
+    const auto ring = [&](float r0, float r1, Vec3 color, uint32_t mat, float lift) {
+      for (int k = 0; k < kSeg; ++k) {
+        const uint32_t a = m.vertex(at(r0, k, lift), up, color, mat), b = m.vertex(at(r1, k, lift), up, color, mat);
+        const uint32_t cc = m.vertex(at(r1, k + 1, lift), up, color, mat), d = m.vertex(at(r0, k + 1, lift), up, color, mat);
+        m.quad(a, b, cc, d);
+      }
+    };
+    // Asphalt in rings (a little lighter, like a swept concrete-and-asphalt pad).
+    const float rings[] = {0, 8, 18, 28, 38, 48, 60};
+    for (int i = 0; i + 1 < 7; ++i) ring(rings[i], rings[i + 1], kAsphaltColor * 1.25f, kAsphalt, 0);
+    for (float r : {30.0f, 50.0f}) ring(r - 0.15f, r + 0.15f, kWhite, kPaint, 0.01f);
+    // Start marks on the 50 m ring and a cross in the middle.
+    m.flatQuad(c + Vec3{-0.15f, 0.012f, 47}, c + Vec3{0.15f, 0.012f, 47}, c + Vec3{0.15f, 0.012f, 53},
+               c + Vec3{-0.15f, 0.012f, 53}, kRed, kPaint);
+    m.flatQuad(c + Vec3{-3, 0.012f, -0.12f}, c + Vec3{3, 0.012f, -0.12f}, c + Vec3{3, 0.012f, 0.12f},
+               c + Vec3{-3, 0.012f, 0.12f}, kWhite, kPaint);
+    m.flatQuad(c + Vec3{-0.12f, 0.012f, -3}, c + Vec3{0.12f, 0.012f, -3}, c + Vec3{0.12f, 0.012f, 3},
+               c + Vec3{-0.12f, 0.012f, 3}, kWhite, kPaint);
+    ring(pad_.asphalt, pad_.wall, kGrassColor, kGrass, -0.01f);
+    // Tire wall: inner face, top, outer face; red and white in 4 m blocks.
+    for (int k = 0; k < kSeg; ++k) {
+      const Vec3 stripe = (k / 2) % 2 == 0 ? Vec3{0.75f, 0.75f, 0.72f} : Vec3{0.5f, 0.03f, 0.02f};
+      const Vec3 a0 = at(pad_.wall, k), a1 = at(pad_.wall, k + 1);
+      const Vec3 b0 = at(pad_.wall + 0.9f, k), b1 = at(pad_.wall + 0.9f, k + 1);
+      const Vec3 h{0, 1.0f, 0};
+      m.flatQuad(a0, a1, a1 + h, a0 + h, stripe, kRubber);
+      m.flatQuad(a0 + h, a1 + h, b1 + h, b0 + h, {0.03f, 0.03f, 0.03f}, kRubber);
+      m.flatQuad(b1, b0, b0 + h, b1 + h, {0.03f, 0.03f, 0.03f}, kRubber);
+    }
+    // Light towers round the edge.
+    for (int k = 0; k < 6; ++k) {
+      const float a = engine::kPi / 6 + 2 * engine::kPi * static_cast<float>(k) / 6;
+      const Vec3 base = c + Vec3{std::cos(a), 0, std::sin(a)} * (pad_.wall + 6);
+      m.box(base + Vec3{0, 6, 0}, {0.2f, 6, 0.2f}, {0.3f, 0.3f, 0.32f}, kMetal);
+      m.box(base + Vec3{0, 12.2f, 0}, {1.1f, 0.35f, 0.35f}, {0.85f, 0.85f, 0.8f}, kPlain);
+    }
+    chunks.push_back(std::move(padChunk));
+  }
   for (Chunk& c : chunks) {
     c.boundsMin = {1e9f, 1e9f, 1e9f};
     c.boundsMax = {-1e9f, -1e9f, -1e9f};

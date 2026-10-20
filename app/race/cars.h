@@ -19,9 +19,14 @@ struct CarModel {
   engine::CarSpec spec;
   CarStyle style;
   float speed, handling, weight;  // 0..1 bars for the garage
+  // Drives on the new physics (engine/drive, docs/DRIVING_REWORK.md); `spec`
+  // above is then its stand-in for the old physics (Car setup → Old physics),
+  // drawing and collisions.
+  bool newPhysics = false;
 };
 
-constexpr int kCarCount = 3, kPaintCount = 12, kRimCount = 8;
+constexpr int kCarCount = 4, kPaintCount = 12, kRimCount = 8;
+constexpr int kRidgeback = 3;  // the Vance Ridgeback GS (new physics)
 const CarModel& carModel(int index);
 engine::Vec3 paintColor(int index);
 engine::Vec3 rimColor(int index);

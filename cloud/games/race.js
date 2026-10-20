@@ -13,7 +13,7 @@
 // state 0 = in the garage, 1 = ready, 2 = racing, 3 = finished (time = their
 // race time), 4 = didn't finish.
 
-export const CARS = 3, PAINTS = 12, RIMS = 8;
+export const CARS = 4, PAINTS = 12, RIMS = 8;
 export const LAPS = 3;
 export const LIGHTS_MS = 1500 + 5 * 900 + 400;  // from "race on" to the lights' last one (the C++ grid)
 const LEAD_MS = 1200;                          // network slack before the lights start
