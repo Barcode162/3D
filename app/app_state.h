@@ -178,6 +178,8 @@ struct App {
   bool entered = false;        // the loading screen has been closed
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
+  int nextBook = 0;                 // the bookshelf's next title
+  std::vector<int> mirrorButtonsShown;  // per mirror: the mode its buttons show
   size_t infoSongCount = SIZE_MAX;  // piano songs the menu knows (SIZE_MAX: nothing sent yet)
   std::string infoState;            // what the menu was last told about you
 };

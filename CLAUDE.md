@@ -112,8 +112,9 @@ judged on the user's phone.
   the shared glasses, jukebox and mirrors. `piano.cpp`, `darts.cpp`,
   `rhythm.cpp`, `bartender.cpp` are the games and jobs; `app/race/` is the
   racing sim (`docs/RACING.md`: track, world + bots, controls, view, game).
-  `main.cpp` is the frame loop, input → interaction (seats, things to
-  use); `app_state.h` the shared App state, `hud.cpp` the on-screen text,
+  `main.cpp` is the entry point; `game.cpp` the frame's phases (a table:
+  input → interaction → physics → net in → games → claims → net out →
+  render), seats and things to use; `app_state.h` the shared App state, `hud.cpp` the on-screen text,
   `local_player.cpp` your camera, walking and held things. `loader.*` is the loading screen's stages,
   `test_hooks.*` the test page options (`?cam`, `?still`, `?sit`...).
 - `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.

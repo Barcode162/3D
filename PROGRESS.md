@@ -44,7 +44,12 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      `app/hud.cpp` (on-screen text), `app/local_player.cpp` (camera, walking,
      held things, your pose). `main.cpp` 1,899 → 1,331 lines. Pure move:
      activity screenshots identical.
-   - [ ] 4.1b next: the Game object and the phase table (`g_app` gone).
+   - [x] 4.1b (2026-10-20): the frame is a table of named phases (input,
+     interaction, physics, net in, games, claims, net out, render) in
+     `app/game.cpp`; `main.cpp` is the 38-line entry point; the last
+     function-local state (bookshelf, mirror buttons) moved into App. Kept
+     `g_app` (one global App) rather than a Game class: same effect, far less churn.
+   - [ ] 4.3a next: ActivityManager (seats, piano, 4K Mania).
 3. [ ] **Accounts + economy foundation:** accounts move from IONOS PHP to
    Cloudflare D1; age at sign-up (13+ only; teen 13-17 / adult 18+ bands);
    inventory and a currency ledger the server owns (every change a
