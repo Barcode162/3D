@@ -544,8 +544,11 @@ void buildConstruction(Builder& b) {
 // platformer machine against the back wall (tools/assets/arcade.py,
 // arcade_cabinet.py). Its music: app/arcade_music (main.cpp).
 void buildArcade(Builder& b) {
-  b.room = 1;  // its models load as you come near (SceneRenderer::streamRooms)
+  // The shell loads at start: its doorway front (the arch, the ARCADE sign)
+  // faces the bar. What's inside loads as you come near or see the doorway
+  // (SceneRenderer::streamRooms).
   b.model("arcade.glb", {0, 0, 0}, kBlackSteel);
+  b.room = 1;
   b.scene.arcadeMin = {kArcX0, 0, kArcZ0};
   b.scene.arcadeMax = {kArcX1, kArcH, kArcZ1};
   b.scene.arcadeDoor = {(kDoorAX0 + kDoorAX1) / 2, 1.2f, kZ0};

@@ -94,8 +94,8 @@ class SceneRenderer {
   float loadProgress() const;
 
   // Rooms you're not in load when you come within kStreamDistance of them,
-  // or after kStreamIdleMs in the bar anyway (so walking in finds them ready).
-  // Call every frame once in the bar.
+  // when their doorway is on screen, or after kStreamIdleMs in the bar anyway
+  // (so walking in finds them ready). Call every frame once in the bar.
   void streamRooms(engine::Vec3 eye, double nowMs);
   static constexpr float kStreamDistance = 8.0f;
   static constexpr double kStreamIdleMs = 20000;
@@ -243,6 +243,7 @@ class SceneRenderer {
   std::vector<StreamRoom> streamRooms_;
   std::vector<int> fileSlot_;  // per file: its place in fileProgress_ (-1 = streamed later)
   double streamStartMs_ = -1;
+  std::vector<bool> roomOnScreen_;  // last frame's main view: rooms seen through a doorway
   std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
   size_t filesDone_ = 0;
   size_t filesFailed_ = 0;

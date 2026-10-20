@@ -705,9 +705,12 @@ void SceneRenderer::streamRooms(Vec3 eye, double nowMs) {
     const engine::Aabb& box = rooms_[static_cast<size_t>(r.room)];
     const float dx = eye.x - std::clamp(eye.x, box.min.x, box.max.x);
     const float dz = eye.z - std::clamp(eye.z, box.min.z, box.max.z);
-    if (!idle && dx * dx + dz * dz > kStreamDistance * kStreamDistance) continue;
+    const bool onScreen = static_cast<size_t>(r.room) < roomOnScreen_.size() && roomOnScreen_[static_cast<size_t>(r.room)];
+    const bool near = dx * dx + dz * dz <= kStreamDistance * kStreamDistance;
+    if (!idle && !near && !onScreen) continue;
     r.requested = true;
-    LOG_INFO("Room %d: loading its %zu model files (%s).", r.room, r.files.size(), idle ? "in the background" : "you're near");
+    LOG_INFO("Room %d: loading its %zu model files (%s).", r.room, r.files.size(),
+             near ? "you're near" : onScreen ? "its doorway is in view" : "in the background");
     for (size_t f : r.files) requestFile(f, false);
   }
 }
@@ -1131,6 +1134,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
   const RoomView cull = roomView(viewProj, roomAt(eye));
+  roomOnScreen_ = cull.roomSeen;  // streamRooms: a room you can see into loads now
   drawItems(pass, sceneDraws_, cull);
   drawBoxes(pass);
   pass.SetPipeline(modelPipeline_);

@@ -32,9 +32,10 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      copies the code; reports list the last taps and what they hit).
    - [ ] Open bug: the menu stops answering after some games (wait for a
      quick report from the phone, then fix).
-   - [x] e. Rooms load as you approach (2026-10-19): the arcade's models load
-     within 8 m of it, or 20 s after you enter anyway (`streamRooms`).
-     Start-up loads 36 files instead of 38. Homes will use the same mechanism.
+   - [x] e. Rooms load as you approach (2026-10-19): what's inside the arcade
+     loads within 8 m of it, when its doorway is on screen, or 20 s after you
+     enter anyway (`streamRooms`). Its shell loads at start (2026-10-20: the
+     doorway's ARCADE sign faces the bar and was missing at spawn). Homes will use the same mechanism.
    - [ ] f. Measure on the phone: 3 reports (after entering, at the mirror,
      after 2 min walking, incl. into the arcade) vs the baseline.
 2. [ ] **Clean core** (RESTRUCTURE Phase 4): `main.cpp` split into clear parts,

@@ -1052,5 +1052,8 @@ No builds or headless runs outside "go".
 - **Streaming:** `ModelPlacement::room` (Builder::room while building a room).
   Files used only in a room other than the spawn room aren't part of the
   loading screen; `streamRooms(eye, now)` loads them within 8 m of the room or
-  after 20 s in the bar ("Room N: loading ..." / "Room N streamed in" in the log).
+  after 20 s in the bar ("Room N: loading ..." / "Room N streamed in" in the log),
+  or as soon as the room's doorway is in the main view. A room's shell must
+  load at start when part of it faces another room (the arcade's doorway arch
+  and sign were missing at spawn, 2026-10-20): only its inside streams.
 
