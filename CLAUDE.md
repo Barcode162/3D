@@ -45,7 +45,7 @@ questions, answers, reports, messages). Claude reads and updates it with
   line each. No builds, no tests. The user picks one.
 - **"plan"**: a short plan for the picked item: what changes, what they'll see
   on the phone, open questions. No code yet. The user says "go" or edits it.
-- **"go"**: build it in steps; test and deploy **once at the end** (not after
+- **"go"**: build it in steps (each saved to `work`); test and deploy **once at the end** (not after
   each small step), then the "How to check it worked" list.
 - **"park: <idea>"**: add one line to Parked in `PROGRESS.md`. No work, no debate.
 - **"talk"**: conversation only, no tools.
@@ -61,26 +61,45 @@ questions, answers, reports, messages). Claude reads and updates it with
   list: the build code, then 2-4 specific things to look at, each saying
   where to stand or look and what they should see (and what would mean it
   failed). They can't always tell what changed, so be concrete.
-- Testing loop: push to `main` → GitHub Actions builds and force-pushes the site
+- Testing loop: push to `main` (once per "go", see below) → GitHub Actions builds and force-pushes the site
   to the `gh-pages` branch (Pages serves it) → user opens
   **https://barcode162.github.io/3D/** in Safari. The `build xxxxxxx` label in
   the top-right shows which commit is live, so the user can confirm they have
   the newest version.
 
-## Never lose work
-- The container is temporary. **Commit and push to `main` after every working
-  step**, without waiting to be asked. Pushing straight to `main` is the agreed
-  workflow (no PRs).
+## Never lose work, deploy in batches (user, 2026-10-20)
+The user works through many hub cards, then tests many systems at once on the
+phone. So: **save every step, deploy once per "go"**, and only the systems
+that changed get rebuilt (docs/DECISIONS.md → Deploys by system).
+- The container is temporary. **Commit after every working step and push it to
+  the `work` branch** (`git push -u origin HEAD:work`), without being asked.
+  `work` never deploys; it only keeps the work safe. No PRs.
+- **At the end of "go"** (every Ready card done, or the user asks): run the
+  tests for each system you touched (table below), merge into `main`
+  (`git fetch origin main && git merge origin/main`, re-test if it brought
+  changes), push `main` **once**. Then every finished card goes to Check with
+  that one build code, and the chat gets one combined "How to check it" list,
+  grouped by system.
+- **What CI rebuilds:** `deploy.yml` compares `main` with the live build and
+  skips the game when only the hub, `docs/` or Markdown notes changed;
+  `hub.yml` deploys the hub alone (~2 min). Runs queue, they don't cancel.
+- **Tests per system** (before the push to `main`):
+  hub → `hub_test.mjs` · server PHP → `php -l` + `hub_test.mjs` ·
+  cloud room/ledger → `proto_test`, `room_test`, `ledger_test`, `mp_test` ·
+  game (engine/, app/, shaders/, web/, assets/) → build + `smoke.mjs` +
+  `tools/native/run.sh` + the feature's own test (arcade, rhythm, chess...) ·
+  docs only → nothing.
+- **Two sessions at once:** each pushes to its own `work-<topic>` branch and
+  merges `origin/main` right before its one push to `main`.
+- An urgent one-line fix the user is waiting on may go straight to `main`.
 - Update `PROGRESS.md` in the same commit whenever a step is finished or a plan
   changes. Record new decisions or gotchas in `docs/DECISIONS.md`, and new
   ideas from the user in `docs/VISION.md`. A fresh session only knows what's
   written in the repo.
-- After pushing, confirm the deploy: wait for `gh-pages` to get a
-  "Site build <sha>" commit (or poll `version.txt` on the site), then run
-  `NODE_PATH=$(npm root -g) node tools/check_live.mjs` to load the live
-  site headlessly, and tell the user the build code to look for.
-- Before pushing code: the build passes and the smoke test passes. Look at the
-  screenshot. Docs-only commits need no build or tests.
+- After the push to `main`, watch the **Actions runs** (not the site): a red
+  run is fixed right away. When green, run
+  `NODE_PATH=$(npm root -g) node tools/check_live.mjs` for game deploys, and
+  tell the user the build code to look for.
 
 ## Build and test
 ```sh

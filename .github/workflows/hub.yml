@@ -1,0 +1,57 @@
+# The project hub (hub/, joshuavelasco.com/hub) deploys on its own: about two
+# minutes, without rebuilding or retesting the game (docs/DECISIONS.md →
+# Deploys by system). deploy.yml skips the game when only the hub changed.
+name: Hub
+
+on:
+  push:
+    branches: [main]
+    paths: ['hub/**', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Queue, never cancel: every hub push gets uploaded.
+concurrency:
+  group: hub
+  cancel-in-progress: false
+
+env:
+  IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+  IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+  IONOS_HOME: home
+
+jobs:
+  hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Test: PHP syntax"
+        run: for f in hub/*.php server/account.php; do php -l "$f"; done
+
+      - name: Install Playwright
+        run: |
+          npm i --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: "Test: the project hub (hub/ + account.php on PHP's server)"
+        run: mkdir -p build && node tools/hub_test.mjs
+
+      - name: Upload the hub to IONOS
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          sudo apt-get install -y lftp >/dev/null
+          lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<EOF2
+          set cmd:fail-exit yes
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 30
+          mkdir -p -f $IONOS_HOME/hub
+          mkdir -p -f private/hub
+          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/hub $IONOS_HOME/hub
+          bye
+          EOF2

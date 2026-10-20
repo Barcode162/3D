@@ -17,6 +17,11 @@ inbox (`hub.mjs inbox`), the board copied into `docs/hub/bar3d.md`
 (`hub.mjs snapshot`). Next for the hub: v2 members (the user's
 brothers, their cards wait for the owner's review), v3 activity feed.
 
+## Deploys (2026-10-20)
+Batched and by system: steps go to the `work` branch, one push to `main` per
+"go"; the game is rebuilt only when it changed, the hub deploys alone in ~2 min
+(`.github/workflows/hub.yml`). CLAUDE.md → Never lose work.
+
 ## Next up: the master list (2026-10-19, start here)
 One list, in priority order. Work top to bottom unless the user picks
 otherwise at "start". New ideas go to **Parked** (one line, no work) until the

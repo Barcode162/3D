@@ -1096,6 +1096,27 @@ No builds or headless runs outside "go".
   shown once, stored hashed; resets the password once and signs out every
   login), in the bar (your card → Password & recovery) and in the hub.
 
+## Deploys by system, batched (2026-10-20)
+- Why: every push rebuilt and retested the whole game (10-15 min), two
+  sessions pushing cancelled each other's runs, and the user tests many
+  systems at once anyway. Like a real team: work piles up on a branch, ships
+  as one release, and only the parts that changed are rebuilt.
+- Steps are pushed to the `work` branch (safe, never deploys); `main` gets
+  one push at the end of each "go" (CLAUDE.md → Never lose work).
+- `deploy.yml` has a `changes` job: it reads the live build from gh-pages'
+  last commit ("Site build <sha>") and diffs it with `main`. Nothing outside
+  `hub/`, `docs/`, `.claude/`, root `*.md`, `tools/hub*.mjs`, `hub.yml` →
+  the game job is skipped. Comparing with the live build (not the previous
+  push) means a queued or failed run never loses a change. Run by hand
+  (workflow_dispatch) = always a full deploy.
+- `hub.yml`: only on hub paths (and `server/account.php`, which its test
+  uses): php -l, `hub_test.mjs`, upload `hub/` to IONOS. The game workflow no
+  longer tests or uploads the hub.
+- Both use `cancel-in-progress: false`: a push during a run waits for it
+  (a restart threw away the first run's minutes).
+- Lesson: wait on the Actions run, not the site. A poll on version.txt sat
+  17 minutes on a run that had already failed.
+
 ## Hub v2 (2026-10-20, hub card "The Hub update.")
 - The user's loop: they edit everything in the hub, say "go" in chat, Claude
   works what's approved and answers on the cards. Not run from the site alone

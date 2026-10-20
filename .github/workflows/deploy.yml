@@ -1,6 +1,10 @@
 # Builds the C++ app to WebAssembly and publishes the result to the
-# `gh-pages` branch on every push to main. GitHub Pages serves that branch
-# (repo Settings -> Pages -> Deploy from a branch -> gh-pages / root).
+# `gh-pages` branch when a push to main changes the game. GitHub Pages serves
+# that branch (repo Settings -> Pages -> Deploy from a branch -> gh-pages / root).
+# Deploys by system (docs/DECISIONS.md): the `changes` job compares main with
+# the build that is live (gh-pages' "Site build <sha>"), so a batch of pushes is
+# one deploy and nothing is missed. Only the hub, docs or notes changed → the
+# game is left alone (the hub has its own workflow, hub.yml).
 name: Build and deploy
 
 on:
@@ -13,9 +17,11 @@ permissions:
   pages: write        # to cancel a stuck Pages deployment (see below)
   deployments: read
 
+# Queue instead of cancel: a push during a deploy waits, then deploys
+# everything since the live build (a restart wasted the first 10 minutes).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   EMSDK_VERSION: 6.0.12
@@ -33,7 +39,31 @@ env:
   HAVE_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
 
 jobs:
+  # Did anything in the game change since the live build? Files that never
+  # reach the game: the hub, docs, Markdown notes, the hub's tools, settings.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      game: ${{ steps.diff.outputs.game }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        run: |
+          live=$(git log -1 --format=%s origin/gh-pages 2>/dev/null | sed -n 's/^Site build \([0-9a-f]\{7,\}\)$/\1/p')
+          if [ "${{ github.event_name }}" = workflow_dispatch ] || [ -z "$live" ] || ! git cat-file -e "$live^{commit}" 2>/dev/null; then
+            echo "Live build unknown (or run by hand): full deploy"; echo "game=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "Live build: $live. Changed since then:"
+          git diff --name-only "$live" HEAD | tee /tmp/changed
+          game=$(grep -v -E '^(hub/|docs/|\.claude/|[^/]+\.md$|tools/hub(_test)?\.mjs$|\.github/workflows/hub\.yml$)' /tmp/changed | head -1)
+          if [ -n "$game" ]; then echo "game=true" >> "$GITHUB_OUTPUT"; echo "→ the game changed ($game ...): build, test, deploy";
+          else echo "game=false" >> "$GITHUB_OUTPUT"; echo "→ nothing in the game changed: left alone"; fi
+
   build-and-publish:
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,7 +117,7 @@ jobs:
 
       - name: "Test: PHP syntax and EM_ASM lint"
         run: |
-          for f in server/*.php hub/*.php; do php -l "$f"; done
+          for f in server/*.php; do php -l "$f"; done
           node tools/lint_emasm.mjs
 
       - name: "Test: room protocol codec (cloud/proto.js on the golden vectors)"
@@ -111,9 +141,6 @@ jobs:
       # run 2026-10-17), so a failing smoke blocks the deploy.
       - name: "Test: browser smoke (Release build)"
         run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
-
-      - name: "Test: the project hub (hub/ + account.php on PHP's server)"
-        run: node tools/hub_test.mjs
 
       - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
         run: node tools/menu_test.mjs
@@ -258,9 +285,6 @@ jobs:
           mkdir -p -f private/bar/reports
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/index.php
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/.htaccess
-          mkdir -p -f $IONOS_HOME/hub
-          mkdir -p -f private/hub
-          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/hub $IONOS_HOME/hub
           mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
           mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php report.php .htaccess
