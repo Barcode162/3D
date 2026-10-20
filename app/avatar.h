@@ -28,6 +28,10 @@ struct AvatarMotion {
   Activity activity = Activity::kNone;
   Emote emote = Emote::kNone;
   float actionTime = 0;  // seconds since the activity or emote started
+  // An upper-body pose on top of the activity (the pose layer): e.g. kDrink
+  // while seated keeps the legs on the stool and lifts the glass.
+  Activity pose = Activity::kNone;
+  float poseTime = 0;
   float steer = 0;       // driving: -1 left .. 1 right
   float handL = 0, handR = 0;  // piano: where each hand is along the keys (-1 .. 1)
   float lowSeat = 0;     // 0 = a stool or chair, 1 = a low sofa or beanbag

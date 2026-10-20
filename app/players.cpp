@@ -57,6 +57,7 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
     // What they're doing: taken as it comes (no smoothing).
     const int oldActivity = static_cast<int>(o.values[slot::kActivity]);
     const int oldParam = static_cast<int>(o.values[slot::kParam]);
+    const int oldPose = static_cast<int>(o.values[slot::kPose]);
     for (int k = 0; k < slot::kCount; ++k) o.values[k] = k < p.count ? p.values[k] : 0;
     o.look = static_cast<int>(o.values[slot::kLook]);
     const int emoteCount = static_cast<int>(o.values[slot::kEmoteCount]);
@@ -65,6 +66,7 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
       o.activitySinceMs = nowMs;
     }
     o.emoteCount = emoteCount;
+    if (static_cast<int>(o.values[slot::kPose]) != oldPose) o.poseSinceMs = nowMs;
     const bool away = (static_cast<int>(o.values[slot::kFlags]) & kFlagAway) != 0;
     if (away != o.away) {
       o.away = away;
@@ -108,6 +110,8 @@ void OtherPlayers::update(double nowMs, float dt, float walkSpeed) {
     o.motion.activity = static_cast<Activity>(static_cast<int>(o.values[slot::kActivity]));
     o.motion.emote = static_cast<Emote>(static_cast<int>(o.values[slot::kEmote]));
     o.motion.actionTime = static_cast<float>((nowMs - o.activitySinceMs) / 1000.0);
+    o.motion.pose = static_cast<Activity>(static_cast<int>(o.values[slot::kPose]));
+    o.motion.poseTime = static_cast<float>((nowMs - o.poseSinceMs) / 1000.0);
     o.voice += (o.values[slot::kVoice] - o.voice) * std::min(1.0f, dt * 10.0f);
     o.motion.time = static_cast<float>(nowMs / 1000.0) + static_cast<float>(o.id) * 1.7f;  // out of step with you
     o.placed = true;

@@ -326,7 +326,7 @@ window.bar3dNet = (function () {
     rosterVer++;
   }
 
-  // Avatar block + activity (PROTOCOL §3) ↔ the 20 numbers C++ uses
+  // Avatar block + activity (PROTOCOL §3) ↔ the 19 numbers C++ uses
   // (app/players.h slot list).
   var FLAG_BARTENDER = 1, FLAG_MIC = 2, FLAG_AWAY = 4;  // C++ kFlags bits
   function encodeState(s) {
@@ -338,15 +338,18 @@ window.bar3dNet = (function () {
     };
     // Activity TLV kind 1 (the bar's activity): activity u8, param i16,
     // voice u8, 5 × f32 activity data = 24 bytes.
-    var b = new DataView(new ArrayBuffer(26));
+    var pose = clampInt(s[18], 0, 255);
+    var b = new DataView(new ArrayBuffer(pose ? 29 : 26));
     b.setUint8(0, 1);
     b.setUint8(1, 24);
     b.setUint8(2, clampInt(s[5], 0, 255));
     b.setInt16(3, clampInt(s[6], -32768, 32767), true);
     b.setUint8(5, clampInt(Math.round(voice * 255), 0, 255));
     for (var i = 0; i < 5; i++) b.setFloat32(6 + i * 4, isFinite(s[11 + i]) ? +s[11 + i] : 0, true);
+    // Kind 2 (the pose layer): u8 pose, only while there is one.
+    if (pose) { b.setUint8(26, 2); b.setUint8(27, 1); b.setUint8(28, pose); }
     var hex = '';
-    for (var j = 0; j < 26; j++) { var x = b.getUint8(j); hex += (x < 16 ? '0' : '') + x.toString(16); }
+    for (var j = 0; j < b.byteLength; j++) { var x = b.getUint8(j); hex += (x < 16 ? '0' : '') + x.toString(16); }
     return { avatar: avatar, act: hex };
   }
   function clampInt(v, lo, hi) { v = Math.round(+v || 0); return v < lo ? lo : v > hi ? hi : v; }
@@ -354,8 +357,8 @@ window.bar3dNet = (function () {
   function decodeState(avatar, act) {
     var s = [avatar.x, avatar.y, avatar.z, avatar.yaw > Math.PI ? avatar.yaw - 2 * Math.PI : avatar.yaw, avatar.pitch,
              0, 0, avatar.look, avatar.flags & 1 ? 0.5 : 0, avatar.anim, avatar.animTick, 0, 0, 0, 0, 0, avatar.held,
-             (avatar.flags & 4 ? FLAG_BARTENDER : 0) | (avatar.flags & 8 ? FLAG_MIC : 0) | (avatar.flags & 2 ? FLAG_AWAY : 0)];
-    // Walk the TLV for kind 1.
+             (avatar.flags & 4 ? FLAG_BARTENDER : 0) | (avatar.flags & 8 ? FLAG_MIC : 0) | (avatar.flags & 2 ? FLAG_AWAY : 0), 0];
+    // Walk the TLV for kind 1 (and 2, the pose; older builds skip it).
     var bytes = [];
     for (var i = 0; i + 1 < act.length; i += 2) bytes.push(parseInt(act.substr(i, 2), 16));
     var p = 0;
@@ -368,9 +371,10 @@ window.bar3dNet = (function () {
         s[8] = dv.getUint8(3) / 255;
         for (var k = 0; k < 5; k++) s[11 + k] = dv.getFloat32(4 + k * 4, true);
       }
+      if (kind === 2 && n >= 1 && p + 3 <= bytes.length) s[18] = bytes[p + 2];
       p += 2 + n;
     }
-    return s;  // the 18 numbers of app/players.h (kCount)
+    return s;  // the 19 numbers of app/players.h (kCount)
   }
 
   function pushPacket(p, t, s) {

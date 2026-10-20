@@ -734,9 +734,10 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
     bone("forearm.L") = X(80);
     bone("chest") = Y(shake * 0.3f);
   }
-  if (m.activity == Activity::kDrink) {
+  if (m.activity == Activity::kDrink || m.pose == Activity::kDrink) {
     // Glass to the mouth for a sip every few seconds, otherwise held low.
-    const float sip = std::pow(std::max(0.0f, std::sin(t * 1.4f)), 4.0f);
+    const float st = m.activity == Activity::kDrink ? t : m.poseTime;
+    const float sip = std::pow(std::max(0.0f, std::sin(st * 1.4f)), 4.0f);
     bone("upperArm.R") = Z(10) * X(25 + 30 * sip);
     bone("forearm.R") = X(70 + 65 * sip);
   }

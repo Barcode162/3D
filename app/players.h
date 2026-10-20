@@ -27,6 +27,7 @@ enum : int {
   kData,                     // 5 numbers for the activity (scores, steering...)
   kHeldDrink = kData + 5,    // drink in hand (drink type + 1, 0 = none)
   kFlags,                    // bit 0 = bartender on shift, bit 1 = on the stage mic, bit 2 = away (kFlagAway)
+  kPose,                     // app::Activity shown on top of the body's: e.g. a sip while seated (0 = none)
   kCount,
 };
 }
@@ -48,6 +49,7 @@ struct OtherPlayer {
   int emoteCount = -1;
   bool away = false;  // their game is in the background (kFlagAway)
   double activitySinceMs = 0;  // when their current activity/emote started (our clock)
+  double poseSinceMs = 0;      // when their pose (slot kPose) started
 
   // Received states, oldest first, on the sender's clock.
   struct Sample {

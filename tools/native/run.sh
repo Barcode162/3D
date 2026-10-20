@@ -14,6 +14,7 @@ declare -A TESTS=(
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [quality_test]="tools/native/quality_test.cpp"
+  [entity_test]="tools/native/entity_test.cpp app/entities.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp engine/mesh_data.cpp"
   [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"
   [chess_test]="tools/native/chess_test.cpp app/chess_rules.cpp"
   [activity_test]="tools/native/activity_test.cpp app/activity.cpp"

@@ -173,6 +173,13 @@ void updateSelfMotion(double nowMs) {
     shown = Activity::kDrink;
     actionTime = t;
   }
+  // Seated with a drink: the sip goes on the pose layer (you stay seated).
+  m.pose = Activity::kNone;
+  m.poseTime = 0;
+  if (g_app.act.current() == Activity::kSit && g_app.bartender.held() && g_app.bartender.sipping(nowMs, t)) {
+    m.pose = Activity::kDrink;
+    m.poseTime = t;
+  }
   m.activity = shown;
   m.emote = g_app.emote;
   m.actionTime = actionTime;

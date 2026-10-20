@@ -126,6 +126,14 @@ void startEmote(Emote e) {
 // ---- Sitting ----
 
 void applyQuality(const char* why);  // (below, with the frame)
+
+// Game input (touches go to a game instead of walking and looking): on
+// exactly while a game that takes the whole screen is open. The one place
+// that switches it, so leaving a game can't forget to give the controls back.
+void syncCapture() {
+  g_app.input.setCapture(g_app.race.open() || g_app.rhythm.isOpen() || g_app.chess.isOpen() ||
+                         g_app.piano.keyboardOpen());
+}
 void applyMirrorDetail();
 
 std::string seatKey(int seat) { return "seat." + std::to_string(seat); }
@@ -137,11 +145,11 @@ void standUp() {
   g_app.seatClaim = 0;
   if (s.kind == app::SeatKind::kSim) {
     g_app.race.close();
-    g_app.input.setCapture(false);
+    syncCapture();
   }
   if (s.kind == app::SeatKind::kPianoBench) {
     g_app.piano.closeKeyboard();
-    g_app.input.setCapture(false);
+    syncCapture();
   }
   // Step off where you can walk away (app::standSpot).
   Vec3 p = app::standSpot(g_app.scene, s);
@@ -158,7 +166,7 @@ void startRace(bool straightIn, bool pad) {
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
   if (s.kind != app::SeatKind::kSim) return;
   if (g_app.race.start(std::max(0, s.machine), engine::frameTime().nowMs, straightIn, pad)) {
-    g_app.input.setCapture(true);
+    syncCapture();
   } else {
     showToast("Warming up the race...");  // it starts by itself in a moment
   }
@@ -199,7 +207,7 @@ void sitOn(int index) {
   } else if (s.kind == app::SeatKind::kPianoBench) {
     setActivity(Activity::kPiano);
     g_app.piano.openKeyboard();
-    g_app.input.setCapture(true);
+    syncCapture();
   } else {
     setActivity(Activity::kSit);
     showToast(std::string(s.name) + "\nMove the joystick to stand up");
@@ -349,7 +357,7 @@ void use(const app::Interactable& it) {
       std::vector<app::RhythmGame::SongChoice> songs;
       for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, "", s.url});
       g_app.rhythm.open(std::move(songs));
-      g_app.input.setCapture(true);
+      syncCapture();
       setActivity(Activity::kRhythm);
       break;
     }
@@ -445,7 +453,7 @@ void use(const app::Interactable& it) {
         showToast(why);
         break;
       }
-      g_app.input.setCapture(true);
+      syncCapture();
       playSfx(engine::synth::Effect::kClick, where, 0.6f, true);
       break;
     }
@@ -768,17 +776,17 @@ void updateInteraction(double nowMs, float dt) {
     }
     if (g_app.chess.update(nowMs, dt, chessTaps, g_app.camera, W / std::max(H, 1.0f))) {
       g_app.chess.close();
-      g_app.input.setCapture(false);
+      syncCapture();
     }
   }
   if (g_app.rhythm.isOpen()) {
     g_app.rhythm.update(nowMs, g_app.input.frame().presses, W, H);
     if (!g_app.rhythm.isOpen()) {
-      g_app.input.setCapture(false);
+      syncCapture();
       setActivity(Activity::kNone);
     }
   } else if (g_app.race.pending()) {
-    if (g_app.race.tryPending(nowMs)) g_app.input.setCapture(true);
+    if (g_app.race.tryPending(nowMs)) syncCapture();
   } else if (g_app.race.open()) {
     if (g_app.race.update(nowMs, dt, g_app.input.frame())) standUp();
   } else if (g_app.piano.keyboardOpen()) {
@@ -888,6 +896,7 @@ void selfState(float extra[kCount - app::slot::kActivity]) {
   for (int i = 0; i < 5; ++i) e(kData + i) = data[i];
   e(kHeldDrink) = static_cast<float>(g_app.bartender.held());
   e(kFlags) = static_cast<float>((g_app.bartender.onShift() ? 1 : 0) | (g_app.onMic ? 2 : 0));
+  e(kPose) = static_cast<float>(static_cast<int>(m.pose));
 }
 
 
@@ -920,12 +929,12 @@ void applyTestHooks() {
     std::vector<app::RhythmGame::SongChoice> songs;
     for (const app::Song& s : g_app.jukebox.songs()) songs.push_back({s.title, "", s.url});
     g_app.rhythm.open(std::move(songs));
-    g_app.input.setCapture(true);
+    syncCapture();
     if (h.rhythmSong >= 0) g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, app::kDifficultyCount - 1)));
     setActivity(Activity::kRhythm);
   }
   if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);
-  if (h.chess && g_app.chess.open(g_app.others.online()).empty()) g_app.input.setCapture(true);
+  if (h.chess && g_app.chess.open(g_app.others.online()).empty()) syncCapture();
   if (h.emote > 0 && h.emote < static_cast<int>(Emote::kCount)) startEmote(static_cast<Emote>(h.emote));
   if (h.pianoSong >= 0) g_app.piano.playSong(h.pianoSong);
   for (const app::Interactable& it : g_app.scene.interactables) {
@@ -997,6 +1006,7 @@ void phaseInput(FrameIn& f) {
 void phaseInteraction(FrameIn& f) {
   PROFILE(engine::Phase::kInteraction);
   updateInteraction(f.nowMs, f.dt);
+  syncCapture();  // (also after anything that ended a game on its own)
 }
 
 void phasePhysics(FrameIn& f) {
@@ -1067,7 +1077,7 @@ void phaseClaims(FrameIn&) {
       if (g_app.darts.playing()) g_app.darts.stop();
       if (g_app.rhythm.isOpen()) {
         g_app.rhythm.close();
-        g_app.input.setCapture(false);
+        syncCapture();
       }
       setActivity(Activity::kNone);
     }

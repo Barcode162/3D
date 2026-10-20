@@ -67,10 +67,11 @@ e.g. race steering, darts aim) and listed here when they are added.
 | Kind | Meaning | Added |
 |---|---|---|
 | 1 | The bar's activity, 24 bytes: `u8 activity` (app `Activity`), `i16 param` (seat, machine...), `u8 voice level` (0..255), `5 × f32` activity data (app/players.h `kData`) | 3.4 |
+| 2 | The pose layer, 1 byte: `u8 pose` (app `Activity` shown on the upper body on top of kind 1's, e.g. a sip while seated; sent only while there is one, older builds skip it) | 4.3b |
 
 Until 3.4b the avatar block's `animTick` carries the emote counter (it goes up by one per
 emote, so a repeat restarts it), `anim` the emote id and `held` the drink in hand + 1.
-`web/net.js` maps the block + kind 1 to the 18 numbers of `app/players.h` both ways.
+`web/net.js` maps the block + kind 1 to the 19 numbers of `app/players.h` both ways.
 
 ### 3.3 Prop sample (18 bytes)
 | Offset | Type | Field | Encoding |
