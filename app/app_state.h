@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include "app/activity.h"
 #include "app/avatar.h"
 #include "app/bar_scene.h"
 #include "app/bartender.h"
@@ -136,13 +137,12 @@ struct App {
 
   // You: what you're doing.
   int look = 0;
-  Activity activity = Activity::kNone;
+  app::ActivityManager act;  // what you're doing (app/activity.h)
   int seat = -1;               // the seat you're on
   int seatClaim = 0;           // the room's answer to "may I sit here?" (engine::net::claim)
   bool meridianOpen = false;   // Meridian (web/meridian/) covers the screen: the bar stops drawing
   std::string machineKey;      // the machine you're using (darts, 4K Mania), claimed in the room
   int machineClaim = 0;
-  double activityStartMs = 0;
   Emote emote = Emote::kNone;
   int emoteCount = 0;
   bool onMic = false;

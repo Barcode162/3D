@@ -49,7 +49,13 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      `app/game.cpp`; `main.cpp` is the 38-line entry point; the last
      function-local state (bookshelf, mirror buttons) moved into App. Kept
      `g_app` (one global App) rather than a Game class: same effect, far less churn.
-   - [ ] 4.3a next: ActivityManager (seats, piano, 4K Mania).
+   - [x] 4.3a (2026-10-20): `app/activity.{h,cpp}`: one record of what you're
+     doing and the rules for starting something (seat taken, machine in use,
+     no emotes while seated or playing); menu commands checked first (emote in
+     range, drinks only on shift, stand up only when seated). Test:
+     `tools/native/activity_test.cpp`.
+   - [ ] 4.4 next: one tap resolver (a player behind the jukebox no longer
+     steals the tap), badges cached, `teleport()`.
 3. [ ] **Accounts + economy foundation:** accounts move from IONOS PHP to
    Cloudflare D1; age at sign-up (13+ only; teen 13-17 / adult 18+ bands);
    inventory and a currency ledger the server owns (every change a

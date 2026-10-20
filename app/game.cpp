@@ -108,28 +108,22 @@ const app::OtherPlayer* playerUsing(Activity a, int param) {
   return nullptr;
 }
 
+// Switches what you're doing (the callers already checked the rules).
 void setActivity(Activity a) {
-  if (g_app.activity == a) return;
-  // Leaving darts or 4K Mania frees the machine for the others.
-  if (!g_app.machineKey.empty() && (g_app.activity == Activity::kDarts || g_app.activity == Activity::kRhythm)) {
-    engine::net::release(g_app.machineKey);
-    g_app.machineKey.clear();
-    g_app.machineClaim = 0;
-  }
-  g_app.activity = a;
-  g_app.activityStartMs = engine::frameTime().nowMs;
+  if (g_app.act.current() == a) return;
+  g_app.act.set(a, g_app.seat >= 0 ? g_app.seat : 0, engine::frameTime().nowMs);
   if (a != Activity::kEmote) g_app.emote = Emote::kNone;
 }
 
 void startEmote(Emote e) {
-  if (g_app.seat >= 0 || g_app.rhythm.isOpen() || g_app.darts.playing()) {
-    showToast("Stand up first to do an emote.");
+  std::string why;
+  // Each emote is a new one, even the same again (param = how many so far).
+  if (!g_app.act.request(Activity::kEmote, g_app.emoteCount + 1, engine::frameTime().nowMs, &why)) {
+    showToast(why);
     return;
   }
   g_app.emote = e;
   ++g_app.emoteCount;
-  g_app.activity = Activity::kEmote;
-  g_app.activityStartMs = engine::frameTime().nowMs;
 }
 
 // ---- Sitting ----
@@ -172,8 +166,8 @@ void startRace(bool straightIn) {
 
 void sitOn(int index) {
   const app::Seat& s = g_app.scene.seats[static_cast<size_t>(index)];
-  if (const app::OtherPlayer* o = playerUsing(Activity::kSit, index)) {
-    showToast(o->name + " is sitting there.");
+  if (const std::string why = g_app.act.blocked(Activity::kSit, index); !why.empty()) {
+    showToast(why);
     return;
   }
   // The room decides who sits where: ask, and sit down right away; if the
@@ -345,8 +339,8 @@ void use(const app::Interactable& it) {
   switch (it.action) {
     case Action::kJukebox: g_app.jukeboxMenu.open(); break;
     case Action::kRhythm: {
-      if (const app::OtherPlayer* o = playerUsing(Activity::kRhythm, 0)) {
-        showToast(o->name + " is playing. One player at a time.");
+      if (const std::string why = g_app.act.blocked(Activity::kRhythm, 0); !why.empty()) {
+        showToast(why);
         break;
       }
       if (!claimMachine("machine.rhythm", "playing")) break;
@@ -370,8 +364,8 @@ void use(const app::Interactable& it) {
       break;
     }
     case Action::kDarts: {
-      if (const app::OtherPlayer* o = playerUsing(Activity::kDarts, 0)) {
-        showToast(o->name + " is throwing. One player at a time.");
+      if (const std::string why = g_app.act.blocked(Activity::kDarts, 0); !why.empty()) {
+        showToast(why);
         break;
       }
       if (!claimMachine("machine.darts", "throwing")) break;
@@ -538,6 +532,11 @@ void handleCommands() {
   std::vector<engine::ui::Command> commands;
   engine::ui::takeCommands(commands);
   for (const engine::ui::Command& c : commands) {
+    // Checked first: an emote in range, drinks only on shift, standing up only when seated.
+    if (!app::commandAllowed(c.name, c.a, g_app.seat >= 0, g_app.bartender.onShift())) {
+      LOG_INFO("Menu: ignored \"%s\" (not now).", c.name.c_str());
+      continue;
+    }
     if (c.name == "emote") startEmote(static_cast<Emote>(static_cast<int>(c.a)));
     else if (c.name == "look") {
       g_app.look = std::clamp(static_cast<int>(c.a), 0, static_cast<int>(app::avatarLooks().size()) - 1);
@@ -790,7 +789,7 @@ void updateInteraction(double nowMs, float dt) {
     const Vec3 dir = screenRay(tap);
     if (g_app.darts.playing()) {
       g_app.darts.throwAt(cam.position, dir, nowMs);
-      g_app.activityStartMs = nowMs;  // the throw animation
+      g_app.act.restart(nowMs);  // the throw animation
       continue;
     }
     if (g_app.held >= 0) {
@@ -1272,6 +1271,19 @@ void updateArcadeMusic(float dt) {
 }
 
 void onGpuReady(bool ok) {
+  // The activity rules: who else uses a seat or machine, and what leaving one does.
+  g_app.act.usedBy = [](Activity kind, int param) {
+    const app::OtherPlayer* o = playerUsing(kind, param);
+    return o ? o->name : std::string();
+  };
+  g_app.act.onLeave = [](Activity ended) {
+    // Leaving darts or 4K Mania frees the machine for the others.
+    if (!g_app.machineKey.empty() && (ended == Activity::kDarts || ended == Activity::kRhythm)) {
+      engine::net::release(g_app.machineKey);
+      g_app.machineKey.clear();
+      g_app.machineClaim = 0;
+    }
+  };
   if (!ok) {
     engine::setStatus("Startup failed - see log");
     LOG_FATAL("Startup failed: no GPU.");

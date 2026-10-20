@@ -88,7 +88,7 @@ void updateCamera(float dt) {
   // Walking ends an emote, darts, a shift's station.
   const float walked = engine::length({moved.x, 0, moved.z});
   if (walked > 0.002f) {
-    if (g_app.activity == Activity::kEmote) setActivity(Activity::kNone);
+    if (g_app.act.current() == Activity::kEmote) setActivity(Activity::kNone);
     if (g_app.darts.playing() && engine::length(g_app.camera.position - g_app.scene.dartOche) > 0.6f) {
       g_app.darts.stop();
       setActivity(Activity::kNone);
@@ -146,17 +146,17 @@ bool tryPickUp(Vec3 dir) {
 void updateSelfMotion(double nowMs) {
   app::AvatarMotion& m = g_app.avatarMotion;
   // Emotes end by themselves.
-  if (g_app.activity == Activity::kEmote &&
-      (nowMs - g_app.activityStartMs) / 1000.0 > app::emoteLength(g_app.emote)) {
+  if (g_app.act.current() == Activity::kEmote &&
+      (nowMs - g_app.act.sinceMs()) / 1000.0 > app::emoteLength(g_app.emote)) {
     setActivity(Activity::kNone);
   }
-  Activity shown = g_app.activity;
-  float actionTime = static_cast<float>((nowMs - g_app.activityStartMs) / 1000.0);
+  Activity shown = g_app.act.current();
+  float actionTime = static_cast<float>((nowMs - g_app.act.sinceMs()) / 1000.0);
   float t;
   if (g_app.bartender.activity(nowMs, t) == Activity::kBartend) {
     shown = Activity::kBartend;
     actionTime = t;
-  } else if (g_app.activity == Activity::kNone && g_app.bartender.held() && g_app.bartender.sipping(nowMs, t)) {
+  } else if (g_app.act.current() == Activity::kNone && g_app.bartender.held() && g_app.bartender.sipping(nowMs, t)) {
     shown = Activity::kDrink;
     actionTime = t;
   }
