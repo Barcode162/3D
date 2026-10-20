@@ -160,6 +160,94 @@
     .side .item { min-height: 34px; padding: 6px 10px; border-left: 0; }
   }
   .side { display: none; }
+
+  /* ---- finding things: home, the section map, the bottom tabs ---- */
+  .hello { margin: 2px 0 12px; }
+  .hello h2 { font-size: 19px; }
+  .hello .dim { font-size: 13px; margin-top: 2px; }
+  .summary4 { grid-template-columns: repeat(4, 1fr); }
+  .summary4 .n { font-size: 20px; }
+  .map { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .maptile { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px 10px 9px; cursor: pointer;
+             display: flex; flex-direction: column; gap: 4px; min-height: 88px; position: relative; overflow: hidden;
+             transition: border-color .2s, transform .15s; }
+  .maptile:active { transform: scale(.98); border-color: var(--line2); }
+  .maptile .nm { font-weight: 600; font-size: 13.5px; line-height: 1.25; }
+  .maptile .ab { font-size: 11.5px; color: var(--faint); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
+                 -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+  .maptile .ct { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .sbar { display: flex; gap: 2px; height: 4px; border-radius: 2px; overflow: hidden; background: var(--line); }
+  .sbar i { display: block; background: var(--s); transform-origin: left; }
+  .anim .sbar i { animation: grow .7s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 35ms + .15s); }
+  .newdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 0 0 var(--accent);
+            animation: ping 2s ease-out infinite; }
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; border-top: 1px solid var(--line);
+          background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          padding: 4px 4px env(safe-area-inset-bottom); }
+  .tabs button { flex: 1; background: transparent; border: 0; border-radius: var(--r); color: var(--faint); padding: 6px 2px 5px;
+                 display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; position: relative; }
+  .tabs button svg { width: 21px; height: 21px; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .tabs button.on { color: var(--text); }
+  .tabs button.on svg { color: var(--accent); transform: translateY(-1px) scale(1.08); }
+  .tabs .badge { position: absolute; top: 1px; left: calc(50% + 6px); margin: 0; }
+  .has-tabs main { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  @media (min-width: 900px) { .tabs { display: none; } .has-tabs main { padding-bottom: 40px; } .top .nav { display: none; } }
+  .grip { flex: none; width: 26px; align-self: stretch; margin: -10px 0 -10px -6px; display: flex; align-items: center; justify-content: center;
+          color: var(--faint); touch-action: none; cursor: grab; }
+  .grip svg { width: 12px; height: 16px; }
+  .list.sorting .item { transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+  .list.sorting .item.lifted { transition: none; position: relative; z-index: 2; background: var(--raise);
+                               box-shadow: 0 10px 28px #000a; border-radius: 4px; }
+  .skel { height: 48px; border-radius: 7px; margin: 0 0 8px; background: linear-gradient(90deg, var(--panel) 0%, var(--panel2) 50%, var(--panel) 100%);
+          background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+  .skel.short { width: 45%; height: 20px; }
+
+  /* ---- motion: how things appear ---- */
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes reveal { from { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(-4px); }
+                      to { opacity: 1; clip-path: inset(0 0 0 0); transform: none; } }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes slideIn { from { opacity: .4; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+  @keyframes slideOut { to { opacity: 0; transform: translateX(34px); } }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); }
+                    70%, 100% { box-shadow: 0 0 0 6px transparent; } }
+  @keyframes breathe { 50% { opacity: .45; } }
+  @keyframes glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 18%, transparent); } }
+  .anim .item, .anim .tile, .anim .stat, .anim .maptile, .anim .block, .anim .ghead, .anim .shead, .anim .empty, .anim .hello .dim {
+    animation: rise .48s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
+  .anim h1, .anim .hello h2, .anim .shead h2 { animation: reveal .6s cubic-bezier(.2,.8,.2,1) backwards; }
+  .anim .msg { animation: pop .4s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
+  .anim .pipe div.on { transform-origin: left; animation: grow .5s cubic-bezier(.2,.8,.2,1) backwards; animation-delay: calc(var(--i, 0) * 70ms + .1s); }
+  .screen.enter { animation: slideIn .34s cubic-bezier(.2,.8,.2,1); }
+  .screen.leave { animation: slideOut .22s ease-in forwards; pointer-events: none; }
+  .scroll.fade > * { animation: fade .3s cubic-bezier(.2,.8,.2,1) backwards; }
+  .seg { position: relative; }
+  .seg::before { content: ""; position: absolute; top: 0; bottom: 0; width: 25%; left: calc(var(--k, 0) * 25%); background: var(--raise);
+                 transition: left .3s cubic-bezier(.2,.8,.2,1); }
+  .seg button { position: relative; transition: color .2s; }
+  .seg button.on { background: transparent; }
+  .tag.q { animation: glow 2.6s ease-in-out infinite; }
+  .dot.c-doing { animation: breathe 1.8s ease-in-out infinite; }
+  button { transition: transform .12s, background-color .15s, border-color .15s, opacity .15s; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  .item { transition: background-color .15s; }
+  .tile { transition: border-color .2s, transform .15s; }
+  .tile:active { transform: scale(.985); }
+  .tile .shot { transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+  .tile:hover .shot, .tile:active .shot { transform: scale(1.04); }
+  .sheet { display: flex; visibility: hidden; background: #0000; transition: background-color .25s, visibility 0s .32s; }
+  .sheet.open { visibility: visible; background: #000b; transition: background-color .25s; }
+  .sheetBody { transform: translateY(100%); transition: transform .34s cubic-bezier(.2,.8,.2,1); }
+  .sheet.open .sheetBody { transform: none; }
+  .toast { transform: translate(-50%, -8px) scale(.96); transition: opacity .22s, transform .3s cubic-bezier(.2,.8,.2,1); }
+  .toast.on { transform: translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+                             transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
@@ -237,7 +325,7 @@ function planParts(plan) {
   return { parts: parts, loose: loose.join('\n').trim() };
 }
 function app() { return document.getElementById('app'); }
-function setApp(kids) { var a = app(); a.innerHTML = ''; kids.forEach(function (k) { if (k) a.appendChild(k); }); }
+function setApp(kids) { var a = app(); a.innerHTML = ''; document.body.classList.remove('has-tabs'); kids.forEach(function (k) { if (k) a.appendChild(k); }); }
 function closeSheet() { document.getElementById('sheet').classList.remove('open'); }
 function openSheet(kids) {
   var b = document.getElementById('sheetBody');
@@ -250,6 +338,60 @@ document.getElementById('sheet').onclick = function (e) { if (e.target.id === 's
 function go(hash) { if (location.hash === hash) route(); else location.hash = hash; }
 function stageTag(s) { return el('span', { class: 'tag c-' + s }, [el('span', { class: 'dot c-' + s }), STAGE_SHORT[s] || s]); }
 
+// ---- motion ----
+// Fresh screens animate in; the quiet 30-second refresh and typing in search don't.
+var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function stagger(root) {
+  var k = 0;
+  root.querySelectorAll('.item, .tile, .stat, .maptile, .block, .ghead, .shead, .empty, .msg, .pipe div.on, .sbar').forEach(function (n) {
+    n.style.setProperty('--i', Math.min(k++, 16));
+  });
+}
+function animate(root) { if (state.quiet || REDUCED) return; root.classList.add('anim'); stagger(root); }
+function countUp(node, to) {
+  node.textContent = String(to);
+  if (state.quiet || REDUCED || !to) return;
+  var t0 = performance.now();
+  var step = function (t) {
+    var p = Math.min(1, (t - t0) / 650);
+    node.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function skeleton() {
+  return el('main', {}, [el('div', { class: 'skel short' }), el('div', { class: 'skel' }), el('div', { class: 'skel' }), el('div', { class: 'skel' }),
+    el('div', { class: 'skel', style: 'opacity:.6' }), el('div', { class: 'skel', style: 'opacity:.3' })]);
+}
+var ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  queue: '<path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 5 3-5 3z" fill="currentColor"/>',
+  map: '<rect x="3" y="3" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1"/>',
+  all: '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/>',
+  grip: '<circle cx="4" cy="3" r="1.4"/><circle cx="8" cy="3" r="1.4"/><circle cx="4" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="4" cy="13" r="1.4"/><circle cx="8" cy="13" r="1.4"/>'
+};
+function icon(name) {
+  var s = el('span', { style: 'display:contents' });
+  s.innerHTML = name === 'grip' ? '<svg viewBox="0 0 12 16" fill="currentColor">' + ICONS.grip + '</svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+  return s;
+}
+
+// ---- new from Claude ----
+// A card is "new" when Claude wrote last, after you last opened it (kept on this phone).
+function seenKey(id) { return 'hubSeen:' + state.project + ':' + id; }
+function seenBase() {
+  var k = 'hubSeenBase:' + state.project, v = +store.get(k);
+  if (!v) { v = Math.floor(Date.now() / 1000); store.set(k, String(v)); }
+  return v;
+}
+function lastClaude(c) {
+  var t = c.thread || [], m = t[t.length - 1];
+  return m && m.role !== 'owner' ? m.at : 0;
+}
+function isNew(c) { var at = lastClaude(c); return !!at && at > Math.max(seenBase(), +store.get(seenKey(c.id)) || 0); }
+function markSeen(c) { store.set(seenKey(c.id), String(Math.max(Math.floor(Date.now() / 1000), lastClaude(c)))); }
+
 // ---- logging in ----
 function loginScreen(msg) {
   var user = el('input', { autocapitalize: 'none', autocomplete: 'username', placeholder: 'Username' });
@@ -258,7 +400,7 @@ function loginScreen(msg) {
   var submit = function () {
     err.textContent = '';
     post(ACCOUNTS, { a: 'login', user: user.value, pass: pass.value }).then(function (r) {
-      state.token = r.token; store.set('hubToken', r.token); route();
+      state.token = r.token; store.set('hubToken', r.token); document.body.classList.remove('has-tabs'); route();
     }).catch(function (e) { err.textContent = e.message; });
   };
   pass.onkeydown = function (e) { if (e.key === 'Enter') submit(); };
@@ -292,7 +434,8 @@ function authFail(e) {
 function parseHash() {
   var p = (location.hash || '#/').replace(/^#\/?/, '').split('/');
   if (p[0] !== 'p' || !p[1]) return { page: 'projects' };
-  return { page: 'board', project: p[1], view: p[2] || 'needs', arg: p[3] || '' };
+  var view = p[2] || 'home';
+  return { page: 'board', project: p[1], view: view === 'needs' ? 'home' : view, arg: p[3] || '' };
 }
 function route() {
   if (!state.token) return loginScreen();
@@ -300,14 +443,14 @@ function route() {
   if (r.page === 'projects') { closeCard(); return loadProjects(); }
   if (state.project !== r.project || !state.board) {
     state.project = r.project; state.board = null;
-    setApp([el('div', { class: 'center dim', text: 'Loading…' })]);
+    setApp([skeleton()]);
     return api({ a: 'board', project: r.project }).then(function (b) { state.board = b; route(); }).catch(function (e) {
       if (/project/i.test(e.message)) { toast(e.message); go('#/'); } else authFail(e);
     });
   }
   store.set('hubView:' + r.project, r.view === 'c' ? '' : r.view + (r.arg ? '/' + r.arg : ''));
   if (r.view === 'c') {
-    if (!app().querySelector('.top')) renderBoard({ view: 'needs' });
+    if (!app().querySelector('.top')) renderBoard({ view: 'home' });
     return openCard(r.arg);
   }
   closeCard();
@@ -320,7 +463,7 @@ function reloadBoard(then) {
 
 // ---- projects ----
 function loadProjects() {
-  if (!state.projects) setApp([el('div', { class: 'center dim', text: 'Loading…' })]);
+  if (!state.projects) setApp([skeleton()]);
   return post(API, { a: 'projects', token: state.token }).then(function (r) {
     state.projects = r.projects; state.you = r.you; state.role = r.role;
     if (parseHash().page === 'projects') renderProjects();
@@ -336,7 +479,7 @@ function renderProjects() {
     var shot = el('div', { class: 'shot', text: p.image ? '' : p.name.slice(0, 1).toUpperCase() });
     if (p.image) shot.style.backgroundImage = 'url("' + p.image + '")';
     var last = store.get('hubView:' + p.id);
-    grid.appendChild(el('div', { class: 'tile', onclick: function () { go('#/p/' + p.id + '/' + (last || 'needs')); } }, [shot,
+    grid.appendChild(el('div', { class: 'tile', onclick: function () { go('#/p/' + p.id + '/' + (last || 'home')); } }, [shot,
       el('div', { class: 'body' }, [
         el('div', { class: 'row' }, [el('h2', { class: 'grow', text: p.name }),
           p.questions ? el('span', { class: 'tag q', text: p.questions + ' question' + (p.questions === 1 ? '' : 's') }) : null]),
@@ -353,7 +496,11 @@ function renderProjects() {
           el('button', { class: 'sm ghost', text: 'Edit', onclick: function (e) { e.stopPropagation(); projectSheet(p); } })])])]));
   });
   grid.appendChild(el('div', { class: 'tile add', text: '+ New project', onclick: function () { projectSheet(null); } }));
-  setApp([top, el('main', {}, [grid])]);
+  var main = el('main', {}, [grid]);
+  document.body.classList.remove('has-tabs');
+  document.title = 'Hub';
+  setApp([top, main]);
+  animate(main);
 }
 // A phone screenshot, made small on the phone before it's sent (≤ 1280 px wide JPEG).
 function shrinkImage(file, done) {
@@ -422,38 +569,54 @@ function navButton(label, hash, on, count, hot) {
   return el('button', { class: on ? 'on' : '', onclick: function () { go(hash); } },
             [label, count != null ? el('span', { class: 'badge' + (hot && count ? ' hot' : ''), text: String(count) }) : null]);
 }
+function liveIn(id) { return state.board.cards.filter(function (c) { return c.section === id && c.stage !== 'done'; }).length; }
 function renderBoard(r) {
   var b = state.board, n = counts(), base = '#/p/' + state.project + '/';
-  var secCount = function (id) { return b.cards.filter(function (c) { return c.section === id && c.stage !== 'done'; }).length; };
-  var search = el('input', { type: 'search', placeholder: 'Search cards', value: state.query, enterkeyhint: 'search' });
+  seenBase();  // the first visit on this phone: only what Claude writes from now on counts as new
+  var search = el('input', { type: 'search', placeholder: 'Search every card', value: state.query, enterkeyhint: 'search' });
   search.oninput = function () {
     state.query = search.value;
     var m = document.querySelector('main .content');
-    if (m) { m.innerHTML = ''; boardContent(m, state.query ? { view: 'search' } : r); }
+    if (!m) return;
+    m.innerHTML = '';
+    var q = state.quiet; state.quiet = true;
+    boardContent(m, state.query ? { view: 'search' } : r);
+    state.quiet = q;
   };
-  var nav = el('div', { class: 'nav' }, [
-    navButton('Needs you', base + 'needs', r.view === 'needs', n.needs, true),
-    navButton('Claude queue', base + 'queue', r.view === 'queue', n.ready),
-    navButton('In progress', base + 'doing', r.view === 'doing', n.doing),
-    navButton('All', base + 'all', r.view === 'all'),
+  // The strip of sections, for hopping between them (on the map views; Home has the map itself).
+  var nav = r.view === 's' || r.view === 'all' ? el('div', { class: 'nav' }, [navButton('All', base + 'all', r.view === 'all'),
     el('span', { class: 'div' })].concat(sections(false).map(function (s) {
-      return navButton(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id, secCount(s.id));
+      return navButton(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id, liveIn(s.id));
     }), [el('span', { class: 'div' })], sections(true).map(function (s) {
-      return navButton(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id, secCount(s.id));
-    })));
+      return navButton(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id, liveIn(s.id));
+    }))) : el('div', { style: 'height:8px' });
   var top = el('div', { class: 'top' }, [
     el('div', { class: 'bar' }, [
       el('button', { class: 'icon ghost', text: '‹', title: 'Projects', style: 'font-size:22px;padding:0 8px', onclick: function () { go('#/'); } }),
       el('div', { class: 'crumb grow ellipsis' }, [projectName()]),
-      el('button', { class: 'icon sm', text: '☰', title: 'Sections', onclick: sectionsDrawer }),
       el('button', { class: 'icon sm', text: '⟳', title: 'Refresh', onclick: function () { reloadBoard(); toast('Up to date'); } }),
       el('button', { class: 'sm', text: '+ Card', onclick: function () { newCard(r.view === 's' ? r.arg : null); } })]),
     el('div', { class: 'search' }, [search]), nav]);
   var side = el('div', { class: 'side' }, [sideList(r)]);
   var content = el('div', { class: 'content' });
   boardContent(content, state.query ? { view: 'search' } : r);
-  setApp([top, el('main', { class: 'layout' }, [side, content])]);
-  var on = nav.querySelector('.on');
+  // The bottom tabs (phone): Home, Claude's queue, the map of sections, every card.
+  var fresh = b.cards.filter(isNew).length;
+  var tab = function (label, ic, on, onclick, count, hot) {
+    return el('button', { class: on ? 'on' : '', onclick: onclick }, [icon(ic), label,
+      count ? el('span', { class: 'badge' + (hot ? ' hot' : ''), text: String(count) }) : null]);
+  };
+  var tabs = el('div', { class: 'tabs' }, [
+    tab('Home', 'home', r.view === 'home', function () { go(base + 'home'); }, n.needs + fresh, true),
+    tab('Queue', 'queue', r.view === 'queue' || r.view === 'doing', function () { go(base + 'queue'); }, n.ready),
+    tab('Sections', 'map', r.view === 's', sectionsDrawer),
+    tab('All', 'all', r.view === 'all', function () { go(base + 'all'); })]);
+  var main = el('main', { class: 'layout' }, [side, content]);
+  setApp([top, main, tabs]);
+  document.body.classList.add('has-tabs');
+  document.title = (n.needs + fresh ? '(' + (n.needs + fresh) + ') ' : '') + projectName() + ' · Hub';
+  animate(content);
+  var on = nav.querySelector && nav.querySelector('.on');
   if (on) nav.scrollLeft = on.offsetLeft - 60;
 }
 function sideList(r) {
@@ -465,12 +628,9 @@ function sideList(r) {
   var n = counts();
   var list = function (title, items) { return el('div', { class: 'group' }, [el('div', { class: 'cap', style: 'padding:4px 2px', text: title }), el('div', { class: 'list' }, items)]); };
   var secs = function (adv) {
-    return sections(adv).map(function (s) {
-      return mk(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id,
-                state.board.cards.filter(function (c) { return c.section === s.id && c.stage !== 'done'; }).length);
-    });
+    return sections(adv).map(function (s) { return mk(s.name, base + 's/' + s.id, r.view === 's' && r.arg === s.id, liveIn(s.id)); });
   };
-  return el('div', {}, [list('Views', [mk('Needs you', base + 'needs', r.view === 'needs', n.needs),
+  return el('div', {}, [list('Views', [mk('Home', base + 'home', r.view === 'home', n.needs),
     mk('Claude queue', base + 'queue', r.view === 'queue', n.ready), mk('In progress', base + 'doing', r.view === 'doing', n.doing),
     mk('All cards', base + 'all', r.view === 'all', state.board.cards.length)]),
     list('World', secs(false)), list('Advanced', secs(true))]);
@@ -532,59 +692,160 @@ function row(c, opts) {
   if (opts.section !== false) meta.push(sectionName(c.section));
   if (c.build) meta.push('build ' + c.build);
   meta.push(ago(c.updated));
-  return el('div', { class: 'item c-' + c.stage, onclick: function () { go('#/p/' + state.project + '/c/' + c.id); } }, [
-    el('div', { class: 'grow' }, [el('div', { class: 't', text: c.title }), el('div', { class: 'm ellipsis', text: meta.join(' · ') })]),
+  var fresh = isNew(c);
+  return el('div', { class: 'item c-' + c.stage, 'data-id': c.id, onclick: function () {
+    if (dragSort.justDropped) return;
+    go('#/p/' + state.project + '/c/' + c.id);
+  } }, [
+    opts.drag ? el('span', { class: 'grip', title: 'Drag to reorder', onclick: function (e) { e.stopPropagation(); } }, [icon('grip')]) : null,
+    fresh ? el('span', { class: 'newdot', title: 'New from Claude' }) : null,
+    el('div', { class: 'grow' }, [el('div', { class: 't', text: c.title }), el('div', { class: 'm ellipsis', text: (fresh ? 'New from Claude · ' : '') + meta.join(' · ') })]),
     c.question ? el('span', { class: 'tag q', text: '? Question' }) : null,
     c.unread ? el('span', { class: 'tag', title: 'Claude hasn\'t read this yet', text: 'Sent' }) : null,
     opts.stage !== false ? stageTag(c.stage) : null]);
 }
 function group(title, cards, opts, hint) {
+  opts = opts || {};
   var g = el('div', { class: 'group' }, [el('div', { class: 'ghead' }, [el('span', { class: 'cap', text: title }),
     el('span', { class: 'faint small', text: String(cards.length) }), el('div', { class: 'grow' }),
     hint ? el('span', { class: 'faint small', text: hint }) : null])]);
   var list = el('div', { class: 'list' });
   cards.forEach(function (c) { list.appendChild(row(c, opts)); });
   if (!cards.length) list.appendChild(el('div', { class: 'empty', text: 'Nothing here.' }));
+  if (opts.drag && cards.length > 1) dragSort(list);
   g.appendChild(list);
   return g;
+}
+// Drag a card by its grip (⋮⋮) to a new place in its list; the others slide out of the way.
+function dragSort(list) {
+  list.addEventListener('pointerdown', function (e) {
+    var grip = e.target.closest && e.target.closest('.grip');
+    if (!grip || (e.button != null && e.button > 0)) return;
+    e.preventDefault();
+    var item = grip.closest('.item');
+    var items = [].slice.call(list.querySelectorAll(':scope > .item'));
+    var rects = items.map(function (n) { return n.getBoundingClientRect(); });
+    var from = items.indexOf(item), to = from, y0 = e.clientY, hgt = rects[from].height;
+    list.classList.add('sorting'); item.classList.add('lifted');
+    try { grip.setPointerCapture(e.pointerId); } catch (x) {}
+    var move = function (ev) {
+      var dy = ev.clientY - y0, mid = rects[from].top + hgt / 2 + dy;
+      item.style.transform = 'translateY(' + dy + 'px) scale(1.01)';
+      to = from;
+      for (var k = from + 1; k < items.length; k++) if (mid > rects[k].top + rects[k].height / 2) to = k;
+      for (var j = from - 1; j >= 0; j--) if (mid < rects[j].top + rects[j].height / 2) to = j;
+      items.forEach(function (o, k) {
+        if (o === item) return;
+        var shift = k > from && k <= to ? -hgt : k < from && k >= to ? hgt : 0;
+        o.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+      });
+    };
+    var up = function () {
+      grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
+      dragSort.justDropped = true; setTimeout(function () { dragSort.justDropped = false; }, 350);
+      var settle = function () { list.classList.remove('sorting'); item.classList.remove('lifted'); items.forEach(function (o) { o.style.transform = ''; }); };
+      if (to === from) { settle(); return; }
+      var dest = to > from ? rects[to].bottom - rects[from].bottom : rects[to].top - rects[from].top;
+      item.style.transform = 'translateY(' + dest + 'px)';
+      var body = { a: 'place', id: item.getAttribute('data-id') };
+      body[to > from ? 'after' : 'before'] = items[to].getAttribute('data-id');
+      api(body).then(function () {
+        toast('Moved');
+        reloadBoard(function () { var q = state.quiet; state.quiet = true; route(); state.quiet = q; });
+      }).catch(function (err) { settle(); toast(err.message); });
+    };
+    grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+  });
 }
 function inBoardOrder(cards) {
   var idx = {};
   state.board.sections.forEach(function (s, i) { idx[s.id] = i; });
   return cards.slice().sort(function (a, b) { return (idx[a.section] - idx[b.section]) || (a.order - b.order); });
 }
+// A section on the map: its name, what goes there, how many cards are live, and a bar of their stages.
+function mapTile(s) {
+  var base = '#/p/' + state.project + '/';
+  var cards = state.board.cards.filter(function (c) { return c.section === s.id; });
+  var need = cards.filter(needsYou).length, fresh = cards.filter(isNew).length;
+  var live = cards.filter(function (c) { return c.stage !== 'done'; }).length;
+  var done = cards.length - live;
+  var bar = el('div', { class: 'sbar' }, GROUP_ORDER.slice().reverse().map(function (st) {
+    var k = cards.filter(function (c) { return c.stage === st; }).length;
+    return k ? el('i', { class: 'c-' + st, style: 'flex:' + k, title: STAGE_NAMES[st] + ': ' + k }) : null;
+  }));
+  return el('div', { class: 'maptile', onclick: function () { go(base + 's/' + s.id); } }, [
+    el('div', { class: 'row', style: 'gap:6px;align-items:flex-start' }, [el('div', { class: 'nm grow', text: s.name }),
+      fresh ? el('span', { class: 'newdot', style: 'margin-top:4px', title: 'New from Claude' }) : null,
+      need ? el('span', { class: 'badge hot', style: 'margin:0', text: String(need) }) : null]),
+    el('div', { class: 'ab', text: s.about || '' }),
+    el('div', { class: 'ct', text: cards.length ? live + ' open' + (done ? ' · ' + done + ' done' : '') : 'empty' }),
+    bar]);
+}
 function boardContent(box, r) {
   var b = state.board, base = '#/p/' + state.project + '/';
   var of = function (f) { return inBoardOrder(b.cards.filter(f)); };
   if (r.view === 'search') {
     var q = state.query.toLowerCase();
-    var hits = of(function (c) { return (c.title + '\n' + c.notes + '\n' + c.plan + '\n' + c.report).toLowerCase().indexOf(q) >= 0; });
-    box.appendChild(group('Search: “' + state.query + '”', hits));
+    var hits = of(function (c) {
+      return (c.title + '\n' + c.notes + '\n' + c.plan + '\n' + c.report + '\n' + sectionName(c.section) + '\n' +
+              (c.thread || []).map(function (m) { return m.text; }).join('\n')).toLowerCase().indexOf(q) >= 0;
+    });
+    var secHits = b.sections.filter(function (s) { return (s.name + ' ' + (s.about || '')).toLowerCase().indexOf(q) >= 0; });
+    if (secHits.length) box.appendChild(el('div', { class: 'map' }, secHits.map(mapTile)));
+    box.appendChild(group('Cards matching “' + state.query + '”', hits));
+    animate(box);
     return;
   }
-  if (r.view === 'needs') {
+  if (r.view === 'home') {
     var n = counts();
-    var stat = function (num, label, hash) { return el('div', { class: 'stat', onclick: function () { go(hash); } }, [el('div', { class: 'n', text: String(num) }), el('div', { class: 'l', text: label })]); };
-    box.appendChild(el('div', { class: 'summary' }, [stat(n.ready, 'Ready for Claude', base + 'queue'), stat(n.doing, 'In progress', base + 'doing'),
-      stat(n.done, 'Done', base + 'all')]));
     var asks = of(function (c) { return !!c.question; });
     var check = of(function (c) { return c.stage === 'check' && !c.question; });
     var review = of(function (c) { return c.stage === 'review' && !c.question; });
-    box.appendChild(group('Claude asks you', asks, {}, 'answer in plain words'));
-    box.appendChild(group('Check on your phone', check, { stage: false }, 'then mark Done'));
-    box.appendChild(group('Waiting for your review', review, { stage: false }, 'approve → Ready'));
+    var fresh = of(function (c) { return isNew(c) && !needsYou(c); });
+    var doing = of(function (c) { return c.stage === 'doing'; });
+    var todo = asks.length + check.length + review.length;
+    box.appendChild(el('div', { class: 'hello' }, [
+      el('h2', { text: todo ? todo + (todo === 1 ? ' thing needs you' : ' things need you') : 'Nothing needs you right now' }),
+      el('div', { class: 'dim', text: n.ready + ' ready for Claude · ' + n.doing + ' in progress' + (fresh.length ? ' · ' + fresh.length + ' new from Claude' : '') })]));
+    var stat = function (num, label, hash, hot) {
+      var big = el('div', { class: 'n', style: hot && num ? 'color:var(--warn)' : '' });
+      countUp(big, num);
+      return el('div', { class: 'stat', onclick: function () { go(hash); } }, [big, el('div', { class: 'l', text: label })]);
+    };
+    box.appendChild(el('div', { class: 'summary summary4' }, [stat(todo, 'Needs you', base + 'home', true), stat(n.ready, 'Ready', base + 'queue'),
+      stat(n.doing, 'In progress', base + 'doing'), stat(n.done, 'Done', base + 'all')]));
+    if (asks.length) box.appendChild(group('Claude asks you', asks, {}, 'answer in plain words'));
+    if (fresh.length) box.appendChild(group('New from Claude', fresh, {}, 'reports and notes'));
+    if (check.length) box.appendChild(group('Check on your phone', check, { stage: false }, 'then mark Done'));
+    if (review.length) box.appendChild(group('Waiting for your review', review, { stage: false }, 'approve → Ready'));
+    if (doing.length) box.appendChild(group('Claude is working on', doing, { stage: false }));
+    box.appendChild(el('div', { class: 'ghead' }, [el('span', { class: 'cap', text: 'The world' }), el('div', { class: 'grow' }),
+      el('span', { class: 'faint small', text: 'every section' })]));
+    box.appendChild(el('div', { class: 'map' }, sections(false).map(mapTile)));
+    if (sections(true).length) {
+      box.appendChild(el('div', { class: 'ghead' }, [el('span', { class: 'cap', text: 'Advanced' }), el('div', { class: 'grow' }),
+        el('span', { class: 'faint small', text: 'what makes it work' })]));
+      box.appendChild(el('div', { class: 'map' }, sections(true).map(mapTile)));
+    }
+    var recent = b.cards.slice().sort(function (x, y) { return y.updated - x.updated; }).slice(0, 6);
+    if (recent.length) box.appendChild(group('Recently changed', recent));
+    animate(box);
     return;
   }
   if (r.view === 'queue') {
     box.appendChild(el('div', { class: 'shead' }, [el('h2', { text: 'Claude queue' }),
       el('div', { class: 'about', text: 'What Claude works on when you say "go", top to bottom.' })]));
     box.appendChild(group('Ready for Claude', of(function (c) { return c.stage === 'ready'; }), { stage: false }));
+    var working = of(function (c) { return c.stage === 'doing'; });
+    if (working.length) box.appendChild(group('In progress', working, { stage: false }));
     var sent = of(function (c) { return c.unread && c.stage !== 'ready'; });
     if (sent.length) box.appendChild(group('Your notes Claude reads on "go"', sent));
+    animate(box);
     return;
   }
   if (r.view === 'doing') {
     box.appendChild(group('In progress', of(function (c) { return c.stage === 'doing'; }), { stage: false }));
+    animate(box);
     return;
   }
   var secs = r.view === 's' ? b.sections.filter(function (s) { return s.id === r.arg; }) : b.sections;
@@ -598,7 +859,7 @@ function boardContent(box, r) {
     GROUP_ORDER.forEach(function (st) {
       var list = cards.filter(function (c) { return c.stage === st; });
       if (!list.length) return;
-      var g = group(STAGE_NAMES[st], list, { section: false, stage: false });
+      var g = group(STAGE_NAMES[st], list, { section: false, stage: false, drag: r.view === 's' }, r.view === 's' && list.length > 1 && st !== 'done' ? 'drag ⋮⋮ to reorder' : null);
       if (st === 'done') {
         var d = el('details', { class: 'done' }, [el('summary', {}, [g.firstChild])]);
         d.appendChild(g.lastChild);
@@ -607,6 +868,7 @@ function boardContent(box, r) {
     });
     if (!cards.length) box.appendChild(el('div', { class: 'list', style: 'margin-bottom:16px' }, [el('div', { class: 'empty', text: 'No cards yet.' })]));
   });
+  animate(box);
 }
 
 // ---- a new card ----
@@ -633,22 +895,41 @@ function newCard(sectionId) {
 }
 
 // ---- one card ----
-function closeCard() { document.getElementById('screen').innerHTML = ''; document.body.style.overflow = ''; }
-function backToBoard() { go('#/p/' + state.project + '/' + (store.get('hubView:' + state.project) || 'needs')); }
+function closeCard() {
+  var holder = document.getElementById('screen'), scr = holder.querySelector('.screen');
+  document.body.style.overflow = '';
+  if (!scr) return;
+  if (state.quiet || REDUCED) { holder.innerHTML = ''; return; }
+  scr.classList.remove('enter'); scr.classList.add('leave');
+  setTimeout(function () { if (scr.parentNode) scr.parentNode.removeChild(scr); }, 230);
+}
+function backToBoard() { go('#/p/' + state.project + '/' + (store.get('hubView:' + state.project) || 'home')); }
 function openCard(id) {
   var c = cardById(id);
   if (!c) { toast('That card is gone.'); return backToBoard(); }
-  var tab = state.cardTab[id] || (c.question || c.unread ? 'talk' : c.stage === 'check' ? 'status' : 'plan');
-  var scr = el('div', { class: 'screen' });
+  var tab = state.cardTab[id] || (c.question || c.unread || isNew(c) ? 'talk' : c.stage === 'check' ? 'status' : 'plan');
+  var holder = document.getElementById('screen');
+  var old = holder.querySelector('.screen:not(.leave)');
+  var fresh = !old || old.getAttribute('data-id') !== id;
+  var scr = el('div', { class: 'screen' + (fresh && !state.quiet && !REDUCED ? ' enter' : ''), 'data-id': id });
+  var TABS = ['status', 'plan', 'talk', 'details'];
+  var shown = fresh ? null : old.getAttribute('data-tab');
   var draw = function () {
     c = cardById(id) || c;
+    var changed = shown !== null && shown !== tab, prev = shown;
+    shown = tab;
+    scr.setAttribute('data-tab', tab);
     state.cardTab[id] = tab;
+    markSeen(c);
     var talkCount = (c.thread || []).length;
     var seg = el('div', { class: 'seg' }, [['status', 'Status'], ['plan', 'Your plan'], ['talk', 'Talk'], ['details', 'Details']].map(function (t) {
       return el('button', { class: tab === t[0] ? 'on' : '', onclick: function () { tab = t[0]; draw(); } },
                 [t[1], t[0] === 'talk' && c.question ? el('span', { class: 'badge hot', text: '?' }) :
                        t[0] === 'talk' && talkCount ? el('span', { class: 'badge', text: String(talkCount) }) : null]);
     }));
+    // The highlight slides from the last tab to this one.
+    seg.style.setProperty('--k', TABS.indexOf(changed ? prev : tab));
+    if (changed) requestAnimationFrame(function () { requestAnimationFrame(function () { seg.style.setProperty('--k', TABS.indexOf(tab)); }); });
     var top = el('div', { class: 'top' }, [
       el('div', { class: 'bar' }, [
         el('button', { class: 'icon ghost', text: '‹', style: 'font-size:22px;padding:0 8px', onclick: function () {
@@ -657,7 +938,7 @@ function openCard(id) {
         el('div', { class: 'grow' }, [el('div', { class: 'crumb ellipsis', text: c.title }),
           el('div', { class: 'faint small ellipsis', text: sectionName(c.section) + ' · ' + STAGE_NAMES[c.stage] })])]),
       seg]);
-    var body = el('div', { class: 'scroll' });
+    var body = el('div', { class: 'scroll' + (changed && !REDUCED ? ' fade' : '') });
     var foot = null;
     if (tab === 'status') statusTab(body, c, draw);
     else if (tab === 'plan') planTab(body, c);
@@ -665,10 +946,11 @@ function openCard(id) {
     else detailsTab(body, c);
     scr.innerHTML = '';
     [top, body, foot].forEach(function (n) { if (n) scr.appendChild(n); });
+    if ((fresh || changed) && !state.quiet && !REDUCED) { body.classList.add('anim'); stagger(body); }
+    fresh = false;
     if (tab === 'talk') body.scrollTop = body.scrollHeight;
   };
   draw();
-  var holder = document.getElementById('screen');
   holder.innerHTML = '';
   holder.appendChild(scr);
   document.body.style.overflow = 'hidden';
@@ -680,9 +962,11 @@ function setStage(c, stage, draw) {
   }).catch(function (e) { toast(e.message); });
 }
 function renderBoardQuiet() {  // refresh the board behind the card
-  var r = { view: store.get('hubView:' + state.project) || 'needs' };
-  var p = r.view.split('/'); r.view = p[0]; r.arg = p[1] || '';
+  var r = { view: store.get('hubView:' + state.project) || 'home' };
+  var p = r.view.split('/'); r.view = p[0] === 'needs' ? 'home' : p[0]; r.arg = p[1] || '';
+  var q = state.quiet; state.quiet = true;
   renderBoard(r);
+  state.quiet = q;
 }
 function statusTab(box, c, draw) {
   var i = STAGES.indexOf(c.stage);

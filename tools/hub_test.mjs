@@ -55,17 +55,21 @@ try {
   check(tiles.includes('Bar3D') && /bar3d\.jpg/.test(pic), `the projects screen shows Bar3D with its picture (${tiles.join(', ')})`);
   await page.screenshot({ path: 'build/hub-projects.png' });
   await page.click('.tile:has-text("Bar3D")');
-  await page.waitForSelector('.nav button', { timeout: 10000 });
-  const nav = await page.$$eval('.nav button', (b) => b.map((x) => x.textContent));
-  check(nav.some((t) => t.startsWith('Needs you')) && nav.some((t) => t.startsWith('Games')) && nav.some((t) => t.startsWith('Performance')),
-        `the board's nav has the views and every section (${nav.length})`);
-  await page.click('.nav button:has-text("Games")');
+  await page.waitForSelector('.tabs button', { timeout: 10000 });
+  const tabs = await page.$$eval('.tabs button', (b) => b.map((x) => x.textContent));
+  const map = await page.$$eval('.content .maptile .nm', (b) => b.map((x) => x.textContent));
+  check(['Home', 'Queue', 'Sections', 'All'].every((t) => tabs.some((x) => x.startsWith(t))) && map.includes('Games') && map.includes('Performance'),
+        `Home: the bottom tabs and a map of every section (${map.length})`);
+  await wait(1200); await page.screenshot({ path: 'build/hub-home.png', fullPage: true });
+  await page.click('.maptile:has(.nm:text-is("Games"))');
   // (Wait for the Games view itself: the previous view's items match too.)
   await page.waitForFunction(() => location.hash.endsWith('/s/games') && document.querySelectorAll('.content .item').length > 3,
                              null, { timeout: 5000 });
   const cards = await page.$$eval('.content .item', (c) => c.length);
-  check(cards > 3 && page.url().endsWith('/s/games'), `a section shows its cards, grouped by stage (${cards} in Games)`);
-  await page.screenshot({ path: 'build/hub.png' });
+  const strip = await page.$$eval('.nav button.on', (b) => b.map((x) => x.textContent));
+  check(cards > 3 && page.url().endsWith('/s/games') && strip.some((t) => t.startsWith('Games')),
+        `a section shows its cards, grouped by stage, with the sections strip (${cards} in Games)`);
+  await wait(1200); await page.screenshot({ path: 'build/hub.png' });
 
   // A new card in Games, straight to Claude's queue.
   await page.click('.shead button:has-text("+ Card")');
@@ -83,6 +87,7 @@ try {
   const queue = await post('/hub/hub.php', { a: 'queue' }, { 'X-Hub-Key': key });
   const card = (queue.cards || []).find((c) => c.title === 'Bowling lane in the arcade');
   check(queue.ok === 1 && !!card && card.notes.includes('real pins') && card.stage === 'ready', 'Claude reads the queue with the key (the owner\'s words in notes)');
+  await wait(1100);  // "new from Claude" counts what comes after the page first loaded (seconds)
   const rep = await post('/hub/hub.php', { a: 'report', id: card.id, stage: 'check', report: 'Built two lanes.', build: 'abc1234',
                                            question: 'Wood or neon lanes?' }, { 'X-Hub-Key': key });
   check(rep.ok === 1 && rep.card.stage === 'check' && rep.card.thread.length === 2 && !rep.card.unread,
@@ -95,8 +100,9 @@ try {
 
   // The owner sees it in "Needs you" and answers in plain words.
   await page.click('.top button[title=Refresh]');
-  await page.click('.nav button:has-text("Needs you")');
-  await page.waitForSelector('.content .item:has-text("Bowling lane")', { timeout: 5000 });
+  await page.click('.tabs button:has-text("Home")');
+  await page.waitForSelector('.content .item:has-text("Bowling lane") .tag.q', { timeout: 5000 });
+  check(await page.$('.content .item:has-text("Bowling lane") .newdot') !== null, 'Home marks the card "new from Claude"');
   await page.click('.content .item:has-text("Bowling lane")');
   await page.waitForSelector('.screen .composer textarea', { timeout: 5000 });
   const shown = await page.textContent('.screen');
@@ -124,6 +130,30 @@ try {
   const claudeNotes = await post('/hub/hub.php', { a: 'save', card: { id: card.id, notes: 'overwritten' } }, { 'X-Hub-Key': key });
   check(notes.notes === 'Two lanes, neon, a scoreboard.' && claudeNotes.card.notes === notes.notes,
         '"What you want" saves, and Claude can\'t overwrite it');
+
+  // Drag to reorder: the first card of a Games group, dragged below the next one.
+  await page.goto(base + '/hub/#/p/bar3d/s/games');
+  await page.waitForFunction(() => [...document.querySelectorAll('.content .list')].some((l) => l.querySelectorAll(':scope > .item .grip').length > 1),
+                             null, { timeout: 5000 });
+  const ids = await page.evaluate(() => {
+    const l = [...document.querySelectorAll('.content .list')].find((x) => x.querySelectorAll(':scope > .item .grip').length > 1);
+    l.setAttribute('data-test', 'drag');
+    return [...l.querySelectorAll(':scope > .item')].slice(0, 2).map((i) => i.getAttribute('data-id'));
+  });
+  const g0 = await page.$('[data-test=drag] > .item:first-child .grip');
+  const box0 = await g0.boundingBox();
+  const h1 = (await (await page.$('[data-test=drag] > .item:nth-child(2)')).boundingBox()).height;
+  await page.mouse.move(box0.x + box0.width / 2, box0.y + box0.height / 2);
+  await page.mouse.down();
+  for (let k = 1; k <= 6; k++) await page.mouse.move(box0.x + box0.width / 2, box0.y + box0.height / 2 + (h1 * 1.3 * k) / 6);
+  await page.mouse.up();
+  await wait(900);
+  const reordered = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards;
+  const o = (id) => reordered.find((c) => c.id === id).order;
+  check(o(ids[0]) > o(ids[1]) && page.url().endsWith('/s/games'), 'dragging a card by its grip reorders the section (and doesn\'t open it)');
+  const placed = await post('/hub/hub.php', { a: 'place', id: ids[0], before: ids[1] }, { 'X-Hub-Key': key });
+  const back = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards;
+  check(placed.status === 403 && back.find((c) => c.id === ids[0]).order === o(ids[0]), 'only the owner reorders (Claude\'s key is refused)');
 
   // A second project, with its own board.
   await page.goto(base + '/hub/#/');

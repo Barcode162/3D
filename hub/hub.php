@@ -410,6 +410,28 @@ if ($a === 'move') {
   }));
 }
 
+// Drag to reorder: put a card right before (or after) another card of its section.
+if ($a === 'place') {
+  if ($me['role'] !== 'owner') fail('Only the owner orders the board.', 403);
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  $before = is_string($in['before'] ?? null) ? $in['before'] : '';
+  $after = is_string($in['after'] ?? null) ? $in['after'] : '';
+  reply(with_board($pid, function (&$b) use ($id, $before, $after) {
+    $i = find_card($b, $id);
+    if ($i < 0) fail('That card is gone.', 404);
+    $sec = $b['cards'][$i]['section'];
+    $same = array_values(array_filter(array_keys($b['cards']), fn($k) => $b['cards'][$k]['section'] === $sec && $k !== $i));
+    usort($same, fn($x, $y) => $b['cards'][$x]['order'] <=> $b['cards'][$y]['order']);
+    $anchor = find_card($b, $before !== '' ? $before : $after);
+    $pos = $anchor >= 0 ? array_search($anchor, $same, true) : false;
+    if ($pos === false) $pos = count($same);
+    elseif ($before === '') $pos++;
+    array_splice($same, $pos, 0, [$i]);
+    foreach ($same as $n => $k) $b['cards'][$k]['order'] = $n;
+    return ['ok' => 1, '_save' => true];
+  }));
+}
+
 if ($a === 'delete') {
   if ($me['role'] !== 'owner') fail('Only the owner deletes cards.', 403);
   $id = is_string($in['id'] ?? null) ? $in['id'] : '';
