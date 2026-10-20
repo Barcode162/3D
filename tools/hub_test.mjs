@@ -60,7 +60,9 @@ try {
   check(nav.some((t) => t.startsWith('Needs you')) && nav.some((t) => t.startsWith('Games')) && nav.some((t) => t.startsWith('Performance')),
         `the board's nav has the views and every section (${nav.length})`);
   await page.click('.nav button:has-text("Games")');
-  await page.waitForSelector('.content .item', { timeout: 5000 });
+  // (Wait for the Games view itself: the previous view's items match too.)
+  await page.waitForFunction(() => location.pathname.endsWith('/s/games') && document.querySelectorAll('.content .item').length > 3,
+                             null, { timeout: 5000 }).catch(() => {});
   const cards = await page.$$eval('.content .item', (c) => c.length);
   check(cards > 3 && page.url().endsWith('/s/games'), `a section shows its cards, grouped by stage (${cards} in Games)`);
   await page.screenshot({ path: 'build/hub.png' });
