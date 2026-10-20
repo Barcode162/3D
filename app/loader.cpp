@@ -12,9 +12,12 @@ namespace app {
 void Loader::enter(Stage s, const char* text) {
   stage_ = s;
   static const char* kNames[] = {"models", "finishing", "shaders", "warm-up", "steady", "ready", "failed"};
+  // Where the loading bar stands when each stage starts (the downloads fill
+  // the bar up to 85%, see index.html barLoading.set).
+  static const float kBar[] = {0.05f, 0.85f, 0.9f, 0.94f, 0.97f, 1.0f, 1.0f};
   engine::profiler().stage(std::string("load:") + kNames[static_cast<int>(s)]);
-  EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage'](UTF8ToString($0)); },
-         text);
+  EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage'](UTF8ToString($0), $1); },
+         text, kBar[static_cast<int>(s)]);
 }
 
 bool Loader::update(const LoaderInputs& in, double nowMs) {
@@ -28,19 +31,20 @@ bool Loader::update(const LoaderInputs& in, double nowMs) {
       if (in.filesDone < in.files) return false;
       LOG_INFO("Everything loaded (%zu model files).", in.files);
       engine::profiler().stage("loaded");
-      enter(Stage::kFinishing, "Finishing textures…");
+      enter(Stage::kFinishing, "Unpacking the textures");
       [[fallthrough]];
     case Stage::kFinishing:
       if (in.jobsPending > 0) return false;
-      enter(Stage::kShaders, "Preparing shaders…");
+      enter(Stage::kShaders, "Preparing the lights and materials");
       [[fallthrough]];
     case Stage::kShaders:
       if (in.pipelinesPending > 0) return false;
-      enter(Stage::kWarmUp, "Warming up…");
+      enter(Stage::kWarmUp, "Turning the lights on");
       return false;  // the warm-up frame is drawn by the frame loop
     case Stage::kWarmUp:
       if (!in.warmUpDone) return false;
       stage_ = Stage::kSteady;
+      EM_ASM({ if (window['barLoading'] && window['barLoading']['stage']) window['barLoading']['stage']('', 0.97); });
       steadySinceMs_ = prevFrameMs_ = nowMs;
       return false;
     case Stage::kSteady: {

@@ -15,6 +15,7 @@
 <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data: https://joshuavelasco.com https://*.workers.dev wss://*.workers.dev http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; img-src 'self' https://joshuavelasco.com data: blob:">
 <link rel="preload" href="app.wasm?v=__BUILD__" as="fetch" crossorigin>
 <link rel="stylesheet" href="theme.css?v=__BUILD__">
+<link rel="preload" href="loading.jpg" as="image">
 <style>
   html, body { margin: 0; height: 100%; background: #0b0710; overflow: hidden;
                overscroll-behavior: none; -webkit-user-select: none; user-select: none;
@@ -59,6 +60,14 @@
              color: #f5d9a8; font: 13px/1.4 ui-monospace, Menlo, monospace; text-align: center;
              transition: opacity 0.7s ease; }
   #loading.gone { opacity: 0; pointer-events: none; }
+  /* Behind it, a still of the bar (made by the game itself, web/loading.jpg),
+     dimmed, fading in once it has arrived. */
+  #loading::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0;
+                     background: linear-gradient(180deg, #0b0710e6 0%, #0b0710a6 45%, #0b0710e6 100%),
+                                 url(loading.jpg) center 40% / cover no-repeat;
+                     transition: opacity 0.8s ease; }
+  #loading.pic::before { opacity: 1; }
+  #loading { isolation: isolate; }
   #loading { will-change: opacity; }
   /* The HUD buttons appear once you're in (the error badge always can). */
   body:not(.entered) #hud button:not(#errBadge) { visibility: hidden; }
@@ -84,7 +93,7 @@
   <div class="title">BAR3D</div>
   <div class="sub">a cozy bar, built from scratch</div>
   <div id="loadBar"><div id="loadFill"></div></div>
-  <div id="loadText">Starting the engine…</div>
+  <div id="loadText">Starting the engine… 0%</div>
   <button id="enter" hidden>Tap to enter</button>
 </div>
 <div id="stickBase"></div>
@@ -350,6 +359,11 @@
     // barLoading.ready() once every model is in; then "Tap to enter" (that
     // tap also unlocks sound on iOS). ?skipintro enters by itself (tests).
     var loadingEl = document.getElementById('loading');
+    (function () {  // the bar's picture behind the loading screen, once it's here
+      var img = new Image();
+      img.onload = function () { loadingEl.classList.add('pic'); };
+      img.src = 'loading.jpg';
+    })();
     var enterBtn = document.getElementById('enter');
     function enter() {
       document.body.classList.add('entered');
@@ -361,13 +375,20 @@
       if (window.Module && Module._app_enter) Module._app_enter();
     }
     enterBtn.onclick = enter;
+    // One bar for the whole wait: the downloads fill it from 5% to 85%, then
+    // the last stages (app/loader.cpp) take it to 100%. It never goes back.
+    var shownFill = 0, stageText = '';
+    function fill(f) {
+      shownFill = Math.max(shownFill, Math.min(1, Math.max(0, f)));
+      document.getElementById('loadFill').style.transform = 'scaleX(' + shownFill + ')';
+      document.getElementById('loadText').textContent = stageText + '… ' + Math.round(shownFill * 100) + '%';
+    }
     window.barLoading = {
       set: function (done, total, progress) {
-        document.getElementById('loadFill').style.transform = 'scaleX(' + Math.min(1, Math.max(0, progress)) + ')';
-        document.getElementById('loadText').textContent =
-          'Building the bar… ' + done + ' / ' + total + ' pieces';
+        stageText = 'Bringing in the bar (' + done + ' of ' + total + ' pieces)';
+        fill(0.05 + 0.8 * progress);
       },
-      stage: function (text) { document.getElementById('loadText').textContent = text; },
+      stage: function (text, f) { if (text) stageText = text; fill(f || shownFill); },
       // Some files never arrived: say so, with Retry (a reload). `critical` =
       // the room itself is missing, so entering isn't offered.
       fail: function (text, critical) {
