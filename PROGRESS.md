@@ -62,10 +62,22 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
    - Left of Phase 4 (need protocol changes, do with Phase 5): 4.1c (remote
      visuals in one place), 4.2 (stable entity ids), 4.3b (darts, bartending,
      race in the activity system + pose layer).
-3. [ ] **Accounts + economy foundation:** accounts move from IONOS PHP to
-   Cloudflare D1; age at sign-up (13+ only; teen 13-17 / adult 18+ bands);
-   inventory and a currency ledger the server owns (every change a
-   transaction). Server checks for 4K Mania scores and chess moves.
+3. [ ] **Accounts + economy foundation:** age at sign-up (13+ only; teen 13-17 /
+   adult 18+ bands); inventory and a currency ledger the server owns (every
+   change a transaction); accounts off IONOS; server checks for 4K Mania
+   scores and chess moves.
+   - [x] The Ledger (2026-10-20, running dark): `cloud/ledger.js`, a Durable
+     Object with SQLite next to the room (no D1, so no new Cloudflare
+     permissions): wallets in cents, every change a row with a unique ref
+     (nothing counted twice), never below zero, daily earning cap ($500),
+     numbered items (#1, #2...), tradeable flag. Players read their own wallet
+     at `/bank`; only the game's servers change money. Test: `tools/ledger_test.mjs`.
+   - [x] Age at sign-up (2026-10-20): birth date required, under 13 refused;
+     kept private, your own replies carry `band` ("teen"/"adult"; "" for older
+     accounts, to be asked later).
+   - [ ] Next: games pay into the ledger (part of 7), the wallet in the menu,
+     accounts moved off IONOS (logins to the Ledger's side, PBKDF2 hashes,
+     migrated on first login), room checks for chess moves and 4K Mania scores.
 4. [ ] **Safety:** age bands kept apart (lobbies, voice, messages), block /
    mute / report everywhere (report keeps the last seconds of voice),
    teen phrase builder, adult filtered text, the no-friends lobby.

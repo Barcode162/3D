@@ -153,9 +153,13 @@ export class Ledger {
         result = { ok: 0, error: 'not enough credits' };
         return;
       }
-      this.sql.exec(`INSERT INTO wallets (user, balance, updated) VALUES (?, ?, ?)
-                     ON CONFLICT (user) DO UPDATE SET balance = balance + excluded.balance, updated = excluded.updated`,
-                    user, delta, now);
+      // (An update or an insert, not an upsert: the row's own CHECK would
+      // reject a negative delta before the conflict turned it into an update.)
+      if (this.sql.exec('SELECT 1 FROM wallets WHERE user = ?', user).toArray().length) {
+        this.sql.exec('UPDATE wallets SET balance = balance + ?, updated = ? WHERE user = ?', delta, now, user);
+      } else {
+        this.sql.exec('INSERT INTO wallets (user, balance, updated) VALUES (?, ?, ?)', user, delta, now);
+      }
       this.sql.exec('INSERT INTO ledger (user, delta, reason, ref, at) VALUES (?, ?, ?, ?, ?)', user, delta, reason, ref, now);
       result = { ok: 1, credited: sign > 0 ? delta : undefined, capped: sign > 0 && delta < cents ? 1 : undefined,
                  balance: this.balanceOf(user) };

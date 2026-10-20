@@ -78,7 +78,8 @@ try {
   check(me.items.length === 1 && me.items[0].item === 'jacket.gold' && me.items[0].serial === 1 && me.items[0].tradeable === 1,
         'your wallet lists your gold jacket #1 (tradeable)');
   const h = await internal({ a: 'history', user: USER, limit: 10 });
-  check(h.ok === 1 && h.rows.length === 4 && h.rows[0].ref === 'race-1', 'the history has every change, newest first');
+  check(h.ok === 1 && h.rows.length === 3 && h.rows[0].ref === 'race-1' && h.rows[2].ref === 'darts-1',
+        'the history has every change that went through, newest first');
   check((await internal({ a: 'credit', user: USER, cents: -5, reason: 'x', ref: 'neg' })).ok === 0, 'negative amounts are refused');
 } catch (e) {
   console.log('ERROR ' + (e && e.stack || e));

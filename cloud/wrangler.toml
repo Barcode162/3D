@@ -17,6 +17,8 @@ ACCOUNT_URL = "https://joshuavelasco.com/bar/account.php"
 ALLOWED_ORIGINS = "https://barcode162.github.io,https://joshuavelasco.com"
 # Protocol version the room speaks (it also accepts PROTO - 1).
 PROTO = "1"
+# Earning cap per player per day, in cents of the world's currency.
+DAILY_CAP_CENTS = "50000"
 # Test-only switches, set by tools/room_test.mjs with --var: DEV = "1",
 # GRACE_MS, CONNECT_LIMIT_PER_MIN, GHOST_MS, AFK_MS, GHOST_CHECK_MS.
 
@@ -24,6 +26,15 @@ PROTO = "1"
 name = "ROOMS"
 class_name = "Room"
 
+# The Ledger (cloud/ledger.js): money and owned things, one SQLite database.
+[[durable_objects.bindings]]
+name = "LEDGER"
+class_name = "Ledger"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Ledger"]

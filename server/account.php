@@ -4,7 +4,10 @@
 // relay.php, so it runs on the IONOS web hosting without a database.
 //
 // POST (JSON, sent as text/plain so browsers skip the CORS preflight):
-//   {"a":"signup","user":"josh","pass":"...","name":"Josh"}  -> {"ok":1,"token":..,"me":profile}
+//   {"a":"signup","user":"josh","pass":"...","name":"Josh","birth":"2004-05-17"}
+//                                                          -> {"ok":1,"token":..,"me":profile}
+//     (13 and up only; the birth date stays private: your own replies carry
+//      only "band": "teen" (13-17) or "adult", "" for older accounts without one)
 //   {"a":"login","user":"josh","pass":"..."}                -> {"ok":1,"token":..,"me":profile}
 //   {"a":"me","token":".."}                                 -> {"ok":1,"me":profile}
 //   {"a":"update","token":"..","name":..,"bio":..,"drink":..,"song":..,"color":0..7}
@@ -85,6 +88,15 @@ function is_owner($u) {
   return is_array($names) && count($names) && array_key_first($names) === $u['user'];
 }
 
+// Age group from the private birth date: "teen" (13-17), "adult", or ""
+// (accounts made before birth dates were asked). Only in your own replies.
+function age_band($u) {
+  $b = $u['birth'] ?? '';
+  if (!is_string($b) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $b)) return '';
+  $age = (new DateTime($b))->diff(new DateTime('today'))->y;
+  return $age >= 18 ? 'adult' : 'teen';
+}
+function own_profile($u) { return public_profile($u) + ['band' => age_band($u)]; }
 // What others may see.
 function public_profile($u) {
   $badges = $u['badges'] ?? [];
@@ -143,12 +155,21 @@ if ($a === 'signup' || $a === 'login') {
   $names = json_decode(stream_get_contents($namesFile), true);
   if (!is_array($names)) $names = [];
   if ($a === 'signup') {
+    // 13 and up: the birth date is required and kept private.
+    $birth = is_string($in['birth'] ?? null) ? $in['birth'] : '';
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birth, $bm) || !checkdate((int)$bm[2], (int)$bm[3], (int)$bm[1])) {
+      flock($namesFile, LOCK_UN);
+      fail('Please enter your birth date.');
+    }
+    $age = (new DateTime($birth))->diff(new DateTime('today'))->y;
+    if ((new DateTime($birth)) > new DateTime('today') || $age > 120) { flock($namesFile, LOCK_UN); fail('Please enter your real birth date.'); }
+    if ($age < 13) { flock($namesFile, LOCK_UN); fail('Bar3D is for ages 13 and up.'); }
     if (isset($names[$user])) { flock($namesFile, LOCK_UN); fail('That username is taken.'); }
     $id = bin2hex(random_bytes(6));
     $display = clean($in['name'] ?? '', 20);
     $u = ['id' => $id, 'user' => $user, 'hash' => password_hash($pass, PASSWORD_DEFAULT),
           'name' => $display !== '' ? $display : $user, 'bio' => '', 'drink' => '', 'song' => '',
-          'color' => random_int(0, 7), 'avatar' => 0, 'joined' => date('Y-m-d'), 'tokens' => []];
+          'color' => random_int(0, 7), 'avatar' => 0, 'joined' => date('Y-m-d'), 'birth' => $birth, 'tokens' => []];
     $names[$user] = $id;
     ftruncate($namesFile, 0);
     rewind($namesFile);
@@ -170,7 +191,7 @@ if ($a === 'signup' || $a === 'login') {
   $u['tokens'][] = hash('sha256', $token);
   while (count($u['tokens']) > MAX_TOKENS_PER_USER) @unlink("$base/tokens/" . array_shift($u['tokens']) . '.json');
   write_json(user_path($u['id']), $u);
-  reply(['ok' => 1, 'token' => $token, 'me' => public_profile($u)]);
+  reply(['ok' => 1, 'token' => $token, 'me' => own_profile($u)]);
 }
 
 if ($a === 'profile') {
@@ -182,7 +203,7 @@ if ($a === 'profile') {
 
 $u = user_for_token($in['token'] ?? '');
 
-if ($a === 'me') reply(['ok' => 1, 'me' => public_profile($u)]);
+if ($a === 'me') reply(['ok' => 1, 'me' => own_profile($u)]);
 
 if ($a === 'update') {
   if (isset($in['name'])) {
@@ -212,7 +233,7 @@ if ($a === 'update') {
     $u['slots'] = $slots;
   }
   write_json(user_path($u['id']), $u);
-  reply(['ok' => 1, 'me' => public_profile($u)]);
+  reply(['ok' => 1, 'me' => own_profile($u)]);
 }
 
 if ($a === 'avatar') {
@@ -225,7 +246,7 @@ if ($a === 'avatar') {
   file_put_contents("$base/avatars/{$u['id']}.jpg", $bytes);
   $u['avatar'] = ($u['avatar'] ?? 0) + 1;
   write_json(user_path($u['id']), $u);
-  reply(['ok' => 1, 'me' => public_profile($u)]);
+  reply(['ok' => 1, 'me' => own_profile($u)]);
 }
 
 if ($a === 'badge') {
@@ -242,7 +263,7 @@ if ($a === 'badge') {
   $t['badges'] = array_values(array_unique($list));
   write_json(user_path($t['id']), $t);
   if ($t['id'] === $u['id']) $u = $t;
-  reply(['ok' => 1, 'profile' => public_profile($t), 'me' => public_profile($u)]);
+  reply(['ok' => 1, 'profile' => public_profile($t), 'me' => own_profile($u)]);
 }
 
 if ($a === 'logout') {

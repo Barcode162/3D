@@ -66,6 +66,7 @@ bash tools/native/run.sh             # car, race, JSON, math, physics tests (g++
 node tools/lint_emasm.mjs            # quoted names in EM_ASM (Release renames the rest)
 node tools/proto_test.mjs            # room protocol codec on proto/vectors.json (C++ twin in run.sh)
 node tools/room_test.mjs             # Cloudflare room via its own wrangler dev (setup.sh installs it)
+node tools/ledger_test.mjs           # the Ledger (money, items) via its own wrangler dev
 NODE_PATH=$(npm root -g) node tools/mp_test.mjs     # two/three players + the room (wrangler dev)
 NODE_PATH=$(npm root -g) node tools/voice_test.mjs  # voice chat between two players
 NODE_PATH=$(npm root -g) node tools/meridian_test.mjs  # Meridian from a racing rig and back
@@ -143,7 +144,8 @@ judged on the user's phone.
   codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
   `proto/vectors.json`. `cloud/` is the Cloudflare Worker (`worker.js`:
   router, Origin check, `/health`) + room Durable Object (`room.js`), the
-  multiplayer server. The room checks every shared write (`rules.js`) and runs
+  multiplayer server, + the Ledger (`ledger.js`: money and owned things,
+  `/bank`, test `tools/ledger_test.mjs`). The room checks every shared write (`rules.js`) and runs
   games itself (`cloud/games/`: darts, jukebox, glasses); the glasses use the
   bar's own C++ physics compiled for the Worker (`cloud/sim/`, built by
   `cloud/sim/build.sh` into `room_sim.wasm`, not in git: CI and `setup.sh` build

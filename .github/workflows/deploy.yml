@@ -98,6 +98,9 @@ jobs:
           npm ci --prefix cloud --no-audit --no-fund >/dev/null
           node tools/room_test.mjs
 
+      - name: "Test: the ledger (money and owned things, wrangler dev)"
+        run: node tools/ledger_test.mjs
+
       - name: Install Playwright
         run: |
           npm i --no-save --no-package-lock playwright@1.56.1

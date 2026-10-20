@@ -1057,3 +1057,23 @@ No builds or headless runs outside "go".
   load at start when part of it faces another room (the arcade's doorway arch
   and sign were missing at spawn, 2026-10-20): only its inside streams.
 
+## The ledger and age bands (2026-10-20, master list 3)
+- Money and owned things live in a **Durable Object with SQLite**
+  (`cloud/ledger.js`, binding `LEDGER`, migration tag v2), not D1: the room
+  already uses SQLite Durable Objects, so the existing CI token deploys it and
+  nothing new is needed from the user. One object ("main") for now; shard by
+  player later if it ever gets busy.
+- Rules: cents (integers); each change is a `ledger` row with a UNIQUE `ref` (a
+  repeat is a no-op); `wallets.balance` CHECK ≥ 0 and spends refused when
+  short; earnings capped per UTC day (`DAILY_CAP_CENTS`, $500); numbered items
+  get the next serial per item. Gotcha: an upsert with a negative amount trips
+  the CHECK before the conflict becomes an update: update or insert instead.
+- Trust: the Worker forwards internet requests to `/bank` with `X-Public: 1`,
+  and those may only read your own wallet ("me", by login token, asked from
+  account.php and cached 5 min). Money changes come straight from other
+  Durable Objects (the room's games, later the mall and the VIP store).
+  `/bank-internal` exists only with DEV = "1" (tests).
+- Age: sign-up needs a birth date; under 13 is refused ("Bar3D is for ages 13
+  and up."); the date is private; `band` ("teen"/"adult") only in your own
+  replies, so the room can keep teens and adults apart (master list 4).
+

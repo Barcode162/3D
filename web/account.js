@@ -150,12 +150,14 @@ window.bar3dAccount = (function () {
     var name = el('input', { placeholder: 'how your name shows in the bar', maxlength: '20' });
     var pass = el('input', { type: 'password', autocomplete: signup ? 'new-password' : 'current-password',
                              placeholder: 'password (6+ characters)' });
+    // Sign up: 13 and up only. The date stays private (account.php).
+    var birth = el('input', { type: 'date', autocomplete: 'bday' });
     var err = el('div', { class: 'acctErr' });
     var go = el('button', { class: 'acctBtn', text: signup ? 'Create account' : 'Log in' });
     go.onclick = function () {
       err.textContent = '';
       go.disabled = true;
-      call({ a: signup ? 'signup' : 'login', user: user.value, pass: pass.value, name: name.value })
+      call({ a: signup ? 'signup' : 'login', user: user.value, pass: pass.value, name: name.value, birth: birth.value })
         .then(function (r) {
           setSession(r.token, r.me);
           info('Account: logged in as ' + r.me.name + '.');
@@ -164,7 +166,9 @@ window.bar3dAccount = (function () {
         .catch(function (e) { err.textContent = e.message; go.disabled = false; });
     };
     var children = [el('h2', { text: signup ? 'Sign up' : 'Log in' }), el('label', { text: 'Username' }), user];
-    if (signup) children.push(el('label', { text: 'Display name' }), name);
+    if (signup) {
+      children.push(el('label', { text: 'Display name' }), name, el('label', { text: 'Birth date (13 and up; kept private)' }), birth);
+    }
     children.push(el('label', { text: 'Password' }), pass, err, go,
                   el('button', { class: 'acctBtn ghost', text: 'Cancel', onclick: close }),
                   el('div', { class: 'acctSmall' }, [el('a', {

@@ -13,6 +13,7 @@
 // Requests without an Origin (Node test tools) are allowed: this check stops
 // other websites' pages, it isn't a login.
 export { Room } from './room.js';
+export { Ledger } from './ledger.js';
 
 const HEALTH_CACHE_MS = 60000;
 
@@ -53,6 +54,16 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/health' || url.pathname === '/') return json(await healthAnswer(env));
+    // The Ledger: players may only read their own wallet (X-Public); the
+    // test-only door /bank-internal exists with DEV = "1" only.
+    if (url.pathname === '/bank' || (url.pathname === '/bank-internal' && env.DEV === '1')) {
+      if (!originAllowed(request.headers.get('Origin'), env)) return json({ ok: 0, error: 'origin not allowed' }, 403);
+      const headers = new Headers(request.headers);
+      if (url.pathname === '/bank') headers.set('X-Public', '1');
+      else headers.delete('X-Public');
+      const ledger = env.LEDGER.get(env.LEDGER.idFromName('main'));
+      return ledger.fetch(new Request(request, { headers }));
+    }
     const m = /^\/room\/([a-z0-9-]{1,32})(\/debug)?$/.exec(url.pathname);
     if (!m) return json({ ok: 0, error: 'not found' }, 404);
     if (m[2] && env.DEV !== '1') return json({ ok: 0, error: 'not found' }, 404);
