@@ -1,5 +1,5 @@
-// Stable entity ids (app/entities.h) on the real bar layout: every id and
-// net id is unique, and the list equals app/entity_ids.txt. A deliberate
+// Stable entity ids (bar/entities.h) on the real bar layout: every id and
+// net id is unique, and the list equals bar/entity_ids.txt. A deliberate
 // layout change: run with UPDATE=1 to rewrite the list, and check the diff.
 #include <cstdio>
 #include <cstdlib>
@@ -8,8 +8,8 @@
 #include <sstream>
 #include <string>
 
-#include "app/bar_scene.h"
-#include "app/entities.h"
+#include "bar/bar_scene.h"
+#include "bar/entities.h"
 
 int main() {
   int failures = 0;
@@ -29,7 +29,7 @@ int main() {
   }
   check(ids.size() == all.size(), std::to_string(all.size()) + " entities, every id unique");
   check(nets.size() == all.size(), "every net id unique");
-  const char* path = "app/entity_ids.txt";
+  const char* path = "bar/entity_ids.txt";
   if (std::getenv("UPDATE")) {
     std::ofstream(path) << list.str();
     std::printf("wrote %s\n", path);

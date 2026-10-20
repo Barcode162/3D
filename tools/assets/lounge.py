@@ -248,7 +248,7 @@ def build_lounge():
             cb_px[i * 16:(i + 1) * 16, j * 16:(j + 1) * 16] = common.srgb((0.85, 0.75, 0.55)) if (i + j) % 2 else \
                 common.srgb((0.3, 0.18, 0.1))
     chess = common.image_material("Chess board", cb_px, roughness=0.3)
-    # The board is played on (app/chess.cpp moves the pieces, models from
+    # The board is played on (bar/projects/chess/chess.cpp moves the pieces, models from
     # tools/assets/chess.py): 0.44 m, centred on the table, rank 1 toward +z
     # (the armchair at +z plays white). Keep in step with kBoard* there.
     CB, BZC = 0.44, TZ

@@ -5,22 +5,22 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p build/native
-RACE="app/race/world.cpp app/race/track.cpp app/race/mesh.cpp app/race/cars.cpp engine/vehicle.cpp engine/drive/car_spec.cpp engine/drive/tire.cpp engine/drive/vehicle_sim.cpp engine/json.cpp"
+RACE="bar/projects/racing/world.cpp bar/projects/racing/track.cpp bar/projects/racing/mesh.cpp bar/projects/racing/cars.cpp looped/vehicle.cpp looped/drive/car_spec.cpp looped/drive/tire.cpp looped/drive/vehicle_sim.cpp looped/json.cpp"
 declare -A TESTS=(
-  [vehicle_test]="tools/native/vehicle_test.cpp engine/vehicle.cpp"
-  [drive_lab]="tools/native/drive_lab.cpp engine/drive/car_spec.cpp engine/drive/tire.cpp engine/drive/vehicle_sim.cpp engine/json.cpp"
+  [vehicle_test]="tools/native/vehicle_test.cpp looped/vehicle.cpp"
+  [drive_lab]="tools/native/drive_lab.cpp looped/drive/car_spec.cpp looped/drive/tire.cpp looped/drive/vehicle_sim.cpp looped/json.cpp"
   [race_test]="tools/native/race_test.cpp $RACE"
-  [steering_test]="tools/native/steering_test.cpp engine/steering.cpp $RACE"
-  [json_test]="tools/native/json_test.cpp engine/json.cpp"
+  [steering_test]="tools/native/steering_test.cpp looped/steering.cpp $RACE"
+  [json_test]="tools/native/json_test.cpp looped/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [quality_test]="tools/native/quality_test.cpp"
-  [entity_test]="tools/native/entity_test.cpp app/entities.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp engine/mesh_data.cpp"
-  [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"
-  [chess_test]="tools/native/chess_test.cpp app/chess_rules.cpp"
-  [activity_test]="tools/native/activity_test.cpp app/activity.cpp"
-  [interaction_test]="tools/native/interaction_test.cpp app/interaction.cpp"
-  [walk_test]="tools/native/walk_test.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp engine/mesh_data.cpp"
-  [physics_test]="tools/native/physics_test.cpp engine/physics.cpp engine/mesh_data.cpp app/props.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp"
+  [entity_test]="tools/native/entity_test.cpp bar/entities.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp"
+  [proto_test]="tools/native/proto_test.cpp looped/netproto.cpp looped/json.cpp"
+  [chess_test]="tools/native/chess_test.cpp bar/projects/chess/chess_rules.cpp"
+  [activity_test]="tools/native/activity_test.cpp bar/activity.cpp"
+  [interaction_test]="tools/native/interaction_test.cpp bar/interaction.cpp"
+  [walk_test]="tools/native/walk_test.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp"
+  [physics_test]="tools/native/physics_test.cpp looped/physics.cpp looped/mesh_data.cpp bar/props.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp"
 )
 for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"
@@ -35,10 +35,10 @@ for t in "${!TESTS[@]}"; do
   fi
 done
 echo "== synth_bench (g++, limits) and (em++ + node, print only)"
-g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -o build/native/synth_bench
+g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp looped/synth.cpp -o build/native/synth_bench
 build/native/synth_bench
 if command -v em++ >/dev/null; then
-  em++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -sENVIRONMENT=node -o build/native/synth_bench.js
+  em++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp looped/synth.cpp -sENVIRONMENT=node -o build/native/synth_bench.js
   node build/native/synth_bench.js --print
 fi
 echo "NATIVE TESTS PASSED"

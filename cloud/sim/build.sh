@@ -5,8 +5,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 em++ -std=c++20 -O2 -I. -fno-exceptions \
-  cloud/sim/room_sim.cpp engine/physics.cpp engine/mesh_data.cpp app/props.cpp app/bar_scene.cpp \
-  app/materials.cpp engine/procedural.cpp \
+  cloud/sim/room_sim.cpp looped/physics.cpp looped/mesh_data.cpp bar/props.cpp bar/bar_scene.cpp \
+  bar/materials.cpp looped/procedural.cpp \
   --no-entry -sSTANDALONE_WASM=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=16MB -sSTACK_SIZE=1MB \
   -sEXPORTED_FUNCTIONS=_sim_buffer,_sim_init,_sim_step,_sim_get,_sim_hold,_sim_release,_sim_place,_sim_awake \
   -o cloud/sim/room_sim.wasm

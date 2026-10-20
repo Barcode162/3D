@@ -105,7 +105,7 @@ visuals tied to the jukebox, and a day/night view through a window.
 
 
 ## Your own avatar (2026-10-16)
-The user wants an avatar that really looks like them: realistic, Blender-quality modeling with a full bone rig, ideally built from a 3D scan of their face (e.g. an iPhone face-scan app exported to GLB/OBJ) so it's accurate. A rough procedural version based on their photo is in `app/avatar.cpp` for now. Note: everyone currently shares the same avatar body.
+The user wants an avatar that really looks like them: realistic, Blender-quality modeling with a full bone rig, ideally built from a 3D scan of their face (e.g. an iPhone face-scan app exported to GLB/OBJ) so it's accurate. A rough procedural version based on their photo is in `bar/avatar.cpp` for now. Note: everyone currently shares the same avatar body.
 
 ## Added 2026-10-16 (the "make everything work" request)
 - Voice chat with WebRTC, as close to lossless as possible; voice settings:

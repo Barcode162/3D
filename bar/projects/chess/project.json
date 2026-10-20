@@ -1,0 +1,7 @@
+{
+  "name": "Chess",
+  "about": "The lounge's chessboard: play the computer or another player.",
+  "kind": "native",
+  "code": ["chess.cpp", "chess_rules.cpp"],
+  "opens_from": "the lounge's chessboard"
+}

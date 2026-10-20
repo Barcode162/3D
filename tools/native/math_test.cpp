@@ -1,9 +1,9 @@
-// engine/math.h checks: quaternion helpers, angles, boxes, finite checks.
+// looped/math.h checks: quaternion helpers, angles, boxes, finite checks.
 #include <cmath>
 #include <cstdio>
 #include <initializer_list>
 
-#include "engine/math.h"
+#include "looped/math.h"
 
 using namespace engine;
 

@@ -23,7 +23,7 @@ const errors = await logErrors(page);
 const status = await page.$eval('#status', (el) => el.textContent);
 await page.screenshot({ path: shotPath });
 const spread = brightnessSpread(readPng(shotPath));
-// Frame profiler numbers (engine/profiler.cpp). Headless runs at 1-2 fps,
+// Frame profiler numbers (looped/profiler.cpp). Headless runs at 1-2 fps,
 // so judge phase costs and counts here, never the frame rate.
 const perf = await page.evaluate(() => window.bar3dPerf);
 let perfLine = 'perf: (window.bar3dPerf missing)';
@@ -102,7 +102,7 @@ await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
   await cp.close();
 }
 
-// A piano song: never more than 32 sounds at once (engine/audio.h kMaxVoices).
+// A piano song: never more than 32 sounds at once (looped/audio.h kMaxVoices).
 {
   const pp = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
   await openBar(pp, site.url, 'skipintro&server=off&pianosong=0&cam=-3.6,1.65,3.2,-115,-10');

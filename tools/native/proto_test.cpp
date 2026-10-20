@@ -1,4 +1,4 @@
-// Room protocol codec test (engine/netproto.*): the same golden vectors as
+// Room protocol codec test (looped/netproto.*): the same golden vectors as
 // tools/proto_test.mjs (cloud/proto.js), so the game and the server agree
 // byte for byte. Bad frames must be rejected; random garbage must not crash.
 #include <cmath>
@@ -8,8 +8,8 @@
 #include <sstream>
 #include <string>
 
-#include "engine/json.h"
-#include "engine/netproto.h"
+#include "looped/json.h"
+#include "looped/netproto.h"
 
 using engine::Json;
 namespace np = engine::netproto;

@@ -89,7 +89,7 @@ that changed get rebuilt (docs/DECISIONS.md → Deploys by system).
 - **Tests per system** (before the push to `main`):
   hub → `hub_test.mjs` · server PHP → `php -l` + `hub_test.mjs` + `gate_test.mjs` ·
   cloud room/ledger → `proto_test`, `room_test`, `ledger_test`, `mp_test` ·
-  game (engine/, app/, shaders/, web/, assets/) → build + `smoke.mjs` +
+  game (looped/, bar/, looped/shaders/, bar/web/, assets/) → build + `smoke.mjs` +
   `tools/native/run.sh` + the feature's own test (arcade, rhythm, chess...) ·
   docs only → nothing.
 - **Two sessions at once:** each pushes to its own `work-<topic>` branch and
@@ -149,42 +149,48 @@ container, so rendering can be checked visually. Performance can only be
 judged on the user's phone.
 
 ## Layout
-- `engine/` is the reusable engine: GPU setup, math, meshes, camera, input
+**Looped layout (2026-10-20, docs/LOOPED.md B):** `looped/` is the engine
+(C++ namespace still `engine`; it never includes `bar/`), `bar/` the main
+game, `bar/projects/<name>/` the bar's projects, each with a `project.json`
+(`kind` web → copied to the site at its `site` path, the same addresses as
+before; `kind` native → C++ built into the game): `meridian`, `platformer`,
+`mania` (4K Mania), `chess`, `racing`. `bar/web/` is the page (the site's root).
+- `looped/` is the reusable engine: GPU setup, math, meshes, camera, input
   (incl. taps), logging, files, text (own pixel font), procedural textures,
   audio bridge, skeletons and skinned meshes, physics, car physics
   (`vehicle.*`; the new driving physics in `drive/`, docs/DRIVING_REWORK.md), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
   (`jobs.*`), async pipelines (`pipeline_cache.*`), the room protocol codec
   (`netproto.*`), the frame
   profiler and performance overlay (`profiler.*`, `?perf=1`).
-- `app/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
+- `bar/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
   `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
   players (multiplayer smoothing, their state slots), `shared_world.cpp`
   the shared glasses, jukebox and mirrors. `piano.cpp`, `darts.cpp`,
-  `rhythm.cpp`, `bartender.cpp` are the games and jobs; `app/race/` is the
+  `bartender.cpp` are the bar's games and jobs (4K Mania and chess are projects); `bar/projects/racing/` is the
   racing sim (`docs/RACING.md`: track, world + bots, controls, view, game).
   `main.cpp` is the entry point; `game.cpp` the frame's phases (a table:
   input → interaction → physics → net in → games → claims → net out →
   render), seats and things to use; `app_state.h` the shared App state, `hud.cpp` the on-screen text,
   `local_player.cpp` your camera, walking and held things. `loader.*` is the loading screen's stages,
   `test_hooks.*` the test page options (`?cam`, `?still`, `?sit`...).
-- `shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
+- `looped/shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
   third-party asset needs a license and credit entry (see
   `assets/music/CREDITS.md`).
-- `web/index.html` is the single page: fullscreen canvas, status bar, log
+- `bar/web/index.html` is the single page: fullscreen canvas, status bar, log
   panel. Everything C++ prints goes to the log panel; errors open it
-  automatically. `web/audio.js` is the thin Web Audio + song-picker bridge, `web/net.js`
-  the multiplayer bridge, `web/voice.js` WebRTC voice chat, `web/menu.js`
-  the HTML menus and settings, `web/account.js` accounts and profiles.
-  `web/bridge.js` (with `engine/bridge.*`) is the per-frame mailbox: one
+  automatically. `bar/web/audio.js` is the thin Web Audio + song-picker bridge, `bar/web/net.js`
+  the multiplayer bridge, `bar/web/voice.js` WebRTC voice chat, `bar/web/menu.js`
+  the HTML menus and settings, `bar/web/account.js` accounts and profiles.
+  `bar/web/bridge.js` (with `looped/bridge.*`) is the per-frame mailbox: one
   pull at frame start, one flush at frame end; prefer it over new EM_ASM
   calls in the frame.
-- `web/meridian/` is **Meridian**, the user's own driving game (three.js from
+- `bar/projects/meridian/` is **Meridian**, the user's own driving game (three.js from
   jsDelivr: the one approved exception to the no-outside-engines rule, for this
   game only; credits in its CREDITS.md, Blender scripts in `incoming/meridian/`).
-  Sitting in a racing rig opens a menu (`web/menu.js` "sim"): the bot race or
+  Sitting in a racing rig opens a menu (`bar/web/menu.js` "sim"): the bot race or
   Meridian, which opens full screen in an iframe while the bar keeps its
   connection and stops drawing. Test: `tools/meridian_test.mjs`.
 - `assets/midi/` holds the piano's MIDI songs (credits in its CREDITS.md).
@@ -192,7 +198,7 @@ judged on the user's phone.
 - `server/report.php` stores phone reports (Menu → Settings → Send report, or
   tap the build code 3 times, gives a code; read it with `curl -s 'https://joshuavelasco.com/bar/report.php?code=XXXXXX'`).
 - `docs/PROTOCOL.md` is the room protocol (Cloudflare room ↔ game); its two
-  codecs are `cloud/proto.js` and `engine/netproto.*`, both tested on
+  codecs are `cloud/proto.js` and `looped/netproto.*`, both tested on
   `proto/vectors.json`. `cloud/` is the Cloudflare Worker (`worker.js`:
   router, Origin check, `/health`) + room Durable Object (`room.js`), the
   multiplayer server, + the Ledger (`ledger.js`: money and owned things,
@@ -202,7 +208,7 @@ judged on the user's phone.
   `cloud/sim/build.sh` into `room_sim.wasm`, not in git: CI and `setup.sh` build
   it). It is deployed by CI to https://bar3d.joshuavelasco60.workers.dev,
   its address written into the site's `config.json`. The game finds it there
-  (`web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
+  (`bar/web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
   On localhost multiplayer is off unless `?cloud=ws://...` is given.
 - `hub/` is the project hub at joshuavelasco.com/hub (page + `hub.php`; its
   board lives in the private folder outside the web root; `seed.json` was the
@@ -230,12 +236,12 @@ judged on the user's phone.
   C++ API from `<webgpu/webgpu_cpp.h>` (emdawnwebgpu port).
 - Asynchronous WebGPU setup uses callbacks (`CallbackMode::AllowSpontaneous`),
   not Asyncify.
-- Log with `LOG_INFO` / `LOG_ERROR` from `engine/log.h`.
-- Pixel ratio is capped at 2 (`engine/gpu.cpp`) for phone GPU budget.
+- Log with `LOG_INFO` / `LOG_ERROR` from `looped/log.h`.
+- Pixel ratio is capped at 2 (`looped/gpu.cpp`) for phone GPU budget.
 - No outside engines or libraries. The engine is written from scratch.
   Exceptions must be discussed with the user first. (Approved so far: three.js,
   for Meridian, 2026-10-18, and for the user's platformer "Test 2" in the
-  arcade, `web/arcade/platformer/`, added "as is", 2026-10-19.)
+  arcade, `bar/projects/platformer/`, added "as is", 2026-10-19.)
 
 ## iOS Safari constraints to remember
 - WebGPU is available on iOS 26. There's no WebXR (AR would mean exporting USDZ for AR Quick Look).

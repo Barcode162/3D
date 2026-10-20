@@ -1,6 +1,6 @@
 // Darts, run by the room (the phone only says where it aimed): 301, three
 // darts a turn, finish on exactly zero; going below zero or to 1 is a bust
-// (the turn doesn't count). Same board and rules as app/darts.cpp, which
+// (the turn doesn't count). Same board and rules as bar/darts.cpp, which
 // now only draws what the room decides (and scores alone when offline).
 
 export const SPREAD = 0.022;  // metres: how far from the aim a dart lands (on average)

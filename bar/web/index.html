@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bar3D">
+<meta name="theme-color" content="#0b0710">
+<title>Bar3D</title>
+<!-- Which servers the page may talk to and load pictures from (defence in
+     depth; the real gate is bar/web/net.js's host allowlist). localhost is for
+     the headless tests. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data: https://joshuavelasco.com https://*.workers.dev wss://*.workers.dev http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; img-src 'self' https://joshuavelasco.com data: blob:">
+<link rel="preload" href="app.wasm?v=__BUILD__" as="fetch" crossorigin>
+<link rel="stylesheet" href="theme.css?v=__BUILD__">
+<link rel="preload" href="loading.jpg" as="image">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0710; overflow: hidden;
+               overscroll-behavior: none; -webkit-user-select: none; user-select: none;
+               -webkit-touch-callout: none; touch-action: none; }
+  #canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud { position: fixed; top: env(safe-area-inset-top); left: 0; right: 0;
+         display: flex; justify-content: space-between; align-items: center; gap: 8px;
+         padding: 6px 10px; font: 12px/1.3 ui-monospace, Menlo, monospace; color: #f5d9a8;
+         pointer-events: none; text-shadow: 0 1px 2px #000; z-index: 6; }
+  body.racing #hud { display: none; }  /* the race draws its own buttons */
+  body.still #hud { visibility: hidden; }  /* ?still test shots: no changing fps text */
+  #hud button { pointer-events: auto; font: inherit; color: inherit; background: #0008;
+                border: 1px solid #f5d9a855; border-radius: 6px; padding: 4px 8px; }
+  #log { position: fixed; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom));
+         max-height: 40%; overflow: auto; margin: 0; padding: 8px; border-radius: 8px;
+         background: #000c; color: #ddd; font: 11px/1.4 ui-monospace, Menlo, monospace;
+         white-space: pre-wrap; word-break: break-word; -webkit-user-select: text; user-select: text;
+         touch-action: pan-y; z-index: 7; }
+  #log.hidden { display: none; }
+  #log .err { color: #ff7a7a; }
+  #log .warn { color: #ffd27a; }
+  #errBadge { color: #fff !important; background: #c0222a !important; border-color: #ff8080 !important; }
+  #errBadge[hidden] { display: none; }
+  /* Fatal error: the game can't go on. */
+  #fatal { position: fixed; inset: 0; z-index: 20; display: none; flex-direction: column; align-items: center;
+           justify-content: center; gap: 14px; padding: 24px; background: #0b0710ee; color: #f5d9a8;
+           font: 14px/1.4 ui-monospace, Menlo, monospace; text-align: center; }
+  #fatal.on { display: flex; }
+  #fatal .big { font-size: 20px; color: #ff7a7a; }
+  #fatal .small { color: #f5d9a8aa; font-size: 12px; max-width: 90vw; word-break: break-word;
+                  -webkit-user-select: text; user-select: text; }
+  /* Virtual joystick, positioned by looped/input.cpp. */
+  #stickBase, #stickKnob { position: fixed; left: 0; top: 0; display: none; pointer-events: none;
+                           border-radius: 50%; }
+  #stickBase { width: 120px; height: 120px; margin: -60px 0 0 -60px;
+               border: 2px solid #f5d9a866; background: #f5d9a811; }
+  #stickKnob { width: 50px; height: 50px; margin: -25px 0 0 -25px; background: #f5d9a855; }
+  /* Loading screen: covers the room until every model has arrived. */
+  #loading { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; gap: 18px; padding: 24px;
+             background: radial-gradient(ellipse at 50% 40%, #2a1420 0%, #0b0710 70%);
+             color: #f5d9a8; font: 13px/1.4 ui-monospace, Menlo, monospace; text-align: center;
+             transition: opacity 0.7s ease; }
+  #loading.gone { opacity: 0; pointer-events: none; }
+  /* Behind it, a still of the bar (made by the game itself, bar/web/loading.jpg),
+     dimmed, fading in once it has arrived. */
+  #loading::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0;
+                     background: linear-gradient(180deg, #0b0710e6 0%, #0b0710a6 45%, #0b0710e6 100%),
+                                 url(loading.jpg) center 40% / cover no-repeat;
+                     transition: opacity 0.8s ease; }
+  #loading.pic::before { opacity: 1; }
+  #loading { isolation: isolate; }
+  #loading { will-change: opacity; }
+  /* The HUD buttons appear once you're in (the error badge always can). */
+  body:not(.entered) #hud button:not(#errBadge) { visibility: hidden; }
+  #loading .title { font-size: 44px; letter-spacing: 6px; color: #ff5ab4; font-weight: bold;
+                    text-shadow: 0 0 12px #ff2d95, 0 0 32px #ff2d9588; }
+  #loading .sub { color: #f5d9a8aa; margin-top: -10px; }
+  #loadBar { width: min(70vw, 320px); height: 10px; border-radius: 5px; background: #ffffff14;
+             border: 1px solid #f5d9a844; overflow: hidden; }
+  #loadFill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffb35a, #ff5ab4);
+              transform: scaleX(0); transform-origin: left; transition: transform 0.25s ease; }
+  #enter { font: inherit; font-size: 17px; color: #0b0710; background: #f5d9a8; border: 0;
+           border-radius: 22px; padding: 12px 34px; box-shadow: 0 0 22px #ffb35a88; }
+  #enter[hidden] { display: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="hud">
+  <span id="status">loading…</span>
+  <span>build <span id="build">__BUILD__</span> <button id="errBadge" hidden></button> <button id="logToggle">log</button></span>
+</div>
+<div id="loading">
+  <div class="title">BAR3D</div>
+  <div class="sub">a cozy bar, built from scratch</div>
+  <div id="loadBar"><div id="loadFill"></div></div>
+  <div id="loadText">Starting the engine… 0%</div>
+  <button id="enter" hidden>Tap to enter</button>
+</div>
+<div id="stickBase"></div>
+<div id="stickKnob"></div>
+<pre id="log" class="hidden"></pre>
+<div id="fatal"><div class="big">Something broke - tap to rejoin</div>
+  <div class="small" id="fatalText"></div><div id="fatalCode"></div></div>
+<script>
+  // The log: everything C++ and the bridges print (looped/log.h), plus any
+  // JavaScript/WebAssembly errors. A ring of the last 300 lines, drawn into
+  // the panel once per animation frame. Errors count on a red badge; only a
+  // fatal error opens the panel (behind "Something broke - tap to rejoin").
+  (function () {
+    var logEl = document.getElementById('log');
+    var badge = document.getElementById('errBadge');
+    var build = document.getElementById('build').textContent;
+    var RING = 300;
+    var ring = [], pending = [], errors = 0, flushQueued = false, fatalShown = false;
+    var repeats = {};  // rate limit: text (digits removed) -> {start, n, hidden, text, level}
+    function toggleLog() { logEl.classList.toggle('hidden'); if (!logEl.classList.contains('hidden')) logEl.scrollTop = logEl.scrollHeight; }
+    document.getElementById('logToggle').onclick = toggleLog;
+    badge.onclick = toggleLog;
+
+    function flush() {
+      flushQueued = false;
+      var now = performance.now();
+      for (var k in repeats) {  // "×N" for repeats hidden in the last second
+        var r = repeats[k];
+        if (now - r.start < 1000) continue;
+        if (r.hidden) store(r.level, '(x' + r.hidden + ' more in 1 s) ' + r.text);
+        delete repeats[k];
+      }
+      if (!pending.length) return;
+      var frag = document.createDocumentFragment();
+      pending.forEach(function (e) {
+        var line = document.createElement('div');
+        if (e.l === 'error' || e.l === 'fatal') line.className = 'err';
+        else if (e.l === 'warn') line.className = 'warn';
+        line.textContent = (e.t / 1000).toFixed(1) + ' ' + e.m;
+        frag.appendChild(line);
+      });
+      pending = [];
+      logEl.appendChild(frag);
+      while (logEl.childNodes.length > RING) logEl.removeChild(logEl.firstChild);
+      if (!logEl.classList.contains('hidden')) logEl.scrollTop = logEl.scrollHeight;
+      if (errors) { badge.hidden = false; badge.textContent = '\u26A0 ' + errors; }
+    }
+    function queueFlush() {
+      if (flushQueued) return;
+      flushQueued = true;
+      requestAnimationFrame(flush);
+      setTimeout(function () { if (flushQueued) flush(); }, 250);  // rAF pauses in background tabs
+    }
+    function store(level, text) {
+      var cat = /^([A-Z][A-Za-z ]{1,20}):/.exec(text);
+      var e = { t: Math.round(performance.now()), l: level, c: cat ? cat[1] : '', m: text };
+      ring.push(e);
+      if (ring.length > RING) ring.shift();
+      pending.push(e);
+      if (level === 'error' || level === 'fatal') errors++;
+      queueFlush();
+    }
+    window.bar3dLog = {
+      add: function (level, text) {
+        text = String(text);
+        if (level !== 'fatal') {
+          var key = text.replace(/[0-9.]+/g, '#').slice(0, 120);
+          var now = performance.now(), r = repeats[key];
+          if (!r || now - r.start >= 1000) {
+            if (r && r.hidden) store(r.level, '(x' + r.hidden + ' more in 1 s) ' + r.text);
+            r = repeats[key] = { start: now, n: 0, hidden: 0, text: text, level: level };
+          }
+          if (++r.n > 3) { r.hidden++; r.text = text; queueFlush(); return; }
+        }
+        store(level, text);
+        if (level === 'fatal') showFatal(text);
+      },
+      ring: function () { return ring.slice(); },
+      errors: function () { return errors; },
+    };
+    function append(text, isError) { bar3dLog.add(isError ? 'error' : 'info', text); }
+    // Lines printed with a "[level] " prefix (the bridges) keep that level.
+    function printed(text, fallback) {
+      var m = /^\[(info|warn|error|fatal)\] ?/.exec(text);
+      bar3dLog.add(m ? m[1] : fallback, m ? text.slice(m[0].length) : text);
+    }
+
+    function showFatal(text) {
+      if (fatalShown) return;
+      fatalShown = true;
+      var el = document.getElementById('fatal');
+      document.getElementById('fatalText').textContent = text;
+      el.classList.add('on');
+      el.onclick = function () { location.reload(); };  // keeps ?room and the other options
+      logEl.classList.remove('hidden');
+      if (window.bar3dReport) {
+        bar3dReport.send(true).then(function (code) {
+          document.getElementById('fatalCode').textContent = 'Report sent: ' + code;
+        }).catch(function () {});
+      }
+    }
+
+    window.addEventListener('error', function (e) { append('JS error: ' + e.message, true); });
+    document.addEventListener('securitypolicyviolation', function (e) {
+      append('Blocked by the page\'s security policy: ' + e.blockedURI + ' (' + e.violatedDirective + ')', true);
+    });
+    window.addEventListener('unhandledrejection', function (e) { append('Promise error: ' + e.reason, true); });
+
+    // Reports (Menu → Settings → Send report, and automatically on a fatal
+    // error): the log, performance numbers and device facts go to
+    // report.php next to the relay, which answers with a 6-letter code.
+    // Reports can be read by anyone with the code, so names and tokens are
+    // removed here first.
+    window.bar3dReport = {
+      url: function () {
+        var relay = window.bar3dNet && bar3dNet.serverUrl ? bar3dNet.serverUrl() : '';
+        return relay ? relay.replace(/relay\.php(\?.*)?$/, 'report.php') : '';
+      },
+      payload: function (fatal) {
+        var settings = {};
+        try { settings = JSON.parse(localStorage.getItem('bar3dSettings') || '{}'); } catch (e) {}
+        var net = window.bar3dNet;
+        var p = {
+          v: 1, build: build, at: new Date().toISOString(), fatal: !!fatal,
+          ua: navigator.userAgent, dpr: window.devicePixelRatio, screen: [screen.width, screen.height],
+          view: [innerWidth, innerHeight], params: location.search.replace(/([?&]name=)[^&]*/g, '$1-'),
+          settings: settings, room: net && net.room ? net.room() : '',
+          online: net && net.status ? net.status() : 0, players: net && net.names ? net.names().length : 0,
+          errors: errors, perf: window.bar3dPerf || null, log: ring, taps: tapRing,
+          modal: window.bar3dModal ? bar3dModal.name() : '',
+        };
+        var names = [];
+        try {
+          names.push(localStorage.getItem('bar3dName'));
+          var me = JSON.parse(localStorage.getItem('bar3dProfile') || 'null');
+          if (me) names.push(me.name, me.username, me.user);
+        } catch (e) {}
+        if (net && net.names) names = names.concat(net.names());
+        var patterns = names.filter(function (n) { return n && String(n).length >= 2; }).map(function (n) {
+          return new RegExp(String(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        });
+        // Only string values are cleaned (a short name could match a key).
+        function clean(v) {
+          if (typeof v === 'string') {
+            patterns.forEach(function (re) { v = v.replace(re, '<name>'); });
+            return v.replace(/[0-9a-fA-F]{48,}/g, '<hex>');
+          }
+          if (Array.isArray(v)) return v.map(clean);
+          if (v && typeof v === 'object') {
+            var o = {};
+            for (var k in v) o[k] = clean(v[k]);
+            return o;
+          }
+          return v;
+        }
+        return JSON.stringify(clean(p));
+      },
+      sent: null,
+      send: function (fatal) {
+        var url = this.url();
+        if (!url) return Promise.reject(new Error('Reports need the multiplayer server.'));
+        if (fatal && this.sent) return this.sent;
+        var self = this;
+        var req = fetch(url, { method: 'POST', body: this.payload(fatal), cache: 'no-store',
+                               headers: { 'Content-Type': 'text/plain' } })
+          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            if (!r || !r.code) throw new Error(r && r.error ? r.error : 'no code');
+            bar3dLog.add('info', 'Report: sent, code ' + r.code + '.');
+            return r.code;
+          });
+        if (fatal) self.sent = req;
+        return req;
+      },
+    };
+    // The last taps and what they landed on, for reports: when a button
+    // stops answering, this shows what was on top of it.
+    var tapRing = [];
+    function describe(n) {
+      if (!n || !n.tagName) return '';
+      var s = n.tagName.toLowerCase() + (n.id ? '#' + n.id : '');
+      if (typeof n.className === 'string' && n.className) s += '.' + n.className.trim().split(/\s+/).join('.');
+      return s;
+    }
+    // Quick report: tap the build code (top right) 3 times. The tap is read
+    // here, before anything on the page can swallow it, so it works even
+    // when the menu is stuck. The code is copied to the clipboard.
+    var quickTaps = [];
+    function quickReport() {
+      var box = document.getElementById('quickReport');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'quickReport';
+        box.style.cssText = 'position:fixed;left:50%;top:calc(44px + env(safe-area-inset-top));transform:translateX(-50%);' +
+          'z-index:3000;background:#1a1220f0;color:#f5ecf8;padding:10px 16px;border-radius:14px;' +
+          'font:600 16px -apple-system,system-ui,sans-serif;-webkit-user-select:text;user-select:text;text-align:center;';
+        document.body.appendChild(box);
+      }
+      box.style.display = 'block';
+      box.textContent = 'Sending report…';
+      var sent = window.bar3dReport.send(false);
+      var copied = false;
+      try {  // Safari: the copy must start during the tap, so it waits on the code.
+        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          navigator.clipboard.write([new ClipboardItem({ 'text/plain': sent.then(function (c) {
+            return new Blob([c], { type: 'text/plain' });
+          }) })]).then(function () { copied = true; }, function () {});
+        }
+      } catch (e) {}
+      sent.then(function (code) {
+        setTimeout(function () {
+          box.textContent = 'Report ' + code + (copied ? ' (copied)' : '');
+        }, 300);
+        setTimeout(function () { box.style.display = 'none'; }, 12000);
+      }, function (e) {
+        box.textContent = 'Report not sent: ' + e.message;
+        setTimeout(function () { box.style.display = 'none'; }, 6000);
+      });
+    }
+    document.addEventListener('pointerup', function (e) {
+      tapRing.push({ t: Math.round(performance.now()), x: Math.round(e.clientX), y: Math.round(e.clientY),
+                     on: describe(e.target), top: describe(document.elementFromPoint(e.clientX, e.clientY)),
+                     modal: window.bar3dModal ? bar3dModal.name() : '' });
+      if (tapRing.length > 12) tapRing.shift();
+      var b = document.getElementById('build');
+      if (!b) return;
+      var r = b.getBoundingClientRect();
+      if (e.clientX < r.left - 16 || e.clientX > r.right + 16 || e.clientY < r.top - 16 || e.clientY > r.bottom + 16) {
+        quickTaps = [];
+        return;
+      }
+      var now = performance.now();
+      quickTaps = quickTaps.filter(function (t) { return now - t < 1500; });
+      quickTaps.push(now);
+      if (quickTaps.length >= 3) { quickTaps = []; quickReport(); }
+    }, true);
+
+    // Test hook (restructure 0.3): ?testerror logs an error after start.
+    if (/[?&]testerror/.test(location.search)) setTimeout(function () { append('Test error (from ?testerror).', true); }, 500);
+
+    // GitHub Pages lets browsers reuse a saved copy of this page for up to
+    // 10 minutes, so a phone can show an old build. version.txt is never
+    // cached: if it names a newer build, reload from a fresh URL. The game's
+    // code is only loaded once this check is done (or 1.5 s passed), so an
+    // old build doesn't start downloading for nothing.
+    var versionChecked = new Promise(function (resolve) {
+      if (build.indexOf('__') >= 0) { resolve(); return; }  // a local build
+      setTimeout(resolve, 1500);
+      fetch('version.txt', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; })
+        .then(function (latest) {
+          latest = latest.trim();
+          if (latest && latest !== build && location.search.indexOf('b=' + latest) < 0) {
+            // Keep the other options (?cam=, ?room=, ...) across the reload.
+            var rest = location.search.replace(/^\?/, '').replace(/(^|&)b=[^&]*/g, '');
+            location.replace(location.pathname + '?b=' + latest + (rest ? '&' + rest.replace(/^&/, '') : ''));
+            return;  // don't resolve: the page is going away
+          }
+          resolve();
+        }).catch(resolve);
+    });
+
+    // Loading screen. C++ reports progress (barLoading.set) and calls
+    // barLoading.ready() once every model is in; then "Tap to enter" (that
+    // tap also unlocks sound on iOS). ?skipintro enters by itself (tests).
+    var loadingEl = document.getElementById('loading');
+    (function () {  // the bar's picture behind the loading screen, once it's here
+      var img = new Image();
+      img.onload = function () { loadingEl.classList.add('pic'); };
+      img.src = 'loading.jpg';
+    })();
+    var enterBtn = document.getElementById('enter');
+    function enter() {
+      document.body.classList.add('entered');
+      loadingEl.classList.add('gone');
+      var removed = false;
+      var remove = function () { if (!removed) { removed = true; loadingEl.style.display = 'none'; } };
+      loadingEl.addEventListener('transitionend', remove);
+      setTimeout(remove, 1000);  // in case the transition never ends (hidden tab)
+      if (window.Module && Module._app_enter) Module._app_enter();
+    }
+    enterBtn.onclick = enter;
+    // One bar for the whole wait: the downloads fill it from 5% to 85%, then
+    // the last stages (bar/loader.cpp) take it to 100%. It never goes back.
+    var shownFill = 0, stageText = '';
+    function fill(f) {
+      shownFill = Math.max(shownFill, Math.min(1, Math.max(0, f)));
+      document.getElementById('loadFill').style.transform = 'scaleX(' + shownFill + ')';
+      document.getElementById('loadText').textContent = stageText + '… ' + Math.round(shownFill * 100) + '%';
+    }
+    window.barLoading = {
+      set: function (done, total, progress) {
+        stageText = 'Bringing in the bar (' + done + ' of ' + total + ' pieces)';
+        fill(0.05 + 0.8 * progress);
+      },
+      stage: function (text, f) { if (text) stageText = text; fill(f || shownFill); },
+      // Some files never arrived: say so, with Retry (a reload). `critical` =
+      // the room itself is missing, so entering isn't offered.
+      fail: function (text, critical) {
+        var t = document.getElementById('loadText');
+        t.textContent = text + (critical ? ' - the bar can\'t open. ' : ' - ');
+        var retry = document.createElement('button');
+        retry.textContent = 'Retry';
+        retry.style.cssText = 'font:inherit;margin-left:6px;padding:4px 12px;border-radius:12px;border:1px solid #f5d9a8;background:none;color:#f5d9a8';
+        retry.onclick = function () { location.reload(); };
+        t.appendChild(retry);
+      },
+      ready: function () {
+        document.getElementById('loadFill').style.transform = 'scaleX(1)';
+        var lt = document.getElementById('loadText');
+        if (!lt.querySelector('button')) lt.textContent = 'Everything is ready.';
+        if (/[?&]skipintro/.test(location.search)) { enter(); return; }
+        enterBtn.hidden = false;
+      },
+    };
+
+    append(navigator.userAgent);
+    if (/[?&]still/.test(location.search)) document.body.classList.add('still');
+    if (!navigator.gpu) bar3dLog.add('fatal', 'This browser has no WebGPU. Use Safari on iOS 26+.');
+
+    window.Module = {
+      print: function (t) { printed(t, 'info'); },
+      printErr: function (t) { printed(t, 'error'); },
+      // Cache-bust per build so Safari never runs a stale .wasm.
+      locateFile: function (path) { return path + '?v=' + build; },
+      onAbort: function (what) { bar3dLog.add('fatal', 'Aborted: ' + what); },
+    };
+    // ?crossings (tests): count every call from the game into JavaScript, by
+    // name, so a test can report "crossings per frame" (window.bar3dCrossings).
+    if (/[?&]crossings/.test(location.search)) {
+      var counts = { total: 0, frames: 0, byName: {} };
+      window.bar3dCrossings = counts;
+      (function tick() { counts.frames++; requestAnimationFrame(tick); })();
+      Module.instantiateWasm = function (imports, done) {
+        var wrapped = [];
+        Object.keys(imports).forEach(function (mod) {
+          var table = imports[mod];
+          if (wrapped.indexOf(table) >= 0) return;  // the same table can appear under two names
+          wrapped.push(table);
+          Object.keys(table).forEach(function (name) {
+            var f = table[name];
+            if (typeof f !== 'function') return;
+            table[name] = function () {
+              counts.total++;
+              counts.byName[name] = (counts.byName[name] || 0) + 1;
+              if (/^emscripten_asm_const/.test(name)) {  // which EM_ASM block (Debug builds)
+                var k = name + '#' + arguments[0];
+                counts.byName[k] = (counts.byName[k] || 0) + 1;
+              }
+              return f.apply(this, arguments);
+            };
+          });
+        });
+        WebAssembly.instantiateStreaming(fetch(Module.locateFile('app.wasm')), imports)
+          .then(function (r) { done(r.instance, r.module); })
+          .catch(function (e) { bar3dLog.add('fatal', 'wasm: ' + e); });
+        return {};
+      };
+    }
+    // The bridges C++ talks to, in order, then the app itself.
+    versionChecked.then(function () {
+      ['bridge.js', 'audio.js', 'proto.js', 'net.js', 'menu.js', 'voice.js', 'account.js'].forEach(function (name) {
+        var s = document.createElement('script');
+        s.src = name + '?v=' + build;
+        s.async = false;
+        s.onerror = function () { append('Failed to load ' + name, true); };
+        document.body.appendChild(s);
+      });
+      var script = document.createElement('script');
+      script.async = false;  // run after the bridges above
+      script.src = 'app.js?v=' + build;
+      script.onerror = function () { append('Failed to load app.js', true); };
+      document.body.appendChild(script);
+    });
+  })();
+</script>
+</body>
+</html>

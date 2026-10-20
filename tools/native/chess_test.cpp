@@ -1,4 +1,4 @@
-// Chess rules (app/chess_rules.*): perft counts on standard test positions
+// Chess rules (bar/projects/chess/chess_rules.*): perft counts on standard test positions
 // must match the known numbers exactly (every legal move: castling, en
 // passant, promotions, pins, checks), then checkmate / stalemate detection
 // and that the computer finds a mate in one and doesn't hang its queen.
@@ -6,7 +6,7 @@
 #include <chrono>
 #include <cstdio>
 
-#include "app/chess_rules.h"
+#include "bar/projects/chess/chess_rules.h"
 
 using namespace app::chess;
 

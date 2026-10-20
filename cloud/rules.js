@@ -3,7 +3,7 @@
 // checkWrite(); a write that breaks a rule is refused and never reaches the
 // other players. (cloud/room.js calls this; docs/PROTOCOL.md §4.5 lists it.)
 //
-// Keys today (written by the game, app/*.cpp):
+// Keys today (written by the game, bar/*.cpp):
 //   g<n>   glass n: x,y,z, quaternion x,y,z,w, velocity x,y,z, state
 //          (0 moving, 1 held, 2 resting). Written only by the room's own
 //          physics (cloud/games/glasses.js); phones use grab/drop/throw intents.
@@ -14,7 +14,7 @@
 //   ch     the lounge's chess game: board (8 numbers), turn, castling, en
 //          passant, halfmoves, fullmove, last move, two players, move number.
 //          Only a player at the board (claim machine.chess.w / .b) writes it.
-//   a<n>   player in slot n's custom avatar (17 small numbers, app/avatar.h
+//   a<n>   player in slot n's custom avatar (17 small numbers, bar/avatar.h
 //          AvatarStyle). Only that player writes it.
 //   rc     the racing rigs: lobby, picks, start time, results. Written only
 //          by the room (cloud/games/race.js); phones use `race` intents.

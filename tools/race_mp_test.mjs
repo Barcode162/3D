@@ -30,7 +30,7 @@ try {
   const bob = await player('Bob', 31);
   check(await waitLog(bob, /Alice joined/), 'Bob sees Alice in the room');
   await bob.waitForTimeout(2500);  // both claim their rig and join the garage
-  // READY (bottom right of the garage, app/race/game.cpp garageButtons).
+  // READY (bottom right of the garage, bar/projects/racing/game.cpp garageButtons).
   const u = Math.min(W, H) / 400;
   const ready = { x: W - 0.05 * W - 75 * u, y: H - 42 * u };
   for (const p of [alice, bob]) {

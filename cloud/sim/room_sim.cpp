@@ -1,5 +1,5 @@
 // The bar's physics for the room (cloud/room.js): the same C++ the phones
-// run (engine/physics + the bar's layout from app/bar_scene + app/props),
+// run (looped/physics + the bar's layout from bar/bar_scene + bar/props),
 // compiled to a small WebAssembly module the Cloudflare Worker loads
 // (cloud/sim/build.sh → cloud/sim/room_sim.wasm). The room simulates every
 // glass: held ones follow their holder's hand, thrown and knocked ones fly,
@@ -17,9 +17,9 @@
 
 #include <vector>
 
-#include "app/bar_scene.h"
-#include "app/props.h"
-#include "engine/physics.h"
+#include "bar/bar_scene.h"
+#include "bar/props.h"
+#include "looped/physics.h"
 
 namespace {
 engine::PhysicsWorld* world = nullptr;

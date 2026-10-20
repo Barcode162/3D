@@ -1,18 +1,18 @@
-// The steering feel, measured (engine/steering.* on the race car,
+// The steering feel, measured (looped/steering.* on the race car,
 // app::race::sportsCar, flat asphalt, 240 Hz): turning circle, grip at
 // speed, how fast it answers, letting go, and slides. Prints a table and
 // fails if a number is out of its band. FEEL=old also runs the old steering
-// (the touch assist in app/race/controls.cpp before 2026-10-19) to compare.
+// (the touch assist in bar/projects/racing/controls.cpp before 2026-10-19) to compare.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <functional>
 
-#include "app/race/cars.h"
-#include "app/race/world.h"
-#include "engine/steering.h"
-#include "engine/vehicle.h"
+#include "bar/projects/racing/cars.h"
+#include "bar/projects/racing/world.h"
+#include "looped/steering.h"
+#include "looped/vehicle.h"
 
 using namespace engine;
 

@@ -2,7 +2,7 @@
 // rows): static settle, drop, parked creep, slope hold, 0-60, top speed,
 // 60-0 braking, the 40 m skid pad, through zero into reverse, a 5 cm bump,
 // letting go of the wheel, the handbrake. Prints numbers and fails on limits.
-//   g++ -std=c++20 -O2 -I. tools/native/drive_lab.cpp engine/drive/*.cpp engine/json.cpp
+//   g++ -std=c++20 -O2 -I. tools/native/drive_lab.cpp looped/drive/*.cpp looped/json.cpp
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "engine/drive/car_spec.h"
-#include "engine/drive/vehicle_sim.h"
+#include "looped/drive/car_spec.h"
+#include "looped/drive/vehicle_sim.h"
 
 using engine::Vec3;
 using namespace engine::drive;

@@ -1,7 +1,7 @@
 # The badges on player cards, modelled in 3D and rendered to pictures (the
 # user wanted Clash Royale style badges instead of emojis): a chunky shield
 # with a gold rim and glossy enamel, and a rounded, toy-like emblem on it.
-# One PNG per badge (transparent background) into web/badges/.
+# One PNG per badge (transparent background) into bar/web/badges/.
 #
 #   blender -b --factory-startup --python tools/assets/badges.py -- <out dir> [size]
 #

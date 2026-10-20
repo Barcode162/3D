@@ -1,6 +1,6 @@
 // The jukebox, run by the room: when a song ends, the room starts the next
 // one for everyone (the phones don't each decide). The list must match the
-// built-in songs in app/jukebox.cpp (kBuiltIn), in the same order; lengths in
+// built-in songs in bar/jukebox.cpp (kBuiltIn), in the same order; lengths in
 // seconds, from ffprobe on assets/music/*.m4a (tools/native/run.sh checks the
 // names still match).
 export const SONGS = [

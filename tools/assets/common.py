@@ -462,7 +462,7 @@ def finish_and_export(out_path, uv_scale, image_format="JPEG"):
 
 
 # ---- Pixel text for textures (signs, menus, posters) ----
-# Uses the engine's own 5x7 pixel font (engine/font.cpp), so painted text
+# Uses the engine's own 5x7 pixel font (looped/font.cpp), so painted text
 # matches the on-screen text.
 _GLYPHS = None
 

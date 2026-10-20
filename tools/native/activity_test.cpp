@@ -1,9 +1,9 @@
-// The activity rules (app/activity.*): what you may start from what, who
+// The activity rules (bar/activity.*): what you may start from what, who
 // else is using a seat or machine, the menu's command checks.
 #include <cstdio>
 #include <string>
 
-#include "app/activity.h"
+#include "bar/activity.h"
 
 using app::Activity;
 using app::ActivityManager;

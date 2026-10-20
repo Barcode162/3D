@@ -1,4 +1,4 @@
-// JSON reader/writer test (engine/json.*): what the writer produces parses
+// JSON reader/writer test (looped/json.*): what the writer produces parses
 // back to the same values (backslashes, quotes, control characters, emoji),
 // limits hold, and random garbage never crashes the reader.
 #include <cmath>
@@ -7,7 +7,7 @@
 #include <random>
 #include <string>
 
-#include "engine/json.h"
+#include "looped/json.h"
 
 using engine::Json;
 using engine::JsonWriter;

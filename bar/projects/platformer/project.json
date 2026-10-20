@@ -1,0 +1,9 @@
+{
+  "name": "Test 2 (platformer)",
+  "about": "The user's platformer, added as is (three.js). Plays on an arcade machine.",
+  "kind": "web",
+  "site": "arcade/platformer",
+  "entry": "index.html",
+  "opens_from": "the arcade's platformer machine",
+  "credits": "CREDITS.md"
+}

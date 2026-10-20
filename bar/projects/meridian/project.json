@@ -1,0 +1,9 @@
+{
+  "name": "Meridian",
+  "about": "The user's own driving game (three.js, the approved exception). Opens full screen from a racing rig's menu; the bar keeps its connection.",
+  "kind": "web",
+  "site": "meridian",
+  "entry": "index.html",
+  "opens_from": "racing rig menu (bar/web/menu.js \"sim\")",
+  "credits": "CREDITS.md"
+}

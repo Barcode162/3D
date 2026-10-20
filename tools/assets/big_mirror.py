@@ -6,7 +6,7 @@
 #
 #   blender -b --factory-startup --python tools/assets/big_mirror.py -- <texture dir> <out dir>
 #
-# Model space = world space. Matches buildMirror() in app/bar_scene.cpp.
+# Model space = world space. Matches buildMirror() in bar/bar_scene.cpp.
 import os
 import sys
 

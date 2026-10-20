@@ -54,7 +54,7 @@ await page.waitForTimeout(1500);
 check(await until((want) => bar3dUi.info().look === -1 && JSON.stringify(bar3dUi.info().avatarStyle) === want, 20000, style),
       'after a reload you still wear your look');
 
-// The walk (upgrade item 15): planted feet barely slide (app/avatar.cpp walkReport).
+// The walk (upgrade item 15): planted feet barely slide (bar/avatar.cpp walkReport).
 await openBar(page, site.url, 'skipintro&server=off&walkcheck');
 const report = (await logText(page)).split('\n').find((l) => l.includes('Walk check')) || '';
 console.log('     ' + report.replace(/;/g, ';\n     '));

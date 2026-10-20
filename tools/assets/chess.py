@@ -1,7 +1,7 @@
 # Chess pieces for the lounge's playable chessboard (upgrade plan item 13):
 # Staunton-style pieces turned on a lathe, a carved knight head, a cross on
 # the king, a crown on the queen, felt under each. White is ivory-coloured
-# wood, black is ebony. One model per piece (placed and moved by app/chess.cpp).
+# wood, black is ebony. One model per piece (placed and moved by bar/projects/chess/chess.cpp).
 #
 #   blender -b --factory-startup --python tools/assets/chess.py -- <texture dir> <out dir>
 #

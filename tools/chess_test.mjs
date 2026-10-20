@@ -13,7 +13,7 @@ const browser = await launchBrowser();
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 check('the bar loads', await openBar(page, url, 'skipintro&chess'));
 await page.waitForTimeout(2500);
-// Where a square is on screen: the game's chess camera (app/chess.cpp):
+// Where a square is on screen: the game's chess camera (bar/projects/chess/chess.cpp):
 // above white's edge, 0.5 m up and 0.38 m back, pitched down 0.92 rad, 70 deg tall.
 function screenOf(file, rank) {
   const sq = 0.055, p = [(file - 3.5) * sq, 0, (3.5 - rank) * sq], e = [0, 0.5, 0.38];

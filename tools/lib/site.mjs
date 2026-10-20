@@ -9,7 +9,7 @@ const types = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4', '.mp3': 'audio/mpeg',
 };
 
-export function serveSite(dir = 'build/site') {
+export function serveSite(dir = process.env.SITE || 'build/site') {
   const root = resolve(dir);
   const server = createServer(async (req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);

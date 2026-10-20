@@ -93,7 +93,7 @@ references for the data), never in the game.
   the HUD and logs. Data files say their unit in the key (`mass_kg`,
   `rpm`, `deg`).
 - **World:** right-handed, **y up**, gravity g = 9.81 m/s² along -y.
-- **Car body frame** (same as today's `engine/vehicle`): **x right, y
+- **Car body frame** (same as today's `looped/vehicle`): **x right, y
   up, -z forward**. The origin is at the centre of mass (CG).
 - **Tire frame** (for the tire maths only, ISO-W style): x_t forward
   along the wheel's heading in the ground plane, y_t to the left, z_t
@@ -112,12 +112,12 @@ references for the data), never in the game.
 ---
 
 ## 2. Architecture and files
-New module **`engine/drive/`** (reusable, no game code). It replaces
-`engine/vehicle.*` once it passes every test in §17; until then the old
+New module **`looped/drive/`** (reusable, no game code). It replaces
+`looped/vehicle.*` once it passes every test in §17; until then the old
 one stays for comparison (`FEEL=old` in the tests, like `steering_test`).
 
 ```
-engine/drive/
+looped/drive/
   car_spec.{h,cpp}      every number of a car (POD), loaded from JSON, checked
   body.{h,cpp}          6-DOF rigid body, integrator
   road.{h,cpp}          RoadQuery interface: height, normal, material, velocity
@@ -127,7 +127,7 @@ engine/drive/
   driveline.{h,cpp}     engine, turbo, clutch, gearbox, diff, shafts, wheels
   brakes.{h,cpp}        pressure, bias, torque, temperature, handbrake
   steering.{h,cpp}      wheel → rack → road wheels, aligning torque, the
-                        virtual steering wheel (the existing engine/steering
+                        virtual steering wheel (the existing looped/steering
                         becomes its "assist" layer)
   aero.{h,cpp}          drag, lift per axle, ride height and yaw, slipstream
   electronics.{h,cpp}   ABS, TC, ESC, launch, rev-match, drive modes
@@ -136,8 +136,8 @@ engine/drive/
   telemetry.{h,cpp}     ring buffer of channels, CSV export
 assets/cars/<id>/car.json   data sheet (§5), plus tuning presets
 assets/cars/<id>/*.glb      model, hulls, LODs (§9)
-engine/road/            road graph, spline sections, terrain tiles (§11)
-app/drive/              game side: modes, garage, HUD, cameras, sound mixer
+looped/road/            road graph, spline sections, terrain tiles (§11)
+bar/projects/racing/drive/ game side: modes, garage, HUD, cameras, sound mixer
 tools/native/           drive_lab.cpp (tests), calibrate.cpp (fitting)
 ```
 Rules [D]: the sim never reads the clock, the screen or the network. It
@@ -226,7 +226,7 @@ edges. Every surface the tires touch answers one query:
 RoadQuery(point, downDir) → { height, normal, material, roughness, roadVelocity }
 ```
 with three implementations:
-1. **Spline roads** (`engine/road/`): position on the road (s along,
+1. **Spline roads** (`looped/road/`): position on the road (s along,
    t across) found through a grid; height and normal from the cross-
    section formula (§11.4). C1-continuous (no kinks) by construction.
 2. **Terrain**: a height grid sampled **bicubically** (smooth normals).
@@ -539,7 +539,7 @@ All are constraints in the §4.6 solver.
   - when the front tires pass their peak, the pneumatic trail collapses
     and the wheel "goes light". The HUD can show it (a subtle ring
     brightness) and the gamepad rumbles.
-  The existing `engine/steering.*` (speed-sensitive limit, rate limits,
+  The existing `looped/steering.*` (speed-sensitive limit, rate limits,
   measured in `steering_test`) becomes the **"assisted" mode** on top of
   this; "sim" mode is direct. A real steering wheel bypasses the virtual
   hand and sets θ_sw directly (soft lock at the car's lock).
@@ -921,7 +921,7 @@ The roads are data, so they can be built and changed by text:
 - **Cross-section formula:** height(s, t) = centreline(s).y + t·bank(s)
   + crown·(1 - (2t/w)²)·w/2, with every term C1 along s (Hermite
   splines), so the physics surface (§4.2) is exact and smooth.
-- **Generator** (`engine/road/`, shared by game, tests and tools) →
+- **Generator** (`looped/road/`, shared by game, tests and tools) →
   render mesh chunks with LOD, kerbs, lines, barriers, collision walls,
   terrain blended into the road edges.
 - Preview: screenshots via `tools/shots.mjs` with `CAM=`; later an
@@ -1104,7 +1104,7 @@ Goal: the user feels the new physics on the phone as soon as possible
 and can change how the car drives **on the phone**, live. Simple
 versions of the core, built so the later stages replace parts without
 rewrites:
-- `engine/drive/` with: car_spec + JSON; chassis at 480 Hz; spline
+- `looped/drive/` with: car_spec + JSON; chassis at 480 Hz; spline
   road + multi-probe contact on the existing Ring; unsprung wheels;
   springs, dampers, bump stops, anti-roll bars (no kinematics tables
   yet: fixed camber, simple roll centre); tires with MF pure + combined

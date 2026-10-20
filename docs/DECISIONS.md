@@ -10,27 +10,27 @@ future session re-litigates or repeats it.
 | Graphics API | WebGPU (via Dawn's `webgpu_cpp.h`, emdawnwebgpu port) | Modern, compute shaders, iOS 26 Safari supports it |
 | Compiler | Emscripten **6.0.12** (pinned in CI and CLAUDE.md) | C++ → WebAssembly |
 | Build | CMake + Ninja | Standard, incremental |
-| Shaders | WGSL files in `shaders/`, embedded into the binary | The only shader language WebGPU accepts |
+| Shaders | WGSL files in `looped/shaders/`, embedded into the binary | The only shader language WebGPU accepts |
 | Engines/libraries | None. Everything from scratch | User's explicit wish; discuss any exception first |
 | Assets | Real modeled assets as GLB files in `assets/`: CC0 models/textures (Poly Haven, ambientCG), custom ones Claude makes with offline tools (Blender headless is a *tool*, like a compiler, never a runtime dependency), and the user's own GLBs. Every third-party file gets a license + credit entry. Procedural code stays for things that are better generated | Decided 2026-10-15: code-built boxes/cylinders look "basic AI 3D"; user wants highest quality |
 | Async setup | Callbacks with `CallbackMode::AllowSpontaneous`, no Asyncify | Smaller and faster |
 | Threads | None (yet) | Pages can't send COOP/COEP headers |
-| Text | Own 5x7 pixel font in code (`engine/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
-| Textures | Generated in code at startup (`engine/procedural.cpp`), 512px, texture arrays with mips; projected triplanar in object space | No image files in the repo; meshes need no UVs; object-space keeps textures stuck to objects once they can move |
-| Audio | Browser Web Audio for output; C++ decides what plays and where (thin JS bridge `web/audio.js`). Music streams through an `<audio>` element → `PannerNode` (HRTF) | Like WebGPU for graphics: the platform API is the "driver". Streaming avoids decoding 3-minute songs into ~60 MB of memory each |
+| Text | Own 5x7 pixel font in code (`looped/font.cpp`) → signed distance field atlas | No font files or libraries; SDF keeps it crisp at any size and gives outlines for free |
+| Textures | Generated in code at startup (`looped/procedural.cpp`), 512px, texture arrays with mips; projected triplanar in object space | No image files in the repo; meshes need no UVs; object-space keeps textures stuck to objects once they can move |
+| Audio | Browser Web Audio for output; C++ decides what plays and where (thin JS bridge `bar/web/audio.js`). Music streams through an `<audio>` element → `PannerNode` (HRTF) | Like WebGPU for graphics: the platform API is the "driver". Streaming avoids decoding 3-minute songs into ~60 MB of memory each |
 | Mirrors | Planar reflection: scene rendered with `viewProj * reflection` into a screen-sized texture, scissored to the mirror's screen rectangle; glass reads it 1:1 with `textureLoad` | Exact, simple, and cost scales with how much of the screen the mirror covers. Avatars-only mode skips the room (VRChat's cheap mirror) |
 | Avatar | Procedural skinned mesh: rings (tubes) along the limbs and torso + ellipsoids for the head, each vertex weighted to 2 bones, blended near joints; per-vertex color/gloss/texture layer | No model files needed; one continuous mesh bends cleanly at elbows/knees. A GLB/VRM loader can feed the same skinning path later |
-| Materials | `engine::Material` (look + physics + sound) in `engine/material.h`; the bar's library in `app/materials.cpp`, objects reference a `MaterialId` and may override color/glow/texture scale | One definition per kind of stuff feeds every engine (see World-simulation principles) |
+| Materials | `engine::Material` (look + physics + sound) in `looped/material.h`; the bar's library in `bar/materials.cpp`, objects reference a `MaterialId` and may override color/glow/texture scale | One definition per kind of stuff feeds every engine (see World-simulation principles) |
 | Shading | PBR metal/roughness: GGX + Smith + Schlick, Karis sphere-light widening (`PointLight::radius`), Karis env-BRDF approximation against a fake "room glow" (`roomGlow` in `scene.wgsl`) | Same model as glTF, so loaded assets look right. Diffuse leaves out 1/pi (keeps the old light tuning), so specular is scaled by pi |
-| Model files | glTF 2.0 binary (.glb), own loader: `engine/json.*` (parser), `engine/gltf.*` (meshes, node tree flattened into model space, PBR materials, tangents computed if missing), `engine/model.*` (GPU upload, per-material bind group). PNG/JPEG decoded by the browser (`createImageBitmap`, `colorSpaceConversion: 'none'`) in `engine/fetch.cpp` | Standard format every tool exports; image decoding is a platform "driver" like AAC |
+| Model files | glTF 2.0 binary (.glb), own loader: `looped/json.*` (parser), `looped/gltf.*` (meshes, node tree flattened into model space, PBR materials, tangents computed if missing), `looped/model.*` (GPU upload, per-material bind group). PNG/JPEG decoded by the browser (`createImageBitmap`, `colorSpaceConversion: 'none'`) in `looped/fetch.cpp` | Standard format every tool exports; image decoding is a platform "driver" like AAC |
 | Model placement | `BarScene::models` (`ModelPlacement`: file, position, rotation, scale, `MaterialId` for feel/sound). The file gives the look | Look from the asset, physics/sound from the material library |
-| Physics | Own engine (`engine/physics.*`): moving bodies = compound spheres (cheap, stable contacts), world = oriented boxes; sequential impulses with Coulomb friction, restitution above 0.4 m/s, split position correction; fixed 1/60 s steps x 8 substeps, max 8 steps per frame; sleeping. Mass = material density x real solid volume | Stable on a phone without a full convex-collision system; materials drive weight, grip and bounce |
+| Physics | Own engine (`looped/physics.*`): moving bodies = compound spheres (cheap, stable contacts), world = oriented boxes; sequential impulses with Coulomb friction, restitution above 0.4 m/s, split position correction; fixed 1/60 s steps x 8 substeps, max 8 steps per frame; sleeping. Mass = material density x real solid volume | Stable on a phone without a full convex-collision system; materials drive weight, grip and bounce |
 | Glass | glTF `alphaMode: BLEND` → see-through pipeline: premultiplied alpha, no depth write, sorted back to front, opacity rises at grazing angles (Fresnel) | Real glass look without refraction cost |
 | Pixel ratio | Capped at 2 | Phone GPU budget, little visible loss |
 
 ## Big bar upgrade engine pieces (2026-10-16)
-- **Loading screen** (`#loading` in `web/index.html`): covers the room until
-  every model file is in. C++ (`updateLoadingScreen` in `app/main.cpp`)
+- **Loading screen** (`#loading` in `bar/web/index.html`): covers the room until
+  every model file is in. C++ (`updateLoadingScreen` in `bar/main.cpp`)
   reports progress through `window['barLoading']` (downloads via
   `emscripten_async_wget2_data` progress, 85%; texture decoding the rest),
   then the page shows "Tap to enter" (that tap also unlocks sound) and
@@ -48,7 +48,7 @@ future session re-litigates or repeats it.
 
 - **Gzipped models**: the build (`site_assets` in CMakeLists) gzips every
   `.glb` (`gzip -9 -n`), the engine asks for `<file>.glb.gz` and unpacks it
-  with the browser's `DecompressionStream` (`engine/fetch.cpp`, a `fetch()`
+  with the browser's `DecompressionStream` (`looped/fetch.cpp`, a `fetch()`
   with progress). Files starting with 1f 8b are unpacked; anything else is
   used as is, so a server that adds `Content-Encoding: gzip` (Apache on
   IONOS might) still works. Geometry-heavy models shrink to ~40-55%.
@@ -65,7 +65,7 @@ future session re-litigates or repeats it.
 - **Zone models in world space**: each zone script builds its model
   where it stands in the room (model space = world space, placed at the
   origin), using `tools/assets/layout.py` for the shared floor plan
-  (`app/bar_scene.cpp` repeats the numbers). The piano, sim rig and
+  (`bar/bar_scene.cpp` repeats the numbers). The piano, sim rig and
   rhythm corner are built locally and placed/turned by the app.
 - **Clutter**: `tools/assets/props_lib.py` builds bottles (11 shapes,
   16 glass colors and 16 labels through atlases), glassware with drinks,
@@ -73,17 +73,17 @@ future session re-litigates or repeats it.
   *before* moving a prop into place (`swatch_uvs` reads positions).
 
 ## Rhythm game (4K MANIA cabinet, 2026-10-16)
-- Tap the cabinet → `app/rhythm.*` covers the screen (drawn with the text
+- Tap the cabinet → `bar/projects/mania/rhythm.*` covers the screen (drawn with the text
   renderer: rects, text, and two new SDF shapes in the font atlas, a disc
   and a ring: `TextRenderer::addShape`). Circle skin at the user's request.
 - Songs = the jukebox's list (built-in + songs loaded from the phone).
-  Charts are made in C++ from the audio (`app/rhythm_chart.cpp`): own FFT,
+  Charts are made in C++ from the audio (`bar/projects/mania/rhythm_chart.cpp`): own FFT,
   spectral flux in 4 bands, tempo by autocorrelation (preferring ~120
   BPM) and beat phase, notes snapped to beats / eighths / sixteenths for
   Easy / Normal / Hard, lanes from the spectral centroid (quartiles, so
   all lanes are used), no fast repeats on one key, chords on loud hits.
 - The song is decoded fully (`engine::Track`, `trackLoad` in
-  `web/audio.js`) and played as an AudioBufferSourceNode, so timing is
+  `bar/web/audio.js`) and played as an AudioBufferSourceNode, so timing is
   sample-exact: song time = `ctx.currentTime - start - latency`. Touches
   come from `Input` capture mode with their time (`emscripten_get_now`);
   a press's song time = now's song time minus how long ago it happened.
@@ -108,14 +108,14 @@ future session re-litigates or repeats it.
 - **Profile fields:** display name (20), bio (240), favorite drink and
   song (40 each), card color (8 choices), picture (256 px JPEG, cropped to
   a square in the browser before upload), join date.
-- **Client:** `web/account.js`, plain HTML forms over the game (the
+- **Client:** `bar/web/account.js`, plain HTML forms over the game (the
   phone keyboard and photo picker need real form fields; the 3D world is
   still all ours). Token in localStorage; the loading screen shows who's
   signed in (or Log in / Sign up), the HUD has a name/"log in" button.
 - **Relay:** a logged-in player sends `tok`; the relay checks it (then
   every 20 s), uses the account's display name and passes `acct` and `av`
   (picture revision) to the others, so names can't be faked.
-- **In the world:** `engine/billboard.*` draws round pictures facing you
+- **In the world:** `looped/billboard.*` draws round pictures facing you
   (texture array, 8 slots, colored rim) over other players within 7 m,
   above their name. Tapping a player opens their card
   (`bar3dAccount.showCard`). Guests get a simple card.
@@ -131,12 +131,12 @@ everyone, darts, a racing game on the sims, 4K Mania visible to others,
 one player per machine, a bartender badge and drinks, "everything
 interactable", all crude but working, with a remaster list
 (`docs/REMASTER.md`).
-- **Menus are HTML** (`web/menu.js`), like the account screens: sliders,
+- **Menus are HTML** (`bar/web/menu.js`), like the account screens: sliders,
   toggles and file pickers need real form controls on the phone. They
-  queue commands for C++ (`bar3dUi.take`, read in `engine/ui.*`), and C++
+  queue commands for C++ (`bar3dUi.take`, read in `looped/ui.*`), and C++
   tells them the state as JSON (`bar3dUi.setInfo`). Settings live in
   localStorage (`bar3dSettings`); C++ re-reads them when `version()` changes.
-- **Player state grew to 18 numbers** (`app/players.h` `slot::`): activity,
+- **Player state grew to 18 numbers** (`bar/players.h` `slot::`): activity,
   its parameter (seat, machine), avatar look, talking level, emote +
   counter, 5 activity numbers (race position/steer, darts, rhythm screen),
   held drink, flags (bartender, on the mic). The relay's MAX_VALUES is 20.
@@ -153,13 +153,13 @@ interactable", all crude but working, with a remaster list
 - **Moving boxes** (`SceneRenderer::setBoxes`, up to 320, one draw each):
   piano key lights and strings, darts, drinks. **World quads**
   (`TextRenderer::addWorldQuad`) draw games onto screens in the room.
-- **Sounds made in C++** (`engine/synth.*`): piano notes (additive,
+- **Sounds made in C++** (`looped/synth.*`): piano notes (additive,
   inharmonic partials, 3 detuned strings, made lazily per key at 22 kHz),
   Karplus-Strong guitar, bell, dart thunk, clink, pour, shaker, click,
   engine hum (loops), knock, cheer. Played through `engine::Sound`
-  (`soundPlay` in `web/audio.js`), on buses (effects, piano, music, voice)
+  (`soundPlay` in `bar/web/audio.js`), on buses (effects, piano, music, voice)
   whose volumes follow the settings.
-- **MIDI**: own parser (`engine/midi.*`: formats 0/1, tempo map, sustain
+- **MIDI**: own parser (`looped/midi.*`: formats 0/1, tempo map, sustain
   pedal, drums skipped). Songs from the Mutopia Project (public domain or
   CC BY-SA, `assets/midi/CREDITS.md`). Playback is scheduled ahead on the
   audio clock (lookahead grows when frames are slow, or notes would be
@@ -170,7 +170,7 @@ interactable", all crude but working, with a remaster list
 - **Events** (`engine::net::sendEvent`): quick one-offs (piano keys, a bell
   ring) go over the WebRTC data channel when there is one, else through
   the relay's new message inbox (`"m"` in, `"inbox"` out).
-- **Voice chat** (`web/voice.js`): one RTCPeerConnection per pair of
+- **Voice chat** (`bar/web/voice.js`): one RTCPeerConnection per pair of
   players (the lower id calls), audio transceiver + data channel from the
   start, mic attached later with `replaceTrack` (no renegotiation). The
   handshake is "vanilla ICE": wait for candidate gathering (max 2.5 s),
@@ -278,7 +278,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - Requests are sent as `text/plain` so browsers skip the CORS preflight;
   the relay answers with `Access-Control-Allow-Origin: *`, so the GitHub
   Pages copy of the game can use the IONOS relay.
-- Smoothing (`app/players.cpp`): others are played back 250 ms in the past,
+- Smoothing (`bar/players.cpp`): others are played back 250 ms in the past,
   interpolated between received states, on the sender's clock (offset
   estimated from the fastest delivery). Their walk animation comes from how
   far they move, like your own.
@@ -290,7 +290,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   the relay into `home/bar/` on the webspace with lftp, plus the landing
   page into `home/`. So the game is also at `https://joshuavelasco.com/bar/`,
   and there it uses `relay.php` next to itself.
-  On github.io it uses `DEFAULT_SERVER` in `web/net.js`.
+  On github.io it uses `DEFAULT_SERVER` in `bar/web/net.js`.
 - IONOS account facts: SFTP host `access-5021658795.webspace-host.com`
   (port 22), user `su454332` (password only in GitHub secrets). System
   domain `s1114537466.onlinehome.us` answers on http only (no SSL), and the
@@ -301,7 +301,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - **Domain: `joshuavelasco.org`** (IONOS, 2026-10-15). It points straight
   at the `bar/` webspace folder, so the game is at the domain root and the
   relay at `https://joshuavelasco.org/relay.php` (`DEFAULT_SERVER` in
-  `web/net.js`, used by the github.io copy). Tested live over http: health
+  `bar/web/net.js`, used by the github.io copy). Tested live over http: health
   check OK, two headless players through it OK, ~85 ms per request,
   `rooms/` gives 403. IONOS sends `x-ws-ratelimit-limit: 1000` (seems per
   second; fine). HTTPS was not on yet at first (TLS "internal error" = no
@@ -326,7 +326,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
 - Keys: `g<body>` = glass [x,y,z, quat, velocity, state 0 moving / 1 held /
   2 resting]; `jb` = [song index or -1, server time it started]; `m<i>` =
   mirror on/off.
-- Glasses (`app/shared_world.cpp`): the player moving one (holding it, or it
+- Glasses (`bar/shared_world.cpp`): the player moving one (holding it, or it
   is flying/sliding after their throw or knock) owns it and sends ~10x/s;
   on rest the final pose is sent once and nobody owns it. Others drive it
   as a **kinematic** body (`Body::kinematic`: no gravity, moved along its
@@ -337,7 +337,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   shared positions) and not within 1.5 s of the network placing it.
 - Jukebox: only built-in songs are shared (your own files stay on your
   phone). A late joiner seeks to `server now - start` (set on
-  `loadedmetadata` in `web/audio.js`). A remote song waits for the first
+  `loadedmetadata` in `bar/web/audio.js`). A remote song waits for the first
   tap (sound unlock). When a song ends, everyone advances and writes the
   next song; starts within 2 s count as the same, so nobody restarts.
 
@@ -352,7 +352,7 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   every subfolder that has a **`project.json`**
   (`{"name", "description", "order"}`), read on each visit, so a new project
   appears when its first deploy lands; no landing-page change needed.
-  Bar3D's is `web/project.json`.
+  Bar3D's is `bar/web/project.json`.
 - Deploys only add/replace files (lftp `mirror -R` without `--delete`, `put`),
   so one project's deploy never touches another's folder.
 - Could move to its own repo later; then remove the two `put` lines here.
@@ -390,11 +390,11 @@ our own AAC/MP3 decoder is possible but has no visible benefit.
   pointing their UVs at a spot in a small color atlas (`swatch_uvs`);
   labels share one label atlas. One draw call per material, not per bottle.
 - Glow: `plain_material(..., emission=rgb, strength=s)`; strengths above 1
-  export as `KHR_materials_emissive_strength`, which `engine/gltf.cpp`
+  export as `KHR_materials_emissive_strength`, which `looped/gltf.cpp`
   reads. The tone mapper turns strong glow white: neon looks colored at
   strength ~2, bulbs and flames want 8-20.
 - Painted text in textures (menus, chalkboard, posters, title cards) uses
-  the engine's own 5x7 pixel font, parsed from `engine/font.cpp`
+  the engine's own 5x7 pixel font, parsed from `looped/font.cpp`
   (`common.draw_text`). Image arrays have row 0 at the bottom (v = 0).
 - Box UVs follow `grain_axis`: walls running along z need `grain_axis="z"`,
   or the bricks come out turned 90 degrees.
@@ -441,20 +441,20 @@ account id); the server detects ghosts; join = full snapshot + deltas;
 validate every incoming value. Q1 (Cloudflare account + GitHub secrets)
 was answered by the user on 2026-10-17.
 - **Server overrides are allowlisted (step 0.1):** `?server=` works only
-  for localhost or exact hosts in `ALLOWED_HOSTS` in `web/net.js`
+  for localhost or exact hosts in `ALLOWED_HOSTS` in `bar/web/net.js`
   (`joshuavelasco.com`); `?cloud=` only for localhost until 3.3 adds the
   room's workers.dev host to `ALLOWED_CLOUD_HOSTS`. Never a suffix match.
   Tokens and passwords go only to same-origin or allowlisted hosts.
 - **Race determinism** holds only for the identical wasm build: a native
   build can differ from wasm, and the track surface hash uses `sin`
-  (`app/race/track.cpp`). Two players must run the same build (steps
+  (`bar/projects/racing/track.cpp`). Two players must run the same build (steps
   2.4a/2.4b/7.3 add em++ tests, an integer hash and a build hash check).
 - **IONOS upload:** `mirror` runs without `--ignore-time` (it skipped edits
   that kept the size), so after a fresh CI build it re-sends everything
   (about 45 MB of assets); the per-build `mput` list comes from
   `build/site/*.js *.json`.
 
-- **Frame profiler (step 0.2, `engine/profiler.*`):** fixed phase enum,
+- **Frame profiler (step 0.2, `looped/profiler.*`):** fixed phase enum,
   `PROFILE(Phase::kX)` scopes in `frame()`, `prof::draw()` next to every
   draw call, start-up `stage()` marks. Overlay: Settings → Performance
   overlay or `?perf=1` (bars = time between frames, blue = CPU part, lines
@@ -464,8 +464,8 @@ was answered by the user on 2026-10-17.
   phase times are coarse; trust averages. A hitch (> 20 ms between frames)
   is blamed on the previous frame's longest phase.
 
-- **Logs and reports (step 0.3):** `LOG_INFO/WARN/ERROR/FATAL` (engine/log.h)
-  call `bar3dLog.add` in `web/index.html` directly (no printf). Ring of 300
+- **Logs and reports (step 0.3):** `LOG_INFO/WARN/ERROR/FATAL` (looped/log.h)
+  call `bar3dLog.add` in `bar/web/index.html` directly (no printf). Ring of 300
   lines, drawn once per frame. Errors show a red badge (tap = log); only
   fatal opens the panel, behind "Something broke - tap to rejoin" (reload,
   keeps the URL options), and sends a report by itself. Audio problems are
@@ -483,7 +483,7 @@ was answered by the user on 2026-10-17.
   At high frame rates (PC, 280 fps) it reads ~10 ms because it includes
   waiting behind earlier frames: only meaningful when frames are slow.
 - **Web Audio on Safari:** never call `setTargetAtTime` every frame without
-  clearing old events; `soundSet` (web/audio.js) sends only 1% changes and
+  clearing old events; `soundSet` (bar/web/audio.js) sends only 1% changes and
   uses `cancelAndHoldAtTime` first.
 - **CI tests (step 0.4):** native tests (g++ + em++), `php -l`, EM_ASM lint
   and the browser smoke run before publishing; a failing step stops the
@@ -514,7 +514,7 @@ was answered by the user on 2026-10-17.
   `GetBindGroupLayout` on a pipeline (it may not exist yet): give the
   pipeline an explicit layout (`pipelines::pipelineLayout`).
 - **Jobs (step 1.4):** queue background work with `engine::queueJob(fn,
-  lane, kind)` (`engine/jobs.h`); give it a kind name so the queue learns
+  lane, kind)` (`looped/jobs.h`); give it a kind name so the queue learns
   its cost. Jobs run after the frame's submit until a deadline (3 ms in the
   bar, 8 ms loading). Keep a job small (one mesh part, one image, a 512 KB
   buffer slice). Jobs in one lane run in order, so a "done" job queued
@@ -523,7 +523,7 @@ was answered by the user on 2026-10-17.
   play them at ±1 semitone (playbackRate). Built in background jobs after
   you enter.
 - **Page mailbox (steps 2.1a-c):** game ↔ page goes through
-  `engine/bridge.*` + `web/bridge.js`: one `pull()` at frame start, one
+  `looped/bridge.*` + `bar/web/bridge.js`: one `pull()` at frame start, one
   `flush()` at frame end. Don't add EM_ASM calls in the frame; add a
   header slot or an op instead. Input is read once per frame as a
   read-only `InputFrame` (`Input::poll()`). Menu commands are pushed with
@@ -531,22 +531,22 @@ was answered by the user on 2026-10-17.
   things with `ui::setInfo(JsonWriter object)`, only on change. Build JSON
   only with `engine::JsonWriter` / `jsonQuote` (escaping). Panels that
   cover the game register with `bar3dModal` (one at a time). Who's in the
-  room is `bridge::roster()`, re-sent only when `web/net.js` bumps
+  room is `bridge::roster()`, re-sent only when `bar/web/net.js` bumps
   `rosterVersion`; a player index above the last roster counts as present
   (their first packet can arrive a frame before the roster lists them).
-  New saved settings need an entry in the `SCHEMA` in `web/menu.js`.
+  New saved settings need an entry in the `SCHEMA` in `bar/web/menu.js`.
 - **Time (step 2.2):** game code reads `engine::frameTime().nowMs` / `.dt`
   (one time per frame, from the browser's animation frame); use
   `engine::clockMs()` only to measure how long something took. No
-  `emscripten_get_now()` in `app/`. Test "page hidden" headless by
+  `emscripten_get_now()` in `bar/`. Test "page hidden" headless by
   redefining `document.hidden` and dispatching `visibilitychange`
   (`tools/mp_test.mjs` `setHidden`).
 - **Physics (step 2.3b):** draw bodies at `Body::shownPosition` /
   `shownRotation` (between steps), never `position`. Move a body
   instantly only with `PhysicsWorld::teleport`. Move a remote/kinematic
   body by setting `target`/`targetRotation`, not velocity. Headers that
-  native tests include must stay GPU-free (`engine/mesh_data.h`,
-  `engine/image.h`; `mesh.h`/`texture.h` add the upload code).
+  native tests include must stay GPU-free (`looped/mesh_data.h`,
+  `looped/image.h`; `mesh.h`/`texture.h` add the upload code).
 - **IONOS facts (`report.php?env=1`, 2026-10-17):** PHP 8.4.23, sodium yes
   (Ed25519 tickets possible, restructure 5.1c), pdo_mysql yes, pdo_sqlite
   yes, private folder writable and outside the web root, no open_basedir.
@@ -573,14 +573,14 @@ was answered by the user on 2026-10-17.
   the car's middle height (low contact points flipped cars), hard hits
   soak up spin, a car through the barrier is put back, flipped cars reset
   after 1.5 s. Safety caps on spin (10 rad/s) and speed (110 m/s).
-- Racing renders with its own pipeline (`shaders/race.wgsl`, cull none,
+- Racing renders with its own pipeline (`looped/shaders/race.wgsl`, cull none,
   the shader flips back-face normals). While racing the bar isn't drawn.
-- Native tests: `g++` builds `engine/vehicle.cpp` and `app/race/*.cpp`
+- Native tests: `g++` builds `looped/vehicle.cpp` and `bar/projects/racing/*.cpp`
   (except view/game/controls/car_model) without Emscripten; see the
   commands at the top of `tools/native/*.cpp`.
 
 ## Meridian in the bar (2026-10-18)
-- The user's own three.js driving game (uploaded as a zip) lives in `web/meridian/`,
+- The user's own three.js driving game (uploaded as a zip) lives in `bar/projects/meridian/`,
   served at `<site>/meridian/`. Sitting in a racing rig opens a menu: "Race (with
   bots)" (our engine) or "Meridian". Meridian opens full screen in an iframe with a
   "Back to the bar" button at the top middle (its own displays use the top corners).
@@ -606,10 +606,10 @@ was answered by the user on 2026-10-17.
   the authority for everything (the backend runs and manages the game), client-side
   work after. Only work on what the user names.
 - **Deviation from RESTRUCTURE 3.4a:** the phone decodes room messages in JavaScript
-  (`web/net.js` with `proto.js`, the room's own codec copied in by the build), not in
+  (`bar/web/net.js` with `proto.js`, the room's own codec copied in by the build), not in
   C++ through a wasm ring. It keeps the C++ net API unchanged (20-number states,
   world entries, events) so the cutover touched no game code except seats. The C++
-  codec (`engine/netproto.*`) stays tested for when C++ takes over.
+  codec (`looped/netproto.*`) stays tested for when C++ takes over.
 - **Shared world echo rule (net.js `onKv`):** the room echoes every world write to
   the writer too. Our own echo is skipped, unless someone else's write to the same
   key arrived after ours was sent and this is the echo of our latest write: then it's
@@ -635,18 +635,18 @@ was answered by the user on 2026-10-17.
   attachment.
 - **The room runs the jukebox (2026-10-18)** (`cloud/games/jukebox.js`): it knows the
   built-in songs' lengths (ffprobe; keep the list in the order of `kBuiltIn` in
-  `app/jukebox.cpp`, room_test checks the names) and starts the next song for
+  `bar/jukebox.cpp`, room_test checks the names) and starts the next song for
   everyone when one ends (a `song` deadline in the alarm scheduler). Online, a phone
   doesn't advance a built-in song itself; your own songs from the Files app still
   advance on your phone only. Adding a built-in song = add it to both lists.
-- **The room runs the glasses' physics (2026-10-18):** the bar's own C++ (engine/physics +
-  app/bar_scene + app/props, the same code the phones run) compiled with
+- **The room runs the glasses' physics (2026-10-18):** the bar's own C++ (looped/physics +
+  bar/bar_scene + bar/props, the same code the phones run) compiled with
   `-sSTANDALONE_WASM --no-entry` into `cloud/sim/room_sim.wasm` (≈ 90 KB; 4 WASI/env
   imports stubbed in `cloud/sim/sim.js`), imported by the Worker. Init ≈ 14 ms (it
   settles the glasses once), a 50 ms tick's step ≤ 0.2 ms in Node. Phones ask
   (`grab`/`drop`/`throw`), show the glass in their own hand at once, and otherwise keep
   every glass kinematic, following the room's poses (TICK props → world entries `g<n>`
-  in `web/net.js` → `SharedWorld`); the resting spot is world key `g<n>` by the room.
+  in `bar/web/net.js` → `SharedWorld`); the resting spot is world key `g<n>` by the room.
   The wasm isn't in git: CI builds it (Build step) and `tools/setup.sh` builds it in a
   fresh session.
 - **Gotcha:** send a glass's "came to rest" (KV) *after* the TICK that carries its last
@@ -667,7 +667,7 @@ was answered by the user on 2026-10-17.
 ## Steering feel (2026-10-19, upgrade item 2)
 The user: "so slippery", "no turn radius", wants a real wheel that comes
 back to the middle, "really smooth but race like", reused later. Built as
-`engine/steering.*` (any game can use it), measured by
+`looped/steering.*` (any game can use it), measured by
 `tools/native/steering_test.cpp` (in run.sh; `FEEL=old` compares the old one).
 - Two layers: the wheel in your hands (holding = light 35 ms follow; keys =
   rate-limited, back to centre 2x faster; let go = self-centres, 0.30 s
@@ -700,7 +700,7 @@ back to the middle, "really smooth but race like", reused later. Built as
 - **Contact** with the other player: both masses count, each phone moves only
   its own car (a bit more than half the overlap). The other phone sees the
   same bump and does the same.
-- Three cars (`app/race/cars.*`): GT (the tuned one), MUSCLE (1.35x torque,
+- Three cars (`bar/projects/racing/cars.*`): GT (the tuned one), MUSCLE (1.35x torque,
   heavy, slides more), ROADSTER (light, 0.78x torque, more grip). The body
   mesh is the GT's scaled per model; their axles are scaled the same way.
   `steering_test` checks all three (per-car limits on grip and slide).
@@ -718,9 +718,9 @@ back to the middle, "really smooth but race like", reused later. Built as
 - 7 coloured point lights (the bar has a hard limit of 32 lights: 29 now).
   The light grid now reaches the arcade (`lightGridMin.z`).
 - The machine: `tools/assets/arcade_cabinet.py` (reusable: title as an
-  argument). Tap → `web/menu.js` GAMES.platformer, the same full-screen iframe
+  argument). Tap → `bar/web/menu.js` GAMES.platformer, the same full-screen iframe
   as Meridian (the bar stops drawing, its sounds go quiet). The user's game is
-  in `web/arcade/platformer/` unchanged ("as is"); it loads three.js from
+  in `bar/projects/platformer/` unchanged ("as is"); it loads three.js from
   unpkg (the user's own code: the second approved three.js use).
 - The music: an original chiptune (A minor, Am F C G, 140 bpm, 16 bars,
   27 s) made in code at start-up in a background job; one looping voice whose
@@ -750,7 +750,7 @@ back to the middle, "really smooth but race like", reused later. Built as
   accuracy like osu! (MAX = 300), score out of 1,000,000 (MAX worth a bit
   more), a timing-error bar, a health bar (no failing). The page's top bar is
   hidden while it's open (body class `racing`).
-- Charts (`app/rhythm_chart.cpp`): INSANE (16ths, more chords, triples on
+- Charts (`bar/projects/mania/rhythm_chart.cpp`): INSANE (16ths, more chords, triples on
   the biggest hits), hold notes where the sound keeps ringing a beat later
   (12/20/25% of notes at most on normal/hard/insane). Made once per song and
   difficulty per session.
@@ -769,9 +769,9 @@ back to the middle, "really smooth but race like", reused later. Built as
 ## Clash Royale style UI (2026-10-19)
 - The user wants the UI "like Clash Royale": smooth, badges easy to tell
   apart, no emojis ("they look cheap"), everything 3D modelled.
-- `web/theme.css` skins the HTML menus (`web/menu.js`) and cards
-  (`web/account.js`) by overriding their classes (`body .mPanel` etc.). Font:
-  Lilita One (SIL OFL, `web/fonts/`, from Google Fonts).
+- `bar/web/theme.css` skins the HTML menus (`bar/web/menu.js`) and cards
+  (`bar/web/account.js`) by overriding their classes (`body .mPanel` etc.). Font:
+  Lilita One (SIL OFL, `bar/web/fonts/`, from Google Fonts).
 - Icons and badges are Blender models rendered with Cycles to transparent
   PNGs (`tools/assets/toy.py` helpers: glossy enamel/gold, bevelled slabs,
   tubes, studio lights, `Medium High Contrast`). badges.py: owner, bartender,
@@ -781,7 +781,7 @@ back to the middle, "really smooth but race like", reused later. Built as
   size: 4x4 pixel pictures.
 
 ## Chess in the lounge (2026-10-19, upgrade item 13)
-- Rules in plain C++ (`app/chess_rules.*`): legal moves with castling, en
+- Rules in plain C++ (`bar/projects/chess/chess_rules.*`): legal moves with castling, en
   passant, promotion; check/mate/stalemate/50 moves/bare kings. Checked by
   `tools/native/chess_test.cpp` with perft on the 5 standard positions (exact
   counts). Computer: alpha-beta 3 plies + captures, piece-square tables (~6 ms
@@ -800,7 +800,7 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Test: `tools/chess_test.mjs` (?chess, taps e2-e4 by projecting the squares).
 
 ## Avatar customizer (2026-10-19, upgrade item 14)
-- A custom look is 17 small numbers (`app/avatar.h` AvatarStyle: body,
+- A custom look is 17 small numbers (`bar/avatar.h` AvatarStyle: body,
   skin, hair style/colour/highlight, top style/colours/pattern, bottom
   style/colours/pattern, shoes, eyes, facial hair). The same Avatar::build
   makes the presets and custom looks; all share avatars[0]'s skeleton, so the
@@ -846,7 +846,7 @@ back to the middle, "really smooth but race like", reused later. Built as
   decoded to pixels on the main thread (getImageData), converted to float
   with `pow()` per channel and mipmapped on the CPU, all in the frame the
   model arrived (the hall has 48 textures: seconds of freeze). Now
-  `engine/gpu_upload.*`: createImageBitmap (off the main thread) →
+  `looped/gpu_upload.*`: createImageBitmap (off the main thread) →
   `copyExternalImageToTexture` → mipmaps drawn on the GPU, and every GPU
   setup step is a job run with a per-frame budget (`runJobs`, 8 ms on the
   loading screen, 3 ms after). Same pixels as before (diffed).
@@ -857,7 +857,7 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Never capture `std::vector<bool>` elements with `[x = v[i]]` in a lambda:
   that copies a proxy that points into the vector (dangling later). Use
   `static_cast<bool>(v[i])`.
-- Files in `web/` are copied by the `site_assets` target on every build
+- Files in `bar/web/` are copied by the `site_assets` target on every build
   (before, only when app.js relinked, so a JS-only change could test stale).
 - Physics in the headless test runs at ~2 fps, so the world moves in slow
   motion there (max 8 fixed steps per frame). Judge timing on the phone.
@@ -894,7 +894,7 @@ back to the middle, "really smooth but race like", reused later. Built as
   shading skips bump mapping (the bump would need per-vertex bone rotation).
 - In WGSL, `textureSample` must not sit behind a per-pixel branch:
   `fs_skinned` always samples, then decides whether to use it.
-- Shape builders (`engine/skinned_mesh.cpp`) flip each triangle to face
+- Shape builders (`looped/skinned_mesh.cpp`) flip each triangle to face
   its vertex normals, so winding mistakes can't happen there.
 - Reflected views flip triangle winding: the mirror pass uses a second
   scene pipeline with `FrontFace::CW`. Things behind the glass (the wall,
@@ -902,7 +902,7 @@ back to the middle, "really smooth but race like", reused later. Built as
 - Each camera view (main + one per mirror) needs its own frame uniform
   buffer: `WriteBuffer` calls all land before the single submit.
 - iOS opens the file picker only from a real tap on a real element. The
-  jukebox menu draws its "Load song" button in WebGPU, and `web/audio.js`
+  jukebox menu draws its "Load song" button in WebGPU, and `bar/web/audio.js`
   places an invisible `<label for=songPicker>` exactly over it while the
   menu is open (`setSongPickerRect`).
 - Solid rectangles (menu panels) go through the text pipeline: the font
@@ -912,7 +912,7 @@ back to the middle, "really smooth but race like", reused later. Built as
 - The Playwright test Chromium can't play AAC (`.m4a`). To test music
   headless, copy an Ogg/Opus version over the file in `build/site` only
   (ffmpeg is installed). Safari plays AAC fine.
-- iOS only lets sound start inside a tap. `web/audio.js` unlocks on the
+- iOS only lets sound start inside a tap. `bar/web/audio.js` unlocks on the
   first touchend (creates the AudioContext, plays a moment of silence in
   each music element); later `play()` calls from C++ then work.
 - The error log panel opens on errors and covers the lower screen, so
@@ -983,10 +983,10 @@ No builds or headless runs outside "go".
 ## Frustum culling (2026-10-19, master list 1c)
 - The phone baseline showed the GPU is the limit, not draw calls, so the goal
   is fewer triangles, not fewer draws.
-- `engine/culling.h`: frustum planes from a view-projection matrix (optionally
+- `looped/culling.h`: frustum planes from a view-projection matrix (optionally
   narrowed to part of the screen), box test, box transform.
 - Big .glb parts (≥ 1,500 triangles spanning more than one cell) are cut at load
-  (`engine/model.cpp` buildClusters) into 3 m floor-grid chunks: indices
+  (`looped/model.cpp` buildClusters) into 3 m floor-grid chunks: indices
   reordered so each chunk is one run, with its own box. Neighbouring visible
   chunks are drawn as one `DrawIndexed`. Room-wide models (back bar, counter,
   walls) are why whole-model culling alone wouldn't help.
@@ -1175,7 +1175,7 @@ No builds or headless runs outside "go".
 
 ## Driving rework MVP (2026-10-20, hub card "Driving rework")
 The first slice of `docs/DRIVING_REWORK.md`: the new physics in
-`engine/drive/` (car_spec, tire, vehicle_sim), the Vance Ridgeback GS (C7
+`looped/drive/` (car_spec, tire, vehicle_sim), the Vance Ridgeback GS (C7
 Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - **Plugged in beside the old physics, not instead of it.** A racer with
   the new physics keeps its old `engine::Vehicle` as a mirror: after every
@@ -1212,7 +1212,7 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   assist" blends the old speed-sensitive assist (1, default) with your
   thumb's wheel position straight to the wheel (0). Ratio 15.5:1, 29 degree
   lock, so the turning circle matches the real car's ~11.5 m.
-- **Car setup** (`web/menu.js` carSetup, SETUP button on the race screen
+- **Car setup** (`bar/web/menu.js` carSetup, SETUP button on the race screen
   for the GS): only changed keys are stored (localStorage `bar3dCarSetup`)
   and sent as JSON (`carSetup` command → `engine::drive::parseSetup`).
   "Old physics" switches the GS to the old physics on the spot.
@@ -1233,12 +1233,12 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   until a crawl; (4) kickdown on a floored pedal low in the revs; (5) lock
   36 deg (ratio 12.5, tighter than the real car, [D]); (6) TC default 0.2
   (was 0.6) and the GS's steering assist asks for more angle and catches
-  less (`feelFor` in app/race/game.cpp). drive_lab checks power oversteer
+  less (`feelFor` in bar/projects/racing/game.cpp). drive_lab checks power oversteer
   with TC off and full revs from 45 km/h.
 
 
 ## Faster drawing 2, loading screen, clean core leftovers (2026-10-20, hub cards)
-- **Quality** (`engine/quality.h`, Settings → Graphics): the phone's GPU is
+- **Quality** (`looped/quality.h`, Settings → Graphics): the phone's GPU is
   the limit (CPU ≈ 1 ms), so the first lever is pixels: High 2.0, Medium 1.6,
   Low 1.3 device pixels per CSS pixel (`Gpu::resolutionCap`). Auto: 2 s
   windows; down when frames average > 18.5 ms with the game's CPU < 8 ms and
@@ -1256,12 +1256,12 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - Other players are culled per view (a box around their feet, 2.4 m tall).
 - Not done (CPU isn't the limit, headless text costs 0.45 ms): render core
   6.1, retained HUD 6.6, hair LOD. Redo if phone reports show CPU time.
-- **Loading screen**: `web/loading.jpg` (42 KB, rendered by the game from the
+- **Loading screen**: `bar/web/loading.jpg` (42 KB, rendered by the game from the
   door, `VIEW=540x1170 node tools/shots.mjs "still&cam=0.4,1.65,5.2,0,-3"`),
   dimmed behind the title; one bar: downloads 5 → 85%, then the stages
-  (`app/loader.cpp` kBar). Not done: prefetching models before the code runs
+  (`bar/loader.cpp` kBar). Not done: prefetching models before the code runs
   (bytes, not request order, decide the phone's wait: 18 MB at start).
-- **Menu bug guard**: `web/menu.js onTap`: a short tap whose click doesn't
+- **Menu bug guard**: `bar/web/menu.js onTap`: a short tap whose click doesn't
   come within 0.5 s runs the button anyway and logs a warning. Not
   reproduced headless (`tools/menu_games_test.mjs`).
 - **Pose layer**: `slot::kPose` (19 numbers), TLV kind 2 (1 byte, sent only

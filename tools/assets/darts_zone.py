@@ -7,7 +7,7 @@
 #   blender -b --factory-startup --python tools/assets/darts_zone.py -- <texture dir> <out.glb>
 #
 # Model space = world space. The board's center is at (BX, BY), its face at
-# z = FACE_Z (app/bar_scene.cpp places dartboard.glb at x = 6.0 on the
+# z = FACE_Z (bar/bar_scene.cpp places dartboard.glb at x = 6.0 on the
 # front wall).
 import math
 import os

@@ -1,9 +1,9 @@
-// Picture quality on Auto (engine/quality.h): steps down when the GPU keeps
+// Picture quality on Auto (looped/quality.h): steps down when the GPU keeps
 // frames slow, not when the CPU does; back up when there's room; no ping-pong.
 #include <cstdio>
 #include <cstdlib>
 
-#include "engine/quality.h"
+#include "looped/quality.h"
 
 static int failures = 0;
 static void check(bool ok, const char* what) {

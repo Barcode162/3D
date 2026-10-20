@@ -3,7 +3,7 @@
 How a phone talks to its room on Cloudflare (`cloud/room.js`, one Durable Object per
 room). Written in restructure step 3.1 from `docs/RESTRUCTURE.md` §2.5, which explains
 *why*; this file is the exact *what*. Two codecs implement it and must agree:
-`cloud/proto.js` (server, also used by the Node test tools) and `engine/netproto.*`
+`cloud/proto.js` (server, also used by the Node test tools) and `looped/netproto.*`
 (the game). Both are tested on the same golden vectors in `proto/vectors.json`:
 `node tools/proto_test.mjs` and the native `proto_test` (in `tools/native/run.sh`).
 
@@ -66,12 +66,12 @@ e.g. race steering, darts aim) and listed here when they are added.
 
 | Kind | Meaning | Added |
 |---|---|---|
-| 1 | The bar's activity, 24 bytes: `u8 activity` (app `Activity`), `i16 param` (seat, machine...), `u8 voice level` (0..255), `5 × f32` activity data (app/players.h `kData`) | 3.4 |
+| 1 | The bar's activity, 24 bytes: `u8 activity` (app `Activity`), `i16 param` (seat, machine...), `u8 voice level` (0..255), `5 × f32` activity data (bar/players.h `kData`) | 3.4 |
 | 2 | The pose layer, 1 byte: `u8 pose` (app `Activity` shown on the upper body on top of kind 1's, e.g. a sip while seated; sent only while there is one, older builds skip it) | 4.3b |
 
 Until 3.4b the avatar block's `animTick` carries the emote counter (it goes up by one per
 emote, so a repeat restarts it), `anim` the emote id and `held` the drink in hand + 1.
-`web/net.js` maps the block + kind 1 to the 19 numbers of `app/players.h` both ways.
+`bar/web/net.js` maps the block + kind 1 to the 19 numbers of `bar/players.h` both ways.
 
 ### 3.3 Prop sample (18 bytes)
 | Offset | Type | Field | Encoding |
@@ -147,7 +147,7 @@ the same as the game's physics body index); when it comes to rest the room write
 key `g<n>` (state 2) right after that TICK. Phones never write `g<n>`.
 
 Games the room runs live in `cloud/games/` (darts: `darts.js`, 301 rules as in
-`app/darts.cpp`). A game's state is kept in its player's socket attachment (survives the
+`bar/darts.cpp`). A game's state is kept in its player's socket attachment (survives the
 room sleeping) and ends when they release the machine or leave.
 
 **The racing rigs** (`cloud/games/race.js`): the garage lobby. When everyone on the rigs

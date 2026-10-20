@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "app/bar_scene.h"
+#include "bar/bar_scene.h"
 
 using engine::Vec3;
 
@@ -80,7 +80,7 @@ int main() {
     }
   }
   int failed = 0;
-  // Seats: standing up (app::standSpot, used by app/main.cpp standUp) must
+  // Seats: standing up (app::standSpot, used by bar/main.cpp standUp) must
   // put you somewhere you can walk away from, close to the seat.
   for (size_t n = 0; n < scene.seats.size(); ++n) {
     const app::Seat& s = scene.seats[n];

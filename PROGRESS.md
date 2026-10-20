@@ -67,44 +67,44 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      after 2 min walking, incl. into the arcade) vs the baseline.
    - [x] Faster drawing part 2, first batch (2026-10-20, hub card): Settings →
      Graphics: Quality Auto/High/Medium/Low (2 / 1.6 / 1.3 pixels per point;
-     Auto steps down when the GPU keeps frames slow, `engine/quality.h`,
+     Auto steps down when the GPU keeps frames slow, `looped/quality.h`,
      test `quality_test`), Mirror Full/Simple (Simple: softer, small far
      things left out; Auto at Low uses it), field of view; other players
      culled. Left for later (CPU isn't the limit): render core 6.1, retained
      HUD 6.6, avatar LOD 6.5 rest, layout from Blender 6.2.
    - [x] Loading screen (2026-10-20): a still of the bar behind it
-     (`web/loading.jpg`, made by the game), one bar over every stage with a
+     (`bar/web/loading.jpg`, made by the game), one bar over every stage with a
      percentage, plain stage names.
 2. [ ] **Clean core** (RESTRUCTURE Phase 4): `main.cpp` split into clear parts,
    stable entity ids, one activity/interaction system. Overlaps 1c.
-   - [x] 4.1a (2026-10-19): `app/app_state.h` (the App state, shared helpers),
-     `app/hud.cpp` (on-screen text), `app/local_player.cpp` (camera, walking,
+   - [x] 4.1a (2026-10-19): `bar/app_state.h` (the App state, shared helpers),
+     `bar/hud.cpp` (on-screen text), `bar/local_player.cpp` (camera, walking,
      held things, your pose). `main.cpp` 1,899 → 1,331 lines. Pure move:
      activity screenshots identical.
    - [x] 4.1b (2026-10-20): the frame is a table of named phases (input,
      interaction, physics, net in, games, claims, net out, render) in
-     `app/game.cpp`; `main.cpp` is the 38-line entry point; the last
+     `bar/game.cpp`; `main.cpp` is the 38-line entry point; the last
      function-local state (bookshelf, mirror buttons) moved into App. Kept
      `g_app` (one global App) rather than a Game class: same effect, far less churn.
-   - [x] 4.3a (2026-10-20): `app/activity.{h,cpp}`: one record of what you're
+   - [x] 4.3a (2026-10-20): `bar/activity.{h,cpp}`: one record of what you're
      doing and the rules for starting something (seat taken, machine in use,
      no emotes while seated or playing); menu commands checked first (emote in
      range, drinks only on shift, stand up only when seated). Test:
      `tools/native/activity_test.cpp`.
-   - [x] 4.4 (2026-10-20): `app/interaction.{h,cpp}`: one tap resolver over
+   - [x] 4.4 (2026-10-20): `bar/interaction.{h,cpp}`: one tap resolver over
      pick-ups, players, things and seats, nearest wins with documented biases
      (a player behind the jukebox no longer steals the tap); badges asked once
      a second instead of every frame; `teleport()` for the oche and the
      bartender spot. Test: `tools/native/interaction_test.cpp`.
-   - [x] 4.1c (2026-10-20): `app/presentation.cpp` (moving shapes, avatar
-     poses); no EM_ASM left in `app/` (all behind `engine::ui`).
+   - [x] 4.1c (2026-10-20): `bar/presentation.cpp` (moving shapes, avatar
+     poses); no EM_ASM left in `bar/` (all behind `engine::ui`).
    - [x] 4.3b (2026-10-20, part): one place switches game input
      (`syncCapture`, derived from what's open); the pose layer (a sip while
      seated stays seated for everyone; PROTOCOL TLV kind 2, older builds skip it).
-     Left: darts/bartending/race adapters in `app/activities/`.
-   - [x] 4.2 (2026-10-20, first half): `app/entities.{h,cpp}`: a readable id
+     Left: darts/bartending/race adapters in `bar/activities/`.
+   - [x] 4.2 (2026-10-20, first half): `bar/entities.{h,cpp}`: a readable id
      and 16-bit net id for every seat, thing, mirror and prop (75), golden list
-     `app/entity_ids.txt`, test `entity_test`. Left (with Phase 5): the wire
+     `bar/entity_ids.txt`, test `entity_test`. Left (with Phase 5): the wire
      and the room using them (protocol bump, everyone reloads).
 3. [ ] **Accounts + economy foundation:** age at sign-up (13+ only; teen 13-17 /
    adult 18+ bands); inventory and a currency ledger the server owns (every
@@ -147,7 +147,7 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
 
 ### Driving rework (hub card, started 2026-10-20)
 Spec and build order: `docs/DRIVING_REWORK.md`.
-- [x] MVP (2026-10-20): new physics `engine/drive/` (480 Hz chassis, unsprung
+- [x] MVP (2026-10-20): new physics `looped/drive/` (480 Hz chassis, unsprung
   wheels, 15-probe contact, MF tires with relaxation and low-speed anchor,
   driveline with clutch/7 gears/LSD, brakes, ABS, TC, launch control, aero,
   virtual steering wheel); the Ridgeback GS (car 4 "GS" in the garage); the
@@ -190,7 +190,7 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
 2. Helpers in `tools/assets/common.py` (boxes, lathe, torus, tube, PBR and
    image materials, glow, pixel text, atlas UVs); add a row to
    `assets/models/CREDITS.md`.
-3. Place it in `app/bar_scene.cpp` (`b.model(...)` plus `b.solid(...)` for
+3. Place it in `bar/bar_scene.cpp` (`b.model(...)` plus `b.solid(...)` for
    its physics shape).
 4. Check: build, smoke test, `CAM="a;b;c"` close-ups (several in one run);
    after the deploy, `node tools/check_live.mjs`.
@@ -220,16 +220,16 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 ## Roadmap
 ### Stage 1: Engine foundation
 - [x] 1.1 Pipeline proof: C++ → WASM → WebGPU triangle, tap to change color, on-screen log, auto-deploy (verified on iPhone: 60 fps, Apple GPU)
-- [x] 1.2 Math library: vectors, matrices, quaternions (`engine/math.h`)
-- [x] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres (`engine/mesh.*`)
+- [x] 1.2 Math library: vectors, matrices, quaternions (`looped/math.h`)
+- [x] 1.3 3D meshes + depth buffer: procedural boxes, cylinders, spheres (`looped/mesh.*`)
 - [x] 1.4 First-person camera + touch controls (left stick move, right drag look; WASD + mouse on a computer)
 - [x] 1.5 Lighting: 8 warm point lights + emissive + haze + tone mapping + PBR materials (W1)
-- [x] 1.6 Text rendering in-engine (`engine/font.*`, `engine/text.*`, `shaders/text.wgsl`): hand-drawn 5x7 pixel font → SDF atlas with mipmaps, outlines, screen + 3D world text, one draw call
+- [x] 1.6 Text rendering in-engine (`looped/font.*`, `looped/text.*`, `looped/shaders/text.wgsl`): hand-drawn 5x7 pixel font → SDF atlas with mipmaps, outlines, screen + 3D world text, one draw call
 
 ### Stage 2: The bar room
-- [x] Rough blockout (`app/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
+- [x] Rough blockout (`bar/bar_scene.cpp`): room, bar counter, stools, back bar with bottles,
       pendant lamps, neon frame, tables, booth, jukebox, mirror frame, door
-- [x] Procedural textures (`engine/procedural.*`, `engine/texture.*`): wood planks (floor), wood grain (bar, tables, shelves, panels, door), brick (walls), leather (stools, booth), plaster (ceiling). Color + gloss + bump, mipmaps, triplanar mapping (no UVs needed)
+- [x] Procedural textures (`looped/procedural.*`, `looped/texture.*`): wood planks (floor), wood grain (bar, tables, shelves, panels, door), brick (walls), leather (stools, booth), plaster (ceiling). Color + gloss + bump, mipmaps, triplanar mapping (no UVs needed)
 - [x] More detail and props; better neon (real sign shapes): all real models now (W3)
 - [x] Collision so you can't walk through walls or furniture (circle vs. floor rectangles)
 
@@ -242,9 +242,9 @@ A cozy 3D hangout bar, viewed in first person on an iPhone:
 - [ ] Pool table
 
 ### Stage 4: Audio
-- [x] C++ audio through Web Audio (`engine/audio.*` + thin bridge `web/audio.js`; unlocks on first tap)
-- [x] Jukebox plays the smooth-jazz playlist (`app/jukebox.*`), 3D-positioned (HRTF), tap = next song, after the last song tap = off
-- [x] Jukebox menu (`JukeboxMenu` in `app/jukebox.*`): song list with codes A1, A2…, pages, Load song / Stop / Close
+- [x] C++ audio through Web Audio (`looped/audio.*` + thin bridge `bar/web/audio.js`; unlocks on first tap)
+- [x] Jukebox plays the smooth-jazz playlist (`bar/jukebox.*`), 3D-positioned (HRTF), tap = next song, after the last song tap = off
+- [x] Jukebox menu (`JukeboxMenu` in `bar/jukebox.*`): song list with codes A1, A2…, pages, Load song / Stop / Close
 - [x] "Load song": the user's own songs from the iPhone Files app (local only, never uploaded; gone after reload)
 - [x] In-game credits for the CC BY tracks ("Now playing" banner with the credit)
 - [ ] Generated sound effects (glass clink, footsteps, switches)
@@ -261,7 +261,7 @@ A small DAW inside the bar, all DSP written in C++:
 ### Stage 5: Avatar + mirror
 - [x] Mirror 1: full reflection (reflected camera into a screen-sized texture, scissored to the mirror, clip plane at the glass)
 - [x] Mirror 2: avatars-only mirror (VRChat style), studio-lit backdrop. Tap a mirror to turn it on/off
-- [x] Skinned humanoid avatar (`engine/skeleton.*`, `engine/skinned_mesh.*`, `app/avatar.*`): 18 bones, one smooth mesh (~4k vertices) built from tubes/ellipsoids, 2-bone skinning in `vs_skinned`; face, hair, t-shirt (fabric texture), jeans (denim texture), belt, shoes; head follows where you look
+- [x] Skinned humanoid avatar (`looped/skeleton.*`, `looped/skinned_mesh.*`, `bar/avatar.*`): 18 bones, one smooth mesh (~4k vertices) built from tubes/ellipsoids, 2-bone skinning in `vs_skinned`; face, hair, t-shirt (fabric texture), jeans (denim texture), belt, shoes; head follows where you look
 - [x] Walk/idle animation (`advanceWalk` + `Avatar::pose`): stride driven by distance moved, legs/knees/feet, arm swing, hip/chest twist, bob; idle breathing and sway; head follows where you look
 - [x] First-person body: the avatar is drawn in the main view with the head and neck folded away (`Avatar::hideHead`); looking down tilts the head around the neck, so the body shifts back and you see your feet
 - [x] Avatar follows your movement; visible in the mirror
@@ -280,17 +280,17 @@ A small DAW inside the bar, all DSP written in C++:
 - [x] GLB model loader (done as W2)
 
 ### Stage M: Multiplayer (2026-10-15)
-- [x] M1 See each other: PHP relay on IONOS (`server/relay.php`), bridge `web/net.js` + `engine/net.*`, smoothing + walk animation `app/players.*`, up to 7 other avatars with name tags, in mirrors too. `?room=`, `?name=`. Test: `tools/mp_test.mjs`
+- [x] M1 See each other: PHP relay on IONOS (`server/relay.php`), bridge `bar/web/net.js` + `looped/net.*`, smoothing + walk animation `bar/players.*`, up to 7 other avatars with name tags, in mirrors too. `?room=`, `?name=`. Test: `tools/mp_test.mjs`
 - [x] IONOS upload + domain joshuavelasco.org (game + relay live over http)
 - [x] Domain moved to joshuavelasco.com (HTTPS on), landing page + game at `/bar/`
-- [x] M2 Shared world (`app/shared_world.*`): held/thrown/knocked glasses, jukebox song (late joiners hear the same part), mirrors on/off; world entries with revisions in the relay. Test: `tools/mp_test.mjs` (5 checks)
+- [x] M2 Shared world (`bar/shared_world.*`): held/thrown/knocked glasses, jukebox song (late joiners hear the same part), mirrors on/off; world entries with revisions in the relay. Test: `tools/mp_test.mjs` (5 checks)
 - [x] M3 (part) WebRTC phone-to-phone: voice chat + data channel for quick events (2026-10-16). Movement still goes through the relay
 
 ### Stage W: World simulation (new north star, 2026-10-15)
-- [x] W1 Material system (`engine/material.h`, `app/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
-- [x] W2 GLB loader (`engine/json.*`, `engine/gltf.*`, `engine/model.*`, `engine/fetch.*`) + asset pipeline (`tools/assets/`, Blender headless)
+- [x] W1 Material system (`looped/material.h`, `bar/materials.*`: look + physics + sound in one record) + PBR shading (GGX, metal/roughness, sphere-light highlights, approximate room reflections)
+- [x] W2 GLB loader (`looped/json.*`, `looped/gltf.*`, `looped/model.*`, `looped/fetch.*`) + asset pipeline (`tools/assets/`, Blender headless)
 - [x] W3 Real assets: room shell, bar counter, back bar with ~110 bottles, stools, tables, booth, jukebox, lamps, neon sign, candles, beer taps, coasters, napkin holders, menus, dartboard, chalkboard, posters, mirror frames (`tools/assets/`, `assets/models/`)
-- [x] W4 Rigid-body physics (`engine/physics.*`, `app/props.*`): compound-sphere bodies, fixed boxes, friction/bounce/mass from materials, sleeping, impact events; pick up / put down / throw glasses
+- [x] W4 Rigid-body physics (`looped/physics.*`, `bar/props.*`): compound-sphere bodies, fixed boxes, friction/bounce/mass from materials, sleeping, impact events; pick up / put down / throw glasses
 - [ ] W5 Physical sound: synthesized impacts, room acoustics
 - [ ] W6 Heat and fire (candle flames, steam, melting ice)
 - [ ] W7 Liquids (pour and mix drinks)
@@ -341,7 +341,7 @@ A small DAW inside the bar, all DSP written in C++:
   jukebox codes, paging, Load song (Files app), Stop, Close.
 - **2026-10-15:** Mirrors. Full mirror (brass frame, z = -2.2) and avatar
   mirror (black frame, z = 1.1) on the right wall; tap to toggle. Placeholder
-  avatar. Drawing code moved from `main.cpp` to `app/renderer.*`.
+  avatar. Drawing code moved from `main.cpp` to `bar/renderer.*`.
 - **2026-10-15:** Skinned avatar with skeleton, body shapes, face and
   clothes textures; replaces the mannequin.
 - **2026-10-15:** Walk and idle animation. Session wrapped up here; all
@@ -436,7 +436,7 @@ A small DAW inside the bar, all DSP written in C++:
   Native tests in `tools/native/`.
 - **2026-10-16:** Cloudflare realtime server written (`cloud/worker.js`,
   one Durable Object room per bar, WebSockets, asks IONOS to verify
-  logins); `web/net.js` uses it when `cloud.json` gives its address, else
+  logins); `bar/web/net.js` uses it when `cloud.json` gives its address, else
   the IONOS relay. Tested locally (`tools/cloud_test.mjs`, `CLOUD=` in
   `tools/mp_test.mjs`). **Not deployed yet:** next is the deploy step
   (wrangler with the `CLOUDFLARE_*` secrets, which the user has added, and
@@ -445,14 +445,14 @@ A small DAW inside the bar, all DSP written in C++:
   files into IONOS MySQL later).
 - **2026-10-17:** Restructure step 0.1 done. Closed the token leak:
   `?server=` / `?cloud=` overrides now only work for localhost or exact
-  allowlisted hosts (`web/net.js`), and logins/passwords go only to
+  allowlisted hosts (`bar/web/net.js`), and logins/passwords go only to
   same-origin or allowlisted hosts. `cloud/.wrangler` removed from git and
   ignored. IONOS upload list generated from the build, `mirror` no longer
   skips same-size edits. Racing docs corrected (frame-rate dependence,
   remote-car mass). `tools/shots.mjs` takes its own `server=` and
   `REQUESTS=1` (prints requests to outside hosts).
 - **2026-10-17:** Restructure step 0.2 done. Frame profiler
-  (`engine/profiler.*`): time per frame phase, draw/triangle counts per
+  (`looped/profiler.*`): time per frame phase, draw/triangle counts per
   pass, loading jobs, heap, hitches, start-up stages. Performance overlay
   (Menu → Settings → Performance overlay, or `?perf=1`). Smoke test prints
   a `perf:` line from `window.bar3dPerf`. First finding: at the door the
@@ -526,10 +526,10 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-17:** Restructure 1.6 + 1.7 + 1.8 done, Phase 1 complete:
   identical textures shared between models (237 → 159, 132 MB), mirror at
   half resolution with an oblique near plane (no `discard` anywhere),
-  named loading stages, test options in `app/test_hooks.*`, version check
+  named loading stages, test options in `bar/test_hooks.*`, version check
   before loading the game, a security policy on the page.
 - **2026-10-17, HANDOFF (chat ended mid-batch):** step 2.1a is mostly done
-  and pushed: `engine/bridge.*` + `web/bridge.js` (one `pull()` at frame
+  and pushed: `looped/bridge.*` + `bar/web/bridge.js` (one `pull()` at frame
   start: canvas size from a ResizeObserver, dpr, safe area, hidden/blur
   count, text-field focus, modal open, audio running + sound clock,
   settings version, your voice level, touches, other players' voice levels,
@@ -542,7 +542,7 @@ A small DAW inside the bar, all DSP written in C++:
   once). Page calls per game frame: ~24 → ~3 (pull, flush, net status at
   times). Bonus: the mirror pass is skipped when the glass isn't on screen
   (at the door: ~525 fewer draws).
-  **Left to do for 2.1a:** (1) `web/index.html` `?crossings` counter wraps
+  **Left to do for 2.1a:** (1) `bar/web/index.html` `?crossings` counter wraps
   the same import table twice (it's under two names), so it counts every
   call double: skip a table already wrapped (keep a list). (2) Check
   rotation (`VIEW=932x430` then `430x932` → one resize each) and
@@ -604,7 +604,7 @@ A small DAW inside the bar, all DSP written in C++:
 - **2026-10-17, HANDOFF (user paused to regroup; "exciting news" for the
   project coming in a new chat):** step 2.5 is mostly built and pushed.
   Done: sound plays/stops/changes go as commands in the frame's mailbox
-  flush (`sp`/`ss`/`sv`/`se` ops in `web/bridge.js`; C++ picks voice ids,
+  flush (`sp`/`ss`/`sv`/`se` ops in `bar/web/bridge.js`; C++ picks voice ids,
   times are absolute sound-clock times), 32-voice cap (oldest replaced),
   one shared HRTF emitter for the piano (`audio::createEmitter`, other
   placed sounds use equal-power panners), raw sound data dropped once the
@@ -626,17 +626,17 @@ A small DAW inside the bar, all DSP written in C++:
   voice_test pass with the new sound path.
 - **2026-10-18:** Restructure 3.1 done: the language the phone and the
   new Cloudflare room will speak is written down (`docs/PROTOCOL.md`), with
-  one translator on each side (`cloud/proto.js`, `engine/netproto.*`) that
+  one translator on each side (`cloud/proto.js`, `looped/netproto.*`) that
   are tested to agree byte for byte on shared examples
   (`proto/vectors.json`), and to refuse broken messages. Nothing changes on
   the phone yet.
 - **2026-10-18:** Meridian (the user's driving game) is in the bar: sit in a racing
-  rig → pick "Meridian" (or the bot race). `web/meridian/`, test
+  rig → pick "Meridian" (or the bot race). `bar/projects/meridian/`, test
   `tools/meridian_test.mjs`.
 - **2026-10-18:** Restructure 3.2b, 3.2c, 3.3 and the cutover done in one go
   (user: "server first"): the room ticks, events, signals, shared world with
   echo, claims (seats decided by the room), ghosts, AFK, rate limits, saved
-  world, `/health` usage; CI deploys it and writes `config.json`; `web/net.js`
+  world, `/health` usage; CI deploys it and writes `config.json`; `bar/web/net.js`
   rewritten for it (no relay any more); mp_test (8 checks) and voice_test run
   against the room on wrangler dev. Meridian was added afterwards (see the entry above).
 - **2026-10-18:** Restructure 3.2a done: the new Cloudflare room

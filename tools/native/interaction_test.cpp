@@ -1,7 +1,7 @@
-// The tap resolver (app/interaction.*): which of the things a tap hits wins.
+// The tap resolver (bar/interaction.*): which of the things a tap hits wins.
 #include <cstdio>
 
-#include "app/interaction.h"
+#include "bar/interaction.h"
 
 using app::TapTarget;
 using app::TargetKind;

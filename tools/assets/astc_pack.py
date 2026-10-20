@@ -12,10 +12,10 @@ by every model that uses the same image, so it downloads once. The key is a
 hash of the source image and how it's used, so unchanged images are never
 re-encoded (the cache dir keeps them between builds).
 
-Images are scaled the way the game scales PNG/JPEG ones (engine/model.cpp
+Images are scaled the way the game scales PNG/JPEG ones (looped/model.cpp
 afterParse: colors and normal maps up to 1024, roughness/occlusion maps up
 to 256). Color images (base color, emissive) are encoded and mipmapped as
-sRGB, the rest as linear data. A .ba3c file (read by engine/gpu_upload.cpp):
+sRGB, the rest as linear data. A .ba3c file (read by looped/gpu_upload.cpp):
 
   "BA3C", u32 width, height, mip count, block width, block height (4 or 8:
   8x8 when the image still measures near-identical, MIN_PSNR),
@@ -142,7 +142,7 @@ def pack_image(astcenc, raw, srgb, cap, tmp, tag):
     img = Image.open(io.BytesIO(raw)).convert('RGBA')
     w, h = img.size
     big = max(w, h)
-    if big > cap:  # like createImageBitmap's resize in engine/gpu_upload.cpp
+    if big > cap:  # like createImageBitmap's resize in looped/gpu_upload.cpp
         s = cap / big
         w, h = max(1, round(w * s)), max(1, round(h * s))
     # The GPU wants whole blocks at full size: sizes that are multiples of 8

@@ -1,6 +1,6 @@
 // The arcade (upgrade plan items 3-5): stands in front of the platformer
 // machine, taps it, checks the user's platformer ("Test 2",
-// web/arcade/platformer/) opens full screen and draws (build/arcade.png),
+// bar/projects/platformer/) opens full screen and draws (build/arcade.png),
 // goes back to the bar, and checks the arcade's music came on in there.
 // Usage: NODE_PATH=$(npm root -g) node tools/arcade_test.mjs
 import { launchBrowser, logText, openBar } from './lib/browser.mjs';

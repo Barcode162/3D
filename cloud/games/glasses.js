@@ -5,7 +5,7 @@
 // until it comes to rest; the resting spot is saved as world key g<n>.
 //
 // Hand position = the holder's eyes + 0.5 m forward + 0.12 m right - 0.28 m
-// down, from their latest STATE (as app/main.cpp updatePhysics does).
+// down, from their latest STATE (as bar/main.cpp updatePhysics does).
 
 export const REACH_M = 3.0;       // grab/put down within this of your eyes
 export const MAX_THROW = 12;      // m/s

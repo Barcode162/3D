@@ -9,9 +9,9 @@
 #include <random>
 #include <vector>
 
-#include "app/bar_scene.h"
-#include "app/props.h"
-#include "engine/physics.h"
+#include "bar/bar_scene.h"
+#include "bar/props.h"
+#include "looped/physics.h"
 
 using engine::Vec3;
 

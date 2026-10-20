@@ -1,5 +1,5 @@
 # The new bar's floor plan, shared by every asset script (see
-# docs/BAR_REDESIGN.md). app/bar_scene.cpp repeats these numbers; change
+# docs/BAR_REDESIGN.md). bar/bar_scene.cpp repeats these numbers; change
 # both together.
 #
 # World space = model space for the room-sized models: x to the right,

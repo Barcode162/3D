@@ -1,10 +1,10 @@
 // Native test of the car physics (no browser): checks the car behaves like
 // a real one. Build and run:
-//   g++ -std=c++20 -O2 -I. tools/native/vehicle_test.cpp engine/vehicle.cpp -o build/vehicle_test && build/vehicle_test
+//   g++ -std=c++20 -O2 -I. tools/native/vehicle_test.cpp looped/vehicle.cpp -o build/vehicle_test && build/vehicle_test
 #include <cmath>
 #include <cstdio>
 
-#include "engine/vehicle.h"
+#include "looped/vehicle.h"
 
 using namespace engine;
 

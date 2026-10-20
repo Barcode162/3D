@@ -1,0 +1,8 @@
+{
+  "name": "Racing",
+  "about": "The racing sim on the two rigs: bots, two-player races, the new driving physics (looped/drive/).",
+  "kind": "native",
+  "code": ["game.cpp", "world.cpp", "track.cpp", "cars.cpp", "controls.cpp", "view.cpp", "mesh.cpp", "car_model.cpp"],
+  "opens_from": "a racing rig's menu (bar/web/menu.js \"sim\")",
+  "docs": "docs/RACING.md, docs/DRIVING_REWORK.md"
+}

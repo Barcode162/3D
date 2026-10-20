@@ -5,7 +5,7 @@ format": everything must exist and work, looks come later. This is the list
 of every crude first version, so each one can be remastered properly. Tick
 an item when its remaster is done.
 
-## Voice chat (`web/voice.js`)
+## Voice chat (`bar/web/voice.js`)
 - [ ] TURN server: only Google's public STUN is used. Two phones on strict
       networks (some cellular carriers) may fail to connect ("could not
       connect ... (network)" in the log). Fix: a TURN relay (paid service,
@@ -22,13 +22,13 @@ an item when its remaster is done.
 - [ ] Push to talk is the HUD mic button only (no on-screen hold button
       elsewhere, no keyboard key).
 
-## Menu (`web/menu.js`)
+## Menu (`bar/web/menu.js`)
 - [ ] Plain HTML panels; restyle to match the bar (or draw in WebGPU).
 - [ ] Emote menu is a grid, not a radial wheel; no favorites/hotkeys.
 - [ ] Settings: no graphics options yet (pixel ratio, mirror quality),
       no key rebinding.
 
-## Avatars and animation (`app/avatar.*`)
+## Avatars and animation (`bar/avatar.*`)
 - [ ] 8 looks are color/hair/sleeve variations of one body. Real separate
       avatars (Blender-built, or the user's own GLB/VRM) later.
 - [ ] Every pose is a few hand-set joint angles (sit, drive, piano,
@@ -38,14 +38,14 @@ an item when its remaster is done.
 - [ ] Others' drinks float near their hand (not attached to the hand bone).
 - [ ] No mouth/face animation while talking.
 
-## Seats (`app/bar_scene.cpp` seats, `app/main.cpp` sitOn/standUp)
+## Seats (`bar/bar_scene.cpp` seats, `bar/main.cpp` sitOn/standUp)
 - [ ] Sitting snaps into place (no walk-up or sit-down animation).
 - [ ] Sofa and armchair hip points are estimates; check each seat in the
       mirror and tune.
 - [ ] Two players sitting at the same instant: the lower id keeps it
       (the other is stood up with a message).
 
-## Piano (`app/piano.*`, `engine/synth.cpp`, `engine/midi.*`)
+## Piano (`bar/piano.*`, `looped/synth.cpp`, `looped/midi.*`)
 - [ ] The piano sound is additive synthesis (sines + hammer noise). Better:
       physical modeling (string waveguides, soundboard) or sampled.
 - [ ] Keys light up but don't physically go down (the model's keys are one
@@ -60,7 +60,7 @@ an item when its remaster is done.
 - [ ] Only the 10 Mutopia songs; no song search, no tempo control, no
       "learn mode" (falling notes).
 
-## Darts (`app/darts.*`)
+## Darts (`bar/darts.*`)
 - [ ] Tap to throw where you tapped plus random wobble; no swipe power,
       no arm-skill model.
 - [ ] Darts are boxes. Only 301; no cricket, no turns between players
@@ -68,7 +68,7 @@ an item when its remaster is done.
 - [ ] The score shows on the HUD; others see it as floating text by the
       chalkboard, not written on the chalkboard.
 
-## Racing (`app/race/*`, plan in `docs/RACING.md`)
+## Racing (`bar/projects/racing/*`, plan in `docs/RACING.md`)
 - [ ] Car model built in code (boxy loft); replace with a Blender car
       with interior/cockpit.
 - [ ] Track scenery built in code (box grandstand, cone trees, flat
@@ -79,11 +79,11 @@ an item when its remaster is done.
       whine, crash sounds; other cars are silent.
 - [ ] Spectator monitors show text only (step 4).
 
-## 4K Mania for others (`app/rhythm.cpp` drawCabinet)
+## 4K Mania for others (`bar/projects/mania/rhythm.cpp` drawCabinet)
 - [ ] Others see lanes, pressed keys and combo, with a fake note pattern
       (the real chart isn't sent).
 
-## Bartending (`app/bartender.*`, `server/account.php` badges)
+## Bartending (`bar/bartender.*`, `server/account.php` badges)
 - [ ] Making a drink = tapping through its steps (with sounds and a
       shaking animation). No real liquids, bottles or glasses moving (W7).
 - [ ] Drinks are colored boxes; served on 8 spots on the counter; anyone
@@ -94,7 +94,7 @@ an item when its remaster is done.
 - [ ] The badge is checked on your own phone only (a determined guest could
       fake it). Fine for friends; a server check would need the relay.
 
-## Other interactions (`app/main.cpp` use())
+## Other interactions (`bar/main.cpp` use())
 - [ ] Bell, guitar (one E major strum), door knock, chess, books, tip jar,
       light switch (dims the room), fireplace (fire light on/off; the
       flames model stays), stage mic (your voice carries across the bar):
@@ -103,7 +103,7 @@ an item when its remaster is done.
 - [ ] Beer taps and coffee machine are shortcuts into bartending.
 - [ ] The TV over the bar end has no interaction yet.
 
-## Profiles (`web/account.js`)
+## Profiles (`bar/web/account.js`)
 - [ ] 13 extra detail fields (pronouns, status, location, birthday, job,
       games, music, instrument, cocktail, languages, socials, looking for,
       fun fact) as plain text boxes. No privacy options per field.

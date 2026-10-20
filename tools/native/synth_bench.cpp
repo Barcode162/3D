@@ -1,6 +1,6 @@
-// Times the piano synth (engine/synth.cpp): middle C and 30 keys across the
+// Times the piano synth (looped/synth.cpp): middle C and 30 keys across the
 // keyboard, plus a checksum so changes to the sound show up.
-//   g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -o build/synth_bench && build/synth_bench
+//   g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp looped/synth.cpp -o build/synth_bench && build/synth_bench
 // Fails (exit 1) if middle C takes over 2.5 ms or the 30 keys over 60 ms
 // (native limits; pass --print to only print, e.g. for the slower wasm build).
 #include <algorithm>
@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "engine/synth.h"
+#include "looped/synth.h"
 
 using Clock = std::chrono::steady_clock;
 

@@ -2,14 +2,14 @@
 // times, finishing order, how often bots got stuck, and the track's numbers.
 // Then runs the same race at 30, 57.3 and 120 fps: the results must be
 // identical ("frame-rate independent: OK"), since the race runs on ticks.
-//   g++ -std=c++20 -O2 -I. tools/native/race_test.cpp app/race/world.cpp app/race/track.cpp app/race/mesh.cpp
-//       engine/vehicle.cpp -o build/race_test && build/race_test
+//   g++ -std=c++20 -O2 -I. tools/native/race_test.cpp bar/projects/racing/world.cpp bar/projects/racing/track.cpp bar/projects/racing/mesh.cpp
+//       looped/vehicle.cpp -o build/race_test && build/race_test
 #include <cmath>
 #include <cstdio>
 #include <string>
 
-#include "app/race/cars.h"
-#include "app/race/world.h"
+#include "bar/projects/racing/cars.h"
+#include "bar/projects/racing/world.h"
 
 using namespace app::race;
 
@@ -83,7 +83,7 @@ int main() {
   }
   std::printf("frame-rate independent: %s\n", same ? "OK" : "FAILED");
 
-  // The Ridgeback GS on the new physics (engine/drive), driven round the
+  // The Ridgeback GS on the new physics (looped/drive), driven round the
   // Ring by the bots' driver: it finishes, in a sane time, the same at any
   // frame rate.
   const auto gsRace = [&](double fps) {

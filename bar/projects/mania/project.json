@@ -1,0 +1,7 @@
+{
+  "name": "4K Mania",
+  "about": "The rhythm game on the 4K MANIA cabinet (like osu!mania).",
+  "kind": "native",
+  "code": ["rhythm.cpp", "rhythm_chart.cpp"],
+  "opens_from": "the 4K MANIA cabinet"
+}

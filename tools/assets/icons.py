@@ -1,7 +1,7 @@
 # The menu's icons, modelled in 3D and rendered to pictures (instead of
 # emojis): the main menu (emotes, avatar, profile, voice, settings, piano,
 # bartender, help, stand up) and one smiley for each emote. Same toy look as
-# the badges (toy.py). One PNG each into web/icons/.
+# the badges (toy.py). One PNG each into bar/web/icons/.
 #
 #   blender -b --factory-startup --python tools/assets/icons.py -- <out dir> [size] [names...]
 import math

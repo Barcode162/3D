@@ -7,3 +7,4 @@ __pycache__/
 build-debug/
 cloud/sim/room_sim.wasm
 .astcenc/
+build-b1/

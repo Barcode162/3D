@@ -7,15 +7,15 @@ user asked: "the race game should actually be fixed".)
 
 ## Added 2026-10-19 (user): Clash Royale style UI
 - [x] **UI like Clash Royale:** chunky outlined font (Lilita One, OFL), blue
-      bevelled panels, glossy buttons that press in (`web/theme.css`, over the
+      bevelled panels, glossy buttons that press in (`bar/web/theme.css`, over the
       menus and cards). No emojis: 3D-modelled badges (`tools/assets/badges.py`
-      → `web/badges/`) and menu/emote icons (`tools/assets/icons.py` →
-      `web/icons/`), shared toy look in `tools/assets/toy.py`.
+      → `bar/web/badges/`) and menu/emote icons (`tools/assets/icons.py` →
+      `bar/web/icons/`), shared toy look in `tools/assets/toy.py`.
 - [ ] Next for the UI: the in-game HUD text (pixel font) and 4K Mania / race
       screens in the same style; better emote faces.
 
 ## Added 2026-10-19 (user): 4K Mania, round 2
-- [x] Skins for the notes and menus (`kSkins` in `app/rhythm.cpp`): CLASSIC
+- [x] Skins for the notes and menus (`kSkins` in `bar/projects/mania/rhythm.cpp`): CLASSIC
       bars, CIRCLES, BUBBLE (default, glossy), NEON rings, ARROWS. Tap the
       SKIN button in the song select.
 - [x] Bubbly menus: rounded glossy buttons, bobbing picked card, rising bubbles.
@@ -41,7 +41,7 @@ user asked: "the race game should actually be fixed".)
       races the other rig's player (bots optional). Synced through the
       Cloudflare room.
 - [x] **2. Steering that feels like a real car:** (done 2026-10-19:
-      `engine/steering.*`, measured by `tools/native/steering_test.cpp`;
+      `looped/steering.*`, measured by `tools/native/steering_test.cpp`;
       see DECISIONS → Steering feel.) today it's "so slippery" with
       "no turn radius". Map the steering like a real steering wheel: you turn
       left, it comes back to the middle by itself, but feels like a real car
@@ -56,7 +56,7 @@ user asked: "the race game should actually be fixed".)
       lights, real 3D modelling (not boxes).
 - [x] **4. A new arcade machine: a platformer** (done 2026-10-19: the
       cabinet `tools/assets/arcade_cabinet.py`, tap → full screen like Meridian), running the user's game
-      "Test 2" as is (`web/arcade/platformer/`, three.js, from their zip).
+      "Test 2" as is (`bar/projects/platformer/`, three.js, from their zip).
       They loved how it felt; improvements later.
 - [x] **5. Arcade background music** (done 2026-10-19: an original
       chiptune made in code, `engine::synth::arcadeLoop`, main.cpp updateArcadeMusic): only audible around the arcade's door,
@@ -97,7 +97,7 @@ user asked: "the race game should actually be fixed".)
       every seat) you get trapped after sitting at the
       **fireplace** and in the **left racing rig**: standing up must let you walk.
 - [x] **13. The chessboard works** (done 2026-10-19: full rules,
-      `app/chess_rules.*`, perft-tested; 3D pieces `tools/assets/chess.py`
+      `bar/projects/chess/chess_rules.*`, perft-tested; 3D pieces `tools/assets/chess.py`
       that hop between squares; tap the board to play the computer, or black
       against whoever plays white; shared through the room (`ch`, claims
       machine.chess.w/.b). Later: the room checking each move's legality.)

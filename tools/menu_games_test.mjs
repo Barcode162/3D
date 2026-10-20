@@ -3,7 +3,7 @@
 // turn, leaves it, then taps the Menu button and the panel's ✕ where a
 // finger would (not through code), checking each still answers and that
 // nothing sits on top of the button. Last, a tap whose click the browser
-// drops still opens the menu (web/menu.js onTap).
+// drops still opens the menu (bar/web/menu.js onTap).
 // Usage: NODE_PATH=$(npm root -g) node tools/menu_games_test.mjs
 import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
 import { serveSite } from './lib/site.mjs';

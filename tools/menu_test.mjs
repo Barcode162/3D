@@ -87,7 +87,8 @@ for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
   await p3.click('.mTile:has-text("Settings")');
   await p3.click('.mChoice button:has-text("Low")');
   let r1 = 0;
-  for (let t = 0; t < 5000 && Math.abs((r1 = await ratio()) - 1.3) > 0.01; t += 250) await p3.waitForTimeout(250);
+  // Slow software rendering can take 1-2 s a frame here: allow 20 s.
+  for (let t = 0; t < 20000 && Math.abs((r1 = await ratio()) - 1.3) > 0.01; t += 250) await p3.waitForTimeout(250);
   check(Math.abs(r0 - 2) < 0.01 && Math.abs(r1 - 1.3) < 0.01, `Graphics → Low: ${r0.toFixed(2)}x → ${r1.toFixed(2)}x pixels`);
   check(/Quality: Low \(1.3x\), setting/.test(await p3.$eval('#log', (e) => e.textContent)), 'the log says the quality changed');
   await p3.screenshot({ path: 'build/menu-quality-low.png' });

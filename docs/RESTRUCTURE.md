@@ -171,7 +171,7 @@ Network: remote motion delay ≤ 200 ms, claim round trip ≤ 150 ms, event play
   allowlisted hosts (never a suffix match such as `*.workers.dev`: anyone can create one).
   Tokens and passwords go only to same-origin or allowlisted hosts.
 - **E-6** Every system has `reset()`; room switch and reconnect call it.
-- **E-7** No `EM_ASM`/`EM_JS` in `app/`. Only `engine/bridge`, `audio`, `net`, `ui`,
+- **E-7** No `EM_ASM`/`EM_JS` in `bar/`. Only `looped/bridge`, `audio`, `net`, `ui`,
   `gpu*`, `fetch` talk to JS.
 
 ---
@@ -193,7 +193,7 @@ Network: remote motion delay ≤ 200 ms, claim round trip ≤ 150 ms, event play
 - At 30 Hz (Low Power Mode) each frame runs 2 ticks: still correct.
 - Hidden tab: rAF stops; on return, catch-up is capped and the client resyncs (§2.5.8).
 
-**Exact order (one table in `app/game.cpp`, each row a system call timed by the profiler):**
+**Exact order (one table in `bar/game.cpp`, each row a system call timed by the profiler):**
 | # | Phase | Does | Reads | Writes |
 |---|---|---|---|---|
 | 0 | BeginFrame | FrameTime; profiler begin; `bridge.readInbox()` (size, visibility, focus, safe area, voice levels, UI commands); `Input::poll()` → immutable `InputFrame` | mailbox | FrameTime, InputFrame |
@@ -214,7 +214,7 @@ another system's internals; cross-system effects go through the event bus (§2.2
 `main.cpp` shrinks to about 100 lines: create `Engine` services, create `Game`, start
 the loop. The `g_app` god object disappears.
 
-**engine/** (reusable, never includes `app/`):
+**looped/** (reusable, never includes `bar/`):
 | Module | Files (existing → new) | Responsibility |
 |---|---|---|
 | core | `frame_time.h`, `profiler.*`, `jobs.*` (from `gpu_upload.*` queue), `log.*` (ring buffer), `bridge.*` | frame time, profiling, jobs with priorities/deadline, logging, the one JS mailbox |
@@ -222,11 +222,11 @@ the loop. The `g_app` god object disappears.
 | assets | `fetch.*`, `gltf.*` (dev/user GLBs only), `model.*`, `pack.*` (baked pack loader) | streaming with retry, sliced parsing |
 | input | `input.*`, `gamepad.*` | raw events (with event timestamps) → `InputFrame` |
 | audio | `audio.*` → `AudioMixer` (buses, emitters, voice pool, command buffer), `clock.*` (server↔audio time, latency + calibration), `synth.*`, `midi.*` | |
-| net | `net.*` v2 (typed messages, slots, intents, events, server time), `netproto.*` (binary codec) | transport is JS (`web/net.js`), logic is C++ |
+| net | `net.*` v2 (typed messages, slots, intents, events, server time), `netproto.*` (binary codec) | transport is JS (`bar/web/net.js`), logic is C++ |
 | sim | `physics.*`, `vehicle.*`, `math.h`, `skeleton.*`, `skinned_mesh.*`, `camera.h`, `material.h` | |
 | ui | `ui.*` (typed commands in, UI state out), `text.*`, `font.*`, `billboard.*` | |
 
-**app/** (the bar):
+**bar/** (the bar):
 | Module | Files | Responsibility |
 |---|---|---|
 | Game | `game.*` | owns every system, the phase table, `reset()` on room join/leave |
@@ -352,7 +352,7 @@ parsed in C++ only when they arrive).
 - Close codes: `4001` room full (sent after accept, with reason), `4002` protocol
   mismatch → reload prompt, `4003` replaced (only by a valid resume token), `4004`
   idle/ghost, `4005` rate limit.
-- One codec per side: `cloud/proto.js` (server) and `engine/netproto.*` (C++), both
+- One codec per side: `cloud/proto.js` (server) and `looped/netproto.*` (C++), both
   tested against golden vectors in `proto/vectors.json`. JS in the browser does **not**
   decode game messages; it copies frames into the wasm ring and only peeks the type
   byte for SIGNAL (voice) and PROFILE (menus/cards).
@@ -511,7 +511,7 @@ for a payment method (check before using it); TURN needs a TURN key made in the 
   reserved-word list.
 
 ### 2.7 Loading, streaming and the start-up lag fix
-**Loader stages** (`app/loader.*`, shown on the loading screen, timed by the profiler):
+**Loader stages** (`bar/loader.*`, shown on the loading screen, timed by the profiler):
 | Stage | Work | Phone target |
 |---|---|---|
 | Boot | HTML; `<link rel=preload>` for `app.wasm`, `app.js`, the 4 biggest models; version check (1.5 s timeout) **before** injecting `app.js` | 0.3 s |
@@ -546,7 +546,7 @@ into ≈ 3 m spatial clusters per material with AABBs; repeated props become ins
 prototypes; packed 24 B vertices + Uint16 indices; LOD1 via Blender decimate; plus
 `layout.json` (placements, colliders, walk shapes, seats, interactables, lights, mirror,
 anchors, stable ids, prop collision proxies), so the floor plan exists in exactly one
-place. `engine/gltf.cpp` stays for user GLBs, run in slices.
+place. `looped/gltf.cpp` stays for user GLBs, run in slices.
 
 **Mirror cost:** half-resolution reflection sampled with projective UVs; cheap shader
 variant (≤ 4 lights, no normal/AO/emissive maps); oblique near-plane projection instead
@@ -581,7 +581,7 @@ local per viewer; quality tiers full / avatars-only / off.
   culling), with the sky drawn last and reverse-Z depth.
 
 ### 2.9 Audio
-- **AudioMixer** (C++ decides, `web/audio.js` executes one command list per frame):
+- **AudioMixer** (C++ decides, `bar/web/audio.js` executes one command list per frame):
   buses (music, sfx, voice, game, piano), **persistent emitters** per world source
   (piano, jukebox, dartboard, bar station, bell, rigs) with one HRTF panner each;
   short one-shots use `equalpower`; global voice pool (cap ≈ 32, steal oldest); every
@@ -606,7 +606,7 @@ local per viewer; quality tiers full / avatars-only / off.
   voice starts after "Everything loaded", one peer every 400 ms.
 
 ### 2.10 Web/HTML bridge
-- **One mailbox per frame** (`engine/bridge.*` + `web/bridge.js`): C++ allocates an
+- **One mailbox per frame** (`looped/bridge.*` + `bar/web/bridge.js`): C++ allocates an
   inbound and an outbound area in the wasm heap (e.g. 256 KB / 64 KB). JS writes:
   header `{frame, flags (visible, inputFocused, audioRunning, modalOpen), cssW, cssH, dpr,
   safeArea L/T/R/B}`, voice levels per slot, then a ring of records (net frames, UI
@@ -636,7 +636,7 @@ local per viewer; quality tiers full / avatars-only / off.
 ### 2.11 Testing and telemetry
 | Layer | Tool | Runs | Covers |
 |---|---|---|---|
-| Native C++ (g++, fast) and the same sources with em++ + node (bit-exact reference) | `tools/native/*.cpp` | CI + locally | vehicle targets, race determinism at 30/57.3/60/120 fps, snapshot round trips, physics (glasses sleep ≤ 2 s, no NaN), synth cost, codec vs golden vectors, JSON round trip + garbage input, activity transitions, interaction resolver, interpolation buffer, clock filter, entity ids stable. Tests that need `bar_scene` include only CPU headers (`engine/mesh_data.h`, split from `mesh.h` in 2.3b; `mesh.h` pulls in `<webgpu/webgpu_cpp.h>`, which g++ doesn't have) or are built with em++ and run in node |
+| Native C++ (g++, fast) and the same sources with em++ + node (bit-exact reference) | `tools/native/*.cpp` | CI + locally | vehicle targets, race determinism at 30/57.3/60/120 fps, snapshot round trips, physics (glasses sleep ≤ 2 s, no NaN), synth cost, codec vs golden vectors, JSON round trip + garbage input, activity transitions, interaction resolver, interpolation buffer, clock filter, entity ids stable. Tests that need `bar_scene` include only CPU headers (`looped/mesh_data.h`, split from `mesh.h` in 2.3b; `mesh.h` pulls in `<webgpu/webgpu_cpp.h>`, which g++ doesn't have) or are built with em++ and run in node |
 | Protocol | `tools/room_test.mjs` (Node vs `wrangler dev`; replaces `tools/cloud_test.mjs` in 3.2a) | CI | slots, resume, ghosts, 4001/4002/4005, concurrent writes converge, exactly-one claim, take races, leases, jukebox advance once, rows written, alarm scheduler, rate limits. Against the live worker from the container: `NODE_USE_ENV_PROXY=1` (Node 22 ignores `HTTPS_PROXY` otherwise) |
 | Accounts | `tools/account_test.mjs` (php -S + PDO SQLite) | CI | signup/login/refresh/ticket/logoutAll, lockout, bad tickets |
 | Browser smoke | `tools/smoke.mjs` (headless Chromium + SwiftShader) | CI + locally | loads, "Everything loaded", non-blank screenshot, no errors, prints `bar3dPerf` |
@@ -644,7 +644,7 @@ local per viewer; quality tiers full / avatars-only / off.
 | Visual | `tools/imgdiff.mjs` + `?still` (0.4) | locally | "looks the same" checks at the standard spots (VIS) |
 | Live | `tools/check_live.mjs` with `EXPECT_SHA` (no room socket unless `NET=1`) | after deploy | right build is live |
 | Phone | `?perf=1` overlay + "Send report" code | user | real frame times, hitches, stages, heap |
-| Fault injection | `?netsim=lat:100,jitter:50` in `web/net.js` (localhost only) | locally | interpolation, playout, reconnect |
+| Fault injection | `?netsim=lat:100,jitter:50` in `bar/web/net.js` (localhost only) | locally | interpolation, playout, reconnect |
 Headless runs at 1-2 fps, so never judge timing there: judge CPU phase costs and counts
 headless, frame rate on the phone.
 
@@ -694,11 +694,11 @@ Rating is 1-10 (10 = keep as is). Delay = time added before the effect is seen.
 | Interaction (focus, taps, use) | 5 | tap on lift ok | same frame | < 0.1 ms | medium | refactor → 4.4 |
 | HUD, labels, machine screens | 5 | picture decode on main thread | — | 0.3-1 ms, grows | low | refactor → 4.1, 6.6 |
 | Startup & loading orchestration (+ loading screen) | 4 | stale-version reload wastes the load | several 100 ms freeze + 4-8 s load | full scene rendered behind overlay | medium | rewrite → 1.1-1.8 |
-| Input (`engine/input`) | 6 | keys stick on blur | handler-time stamps | layout read per touch event | none | refactor → 2.1 |
-| GPU device/surface/pipelines (`engine/gpu`) | 6 | no device-loss recovery; 11 sync pipelines at startup (+ mip mid-load, + 2 race on first sit) | pipeline compile on first use | layout read every frame | none | refactor → 0.3, 1.3, 2.1 |
+| Input (`looped/input`) | 6 | keys stick on blur | handler-time stamps | layout read per touch event | none | refactor → 2.1 |
+| GPU device/surface/pipelines (`looped/gpu`) | 6 | no device-loss recovery; 11 sync pipelines at startup (+ mip mid-load, + 2 race on first sit) | pipeline compile on first use | layout read every frame | none | refactor → 0.3, 1.3, 2.1 |
 | Job queue + image upload (`gpu_upload`) | 6 | ok; no size cap | FIFO, no priorities | jobs unbounded | none | refactor → 1.4 |
 | Logging + status | 4 | logs stuck on phone | — | forced layout per line | none | refactor → 0.3 |
-| Embedded files (`engine/file`) | 7 | fine | — | — | none | keep |
+| Embedded files (`looped/file`) | 7 | fine | — | — | none | keep |
 | Menu/settings bridge (`ui.*`, `menu.js`) | 5 | ok | ≤ 1 frame | JSON poll every frame | low | refactor → 2.1 |
 | Scene renderer core | 4 | per-draw pattern costly on Safari | — | ≈ 1,060 draws / 4.2k calls w/ mirror, est. 4-8 ms encode | low | rewrite → 6.1, 6.2 |
 | Mirror | 4 | discard defeats Apple HSR | — | +2-4 ms CPU, +4-7 ms GPU (full) | medium (shared mode) | rewrite → 1.7, 6.3 |
@@ -715,8 +715,8 @@ Rating is 1-10 (10 = keep as is). Delay = time added before the effect is seen.
 | Skinned mesh | 6 | — | — | 13 MB/frame vertex reads worst | none | refactor → 6.5 |
 | Camera | 7 | 70° vertical FOV narrow in portrait | — | — | low | keep |
 | Math | 6 | — | — | — | low | refactor → 2.3 |
-| Client transport (`web/net.js`) | 4 | iOS kills sockets silently | cloud 20-130 ms, relay 150-400 ms | GC churn, O(N²) lookups | high (split brain) | rewrite → 3.4 |
-| C++ net API (`engine/net`) | 5 | fine | 1 frame | 2 JSON round trips/frame | medium | rewrite → 3.4 |
+| Client transport (`bar/web/net.js`) | 4 | iOS kills sockets silently | cloud 20-130 ms, relay 150-400 ms | GC churn, O(N²) lookups | high (split brain) | rewrite → 3.4 |
+| C++ net API (`looped/net`) | 5 | fine | 1 frame | 2 JSON round trips/frame | medium | rewrite → 3.4 |
 | Remote players (`players.*`) | 5 | fine | fixed 250 ms + transport | low | medium | refactor → 3.4 |
 | Shared world + glass ownership (`shared_world.*`) | 4 | fine | 90 ms + transport + 70 ms follow | low | high | rewrite → 2.3, 5.4 |
 | Locks + game world keys | 3 | — | double booking 50-400 ms | low | high | rewrite → 5.2-5.9 |
@@ -781,7 +781,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Shared facts duplicated and polled (`updateMirrorButtons` `main.cpp:777-789`; `setLights` from two places) → RoomState + change events. *[5.3]*
 - [x] **L** Sound handles are raw pointers into `g_app.sfx` (`main.cpp:1385-1391`) → AudioMixer sound ids. *[2.5]*
 - [ ] **L** Test hooks are regexes inside startup (`main.cpp:1186-1218`) → TestHooks parsed once. *[1.8]*
-- [ ] **L** *(review)* E-7 has no global check; `app/race/game.cpp` keeps 2 `EM_ASM` (the `racing` body class) that no step removed → moved behind an engine call; `grep -rn "EM_ASM\|EM_JS" app` → 0. *[2.4b, 4.1c]* (2.4b part done: `grep EM_ASM app/race` → 0; `ui::setBodyClass`, `ui::buildLabel`)
+- [ ] **L** *(review)* E-7 has no global check; `bar/projects/racing/game.cpp` keeps 2 `EM_ASM` (the `racing` body class) that no step removed → moved behind an engine call; `grep -rn "EM_ASM\|EM_JS" app` → 0. *[2.4b, 4.1c]* (2.4b part done: `grep EM_ASM bar/projects/racing` → 0; `ui::setBodyClass`, `ui::buildLabel`)
 
 **B. Activities, seats, interaction, HUD**
 - [ ] **H** Seats: "lower id wins" after both sat; a newcomer who hasn't placed others yet can steal a seat (`main.cpp:1253-1265`, `:182`, `:235`) → server claims + pending sit animation. *[5.2]*
@@ -836,7 +836,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** Logs never leave the phone (`log.h:6-7`) → report endpoint + code. *[0.3]*
 - [x] **L** No levels, timestamps or categories in logs → add. *[0.3]*
 - [x] **M** `setInfo` JSON hand-built without escaping; a `\` in a MIDI file name silently freezes menu info (`main.cpp:923-937`, `menu.js:378`) → JSON writer + log parse failures. *[2.1b]*
-- [x] **M** *(review)* `engine/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]* (2.1b part done: writer, limits, no shared_ptr, json_test with 1,000 garbage inputs; 3.1: malformed JSON, NaN, 1e999, deep nesting in proto vectors)
+- [x] **M** *(review)* `looped/json.{h,cpp}` was never audited, yet from 3.4 it parses untrusted network JSON (DELTA, EVENTS, PROFILE with user names); it allocates `shared_ptr` maps per value and has no writer → writer + depth/size limits in 2.1b; garbage-input cases in proto_test. *[2.1b, 3.1]* (2.1b part done: writer, limits, no shared_ptr, json_test with 1,000 garbage inputs; 3.1: malformed JSON, NaN, 1e999, deep nesting in proto vectors)
 - [x] **L** UI command poll stringifies `[]` every frame (`ui.cpp:11-19`) → push model. *[2.1b]*
 - [x] **L** Static catalogs re-sent every 500 ms (`main.cpp:920-939`) → once + on change. *[2.1b]*
 - [x] **L** Avatar look set through two paths (`menu.js:153-155`) → command only. *[2.1b]*
@@ -844,10 +844,10 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **L** Dead bridge code (`net.cpp:80-81` panelOpen; `bar3dUi.isOpen`) → modal manager. *[2.1b]*
 - [x] **L** Backdrop blur over the live canvas (`account.js:62`); two modal systems both z-index 8 → opaque dim + modal manager + cheap render. *[2.1b]*
 - [x] **M** Closure renames unquoted EM_ASM names in Release only → JS libraries + lint + Release smoke in CI. *[0.4]*
-- [x] **L** `web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
+- [x] **L** `bar/web/` copied twice concurrently (POST_BUILD + `site_assets`) → one staging step. *[0.4]*
 - [x] **L** Models re-gzipped on every build → per-file custom commands. *[0.4]*
 - [x] **L** No `STACK_SIZE`, no `-Werror` on engine → set. *[1.5]*
-- [x] **L** *(review)* `-Werror` would break the build today: `engine/net.cpp:68:61` "empty character constant" inside an EM_ASM body (the only warning across `engine/*.cpp`) → fix it first, verify with a clean rebuild. *[1.5]*
+- [x] **L** *(review)* `-Werror` would break the build today: `looped/net.cpp:68:61` "empty character constant" inside an EM_ASM body (the only warning across `looped/*.cpp`) → fix it first, verify with a clean rebuild. *[1.5]*
 - [ ] **L** Shaders via `--embed-file` pull in the FS runtime (`CMakeLists.txt:23`) → generated header (optional). *[6.4]*
 
 **E. Rendering**
@@ -1011,7 +1011,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [ ] **L** Inputs not tick-stamped (`controls.h:39`) → InputFrame per tick. *[7.1]*
 - [x] **L** Lap-0 dead code; car B uses car A's extents (`world.cpp:315,326,398-414`) → fix. *[2.4a]*
 - [x] **L** Racing line rebuilt every init (`world.cpp:48-62`) → part of TrackData built once. *[2.4b]*
-- [ ] **L** AI mixed into `world.cpp` → `app/race/ai.*`. *[7.4]*
+- [ ] **L** AI mixed into `world.cpp` → `bar/projects/racing/ai.*`. *[7.4]*
 - [ ] **L** Degenerate quads and dead code in the car body (`car_model.cpp:102,110,139-140`); no car LOD → fix; LOD1. *[7.5, 7.6]*
 - [ ] **L** Race resources never released; other cars silent (`game.cpp:97,125-130,157-158`) → pooled engine voices for the nearest 2-3 cars. *[7.6]*
 - [x] **L** Magic numbers, fragile restart tap (`game.cpp:147,215`) → `spec.maxSteer`, Input taps. *[2.4b]*
@@ -1025,7 +1025,7 @@ step means all its parts. Items marked *(review)* were added on 2026-10-17.
 - [x] **M** No NaN guard; a bad pose would be broadcast (`physics.cpp:23-26`; `shared_world.cpp:62-66`) → finite + bounds checks both ways. *[2.3b]*
 - [x] **L** Held glass grinds into walls (`physics.cpp:42-45,116-133`) → sweep the hold target. *[2.3b]*
 - [x] **L** Impacts collected then discarded every frame (`physics.cpp:348-352`; `main.cpp:846`) → ring buffer, off until sounds use it. *[2.3b]*
-- [x] **M** *(review)* `bar_scene.h` includes `engine/mesh.h`, which includes `<webgpu/webgpu_cpp.h>`, so no native g++ test can include the layout (the planned physics/entity/activity/interaction tests) → CPU part split into `engine/mesh_data.h`. *[2.3b]*
+- [x] **M** *(review)* `bar_scene.h` includes `looped/mesh.h`, which includes `<webgpu/webgpu_cpp.h>`, so no native g++ test can include the layout (the planned physics/entity/activity/interaction tests) → CPU part split into `looped/mesh_data.h`. *[2.3b]*
 - [ ] **L** Body identity is a vector index, fields written from 3 places → BodyId + modes. *[5.4]*
 - [ ] **M** Runtime state stored in the "static" layout (`bar_scene.h:133-134` mirror on/mode) → Layout const + RoomState/local. *[5.3]*
 - [ ] **M** Indices as network identities (seat index in kParam `main.cpp:1128`, `m<i>`, `firstModel`) → stable ids. *[4.2]*
@@ -1136,7 +1136,7 @@ server side can be built early in the background).
   lose storage; add new migration tags, never edit old ones).
 - The `account.php` URL path (`https://joshuavelasco.com/bar/account.php`: the Worker's
   `ACCOUNT_URL`, `config.json` and cached old clients use it); IONOS `home/bar/accounts/`,
-  the reports folder and the `.htaccess` RedirectMatch rules; `web/project.json` (the
+  the reports folder and the `.htaccess` RedirectMatch rules; `bar/web/project.json` (the
   homepage lists the bar only because of it).
 - The `#build` label and `version.txt` until 8.1 (the user and check_live rely on them);
   test URL params (`skipintro`, `cam`, `sit`, `rhythm`, `autoplay`, `darts`, `shift`,
@@ -1144,7 +1144,7 @@ server side can be built early in the background).
   (`bar3dToken`, `bar3dSettings`, `bar3dName`, `bar3dProfile`; change only with a migration).
 - `CLAUDE.md` is kept current, not left behind: its Layout ("`server/` is the multiplayer
   relay") and Build-and-test sections must be updated by the step that changes them
-  (`cloud/`, `proto/`, `app/activities/`, `tools/lib/`, room_test, imgdiff).
+  (`cloud/`, `proto/`, `bar/activities/`, `tools/lib/`, room_test, imgdiff).
 
 **Data migration summary:** accounts JSON → MySQL: backup first, dry run in 5.1a,
 idempotent re-run at the 5.1b switch-over (catches signups since the dry run); token
@@ -1162,7 +1162,7 @@ settings again. Your own songs and MIDI files stay local.
 
 #### 0.1 Repo hygiene, honest docs, close the token leak
 Done in `de05ef9` (2026-10-17).
-- **Files:** `.gitignore`, `cloud/.wrangler/` (remove from git), `web/net.js`, `web/account.js`,
+- **Files:** `.gitignore`, `cloud/.wrangler/` (remove from git), `bar/web/net.js`, `bar/web/account.js`,
   `docs/RACING.md`, `docs/DECISIONS.md`, `.github/workflows/deploy.yml`.
 - **Build:** `git rm -r --cached cloud/.wrangler` + `.wrangler/` in `.gitignore`. In `net.js`
   and `account.js`: the defaults (`DEFAULT_SERVER`, the same-origin relative `relay.php` on
@@ -1197,9 +1197,9 @@ Done 2026-10-17 (see PROGRESS log). `window.bar3dPerf` is a getter (computed whe
 not refreshed once a second: building it cost ~5 ms headless, a hitch every second.
 First numbers (headless, at the door): 527 draws / 649k tris main and 525 draws / 649k tris
 mirror, so the mirror pass runs at spawn; budget is ≤ 150 / ≤ 60 (Phase 6).
-- **Files:** new `engine/profiler.{h,cpp}`; `app/main.cpp` (scopes around every phase of
-  `frame()` as it is today, plus startup stages); `engine/gpu_upload.cpp` (jobs run, pending,
-  max job ms); `app/renderer.cpp` (draw + triangle counters per pass); `web/menu.js` (Settings
+- **Files:** new `looped/profiler.{h,cpp}`; `bar/main.cpp` (scopes around every phase of
+  `frame()` as it is today, plus startup stages); `looped/gpu_upload.cpp` (jobs run, pending,
+  max job ms); `bar/renderer.cpp` (draw + triangle counters per pass); `bar/web/menu.js` (Settings
   toggle "Performance overlay"); `tools/smoke.mjs` (print `window.bar3dPerf`).
 - **Build:** `Profiler` with a fixed phase enum, RAII `Scope`, ring of 300 frames {per-phase ms,
   total, draws, tris, jobs pending, heap MB}; stats avg/p95/worst; hitch log (frames > 20 ms
@@ -1214,14 +1214,14 @@ mirror, so the mirror pass runs at spawn; budget is ≤ 150 / ≤ 60 (Phase 6).
 
 #### 0.3 Logs and reports that leave the phone
 Done 2026-10-17. Differences from the text below: the log ring and the report payload live
-in `web/index.html` (`bar3dLog`, `bar3dReport`), because every log line (C++ and the JS
+in `bar/web/index.html` (`bar3dLog`, `bar3dReport`), because every log line (C++ and the JS
 bridges) ends there; C++ contributes `window.bar3dPerf`. Categories are the leading
 "Word:" of a line. Rate limiting is in the page (3 per second per message, digits ignored,
 then "(xN more in 1 s)"). Hitches also record `touches` (taps in that frame).
-- **Files:** `engine/log.{h,cpp}` (levels, timestamps, categories, ring of 300, rate limit:
-  first 3 repeats then "×N" per second); `web/index.html` (ring + rAF-batched DOM, red error
+- **Files:** `looped/log.{h,cpp}` (levels, timestamps, categories, ring of 300, rate limit:
+  first 3 repeats then "×N" per second); `bar/web/index.html` (ring + rAF-batched DOM, red error
   badge, panel opens only on fatal; fatal overlay "Something broke - tap to rejoin" keeping
-  `?room`); `engine/gpu.cpp` (dedupe uncaptured errors; device lost → fatal); `web/audio.js`
+  `?room`); `looped/gpu.cpp` (dedupe uncaptured errors; device lost → fatal); `bar/web/audio.js`
   (non-fatal audio problems at warn level); new `server/report.php` (POST ≤ 256 KB JSON →
   `<6-char code>.json` in a **private folder outside the docroot** (the same kind of folder
   5.1 uses for keys; the docroot + `.htaccess` is the weakness 5.1 removes), returns the
@@ -1231,7 +1231,7 @@ then "(xN more in 1 s)"). Hitches also record `touches` (taps in that frame).
   for `https://barcode162.github.io` and `https://joshuavelasco.com` so the github.io page can
   read the code; `?env=1` returns the PHP version, whether sodium and pdo_mysql exist and
   whether the private folder is writable, so 5.1's assumptions are checked now);
-  `web/menu.js` (Settings → "Send report" shows the code); C++ export of the payload (log
+  `bar/web/menu.js` (Settings → "Send report" shows the code); C++ export of the payload (log
   ring, profiler stats + hitch log, build, UA, DPR, settings, room, player count; the GET is
   public, so the client strips tokens, names and account fields); automatic send on fatal;
   `deploy.yml` uploads `report.php` and creates the private folder.
@@ -1268,7 +1268,7 @@ The native tests got basic pass/fail checks (they only printed before).
   `smoke` and `shots` to them); new `tools/imgdiff.mjs` (PNG decode with `node:zlib`,
   per-pixel threshold, prints the % of differing pixels, exit 1 above a limit); a `?still`
   test hook (fixed time, no idle animation, no candle flicker; a temporary regex in
-  `app/main.cpp`, moved into TestHooks in 1.8); new `tools/lib/spots.mjs` (the standard CAM
+  `bar/main.cpp`, moved into TestHooks in 1.8); new `tools/lib/spots.mjs` (the standard CAM
   spots; write the chosen strings into §How to use → VIS); `CMakeLists.txt` (single staging
   step; per-file gzip commands); a lint script `tools/lint_emasm.mjs` (flags unquoted
   property access in EM_ASM/EM_JS bodies).
@@ -1289,11 +1289,11 @@ only the text layer (one warm-up frame of the full bar once loaded), the room is
 and voice starts on enter (one new peer per 400 ms). Headless: textures 1250 → 300-530 ms,
 everything loaded 9.5 → 5.2 s, heap 84 → 48 MB, 4K Mania 1 draw. The 5 standard spots are
 pixel-identical.
-- **Files:** `app/bar_scene.cpp` (`buildBarTextures`: only fabric, denim, hair), `engine/texture.cpp`
-  (sRGB LUT instead of `pow`, no layer copies), `app/renderer.cpp` (start `loadModels` before
-  generating textures), `app/main.cpp` (until entered: clear only, except the one warm-up frame;
+- **Files:** `bar/bar_scene.cpp` (`buildBarTextures`: only fabric, denim, hair), `looped/texture.cpp`
+  (sRGB LUT instead of `pow`, no layer copies), `bar/renderer.cpp` (start `loadModels` before
+  generating textures), `bar/main.cpp` (until entered: clear only, except the one warm-up frame;
   rhythm open → overlay only, no scene/mirror/avatars; `others.start()`/`shared.start()` moved
-  to `app_enter`), `web/voice.js` (start after enter, one peer every 400 ms).
+  to `app_enter`), `bar/web/voice.js` (start after enter, one peer every 400 ms).
 - **Accept:** STD; smoke log "Procedural textures: 3 layers in X ms" (was 8 layers, ≈ 410 ms);
   profiler stage "everything loaded" earlier than the 0.3 baseline; with `?rhythm=0,1&autoplay`
   the profiler shows ≤ 10 draws per frame; `tools/mp_test.mjs` still passes (players appear
@@ -1308,8 +1308,8 @@ every 64 samples, both decay stages in one pass, -80 dB cutoff, 4 partials side 
 notes now last up to 6 s instead of a looped tail. Joiners check a song's end on the server
 clock ("Piano: song already ended", 0 keys made); the owner clears `pso` when it ends; playing
 your own .mid clears `pso` for the others. `synth_bench` runs in `tools/native/run.sh`.
-- **Files:** `engine/synth.cpp` (one pass per partial with both decay stages, stop at -80 dB,
-  detuned strings in the same loop, phasor engine hum, looping bass tail), `app/piano.{h,cpp}`
+- **Files:** `looped/synth.cpp` (one pass per partial with both decay stages, stop at -80 dB,
+  detuned strings in the same loop, phasor engine hum, looping bass tail), `bar/piano.{h,cpp}`
   (a joiner computes the song's end from the parsed MIDI and ignores songs that already
   ended; the owner clears `pso` at the end, after checking that the current build handles
   an empty `pso` safely (if not, leave it set); `nextNote_` found by binary search; delete
@@ -1317,7 +1317,7 @@ your own .mid clears `pso` for the others. `synth_bench` runs in `tools/native/r
 - **Build:** keep the `pso` wire format unchanged: old and new builds share the relay until
   3.4d and the relay has no version check. Sample preparation, per-player voices and the
   pedal are 1.2b (they need 1.4's job lanes).
-- **Accept:** `g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp engine/synth.cpp -o build/synth_bench && build/synth_bench`
+- **Accept:** `g++ -std=c++20 -O2 -I. tools/native/synth_bench.cpp looped/synth.cpp -o build/synth_bench && build/synth_bench`
   → middle C ≤ 2.5 ms (was 15.7-20 ms native, 30.6 ms wasm), all 30 sample keys ≤ 60 ms total;
   STD; smoke with `?pianosong=3` → profiler "piano" phase lower than before (log both
   numbers); mp_test variant: page A starts a short song and waits until it ends, then page B
@@ -1327,20 +1327,20 @@ your own .mid clears `pso` for the others. `synth_bench` runs in `tools/native/r
   stutter after entering.
 
 #### 1.3 Async pipelines, warm-up, an honest "ready"
-Done 2026-10-17. `engine/pipeline_cache.*`: every pipeline compiles async (13 gated + the 2 race
+Done 2026-10-17. `looped/pipeline_cache.*`: every pipeline compiles async (13 gated + the 2 race
 ones, prepared at start-up); text, pictures and mirror glass got explicit bind group layouts
 (they used `GetBindGroupLayout`, which needs the finished pipeline); the bar draws only the
 text layer until its 9 pipelines exist; texture jobs wait for the 2 mip pipelines. Warm-up is
 the one full frame behind the loading screen (from 1.1, now after jobs and pipelines are done)
 instead of a separate 64×64 offscreen render, then `OnSubmittedWorkDone`, then 30 steady
 frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the last file.
-- **Files:** new `engine/pipeline_cache.{h,cpp}` (`CreateRenderPipelineAsync` with
-  `CallbackMode::AllowSpontaneous`, pending count, failure log); `app/renderer.cpp`,
-  `engine/text.cpp`, `engine/billboard.cpp`, `engine/gpu_upload.cpp` (both mip pipelines at
-  startup instead of lazily per format mid-load), `app/race/view.cpp` (its 2 pipelines compiled
-  async during loading, but not part of the warm-up gate); `app/main.cpp` (ready = files done +
+- **Files:** new `looped/pipeline_cache.{h,cpp}` (`CreateRenderPipelineAsync` with
+  `CallbackMode::AllowSpontaneous`, pending count, failure log); `bar/renderer.cpp`,
+  `looped/text.cpp`, `looped/billboard.cpp`, `looped/gpu_upload.cpp` (both mip pipelines at
+  startup instead of lazily per format mid-load), `bar/projects/racing/view.cpp` (its 2 pipelines compiled
+  async during loading, but not part of the warm-up gate); `bar/main.cpp` (ready = files done +
   jobs 0 + bar pipelines 0 pending + warm-up frame done via `queue.OnSubmittedWorkDone` + 30
-  frames < 20 ms or 2 s); `web/index.html` ("Warming up…" stage text).
+  frames < 20 ms or 2 s); `bar/web/index.html` ("Warming up…" stage text).
 - **Build:** today 11 pipelines are created synchronously at startup (renderer ×9, text,
   billboard), the mip pipeline(s) lazily mid-load and the 2 race pipelines on the first sit
   (14 call sites). Draws whose pipeline isn't ready are skipped. Warm-up renders main, full
@@ -1353,20 +1353,20 @@ frames or 2 s. Headless: pipelines ready in ~550 ms, "ready" ~1.5 s after the la
   Open 4K Mania for the first time: no hitch.
 
 #### 1.4 Job scheduler and sliced model loading
-Done 2026-10-17. `engine/jobs.*` (lanes, kinds with learned cost, cancel tokens, a gate for the
+Done 2026-10-17. `looped/jobs.*` (lanes, kinds with learned cost, cancel tokens, a gate for the
 mip pipelines), run after submit. Models: parse begin / one job per mesh part / materials /
 one per image copy / materials+bind groups / buffer slices of 512 KB / done; shared 1×1
 fallbacks; ≤ 4 image decodes in flight; bitmaps always dropped; one submit per image job.
 Downloads retry 3× (0.5, 1.5, 4 s). "N parts failed - Retry" (reload) on the loading screen,
 still enters unless `hall` failed. Smoke: `FAIL_MODEL=candle` check (in CI). Headless: max job
 7-12 ms (single GPU calls, SwiftShader shares the CPU), slowest loading frame 12-25 ms.
-- **Files:** `engine/gpu_upload.{h,cpp}` → `engine/jobs.{h,cpp}` (priority lanes, cancel tokens,
+- **Files:** `looped/gpu_upload.{h,cpp}` → `looped/jobs.{h,cpp}` (priority lanes, cancel tokens,
   per-kind cost estimate, run while `now + estimate < deadline`; always drop bitmaps; batch
-  mipgen per job); `engine/model.cpp` (parse in a job, sliced per mesh; `finish()` = one job per
+  mipgen per job); `looped/model.cpp` (parse in a job, sliced per mesh; `finish()` = one job per
   ≤ 1 MB buffer slice / per material; shared 1×1 fallback textures; ≤ 4 image decodes in flight);
-  `engine/fetch.cpp` (3 retries with backoff, failure reported); `app/renderer.cpp` (failed count;
-  critical files: hall + colliders' models); `web/index.html` (`barLoading.fail(msg)` + Retry);
-  `app/main.cpp` (jobs after submit with a deadline).
+  `looped/fetch.cpp` (3 retries with backoff, failure reported); `bar/renderer.cpp` (failed count;
+  critical files: hall + colliders' models); `bar/web/index.html` (`barLoading.fail(msg)` + Retry);
+  `bar/main.cpp` (jobs after submit with a deadline).
 - **Accept:** STD; smoke prints `max job ms` (≤ 8 ms headless, i.e. well under 3 ms on the
   phone) and no loading frame over 100 ms of CPU; a smoke run that aborts one model
   (`page.route`) shows "1 part failed - Retry" and still enters.
@@ -1379,11 +1379,11 @@ the middle out after enter; song notes without a ready sample are skipped; a liv
 its sample at once if needed. Per-player `Hands` (voices, pedal) released after 10 s quiet.
 `setPedal(down, share)` for the on-screen and MIDI pedal. Not done: the headless pedal
 mp_test variant (checked by reading the code; no Web MIDI on iOS anyway).
-- **Files:** `app/piano.{h,cpp}` (samples for every 3rd key, neighbours by `playbackRate`;
+- **Files:** `bar/piano.{h,cpp}` (samples for every 3rd key, neighbours by `playbackRate`;
   prepared by background-lane jobs (1.4) after enter, one key per job; the scheduler skips
   notes whose sample isn't ready; per-player voice tables + pedal, released on leave or 10 s
-  silence; MIDI pedal shared through one `setPedal(down, share)`), `engine/audio.*` +
-  `web/audio.js` (only `playbackRate` on `soundPlay`; the emitter id and the voice cap belong
+  silence; MIDI pedal shared through one `setPedal(down, share)`), `looped/audio.*` +
+  `bar/web/audio.js` (only `playbackRate` on `soundPlay`; the emitter id and the voice cap belong
   to 2.5, which would otherwise redo them).
 - **Accept:** STD; smoke with `?pianosong=3` → profiler "piano" phase never above 1 ms and
   every piano-sample job ≤ 2 ms headless-scaled (`max job ms`); `tools/mp_test.mjs` passes;
@@ -1395,13 +1395,13 @@ mp_test variant (checked by reading the code; no Web MIDI on iOS anyway).
 
 #### 1.5 Memory: initial heap, fewer copies
 Done 2026-10-17. `INITIAL_MEMORY=80MB` (headless peak 76 MB while loading), `STACK_SIZE=1MB`,
-`-Werror` on `engine/`; downloads land directly in the vector C++ hands on (no copy); the
+`-Werror` on `looped/`; downloads land directly in the vector C++ hands on (no copy); the
 profiler counts heap growth after start ("grew 0 times").
 - **Files:** `CMakeLists.txt` (`-sINITIAL_MEMORY=<peak from the phone report, rounded up to 16 MB>`,
-  `-sSTACK_SIZE=1MB`, `-Werror` for `engine/`), `engine/net.cpp` (first fix the one warning
+  `-sSTACK_SIZE=1MB`, `-Werror` for `looped/`), `looped/net.cpp` (first fix the one warning
   `-Werror` would turn into an error: line 68 "empty character constant
   [-Winvalid-pp-token]" inside an EM_ASM body; use `""` or move it into a JS library
-  function), `engine/fetch.cpp` (decompress straight into a buffer C++ owns, no extra
+  function), `looped/fetch.cpp` (decompress straight into a buffer C++ owns, no extra
   `std::vector` copy), profiler reports heap growth count.
 - **Accept:** a clean rebuild with `-Werror` passes (`rm -rf build && emcmake cmake -B build -G Ninja && cmake --build build`);
   STD; smoke log "heap grew 0 times after start"; heap MB in the report.
@@ -1416,7 +1416,7 @@ size unchanged; the export caps can still be done when models are rebuilt. Spots
 pixels differ (threshold 4).
 - **Files:** `tools/assets/common.py` (max size per role: 1024 floor/brick/counter top, 512
   default, 256 props), rebuilt `assets/models/*.glb` via `bash tools/assets/build_all.sh <scratch>`,
-  `engine/gpu_upload.cpp` (`createImageBitmap` resize cap 1024 as a safety net).
+  `looped/gpu_upload.cpp` (`createImageBitmap` resize cap 1024 as a safety net).
 - **Accept:** `python3 tools/assets/glb_report.py` → total texture MB ≤ 70 (was 231.6), download
   size lower; VIS before/after at the standard spots (bar top, back bar and a floor close-up
   added for this step) compared side by side: as sharp at normal distance (imgdiff number
@@ -1431,10 +1431,10 @@ matrix). Reflection + its own depth buffer at half resolution, sampled with a li
 (`params.yz` = 1/screen). Scissor from the glass quad clipped against the near plane (a mirror
 behind you is skipped). Mirror spot 4.87% differing pixels (softer), others 0%; grazing views
 checked, no leaks. Not done: per-viewer mirror mode (Q3, not asked).
-- **Files:** `shaders/scene.wgsl` (main-view entry points without the clip test, via an override
-  constant), `app/renderer.cpp` (mirror: oblique near-plane projection so the mirror view needs no
+- **Files:** `looped/shaders/scene.wgsl` (main-view entry points without the clip test, via an override
+  constant), `bar/renderer.cpp` (mirror: oblique near-plane projection so the mirror view needs no
   `discard`; half-resolution target; tight scissor from the glass quad clipped against the near
-  plane; skip when the glass is outside the frustum; anisotropy 4), `shaders/mirror.wgsl`
+  plane; skip when the glass is outside the frustum; anisotropy 4), `looped/shaders/mirror.wgsl`
   (projective UVs + linear sampler), settings: mirror mode per viewer if the user agreed (Q3).
 - **Accept:** STD; VIS: mirror-front spot in both modes ≤ 5% differing pixels (the mirror is
   allowed to get softer), every other standard spot ≤ 1%; no wall or frame leaking into the
@@ -1444,15 +1444,15 @@ checked, no leaks. Not done: per-viewer mirror mode (Q3, not asked).
   appear in the mirror.
 
 #### 1.8 Loader state machine, page shell, test hooks
-Done 2026-10-17. `app/loader.*` (stages models → finishing → shaders → warm-up → steady →
-ready/failed, named on the loading screen, profiler stages `load:*`), `app/test_hooks.*` (all
+Done 2026-10-17. `bar/loader.*` (stages models → finishing → shaders → warm-up → steady →
+ready/failed, named on the loading screen, profiler stages `load:*`), `bar/test_hooks.*` (all
 C++ `?` options parsed once, applied at Ready). Page: version check before the scripts load
 (1.5 s timeout), wasm preload, progress bar via `scaleX`, overlay removed on `transitionend`,
 HUD buttons hidden until enter, CSP meta (with localhost for tests), CSP violations logged as
 errors (so smoke/mp_test fail on them).
-- **Files:** new `app/loader.{h,cpp}` (stages of §2.7, progress + names to `barLoading.stage()`),
-  new `app/test_hooks.{h,cpp}` (all `?` params parsed once into a struct; applied as normal
-  commands after Ready), `app/main.cpp`, `web/index.html` (preloads; version check before injecting
+- **Files:** new `bar/loader.{h,cpp}` (stages of §2.7, progress + names to `barLoading.stage()`),
+  new `bar/test_hooks.{h,cpp}` (all `?` params parsed once into a struct; applied as normal
+  commands after Ready), `bar/main.cpp`, `bar/web/index.html` (preloads; version check before injecting
   `app.js`; progress via `transform: scaleX`; `will-change: opacity`; remove overlay on
   `transitionend`; HUD buttons hidden until enter; meta CSP: `connect-src 'self'
   https://joshuavelasco.com https://*.workers.dev wss://*.workers.dev`, `img-src 'self'
@@ -1471,9 +1471,9 @@ errors (so smoke/mp_test fail on them).
 ### Phase 2: Engine plumbing (local)
 
 #### 2.1a One mailbox: bridge, canvas size, input
-- **Files:** new `engine/bridge.{h,cpp}`, new `web/bridge.js` (+ script tag); `engine/gpu.cpp`
+- **Files:** new `looped/bridge.{h,cpp}`, new `bar/web/bridge.js` (+ script tag); `looped/gpu.cpp`
   (size from the mailbox, applied after 120 ms stable; reconfigure on Outdated/Lost);
-  `engine/input.cpp`/`.h` (no layout reads; event timestamps (check `timestamp` in
+  `looped/input.cpp`/`.h` (no layout reads; event timestamps (check `timestamp` in
   `EmscriptenTouchEvent` in 6.0.12's `html5.h`, else a small JS listener); stick visuals through
   the flush; clear on blur/visibility/pagehide; `Input::poll()` → `InputFrame`; safe-area
   insets in the mailbox header; focus flag instead of the per-key `activeElement` EM_ASM).
@@ -1486,71 +1486,71 @@ errors (so smoke/mp_test fail on them).
   `InputFrame` per frame (`Input::poll()`), state private; presses carry the browser's event time.
 
 #### 2.1b UI commands, a JSON writer, one modal manager
-- **Files:** `engine/ui.cpp` + `web/menu.js` (commands pushed into the mailbox ring; settings
+- **Files:** `looped/ui.cpp` + `bar/web/menu.js` (commands pushed into the mailbox ring; settings
   change flag; UI state sent only on change; catalog once; look via command only; mic button
-  updates on change; dead bridge code removed); `engine/json.{h,cpp}` (not audited before:
+  updates on change; dead bridge code removed); `looped/json.{h,cpp}` (not audited before:
   the escaping JSON writer lives here; parse without a `shared_ptr` map per value; reject
   depth > 32 and strings > 4 KB, because from 3.4 it parses untrusted network JSON such as
   names in PROFILE); one modal manager for menu + account panels with the `modalOpen` flag,
-  no backdrop blur (`web/menu.js`, `web/account.js`).
+  no backdrop blur (`bar/web/menu.js`, `bar/web/account.js`).
 - **Accept:** STD; menus, MIDI file add (file name with a backslash) and emotes still work
   (shots); new `tools/native/json_test.cpp`: writer output parses back equal (backslash,
   quotes, control characters, emoji) and 1,000 random garbage inputs don't crash.
 - **Phone:** open the menu and the account panel: they work, no blur lag; pick an emote:
   it plays.
-- **Done (2026-10-17):** `JsonWriter` + `jsonQuote` in `engine/json.*` (values held directly,
+- **Done (2026-10-17):** `JsonWriter` + `jsonQuote` in `looped/json.*` (values held directly,
   depth 32 / string 4 KB limits, glTF passes its own generous limits); commands pushed with
   `bar3dBridge.command` (a second text field replaces the `\n` split); menu info sent as an
   object, lists once, state on change; toast/panel through the flush; `bar3dModal` in
-  `web/bridge.js`; look and walk ignored while a panel is open. Test: `tools/menu_test.mjs` (CI).
+  `bar/web/bridge.js`; look and walk ignored while a panel is open. Test: `tools/menu_test.mjs` (CI).
   Not done here: a cheaper render while a panel is open (the menu dim is see-through; 6.7).
 
 #### 2.1c Voice batch, log flush, settings schema
-- **Files:** `engine/log.cpp` (lines out through the flush); `app/main.cpp` (voice levels read
+- **Files:** `looped/log.cpp` (lines out through the flush); `bar/main.cpp` (voice levels read
   from the mailbox; voice positions sent as one batch at 20 Hz; per-player `present()`
-  replaced by a roster snapshot in the mailbox), `web/voice.js`; settings schema with
+  replaced by a roster snapshot in the mailbox), `bar/web/voice.js`; settings schema with
   defaults (localStorage keys unchanged).
-- **Accept:** STD; `grep -c "EM_ASM" app/main.cpp` ≤ 2; smoke prints JS crossings per frame ≤ 4;
+- **Accept:** STD; `grep -c "EM_ASM" bar/main.cpp` ≤ 2; smoke prints JS crossings per frame ≤ 4;
   `tools/voice_test.mjs` passes; a corrupted `bar3dSettings` value → defaults + one warning.
 - **Phone:** voice with your brother still works and comes from his direction; your
   settings are still there after a reload.
 - **Done (2026-10-17):** log lines and voice levels/positions went through the mailbox in 2.1a;
   here the per-player `present`/`name`/`account`/`avatarRev`/`isLower` page calls became a
-  roster in the mailbox, sent only when `web/net.js` bumps `rosterVersion` (a player newer
+  roster in the mailbox, sent only when `bar/web/net.js` bumps `rosterVersion` (a player newer
   than the last roster counts as present, so a first packet isn't dropped). Settings: a schema
-  in `web/menu.js` (`[default, min, max]` or a boolean) checks saved values; broken ones →
-  defaults + one warning (`tools/menu_test.mjs`). `grep -c EM_ASM app/main.cpp` = 2; page calls
+  in `bar/web/menu.js` (`[default, min, max]` or a boolean) checks saved values; broken ones →
+  defaults + one warning (`tools/menu_test.mjs`). `grep -c EM_ASM bar/main.cpp` = 2; page calls
   per frame 2.8 (Debug smoke).
 
 #### 2.2 FrameTime from rAF and the page lifecycle
-- **Files:** new `engine/frame_time.h`; `app/main.cpp` (`emscripten_request_animation_frame_loop`;
-  FrameTime passed everywhere; remove the stray `emscripten_get_now()` calls); `web/bridge.js`
-  (visibility); `web/net.js` (on hidden: send an "away" flag, stop sending state; on visible:
-  resync); `web/audio.js` (suspend/resume; "Tap to resume sound" when interrupted);
-  `engine/jobs.cpp` (paused while hidden).
-- **Accept:** `grep -n "emscripten_get_now" app/*.cpp app/race/*.cpp` → none (only in engine
+- **Files:** new `looped/frame_time.h`; `bar/main.cpp` (`emscripten_request_animation_frame_loop`;
+  FrameTime passed everywhere; remove the stray `emscripten_get_now()` calls); `bar/web/bridge.js`
+  (visibility); `bar/web/net.js` (on hidden: send an "away" flag, stop sending state; on visible:
+  resync); `bar/web/audio.js` (suspend/resume; "Tap to resume sound" when interrupted);
+  `looped/jobs.cpp` (paused while hidden).
+- **Accept:** `grep -n "emscripten_get_now" bar/*.cpp bar/projects/racing/*.cpp` → none (only in engine
   frame_time/profiler; the race build timing at `race/game.cpp:37,40` uses the profiler);
   mp_test variant: page B fires `visibilitychange` (hidden) → A shows
   "away" over B within 1 s; STD.
 - **Phone:** switch to another app for 10 s and back: no fast-forward jump, sound comes back.
   Your brother sees "away" over you while you're gone.
-- **Done (2026-10-17):** `engine/frame_time.*` (`beginFrameTime(rafMs)`, `frameTime()` with
+- **Done (2026-10-17):** `looped/frame_time.*` (`beginFrameTime(rafMs)`, `frameTime()` with
   `nowMs`, `dt` ≤ 0.1 s, `resumed`, `gapMs`; `clockMs()` only for measuring), the loop is
-  `emscripten_request_animation_frame_loop`; no `emscripten_get_now` left in `app/`. Jobs pause
+  `emscripten_request_animation_frame_loop`; no `emscripten_get_now` left in `bar/`. Jobs pause
   while hidden. Away: C++ names the slot/bit once (`net::setAwayFlag(kFlags, 4)`); on hide
-  `web/net.js` sends one last state with the bit set and freezes it; others log "X is away/back"
+  `bar/web/net.js` sends one last state with the bit set and freezes it; others log "X is away/back"
   and show "(away)" under the name. Sound suspends on hide, resumes on show, "Tap to resume
   sound" if iOS refuses. mp_test: away seen after ~0.6 s headless.
 
 #### 2.3a One `math.h`
-- **Files:** `engine/math.h` (quat conjugate/normalize/nlerp/slerp, angle wrap/lerp, Vec3 ops,
-  AABB, `isFinite`; zero-axis fix for `axisAngle`); delete the copies in `engine/physics.cpp`,
-  `engine/vehicle.cpp`, `app/shared_world.cpp`, `app/players.cpp`, `app/avatar.cpp`; new
+- **Files:** `looped/math.h` (quat conjugate/normalize/nlerp/slerp, angle wrap/lerp, Vec3 ops,
+  AABB, `isFinite`; zero-axis fix for `axisAngle`); delete the copies in `looped/physics.cpp`,
+  `looped/vehicle.cpp`, `bar/shared_world.cpp`, `bar/players.cpp`, `bar/avatar.cpp`; new
   `tools/native/math_test.cpp`.
 - **Accept:** math_test (g++) passes; vehicle_test targets unchanged (0-100 ≈ 4.2 s, braking
   ≈ 31 m); race_test output identical to before the change; STD.
 - **Phone:** nothing changes.
-- **Done (2026-10-17):** `engine/math.h` gained `dot/conjugate/normalized/nlerp/slerp/isFinite`
+- **Done (2026-10-17):** `looped/math.h` gained `dot/conjugate/normalized/nlerp/slerp/isFinite`
   for Quat, `wrapAngle/angleLerp/smoothstep/lerpf/signf`, Vec3 `/ -= *= ==`, `float * Vec3`,
   `lerp/lengthSq/distance/mulComponents/min/maxComponents/isFinite`, `Aabb`; `axisAngle` with a
   zero axis = no turn. Copies deleted (physics, vehicle, shared_world, players, avatar,
@@ -1558,19 +1558,19 @@ errors (so smoke/mp_test fail on them).
   vehicle_test output byte-identical; `tools/native/math_test.cpp` (g++ + em++).
 
 #### 2.3b Physics: no jiggle, no judder, no NaN
-- **Files:** `engine/physics.{h,cpp}` (per-sphere contact dedupe by normal; drift-based sleep;
+- **Files:** `looped/physics.{h,cpp}` (per-sphere contact dedupe by normal; drift-based sleep;
   prev/cur pose + `alpha`; kinematic target per step; `isfinite` + room-bounds guard → reset to
   last good pose; 4 substeps; ≤ 4 catch-up steps; tick counter; static uniform grid broadphase;
-  hold target swept against statics; impacts ring buffer off by default), `app/bar_scene.cpp`
-  (non-overlapping counter-top segments), `app/shared_world.cpp` (targets instead of velocity
-  hack), `app/main.cpp` (render interpolated transforms), new `engine/mesh_data.h` (the CPU
-  part of `engine/mesh.h`: `MeshData` and the `make*` builders, no webgpu include; `mesh.h`
+  hold target swept against statics; impacts ring buffer off by default), `bar/bar_scene.cpp`
+  (non-overlapping counter-top segments), `bar/shared_world.cpp` (targets instead of velocity
+  hack), `bar/main.cpp` (render interpolated transforms), new `looped/mesh_data.h` (the CPU
+  part of `looped/mesh.h`: `MeshData` and the `make*` builders, no webgpu include; `mesh.h`
   includes it and `bar_scene.h` includes only it), new `tools/native/physics_test.cpp`.
-- **Why mesh_data.h:** `bar_scene.h:8` includes `engine/mesh.h`, whose line 3 includes
+- **Why mesh_data.h:** `bar_scene.h:8` includes `looped/mesh.h`, whose line 3 includes
   `<webgpu/webgpu_cpp.h>`, so g++ stops with "No such file". Adding files doesn't fix a
   missing header. The native tests of 4.2, 4.3a/4.3b and 4.4 need the same split. If the split
   turns out impossible, build these tests with em++ and run them in node (like 2.4a's variant).
-- **Accept:** `g++ -std=c++20 -O2 -I. tools/native/physics_test.cpp engine/physics.cpp app/props.cpp app/bar_scene.cpp app/materials.cpp engine/procedural.cpp -o build/physics_test && build/physics_test`
+- **Accept:** `g++ -std=c++20 -O2 -I. tools/native/physics_test.cpp looped/physics.cpp bar/props.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp -o build/physics_test && build/physics_test`
   (add .cpp files until it links) → "all 10 glasses asleep by t ≤ 2 s", "no NaN after 10k random
   impulses", worst step time; STD; `tools/mp_test.mjs` glass scenario passes.
 - **Phone:** the pint near the left end of the bar no longer wobbles after loading; throw a
@@ -1582,15 +1582,15 @@ errors (so smoke/mp_test fail on them).
   kinematic `target`/`targetRotation` reached each step (shared_world eases the target),
   `teleport()`, finite + room-bounds guard (bounds from the layout's box corners, floor at
   y = -0.05) back to the last good pose, speed cap 15 m/s, hold target swept against walls,
-  impacts collected only after `collectImpacts(true)`. `engine/mesh_data.*` and `engine/image.h`
-  split off so `app/bar_scene.h` builds with g++. `tools/native/physics_test.cpp`: all 10 glasses
+  impacts collected only after `collectImpacts(true)`. `looped/mesh_data.*` and `looped/image.h`
+  split off so `bar/bar_scene.h` builds with g++. `tools/native/physics_test.cpp`: all 10 glasses
   asleep by 0.5 s (the pint at x = -3.7 never slept before), no NaN / all in the room after 10k
   knocks. Smoke physics phase 0.37 → 0.10 ms. The counter segments still overlap (needed to
   close the gaps on the outside of the curve); the contact dedupe makes that harmless.
 
 #### 2.4a Race: tick clock, interpolation, frame-rate independent results
-- **Files:** `app/race/world.{h,cpp}` (uint32 tick, goTick, lap/finish in ticks; never reads
-  `nowMs`; per-car extents; lap-0 cleanup), `app/race/game.{h,cpp}` (prev/cur pose per car,
+- **Files:** `bar/projects/racing/world.{h,cpp}` (uint32 tick, goTick, lap/finish in ticks; never reads
+  `nowMs`; per-car extents; lap-0 cleanup), `bar/projects/racing/game.{h,cpp}` (prev/cur pose per car,
   render lerp; HUD/lights from ticks; pause on hidden), `tools/native/race_test.cpp` (same
   race at 30/57.3/60/120 fps must give identical results, exit 1 otherwise).
 - **Accept:** native race_test (command at its top) prints "frame-rate independent: OK"
@@ -1607,17 +1607,17 @@ errors (so smoke/mp_test fail on them).
   em++). Hidden page: the frame clock already caps the step (2.2).
 
 #### 2.4b Race: background build, controls feel, resets
-- **Files:** `app/race/world.{h,cpp}` (reset service: free slot, 2 s ghost, 4 s cooldown;
-  racing line built once into TrackData), `app/race/game.{h,cpp}` (`world_.init()` +
+- **Files:** `bar/projects/racing/world.{h,cpp}` (reset service: free slot, 2 s ghost, 4 s cooldown;
+  racing line built once into TrackData), `bar/projects/racing/game.{h,cpp}` (`world_.init()` +
   `view_.init()` track build (`game.cpp:35-42`) as background jobs after enter; the race
   pipelines already compile in 1.3; "warming up" if you sit early; `spec.maxSteer`; restart
   via taps; the 2 `EM_ASM` calls that toggle the `racing` body class move behind an engine
-  call), `app/race/controls.cpp` (exp smoothing, steer τ ≈ 25 ms, brake jumps to 0.4 then
-  ramps; safe-area insets from the mailbox), `engine/vehicle.{h,cpp}` (`resetState()` used by
-  setup and place; precomputed tire constants), `app/race/track.cpp` (integer-hash smooth
+  call), `bar/projects/racing/controls.cpp` (exp smoothing, steer τ ≈ 25 ms, brake jumps to 0.4 then
+  ramps; safe-area insets from the mailbox), `looped/vehicle.{h,cpp}` (`resetState()` used by
+  setup and place; precomputed tire constants), `bar/projects/racing/track.cpp` (integer-hash smooth
   value noise instead of `sin`).
 - **Accept:** STD; smoke `sit=30` logs "Race track ready" before the sit; race_test still OK;
-  vehicle_test unchanged; `grep -n "EM_ASM" app/race/*.cpp` → none.
+  vehicle_test unchanged; `grep -n "EM_ASM" bar/projects/racing/*.cpp` → none.
 - **Phone:** wait 10 s after entering, sit in a rig: no freeze. Steering feels a bit quicker;
   after a crash, the reset puts you on a free spot.
 - **Done (2026-10-17):** `Game::prepare()` (called on enter) builds the track, racing line and
@@ -1633,9 +1633,9 @@ errors (so smoke/mp_test fail on them).
   `?sit=` applies at "ready", before enter, so it shows the warming path.
 
 #### 2.5 AudioMixer: emitters, voice pool, buses, one command list
-- **Files:** `engine/audio.{h,cpp}` → AudioMixer (named sound ids, buses, persistent emitters,
+- **Files:** `looped/audio.{h,cpp}` → AudioMixer (named sound ids, buses, persistent emitters,
   voice cap/steal, one command buffer flushed through the mailbox, small status block back),
-  `web/audio.js` (executor; one HRTF panner per emitter, equalpower one-shots; Track on a bus;
+  `bar/web/audio.js` (executor; one HRTF panner per emitter, equalpower one-shots; Track on a bus;
   raw sound data dropped once the AudioBuffer exists; unlock listener trimmed; object URLs
   revoked; the piano's emitter id and the global voice cap 32, left out of 1.2b), games use
   sound ids instead of `&g_app.sfx[…]`.
@@ -1656,15 +1656,15 @@ errors (so smoke/mp_test fail on them).
   codes and what the client does on each (no auto-retry on 4001/4002/4005), rates, limits,
   versioning rules (worker accepts protos N-1..N for one deploy), the storage
   `schemaVersion` history), new `proto/vectors.json`, new `cloud/proto.js` (binary codec), new
-  `engine/netproto.{h,cpp}` (C++ codec), new `tools/proto_test.mjs`, new
+  `looped/netproto.{h,cpp}` (C++ codec), new `tools/proto_test.mjs`, new
   `tools/native/proto_test.cpp`.
 - **Accept:** `node tools/proto_test.mjs` and the native proto_test both pass on the same
   vectors, including garbage cases (truncated frames, wrong type bytes, NaN floats, huge
-  lengths, malformed JSON for `engine/json`) that must be rejected without a crash.
+  lengths, malformed JSON for `looped/json`) that must be rejected without a crash.
 - **Phone:** nothing.
 - **Done (2026-10-18):** PROTOCOL.md (frames, binary layouts, every JSON message with field
   ranges, close codes, rates, limits, versions, schemaVersion table), `cloud/proto.js`,
-  `engine/netproto.*` (no std::regex, for wasm size), `proto/vectors.json` (9 binary, 20
+  `looped/netproto.*` (no std::regex, for wasm size), `proto/vectors.json` (9 binary, 20
   text, 44 bad frames), `tools/proto_test.mjs` (+ CI step) and native `proto_test` (g++ and
   em++; `run.sh` now builds wasm tests with `-sNODERAWFS=1` so they can read files). Both
   codecs agree byte for byte; 20,000 random frames each without a crash. Text frames are a
@@ -1694,7 +1694,7 @@ errors (so smoke/mp_test fail on them).
   room DO (3.2c re-checks the rate-limit binding). `tools/room_test.mjs` starts its own
   `wrangler dev` (fresh storage, test vars) and runs 35 checks; in CI. Gotcha: `wrangler dev`
   doesn't deliver a server close to a socket that never sent a frame (see DECISIONS).
-  The old v0 cloud path in `web/net.js` and `mp_test` CLOUD mode no longer match the room;
+  The old v0 cloud path in `bar/web/net.js` and `mp_test` CLOUD mode no longer match the room;
   that's fine (never deployed), 3.4a replaces them.
 
 #### 3.2b Ticks, events, signals, legacy KV with echo
@@ -1738,8 +1738,8 @@ errors (so smoke/mp_test fail on them).
   `.github/workflows/admin.yml` (`workflow_dispatch` with an `action` input; starts with
   `cf-check`; later steps add `d1-create`, `d1-migrate`, `secret-sync`, `pages-create`,
   `r2-create`, `migrate-dry`, `migrate-run`; prints results, never secrets),
-  `cloud/wrangler.toml` comment fixed ("Deployed by deploy.yml" becomes true), `web/net.js` +
-  `web/account.js` (the exact `bar3d.<subdomain>.workers.dev` host joins the allowlist).
+  `cloud/wrangler.toml` comment fixed ("Deployed by deploy.yml" becomes true), `bar/web/net.js` +
+  `bar/web/account.js` (the exact `bar3d.<subdomain>.workers.dev` host joins the allowlist).
   The old client ignores `config.json` (it fetches only `cloud.json`, `net.js:303`), so
   nothing switches yet.
 - **Accept:** Actions run green and its log shows the Cloudflare steps ran (not skipped,
@@ -1755,13 +1755,13 @@ The cutover is split so the old path stays the default until the last part: v2 r
 with `?net=v2` until 3.4d flips it.
 
 #### 3.4a Client net v2 behind `?net=v2`
-- **Files:** `engine/net.{h,cpp}` v2 (`poll()` → typed messages from the ring; `sendState(block)`
+- **Files:** `looped/net.{h,cpp}` v2 (`poll()` → typed messages from the ring; `sendState(block)`
   on the net tick; `sendIntent(kind, args) → reqId`; `sendEvent`; `serverNowMs()`; `slot()`;
   status with reason; compatibility shims `setWorld/receiveWorld` over the legacy KV),
-  `web/net.js` v2 (single backend from `config.json`, no relay fallback, binary frames copied
+  `bar/web/net.js` v2 (single backend from `config.json`, no relay fallback, binary frames copied
   into the wasm ring, reconnect with resume token (250 ms, 1, 2, 4, max 8 s), HUD status:
   connecting / online / offline / full / new version / server busy; `?netsim=` on localhost;
-  the old path stays the default, v2 only with `?net=v2`), `web/account.js` (read `accountsUrl`
+  the old path stays the default, v2 only with `?net=v2`), `bar/web/account.js` (read `accountsUrl`
   from `config.json`, falling back to `https://joshuavelasco.com/bar/account.php`; stop calling
   `bar3dNet.serverUrl()`, which v2 doesn't have; without this, log-in, person cards and
   pictures over heads disappear until 5.1), test isolation (§2.10: net off on localhost
@@ -1786,9 +1786,9 @@ with `?net=v2` until 3.4d flips it.
   still shows over your head.
 
 #### 3.4b Remote players on server time
-- **Files:** `app/players.{h,cpp}` (samples `{serverMs, block}`, adaptive delay, discrete
+- **Files:** `bar/players.{h,cpp}` (samples `{serverMs, block}`, adaptive delay, discrete
   fields at playback, 100 ms extrapolation, stable slots, dimmed while reconnecting; profiles
-  cached from PROFILE; spectator data from the same samples), `app/main.cpp` (`isLower` →
+  cached from PROFILE; spectator data from the same samples), `bar/main.cpp` (`isLower` →
   slot order; state sent on the net tick only; race start time from `serverNowMs()` in v2),
   new `tools/native/interp_test.cpp`.
 - **Accept:** interp_test (jitter, gaps, extrapolation cap, discrete fields switch at render
@@ -1797,7 +1797,7 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** nothing changes yet (default is still the relay).
 
 #### 3.4c Voice signaling over the room; tests on `wrangler dev`
-- **Files:** `web/voice.js` (signaling through SIGNAL keyed by slot in v2), `tools/mp_test.mjs`
+- **Files:** `bar/web/voice.js` (signaling through SIGNAL keyed by slot in v2), `tools/mp_test.mjs`
   (CLOUD mode probes the room, not PHP; new assertions below), `tools/voice_test.mjs` (ported
   to `wrangler dev`; today it copies `server/relay.php`, `voice_test.mjs:33`, which 3.5 deletes).
 - **Accept:** with local `wrangler dev`, `CLOUD=ws://localhost:8787 NODE_PATH=$(npm root -g) node tools/mp_test.mjs`
@@ -1808,7 +1808,7 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** nothing changes.
 
 #### 3.4d Cutover: everyone moves to Cloudflare
-- **Files:** `web/net.js` (v2 becomes the default; the relay path stays in the file, unused,
+- **Files:** `bar/web/net.js` (v2 becomes the default; the relay path stays in the file, unused,
   until 3.5), `.github/workflows/deploy.yml` (Cloudflare steps blocking: drop
   `continue-on-error`).
 - **Accept:** room_test (live, `NODE_USE_ENV_PROXY=1`) + mp_test (CLOUD) + voice_test + STD pass;
@@ -1824,7 +1824,7 @@ with `?net=v2` until 3.4d flips it.
   relay positions aren't carried over). Fail = "offline" stays, or someone is invisible.
 
 #### 3.5 Retire the relay and the second game copy
-- **Files:** delete `server/relay.php` and the relay paths in `web/net.js`/`tools/mp_test.mjs`;
+- **Files:** delete `server/relay.php` and the relay paths in `bar/web/net.js`/`tools/mp_test.mjs`;
   port `tools/account_test.mjs` to `account.php` alone (it copies `relay.php` today,
   `account_test.mjs:31`); `deploy.yml` stops uploading the relay and the game copy to
   `home/bar/`, but keeps uploading `account.php`, `report.php`, `.htaccess` (with its
@@ -1845,52 +1845,52 @@ with `?net=v2` until 3.4d flips it.
 ### Phase 4: Clean core (local refactors, behaviour preserved; 4.1a-c, 4.3a and 4.4 may run before Phase 3, 4.4 after 4.3a; 4.2 and 4.3b need 3.4d)
 
 #### 4.1a LocalPlayer and HUD out of `main.cpp`
-- **Files:** new `app/local_player.{h,cpp}` (camera, controller, eye height, held item), new
-  `app/hud.{h,cpp}` (on-screen text, prompts and labels now built in `main.cpp`), `app/main.cpp`.
+- **Files:** new `bar/local_player.{h,cpp}` (camera, controller, eye height, held item), new
+  `bar/hud.{h,cpp}` (on-screen text, prompts and labels now built in `main.cpp`), `bar/main.cpp`.
 - **Accept:** STD; VIS at the standard spots plus shots with `?sit=30`, `?rhythm=0,1&autoplay`,
   `?darts`, `?shift`, `?emote=3` → ≤ 1% differing pixels vs before; mp_test passes.
 - **Phone:** quick tour: walk, sit, emote, read a prompt: all as before.
 
 #### 4.1b The Game object and the phase table (`g_app` gone)
-- **Files:** new `app/game.{h,cpp}`, `app/world.{h,cpp}`; `app/main.cpp` (≈ 100 lines);
-  function-local statics → members with `reset()`; `app/materials.cpp` (`static_assert` on the
+- **Files:** new `bar/game.{h,cpp}`, `bar/world.{h,cpp}`; `bar/main.cpp` (≈ 100 lines);
+  function-local statics → members with `reset()`; `bar/materials.cpp` (`static_assert` on the
   table size).
 - **Build:** the order of §2.1 (apply inbound → sim → send → present → render → flush → jobs) as
   a table of named phase functions; the seat-conflict check moves before NetOut (it goes away
   entirely in 5.2).
 - **Accept:** STD + VIS and the test-param shots as in 4.1a; mp_test passes;
-  `wc -l app/main.cpp` ≤ 150 (1,418 today); no mutable function-local `static` left in `app/`
-  (`grep -n "^\s*static " app/*.cpp` reviewed).
+  `wc -l bar/main.cpp` ≤ 150 (1,418 today); no mutable function-local `static` left in `bar/`
+  (`grep -n "^\s*static " bar/*.cpp` reviewed).
 - **Phone:** quick tour: sit, emote, piano, darts, 4K Mania, a drink: all as before.
 
 #### 4.1c Presentation: remote visuals in one place
-- **Files:** new `app/presentation.{h,cpp}` (others' darts and remote activity visuals move into
-  Present, so they no longer vanish during rhythm/race; posing remote avatars), `app/game.cpp`;
-  any `EM_ASM` still in `app/` (for example `hasBadge`) moves behind an engine call (E-7; 4.4
+- **Files:** new `bar/presentation.{h,cpp}` (others' darts and remote activity visuals move into
+  Present, so they no longer vanish during rhythm/race; posing remote avatars), `bar/game.cpp`;
+  any `EM_ASM` still in `bar/` (for example `hasBadge`) moves behind an engine call (E-7; 4.4
   then caches badges).
 - **Accept:** STD + VIS and test-param shots; mp_test passes; `grep -rn "EM_ASM\|EM_JS" app` → 0.
 - **Phone:** quick tour with your brother: his darts, piano and 4K Mania screens look as before.
 
 #### 4.2 Stable entity ids
-- **Files:** `app/bar_scene.{h,cpp}` (string id on every seat, interactable, prop, mirror, rig,
-  machine), new `app/entities.{h,cpp}` (registry + 16-bit net ids, collision check), new
-  `app/entity_ids.txt` (golden list), `app/shared_world.cpp` (glass keys by net id), seat param on
+- **Files:** `bar/bar_scene.{h,cpp}` (string id on every seat, interactable, prop, mirror, rig,
+  machine), new `bar/entities.{h,cpp}` (registry + 16-bit net ids, collision check), new
+  `bar/entity_ids.txt` (golden list), `bar/shared_world.cpp` (glass keys by net id), seat param on
   the wire = seat net id, protocol version bump (the worker accepts protos N-1..N for one
   deploy, §2.12; the 4002 handling from 3.4a), Room DO `schemaVersion` bump (old glass keys
   by body index are wiped, not misread).
 - **Needs:** 3.4d. The relay has no version check, so on the relay old and new builds would
   misread each other's seats.
 - **Accept:** new `tools/native/entity_test.cpp` (includes only CPU headers, see 2.3b): ids
-  unique, list equals `app/entity_ids.txt`; STD; mp_test glass + seat scenarios pass on
+  unique, list equals `bar/entity_ids.txt`; STD; mp_test glass + seat scenarios pass on
   `wrangler dev`; room_test: a proto N-1 client still joins, N-2 gets 4002.
 - **Phone:** when the game says "New version", both of you reload; glasses and seats still
   sync with your brother.
 
 #### 4.3a ActivityManager: framework, seats, piano, rhythm (local)
-- **Files:** new `app/activity.{h,cpp}` (states Idle → Requesting → Active → Leaving, with an
+- **Files:** new `bar/activity.{h,cpp}` (states Idle → Requesting → Active → Leaving, with an
   instant local grant for now so 5.2 only plugs in claims; transition table), new
-  `app/activities/{seat,piano,rhythm}.cpp` (adapters over the existing game classes);
-  `app/game.cpp` (their menu/busy/label flags and if/else branches deleted); UI commands become
+  `bar/activities/{seat,piano,rhythm}.cpp` (adapters over the existing game classes);
+  `bar/game.cpp` (their menu/busy/label flags and if/else branches deleted); UI commands become
   validated requests (emote range, `make` only on shift, `standUp` only when seated); local
   exclusivity still via `playerUsing`, but only inside `ActivityManager::canEnter` (claims
   replace it in 5.2). No wire change.
@@ -1900,7 +1900,7 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** sit, stand, piano, 4K Mania: each starts and ends cleanly.
 
 #### 4.3b ActivityManager: darts, bartending, race + the pose layer (needs 3.4d)
-- **Files:** new `app/activities/{darts,bartend,race}.cpp`; `app/game.cpp` (the remaining
+- **Files:** new `bar/activities/{darts,bartend,race}.cpp`; `bar/game.cpp` (the remaining
   exclusive chains deleted; one place calls `setCapture`); occupancy vs pose layer in the
   avatar block (protocol bump: protos N-1..N accepted for one deploy).
 - **Accept:** activity_test gains: walk-away leaves darts, drink while seated keeps the seat;
@@ -1910,9 +1910,9 @@ with `?net=v2` until 3.4d flips it.
   making a drink while seated keeps you on the stool for your brother too.
 
 #### 4.4 Interaction system
-- **Files:** new `app/interaction.{h,cpp}` (one target query over interactables, seats, props,
+- **Files:** new `bar/interaction.{h,cpp}` (one target query over interactables, seats, props,
   players with a priority bias; the active activity can intercept taps; handler table kind →
-  `prompt()`, `available()`, `use(ctx)`; shared actions emit requests), `app/local_player.cpp`
+  `prompt()`, `available()`, `use(ctx)`; shared actions emit requests), `bar/local_player.cpp`
   (`teleport(pos, yaw)` resolves collision + eye height; darts oche and bartender spot use it),
   badges cached on account change (no per-frame EM_ASM), `use()` switch deleted from `game.cpp`.
 - **Accept:** new `tools/native/interaction_test.cpp` (CPU headers only, see 2.3b; resolver picks
@@ -1949,7 +1949,7 @@ with `?net=v2` until 3.4d flips it.
 - **Files:** `server/account_v2.php` → `server/account.php` (same URL path; the legacy
   `{a:'me', token}` API and old 48-hex tokens accepted for 30 days so cached old clients keep
   working); profile pictures moved from `accounts/avatars/<id>.jpg` to the private folder,
-  rev numbers kept; `web/account.js` (on first load a saved `bar3dToken` is sent as the
+  rev numbers kept; `bar/web/account.js` (on first load a saved `bar3dToken` is sent as the
   refresh token and replaced by the new pair; 8 s timeouts; card cache by id + rev); deploy
   order: backup of `home/bar/accounts/` → `migrate-run` again (idempotent, catches signups
   since the dry run) → switch; a dated `PROGRESS.md` item "delete `home/bar/accounts/` after
@@ -1963,7 +1963,7 @@ with `?net=v2` until 3.4d flips it.
 #### 5.1c Signed tickets and in-band re-auth
 - **Files:** `server/account.php` (Ed25519 tickets; key created only if absent with
   `fopen($path, 'x')` under `flock`; `?a=pubkey`; HMAC fallback only if 0.3 showed no sodium),
-  `web/account.js` (ticket refresh every 10 min), `web/net.js` (ticket in HELLO; REAUTH on
+  `bar/web/account.js` (ticket refresh every 10 min), `bar/web/net.js` (ticket in HELLO; REAUTH on
   refresh), `cloud/room.js` (verify with `ACCOUNT_PUBKEY`; delete the IONOS fetch; REAUTH must
   keep the same `sub`; `/health` shows the kid and unknown-kid count), deploy steps fetch
   `?a=pubkey` and pass `ACCOUNT_PUBKEY` to wrangler (no hand pinning), `tools/room_test.mjs`.
@@ -1974,8 +1974,8 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.2 Claims: seats, rigs, machines, bar station, mic
 - **Files:** `cloud/room.js` (claims table, claim/release intents, RESULT, DELTA, release on
-  grace end), `docs/PROTOCOL.md`, `app/activity.cpp` (Requesting state with the approach/sit
-  animation; grant/deny/revoke), `app/game.cpp` (delete the seat tie-break loop and occupancy
+  grace end), `docs/PROTOCOL.md`, `bar/activity.cpp` (Requesting state with the approach/sit
+  animation; grant/deny/revoke), `bar/game.cpp` (delete the seat tie-break loop and occupancy
   inference; remote occupancy from claims), `tools/room_test.mjs`, `tools/mp_test.mjs`.
 - **Accept:** room_test: two clients claim `seat.bar.3` in the same millisecond → exactly one ok,
   the other `taken by`; socket killed → claim freed after grace; mp_test: Alice sits, Bob taps the
@@ -1985,7 +1985,7 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.3 RoomState: lights, fire, mirrors
 - **Files:** `cloud/room.js` (RoomState fields with seq; toggle intents; `schemaVersion` bump),
-  new `app/room_state.{h,cpp}` (replicated struct + change events; renderer light scales set only
+  new `bar/room_state.{h,cpp}` (replicated struct + change events; renderer light scales set only
   from it), mirror mode local per viewer (Q3) saved in settings, legacy `lt` and `m<i>` keys
   deleted (and their echo shim).
 - **Accept:** room_test: A and B toggle the lights at the same time 20× → both equal the server;
@@ -1994,11 +1994,11 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.4 Glasses: ownership leases
 - **Files:** `cloud/room.js` (prop leases, rest poses in RoomState, PROP relayed in TICK, settle
-  lease on owner loss; leases never persisted; `schemaVersion` bump), new `app/prop_sync.{h,cpp}` (grab/release intents; owner streams 15 Hz;
+  lease on owner loss; leases never persisted; `schemaVersion` bump), new `bar/prop_sync.{h,cpp}` (grab/release intents; owner streams 15 Hz;
   others interpolate on server time and drive kinematic targets; only contacts from your own
-  bodies/capsule trigger a claim; deny → follow the stream), `engine/physics.*` (`BodyId`, modes
+  bodies/capsule trigger a claim; deny → follow the stream), `looped/physics.*` (`BodyId`, modes
   Dynamic/Held/KinematicTarget; optional kinematic player capsules so glasses bounce off people),
-  `app/shared_world.cpp` (glass part removed), `tools/room_test.mjs`.
+  `bar/shared_world.cpp` (glass part removed), `tools/room_test.mjs`.
 - **Accept:** room_test: two grabs → one owner; owner disconnects mid-throw → settle lease handed
   over, rest pose stored once; mp_test glass scenario on cloud passes; native interpolation-buffer
   test.
@@ -2008,8 +2008,8 @@ with `?net=v2` until 3.4d flips it.
 #### 5.5 Jukebox owned by the room
 - **Files:** new `assets/music/songs.json` (stable id, file, title, credit, durationMs; a local test
   checks durations with ffprobe), `cloud/room.js` (queue, current `{songId, startMs}`, song-end
-  advance as an alarm-scheduler deadline, play/skip/stop/enqueue with rate limits), `app/jukebox.cpp` (no writes on song end; stable ids;
-  phone songs = local "My music" mode that ducks the room (Q8)), `web/audio.js` (drift follower).
+  advance as an alarm-scheduler deadline, play/skip/stop/enqueue with rate limits), `bar/jukebox.cpp` (no writes on song end; stable ids;
+  phone songs = local "My music" mode that ducks the room (Q8)), `bar/web/audio.js` (drift follower).
 - **Accept:** room_test: song end → exactly one advance even with 3 clients; STD; mp_test jukebox
   scenario passes.
 - **Phone:** both phones hear the same song at the same spot; when it ends the next one starts on
@@ -2017,10 +2017,10 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.6 Piano session, timestamped events, one Clock
 - **Files:** `cloud/room.js` (piano session record; event stamping/TTL; `machine.piano` claim),
-  new `engine/clock.{h,cpp}` (server↔audio mapping, latency + calibration), `app/piano.cpp` (song
+  new `looped/clock.{h,cpp}` (server↔audio mapping, latency + calibration), `bar/piano.cpp` (song
   from the session; live notes as stamped events; spectators schedule at ts + playout; drop > 1 s;
-  remote hands from their notes), `engine/midi.cpp` (same-tick order), `web/menu.js` (MIDI events
-  call an exported function immediately with `event.timeStamp`), `web/net.js`/`voice.js` (no game
+  remote hands from their notes), `looped/midi.cpp` (same-tick order), `bar/web/menu.js` (MIDI events
+  call an exported function immediately with `event.timeStamp`), `bar/web/net.js`/`voice.js` (no game
   events on the data channel).
 - **Accept:** native clock test; mp_test variant: Alice plays 20 notes → Bob gets 20 in order,
   scheduled with even spacing (log the scheduled times); STD.
@@ -2029,14 +2029,14 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.7 Bartender on the server
 - **Files:** `cloud/room.js` (drinks[8]; serve(type) checks the ticket badge → slot or "counter full";
-  take(slot) compare-and-set; step events), `app/bartender.cpp` (requests; "Counter full" HUD;
+  take(slot) compare-and-set; step events), `bar/bartender.cpp` (requests; "Counter full" HUD;
   confirm before replacing a drink; spectator step sounds from the station emitter), legacy `dk*` deleted.
 - **Accept:** room_test: two takes of one slot → one ok; serve without badge → denied; STD.
 - **Phone:** your brother serves a drink and you both tap it at once: only one gets it. Without
   the badge the bar station says you can't serve. You hear his shaker from across the bar.
 
 #### 5.8 Darts session
-- **Files:** `cloud/room.js` (darts session: players, turn queue, scores), `app/darts.cpp` (throw
+- **Files:** `cloud/room.js` (darts session: players, turn queue, scores), `bar/darts.cpp` (throw
   events `{u, v}`; the same deterministic `score()` everywhere; spectators animate the flight and
   play sounds; clamp encoding; `leave()` clears darts; stats saved locally under a settings-schema
   key; D1 comes in 7.2).
@@ -2045,18 +2045,18 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** your brother throws: you see the dart fly and hear the thunk; the chalk score matches.
 
 #### 5.9a Deterministic charts, baked at build time
-- **Files:** `app/rhythm_chart.cpp` (fixed 11,025 Hz input, hop in seconds, parabolic tempo refine,
+- **Files:** `bar/projects/mania/rhythm_chart.cpp` (fixed 11,025 Hz input, hop in seconds, parabolic tempo refine,
   onset snapping), new `tools/native/chart_bake.cpp` → `assets/charts/<song>-<difficulty>.json`,
-  `app/rhythm.cpp` (built-in charts loaded from files).
+  `bar/projects/mania/rhythm.cpp` (built-in charts loaded from files).
 - **Accept:** chart_bake gives ≥ 95% matching notes from 44.1 kHz and 48 kHz decodes of the same
   song (was 15/242); `tools/rhythm_test.mjs` passes and logs "chart from file"; STD.
 - **Phone:** start a built-in song: no freeze before it starts.
 
 #### 5.9b 4K Mania session, spectators, calibration, memory
-- **Files:** `app/rhythm.cpp` (phone songs analysed in jobs with an "Analysing…" screen and cached
+- **Files:** `bar/projects/mania/rhythm.cpp` (phone songs analysed in jobs with an "Analysing…" screen and cached
   per song + difficulty; Retry reuses the buffer; session `{songId, difficulty, startMs}`;
   judgement events; spectators draw the real chart; bests saved locally under a settings-schema
-  key (D1 in 7.2); scrolling list; audio calibration screen), `web/audio.js` (11,025 Hz mono via
+  key (D1 in 7.2); scrolling list; audio calibration screen), `bar/web/audio.js` (11,025 Hz mono via
   OfflineAudioContext, no 54 MB copy, free on close), `cloud/room.js` (rhythm session).
 - **Accept:** `tools/rhythm_test.mjs` passes; after closing a phone song the heap and JS memory
   return to the level before (logged); mp_test: Bob sees Alice's real chart; STD.
@@ -2064,12 +2064,12 @@ with `?net=v2` until 3.4d flips it.
   your brother watching sees the real notes on the cabinet; your best score survives a reload.
 
 #### 5.10 Voice: signaling, bitrate, mesh cap, leaks, TURN
-- **Files:** `web/voice.js` (trickle ICE over SIGNAL; default 48 kbps mono, "studio" opt-in (Q6);
+- **Files:** `bar/web/voice.js` (trickle ICE over SIGNAL; default 48 kbps mono, "studio" opt-in (Q6);
   ≤ 6 nearest peers; one node chain per peer, `drop()` disconnects it; `restartIce` on
   disconnected/failed from either side; voice status per player), `cloud/room.js` (TURN
   credentials only if Q6 says yes and the user added `CF_TURN_KEY_ID` / `CF_TURN_KEY_TOKEN`
   (synced with `admin.yml secret-sync`): sent as a message over the open, HELLO'd socket, never
-  from a public HTTP endpoint; TTL ≤ 10 min; ≤ 1 per minute per slot), `web/menu.js` (defaults).
+  from a public HTTP endpoint; TTL ≤ 10 min; ≤ 1 per minute per slot), `bar/web/menu.js` (defaults).
 - **Accept:** `tools/voice_test.mjs` passes; a page that toggles settings 10× keeps one node chain
   per peer (count logged); room_test: TURN credentials without HELLO → none, a second request
   within a minute → refused, TTL ≤ 10 min; STD.
@@ -2078,8 +2078,8 @@ with `?net=v2` until 3.4d flips it.
 
 #### 5.11 Remove the legacy world KV
 - **Files:** `cloud/room.js` (legacy KV and its storage removed; `schemaVersion` bump),
-  `engine/net.*` (`setWorld`, `receiveWorld`, `takeOther`, `isLower` and the echo shim gone),
-  `app/shared_world.*` (deleted if empty), `docs/PROTOCOL.md` (proto bump).
+  `looped/net.*` (`setWorld`, `receiveWorld`, `takeOther`, `isLower` and the echo shim gone),
+  `bar/shared_world.*` (deleted if empty), `docs/PROTOCOL.md` (proto bump).
 - **Accept:** `grep -rn "setWorld\|isLower\|takeOther" app engine cloud web` → none; room_test +
   mp_test + STD pass.
 - **Phone:** quick multiplayer tour with your brother: everything still in sync.
@@ -2087,10 +2087,10 @@ with `?net=v2` until 3.4d flips it.
 ### Phase 6: Faster drawing (use phone reports to pick the order inside the phase)
 
 #### 6.1 Render core: RenderFrame, UploadRing, culling, instanced boxes
-- **Files:** new `engine/render_frame.h`, `engine/upload_ring.{h,cpp}`, `engine/culling.{h,cpp}` (from
-  `race/view.cpp` `visible()`), `engine/camera.h` (`frustum()`, yaw wrap), `app/renderer.cpp` (no
+- **Files:** new `looped/render_frame.h`, `looped/upload_ring.{h,cpp}`, `looped/culling.{h,cpp}` (from
+  `race/view.cpp` `visible()`), `looped/camera.h` (`frustum()`, yaw wrap), `bar/renderer.cpp` (no
   setters writing GPU buffers mid-frame; one upload phase; delete the SceneObject path; one
-  instanced draw for all boxes; glass drawn with opaques), `app/props.cpp` (dead path removed).
+  instanced draw for all boxes; glass drawn with opaques), `bar/props.cpp` (dead path removed).
 - **Accept:** STD + VIS ≤ 1%; profiler: "upload" ≤ 0.5 ms, draws ≤ before; a glass held
   in front of the mirror is visible.
 - **Phone:** nothing looks different; perf overlay number a bit lower at the mirror.
@@ -2108,7 +2108,7 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** nothing changes.
 
 #### 6.2b Switch the game to `layout.json`
-- **Files:** new `app/layout.{h,cpp}` (loads it; `bar_scene.cpp` numbers deleted), walk collision
+- **Files:** new `bar/layout.{h,cpp}` (loads it; `bar_scene.cpp` numbers deleted), walk collision
   against oriented shapes.
 - **Accept:** the comparison test still passes, then delete it with the old values; STD + VIS;
   walking along the curved bar in shots (`HOLD=`) shows no bumps.
@@ -2118,20 +2118,20 @@ with `?net=v2` until 3.4d flips it.
 #### 6.2c Geometry pack format and loader
 - **Files:** new `tools/assets/pack.py` (clusters ≈ 3 m per material with AABBs; 24 B vertices;
   Uint16 indices; LOD1 by Blender decimate; `assets/pack/manifest.json` + `geometry.bin`; one texture
-  with sRGB view instead of duplicates), new `engine/pack.{h,cpp}` (header read + byte-budgeted
+  with sRGB view instead of duplicates), new `looped/pack.{h,cpp}` (header read + byte-budgeted
   upload jobs straight from the JS buffer); drawn without culling at first.
 - **Accept:** STD + VIS ≤ 1%; download size reported; `max job ms` not above before.
 - **Phone:** looks the same; loads a little faster.
 
 #### 6.2d Renderer: cull clusters, sort blended parts
-- **Files:** `app/renderer.cpp` (cull clusters; sort blended parts by bounds centre).
+- **Files:** `bar/renderer.cpp` (cull clusters; sort blended parts by bounds centre).
 - **Accept:** profiler draws in the main pass ≤ 250 (with culling ≤ 150 at the spawn view);
   STD + VIS ≤ 1%.
 - **Phone:** turn around in the middle of the bar: steady 60 on the overlay; send a report.
 
 #### 6.2e Instancing repeated props
 - **Files:** `tools/assets/pack.py` (instance prototypes for stools, tables, candles, glasses,
-  pendants), `app/renderer.cpp` (one draw per prototype from an instance buffer), `app/entities.cpp`.
+  pendants), `bar/renderer.cpp` (one draw per prototype from an instance buffer), `bar/entities.cpp`.
 - **Accept:** draws main ≤ 150, mirror ≤ 60 (profiler); STD.
 - **Phone:** same look; report at the mirror.
 
@@ -2140,7 +2140,7 @@ with `?net=v2` until 3.4d flips it.
   radius of the mirror/viewer full quality; only things farther away in the reflection drop to low
   quality (LOD / cheaper shader). The half-resolution reflection from 1.7 should become sharp for
   that near zone too (e.g. full-res near layer or a higher-res target when close).
-- **Files:** `app/renderer.cpp` (own cull list through the glass, small props excluded, LOD1,
+- **Files:** `bar/renderer.cpp` (own cull list through the glass, small props excluded, LOD1,
   cheap shader variant, occlusion query on the glass quad (last frame's result), zone gate,
   30 Hz when still, quality tiers full / avatars-only / off).
 - **Accept:** profiler: mirror draws ≤ 60; looking away from the mirror → mirror phase ≈ 0; STD +
@@ -2149,20 +2149,20 @@ with `?net=v2` until 3.4d flips it.
   hidden: the number drops further.
 
 #### 6.4 Shader library, variants, light budget, sRGB
-- **Files:** `shaders/*.wgsl` (shared include for tonemap/PBR; override-constant variants; ORM
-  packing support), `engine/gpu.cpp` (`viewFormats` sRGB; render through the sRGB view), `app/renderer.cpp`
+- **Files:** `looped/shaders/*.wgsl` (shared include for tonemap/PBR; override-constant variants; ORM
+  packing support), `looped/gpu.cpp` (`viewFormats` sRGB; render through the sRGB view), `bar/renderer.cpp`
   (≤ 4 lights per cluster assigned on the CPU), `tools/assets/pack.py` (ORM packing), optional
   generated shader header instead of `--embed-file`.
 - **Accept:** STD + VIS ≤ 1% (colours equal, no seams at former light-cell borders);
-  `grep -n "pow(" shaders/scene.wgsl` → no gamma pow.
+  `grep -n "pow(" looped/shaders/scene.wgsl` → no gamma pow.
 - **Phone:** colours look the same; no light seams on the floor.
 
 #### 6.5 Avatars: lighter, culled, blended
-- **Files:** `app/avatar.cpp` (curly hair ≈ 40 clumps ≤ 2k verts; named index ranges body/head/LOD1;
+- **Files:** `bar/avatar.cpp` (curly hair ≈ 40 clumps ≤ 2k verts; named index ranges body/head/LOD1;
   build looks as jobs, own look first; free CPU meshes; bone indices; 0.25 s crossfade on activity
-  change), `engine/skinned_mesh.*` (ranges, Uint16, 4 weights), `shaders/scene.wgsl` (4-weight blend,
-  fewer samples), `app/renderer.cpp` (one bones storage buffer; per-look palette; frustum + mirror
-  culling; LOD by distance; first person draws only the body range), `app/presentation.cpp` (pose
+  change), `looped/skinned_mesh.*` (ranges, Uint16, 4 weights), `looped/shaders/scene.wgsl` (4-weight blend,
+  fewer samples), `bar/renderer.cpp` (one bones storage buffer; per-look palette; frustum + mirror
+  culling; LOD by distance; first person draws only the body range), `bar/presentation.cpp` (pose
   only visible avatars).
 - **Accept:** smoke log triangle count per look (Josh ≤ 12k); profiler "pose" and avatar draws drop
   with players outside the view (mp_test with 3 players); STD + `smoke-down.png` still shows your body.
@@ -2170,26 +2170,26 @@ with `?net=v2` until 3.4d flips it.
   down: your body is there.
 
 #### 6.6 Retained HUD, billboards by id, picture path
-- **Files:** `app/hud.cpp` (retained widgets: Label3D, ScreenPrompt, Banner, Toast; rebuilt on
-  change), `engine/text.cpp` (cached glyph ranges; world labels in world space + per-view uniform),
-  `engine/billboard.cpp` (slots by player slot, LRU), profile pictures through `loadImageTexture`
-  variant with retry/backoff, `engine/fetch.cpp` `decodeImage` deleted.
+- **Files:** `bar/hud.cpp` (retained widgets: Label3D, ScreenPrompt, Banner, Toast; rebuilt on
+  change), `looped/text.cpp` (cached glyph ranges; world labels in world space + per-view uniform),
+  `looped/billboard.cpp` (slots by player slot, LRU), profile pictures through `loadImageTexture`
+  variant with retry/backoff, `looped/fetch.cpp` `decodeImage` deleted.
 - **Accept:** profiler "hud" ≤ 0.2 ms with 3 players (mp_test); STD + shots of name tags.
 - **Phone:** name tags, prompts and pictures over heads look as before; a friend's picture shows
   up even if it failed once.
 
 #### 6.7 Dynamic resolution and quality settings
-- **Files:** `engine/gpu.cpp` (resolution scale 2.0/1.6/1.3), new quality controller (GPU-bound
-  detection: frame > 15 ms while CPU < 8 ms, hysteresis), `web/menu.js` (Graphics: Auto/High/Medium/
-  Low, mirror quality, field of view), `engine/camera.h` (horizontal-FOV minimum in portrait).
+- **Files:** `looped/gpu.cpp` (resolution scale 2.0/1.6/1.3), new quality controller (GPU-bound
+  detection: frame > 15 ms while CPU < 8 ms, hysteresis), `bar/web/menu.js` (Graphics: Auto/High/Medium/
+  Low, mirror quality, field of view), `looped/camera.h` (horizontal-FOV minimum in portrait).
 - **Accept:** headless forced tiers via `?quality=low` render correctly; STD.
 - **Phone:** Settings → Graphics shows Auto; play for 5 minutes: no stutter when it changes level;
   portrait view feels less like a tunnel.
 
 #### 6.8 ASTC textures (needs G3)
 - **Files:** `tools/assets/pack.py` (astcenc 4×4 colour/normal, 6×6 big surfaces, pre-mipped, own tiny
-  container), `engine/gpu.cpp` (request `texture-compression-astc` when available),
-  `engine/texture_store.*` (WriteTexture of pre-mipped blocks, sliced by bytes; RGBA8 fallback path).
+  container), `looped/gpu.cpp` (request `texture-compression-astc` when available),
+  `looped/texture_store.*` (WriteTexture of pre-mipped blocks, sliced by bytes; RGBA8 fallback path).
 - **Accept:** report shows resident texture MB ≤ 64; Chromium (no ASTC) uses the fallback and smoke
   passes; VIS ≤ 1% on the fallback path.
 - **Phone:** looks the same, loads faster, phone stays cooler; send a report.
@@ -2197,8 +2197,8 @@ with `?net=v2` until 3.4d flips it.
 ### Phase 7: Racing together (replaces RACING.md steps 4-6; update that file in 7.1)
 
 #### 7.1 VehicleState, snapshots, replays
-- **Files:** `engine/vehicle.{h,cpp}` (POD `VehicleState` + `const CarSpec*`; quantized ≈ 32 B
-  snapshot encode/decode; shift queue; clamp-hit counters), `app/race/world.*` (InputFrame per tick
+- **Files:** `looped/vehicle.{h,cpp}` (POD `VehicleState` + `const CarSpec*`; quantized ≈ 32 B
+  snapshot encode/decode; shift queue; clamp-hit counters), `bar/projects/racing/world.*` (InputFrame per tick
   `{tick, steer i8, throttle u8, brake u8, buttons, shifts}`), one car-spec source shared with the
   tests, `docs/RACING.md` (sim contract, netcode, render budget, loading sections).
 - **Accept:** native tests (g++ and em++/node): save → restore → replay gives identical results;
@@ -2211,15 +2211,15 @@ with `?net=v2` until 3.4d flips it.
   (D1 binding; the database created once with `admin.yml d1-create`), `cloud/migrations/*.sql`
   (best_laps, darts stats, rhythm bests keyed by account id; applied by the deploy steps with
   `wrangler d1 migrations apply --remote`), local darts stats and rhythm bests (5.8, 5.9b)
-  uploaded once per account, `app/race/session.{h,cpp}`
-  (Idle → Claiming → Grid → Countdown → Racing → Finished → Restart vote), `app/race/game.cpp`
+  uploaded once per account, `bar/projects/racing/session.{h,cpp}`
+  (Idle → Claiming → Grid → Countdown → Racing → Finished → Restart vote), `bar/projects/racing/game.cpp`
   split into session / DriverView / RaceAudio.
 - **Accept:** room_test race cases (both rigs claimed → one roster, one goAt; a fake lap of 10 s is
   rejected); STD with `?sit=30`.
 - **Phone:** sit in a rig alone: countdown and race work as before; your best lap shows in the results.
 
 #### 7.3 Two players: prediction, proxies, contacts
-- **Files:** `app/race/world.cpp` (Proxy racers extrapolated to the current tick, finite-mass impulse
+- **Files:** `bar/projects/racing/world.cpp` (Proxy racers extrapolated to the current tick, finite-mass impulse
   applied only to your own car, ContactEvents, Baumgarte + slop + 2 iterations), race snapshots at
   30 Hz in 2-tick batches through the room, build hash checked on race join.
 - **Accept:** native two-world test (two Worlds exchange snapshots with 100 ms ± 50 ms simulated
@@ -2228,7 +2228,7 @@ with `?net=v2` until 3.4d flips it.
   each other feels like a real nudge, nobody gets launched; results agree on both phones.
 
 #### 7.4 Bots on one authority + AI module
-- **Files:** new `app/race/ai.{h,cpp}` (BotDriver → InputFrame; lateral clearance, committed pass
+- **Files:** new `bar/projects/racing/ai.{h,cpp}` (BotDriver → InputFrame; lateral clearance, committed pass
   side, no passes in braking zones), host phone (lowest slot in the race) simulates bots and sends
   them in its snapshots; handoff of full VehicleStates if it leaves.
 - **Accept:** native race_test bot sanity (stuck resets below N); two-world test: bots identical on
@@ -2236,21 +2236,21 @@ with `?net=v2` until 3.4d flips it.
 - **Phone:** in a two-player race, the bots are in the same places on both phones.
 
 #### 7.5 Spectator monitors
-- **Files:** new `app/race/monitor_renderer.{h,cpp}` (lite track ribbon at 4 m + barrier tops ≈ 6-10k
+- **Files:** new `bar/projects/racing/monitor_renderer.{h,cpp}` (lite track ribbon at 4 m + barrier tops ≈ 6-10k
   tris, car LOD1, 960×180 atlas, one view refreshed per frame only when the rig is within ≈ 10 m and
   on screen), bar renderer samples the atlas as emissive on the monitor quads (3 or 1 per rig: Q10;
-  for 3, add monitor quads in `tools/assets/sim_rig.py` and `app/bar_scene.cpp`/layout),
+  for 3, add monitor quads in `tools/assets/sim_rig.py` and `bar/bar_scene.cpp`/layout),
   spectators subscribe to the race snapshot stream (interpolated at now - 100 ms), CarVisual input.
 - **Accept:** profiler: monitor phase ≤ 0.8 ms GPU-side estimate (draws ≤ 30); mp_test: Bob near the
   rig sees Alice's race on the monitors (screenshot).
 - **Phone:** while your brother races, walk to his rig: the monitors show his race live.
 
 #### 7.6 Race renderer and controls polish
-- **Files:** `app/race/view.cpp` + `shaders/race.wgsl` (reverse-Z Depth32Float, sky last, backface
+- **Files:** `bar/projects/racing/view.cpp` + `looped/shaders/race.wgsl` (reverse-Z Depth32Float, sky last, backface
   culling, LOD chunks + terrain tiles + far cull, instanced trees/wheels, packed 20 B vertices +
   Uint16, distance-faded noise, CPU car-shadow sin/cos, optional MSAA 4× at DPR 1.5),
-  `app/race/track.cpp`/`mesh.cpp`/`car_model.cpp` (chunked builds, reserve, shared strips, LOD1,
-  degenerate quads), `app/race/controls.cpp` + `engine/gamepad.cpp` (per-axis "moved", delta source
+  `bar/projects/racing/track.cpp`/`mesh.cpp`/`car_model.cpp` (chunked builds, reserve, shared strips, LOD1,
+  degenerate quads), `bar/projects/racing/controls.cpp` + `looped/gamepad.cpp` (per-axis "moved", delta source
   switching, all pads by role), pooled engine voices for the nearest cars.
 - **Accept:** profiler race draws ≤ 100; native track build heap peak ≤ 8 MB; STD with `?sit=30`.
 - **Phone:** no flickering curbs in the distance, less sparkle, steady 60 while racing.
@@ -2259,8 +2259,8 @@ with `?net=v2` until 3.4d flips it.
 
 #### 8.1 Cloudflare Pages, hashed assets, no `version.txt`
 - **Files:** `CMakeLists.txt` (content-hashed asset names + `manifest.json`), C++ resolves asset
-  names through the manifest, `deploy.yml` (`wrangler pages deploy build/site`), new `web/_headers`
-  (`index.html`, `config.json`: no-cache; hashed files: `max-age=31536000, immutable`), `web/index.html`
+  names through the manifest, `deploy.yml` (`wrangler pages deploy build/site`), new `bar/web/_headers`
+  (`index.html`, `config.json`: no-cache; hashed files: `max-age=31536000, immutable`), `bar/web/index.html`
   (version check removed), canonical URL per Q5 (gh-pages kept as a mirror, then retired); the
   Pages project created once with `admin.yml pages-create`. A new origin starts with empty
   localStorage (`bar3dToken`, `bar3dSettings`, `bar3dName`, `bar3dProfile`): tell the user
@@ -2416,9 +2416,9 @@ touch only docs). Findings were applied above; this section records what was che
   `wrangler.toml`); the 0.1 rule contradicted its own test and would have broken the relative
   `relay.php` default; a `*.workers.dev` suffix allowlist would still leak tokens (exact hosts
   now); the 2.3 native test can't compile because `bar_scene.h` pulls in the webgpu header
-  (`engine/mesh_data.h` split added); a separate `deploy-cloud` job can't write
+  (`looped/mesh_data.h` split added); a separate `deploy-cloud` job can't write
   `config.json` into the site and a job-level `if:` can't read secrets (now steps in the
-  existing job); `-Werror` would fail on `engine/net.cpp:68`; the 1.2 MIDI-pedal phone check
+  existing job); `-Werror` would fail on `looped/net.cpp:68`; the 1.2 MIDI-pedal phone check
   is impossible on an iPhone (headless check instead).
 - **Order:** Phase 4 and 4.2/4.3 wire changes now wait for 3.4d (no version check on the
   relay); "worker accepts only the new version" → protos N-1..N for one deploy with a 4002
@@ -2434,7 +2434,7 @@ touch only docs). Findings were applied above; this section records what was che
   `cloud_test.mjs` → `room_test.mjs`; 3.5 remote cleanup (relay files stay live without
   `--delete`; keep `project.json`, `accounts/`, `.htaccess`; port `account_test`/`voice_test`);
   storage `schemaVersion`; check_live/smoke joining the production room; an `admin.yml`
-  workflow for one-off Cloudflare/IONOS actions; `engine/json`, `tools/setup.sh`,
+  workflow for one-off Cloudflare/IONOS actions; `looped/json`, `tools/setup.sh`,
   `cloud/package-lock.json`, `sim_rig.py`, the unaudited Blender scripts; more "What NOT to
   change" items; E-7 global check; CI smoke on GitHub runners; visual checks with
   `?still` + `tools/imgdiff.mjs` + fixed spots.

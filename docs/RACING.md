@@ -27,23 +27,23 @@ What the user asked for, point by point:
 Everything is C++ in our own engine, like the rest of Bar3D.
 
 ```
-engine/vehicle.*      car physics: rigid body, 4 wheels, suspension, tires,
+looped/vehicle.*      car physics: rigid body, 4 wheels, suspension, tires,
                       engine, gearbox, differential, brakes, aero
-app/race/track.*      the circuit: a closed spline -> road, curbs, grass,
+bar/projects/racing/track.*      the circuit: a closed spline -> road, curbs, grass,
                       gravel, walls; fast "where am I on the track" queries
-app/race/world.*      the race: cars, bots, car-to-car and wall collisions,
+bar/projects/racing/world.*      the race: cars, bots, car-to-car and wall collisions,
                       grid, countdown, laps, positions, fixed 240 Hz steps
-app/race/ai.*         bots: racing line + speed plan, steering, braking,
+bar/projects/racing/ai.*         bots: racing line + speed plan, steering, braking,
                       overtaking, avoiding
-app/race/controls.*   touch / keyboard / mouse / gamepad / wheel -> steer,
+bar/projects/racing/controls.*   touch / keyboard / mouse / gamepad / wheel -> steer,
                       throttle, brake, gears, with smoothing and assists
-app/race/view.*       3D renderer for the race (own sky, sun, PBR, fog),
+bar/projects/racing/view.*       3D renderer for the race (own sky, sun, PBR, fog),
                       full screen for the driver, small views for monitors
-app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
+bar/projects/racing/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
                       network state
 ```
 
-### Physics (engine/vehicle)
+### Physics (looped/vehicle)
 - Fixed time step (240 Hz, substepped from the frame). *Not yet* the same
   at every frame rate: a frame is capped at 0.1 s (24 steps), so after a
   hitch the race clock falls behind the wall clock, and the lap times use
@@ -147,19 +147,19 @@ app/race/game.*       glue: sit -> dive in, HUD, cameras, sounds, leaving,
       replays, more cars and tracks, settings, wheel calibration.
 
 ## What exists now (2026-10-16, first build)
-- `engine/vehicle.*`: the car physics described above. Measured with
+- `looped/vehicle.*`: the car physics described above. Measured with
   `tools/native/vehicle_test.cpp` (runs natively with g++, no browser):
   0-100 km/h 4.2 s, top 276 km/h, 100-0 braking 30.7 m (ABS) / 36.4 m
   (locked), ~1.1-1.2 g cornering, a parked car doesn't move at all.
-- `app/race/track.*`: "Bar3D Ring", 2.45 km, 27 control points, curbs,
+- `bar/projects/racing/track.*`: "Bar3D Ring", 2.45 km, 27 control points, curbs,
   gravel traps on slow corners, tire barriers, terrain, ~2000 trees,
   grandstand, pit building, start gantry. 26 chunks, ~128k triangles.
-- `app/race/world.*`: 8 cars, 240 Hz steps, bots (racing line by
+- `bar/projects/racing/world.*`: 8 cars, 240 Hz steps, bots (racing line by
   smoothing, speed plan from curvature, pure pursuit steering, passing,
   slide catching, stuck/flip reset), collisions, laps, positions.
   `tools/native/race_test.cpp` runs a whole bot race in ~1 s.
-- `app/race/controls.*`, `game.*`, `view.*`, `car_model.*`,
-  `shaders/race.wgsl`: as in the architecture above. The car is built in
+- `bar/projects/racing/controls.*`, `game.*`, `view.*`, `car_model.*`,
+  `looped/shaders/race.wgsl`: as in the architecture above. The car is built in
   code (body loft with wheel arches, glass, lights, wheels with spokes).
 - Sitting in a sim seat starts a race (left rig grid slot 4, right 5);
   the page's top bar hides while racing (`body.racing`).
