@@ -10,7 +10,11 @@ hub). The master list below stays as the long-term order; new work flows
 through the hub. v1 built (owner login, sections, stages, Claude key,
 password change + recovery code). 2026-10-20: every card rewritten from the docs
 (66 cards, linked by NEEDS/UNLOCKS; rules in `docs/HUB_MAP.md`, enforced by
-`node tools/hub.mjs check`). Next for the hub: v2 members (the user's
+`node tools/hub.mjs check`). **v2 (2026-10-20):** projects screen (Bar3D with a
+shot of the bar), sharper page, Needs you view, sections in the nav, cards
+split into Status / Your plan / Talk / Details with an answer box, Claude's
+inbox (`hub.mjs inbox`), the board copied into `docs/hub/bar3d.md`
+(`hub.mjs snapshot`). Next for the hub: v2 members (the user's
 brothers, their cards wait for the owner's review), v3 activity feed.
 
 ## Next up: the master list (2026-10-19, start here)

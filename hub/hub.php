@@ -1,32 +1,42 @@
 <?php
-// The project hub (joshuavelasco.com/hub): the owner's board of everything
-// in the world, card by card, and how Claude reads and updates it.
+// The project hub (joshuavelasco.com/hub): the owner's boards, one per
+// project (Bar3D first), card by card, and how Claude reads and updates them.
 //
-// POST JSON (sent as text/plain, so browsers skip the CORS preflight):
-//   {"a":"board","token":".."}                 -> {"ok":1,"role":"owner","sections":[..],"cards":[..]}
-//   {"a":"save","token":"..","card":{id?,section,title,stage,plan}}  -> {"ok":1,"card":..}
-//   {"a":"move","token":"..","id":"..","dir":-1|1}   (up / down within its section)
-//   {"a":"delete","token":"..","id":".."}
-//   {"a":"key","token":".."}                   -> {"ok":1,"key":".."} a new Claude key (shown once)
+// POST JSON (sent as text/plain, so browsers skip the CORS preflight). Every
+// action takes "project" (default "bar3d").
+//   {"a":"projects"}                           -> {"ok":1,"projects":[{id,name,about,link,repo,image,counts,updated}]}
+//   {"a":"project","project":{id?,name,about,link,repo,image?}}   owner: make or edit a project
+//        (image: a data: URL, JPEG/PNG, up to 400 KB; "" removes it)
+//   {"a":"board"}                              -> {"ok":1,"role":..,"sections":[..],"cards":[..]}
+//   {"a":"save","card":{id?,section,title,stage,notes,plan,answer?}}  -> {"ok":1,"card":..}
+//   {"a":"say","id":"..","text":".."}          a message on the card's conversation
+//   {"a":"move","id":"..","dir":-1|1}          owner: up / down within its section
+//   {"a":"delete","id":".."}                   owner
+//   {"a":"key"}                                owner: a new Claude key (shown once)
+//   {"a":"section","id"?:"..","name"?:..,"about"?:..,"advanced"?:bool}
+//        owner: add (no id) or rename a section; Claude: only "about"
 // Claude, with the key (header X-Hub-Key, or "key" in the body):
-//   {"a":"board"}                              the whole board
-//   {"a":"queue"}                              -> the "Ready for Claude" cards, in order
+//   {"a":"queue"}                              the "Ready for Claude" cards, in order
+//   {"a":"inbox"}                              cards where the owner wrote since Claude last did
 //   {"a":"report","id":"..","stage":..,"report":..,"question":..,"build":..}
-//   {"a":"save","card":{..}}                   new cards (e.g. split a big one), or edit one (with its id)
-// Owner or Claude:
-//   {"a":"section","id":"..","about":".."}     a section's "what goes here" line (docs/HUB_MAP.md)
+// A card: notes (the owner's own words: what they want), plan (Claude's
+// structured plan, docs/HUB_MAP.md), report/question/build (Claude's latest),
+// thread (the conversation: questions, answers, reports, messages), unread
+// (the owner wrote something Claude hasn't answered yet).
 // Logins are the bar's accounts (bar/account.php): the owner is the bar's
-// owner (accounts/admins.json, else the first account made). Members (v2)
-// will be able to write cards that wait for the owner's review.
-// Storage (outside the web root): private/hub/board.json, private/hub/key.json.
+// owner (accounts/admins.json, else the first account made).
+// Storage (outside the web root): private/hub/projects.json, board.json
+// (Bar3D) and board-<project>.json, img-<project>.txt, key.json.
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Hub-Key');
 
 const STAGES = ['idea', 'review', 'ready', 'doing', 'check', 'done'];
 const TITLE_MAX = 100;
-const TEXT_MAX = 4000;
+const TEXT_MAX = 6000;
 const HISTORY_MAX = 40;
+const THREAD_MAX = 80;
+const IMAGE_MAX = 400000;
 
 $accounts = getenv('HUB_ACCOUNTS') ?: dirname(__DIR__) . '/bar/accounts';
 $data = getenv('HUB_DATA') ?: dirname(__DIR__, 2) . '/private/hub';
@@ -79,22 +89,54 @@ function who($in) {
   return ['role' => 'owner', 'name' => $u['name'] ?: $u['user']];
 }
 
-// The board, read and written under a lock so two saves can't mix.
-function with_board($fn) {
+// ---- Projects ----
+function default_projects() {
+  return ['projects' => [[
+    'id' => 'bar3d', 'name' => 'Bar3D',
+    'about' => 'A from-scratch 3D engine (C++ → WebAssembly → WebGPU) building a VRChat-style hangout bar: walk around, play games, music, friends.',
+    'link' => 'https://barcode162.github.io/3D/', 'repo' => 'barcode162/3D', 'image' => 'projects/bar3d.jpg', 'created' => time()]]];
+}
+function projects_list() {
   global $data;
-  $f = fopen("$data/board.json", 'c+');
+  return read_json("$data/projects.json") ?? default_projects();
+}
+function board_path($pid) {
+  global $data;
+  return $pid === 'bar3d' ? "$data/board.json" : "$data/board-$pid.json";
+}
+function project_id($in) {
+  $p = $in['project'] ?? 'bar3d';
+  if (!is_string($p) || !preg_match('/^[a-z0-9-]{1,24}$/', $p)) fail('No such project.', 404);
+  foreach (projects_list()['projects'] as $x) if ($x['id'] === $p) return $p;
+  fail('No such project.', 404);
+}
+// A new project's starting sections (the owner can add more).
+function starting_board() {
+  return ['sections' => [
+    ['id' => 'ideas', 'name' => 'Ideas', 'about' => 'Not sorted yet.', 'advanced' => false],
+    ['id' => 'features', 'name' => 'Features', 'about' => 'What people will see and use.', 'advanced' => false],
+    ['id' => 'bugs', 'name' => 'Bugs', 'about' => 'Something broken.', 'advanced' => false],
+    ['id' => 'tools', 'name' => 'Tools & setup', 'about' => 'How it\'s built, tested and shipped.', 'advanced' => true]],
+    'cards' => []];
+}
+
+// The board, read and written under a lock so two saves can't mix.
+function with_board($pid, $fn) {
+  $f = fopen(board_path($pid), 'c+');
   flock($f, LOCK_EX);
   $board = json_decode(stream_get_contents($f), true);
   $seeded = false;
   if (!is_array($board) || !isset($board['cards'])) {
-    $seeded = true;  // the first visit: the starting cards (seed.json), saved right away
-    $board = read_json(__DIR__ . '/seed.json') ?? ['sections' => [], 'cards' => []];
-    foreach ($board['cards'] as $i => &$c) {
-      $c += ['id' => bin2hex(random_bytes(5)), 'plan' => '', 'report' => '', 'question' => '', 'build' => '',
-             'order' => $i, 'history' => [], 'updated' => time()];
-    }
+    $seeded = true;  // the first visit: the starting cards, saved right away
+    $board = $pid === 'bar3d' ? (read_json(__DIR__ . '/seed.json') ?? ['sections' => [], 'cards' => []]) : starting_board();
+    foreach ($board['cards'] as $i => &$c) $c += ['id' => bin2hex(random_bytes(5)), 'order' => $i];
     unset($c);
   }
+  foreach ($board['cards'] as &$c) {  // fields added later (v2: notes, thread, unread)
+    $c += ['notes' => '', 'plan' => '', 'report' => '', 'question' => '', 'build' => '', 'thread' => [],
+           'unread' => false, 'history' => [], 'updated' => time(), 'order' => 0];
+  }
+  unset($c);
   $result = $fn($board);
   if ($seeded || ($result['_save'] ?? false)) {
     ftruncate($f, 0);
@@ -117,9 +159,21 @@ function note(&$card, $who, $what) {
   if (count($card['history']) > HISTORY_MAX) $card['history'] = array_slice($card['history'], -HISTORY_MAX);
   $card['updated'] = time();
 }
+// A message on the card's conversation; who wrote last decides "unread".
+function say(&$card, $me, $kind, $text) {
+  $card['thread'][] = ['at' => time(), 'who' => $me['name'], 'role' => $me['role'], 'kind' => $kind, 'text' => $text];
+  if (count($card['thread']) > THREAD_MAX) $card['thread'] = array_slice($card['thread'], -THREAD_MAX);
+  $card['unread'] = $me['role'] === 'owner';
+  $card['updated'] = time();
+}
 function ordered($cards) {
   usort($cards, fn($a, $b) => $a['order'] <=> $b['order']);
   return $cards;
+}
+function in_board_order($b, $cards) {
+  $sectionIndex = array_flip(array_map(fn($s) => $s['id'], $b['sections']));
+  usort($cards, fn($x, $y) => [$sectionIndex[$x['section']] ?? 99, $x['order']] <=> [$sectionIndex[$y['section']] ?? 99, $y['order']]);
+  return array_values($cards);
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -130,34 +184,94 @@ if (!is_array($in)) fail('Bad request.');
 $a = $in['a'] ?? '';
 $me = who($in);
 
+if ($a === 'projects') {
+  $out = [];
+  foreach (projects_list()['projects'] as $p) {
+    $counts = array_fill_keys(STAGES, 0);
+    $questions = 0;
+    $updated = $p['created'] ?? 0;
+    $b = read_json(board_path($p['id']));
+    if (!$b && $p['id'] === 'bar3d') $b = with_board('bar3d', fn(&$x) => $x);
+    foreach ($b['cards'] ?? [] as $c) {
+      if (isset($counts[$c['stage']])) $counts[$c['stage']]++;
+      if (($c['question'] ?? '') !== '') $questions++;
+      $updated = max($updated, $c['updated'] ?? 0);
+    }
+    $img = @file_get_contents("$data/img-{$p['id']}.txt");
+    $p['image'] = $img !== false ? $img : ($p['image'] ?? '');
+    $p['counts'] = $counts;
+    $p['questions'] = $questions;
+    $p['updated'] = $updated;
+    $out[] = $p;
+  }
+  reply(['ok' => 1, 'role' => $me['role'], 'you' => $me['name'], 'projects' => $out]);
+}
+
+if ($a === 'project') {
+  if ($me['role'] !== 'owner') fail('Only the owner makes projects.', 403);
+  $in_p = is_array($in['project'] ?? null) ? $in['project'] : fail('No project.');
+  $list = projects_list();
+  $id = is_string($in_p['id'] ?? null) ? $in_p['id'] : '';
+  $i = -1;
+  foreach ($list['projects'] as $k => $p) if ($p['id'] === $id) $i = $k;
+  if ($id !== '' && $i < 0) fail('No such project.', 404);
+  if ($i < 0) {
+    $name = clean($in_p['name'] ?? '', 60);
+    if ($name === '') fail('Give the project a name.');
+    $base = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-') ?: 'project';
+    $base = substr($base, 0, 20);
+    $id = $base;
+    $ids = array_map(fn($p) => $p['id'], $list['projects']);
+    for ($n = 2; in_array($id, $ids, true); $n++) $id = "$base-$n";
+    $list['projects'][] = ['id' => $id, 'name' => $name, 'about' => '', 'link' => '', 'repo' => '', 'image' => '', 'created' => time()];
+    $i = count($list['projects']) - 1;
+  }
+  $p = &$list['projects'][$i];
+  if (isset($in_p['name']) && clean($in_p['name'], 60) !== '') $p['name'] = clean($in_p['name'], 60);
+  foreach (['about' => 600, 'link' => 300, 'repo' => 100] as $field => $max) {
+    if (isset($in_p[$field])) $p[$field] = clean($in_p[$field], $max);
+  }
+  if ($p['link'] !== '' && !preg_match('#^https?://#', $p['link'])) $p['link'] = 'https://' . $p['link'];
+  if (isset($in_p['image'])) {
+    $img = $in_p['image'];
+    if ($img === '') @unlink("$data/img-$id.txt");
+    elseif (is_string($img) && strlen($img) <= IMAGE_MAX && preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $img)) {
+      file_put_contents("$data/img-$id.txt", $img);
+    } else fail('That picture is too big or not a JPEG/PNG.');
+  }
+  unset($p);
+  write_json("$data/projects.json", $list);
+  reply(['ok' => 1, 'id' => $id]);
+}
+
+$pid = project_id($in);
+
 if ($a === 'board') {
-  reply(with_board(fn(&$b) => ['ok' => 1, 'role' => $me['role'], 'you' => $me['name'], 'stages' => STAGES,
-                                'sections' => $b['sections'], 'cards' => ordered($b['cards'])]));
+  reply(with_board($pid, fn(&$b) => ['ok' => 1, 'role' => $me['role'], 'you' => $me['name'], 'project' => $pid,
+                                     'stages' => STAGES, 'sections' => $b['sections'], 'cards' => ordered($b['cards'])]));
 }
 
 if ($a === 'queue') {
-  reply(with_board(function (&$b) {
-    $ready = array_values(array_filter($b['cards'], fn($c) => $c['stage'] === 'ready'));
-    // In board order: section order first, then the cards' own order.
-    $sectionIndex = array_flip(array_map(fn($s) => $s['id'], $b['sections']));
-    usort($ready, fn($x, $y) => [$sectionIndex[$x['section']] ?? 99, $x['order']] <=> [$sectionIndex[$y['section']] ?? 99, $y['order']]);
-    return ['ok' => 1, 'cards' => $ready];
-  }));
+  reply(with_board($pid, fn(&$b) => ['ok' => 1, 'cards' => in_board_order($b, array_filter($b['cards'], fn($c) => $c['stage'] === 'ready'))]));
+}
+
+if ($a === 'inbox') {
+  reply(with_board($pid, fn(&$b) => ['ok' => 1, 'cards' => in_board_order($b, array_filter($b['cards'], fn($c) => $c['unread']))]));
 }
 
 if ($a === 'save') {
   $in_card = is_array($in['card'] ?? null) ? $in['card'] : fail('No card.');
-  reply(with_board(function (&$b) use ($in_card, $me) {
+  reply(with_board($pid, function (&$b) use ($in_card, $me) {
     $sections = array_map(fn($s) => $s['id'], $b['sections']);
     $id = is_string($in_card['id'] ?? null) ? $in_card['id'] : '';
     $i = $id !== '' ? find_card($b, $id) : -1;
     if ($id !== '' && $i < 0) fail('That card is gone.', 404);
     if ($i < 0) {
-      $section = in_array($in_card['section'] ?? '', $sections, true) ? $in_card['section'] : 'ideas';
+      $section = in_array($in_card['section'] ?? '', $sections, true) ? $in_card['section'] : $sections[0];
       $orders = array_map(fn($c) => $c['order'], $b['cards']);
       $b['cards'][] = ['id' => bin2hex(random_bytes(5)), 'section' => $section, 'title' => 'New card', 'stage' => 'idea',
-                       'plan' => '', 'report' => '', 'question' => '', 'build' => '',
-                       'order' => $orders ? max($orders) + 1 : 0, 'history' => [], 'updated' => time()];
+                       'notes' => '', 'plan' => '', 'report' => '', 'question' => '', 'build' => '', 'thread' => [],
+                       'unread' => false, 'order' => $orders ? max($orders) + 1 : 0, 'history' => [], 'updated' => time()];
       $i = count($b['cards']) - 1;
       note($b['cards'][$i], $me['name'], 'made this card');
     }
@@ -175,6 +289,15 @@ if ($a === 'save') {
       $c['stage'] = $in_card['stage'];
       $changes[] = 'stage: ' . $c['stage'];
     }
+    // The owner's own words. Claude may only fill them in when empty (moving old notes over).
+    if (isset($in_card['notes'])) {
+      $n = clean($in_card['notes'], TEXT_MAX);
+      if ($n !== $c['notes'] && ($me['role'] === 'owner' || $c['notes'] === '')) {
+        $c['notes'] = $n;
+        $changes[] = 'what you want';
+        if ($me['role'] === 'owner') $c['unread'] = true;
+      }
+    }
     if (isset($in_card['plan'])) {
       $p = clean($in_card['plan'], TEXT_MAX);
       if ($p !== $c['plan']) { $c['plan'] = $p; $changes[] = 'plan'; }
@@ -182,12 +305,33 @@ if ($a === 'save') {
     if (isset($in_card['answer'])) {  // the owner answers Claude's question
       $ans = clean($in_card['answer'], TEXT_MAX);
       if ($ans !== '') {
-        $c['plan'] = trim($c['plan'] . "\n\nAnswer: " . $ans);
+        say($c, $me, 'answer', $ans);
         $c['question'] = '';
         $changes[] = 'answered the question';
       }
     }
+    if ($me['role'] === 'claude' && $changes) $c['unread'] = false;
     if ($changes) note($c, $me['name'], implode(', ', $changes));
+    return ['ok' => 1, 'card' => $c, '_save' => true];
+  }));
+}
+
+if ($a === 'say') {
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  $text = clean($in['text'] ?? '', TEXT_MAX);
+  if ($text === '') fail('Nothing to send.');
+  reply(with_board($pid, function (&$b) use ($id, $text, $me) {
+    $i = find_card($b, $id);
+    if ($i < 0) fail('That card is gone.', 404);
+    $c = &$b['cards'][$i];
+    if ($me['role'] === 'owner' && $c['question'] !== '') {  // a message while a question is open answers it
+      say($c, $me, 'answer', $text);
+      $c['question'] = '';
+      note($c, $me['name'], 'answered the question');
+    } else {
+      say($c, $me, 'note', $text);
+      note($c, $me['name'], 'message');
+    }
     return ['ok' => 1, 'card' => $c, '_save' => true];
   }));
 }
@@ -195,7 +339,7 @@ if ($a === 'save') {
 if ($a === 'report') {
   if ($me['role'] !== 'claude') fail('Only Claude reports on cards.', 403);
   $id = is_string($in['id'] ?? null) ? $in['id'] : '';
-  reply(with_board(function (&$b) use ($in, $id, $me) {
+  reply(with_board($pid, function (&$b) use ($in, $id, $me) {
     $i = find_card($b, $id);
     if ($i < 0) fail('That card is gone.', 404);
     $c = &$b['cards'][$i];
@@ -204,25 +348,46 @@ if ($a === 'report') {
       $c['stage'] = $in['stage'];
       $changes[] = 'stage: ' . $c['stage'];
     }
-    foreach (['report' => TEXT_MAX, 'question' => TEXT_MAX, 'build' => 20] as $field => $max) {
+    foreach (['build' => 20, 'report' => TEXT_MAX, 'question' => TEXT_MAX] as $field => $max) {
       if (isset($in[$field])) {
         $c[$field] = clean($in[$field], $max);
         $changes[] = $field;
+        if ($field !== 'build' && $c[$field] !== '') {
+          say($c, $me, $field, $c[$field] . ($field === 'report' && $c['build'] !== '' ? "\n(build {$c['build']})" : ''));
+        }
       }
     }
+    $c['unread'] = false;
     if ($changes) note($c, $me['name'], implode(', ', $changes));
     return ['ok' => 1, 'card' => $c, '_save' => true];
   }));
 }
 
-// A section's description ("what goes here / not here", docs/HUB_MAP.md).
+// A section: the owner adds or renames one; Claude writes its "what goes here" line (docs/HUB_MAP.md).
 if ($a === 'section') {
   $id = is_string($in['id'] ?? null) ? $in['id'] : '';
-  $about = clean($in['about'] ?? '', 300);
-  if ($about === '') fail('No description.');
-  reply(with_board(function (&$b) use ($id, $about) {
+  reply(with_board($pid, function (&$b) use ($id, $in, $me) {
+    if ($id === '') {
+      if ($me['role'] !== 'owner') fail('Only the owner adds sections.', 403);
+      $name = clean($in['name'] ?? '', 40);
+      if ($name === '') fail('Give the section a name.');
+      $base = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-') ?: 'section';
+      $ids = array_map(fn($s) => $s['id'], $b['sections']);
+      $sid = $base;
+      for ($n = 2; in_array($sid, $ids, true); $n++) $sid = "$base-$n";
+      $b['sections'][] = ['id' => $sid, 'name' => $name, 'about' => clean($in['about'] ?? '', 300), 'advanced' => !empty($in['advanced'])];
+      return ['ok' => 1, 'section' => end($b['sections']), '_save' => true];
+    }
     foreach ($b['sections'] as &$s) {
-      if ($s['id'] === $id) { $s['about'] = $about; return ['ok' => 1, 'section' => $s, '_save' => true]; }
+      if ($s['id'] !== $id) continue;
+      if (isset($in['about'])) {
+        $about = clean($in['about'], 300);
+        if ($about === '') fail('No description.');
+        $s['about'] = $about;
+      }
+      if ($me['role'] === 'owner' && isset($in['name']) && clean($in['name'], 40) !== '') $s['name'] = clean($in['name'], 40);
+      if ($me['role'] === 'owner' && isset($in['advanced'])) $s['advanced'] = !empty($in['advanced']);
+      return ['ok' => 1, 'section' => $s, '_save' => true];
     }
     fail('No such section.', 404);
   }));
@@ -232,7 +397,7 @@ if ($a === 'move') {
   if ($me['role'] !== 'owner') fail('Only the owner orders the board.', 403);
   $id = is_string($in['id'] ?? null) ? $in['id'] : '';
   $dir = ($in['dir'] ?? 0) < 0 ? -1 : 1;
-  reply(with_board(function (&$b) use ($id, $dir) {
+  reply(with_board($pid, function (&$b) use ($id, $dir) {
     $i = find_card($b, $id);
     if ($i < 0) fail('That card is gone.', 404);
     $same = array_values(array_filter(array_keys($b['cards']), fn($k) => $b['cards'][$k]['section'] === $b['cards'][$i]['section']));
@@ -248,7 +413,7 @@ if ($a === 'move') {
 if ($a === 'delete') {
   if ($me['role'] !== 'owner') fail('Only the owner deletes cards.', 403);
   $id = is_string($in['id'] ?? null) ? $in['id'] : '';
-  reply(with_board(function (&$b) use ($id) {
+  reply(with_board($pid, function (&$b) use ($id) {
     $i = find_card($b, $id);
     if ($i < 0) fail('That card is gone.', 404);
     array_splice($b['cards'], $i, 1);

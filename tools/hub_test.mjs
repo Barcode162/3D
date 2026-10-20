@@ -3,7 +3,7 @@
 // (<root>/home/bar, <root>/home/hub, <root>/private). The owner logs in on the
 // page, adds a card, makes a Claude key; "Claude" reads the queue and reports;
 // someone else is kept out; passwords change and a recovery code resets one.
-// Screenshots: build/hub.png (the board), build/hub-card.png (a card).
+// Screenshots: build/hub-projects.png, build/hub.png (a section), build/hub-card.png (a card's Talk), build/hub-status.png.
 //   NODE_PATH=$(npm root -g) node tools/hub_test.mjs
 import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, copyFileSync, rmSync } from 'node:fs';
@@ -24,6 +24,8 @@ mkdirSync(join(root, 'home/bar'), { recursive: true });
 mkdirSync(join(root, 'home/hub'), { recursive: true });
 copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
 for (const f of ['index.html', 'hub.php', 'seed.json']) copyFileSync(join('hub', f), join(root, 'home/hub', f));
+mkdirSync(join(root, 'home/hub/projects'));
+copyFileSync('hub/projects/bar3d.jpg', join(root, 'home/hub/projects/bar3d.jpg'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore' });
 
 const post = async (path, body, headers = {}) => {
@@ -45,54 +47,95 @@ try {
   await page.goto(base + '/hub/');
   await page.fill('input[autocomplete=username]', 'josh');
   await page.fill('input[type=password]', 'secret1');
-  await page.click('button.main');
-  await page.waitForSelector('section.sec', { timeout: 10000 });
-  const sections = await page.$$eval('section.sec h2', (h) => h.map((x) => x.textContent));
-  check(sections.includes('Games') && sections.includes('Your character') && !sections.includes('Performance'),
-        `the World tab shows the player-facing sections (${sections.length})`);
-  const cards = await page.$$eval('.card', (c) => c.length);
-  check(cards > 30, `the board starts with the project's cards (${cards} in World)`);
+  await page.click('button.primary');
+  // The projects screen: Bar3D with its picture.
+  await page.waitForSelector('.tile h2', { timeout: 10000 });
+  const tiles = await page.$$eval('.tile h2', (h) => h.map((x) => x.textContent));
+  const pic = await page.$eval('.tile .shot', (s) => getComputedStyle(s).backgroundImage);
+  check(tiles.includes('Bar3D') && /bar3d\.jpg/.test(pic), `the projects screen shows Bar3D with its picture (${tiles.join(', ')})`);
+  await page.screenshot({ path: 'build/hub-projects.png' });
+  await page.click('.tile:has-text("Bar3D")');
+  await page.waitForSelector('.nav button', { timeout: 10000 });
+  const nav = await page.$$eval('.nav button', (b) => b.map((x) => x.textContent));
+  check(nav.some((t) => t.startsWith('Needs you')) && nav.some((t) => t.startsWith('Games')) && nav.some((t) => t.startsWith('Performance')),
+        `the board's nav has the views and every section (${nav.length})`);
+  await page.click('.nav button:has-text("Games")');
+  await page.waitForSelector('.content .item', { timeout: 5000 });
+  const cards = await page.$$eval('.content .item', (c) => c.length);
+  check(cards > 3 && page.url().endsWith('/s/games'), `a section shows its cards, grouped by stage (${cards} in Games)`);
   await page.screenshot({ path: 'build/hub.png' });
 
-  // A new card in Games, ready for Claude.
-  const games = page.locator('section.sec', { hasText: 'Darts, 4K Mania' });
-  await games.locator('button', { hasText: '+ New card' }).click();
+  // A new card in Games, straight to Claude's queue.
+  await page.click('.shead button:has-text("+ Card")');
   await page.fill('.sheetBody input', 'Bowling lane in the arcade');
-  await page.click('.stages button:has-text("Ready for Claude")');
   await page.fill('.sheetBody textarea', 'Two lanes, real pins with physics.');
-  await page.click('.sheetBody button.main');
-  await page.waitForSelector('.card:has-text("Bowling lane")', { timeout: 5000 });
-  check(true, 'the owner adds a card from the page');
+  await page.click('.sheetBody button:has-text("Ready for Claude")');
+  await page.waitForSelector('.screen .crumb:has-text("Bowling lane")', { timeout: 5000 });
+  check(true, 'the owner adds a card from the page (it opens)');
+  await page.click('.screen .bar button');
+  await page.waitForSelector('.content .item:has-text("Bowling lane")', { timeout: 5000 });
 
   const ownerToken = await page.evaluate(() => localStorage.getItem('hubToken'));
   const key = (await post('/hub/hub.php', { a: 'key', token: ownerToken })).key;
   check(/^[0-9a-f]{48}$/.test(key || ''), 'the owner makes a Claude key');
   const queue = await post('/hub/hub.php', { a: 'queue' }, { 'X-Hub-Key': key });
   const card = (queue.cards || []).find((c) => c.title === 'Bowling lane in the arcade');
-  check(queue.ok === 1 && !!card && card.plan.includes('real pins'), 'Claude reads the queue with the key');
+  check(queue.ok === 1 && !!card && card.notes.includes('real pins') && card.stage === 'ready', 'Claude reads the queue with the key (the owner\'s words in notes)');
   const rep = await post('/hub/hub.php', { a: 'report', id: card.id, stage: 'check', report: 'Built two lanes.', build: 'abc1234',
                                            question: 'Wood or neon lanes?' }, { 'X-Hub-Key': key });
-  check(rep.ok === 1 && rep.card.stage === 'check' && rep.card.history.length >= 2, 'Claude reports on the card (stage, report, question)');
+  check(rep.ok === 1 && rep.card.stage === 'check' && rep.card.thread.length === 2 && !rep.card.unread,
+        'Claude reports on the card (stage, report, question; both on the conversation)');
   const sec = await post('/hub/hub.php', { a: 'section', id: 'games', about: 'What you play.' }, { 'X-Hub-Key': key });
   const secBoard = await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key });
   check(sec.ok === 1 && secBoard.sections.find((s) => s.id === 'games').about === 'What you play.', 'Claude sets a section\'s "what goes here" line');
   const bad = await post('/hub/hub.php', { a: 'queue' }, { 'X-Hub-Key': 'f'.repeat(48) });
   check(bad.status === 401, 'a wrong key is refused');
 
-  // The owner sees it on the page and answers.
-  await page.click('button:has-text("⟳")');
-  await page.click('.tabs button:has-text("Check on phone")');
-  await page.waitForSelector('.card:has-text("Bowling lane")', { timeout: 5000 });
-  await page.click('.card:has-text("Bowling lane")');
-  const shown = await page.textContent('.sheetBody');
+  // The owner sees it in "Needs you" and answers in plain words.
+  await page.click('.top button[title=Refresh]');
+  await page.click('.nav button:has-text("Needs you")');
+  await page.waitForSelector('.content .item:has-text("Bowling lane")', { timeout: 5000 });
+  await page.click('.content .item:has-text("Bowling lane")');
+  await page.waitForSelector('.screen .composer textarea', { timeout: 5000 });
+  const shown = await page.textContent('.screen');
   check(shown.includes('Built two lanes.') && shown.includes('Wood or neon lanes?') && shown.includes('abc1234'),
-        'the card shows Claude\'s report, question and build');
+        'the card opens on Talk: Claude\'s report, question and build');
   await page.screenshot({ path: 'build/hub-card.png' });
-  await page.fill('.sheetBody textarea[placeholder="Your answer for Claude"]', 'Neon!');
-  await page.click('.sheetBody button.main');
-  await wait(500);
-  const after = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards.find((c) => c.id === card.id);
-  check(after.question === '' && after.plan.includes('Answer: Neon!'), 'the answer goes into the plan and the question clears');
+  await page.fill('.screen .composer textarea', 'Neon!');
+  await page.click('.screen .composer button:has-text("Answer")');
+  await page.waitForSelector('.msg.me:has-text("Neon!")', { timeout: 5000 });
+  const inbox = await post('/hub/hub.php', { a: 'inbox' }, { 'X-Hub-Key': key });
+  const after = inbox.cards.find((c) => c.id === card.id);
+  check(!!after && after.question === '' && after.thread.at(-1).kind === 'answer' && after.thread.at(-1).text === 'Neon!' && !after.plan.includes('Neon'),
+        'the answer goes on the conversation, the question clears, and the card is in Claude\'s inbox');
+  await page.click('.seg button:has-text("Status")');
+  await page.screenshot({ path: 'build/hub-status.png' });
+  await page.click('.screen button:has-text("It works")');
+  await wait(600);
+  const done = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards.find((c) => c.id === card.id);
+  check(done.stage === 'done', 'one tap on Status: "It works → Done"');
+  await page.click('.seg button:has-text("Your plan")');
+  await page.fill('.screen textarea', 'Two lanes, neon, a scoreboard.');
+  await page.click('.screen .block button:has-text("Save")');
+  await page.waitForSelector('.saved:has-text("Saved")', { timeout: 5000 });
+  const notes = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards.find((c) => c.id === card.id);
+  const claudeNotes = await post('/hub/hub.php', { a: 'save', card: { id: card.id, notes: 'overwritten' } }, { 'X-Hub-Key': key });
+  check(notes.notes === 'Two lanes, neon, a scoreboard.' && claudeNotes.card.notes === notes.notes,
+        '"What you want" saves, and Claude can\'t overwrite it');
+
+  // A second project, with its own board.
+  await page.goto(base + '/hub/#/');
+  await page.waitForSelector('.tile.add', { timeout: 5000 });
+  await page.click('.tile.add');
+  await page.fill('.sheetBody input', 'Kids Game');
+  await page.click('.sheetBody button.primary');
+  await page.waitForSelector('.tile h2:has-text("Kids Game")', { timeout: 5000 });
+  const kids = await post('/hub/hub.php', { a: 'board', project: 'kids-game' }, { 'X-Hub-Key': key });
+  const kidsAdd = await post('/hub/hub.php', { a: 'save', project: 'kids-game', card: { section: 'features', title: 'Jump' } }, { 'X-Hub-Key': key });
+  const barStill = await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key });
+  check(kids.ok === 1 && kids.sections.some((s) => s.id === 'features') && kids.cards.length === 0 && kidsAdd.ok === 1 &&
+        !barStill.cards.some((c) => c.title === 'Jump'), 'a new project gets its own empty board');
+  check((await post('/hub/hub.php', { a: 'board', project: 'nope' }, { 'X-Hub-Key': key })).status === 404, 'an unknown project is refused');
 
   const before = (await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key })).cards.filter((c) => c.section === 'games');
   const second = before[1];

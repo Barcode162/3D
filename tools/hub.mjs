@@ -1,33 +1,61 @@
 // Claude's side of the project hub (joshuavelasco.com/hub, hub/hub.php).
 // Needs the Claude key in the environment as HUB_KEY (the owner makes it in
 // the hub: Account → Make a new Claude key).
+//   node tools/hub.mjs projects              every project (the hub holds one board per project)
+//   node tools/hub.mjs inbox                 cards where the owner wrote (answers, messages, "what you want")
+//                                            since Claude last did: read these first on "go"
 //   node tools/hub.mjs queue                 the "Ready for Claude" cards, in order
 //   node tools/hub.mjs board [section]       every card (or one section's)
 //   node tools/hub.mjs card <id>             one card in full
 //   node tools/hub.mjs report <id> [--stage doing|check|done|review|ready|idea]
 //        [--report "what I did, how to check"] [--question "..."] [--build abc1234]
+//        (the report and the question also go on the card's conversation)
+//   node tools/hub.mjs say <id> "message"    a message on the card's conversation (clears its inbox mark)
 //   node tools/hub.mjs add <section> "<title>" ["<plan>"]
 //   node tools/hub.mjs set <id> [--title ..] [--section ..] [--plan-file f]   edit a card
 //   node tools/hub.mjs section <id> "<about>"   a section's "what goes here" line
 //   node tools/hub.mjs links                 rewrite every UNLOCKS line from the NEEDS lines
 //   node tools/hub.mjs check                 the board against docs/HUB_MAP.md (exit 1 on errors)
+//   node tools/hub.mjs snapshot [file]       the board as Markdown in the repo (default docs/hub/<project>.md)
+//   node tools/hub.mjs migrate-notes         move YOUR NOTES lines out of plans into the cards' "what you want"
+// Every command takes --project <id> (default HUB_PROJECT, else bar3d).
 // HUB_URL overrides the address (tests).
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 const URL_ = process.env.HUB_URL || 'https://joshuavelasco.com/hub/hub.php';
 const KEY = process.env.HUB_KEY || '';
 if (!KEY) {
   console.log('No HUB_KEY: make one in the hub (Account → Make a new Claude key) and add it to the environment.');
   process.exit(2);
 }
+const argv = process.argv.slice(2);
+const PROJECT = (() => { const i = argv.indexOf('--project'); return i >= 0 ? argv.splice(i, 2)[1] : process.env.HUB_PROJECT || 'bar3d'; })();
 const call = async (body) => {
+  body.project ??= PROJECT;
   const r = await fetch(URL_, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain', 'X-Hub-Key': KEY } });
   const j = await r.json();
   if (!j.ok) { console.log('Hub: ' + (j.error || r.status)); process.exit(1); }
   return j;
 };
-const [cmd, ...args] = process.argv.slice(2);
+const [cmd, ...args] = argv;
 const flag = (name) => { const i = args.indexOf('--' + name); return i >= 0 ? args[i + 1] : undefined; };
-const line = (c) => `${c.id}  [${c.stage}] ${c.section}: ${c.title}${c.question ? '  (question open)' : ''}`;
+const line = (c) => `${c.id}  [${c.stage}] ${c.section}: ${c.title}${c.question ? '  (question open)' : ''}${c.unread ? '  (owner wrote)' : ''}`;
+const indent = (t) => t.replace(/\n/g, '\n          ');
+const when = (at) => new Date(at * 1000).toISOString().slice(0, 16).replace('T', ' ');
+// The owner's words since Claude last wrote, oldest first.
+const fresh = (c) => {
+  const t = c.thread || [];
+  let i = t.length;
+  while (i > 0 && t[i - 1].role === 'owner') i--;
+  return t.slice(i);
+};
+const show = (c) => {
+  let out = line(c);
+  if (c.notes) out += '\n    want: ' + indent(c.notes);
+  if (c.plan) out += '\n    plan: ' + indent(c.plan);
+  for (const m of fresh(c)) out += `\n    ${m.kind === 'answer' ? 'answer' : 'says'}: ` + indent(m.text);
+  return out;
+};
 
 // The card format (docs/HUB_MAP.md §5): labelled lines in the plan; refs are "(#id)".
 const LABELS = ['YOUR NOTES', 'WHAT', 'NOW', 'STEPS', 'LATER', 'NEEDS', 'UNLOCKS', 'NOT HERE', 'DETAILS', 'HOME'];
@@ -73,7 +101,8 @@ function checkBoard(b) {
     }
     if (/^bug:/i.test(c.title) && c.section === 'tools' && !/hub|test|deploy|report/i.test(c.title))
       warn(`${name}: a bug goes in the section of the broken thing`);
-    if ((c.plan || '').length > 3900) warn(`${name}: plan near the 4000-character limit`);
+    if ((c.plan || '').length > 5900) warn(`${name}: plan near the 6000-character limit`);
+    if (field(c.plan, 'YOUR NOTES') !== null) warn(`${name}: YOUR NOTES in the plan (run: node tools/hub.mjs migrate-notes)`);
   }
   // Loops in NEEDS (A needs B needs A) can never start.
   const state = new Map();
@@ -88,17 +117,71 @@ function checkBoard(b) {
   return out;
 }
 
-if (cmd === 'queue') {
+// The board as Markdown, so the repo has its own copy (docs/HUB_MAP.md §7).
+function snapshot(b) {
+  const out = [`# Hub board: ${PROJECT}`, '',
+    `Copied from the hub by \`node tools/hub.mjs snapshot\` on ${when(Date.now() / 1000)} UTC. The hub is the live`,
+    'version; this file is the copy in the repo (read it when the hub is out of reach).', ''];
+  const stages = { idea: 'Idea', review: 'Review', ready: 'Ready for Claude', doing: 'In progress', check: 'Check on phone', done: 'Done' };
+  for (const s of b.sections) {
+    const cards = b.cards.filter((c) => c.section === s.id);
+    out.push(`## ${s.name}${s.advanced ? ' (advanced)' : ''}`, '', s.about ? `_${s.about}_` : '', '');
+    for (const c of cards) {
+      out.push(`### ${c.title}`, '', `\`${c.id}\` · ${stages[c.stage] || c.stage}${c.build ? ` · build ${c.build}` : ''}`, '');
+      if (c.notes) out.push('**What the owner wants:** ' + c.notes.replace(/\n+/g, ' / '), '');
+      if (c.plan) out.push('```', c.plan, '```', '');
+      if (c.report) out.push('**Claude\'s report:** ' + c.report.replace(/\n+/g, ' / '), '');
+      if (c.question) out.push('**Open question:** ' + c.question.replace(/\n+/g, ' / '), '');
+    }
+  }
+  return out.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n') + '\n';
+}
+
+if (cmd === 'projects') {
+  const r = await call({ a: 'projects' });
+  for (const p of r.projects) console.log(`${p.id}  ${p.name}: ${p.counts.ready} ready, ${p.counts.doing} doing, ${p.counts.check} to check, ${p.questions} questions${p.link ? '  ' + p.link : ''}`);
+} else if (cmd === 'inbox') {
+  const q = await call({ a: 'inbox' });
+  if (!q.cards.length) console.log('Nothing new from the owner.');
+  for (const c of q.cards) console.log(show(c));
+} else if (cmd === 'queue') {
   const q = await call({ a: 'queue' });
   if (!q.cards.length) console.log('Nothing ready for Claude.');
-  for (const c of q.cards) console.log(line(c) + (c.plan ? '\n    plan: ' + c.plan.replace(/\n/g, '\n          ') : ''));
+  for (const c of q.cards) console.log(show(c));
+} else if (cmd === 'say') {
+  const r = await call({ a: 'say', id: args[0], text: args[1] });
+  console.log(line(r.card));
+} else if (cmd === 'snapshot') {
+  const b = await call({ a: 'board' });
+  const file = args[0] || `docs/hub/${PROJECT}.md`;
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, snapshot(b));
+  console.log(`${file}: ${b.cards.length} cards`);
+} else if (cmd === 'migrate-notes') {
+  const b = await call({ a: 'board' });
+  for (const c of b.cards) {
+    const notes = field(c.plan, 'YOUR NOTES');
+    if (notes === null) continue;
+    const plan = c.plan.replace(/^YOUR NOTES:.*\n?/m, '').trim();
+    const card = { id: c.id, plan };
+    if (!c.notes) card.notes = notes;
+    else if (!c.notes.includes(notes)) { console.log('skip (has its own notes): ' + line(c)); continue; }
+    await call({ a: 'save', card });
+    console.log('moved: ' + line(c));
+  }
 } else if (cmd === 'board') {
   const b = await call({ a: 'board' });
   for (const c of b.cards.filter((c) => !args[0] || c.section === args[0])) console.log(line(c));
 } else if (cmd === 'card') {
   const b = await call({ a: 'board' });
   const c = b.cards.find((x) => x.id === args[0]);
-  console.log(c ? JSON.stringify(c, null, 2) : 'No such card.');
+  if (!c) console.log('No such card.');
+  else {
+    console.log(show(c));
+    if (c.report) console.log('    report: ' + indent(c.report));
+    if (c.question) console.log('    question: ' + indent(c.question));
+    for (const m of (c.thread || []).slice(-10)) console.log(`    ${when(m.at)} ${m.who} (${m.kind}): ` + indent(m.text));
+  }
 } else if (cmd === 'report') {
   const body = { a: 'report', id: args[0] };
   for (const f of ['stage', 'report', 'question', 'build']) if (flag(f) !== undefined) body[f] = flag(f);
@@ -130,5 +213,5 @@ if (cmd === 'queue') {
   console.log(`${b.cards.length} cards, ${problems.filter((p) => p.error).length} errors, ${problems.filter((p) => !p.error).length} warnings.`);
   process.exit(problems.some((p) => p.error) ? 1 : 0);
 } else {
-  console.log('Usage: node tools/hub.mjs queue | board [section] | card <id> | report <id> --stage .. --report .. | add <section> "<title>" | set <id> .. | section <id> ".." | links | check');
+  console.log('Usage: node tools/hub.mjs [--project id] projects | inbox | queue | board [section] | card <id> | report <id> --stage .. --report .. | say <id> ".." | add <section> "<title>" | set <id> .. | section <id> ".." | links | check | snapshot [file] | migrate-notes');
 }

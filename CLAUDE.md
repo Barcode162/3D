@@ -12,13 +12,19 @@ visible in a mirror, and real music.
    installs Emscripten. If it didn't run, run `bash tools/setup.sh`.
 3. Don't build or run headless tests until the user says "go" (tokens).
 
-## The hub: the user's board (2026-10-20)
-The user plans in **joshuavelasco.com/hub** (`hub/`, server `hub/hub.php`): a
-card per piece of the world, in player-facing sections (Advanced tab: the
-backend), with stages Idea → Waiting for your review → **Ready for Claude** →
-In progress → Check on phone → Done. Claude reads and updates it with
+## The hub: the user's board (2026-10-20, v2)
+The user plans in **joshuavelasco.com/hub** (`hub/`, server `hub/hub.php`): one
+board per project (Bar3D is `bar3d`, the default), a card per piece of the
+world, in player-facing sections (Advanced tab: the backend), with stages Idea
+→ Waiting for your review → **Ready for Claude** → In progress → Check on phone
+→ Done. Each card has the user's own words ("What you want", the `notes`
+field: never overwrite), Claude's structured plan, and a conversation (Talk:
+questions, answers, reports, messages). Claude reads and updates it with
 `node tools/hub.mjs` (needs `HUB_KEY` in the environment; see the file's top).
-- **"go"** means: `node tools/hub.mjs queue`, then work the Ready cards in that
+- **"go"** means: first `node tools/hub.mjs inbox` (what the user wrote since
+  you last did: answers, messages, edited "What you want"): fold each into the
+  card's plan (`set <id> --plan-file`) and reply with `say <id> "..."` or a new
+  `--question`. Then `node tools/hub.mjs queue` and work the Ready cards in that
   order. For each: `report <id> --stage doing` when starting; when deployed,
   `--stage check --build <sha> --report "<what changed + How to check it>"`.
 - A decision only the user can make: `--question "<question, with your
@@ -29,7 +35,10 @@ In progress → Check on phone → Done. Claude reads and updates it with
   Write only NEEDS by hand; `node tools/hub.mjs links` writes every UNLOCKS line.
   After any board change run `node tools/hub.mjs check` (0 errors before you stop).
   Keep the user's own words in YOUR NOTES; never overwrite them.
-- No HUB_KEY in the environment: fall back to `PROGRESS.md`'s master list and say so.
+- At "wrap up", `node tools/hub.mjs snapshot` writes the board into
+  `docs/hub/bar3d.md` (the repo's copy; commit it).
+- No HUB_KEY in the environment: fall back to `docs/hub/bar3d.md` and
+  `PROGRESS.md`'s master list, and say so.
 
 ## The routine (user, 2026-10-19: fewer, deeper passes; save tokens)
 - **"start"**: read the docs, show a short menu: the master list + Parked, one

@@ -53,9 +53,20 @@ When an Ideas card gets a home, it **moves** to that section (stage Idea).
 - Big plans (racing, driving, restructure) stay in `docs/`; the card says which
   part of that file it covers (`DETAILS:`), so a fresh session finds it.
 
-## 5. The card format (in the plan field)
+## 5. The card format
+A card (hub v2) has three parts the page shows apart:
+- **What you want** (`notes`): the user's own words. Only the user writes
+  them (the server lets Claude fill them only when empty). Read them on every
+  "go" (`hub.mjs inbox` lists cards whose notes changed).
+- **Claude's plan** (`plan`): the labelled lines below. The page's Status tab
+  shows NOW, the report and NEEDS/UNLOCKS; Your plan shows WHAT, STEPS, LATER,
+  NOT HERE, DETAILS.
+- **Talk** (`thread`): Claude's reports and questions, the user's answers and
+  messages. An answer no longer goes into the plan; fold what it decides into
+  the plan yourself, then reply.
+
+The plan:
 ```
-YOUR NOTES: the user's own words, kept as written (only when the user wrote some)
 WHAT: one line, what the player gets
 NOW: what exists today
 STEPS: 1. ... 2. ...          (or LATER: for done cards)
@@ -65,7 +76,8 @@ NOT HERE: thing → Title (#id)
 DETAILS: docs/FILE.md §...
 HOME: section (Ideas cards only)
 ```
-Only NEEDS is written by hand; UNLOCKS is always generated, so the two sides can
+(Old cards had a `YOUR NOTES:` line here; `hub.mjs migrate-notes` moves it into
+What you want, and `check` warns about any left.) Only NEEDS is written by hand; UNLOCKS is always generated, so the two sides can
 never disagree. A card in Ready or In progress whose NEEDS aren't Done is
 flagged by `check` as blocked.
 
@@ -86,6 +98,9 @@ This is the same order as `PROGRESS.md`'s master list (3 accounts → 4 safety �
 
 ## 7. Where things are written down
 - **The hub:** status of each piece (stage, plan, Claude's report, questions).
+  One board per project; Bar3D's is `bar3d`.
+- **docs/hub/bar3d.md:** the repo's copy of the board (`hub.mjs snapshot`,
+  at wrap up), for when the hub is out of reach and to see changes in git.
 - **PROGRESS.md:** the master list's order, Parked, what got built and when.
 - **VISION.md:** the user's words and the product's direction.
 - **DECISIONS.md:** what was chosen and why, gotchas.

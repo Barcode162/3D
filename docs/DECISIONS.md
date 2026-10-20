@@ -1096,6 +1096,36 @@ No builds or headless runs outside "go".
   shown once, stored hashed; resets the password once and signs out every
   login), in the bar (your card → Password & recovery) and in the hub.
 
+## Hub v2 (2026-10-20, hub card "The Hub update.")
+- The user's loop: they edit everything in the hub, say "go" in chat, Claude
+  works what's approved and answers on the cards. Not run from the site alone
+  (cost), so the hub never calls Claude itself.
+- **Projects:** the hub holds one board per project (`private/hub/projects.json`;
+  Bar3D keeps `board.json`, others `board-<id>.json`). The first screen is the
+  project list: a picture on the top half (Bar3D: `hub/projects/bar3d.jpg`, a
+  shot of the bar; others: a phone picture, shrunk to ≤1280 px JPEG in the
+  browser, stored as a data URL in `img-<id>.txt`), name, about, counts, link.
+  One Claude key for all projects; every action takes `project` (default
+  `bar3d`), `hub.mjs --project`.
+- **A card in three parts:** What you want (`notes`, the owner's words; Claude
+  can only fill it when empty), Claude's plan, Talk (`thread`: reports,
+  questions, answers, messages). Answers used to be appended to the plan as
+  "Answer: ..." and mixed the user's words into Claude's plan; now they're
+  messages. `unread` marks a card the owner wrote on since Claude last did;
+  `hub.mjs inbox` lists them, and reading them is the first step of "go".
+- **Page:** sharp, dense dark style (system font, 5 px corners, a coloured
+  left edge per stage) instead of the rounded purple one. Views: Needs you
+  (Claude's questions, cards to check, cards to review), Claude queue, In
+  progress, All, and every section in the nav strip (plus a drawer, and a
+  sidebar on wide screens). A section's cards are grouped by stage, Done
+  folded. A card opens full screen with Status (stage bar, one-tap next step,
+  report, waits on / unlocks), Your plan, Talk (answer box always at the
+  bottom; drafts kept on the phone; "Send + Ready"), Details (title, section,
+  raw plan, order, delete, history). Addresses are `#/p/<project>/...`, so the
+  phone's back swipe works. Search covers titles, notes, plans and reports.
+- **The repo's copy:** `hub.mjs snapshot` → `docs/hub/<project>.md`; the page
+  can also download the board as Markdown (Sections drawer).
+
 ## Driving rework MVP (2026-10-20, hub card "Driving rework")
 The first slice of `docs/DRIVING_REWORK.md`: the new physics in
 `engine/drive/` (car_spec, tire, vehicle_sim), the Vance Ridgeback GS (C7
