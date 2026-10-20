@@ -51,14 +51,27 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
    - [x] Chess computer thinks a slice per frame (no more 16 ms freeze).
    - [x] Quick report: tap the build code 3 times (works with a stuck menu;
      copies the code; reports list the last taps and what they hit).
-   - [ ] Open bug: the menu stops answering after some games (wait for a
-     quick report from the phone, then fix).
+   - [ ] Open bug: the menu stops answering after some games. 2026-10-20: not
+     reproduced headless after any game (`tools/menu_games_test.mjs`, in CI);
+     menu buttons now also act on a lifted finger if the click never comes
+     (logged as "got no click"), and one place switches game input
+     (`syncCapture`). If it happens again: a quick report shows which.
    - [x] e. Rooms load as you approach (2026-10-19): what's inside the arcade
      loads within 8 m of it, when its doorway is on screen, or 20 s after you
      enter anyway (`streamRooms`). Its shell loads at start (2026-10-20: the
      doorway's ARCADE sign faces the bar and was missing at spawn). Homes will use the same mechanism.
    - [ ] f. Measure on the phone: 3 reports (after entering, at the mirror,
      after 2 min walking, incl. into the arcade) vs the baseline.
+   - [x] Faster drawing part 2, first batch (2026-10-20, hub card): Settings →
+     Graphics: Quality Auto/High/Medium/Low (2 / 1.6 / 1.3 pixels per point;
+     Auto steps down when the GPU keeps frames slow, `engine/quality.h`,
+     test `quality_test`), Mirror Full/Simple (Simple: softer, small far
+     things left out; Auto at Low uses it), field of view; other players
+     culled. Left for later (CPU isn't the limit): render core 6.1, retained
+     HUD 6.6, avatar LOD 6.5 rest, layout from Blender 6.2.
+   - [x] Loading screen (2026-10-20): a still of the bar behind it
+     (`web/loading.jpg`, made by the game), one bar over every stage with a
+     percentage, plain stage names.
 2. [ ] **Clean core** (RESTRUCTURE Phase 4): `main.cpp` split into clear parts,
    stable entity ids, one activity/interaction system. Overlaps 1c.
    - [x] 4.1a (2026-10-19): `app/app_state.h` (the App state, shared helpers),
@@ -80,9 +93,16 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      (a player behind the jukebox no longer steals the tap); badges asked once
      a second instead of every frame; `teleport()` for the oche and the
      bartender spot. Test: `tools/native/interaction_test.cpp`.
-   - Left of Phase 4 (need protocol changes, do with Phase 5): 4.1c (remote
-     visuals in one place), 4.2 (stable entity ids), 4.3b (darts, bartending,
-     race in the activity system + pose layer).
+   - [x] 4.1c (2026-10-20): `app/presentation.cpp` (moving shapes, avatar
+     poses); no EM_ASM left in `app/` (all behind `engine::ui`).
+   - [x] 4.3b (2026-10-20, part): one place switches game input
+     (`syncCapture`, derived from what's open); the pose layer (a sip while
+     seated stays seated for everyone; PROTOCOL TLV kind 2, older builds skip it).
+     Left: darts/bartending/race adapters in `app/activities/`.
+   - [x] 4.2 (2026-10-20, first half): `app/entities.{h,cpp}`: a readable id
+     and 16-bit net id for every seat, thing, mirror and prop (75), golden list
+     `app/entity_ids.txt`, test `entity_test`. Left (with Phase 5): the wire
+     and the room using them (protocol bump, everyone reloads).
 3. [ ] **Accounts + economy foundation:** age at sign-up (13+ only; teen 13-17 /
    adult 18+ bands); inventory and a currency ledger the server owns (every
    change a transaction); accounts off IONOS; server checks for 4K Mania

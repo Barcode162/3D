@@ -1236,3 +1236,36 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   less (`feelFor` in app/race/game.cpp). drive_lab checks power oversteer
   with TC off and full revs from 45 km/h.
 
+
+## Faster drawing 2, loading screen, clean core leftovers (2026-10-20, hub cards)
+- **Quality** (`engine/quality.h`, Settings → Graphics): the phone's GPU is
+  the limit (CPU ≈ 1 ms), so the first lever is pixels: High 2.0, Medium 1.6,
+  Low 1.3 device pixels per CSS pixel (`Gpu::resolutionCap`). Auto: 2 s
+  windows; down when frames average > 18.5 ms with the game's CPU < 8 ms and
+  the GPU > 12 ms; up when the GPU time scaled to the sharper level's pixels
+  is < 11 ms for 3 windows; 4 s between changes; a bounce (up then straight
+  down) blocks going up for a minute. The GPU time is submit-to-done (an upper
+  bound). Every change is logged ("Quality: Medium (1.6x), the GPU was busy"),
+  so reports show it. `?quality=low|medium|high|auto` forces it in tests.
+- **Mirror detail**: Full / Simple (`?mirrorq=1`). Simple caps the
+  reflection at 0.6 resolution and leaves out models under 4% of their
+  distance (7% removed visible stools 4 m away: too much). At the big mirror:
+  draws 259 → 234, triangles 296 k → 276 k, pixels up to −64%. Auto at Low
+  switches the mirror to Simple too. Skipped from 6.3: 30 Hz reflections
+  (avatars would stutter) and occlusion queries.
+- Other players are culled per view (a box around their feet, 2.4 m tall).
+- Not done (CPU isn't the limit, headless text costs 0.45 ms): render core
+  6.1, retained HUD 6.6, hair LOD. Redo if phone reports show CPU time.
+- **Loading screen**: `web/loading.jpg` (42 KB, rendered by the game from the
+  door, `VIEW=540x1170 node tools/shots.mjs "still&cam=0.4,1.65,5.2,0,-3"`),
+  dimmed behind the title; one bar: downloads 5 → 85%, then the stages
+  (`app/loader.cpp` kBar). Not done: prefetching models before the code runs
+  (bytes, not request order, decide the phone's wait: 18 MB at start).
+- **Menu bug guard**: `web/menu.js onTap`: a short tap whose click doesn't
+  come within 0.5 s runs the button anyway and logs a warning. Not
+  reproduced headless (`tools/menu_games_test.mjs`).
+- **Pose layer**: `slot::kPose` (19 numbers), TLV kind 2 (1 byte, sent only
+  while set); a sip while seated is a pose on top of kSit.
+- **Entity ids**: "kind@x,z" (seats) / "thing.action@x,y,z" (things) /
+  "mirror@..." / "prop.pint@..." in decimetres; net id = FNV-1a folded to
+  16 bits. Moving a thing changes its id on purpose (the golden list shows it).
