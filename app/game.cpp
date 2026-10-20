@@ -139,6 +139,7 @@ void startEmote(Emote e) {
 // ---- Sitting ----
 
 void applyQuality(const char* why);  // (below, with the frame)
+void applyMirrorDetail();
 
 std::string seatKey(int seat) { return "seat." + std::to_string(seat); }
 
@@ -621,6 +622,9 @@ void handleCommands() {
       g_app.quality.setMode(quality, engine::clockMs());
       applyQuality(first ? nullptr : "setting");
     }
+    g_app.mirrorSetting = g_app.hooks.mirrorQ >= 0 ? g_app.hooks.mirrorQ
+                                                   : static_cast<int>(engine::settings::number("mirrorQ", 0));
+    applyMirrorDetail();
     g_app.camera.fovY = engine::radians(std::clamp(static_cast<float>(engine::settings::number("fov", 70)), 50.0f, 100.0f));
     // Your saved look, at start only (later the menu sends a "look" command).
     const int look = first ? static_cast<int>(engine::settings::number("look", g_app.look)) : g_app.look;
@@ -1243,6 +1247,15 @@ void applyQuality(const char* why) {
   g_app.gpu.resolutionCap = cap;
   if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[g_app.quality.tier()], cap, why);
 }
+// The mirror's detail: the setting, or simple while Auto has gone down to Low.
+void applyMirrorDetail() {
+  const bool autoLow = g_app.quality.mode() == engine::QualityController::kAuto &&
+                       g_app.quality.tier() == engine::QualityController::kTiers - 1;
+  const int detail = std::max(g_app.mirrorSetting, autoLow ? 1 : 0);
+  if (detail == g_app.renderer.mirrorDetail()) return;
+  g_app.renderer.setMirrorDetail(detail);
+  LOG_INFO("Mirror detail: %s.", detail ? "simple" : "full");
+}
 void watchQuality(double nowMs) {
   const engine::Profiler& p = engine::profiler();
   if (p.frameCount() == 0) return;
@@ -1250,6 +1263,7 @@ void watchQuality(double nowMs) {
   const bool drawing = g_app.entered && !g_app.meridianOpen && !engine::frameTime().resumed;
   if (g_app.quality.frame(nowMs, last.intervalMs, last.cpuMs, last.gpuMs, drawing)) {
     applyQuality(g_app.quality.pixelRatioCap() < g_app.gpu.resolutionCap ? "the GPU was busy" : "room to spare");
+    applyMirrorDetail();
   }
 }
 

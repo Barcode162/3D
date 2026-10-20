@@ -78,6 +78,7 @@ using app::slot::kCount;
 
 struct App {
   engine::Gpu gpu;
+  int mirrorSetting = 0;  // Settings → Graphics → Mirror (0 full, 1 simple)
   engine::QualityController quality;  // Settings → Graphics (how many pixels to draw)
   engine::Input input;
   engine::FirstPersonCamera camera;

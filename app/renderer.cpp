@@ -963,7 +963,8 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
     const float v = std::clamp(engine::dot(d, mirror.up), -mirror.halfHeight, mirror.halfHeight);
     dist = engine::length(d - mirror.right * u - mirror.up * v);
   }
-  const float scale = std::round(std::clamp(1.1f - 0.085f * dist, 0.4f, 1.0f) * 20.0f) / 20.0f;
+  const bool simple = mirrorDetail_ >= 1;
+  const float scale = std::round(std::clamp(1.1f - 0.085f * dist, 0.4f, simple ? 0.6f : 1.0f) * 20.0f) / 20.0f;
   mirrorTargets_[index].scale = scale;
   // The glass on screen: its corners clipped against the near plane (so a
   // mirror partly behind you still gets a tight box), in the reflection's pixels.
@@ -1045,7 +1046,8 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
       1.0f - 2.0f * static_cast<float>(y0) / H);
   // Props smaller than ~2% of their distance (a glass 5 m away) are left
   // out of the reflection: they'd be a few pixels.
-  constexpr float kMirrorMinSize = 0.02f;
+  // Simple: anything under ~4% of its distance (a glass 2.5 m away, a stool 10 m).
+  const float mirrorMinSize = simple ? 0.04f : 0.02f;
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetViewport(0, 0, W, H, 0, 1);
   pass.SetScissorRect(x0, y0, x1 - x0, y1 - y0);
@@ -1056,14 +1058,14 @@ void SceneRenderer::renderMirror(const wgpu::CommandEncoder& encoder, size_t ind
     drawItems(pass, sceneDraws_, cull);
     drawBoxes(pass);
     pass.SetPipeline(modelMirroredPipeline_);
-    drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, kMirrorMinSize);
+    drawModels(pass, false, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, mirrorMinSize);
   }
   pass.SetPipeline(skinnedMirroredPipeline_);
   drawAvatar(pass, bonesBindGroup_);
   drawOthers(pass);
   if (full) {
     pass.SetPipeline(modelBlendMirroredPipeline_);
-    drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, kMirrorMinSize);
+    drawModels(pass, true, {mirroredEye.x, mirroredEye.y, mirroredEye.z}, cull, mirrorMinSize);
   }
   pass.End();
   engine::prof::setPass(engine::prof::kMain);

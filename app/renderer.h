@@ -55,6 +55,11 @@ class SceneRenderer {
   // Draw your own body whole (with the head) in the main view: the
   // customizer's preview, when the camera looks at you from the front.
   void setSelfWhole(bool whole) { selfWhole_ = whole; }
+  // Mirror detail (Settings → Graphics): 0 full; 1 simple: a softer
+  // reflection that leaves out small things farther away (avatars and
+  // everything near the glass stay). Auto quality at Low uses simple too.
+  void setMirrorDetail(int detail) { mirrorDetail_ = detail; }
+  int mirrorDetail() const { return mirrorDetail_; }
 
   // Extra glow on an interactable's parts (0 = normal).
   void setGlow(const Interactable& it, float glow);
@@ -219,6 +224,7 @@ class SceneRenderer {
 
   engine::Gpu* gpu_ = nullptr;
   size_t mirrorCount_ = 0;
+  int mirrorDetail_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view
   wgpu::RenderPipeline mirroredPipeline_;  // reflected views (triangle winding flips)
   wgpu::RenderPipeline skinnedPipeline_;          // the avatar, first person
