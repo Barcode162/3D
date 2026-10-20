@@ -179,6 +179,8 @@ struct App {
   double fpsWindowStartMs = 0;
   int fpsFrames = 0;
   int nextBook = 0;                 // the bookshelf's next title
+  struct BadgeCheck { bool has; double atMs; };
+  std::map<std::string, BadgeCheck> badgeCache;  // hasBadge: asked at most once a second
   std::vector<int> mirrorButtonsShown;  // per mirror: the mode its buttons show
   size_t infoSongCount = SIZE_MAX;  // piano songs the menu knows (SIZE_MAX: nothing sent yet)
   std::string infoState;            // what the menu was last told about you
@@ -199,7 +201,7 @@ void startRace(bool straightIn = false);
 void sitOn(int index);
 float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax);
 Vec3 screenRay(engine::Vec2 tap);
-bool tapPerson(Vec3 dir);
+int personAt(Vec3 dir, float* dist);
 int seatHit(Vec3 dir, float reach, float* dist = nullptr);
 int buildStyle(const app::AvatarStyle& st, int index);
 int lookForSlot(int slot);

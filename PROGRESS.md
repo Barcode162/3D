@@ -54,8 +54,14 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
      no emotes while seated or playing); menu commands checked first (emote in
      range, drinks only on shift, stand up only when seated). Test:
      `tools/native/activity_test.cpp`.
-   - [ ] 4.4 next: one tap resolver (a player behind the jukebox no longer
-     steals the tap), badges cached, `teleport()`.
+   - [x] 4.4 (2026-10-20): `app/interaction.{h,cpp}`: one tap resolver over
+     pick-ups, players, things and seats, nearest wins with documented biases
+     (a player behind the jukebox no longer steals the tap); badges asked once
+     a second instead of every frame; `teleport()` for the oche and the
+     bartender spot. Test: `tools/native/interaction_test.cpp`.
+   - Left of Phase 4 (need protocol changes, do with Phase 5): 4.1c (remote
+     visuals in one place), 4.2 (stable entity ids), 4.3b (darts, bartending,
+     race in the activity system + pose layer).
 3. [ ] **Accounts + economy foundation:** accounts move from IONOS PHP to
    Cloudflare D1; age at sign-up (13+ only; teen 13-17 / adult 18+ bands);
    inventory and a currency ledger the server owns (every change a

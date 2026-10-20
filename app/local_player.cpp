@@ -125,21 +125,34 @@ void putDownOrThrow(Vec3 dir) {
 
 // Picks up the body a tap lands on, if it's within reach and nothing solid
 // is in the way.
-bool tryPickUp(Vec3 dir) {
+// The body a tap could pick up (within reach, not behind a wall, not in
+// someone else's hand), or -1; `dist` = how far along the ray.
+int pickableAt(Vec3 dir, float* dist) {
   const Vec3 eye = g_app.camera.position;
-  float dist;
-  const int body = g_app.physics.raycastBodies(eye, dir, kGrabReach, &dist);
-  if (body < 0) return false;
+  float d;
+  const int body = g_app.physics.raycastBodies(eye, dir, kGrabReach, &d);
+  if (body < 0) return -1;
   float wallDist;
-  if (g_app.physics.raycastStatic(eye, dir, dist, &wallDist, nullptr)) return false;
-  if (!g_app.shared.canPickUp(body)) return false;  // in someone else's hand
+  if (g_app.physics.raycastStatic(eye, dir, d, &wallDist, nullptr)) return -1;
+  if (!g_app.shared.canPickUp(body)) return -1;  // in someone else's hand
+  if (dist) *dist = d;
+  return body;
+}
+
+void pickUp(int body) {
   engine::Body& b = g_app.physics.body(static_cast<size_t>(body));
   b.held = true;
   b.kinematic = false;
   b.asleep = false;
   g_app.held = body;
   g_app.shared.pickedUp(body);
-  return true;
+}
+
+// Moves you to a spot (the darts oche, the bartender's place), facing `yaw`.
+void teleport(Vec3 eye, float yaw) {
+  g_app.camera.position = eye;
+  g_app.camera.yaw = yaw;
+  g_app.camera.pitch = 0;
 }
 
 // Your avatar's activity this frame (and what it means for the pose).

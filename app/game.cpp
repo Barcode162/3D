@@ -56,6 +56,7 @@ using engine::Vec3;
 void joinRoom();  // main.cpp: joins the multiplayer room once you've entered
 
 #include "app/app_state.h"
+#include "app/interaction.h"
 #include "app/hud.h"
 #include "app/local_player.h"
 
@@ -85,14 +86,23 @@ void strum(Vec3 where, bool share) {
   }
 }
 
+// Badges come from your account (web/account.js). Asked at most once a
+// second per badge (the prompts ask every frame), so logging in or out
+// shows within a second.
 bool hasBadge(const char* badge) {
-  return EM_ASM_INT({
+  auto& cache = g_app.badgeCache;
+  const double now = engine::clockMs();
+  auto it = cache.find(badge);
+  if (it != cache.end() && now - it->second.atMs < 1000) return it->second.has;
+  const bool has = EM_ASM_INT({
     var a = window['bar3dAccount'];
     if (a && a['hasBadge'] && a['hasBadge'](UTF8ToString($0))) return 1;
     // Tests on this computer: ?badge=bartender
     var local = /^localhost$|^127[.]/.test(location.hostname);
     return local && new RegExp('[?&]badge=' + UTF8ToString($0)).test(location.search) ? 1 : 0;
   }, badge) != 0;
+  cache[badge] = {has, now};
+  return has;
 }
 
 // ---- Who's using what ----
@@ -240,21 +250,23 @@ Vec3 screenRay(engine::Vec2 tap) {
 }
 
 // Tapping another player opens their person card.
-bool tapPerson(Vec3 dir) {
+// The other player a ray hits (index into others.players()), or -1.
+int personAt(Vec3 dir, float* dist) {
   const Vec3 eye = g_app.camera.position;
-  const app::OtherPlayer* best = nullptr;
+  int best = -1;
   float nearest = 6.0f;
-  for (const app::OtherPlayer& o : g_app.others.players()) {
+  const auto& players = g_app.others.players();
+  for (size_t i = 0; i < players.size(); ++i) {
+    const app::OtherPlayer& o = players[i];
     if (!o.placed) continue;
     const float t = rayBoxDistance(eye, dir, o.eye - Vec3{0.3f, 1.7f, 0.3f}, o.eye + Vec3{0.3f, 0.45f, 0.3f});
     if (t >= 0 && t < nearest) {
       nearest = t;
-      best = &o;
+      best = static_cast<int>(i);
     }
   }
-  if (!best) return false;
-  engine::net::showCard(best->account, best->name);
-  return true;
+  if (dist) *dist = nearest;
+  return best;
 }
 
 // The seat a ray hits within reach, or -1.
@@ -369,9 +381,7 @@ void use(const app::Interactable& it) {
         break;
       }
       if (!claimMachine("machine.darts", "throwing")) break;
-      g_app.camera.position = g_app.scene.dartOche;
-      g_app.camera.yaw = engine::kPi;  // facing the board (+z)
-      g_app.camera.pitch = 0;
+      teleport(g_app.scene.dartOche, engine::kPi);  // facing the board (+z)
       g_app.darts.setOnline(g_app.others.online() && g_app.machineKey == "machine.darts");
       g_app.darts.start();
       setActivity(Activity::kDarts);
@@ -388,8 +398,7 @@ void use(const app::Interactable& it) {
         break;
       }
       g_app.bartender.startShift();
-      g_app.camera.position = g_app.scene.bartenderSpot;
-      g_app.camera.yaw = engine::kPi;  // facing the counter and the room (+z)
+      teleport(g_app.scene.bartenderSpot, engine::kPi);  // facing the counter and the room (+z)
       engine::ui::openPanel("bartenderShift");
       break;
     }
@@ -796,24 +805,44 @@ void updateInteraction(double nowMs, float dt) {
       putDownOrThrow(dir);
       continue;
     }
-    if (g_app.seat < 0 && tryPickUp(dir)) continue;
-    if (tapPerson(dir)) continue;
-    int hit = -1;
-    float nearest = kTapReach;
-    for (size_t i = 0; i < items.size(); ++i) {
-      if (!available(items[i])) continue;
-      const float t = rayBoxDistance(cam.position, dir, items[i].boundsMin, items[i].boundsMax);
-      if (t >= 0 && t < nearest && (!items[i].direct || t < kDirectReach)) {
-        nearest = t;
-        hit = static_cast<int>(i);
-      }
+    // Everything the tap hits; the nearest wins (app/interaction.h has the
+    // rules: pick-ups first, players only when clearly in front).
+    std::vector<app::TapTarget> hits;
+    const bool standing = g_app.seat < 0;
+    float d;
+    if (standing) {
+      if (const int body = pickableAt(dir, &d); body >= 0) hits.push_back({app::TargetKind::kProp, body, d});
     }
-    float seatDist;
-    const int seat = g_app.seat < 0 ? seatHit(dir, std::min(nearest, kDirectReach), &seatDist) : -1;
-    if (seat >= 0) {
-      sitOn(seat);
+    if (const int person = personAt(dir, &d); person >= 0) hits.push_back({app::TargetKind::kPlayer, person, d});
+    int hit = -1;
+    if (standing) {
+      float nearest = kTapReach;
+      for (size_t i = 0; i < items.size(); ++i) {
+        if (!available(items[i])) continue;
+        const float t = rayBoxDistance(cam.position, dir, items[i].boundsMin, items[i].boundsMax);
+        if (t >= 0 && t < nearest && (!items[i].direct || t < kDirectReach)) {
+          nearest = t;
+          hit = static_cast<int>(i);
+        }
+      }
+      if (hit >= 0) hits.push_back({app::TargetKind::kThing, hit, nearest});
+      if (const int seat = seatHit(dir, kDirectReach, &d); seat >= 0) hits.push_back({app::TargetKind::kSeat, seat, d});
+    }
+    const app::TapTarget target = app::pickTap(hits);
+    if (target.kind == app::TargetKind::kProp) {
+      pickUp(target.index);
       continue;
     }
+    if (target.kind == app::TargetKind::kPlayer) {
+      const app::OtherPlayer& o = g_app.others.players()[static_cast<size_t>(target.index)];
+      engine::net::showCard(o.account, o.name);
+      continue;
+    }
+    if (target.kind == app::TargetKind::kSeat) {
+      sitOn(target.index);
+      continue;
+    }
+    hit = target.kind == app::TargetKind::kThing ? target.index : -1;
     if (hit < 0 && g_app.focused >= 0 && !items[static_cast<size_t>(g_app.focused)].direct) hit = g_app.focused;
     if (hit < 0 && g_app.focused >= 0 && items[static_cast<size_t>(g_app.focused)].direct) hit = g_app.focused;
     if (hit >= 0 && g_app.seat < 0) {
