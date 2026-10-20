@@ -73,6 +73,9 @@ try {
   const rep = await post('/hub/hub.php', { a: 'report', id: card.id, stage: 'check', report: 'Built two lanes.', build: 'abc1234',
                                            question: 'Wood or neon lanes?' }, { 'X-Hub-Key': key });
   check(rep.ok === 1 && rep.card.stage === 'check' && rep.card.history.length >= 2, 'Claude reports on the card (stage, report, question)');
+  const sec = await post('/hub/hub.php', { a: 'section', id: 'games', about: 'What you play.' }, { 'X-Hub-Key': key });
+  const secBoard = await post('/hub/hub.php', { a: 'board' }, { 'X-Hub-Key': key });
+  check(sec.ok === 1 && secBoard.sections.find((s) => s.id === 'games').about === 'What you play.', 'Claude sets a section\'s "what goes here" line');
   const bad = await post('/hub/hub.php', { a: 'queue' }, { 'X-Hub-Key': 'f'.repeat(48) });
   check(bad.status === 401, 'a wrong key is refused');
 

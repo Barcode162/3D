@@ -12,7 +12,9 @@
 //   {"a":"board"}                              the whole board
 //   {"a":"queue"}                              -> the "Ready for Claude" cards, in order
 //   {"a":"report","id":"..","stage":..,"report":..,"question":..,"build":..}
-//   {"a":"save","card":{..}}                   new cards (e.g. split a big one)
+//   {"a":"save","card":{..}}                   new cards (e.g. split a big one), or edit one (with its id)
+// Owner or Claude:
+//   {"a":"section","id":"..","about":".."}     a section's "what goes here" line (docs/HUB_MAP.md)
 // Logins are the bar's accounts (bar/account.php): the owner is the bar's
 // owner (accounts/admins.json, else the first account made). Members (v2)
 // will be able to write cards that wait for the owner's review.
@@ -210,6 +212,19 @@ if ($a === 'report') {
     }
     if ($changes) note($c, $me['name'], implode(', ', $changes));
     return ['ok' => 1, 'card' => $c, '_save' => true];
+  }));
+}
+
+// A section's description ("what goes here / not here", docs/HUB_MAP.md).
+if ($a === 'section') {
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  $about = clean($in['about'] ?? '', 300);
+  if ($about === '') fail('No description.');
+  reply(with_board(function (&$b) use ($id, $about) {
+    foreach ($b['sections'] as &$s) {
+      if ($s['id'] === $id) { $s['about'] = $about; return ['ok' => 1, 'section' => $s, '_save' => true]; }
+    }
+    fail('No such section.', 404);
   }));
 }
 

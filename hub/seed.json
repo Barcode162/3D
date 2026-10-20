@@ -3,79 +3,79 @@
   {
    "id": "arriving",
    "name": "Arriving",
-   "about": "Loading, the first screen, the home screen, \"Happening now\"",
+   "about": "On top of the world: loading, first screen, home screen, Happening now, menus, HUD. Not here: which lobby you join (Social).",
    "advanced": false
   },
   {
    "id": "character",
    "name": "Your character",
-   "about": "Avatar, customizer, animations, outfits",
+   "about": "Your body and look: avatar, customizer, animation, poses, what you wear. Not here: buying outfits (Shops).",
    "advanced": false
   },
   {
    "id": "bar",
    "name": "The bar",
-   "about": "The rooms (main bar, lounge, arcade, room 3), props, lights, mirrors",
+   "about": "Shared places and their things: rooms, props, lights, mirrors, jukebox, the street. Not here: games in them (Games).",
    "advanced": false
   },
   {
    "id": "games",
    "name": "Games",
-   "about": "Darts, 4K Mania, racing, chess, piano, the platformer, Meridian",
+   "about": "What you play or work at (score, turn, win): darts, 4K Mania, racing, chess, piano, arcade, bartending, music studio.",
    "advanced": false
   },
   {
    "id": "social",
    "name": "Social",
-   "about": "Voice, profiles, friends, events, memory book, messages, safety",
+   "about": "Other people: voice, profiles, lobbies, events, memory book, messages, safety. Not here: the voice servers (Server).",
    "advanced": false
   },
   {
    "id": "home",
    "name": "Your home",
-   "about": "Homes, furniture, levels",
+   "about": "Your own place: grid placement, levels, expansion, invites. Not here: buying furniture (Shops).",
    "advanced": false
   },
   {
    "id": "shops",
    "name": "Shops & money",
-   "about": "Credits, the mall, VIP, casino, trading",
+   "about": "Where money and items change hands: credits, the mall, casino, VIP, trading. Not here: the wallet itself (Accounts).",
    "advanced": false
   },
   {
    "id": "ideas",
    "name": "Ideas",
-   "about": "Parked ideas, waiting to be sorted",
+   "about": "No home yet. Once an idea has a home, the card moves there (stage Idea).",
    "advanced": false
   },
   {
    "id": "perf",
    "name": "Performance",
-   "about": "Speed, memory, loading (phone numbers)",
+   "about": "How fast and light it runs on the phone: frame time, memory, loading, quality settings.",
    "advanced": true
   },
   {
    "id": "engine",
    "name": "Engine & code",
-   "about": "The C++ engine, code cleanup (restructure plan)",
+   "about": "Code structure with no visible change: the C++ core, ids, the activity system, cleanup.",
    "advanced": true
   },
   {
    "id": "server",
    "name": "Multiplayer server",
-   "about": "The Cloudflare room, protocol, what the server decides",
+   "about": "The live shared room: what it decides and checks, the protocol, voice relays. Not here: data kept forever (Accounts).",
    "advanced": true
   },
   {
    "id": "accounts",
    "name": "Accounts & ledger",
-   "about": "Logins, passwords, ages, the money ledger",
+   "about": "Kept forever per person: logins, ages, money, owned items, payments. Not here: spending it (Shops).",
    "advanced": true
   },
   {
    "id": "tools",
    "name": "Tests & tools",
-   "about": "Tests, deploys, reports, this hub",
+   "about": "How we work: tests, deploys, phone reports, this hub, the AI dock. Bugs go with the broken thing.",
    "advanced": true
   }
  ],

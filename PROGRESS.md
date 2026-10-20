@@ -8,7 +8,9 @@ The user's board at **joshuavelasco.com/hub** is now the place to plan: cards
 per piece of the world, "Ready for Claude" is the work queue (CLAUDE.md → The
 hub). The master list below stays as the long-term order; new work flows
 through the hub. v1 built (owner login, sections, stages, Claude key,
-password change + recovery code). Next for the hub: v2 members (the user's
+password change + recovery code). 2026-10-20: every card rewritten from the docs
+(66 cards, linked by NEEDS/UNLOCKS; rules in `docs/HUB_MAP.md`, enforced by
+`node tools/hub.mjs check`). Next for the hub: v2 members (the user's
 brothers, their cards wait for the owner's review), v3 activity feed.
 
 ## Next up: the master list (2026-10-19, start here)

@@ -24,6 +24,11 @@ In progress → Check on phone → Done. Claude reads and updates it with
 - A decision only the user can make: `--question "<question, with your
   recommendation>"` on the card, leave it in its stage, and go on to the next card.
 - New ideas from the user in chat: `add ideas "<title>"` (not the master list).
+- **What goes where** is `docs/HUB_MAP.md`: the sorting questions, one card per
+  deliverable, the card format (WHAT / NOW / STEPS / NEEDS / NOT HERE / DETAILS).
+  Write only NEEDS by hand; `node tools/hub.mjs links` writes every UNLOCKS line.
+  After any board change run `node tools/hub.mjs check` (0 errors before you stop).
+  Keep the user's own words in YOUR NOTES; never overwrite them.
 - No HUB_KEY in the environment: fall back to `PROGRESS.md`'s master list and say so.
 
 ## The routine (user, 2026-10-19: fewer, deeper passes; save tokens)
