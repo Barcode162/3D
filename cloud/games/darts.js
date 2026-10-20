@@ -30,7 +30,15 @@ function wobble(rand) {
 }
 
 export function newSession() {
-  return { left: START, turnStart: START, turn: [], games: 0, best: 0 };
+  return { left: START, turnStart: START, turn: [], games: 0, best: 0, thrown: 0, gameId: newId() };
+}
+
+const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+// What a finished game pays (cents): $50 for the fastest finish (6 darts),
+// $2.50 less per extra dart, never under $5.
+export function payout(dartsThrown) {
+  return Math.max(500, Math.min(5000, 5000 - (dartsThrown - 6) * 250));
 }
 
 // One throw at aim (u, v). Changes `s` and returns what happened:
@@ -40,9 +48,14 @@ export function throwDart(s, aimU, aimV, rand = Math.random) {
   if (s.turn.length >= 3 || s.turnOver) {
     s.turn = [];
     s.turnOver = false;
-    if (s.left === 0) s.left = START;
+    if (s.left === 0) {  // a new game
+      s.left = START;
+      s.thrown = 0;
+      s.gameId = newId();
+    }
     s.turnStart = s.left;
   }
+  s.thrown = (s.thrown || 0) + 1;
   const u = clamp(aimU, -0.5, 0.5) + wobble(rand) * SPREAD * 2;
   const v = clamp(aimV, -0.5, 0.5) + wobble(rand) * SPREAD * 2;
   const { pts, label } = score(u, v);
@@ -63,7 +76,7 @@ export function throwDart(s, aimU, aimV, rand = Math.random) {
   if (s.turn.length >= 3) s.turnOver = true;
   if (s.turnOver && !bust) s.best = Math.max(s.best, s.turn.reduce((a, b) => a + b, 0));
   return { u: round(u), v: round(v), pts, label, left: s.left, bust: bust ? 1 : 0, won: won ? 1 : 0,
-    turnOver: s.turnOver ? 1 : 0, games: s.games };
+    turnOver: s.turnOver ? 1 : 0, games: s.games, thrown: s.thrown };
 }
 
 const clamp = (x, lo, hi) => (x < lo ? lo : x > hi ? hi : x);

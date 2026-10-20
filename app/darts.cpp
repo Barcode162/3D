@@ -172,6 +172,9 @@ void Darts::update(double nowMs) {
     d.won = r["won"].integer() != 0;
     d.turnOver = r["turnOver"].integer() != 0;
     games_ = r["games"].integer();
+    d.paid = r["paid"].isNumber() ? r["paid"].integer() : -1;  // cents the room credited (-1: not paid)
+    d.guest = r["guest"].integer() != 0;
+    d.capped = r["capped"].integer() != 0;
     d.scored = true;
   }
   for (Dart& d : darts_) {
@@ -205,7 +208,16 @@ void Darts::update(double nowMs) {
       scoreLeft_ -= pts;
       if (scoreLeft_ == 0) {
         if (!d.scored) ++games_;  // online the room counts games
-        std::snprintf(text, sizeof(text), "%s - GAME SHOT! You won (%d won so far)", label.c_str(), games_);
+        if (d.paid > 0) {
+          std::snprintf(text, sizeof(text), "%s - GAME SHOT! +$%d.%02d%s", label.c_str(), d.paid / 100, d.paid % 100,
+                        d.capped ? " (daily limit reached)" : "");
+        } else if (d.paid == 0 && d.capped) {
+          std::snprintf(text, sizeof(text), "%s - GAME SHOT! (daily limit reached: no credits today)", label.c_str());
+        } else if (d.guest) {
+          std::snprintf(text, sizeof(text), "%s - GAME SHOT! Log in to earn credits", label.c_str());
+        } else {
+          std::snprintf(text, sizeof(text), "%s - GAME SHOT! You won (%d won so far)", label.c_str(), games_);
+        }
         cheer_.play(0.8f, &at);
         turnEndsMs_ = nowMs + 2500;
       } else {

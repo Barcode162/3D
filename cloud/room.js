@@ -409,12 +409,18 @@ export class Room {
 
   // Intents: one RESULT per (slot, request id), so a resend after a
   // reconnect gets the same answer instead of acting twice.
-  onIntent(ws, slot, body) {
+  async onIntent(ws, slot, body) {
     let done = this.intentResults.get(slot);
     if (!done) { done = new Map(); this.intentResults.set(slot, done); }
-    if (done.has(body.i)) { this.send(ws, done.get(body.i)); return; }
+    if (done.has(body.i)) {  // a resend: the same answer (or wait, if it's still being worked out)
+      const prev = done.get(body.i);
+      if (prev) this.send(ws, prev);
+      return;
+    }
+    done.set(body.i, null);
     this.lastActive.set(slot, Date.now());
-    const result = this.runIntent(slot, body);
+    // Most answers are immediate; a winning dart waits for the Ledger's payment.
+    const result = await this.runIntent(slot, body);
     const reply = text('R', { r: body.i, ...result });
     done.set(body.i, reply);
     if (done.size > 64) done.delete(done.keys().next().value);
@@ -473,10 +479,34 @@ export class Room {
     if (this.claims.get('machine.darts') !== slot) return { ok: 0, why: 'not your turn at the board' };
     if (!Number.isFinite(body.u) || !Number.isFinite(body.v)) return { ok: 0, why: 'bad aim' };
     if (!this.games.darts || this.games.darts.owner !== slot) this.games.darts = { owner: slot, session: darts.newSession() };
-    const r = darts.throwDart(this.games.darts.session, body.u, body.v);
+    const session = this.games.darts.session;
+    const gameId = session.gameId;
+    const r = darts.throwDart(session, body.u, body.v);
     this.saveAttachment(slot);
     this.broadcast(text('D', { d: [[this.nextSeq(), 'darts', r, slot]] }), slot);
-    return { ok: 1, ...r };
+    if (!r.won) return { ok: 1, ...r };
+    // A finished game pays (logged-in players): the answer carries what the
+    // Ledger actually credited (the daily cap can make it less).
+    return this.pay(slot, darts.payout(r.thrown), 'darts: 301 in ' + r.thrown + ' darts', 'darts-' + gameId)
+      .then((paid) => ({ ok: 1, ...r, ...paid }));
+  }
+
+  // Credits a player's account through the Ledger (cloud/ledger.js). Returns
+  // {paid: cents, balance, capped} or {guest: 1} / {payError: 1}.
+  async pay(slot, cents, reason, ref) {
+    const p = this.players.get(slot);
+    if (!p || !p.acct || !this.env.LEDGER) return { guest: 1 };
+    try {
+      const ledger = this.env.LEDGER.get(this.env.LEDGER.idFromName('main'));
+      const r = await ledger.fetch(new Request('https://ledger/', {
+        method: 'POST', body: JSON.stringify({ a: 'credit', user: p.acct, cents, reason, ref }),
+      }));
+      const j = await r.json();
+      if (!j.ok) return { payError: 1 };
+      return { paid: j.duplicate ? 0 : (j.credited | 0), balance: j.balance | 0, capped: j.capped ? 1 : 0 };
+    } catch (e) {
+      return { payError: 1 };
+    }
   }
 
   // The racing rigs (cloud/games/race.js): garage, ready, finish. Being on a

@@ -302,7 +302,9 @@ try {
   [ra, rb].forEach((c) => c.ws.close(1000));
 
   // ---- Darts run by the room (cloud/games/darts.js) ----
-  const { score: dscore, throwDart: dthrow, newSession: dnew } = await import('../cloud/games/darts.js');
+  const { score: dscore, throwDart: dthrow, newSession: dnew, payout } = await import('../cloud/games/darts.js');
+  check(payout(6) === 5000 && payout(10) === 4000 && payout(40) === 500,
+        'a 301 win pays $50 in 6 darts, $40 in 10, never under $5');
   check(dscore(0, 0).label === 'BULL' && dscore(0, 0.103).pts === 60 && dscore(0, 0.165).label === 'D20' && dscore(0.3, 0).pts === 0 && dscore(0.05, 0).label === '6',
     'dart scores: bull 50, treble 20, double 20, miss, 6 to the right');
   const ds = dnew(); ds.left = ds.turnStart = 40;

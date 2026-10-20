@@ -52,6 +52,8 @@ class Darts {
     // The room's answer: points, label, what's left, bust/won, turn over.
     int pts = 0, left = 0;
     bool bust = false, won = false, turnOver = false, scored = false;
+    int paid = -1;  // cents the room credited for a win (-1: nothing paid)
+    bool guest = false, capped = false;
     std::string label;
   };
   void endTurn();
