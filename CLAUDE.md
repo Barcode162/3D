@@ -12,6 +12,20 @@ visible in a mirror, and real music.
    installs Emscripten. If it didn't run, run `bash tools/setup.sh`.
 3. Don't build or run headless tests until the user says "go" (tokens).
 
+## The hub: the user's board (2026-10-20)
+The user plans in **joshuavelasco.com/hub** (`hub/`, server `hub/hub.php`): a
+card per piece of the world, in player-facing sections (Advanced tab: the
+backend), with stages Idea → Waiting for your review → **Ready for Claude** →
+In progress → Check on phone → Done. Claude reads and updates it with
+`node tools/hub.mjs` (needs `HUB_KEY` in the environment; see the file's top).
+- **"go"** means: `node tools/hub.mjs queue`, then work the Ready cards in that
+  order. For each: `report <id> --stage doing` when starting; when deployed,
+  `--stage check --build <sha> --report "<what changed + How to check it>"`.
+- A decision only the user can make: `--question "<question, with your
+  recommendation>"` on the card, leave it in its stage, and go on to the next card.
+- New ideas from the user in chat: `add ideas "<title>"` (not the master list).
+- No HUB_KEY in the environment: fall back to `PROGRESS.md`'s master list and say so.
+
 ## The routine (user, 2026-10-19: fewer, deeper passes; save tokens)
 - **"start"**: read the docs, show a short menu: the master list + Parked, one
   line each. No builds, no tests. The user picks one.
@@ -153,6 +167,9 @@ judged on the user's phone.
   its address written into the site's `config.json`. The game finds it there
   (`web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
   On localhost multiplayer is off unless `?cloud=ws://...` is given.
+- `hub/` is the project hub at joshuavelasco.com/hub (page + `hub.php`; its
+  board lives in the private folder outside the web root; `seed.json` was the
+  starting board; test `tools/hub_test.mjs`).
 - `server/` is PHP on the user's IONOS hosting: `account.php` (logins,
   profiles) and `report.php`, uploaded by the deploy with a second copy of the
   game at joshuavelasco.com/bar (the user wants their domain kept: home page

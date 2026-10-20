@@ -1,0 +1,7 @@
+# The hub (joshuavelasco.com/hub): the page and its server. The board itself
+# is stored outside the web root (private/hub), so nothing here is secret.
+DirectoryIndex index.html
+Options -Indexes
+<Files "seed.json">
+  Require all denied
+</Files>

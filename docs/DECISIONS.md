@@ -1077,3 +1077,22 @@ No builds or headless runs outside "go".
   and up."); the date is private; `band` ("teen"/"adult") only in your own
   replies, so the room can keep teens and adults apart (master list 4).
 
+## The project hub (2026-10-20)
+- The user waits on chats too much; they plan in their own board instead:
+  joshuavelasco.com/hub (private), Claude works its "Ready for Claude" queue on
+  "go" and reports on each card (stage, report, build, question).
+- PHP on IONOS like account.php (no new services). Logins are the bar's
+  accounts; only the bar's owner gets in (v1). The board is one JSON file in
+  `private/hub` (outside the web root), written under a lock; the first visit
+  copies `hub/seed.json` (58 cards from the master list, parked ideas, done work).
+- Claude's access: a key the owner makes in the hub (stored as SHA-256 in
+  `private/hub/key.json`), given to Claude's environment as `HUB_KEY`; never in
+  the repo. Claude may report and add cards; only the owner moves or deletes.
+- Sections are what a player experiences (Arriving, Your character, The bar,
+  Games, Social, Your home, Shops & money, Ideas); the Advanced tab holds the
+  backend (Performance, Engine & code, Multiplayer server, Accounts & ledger,
+  Tests & tools).
+- Passwords: change (needs the current one) and a recovery code (12 letters,
+  shown once, stored hashed; resets the password once and signs out every
+  login), in the bar (your card → Password & recovery) and in the hub.
+

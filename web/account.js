@@ -174,6 +174,10 @@ window.bar3dAccount = (function () {
                   el('div', { class: 'acctSmall' }, [el('a', {
                     href: '#', text: signup ? 'I already have an account' : 'New here? Sign up',
                     onclick: function (e) { e.preventDefault(); loginScreen(!signup); } })]));
+    if (!signup) {
+      children.push(el('div', { class: 'acctSmall' }, [el('a', { href: '#', text: 'Forgot password?',
+                      onclick: function (e) { e.preventDefault(); resetScreen(); } })]));
+    }
     open(el('div', { class: 'acctPanel' }, children));
   }
 
@@ -268,6 +272,7 @@ window.bar3dAccount = (function () {
       if ((p.badges || []).indexOf('owner') >= 0) {
         btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Give badges', onclick: badgeScreen }));
       }
+      btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Password & recovery', onclick: passwordScreen }));
       btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Log out', onclick: logout }));
     }
     btns.appendChild(el('button', { class: 'acctBtn ghost', text: 'Close', onclick: close }));
@@ -352,6 +357,57 @@ window.bar3dAccount = (function () {
       el('button', { class: 'acctBtn ghost', text: 'Take badge away', onclick: function () { go(false); } }),
       el('button', { class: 'acctBtn ghost', text: 'Back', onclick: function () { cardScreen(me, true); } }),
     ]));
+  }
+
+  // Change your password, and make a recovery code so a forgotten password
+  // never locks you out (account.php "password", "recovery").
+  function passwordScreen() {
+    var old = el('input', { type: 'password', autocomplete: 'current-password', placeholder: 'current password' });
+    var nw = el('input', { type: 'password', autocomplete: 'new-password', placeholder: 'new password (6+ characters)' });
+    var msg = el('div', { class: 'acctErr' });
+    var code = el('div', { style: 'font-size:22px;letter-spacing:2px;margin:8px 0;-webkit-user-select:text;user-select:text;' });
+    var change = el('button', { class: 'acctBtn', text: 'Change password' });
+    change.onclick = function () {
+      msg.textContent = '';
+      call({ a: 'password', token: token, old: old.value, new: nw.value })
+        .then(function () { msg.textContent = 'Password changed.'; old.value = nw.value = ''; })
+        .catch(function (e) { msg.textContent = e.message; });
+    };
+    var rec = el('button', { class: 'acctBtn ghost', text: me && me.hasRecovery ? 'Make a new recovery code' : 'Make a recovery code' });
+    rec.onclick = function () {
+      msg.textContent = '';
+      if (!old.value) { msg.textContent = 'Type your current password first.'; return; }
+      call({ a: 'recovery', token: token, pass: old.value })
+        .then(function (r) {
+          code.textContent = r.code;
+          msg.textContent = 'Save this code somewhere safe (a screenshot or a note). It resets your password if you forget it. It is shown only once.';
+          if (me) me.hasRecovery = 1;
+        })
+        .catch(function (e) { msg.textContent = e.message; });
+    };
+    open(el('div', { class: 'acctPanel' }, [el('h2', { text: 'Password & recovery' }),
+      el('label', { text: 'Current password' }), old, el('label', { text: 'New password' }), nw, change,
+      el('div', { class: 'acctSmall', text: me && me.hasRecovery ? 'You have a recovery code.' : 'No recovery code yet: make one so you can never be locked out.' }),
+      rec, code, msg, el('button', { class: 'acctBtn ghost', text: 'Close', onclick: close })]));
+  }
+
+  // Forgot your password: the recovery code sets a new one.
+  function resetScreen() {
+    var user = el('input', { autocapitalize: 'none', autocomplete: 'username', placeholder: 'username' });
+    var c = el('input', { autocapitalize: 'characters', placeholder: 'recovery code (XXXX-XXXX-XXXX)' });
+    var nw = el('input', { type: 'password', autocomplete: 'new-password', placeholder: 'new password (6+ characters)' });
+    var err = el('div', { class: 'acctErr' });
+    var go = el('button', { class: 'acctBtn', text: 'Set new password' });
+    go.onclick = function () {
+      err.textContent = '';
+      call({ a: 'reset', user: user.value, code: c.value, new: nw.value })
+        .then(function (r) { setSession(r.token, r.me); info('Account: new password set, logged in as ' + r.me.name + '.'); close(); })
+        .catch(function (e) { err.textContent = e.message; });
+    };
+    open(el('div', { class: 'acctPanel' }, [el('h2', { text: 'Forgot password' }),
+      el('label', { text: 'Username' }), user, el('label', { text: 'Recovery code' }), c,
+      el('label', { text: 'New password' }), nw, err, go,
+      el('button', { class: 'acctBtn ghost', text: 'Back', onclick: function () { loginScreen(false); } })]));
   }
 
   function logout() {

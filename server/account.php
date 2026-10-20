@@ -13,6 +13,11 @@
 //   {"a":"update","token":"..","name":..,"bio":..,"drink":..,"song":..,"color":0..7}
 //   {"a":"avatar","token":"..","image":"data:image/jpeg;base64,..."}  (square JPEG, <= 256 px)
 //   {"a":"logout","token":".."}
+//   {"a":"password","token":"..","old":"...","new":"..."}  change your password
+//   {"a":"recovery","token":"..","pass":"..."} -> {"ok":1,"code":"XXXX-XXXX-XXXX"}
+//     a new recovery code (shown once; the old one stops working)
+//   {"a":"reset","user":"josh","code":"XXXX-XXXX-XXXX","new":"..."} -> like login
+//     forgot your password: the recovery code sets a new one (and is used up)
 //   {"a":"profile","id":".."}                               -> {"ok":1,"profile":profile}
 //   {"a":"update", ..., "details":{"pronouns":..,"status":..,...}}  (DETAIL_FIELDS)
 //   {"a":"update", ..., "slots":["owner","", ...]}  badge slots on the card
@@ -96,7 +101,7 @@ function age_band($u) {
   $age = (new DateTime($b))->diff(new DateTime('today'))->y;
   return $age >= 18 ? 'adult' : 'teen';
 }
-function own_profile($u) { return public_profile($u) + ['band' => age_band($u)]; }
+function own_profile($u) { return public_profile($u) + ['band' => age_band($u), 'hasRecovery' => !empty($u['recovery']) ? 1 : 0]; }
 // What others may see.
 function public_profile($u) {
   $badges = $u['badges'] ?? [];
@@ -201,7 +206,54 @@ if ($a === 'profile') {
   reply(['ok' => 1, 'profile' => public_profile($u)]);
 }
 
+// Forgot your password: your recovery code sets a new one. The code is used
+// up; every old login is signed out.
+if ($a === 'reset') {
+  $user = strtolower(is_string($in['user'] ?? null) ? trim($in['user']) : '');
+  $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', is_string($in['code'] ?? null) ? $in['code'] : ''));
+  $new = is_string($in['new'] ?? null) ? $in['new'] : '';
+  if (strlen($new) < 6 || strlen($new) > 100) fail('Passwords need at least 6 characters.');
+  $names = read_json("$base/names.json") ?? [];
+  $id = $names[$user] ?? null;
+  $u = $id ? read_json(user_path($id)) : null;
+  if (!$u || empty($u['recovery']) || strlen($code) !== 12 || !password_verify($code, $u['recovery'])) {
+    usleep(400000);  // slows down guessing
+    fail('That username and recovery code don\'t match.', 401);
+  }
+  foreach ($u['tokens'] ?? [] as $old) @unlink("$base/tokens/$old.json");
+  $u['tokens'] = [];
+  $u['hash'] = password_hash($new, PASSWORD_DEFAULT);
+  unset($u['recovery']);
+  $token = new_token($u['id']);
+  $u['tokens'][] = hash('sha256', $token);
+  write_json(user_path($u['id']), $u);
+  reply(['ok' => 1, 'token' => $token, 'me' => own_profile($u)]);
+}
+
 $u = user_for_token($in['token'] ?? '');
+
+// Change your password (needs the current one).
+if ($a === 'password') {
+  $old = is_string($in['old'] ?? null) ? $in['old'] : '';
+  $new = is_string($in['new'] ?? null) ? $in['new'] : '';
+  if (!password_verify($old, $u['hash'])) { usleep(400000); fail('Your current password is wrong.', 401); }
+  if (strlen($new) < 6 || strlen($new) > 100) fail('Passwords need at least 6 characters.');
+  $u['hash'] = password_hash($new, PASSWORD_DEFAULT);
+  write_json(user_path($u['id']), $u);
+  reply(['ok' => 1, 'me' => own_profile($u)]);
+}
+
+// A new recovery code (needs your password). Shown once: keep it somewhere safe.
+if ($a === 'recovery') {
+  $pass = is_string($in['pass'] ?? null) ? $in['pass'] : '';
+  if (!password_verify($pass, $u['hash'])) { usleep(400000); fail('Your password is wrong.', 401); }
+  $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';  // no 0/O or 1/I
+  $code = '';
+  for ($i = 0; $i < 12; $i++) $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+  $u['recovery'] = password_hash($code, PASSWORD_DEFAULT);
+  write_json(user_path($u['id']), $u);
+  reply(['ok' => 1, 'code' => substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4)]);
+}
 
 if ($a === 'me') reply(['ok' => 1, 'me' => own_profile($u)]);
 

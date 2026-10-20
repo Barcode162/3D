@@ -3,6 +3,14 @@
 **Live site:** https://barcode162.github.io/3D/
 **Current focus:** the master list below; step 1 is the performance pass.
 
+## The hub (2026-10-20)
+The user's board at **joshuavelasco.com/hub** is now the place to plan: cards
+per piece of the world, "Ready for Claude" is the work queue (CLAUDE.md → The
+hub). The master list below stays as the long-term order; new work flows
+through the hub. v1 built (owner login, sections, stages, Claude key,
+password change + recovery code). Next for the hub: v2 members (the user's
+brothers, their cards wait for the owner's review), v3 activity feed.
+
 ## Next up: the master list (2026-10-19, start here)
 One list, in priority order. Work top to bottom unless the user picks
 otherwise at "start". New ideas go to **Parked** (one line, no work) until the

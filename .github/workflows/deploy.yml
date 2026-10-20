@@ -87,7 +87,7 @@ jobs:
 
       - name: "Test: PHP syntax and EM_ASM lint"
         run: |
-          for f in server/*.php; do php -l "$f"; done
+          for f in server/*.php hub/*.php; do php -l "$f"; done
           node tools/lint_emasm.mjs
 
       - name: "Test: room protocol codec (cloud/proto.js on the golden vectors)"
@@ -101,6 +101,7 @@ jobs:
       - name: "Test: the ledger (money and owned things, wrangler dev)"
         run: node tools/ledger_test.mjs
 
+
       - name: Install Playwright
         run: |
           npm i --no-save --no-package-lock playwright@1.56.1
@@ -110,6 +111,9 @@ jobs:
       # run 2026-10-17), so a failing smoke blocks the deploy.
       - name: "Test: browser smoke (Release build)"
         run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
+
+      - name: "Test: the project hub (hub/ + account.php on PHP's server)"
+        run: node tools/hub_test.mjs
 
       - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
         run: node tools/menu_test.mjs
@@ -254,6 +258,9 @@ jobs:
           mkdir -p -f private/bar/reports
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/index.php
           put -O $IONOS_HOME $GITHUB_WORKSPACE/homepage/.htaccess
+          mkdir -p -f $IONOS_HOME/hub
+          mkdir -p -f private/hub
+          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/hub $IONOS_HOME/hub
           mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
           mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php report.php .htaccess

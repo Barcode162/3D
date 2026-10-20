@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Bar3D Hub</title>
+<style>
+  /* The project hub (hub.php is its server). Phone first. */
+  @font-face { font-family: "Lilita One"; src: url("../bar/fonts/LilitaOne-Regular.ttf") format("truetype"); font-display: swap; }
+  :root { --bg:#160f22; --panel:#241837; --panel2:#2e2046; --line:#4a3a66; --text:#f5ecf8; --dim:#b9a8cc;
+          --idea:#7d6b99; --review:#c08a2e; --ready:#2f9e5b; --doing:#2f7fd1; --check:#c2449a; --done:#4a5560; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 -apple-system, system-ui, sans-serif;
+         padding: env(safe-area-inset-top) 0 calc(80px + env(safe-area-inset-bottom)); }
+  h1, h2, h3, .chunky { font-family: "Lilita One", -apple-system, system-ui, sans-serif; font-weight: 400; letter-spacing: .3px; }
+  h1 { font-size: 24px; margin: 0; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 14px 8px; border-bottom: 1px solid var(--line); }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .grow { flex: 1; }
+  button { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 12px;
+           padding: 9px 12px; }
+  button.main { background: #3b6fd8; border-color: #8db0ff; font-family: "Lilita One", system-ui; font-size: 16px; }
+  button.small { padding: 5px 9px; font-size: 13px; border-radius: 9px; }
+  .tabs { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; }
+  .tabs button { white-space: nowrap; }
+  .tabs button.on { background: #3b6fd8; border-color: #8db0ff; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 8px 14px 2px; }
+  .chip { white-space: nowrap; font-size: 13px; padding: 5px 10px; border-radius: 999px; }
+  .chip.on { outline: 2px solid #fff; }
+  .counts { padding: 4px 14px 0; color: var(--dim); font-size: 13px; }
+  section.sec { margin: 14px 12px 0; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .secHead { padding: 12px 14px 8px; }
+  .secHead h2 { margin: 0; font-size: 20px; }
+  .secHead .about { color: var(--dim); font-size: 13px; }
+  .card { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--line); }
+  .card .t { flex: 1; }
+  .stage { font-size: 12px; padding: 3px 8px; border-radius: 999px; color: #fff; white-space: nowrap; }
+  .s-idea { background: var(--idea); } .s-review { background: var(--review); } .s-ready { background: var(--ready); }
+  .s-doing { background: var(--doing); } .s-check { background: var(--check); } .s-done { background: var(--done); }
+  .q { color: #ffd27a; font-size: 12px; }
+  .addRow { padding: 8px 14px 12px; border-top: 1px solid var(--line); }
+  .sheet { position: fixed; inset: 0; z-index: 20; background: #000a; display: none; align-items: flex-end; }
+  .sheet.open { display: flex; }
+  .sheetBody { width: 100%; max-height: 92vh; overflow: auto; background: var(--panel); border-radius: 18px 18px 0 0;
+               padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  label { display: block; color: var(--dim); font-size: 13px; margin: 12px 0 4px; }
+  input, textarea, select { width: 100%; font: inherit; color: var(--text); background: #1b1229; border: 1px solid var(--line);
+                            border-radius: 10px; padding: 10px; }
+  textarea { min-height: 120px; resize: vertical; }
+  .stages { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stages button { font-size: 13px; padding: 6px 10px; border: 2px solid transparent; }
+  .stages button.on { border-color: #fff; }
+  .box { background: #1b1229; border: 1px solid var(--line); border-radius: 10px; padding: 10px; white-space: pre-wrap; }
+  .qbox { background: #3a2c10; border-color: #c08a2e; }
+  .hist { color: var(--dim); font-size: 12px; }
+  .err { color: #ff8a8a; min-height: 1.2em; }
+  .center { max-width: 420px; margin: 40px auto; padding: 0 16px; }
+  .big { font-size: 22px; letter-spacing: 2px; -webkit-user-select: text; user-select: text; word-break: break-all; }
+  .empty { color: var(--dim); padding: 6px 14px 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="sheet" id="sheet"><div class="sheetBody" id="sheetBody"></div></div>
+<script>
+'use strict';
+// Bar3D Hub: the owner's board (hub.php). Logins are the bar's accounts.
+var API = 'hub.php', ACCOUNTS = '../bar/account.php';
+var STAGE_NAMES = { idea: 'Idea', review: 'Waiting for your review', ready: 'Ready for Claude', doing: 'In progress',
+                    check: 'Check on phone', done: 'Done' };
+var STAGE_SHORT = { idea: 'Idea', review: 'Review', ready: 'Ready for Claude', doing: 'In progress', check: 'Check', done: 'Done' };
+var state = { token: localStorage.getItem('hubToken') || '', board: null, tab: 'world', filter: '' };
+
+function el(tag, attrs, kids) {
+  var e = document.createElement(tag);
+  for (var k in attrs || {}) {
+    if (k === 'text') e.textContent = attrs[k];
+    else if (k.slice(0, 2) === 'on') e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function post(url, body) {
+  return fetch(url, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' }, cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (r) { if (!r || !r.ok) { var e = new Error((r && r.error) || 'Something went wrong.'); e.code = r; throw e; } return r; });
+}
+function api(body) { body.token = state.token; return post(API, body); }
+function app() { return document.getElementById('app'); }
+function closeSheet() { document.getElementById('sheet').classList.remove('open'); }
+function openSheet(kids) {
+  var b = document.getElementById('sheetBody');
+  b.innerHTML = '';
+  kids.forEach(function (k) { if (k) b.appendChild(k); });
+  document.getElementById('sheet').classList.add('open');
+}
+document.getElementById('sheet').onclick = function (e) { if (e.target.id === 'sheet') closeSheet(); };
+
+// ---- Logging in (the bar's accounts) ----
+function loginScreen(msg) {
+  var user = el('input', { autocapitalize: 'none', autocomplete: 'username', placeholder: 'username' });
+  var pass = el('input', { type: 'password', autocomplete: 'current-password', placeholder: 'password' });
+  var err = el('div', { class: 'err', text: msg || '' });
+  var go = el('button', { class: 'main', text: 'Log in' });
+  go.onclick = function () {
+    err.textContent = '';
+    post(ACCOUNTS, { a: 'login', user: user.value, pass: pass.value }).then(function (r) {
+      state.token = r.token;
+      localStorage.setItem('hubToken', r.token);
+      load();
+    }).catch(function (e) { err.textContent = e.message; });
+  };
+  app().innerHTML = '';
+  app().appendChild(el('div', { class: 'center' }, [el('h1', { text: 'Bar3D Hub' }),
+    el('p', { class: 'hist', text: 'Private. Log in with your bar account.' }), user, el('div', { style: 'height:8px' }), pass, err, go,
+    el('p', {}, [el('a', { href: '#', text: 'Forgot password?', style: 'color:#8db0ff',
+                          onclick: function (e) { e.preventDefault(); resetScreen(); } })])]));
+}
+function resetScreen() {
+  var user = el('input', { autocapitalize: 'none', placeholder: 'username' });
+  var code = el('input', { autocapitalize: 'characters', placeholder: 'recovery code (XXXX-XXXX-XXXX)' });
+  var nw = el('input', { type: 'password', autocomplete: 'new-password', placeholder: 'new password (6+ characters)' });
+  var err = el('div', { class: 'err' });
+  var go = el('button', { class: 'main', text: 'Set new password' });
+  go.onclick = function () {
+    post(ACCOUNTS, { a: 'reset', user: user.value, code: code.value, new: nw.value }).then(function (r) {
+      state.token = r.token;
+      localStorage.setItem('hubToken', r.token);
+      load();
+    }).catch(function (e) { err.textContent = e.message; });
+  };
+  app().innerHTML = '';
+  app().appendChild(el('div', { class: 'center' }, [el('h1', { text: 'Forgot password' }),
+    el('label', { text: 'Username' }), user, el('label', { text: 'Recovery code' }), code, el('label', { text: 'New password' }), nw,
+    err, go, el('p', {}, [el('a', { href: '#', text: 'Back', style: 'color:#8db0ff', onclick: function (e) { e.preventDefault(); loginScreen(); } })])]));
+}
+
+// ---- The board ----
+function load() {
+  if (!state.token) return loginScreen();
+  api({ a: 'board' }).then(function (b) { state.board = b; render(); }).catch(function (e) {
+    if (e.code && /log in/i.test(e.message)) { localStorage.removeItem('hubToken'); state.token = ''; }
+    loginScreen(e.message);
+  });
+}
+function stageChip(s) { return el('span', { class: 'stage s-' + s, text: STAGE_SHORT[s] || s }); }
+function cardsOf(section) {
+  return state.board.cards.filter(function (c) { return c.section === section && (!state.filter || c.stage === state.filter); });
+}
+function render() {
+  var b = state.board;
+  var count = function (s) { return b.cards.filter(function (c) { return c.stage === s; }).length; };
+  var questions = b.cards.filter(function (c) { return c.question; }).length;
+  var tab = function (id, name) {
+    return el('button', { class: state.tab === id ? 'on' : '', text: name, onclick: function () { state.tab = id; render(); } });
+  };
+  var head = el('header', {}, [
+    el('div', { class: 'row' }, [el('h1', { class: 'grow', text: 'Bar3D Hub' }),
+      el('button', { class: 'small', text: '⟳', onclick: load }), el('button', { class: 'small', text: 'Account', onclick: accountSheet })]),
+    el('div', { class: 'tabs' }, [tab('world', 'World'), tab('queue', 'Claude queue (' + count('ready') + ')'),
+      tab('check', 'Check on phone (' + count('check') + ')'), tab('advanced', 'Advanced')])]);
+  var chips = el('div', { class: 'chips' }, [el('button', { class: 'chip' + (state.filter ? '' : ' on'), text: 'All',
+    onclick: function () { state.filter = ''; render(); } })].concat(b.stages.map(function (s) {
+    return el('button', { class: 'chip s-' + s + (state.filter === s ? ' on' : ''), text: STAGE_SHORT[s],
+                          onclick: function () { state.filter = state.filter === s ? '' : s; render(); } });
+  })));
+  var counts = el('div', { class: 'counts', text: count('ready') + ' ready for Claude · ' + count('doing') + ' in progress · ' +
+                           count('check') + ' to check · ' + questions + ' question' + (questions === 1 ? '' : 's') + ' for you' });
+  var body = el('div', {});
+  if (state.tab === 'queue' || state.tab === 'check') {
+    var stage = state.tab === 'queue' ? 'ready' : 'check';
+    var list = b.cards.filter(function (c) { return c.stage === stage; });
+    var sec = el('section', { class: 'sec' }, [el('div', { class: 'secHead' }, [
+      el('h2', { text: state.tab === 'queue' ? 'Claude queue' : 'Check on your phone' }),
+      el('div', { class: 'about', text: state.tab === 'queue'
+        ? 'What Claude does next when you say "go", top to bottom (in section order).'
+        : 'Done by Claude: try these on your phone, then mark them Done (or back to Ready with a note).' })])]);
+    list.forEach(function (c) { sec.appendChild(cardRow(c, true)); });
+    if (!list.length) sec.appendChild(el('div', { class: 'empty', text: 'Nothing here right now.' }));
+    body.appendChild(sec);
+  } else {
+    b.sections.filter(function (s) { return !!s.advanced === (state.tab === 'advanced'); }).forEach(function (s) {
+      var sec = el('section', { class: 'sec' }, [el('div', { class: 'secHead' }, [el('h2', { text: s.name }),
+                                                  el('div', { class: 'about', text: s.about || '' })])]);
+      var list = cardsOf(s.id);
+      list.forEach(function (c) { sec.appendChild(cardRow(c, false)); });
+      if (!list.length) sec.appendChild(el('div', { class: 'empty', text: state.filter ? 'No cards at this stage.' : 'No cards yet.' }));
+      sec.appendChild(el('div', { class: 'addRow' }, [el('button', { class: 'small', text: '+ New card',
+        onclick: function () { cardSheet({ section: s.id, title: '', stage: 'idea', plan: '', isNew: true }); } })]));
+      body.appendChild(sec);
+    });
+  }
+  app().innerHTML = '';
+  [head, chips, counts, body].forEach(function (n) { app().appendChild(n); });
+}
+function sectionName(id) {
+  var s = state.board.sections.filter(function (x) { return x.id === id; })[0];
+  return s ? s.name : id;
+}
+function cardRow(c, showSection) {
+  return el('div', { class: 'card', onclick: function () { cardSheet(c); } }, [
+    el('div', { class: 't' }, [c.title, showSection ? el('div', { class: 'hist', text: sectionName(c.section) }) : null,
+      c.question ? el('div', { class: 'q', text: '● Claude has a question' }) : null]),
+    stageChip(c.stage)]);
+}
+
+// ---- One card ----
+function cardSheet(c) {
+  var title = el('input', { value: c.title, placeholder: 'What is it?' });
+  var section = el('select', {}, state.board.sections.map(function (s) {
+    var o = el('option', { value: s.id, text: s.name + (s.advanced ? ' (advanced)' : '') });
+    if (s.id === c.section) o.selected = true;
+    return o;
+  }));
+  var stage = c.stage;
+  var stageBox = el('div', { class: 'stages' });
+  var drawStages = function () {
+    stageBox.innerHTML = '';
+    state.board.stages.forEach(function (s) {
+      stageBox.appendChild(el('button', { class: 's-' + s + (s === stage ? ' on' : ''), text: STAGE_NAMES[s],
+                                          onclick: function () { stage = s; drawStages(); } }));
+    });
+  };
+  drawStages();
+  var plan = el('textarea', { placeholder: 'Your plan: what you want, in your own words.' });
+  plan.value = c.plan || '';
+  var answer = c.question ? el('textarea', { placeholder: 'Your answer for Claude', style: 'min-height:70px' }) : null;
+  var err = el('div', { class: 'err' });
+  var save = el('button', { class: 'main', text: c.isNew ? 'Add card' : 'Save' });
+  save.onclick = function () {
+    var card = { title: title.value, section: section.value, stage: stage, plan: plan.value };
+    if (!c.isNew) card.id = c.id;
+    if (answer && answer.value.trim()) card.answer = answer.value;
+    api({ a: 'save', card: card }).then(function () { closeSheet(); load(); }).catch(function (e) { err.textContent = e.message; });
+  };
+  var kids = [el('h2', { text: c.isNew ? 'New card' : 'Card' }), el('label', { text: 'Title' }), title,
+    el('label', { text: 'Section' }), section, el('label', { text: 'Stage' }), stageBox,
+    el('label', { text: 'Your plan' }), plan];
+  if (c.question) kids.push(el('label', { text: 'Claude asks' }), el('div', { class: 'box qbox', text: c.question }), answer);
+  if (c.report) kids.push(el('label', { text: 'Claude\'s report' + (c.build ? ' (build ' + c.build + ')' : '') }),
+                          el('div', { class: 'box', text: c.report }));
+  kids.push(err, el('div', { class: 'row' }, [save, el('button', { text: 'Close', onclick: closeSheet })]));
+  if (!c.isNew) {
+    kids.push(el('div', { class: 'row', style: 'margin-top:10px' }, [
+      el('button', { class: 'small', text: '▲ Up', onclick: function () { api({ a: 'move', id: c.id, dir: -1 }).then(load); closeSheet(); } }),
+      el('button', { class: 'small', text: '▼ Down', onclick: function () { api({ a: 'move', id: c.id, dir: 1 }).then(load); closeSheet(); } }),
+      el('div', { class: 'grow' }),
+      el('button', { class: 'small', text: 'Delete', onclick: function () {
+        if (confirm('Delete "' + c.title + '"?')) api({ a: 'delete', id: c.id }).then(function () { closeSheet(); load(); });
+      } })]));
+    if (c.history && c.history.length) {
+      kids.push(el('label', { text: 'History' }));
+      c.history.slice().reverse().slice(0, 12).forEach(function (h) {
+        kids.push(el('div', { class: 'hist', text: new Date(h.at * 1000).toLocaleString() + ' · ' + h.who + ': ' + h.what }));
+      });
+    }
+  }
+  openSheet(kids);
+}
+
+// ---- Account: password, recovery code, the Claude key ----
+function accountSheet() {
+  var old = el('input', { type: 'password', autocomplete: 'current-password', placeholder: 'current password' });
+  var nw = el('input', { type: 'password', autocomplete: 'new-password', placeholder: 'new password (6+ characters)' });
+  var msg = el('div', { class: 'err' });
+  var big = el('div', { class: 'big' });
+  var needOld = function () { if (!old.value) { msg.textContent = 'Type your current password first.'; return false; } return true; };
+  openSheet([el('h2', { text: 'Account' }), el('div', { class: 'hist', text: 'Logged in as ' + state.board.you + ' (' + state.board.role + ')' }),
+    el('label', { text: 'Current password' }), old, el('label', { text: 'New password' }), nw,
+    el('div', { class: 'row', style: 'margin-top:10px' }, [
+      el('button', { class: 'main', text: 'Change password', onclick: function () {
+        if (!needOld()) return;
+        post(ACCOUNTS, { a: 'password', token: state.token, old: old.value, new: nw.value })
+          .then(function () { msg.textContent = 'Password changed.'; old.value = nw.value = ''; })
+          .catch(function (e) { msg.textContent = e.message; });
+      } })]),
+    el('label', { text: 'Recovery code (resets your password if you forget it)' }),
+    el('button', { text: 'Make a recovery code', onclick: function () {
+      if (!needOld()) return;
+      post(ACCOUNTS, { a: 'recovery', token: state.token, pass: old.value }).then(function (r) {
+        big.textContent = r.code;
+        msg.textContent = 'Save this code (screenshot or note). Shown only once; a new one replaces it.';
+      }).catch(function (e) { msg.textContent = e.message; });
+    } }),
+    el('label', { text: 'Claude key (lets Claude read and update this board)' }),
+    el('button', { text: 'Make a new Claude key', onclick: function () {
+      if (!confirm('Make a new Claude key? The old one stops working.')) return;
+      api({ a: 'key' }).then(function (r) {
+        big.textContent = r.key;
+        msg.textContent = 'Copy this key into Claude\'s environment settings as HUB_KEY. Shown only once.';
+      }).catch(function (e) { msg.textContent = e.message; });
+    } }),
+    big, msg,
+    el('div', { class: 'row', style: 'margin-top:14px' }, [
+      el('button', { text: 'Log out', onclick: function () { localStorage.removeItem('hubToken'); state.token = ''; closeSheet(); loginScreen(); } }),
+      el('button', { text: 'Close', onclick: closeSheet })])]);
+}
+
+load();
+// Live: the board refreshes every 30 seconds while you look at it (not while a card is open).
+setInterval(function () {
+  if (state.token && !document.hidden && !document.getElementById('sheet').classList.contains('open')) {
+    api({ a: 'board' }).then(function (b) { state.board = b; render(); }).catch(function () {});
+  }
+}, 30000);
+</script>
+</body>
+</html>
