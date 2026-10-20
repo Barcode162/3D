@@ -52,6 +52,7 @@ TestHooks TestHooks::parse() {
   if (param(query, "emote", v) && !v.empty()) h.emote = std::atoi(v.c_str());
   if (param(query, "pianosong", v) && !v.empty()) h.pianoSong = std::atoi(v.c_str());
   if (param(query, "mirrorq", v) && !v.empty()) h.mirrorQ = std::atoi(v.c_str());
+  if (param(query, "post", v) && !v.empty()) h.post = std::atoi(v.c_str()) ? 1 : 0;
   if (param(query, "quality", v)) {
     const char* names[] = {"auto", "high", "medium", "low"};
     for (int i = 0; i < 4; ++i) if (v == names[i]) h.quality = i;

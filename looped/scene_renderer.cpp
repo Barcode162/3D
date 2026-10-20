@@ -124,6 +124,8 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrorCount;
   if (!createScenePipelines() || !createGlassPipeline()) return false;
+  if (!post_.init(gpu)) LOG_ERROR("Glow and mood: post.wgsl is missing.");
+  post_.setMood(scene.mood);
   engine::profiler().stage("pipelines");
 
   // Object uniforms: the scene objects (written once) followed by the avatar
@@ -1126,8 +1128,10 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
+  // With glow and mood on, the scene draws offscreen first (looped/post.h).
+  const bool post = postOn_ && post_.ready();
   wgpu::RenderPassColorAttachment color;
-  color.view = target;
+  color.view = post ? post_.sceneTarget() : target;
   color.loadOp = wgpu::LoadOp::Clear;
   color.storeOp = wgpu::StoreOp::Store;
   color.clearValue = kClearColor;
@@ -1175,8 +1179,9 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   }
 
   pictures.draw(pass);  // profile pictures over heads
-  text.draw(pass);  // after the scene: text is see-through and on top
+  if (!post) text.draw(pass);  // after the scene: text is see-through and on top
   pass.End();
+  if (post) post_.apply(encoder, target, [&](const wgpu::RenderPassEncoder& p) { text.draw(p); });  // text doesn't glow
   wgpu::CommandBuffer commands = encoder.Finish();
   queue.Submit(1, &commands);
 }

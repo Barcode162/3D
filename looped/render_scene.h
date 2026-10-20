@@ -11,6 +11,7 @@
 #include "looped/culling.h"
 #include "looped/math.h"
 #include "looped/mesh_data.h"
+#include "looped/post.h"
 #include "looped/procedural.h"
 
 namespace engine {
@@ -92,6 +93,8 @@ struct RenderScene {
   std::function<std::vector<MaterialImages>()> makeTextures;
   // How often the textures repeat on the avatars, per metre.
   float avatarTextureScale = 1;
+  // Glow and mood after the scene (looped/post.h).
+  Mood mood;
 };
 
 }  // namespace engine

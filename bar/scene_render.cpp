@@ -30,6 +30,16 @@ engine::RenderScene renderSceneOf(const BarScene& scene) {
   r.spawnPosition = scene.spawnPosition;
   r.makeTextures = buildBarTextures;
   r.avatarTextureScale = kAvatarTextureScale;
+  // A warm bar at night: neon and bulbs glow, amber tint, a touch richer,
+  // soft corners.
+  r.mood.glow = 0.7f;
+  r.mood.glowThreshold = 0.5f;
+  r.mood.glowKnee = 0.3f;
+  r.mood.tint = {1.04f, 1.0f, 0.94f};
+  r.mood.saturation = 1.08f;
+  r.mood.contrast = 1.04f;
+  r.mood.lift = 0.01f;
+  r.mood.vignette = 0.22f;
   return r;
 }
 

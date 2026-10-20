@@ -1172,6 +1172,13 @@ void phaseRender(FrameIn& f) {
 void applyQuality(const char* why) {
   static const char* kNames[] = {"High", "Medium", "Low"};
   const double cap = g_app.quality.pixelRatioCap();
+  // Glow and mood cost about one more full-screen pass: off at Low.
+  const bool post = g_app.hooks.post >= 0 ? g_app.hooks.post == 1
+                                          : g_app.quality.tier() < engine::QualityController::kTiers - 1;
+  if (post != g_app.renderer.postEffects()) {
+    g_app.renderer.setPostEffects(post);
+    LOG_INFO("Glow and mood: %s.", post ? "on" : "off");
+  }
   if (cap == g_app.gpu.resolutionCap) return;
   g_app.gpu.resolutionCap = cap;
   if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[g_app.quality.tier()], cap, why);

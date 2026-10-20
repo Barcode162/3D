@@ -20,6 +20,7 @@
 #include "looped/math.h"
 #include "looped/mesh.h"
 #include "looped/model.h"
+#include "looped/post.h"
 #include "looped/render_scene.h"
 #include "looped/skinned_mesh.h"
 #include "looped/text.h"
@@ -59,6 +60,11 @@ class SceneRenderer {
   // reflection that leaves out small things farther away (avatars and
   // everything near the glass stay). Auto quality at Low uses simple too.
   void setMirrorDetail(int detail) { mirrorDetail_ = detail; }
+  // Glow and mood after the scene (looped/post.h). Off = the scene draws
+  // straight to the screen (Low quality, or ?post=0).
+  void setPostEffects(bool on) { postOn_ = on; }
+  bool postEffects() const { return postOn_; }
+  void setMood(const Mood& mood) { post_.setMood(mood); }
   int mirrorDetail() const { return mirrorDetail_; }
 
   // Extra glow on some scene objects and placed models (0 = normal), e.g.
@@ -225,6 +231,8 @@ class SceneRenderer {
                     const engine::Mat4& viewProj, engine::Vec3 eye);
 
   engine::Gpu* gpu_ = nullptr;
+  PostEffects post_;
+  bool postOn_ = true;
   size_t mirrorCount_ = 0;
   int mirrorDetail_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view
