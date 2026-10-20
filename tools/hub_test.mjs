@@ -63,7 +63,8 @@ try {
   await wait(1200); await page.screenshot({ path: 'build/hub-home.png', fullPage: true });
   await page.click('.maptile:has(.nm:text-is("Games"))');
   // (Wait for the Games view itself: the previous view's items match too.)
-  await page.waitForFunction(() => location.hash.endsWith('/s/games') && document.querySelectorAll('.content .item').length > 3,
+  await page.waitForFunction(() => location.hash.endsWith('/s/games') && document.querySelector('.shead h2')?.textContent === 'Games' &&
+                                   document.querySelectorAll('.content .item').length > 3,
                              null, { timeout: 5000 });
   const cards = await page.$$eval('.content .item', (c) => c.length);
   const strip = await page.$$eval('.nav button.on', (b) => b.map((x) => x.textContent));
