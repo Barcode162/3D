@@ -138,6 +138,7 @@ int main() {
     settle(c, flat, 1);
     Input in;
     in.throttle = 1;
+    in.tc = 0.6f;  // (a launch with traction control on, as magazines test)
     float t = 0, t60 = 0, t100 = 0, quarter = 0;
     Vec3 start = c.position;
     while (t < 20) {
@@ -297,6 +298,43 @@ int main() {
       slip = std::max(slip, std::fabs(beta));
     }
     range("handbrake turn: body slip reached (deg)", slip * 57.3, 8, 120);
+  }
+  // Power oversteer: 2nd gear in a turn at 45 km/h, TC off, floor it: the
+  // back steps out (you can drift on the throttle).
+  {
+    Car c = fresh(flat);
+    settle(c, flat, 0.5f);
+    c.setSpeed(12.5f);
+    Input in;
+    in.tc = 0;
+    in.steer = -0.3f;
+    in.throttle = 0.3f;
+    settle(c, flat, 1.0f, in);
+    in.throttle = 1;
+    float slip = 0;
+    for (int i = 0; i < 480 * 2; ++i) {
+      c.step(in, flat);
+      const float beta = std::atan2(engine::dot(c.velocity, c.right()), std::max(std::fabs(c.speed()), 1.0f));
+      slip = std::max(slip, std::fabs(beta));
+    }
+    range("power oversteer, TC off: body slip reached (deg)", slip * 57.3, 15, 180);
+    std::printf("  (gear %d, %.0f rpm at the end)\n", c.gear, c.rpm);
+  }
+  // Full power mid-corner in 2nd at 45 km/h: the clutch stays in and the
+  // engine revs freely (it once held the revs at launch speed there).
+  {
+    Car c = fresh(flat);
+    settle(c, flat, 0.5f);
+    c.setSpeed(12.5f);
+    Input in;
+    in.throttle = 1;
+    in.tc = 0.6f;
+    float maxRpm = 0;
+    for (int i = 0; i < 480 * 2; ++i) {
+      c.step(in, flat);
+      maxRpm = std::max(maxRpm, c.rpm);
+    }
+    range("full throttle from 45 km/h: revs reached", maxRpm, 5000, 7000);
   }
   // Bench: ticks per second on this machine.
   {

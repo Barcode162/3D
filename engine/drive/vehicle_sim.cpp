@@ -14,8 +14,9 @@ constexpr float kVrel = 0.5f;    // m/s: relaxation at standstill (§4.5.2)
 constexpr float kStickK = 1.5e5f;  // N/m: the low-speed anchor (§4.5.3)
 constexpr int kSubsteps = 2;     // driveline steps per tick (960 Hz)
 // The virtual steering wheel (§4.11).
-constexpr float kWheelInertia = 0.05f, kWheelDamping = 2.2f;
-constexpr float kHandStiffness = 40, kHandMaxTorque = 14;
+// (A quick hand: lock to lock in about half a second, like a real driver's.)
+constexpr float kWheelInertia = 0.05f, kWheelDamping = 2.4f;
+constexpr float kHandStiffness = 70, kHandMaxTorque = 40;
 
 float smooth01(float t) {
   t = clampf(t, 0, 1);
@@ -111,6 +112,7 @@ void Car::place(Vec3 ground, float heading, Vec3 normal) {
   wheelAngle = wheelRate = wheelTorque = 0;
   tcCut_ = 1;
   autoClutch_ = 0;
+  clutchClosed_ = false;
   fuelCut_ = false;
 }
 
@@ -149,6 +151,7 @@ void Car::setSpeed(float v) {
   pendingGear_ = gear;
   shiftTimer = 0;
   autoClutch_ = 1;
+  clutchClosed_ = true;
   engineSpeed_ = std::max(drivenRpm(gear), spec_.idleRpm) / kRadToRpm;
   rpm = engineSpeed_ * kRadToRpm;
 }
@@ -209,7 +212,9 @@ void Car::gears(const Input& in) {
     } else if (gear > 1) {
       const float down = drivenRpm(gear - 1);
       const bool braking = in.brake > 0.3f;
-      if (down < spec_.redline * 0.88f && (now < spec_.redline * 0.42f || (braking && now < spec_.redline * 0.66f))) {
+      // Kickdown: flooring it low in the revs drops a gear for the power.
+      const bool kick = in.throttle > 0.85f && now < spec_.redline * 0.6f && down < spec_.redline * 0.82f;
+      if (kick || (down < spec_.redline * 0.88f && (now < spec_.redline * 0.42f || (braking && now < spec_.redline * 0.66f)))) {
         pendingGear_ = gear - 1;
       }
     }
@@ -326,12 +331,18 @@ void Car::driveline(const Input& in, float thr, float /*brake*/, Patch* P) {
       const float shaft = std::fabs(speed() / spec_.rear.tire.radius * gearRatioOf(gear)) * kRadToRpm;
       const float pedal = throttleLag_;  // the driver's foot (not traction control's cut)
       const float launch = spec_.idleRpm + (3200 - spec_.idleRpm) * clampf(pedal * 1.4f, 0, 1);
+      // Once closed it stays closed until the car is down to a crawl (it
+      // used to think a full-throttle 2nd gear at 45 km/h was a launch and
+      // held the engine at the launch revs: no power on the skid pad).
+      if (clutchClosed_ && shaft < spec_.idleRpm + 250) clutchClosed_ = false;
+      if (!clutchClosed_ && shaft > std::max(launch * 0.92f, spec_.idleRpm + 350.0f)) clutchClosed_ = true;
       if (in.handbrake > 0.3f) {
         // Handbrake: clutch in, like a driver does (the engine would keep
         // the rear wheels turning).
         autoClutch_ = std::max(0.0f, autoClutch_ - kTick * 25);
-      } else if (shaft > std::max(launch * 0.92f, spec_.idleRpm + 350.0f)) {
+      } else if (clutchClosed_) {
         autoClutch_ = std::min(1.0f, autoClutch_ + kTick * 8);
+        launching_ = false;
       } else if (pedal < 0.02f && shaft < spec_.idleRpm + 300) {
         autoClutch_ = std::max(0.0f, autoClutch_ - kTick * 6);
       } else {
@@ -348,7 +359,6 @@ void Car::driveline(const Input& in, float thr, float /*brake*/, Patch* P) {
         autoClutch_ += (want - autoClutch_) * std::min(1.0f, kTick / 0.02f);
         launching_ = pedal > 0.3f;
       }
-      if (shaft > std::max(launch * 0.92f, spec_.idleRpm + 350.0f)) launching_ = false;
       clutchEngage = autoClutch_;
     } else {
       clutchEngage = autoClutch_ = 1 - clampf(in.clutch, 0, 1);

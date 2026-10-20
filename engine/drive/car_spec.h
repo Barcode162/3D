@@ -111,7 +111,7 @@ struct Setup {
   float handStrength = 1;        // how firmly the virtual hand holds the wheel
   float steerAssist = 1;         // 0 = direct (sim), 1 = the speed-sensitive assist
   float handbrake = 1;           // handbrake strength (x stock)
-  float tc = 0.6f;               // traction control 0 off .. 1 strong
+  float tc = 0.2f;               // traction control 0 off .. 1 strong (light by default: you can slide)
   bool abs = true;
   float cameraDistance = 1;
   bool telemetry = false;

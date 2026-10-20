@@ -495,11 +495,11 @@ window.bar3dUi = (function () {
     ['Brakes', 'brakeBias', 'Brake bias (front share)', 0.5, 0.75, 0.01, 0.62, times],
     ['Brakes', 'handbrake', 'Handbrake strength', 0.5, 3, 0.05, 1, times],
     ['Differential', 'diffLock', 'Diff lock (0 = open)', 0, 1, 0.02, 0.4, times],
-    ['Steering', 'steerRatio', 'Steering ratio (lower = quicker)', 10, 20, 0.1, 15.5, function (v) { return (+v).toFixed(1) + ':1'; }],
+    ['Steering', 'steerRatio', 'Steering ratio (lower = quicker)', 9, 18, 0.1, 12.5, function (v) { return (+v).toFixed(1) + ':1'; }],
     ['Steering', 'steerAssist', 'Steering assist (0 = direct)', 0, 1, 0.05, 1, times],
     ['Steering', 'steerWeight', 'Self-centring force', 0, 2, 0.05, 1, times],
     ['Steering', 'handStrength', 'Your grip on the wheel', 0.4, 2.5, 0.05, 1, times],
-    ['Assists', 'tc', 'Traction control (0 = off)', 0, 1, 0.05, 0.6, times],
+    ['Assists', 'tc', 'Traction control (0 = off, drift)', 0, 1, 0.05, 0.2, times],
     ['View', 'cameraDistance', 'Camera distance', 0.7, 1.6, 0.05, 1, times],
   ];
   var CAR_SWITCHES = [  // [key, label, stock]

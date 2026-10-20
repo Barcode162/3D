@@ -14,9 +14,11 @@ float approach(float v, float target, float up, float down, float dt) {
 float curve(float x, float power) { return std::copysign(std::pow(std::fabs(x), power), x); }
 float deadzone(float x, float dz) { return std::fabs(x) < dz ? 0 : std::copysign((std::fabs(x) - dz) / (1 - dz), x); }
 
-constexpr float kSteerSpan = 0.2f;  // screen widths of slide for full lock
+constexpr float kSteerSpan = 0.085f;  // screen widths from the joystick's middle to full lock
 
 }  // namespace
+
+float Controls::steerReach() { return kSteerSpan; }
 
 void Controls::reset() {
   car = {};
@@ -92,14 +94,16 @@ void Controls::update(float dt, const engine::InputFrame& input, const engine::V
       if (steerFinger_ != p.id) {
         steerFinger_ = p.id;
         anchorX_ = p.start.x;
+        anchorY_ = p.start.y;
       }
+      thumbX_ = p.pos.x;
       steerAlive = true;
       float raw = (p.pos.x - anchorX_) / kSteerSpan;
       // Past full lock: the center follows the finger, so reversing is instant.
       if (raw > 1) anchorX_ = p.pos.x - kSteerSpan;
       if (raw < -1) anchorX_ = p.pos.x + kSteerSpan;
       raw = engine::clampf(raw, -1, 1);
-      targetSteer_ = curve(raw, 1.35f);
+      targetSteer_ = curve(raw, 1.15f);
       source = Source::kTouch;
       continue;
     }

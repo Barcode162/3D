@@ -1145,4 +1145,17 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - Not done yet (later stages): car.json files (the data is in
   `ridgebackGS()`), kinematics tables, tire heat and wear, ESC, the drift
   skid pad set, sounds per car, the real car model.
+- **Round 2 (user, phone, 2026-10-20: "steering awful, turning radius
+  sucks, too weak to drift"):** (1) the virtual hand turned the wheel at
+  most ~370 deg/s (full lock >1 s): now ~950 deg/s (stiffness 70, 40 N m);
+  (2) touch steering is a joystick that appears under your thumb anywhere on
+  the left half, full lock 0.085 screen widths from its middle (was a 0.2
+  slide with only a bar at the bottom); (3) **bug:** the auto clutch took
+  full throttle in 2nd below ~50 km/h for a launch and held the engine at
+  3,400 rpm (no power on the skid pad); now once closed it stays closed
+  until a crawl; (4) kickdown on a floored pedal low in the revs; (5) lock
+  36 deg (ratio 12.5, tighter than the real car, [D]); (6) TC default 0.2
+  (was 0.6) and the GS's steering assist asks for more angle and catches
+  less (`feelFor` in app/race/game.cpp). drive_lab checks power oversteer
+  with TC off and full revs from 45 km/h.
 

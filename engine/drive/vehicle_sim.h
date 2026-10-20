@@ -50,7 +50,7 @@ struct Input {
   bool hold = false;    // on the grid: brakes on, clutch out (you can rev)
   bool autoGears = true, autoClutch = true;
   bool abs = true;
-  float tc = 0.6f;      // traction control 0 off .. 1 strong
+  float tc = 0.2f;      // traction control 0 off .. 1 strong
   float handStrength = 1, steerWeight = 1;
 };
 
@@ -140,7 +140,8 @@ class Car {
   float reverseHold_ = 0;
   float tcCut_ = 1;
   float autoClutch_ = 0;
-  bool launching_ = false;  // the auto clutch's engagement (a launch controller)
+  bool launching_ = false;
+  bool clutchClosed_ = false;  // the auto clutch is fully in (rolling)  // the auto clutch's engagement (a launch controller)
   Vec3 lastAccel_, lastAngAccel_;
 };
 

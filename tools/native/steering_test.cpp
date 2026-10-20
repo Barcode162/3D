@@ -109,7 +109,7 @@ int main() {
         r.step(1, H::kHolding, r.holdThrottle(12), 0);
         if (r.t > 2) { minX = std::min(minX, r.car.position.x); maxX = std::max(maxX, r.car.position.x); }
       }
-      band("turning circle at 12 km/h (diameter)", maxX - minX, 9.0f, 13.5f, "m");
+      band("turning circle at 12 km/h (diameter)", maxX - minX, app::race::carModel(r.model).newPhysics ? 7.0f : 9.0f, 13.5f, "m");  // (the GS: a tight lock, for drifting)
     }
     // B. Full wheel at speed: sideways grip and how much it slides.
     for (float kmh : {80.0f, 120.0f}) {

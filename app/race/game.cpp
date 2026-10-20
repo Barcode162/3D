@@ -41,6 +41,20 @@ std::string timeText(double ms) {
 
 using engine::wrapAngle;
 
+// The steering assist per car. The GS on the new physics may ask for more
+// angle (its tires and self-steer do the rest) and catches less by itself,
+// so it can be slid and drifted.
+engine::SteeringFeel feelFor(int model) {
+  engine::SteeringFeel f;
+  if (carModel(model).newPhysics) {
+    f.gripG = 1.3f;
+    f.slipShare = 1.1f;
+    f.stability = 0.45f;
+    f.yawDamping = 0.5f;
+  }
+  return f;
+}
+
 }  // namespace
 
 void Game::prepare() {
@@ -127,6 +141,7 @@ void Game::beginPractice(double nowMs, bool pad) {
   resultsMs_ = 0;
   startMs_ = nowMs;
   controls_.reset();
+  controls_.setFeel(feelFor(world_.racers()[static_cast<size_t>(world_.you())].model));
   const Racer& r = world_.racers()[static_cast<size_t>(world_.you())];
   camYaw_ = engine::Vehicle::headingOf(r.car.forward());
   camPos_ = r.car.position;
@@ -303,6 +318,7 @@ void Game::beginRace(double nowMs, bool fromRoom) {
   resultsMs_ = 0;
   startMs_ = nowMs;
   controls_.reset();
+  controls_.setFeel(feelFor(world_.racers()[static_cast<size_t>(world_.you())].model));
   const Racer& r = world_.racers()[static_cast<size_t>(world_.you())];
   camYaw_ = engine::Vehicle::headingOf(r.car.forward());
   camPos_ = r.car.position;
@@ -830,18 +846,31 @@ void Game::queueHud(engine::TextRenderer& text, float W, float H, float px, doub
     rect({gas.x, gas.y + gas.h * (1 - controls_.gasValue()), gas.w, gas.h * controls_.gasValue()},
          {0.2f, 1, 0.4f, 0.45f});
     label(gas, "GAS", 11 * u);
-    // Steering: a bar showing the wheel, plus where your thumb set the center.
-    const float sy = H - 22 * u, sw = 0.36f * W, sx = 0.04f * W;
-    text.addRect(sx, sy, sw, 6 * u, {0, 0, 0, 0.4f});
-    text.addRect(sx + sw * 0.5f - 1 * u, sy - 4 * u, 2 * u, 14 * u, {1, 1, 1, 0.6f});
-    const float st01 = 0.5f + 0.5f * controls_.rawSteer();
-    text.addShape(0, sx + sw * st01, sy + 3 * u, 8 * u,
-                  controls_.steering() ? Vec4{1, 0.42f, 0.78f, 0.95f} : Vec4{1, 1, 1, 0.5f});
-    if (!controls_.steering() && nowMs - startMs_ < 9000) {
-      engine::TextStyle t;
-      t.align = 0.5f;
-      t.color = {1, 1, 1, 0.75f};
-      text.addScreen("THUMB DOWN ANYWHERE HERE\nAND SLIDE TO STEER", 0.25f * W, 0.55f * H, 8 * u, t);
+    // Steering: a joystick appears wherever your thumb lands on the left
+    // half; slide left or right (a short slide is full lock). Faint at its
+    // usual spot when you're not touching it.
+    {
+      const bool on = controls_.steering();
+      const float reach = Controls::steerReach() * W;
+      const float jx = on ? controls_.steerAnchor() * W : 0.2f * W, jy = on ? controls_.steerAnchorY() * H : 0.7f * H;
+      const float a = on ? 1.0f : 0.45f;
+      text.addRect(jx - reach, jy - 2 * u, 2 * reach, 4 * u, {0, 0, 0, 0.35f * a});
+      text.addShape(engine::font::kShapeRing, jx, jy, reach + 10 * u, {1, 1, 1, 0.35f * a});
+      text.addShape(engine::font::kShapeRing, jx - reach, jy, 5 * u, {1, 1, 1, 0.4f * a});
+      text.addShape(engine::font::kShapeRing, jx + reach, jy, 5 * u, {1, 1, 1, 0.4f * a});
+      const float knob = jx + engine::clampf(on ? controls_.steerThumb() * W - jx : 0, -reach, reach);
+      text.addShape(engine::font::kShapeDisc, knob, jy, 14 * u, on ? Vec4{1, 0.42f, 0.78f, 0.9f} : Vec4{1, 1, 1, 0.4f});
+      // The steering wheel's actual position (it lags your thumb a little).
+      const float sw = 0.3f * W, sx = 0.05f * W, sy = H - 14 * u;
+      text.addRect(sx, sy, sw, 4 * u, {0, 0, 0, 0.35f});
+      text.addRect(sx + sw * 0.5f - 1 * u, sy - 3 * u, 2 * u, 10 * u, {1, 1, 1, 0.5f});
+      text.addShape(0, sx + sw * (0.5f + 0.5f * engine::clampf(controls_.wheel(), -1, 1)), sy + 2 * u, 5 * u, {1, 1, 1, 0.7f});
+      if (!on && nowMs - startMs_ < 9000) {
+        engine::TextStyle t;
+        t.align = 0.5f;
+        t.color = {1, 1, 1, 0.8f};
+        text.addScreen("THUMB DOWN ANYWHERE ON THE LEFT,\nSLIDE LEFT OR RIGHT TO STEER", 0.25f * W, 0.45f * H, 8 * u, t);
+      }
     }
   } else {
     engine::TextStyle t;

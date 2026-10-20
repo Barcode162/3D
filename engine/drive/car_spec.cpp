@@ -104,7 +104,8 @@ CarSpec ridgebackGS() {
   s.diffPreload = 90;
   s.diffPower = 0.4f;
   s.diffCoast = 0.25f;
-  s.steeringRatio = 15.5f;     // ~29 degrees at the road wheel: ~11.5 m turning circle [S: 37.7 ft]
+  s.steeringRatio = 12.5f;     // 36 degrees at the road wheel [D]: tighter than the real car's
+                               // 11.5 m circle (user, 2026-10-20: turning and drifting)
   s.lockDeg = 450;             // 2.5 turns lock to lock [E]
   s.ackermann = 0.4f;
   return s;

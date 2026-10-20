@@ -119,7 +119,8 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
   virtual steering wheel); the Ridgeback GS (car 4 "GS" in the garage); the
   skid pad in the Ring's infield (garage button, rig menu, PAD/RING button);
   live Car setup panel (SETUP button) with Old physics switch and telemetry;
-  tests `tools/native/drive_lab.cpp` + race_test. Waiting for the phone check.
+  tests `tools/native/drive_lab.cpp` + race_test. Phone check 1: "so much nicer"; round 2
+  (same day): joystick steering, quicker wheel, clutch power bug, tighter lock, drift.
 - [ ] Next: R-0 research pass, then stages 1-22 (the spec's table).
 
 ### Parked (not now; the user promotes items at "start")

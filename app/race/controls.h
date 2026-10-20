@@ -33,6 +33,8 @@ class Controls {
   enum Button { kLeave, kCamera, kReset, kLookBack, kHandbrake, kGearDown, kGearUp, kSetup, kPlace, kButtonCount };
 
   void reset();
+  // How the steering assist feels (per car: engine/steering.h).
+  void setFeel(const engine::SteeringFeel& f) { steering_.feel = f; }
   // `car` = the car you drive (steering feel needs its speed and slide);
   // `aspect` = width / height of the screen.
   void update(float dt, const engine::InputFrame& input, const engine::Vehicle& car, bool manualGears, float aspect);
@@ -62,7 +64,12 @@ class Controls {
   Rect brakePedal(float aspect) const;
   Rect gasPedal(float aspect) const;
   bool steering() const { return steerFinger_ >= 0; }
-  float steerAnchor() const { return anchorX_; }  // screen fraction
+  // The joystick that appears under your thumb: its middle, the thumb, and
+  // its reach (screen fractions; reach in screen widths).
+  float steerAnchor() const { return anchorX_; }
+  float steerAnchorY() const { return anchorY_; }
+  float steerThumb() const { return thumbX_; }
+  static float steerReach();
   float rawSteer() const { return targetSteer_; }
   float gasValue() const { return gas_; }
   float brakeValue() const { return brake_; }
@@ -73,7 +80,7 @@ class Controls {
   float steer_ = 0, targetSteer_ = 0, gas_ = 0, brake_ = 0;
   engine::Steering steering_;
   int steerFinger_ = -1, gasFinger_ = -1, brakeFinger_ = -1;
-  float anchorX_ = 0;
+  float anchorX_ = 0, anchorY_ = 0.7f, thumbX_ = 0;
   float safeL_ = 0, safeR_ = 0, safeB_ = 0;
   bool held_[kButtonCount] = {};
   bool padWas_[20] = {};
