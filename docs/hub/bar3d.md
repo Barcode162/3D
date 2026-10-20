@@ -1,6 +1,6 @@
 # Hub board: bar3d
 
-Copied from the hub by `node tools/hub.mjs snapshot` on 2026-10-20 16:52 UTC. The hub is the live
+Copied from the hub by `node tools/hub.mjs snapshot` on 2026-10-20 17:53 UTC. The hub is the live
 version; this file is the copy in the repo (read it when the hub is out of reach).
 
 ## Arriving
@@ -959,19 +959,21 @@ _How we work: tests, deploys, phone reports, this hub, the AI dock. Bugs go with
 
 ### The Hub update.
 
-`bedd869642` · In progress
+`bedd869642` · Check on phone · build 9e189a3
 
 **What the owner wants:** The hub works but the workflow is not what I want it to be, I’d like to be able to log on or open my site and be able to simply use just words to awnser what the ai wants to know for each box that I chose, also I’d like to be able to have all the different categories easier to access and it should’ve way more user friendly like on of those newer systems the ui is also nice with color but I think I’d like something a bit more sharp not as bubbly and more geared towards production and work efficiency not just something that works with a lot of edits and reading things should be separated by what the current status is, what I want to from that point on and the ai can auto update the card with my new data and it’s on file version of it so we can have multiple sources to check for what goes where what and how and I’d like to make it so I can clearly have my awnser box and a lot of quality of life features since this is supposed to be a visual hub for me human to interact with my entire full project and I’d like it to be so that this hub tool will be used not just for this Bar3d project but for whatever I want to work on so let’s make sure we have an appropriate selection menu for projects with a screenshot of the bar itself at the top half with the name and the info and details as well on there / The goal for this one is I edit everything and work from here and when I’m read for ai Claude to work I say go and you see what the is to finish and work on that I’ve already approved, then you get back to me through here and I repeat that cycle I don’t have enough money to have it work from this site alone so I’ll do it like that
 
 ```
 WHAT: The hub works the way you work: pick a project, see what needs you, answer Claude in plain words, edit what you want; Claude picks it up on "go" and answers on the card.
-NOW: v2 live (build 05cfaf2). Projects screen (Bar3D with a shot of the bar, name, about, counts, link; + New project with your own picture). Sharper, denser page. Views: Needs you (questions, to check, to review), Claude queue, In progress, All, and every section in the nav strip (☰ lists them all). A card opens full screen: Status (stage bar, one-tap next step, report), Your plan (What you want: your words, Claude never overwrites them; Claude's plan below), Talk (the conversation, answer box always at the bottom, "Send + Ready"), Details (title, section, raw plan, order, delete, history). Search, drafts kept on your phone, board download. Claude: hub.mjs inbox (what you wrote) read first on every "go"; the board copied into docs/hub/bar3d.md.
-LATER: 1. Drag to reorder cards. 2. A badge or notification when Claude answers. 3. Members and the activity feed stay on This hub (#83d21fa99c).
+NOW: v2.1 live (build 9e189a3). Projects screen; Home with the section map; bottom tabs; cards with Status / Your plan / Talk / Details. Drag a card by its ⋮⋮ grip to reorder it in a section. A blue dot (and the Home tab's badge) marks cards Claude wrote on since you last opened them. Search also finds section names and messages.
+LATER: 1. A phone notification when Claude answers (needs the hub as a home-screen app). 2. Members and the activity feed stay on This hub (#83d21fa99c).
 NEEDS: This hub (#83d21fa99c)
 UNLOCKS: nothing yet
 NOT HERE: Claude working from the site by itself → AI dock (work on the project from the site) (#0984e150c5)
-DETAILS: docs/DECISIONS.md → Hub v2; docs/HUB_MAP.md §5.
+DETAILS: docs/DECISIONS.md → Hub v2, Hub v2.1; docs/HUB_MAP.md §5.
 ```
+
+**Claude's report:** Drag to reorder and 'new from Claude' marks are live. / How to check it: / 1) Open a section (e.g. Games). Each card has a ⋮⋮ grip on its left. Hold it and drag a card down past the next one: the others slide out of the way, it says 'Moved', and the new order stays after you reload. Tapping the card itself still opens it. / 2) Cards I wrote on since you last opened them have a blue pulsing dot and 'New from Claude' (these two cards should have it now). Open one, go back: the dot is gone. The Home tab's badge counts them too. / 3) Search 'drag': it now also finds words inside the Talk messages. / When it looks right, Status → It works → Done.
 
 ### AI dock (work on the project from the site)
 
@@ -987,16 +989,16 @@ DETAILS: PROGRESS.md Parked.
 
 ### This hub
 
-`83d21fa99c` · Check on phone · build d752207
+`83d21fa99c` · Check on phone · build 9e189a3
 
 ```
 WHAT: This hub: the board of the world, the Claude queue, reports.
-NOW: v1 live. Rules for what goes where: docs/HUB_MAP.md; node tools/hub.mjs check.
-STEPS: 1. v2: the user's brothers as members; their cards wait for review. 2. v3: an activity feed.
+NOW: v2.1 live (build 9e189a3). A project opens on Home: what needs you, new from Claude, what Claude is working on, a map of every section (tiles with counts and a stage bar), recently changed. Bottom tabs: Home, Queue, Sections, All. Smooth animations: lists and tiles rise in one after another, headings wipe in, numbers count up, cards slide in and out, sheets slide up. Rules for what goes where: docs/HUB_MAP.md; node tools/hub.mjs check.
+STEPS: 1. Members: the user's brothers; their cards wait for review. 2. An activity feed.
 NEEDS: nothing
 UNLOCKS: The Hub update. (#bedd869642); AI dock (work on the project from the site) (#0984e150c5)
-DETAILS: hub/; docs/HUB_MAP.md.
+DETAILS: hub/; docs/DECISIONS.md → Hub v2.1; docs/HUB_MAP.md.
 ```
 
-**Claude's report:** v1 is live: login with your bar account, World / Claude queue / Check on phone / Advanced tabs, cards with stages, plan, Claude's report and questions, up/down order, Account: change password, recovery code, Claude key. / How to check: 1) add a card and set it to Ready for Claude, it shows in Claude queue. 2) Up/Down moves a card in its section. 3) Make a recovery code and save it. Next: v2 members (your brothers, their cards wait for your review), v3 activity feed.
+**Claude's report:** Easier to find things, and smooth animations. Live at joshuavelasco.com/hub (reload once). / How to check it: / 1) Open Bar3D: it opens on Home. Top: how many things need you, then four numbers that count up. Below: 'The world', a tile for every section with a coloured bar of its cards' stages, then 'Recently changed'. / 2) Bottom of the screen: four tabs, Home / Queue / Sections / All. Sections opens the list of every section. / 3) Watch things appear: rows and tiles slide up one after another, a card slides in from the right and back out when you go back, the window from + Card slides up. If everything just pops in with no motion, check iPhone Settings → Accessibility → Motion → Reduce Motion is off (it turns the animations off on purpose). / When it looks right, Status → It works → Done.
 
