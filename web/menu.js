@@ -186,10 +186,31 @@ window.bar3dUi = (function () {
       ['menu_bartender', 'Bartender', bartenderPanel], ['menu_help', 'Help', helpPanel],
     ];
     if (info.seated) tiles.push(['menu_standup', 'Stand up', function () { cmd('standUp'); close(); }]);
-    show('Menu', [el('div', { class: 'mGrid' }, tiles.map(function (t) {
+    show('Menu', [walletLine(), el('div', { class: 'mGrid' }, tiles.map(function (t) {
       return el('button', { class: 'mTile', onclick: t[2] }, [icon(t[0]), t[1]]);
     }))]);
     current = 'main';
+  }
+
+  // Your credits (cloud/ledger.js): shown when you're logged in.
+  function money(cents) { return '$' + (cents / 100).toFixed(2); }
+  function walletLine() {
+    var line = el('div', { class: 'mSmall', style: 'text-align:center;margin:0 0 8px;font-size:15px;' });
+    var A = window.bar3dAccount, N = window.bar3dNet;
+    var token = A && A.token ? A.token() : '';
+    var base = N && N.cloudHttp ? N.cloudHttp() : '';
+    if (!token) { line.textContent = 'Log in (Profile) to earn credits in games.'; return line; }
+    if (!base) return line;
+    line.textContent = 'Credits: …';
+    fetch(base + '/bank', { method: 'POST', body: JSON.stringify({ a: 'me', token: token }),
+                            headers: { 'Content-Type': 'text/plain' }, cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (w) {
+        if (!w || !w.ok) { line.textContent = ''; return; }
+        line.textContent = 'Credits: ' + money(w.balance) + '  ·  earned today ' + money(w.earnedToday) + ' of ' + money(w.cap);
+      })
+      .catch(function () { line.textContent = ''; });
+    return line;
   }
 
   function emotesPanel() {

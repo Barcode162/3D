@@ -75,7 +75,10 @@ material; old notes are in `docs/PLANS_ARCHIVE.md`. Product direction:
    - [x] Age at sign-up (2026-10-20): birth date required, under 13 refused;
      kept private, your own replies carry `band` ("teen"/"adult"; "" for older
      accounts, to be asked later).
-   - [ ] Next: games pay into the ledger (part of 7), the wallet in the menu,
+   - [x] Darts pay (2026-10-20): a finished 301 credits $5-50 (6 darts $50,
+     $2.50 less per extra dart) through the Ledger; the phone says "+$X" (or
+     "Log in to earn credits"); the Menu shows your credits and today's cap.
+   - [ ] Next: more games pay (once the room checks their results),
      accounts moved off IONOS (logins to the Ledger's side, PBKDF2 hashes,
      migrated on first login), room checks for chess moves and 4K Mania scores.
 4. [ ] **Safety:** age bands kept apart (lobbies, voice, messages), block /

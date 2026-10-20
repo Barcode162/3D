@@ -590,6 +590,9 @@ window.bar3dNet = (function () {
     },
     // Where the accounts and reports servers are (see DEFAULT_SERVER).
     serverUrl: function () { return server; },
+    // The Cloudflare server's web address (for /bank), from the room's
+    // socket address; '' until config.json is read.
+    cloudHttp: function () { return url ? url.replace(/^ws/, 'http').replace(/\/room\/.*$/, '') : ''; },
     names: function () { return Object.keys(players).map(function (k) { return players[k].name; }); },
     tokenOk: tokenOk,
     myId: function () { return mySlot >= 0 ? 's' + pad(mySlot) : ''; },
