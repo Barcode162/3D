@@ -133,7 +133,7 @@ void Gpu::resizeIfNeeded() {
   }
   cssWidth = cssW;
   cssHeight = cssH;
-  const double ratio = std::min(dpr, kMaxPixelRatio);
+  const double ratio = std::min(dpr, std::min(resolutionCap, kMaxPixelRatio));
   const auto w = static_cast<uint32_t>(std::max(1.0, std::round(cssW * ratio)));
   const auto h = static_cast<uint32_t>(std::max(1.0, std::round(cssH * ratio)));
   if (w == width && h == height) {

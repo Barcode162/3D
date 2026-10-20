@@ -13,6 +13,7 @@ declare -A TESTS=(
   [steering_test]="tools/native/steering_test.cpp engine/steering.cpp $RACE"
   [json_test]="tools/native/json_test.cpp engine/json.cpp"
   [math_test]="tools/native/math_test.cpp"
+  [quality_test]="tools/native/quality_test.cpp"
   [proto_test]="tools/native/proto_test.cpp engine/netproto.cpp engine/json.cpp"
   [chess_test]="tools/native/chess_test.cpp app/chess_rules.cpp"
   [activity_test]="tools/native/activity_test.cpp app/activity.cpp"

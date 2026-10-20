@@ -75,6 +75,32 @@ for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
   await p2.close();
 }
 
+// Settings → Graphics: on a 3x phone screen High draws 2 pixels per point,
+// Low 1.3 (the canvas shrinks, the page stretches it); ?quality= forces one.
+{
+  const p3 = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3 });
+  await openBar(p3, site.url, 'skipintro&server=off');
+  await p3.waitForTimeout(1000);
+  const ratio = () => p3.evaluate(() => document.getElementById('canvas').width / document.getElementById('canvas').clientWidth);
+  const r0 = await ratio();
+  await p3.click('#hudMenu');
+  await p3.click('.mTile:has-text("Settings")');
+  await p3.click('.mChoice button:has-text("Low")');
+  let r1 = 0;
+  for (let t = 0; t < 5000 && Math.abs((r1 = await ratio()) - 1.3) > 0.01; t += 250) await p3.waitForTimeout(250);
+  check(Math.abs(r0 - 2) < 0.01 && Math.abs(r1 - 1.3) < 0.01, `Graphics → Low: ${r0.toFixed(2)}x → ${r1.toFixed(2)}x pixels`);
+  check(/Quality: Low \(1.3x\), setting/.test(await p3.$eval('#log', (e) => e.textContent)), 'the log says the quality changed');
+  await p3.screenshot({ path: 'build/menu-quality-low.png' });
+  await p3.evaluate(() => bar3dSettings.reset());
+  await p3.goto('about:blank');
+  await openBar(p3, site.url, 'skipintro&server=off&quality=medium');
+  await p3.waitForTimeout(1000);
+  const r2 = await ratio();
+  check(Math.abs(r2 - 1.6) < 0.01, `?quality=medium draws ${r2.toFixed(2)}x`);
+  check((await logErrors(p3)).length === 0, 'no errors at lower quality');
+  await p3.close();
+}
+
 const errors = await logErrors(page);
 check(errors.length === 0, 'no errors in the log' + (errors.length ? ':\n' + errors.join('\n') : ''));
 await browser.close();

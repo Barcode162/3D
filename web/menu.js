@@ -20,6 +20,8 @@ window.bar3dSettings = (function () {
     echoCancel: true, noiseSuppress: true, autoGain: false,
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (engine/profiler)
+    // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (engine/quality.h); fov: degrees, up/down.
+    quality: [0, 0, 3], fov: [70, 50, 100],
   };
   function defaultOf(k) { var d = SCHEMA[k]; return Array.isArray(d) ? d[0] : d; }
   // The value if it fits the schema, else undefined.
@@ -151,6 +153,10 @@ window.bar3dUi = (function () {
       'background:#f5ecf8;transition:left .15s;}',
       '.mToggle.on{background:#ff5ab4;}.mToggle.on::after{left:23px;}',
       '.mSmall{font-size:12px;color:#cbb8d6;margin:4px 0;}',
+      '.mChoice{display:flex;gap:6px;margin:6px 0 4px;}',
+      '.mChoice button{flex:1;padding:8px 0;border-radius:10px;border:1px solid #4a3a55;background:#2a1f33;color:#f5ecf8;',
+      'font:600 13px -apple-system,system-ui;}',
+      '.mChoice button.on{border-color:#ff5ab4;background:#3d2040;}',
       '.mMeter{position:relative;height:16px;border-radius:8px;background:#2a1f33;overflow:hidden;margin:6px 0;}',
       '.mMeter .lvl{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#5ad1ff,#7dff8a);}',
       '.mMeter .gate{position:absolute;top:0;bottom:0;width:3px;background:#ff5ab4;}',
@@ -202,6 +208,17 @@ window.bar3dUi = (function () {
     return el('div', { class: 'mRow' }, [el('label', { text: label }), r, val]);
   }
   var pct = function (v) { return Math.round(v * 100) + '%'; };
+  // One of a few options (a row of small buttons), for a number setting.
+  function choice(label, key, names) {
+    var row = el('div', { class: 'mChoice' });
+    names.forEach(function (n, i) {
+      row.appendChild(el('button', { class: S.get(key) === i ? 'on' : '', text: n, onclick: function () {
+        S.set(key, i);
+        [].forEach.call(row.children, function (b, j) { b.classList.toggle('on', j === i); });
+      } }));
+    });
+    return el('div', {}, [el('label', { text: label }), row]);
+  }
 
   // ---- Panels ----
   function mainPanel() {
@@ -376,6 +393,10 @@ window.bar3dUi = (function () {
       el('h3', { text: 'Screen' }),
       toggle('Show name tags', 'showNames'),
       toggle('Performance overlay', 'perf'),
+      el('h3', { text: 'Graphics' }),
+      choice('Quality', 'quality', ['Auto', 'High', 'Medium', 'Low']),
+      el('div', { class: 'mSmall', text: 'Auto draws a little less sharp when your phone is struggling, and sharp again when it isn\u2019t.' }),
+      slider('Field of view', 'fov', 50, 100, 1, function (v) { return Math.round(v) + '\u00b0'; }),
       el('h3', { text: 'Sound' }),
       slider('Music', 'musicVol', 0, 1, 0.05, pct),
       slider('Effects', 'sfxVol', 0, 1, 0.05, pct),

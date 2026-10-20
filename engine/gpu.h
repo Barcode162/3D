@@ -31,6 +31,9 @@ class Gpu {
   uint32_t width = 0;
   uint32_t height = 0;
   float pixelRatio = 1.0f;
+  // Picture quality (engine/quality.h): at most this many device pixels per
+  // CSS pixel (never above 2). Changing it resizes the canvas next frame.
+  double resolutionCap = 2.0;
   // The GPU reads ASTC compressed textures (Apple GPUs: iPhone, Mac). Off
   // with ?astc=0 (tests the plain PNG/JPEG path).
   bool astc = false;

@@ -22,6 +22,7 @@
 #include "app/race/game.h"
 #include "app/loader.h"
 #include "app/renderer.h"
+#include "engine/quality.h"
 #include "app/test_hooks.h"
 #include "app/chess.h"
 #include "app/rhythm.h"
@@ -77,6 +78,7 @@ using app::slot::kCount;
 
 struct App {
   engine::Gpu gpu;
+  engine::QualityController quality;  // Settings → Graphics (how many pixels to draw)
   engine::Input input;
   engine::FirstPersonCamera camera;
   app::BarScene scene;
