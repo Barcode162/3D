@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Meridian — an endless drive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ui" id="ui">
+  <!-- HUD -->
+  <div class="hud" id="hud">
+    <div class="flow">
+      <div class="flow-label"><span id="flowTier">Calm</span><span class="flow-mult" id="flowMult">×1</span></div>
+      <div class="flow-bar"><div class="flow-fill" id="flowFill"></div></div>
+    </div>
+    <div class="trip">
+      <div><span class="k">Distance</span><span class="v" id="dist">0.0</span><span class="u" id="distU">mi</span></div>
+      <div><span class="k">Clean line</span><span class="v" id="streak">0.0</span><span class="u" id="streakU">mi</span></div>
+      <div><span class="k">Flow score</span><span class="v" id="score">0</span></div>
+    </div>
+    <div class="biome" id="biome"></div>
+    <div class="toast" id="toast"></div>
+    <div class="dash">
+      <svg class="tach" viewBox="0 0 200 120" aria-hidden="true">
+        <path class="tach-bg" d="M20 110 A 80 80 0 0 1 180 110" />
+        <path class="tach-fg" id="tachFg" d="M20 110 A 80 80 0 0 1 180 110" />
+      </svg>
+      <div class="speed"><span id="speed">0</span><span class="speed-u" id="speedU">mph</span></div>
+      <div class="gear"><span id="gear">1</span></div>
+      <div class="pedals"><i id="pThr"></i><i id="pBrk"></i></div>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div class="screen title" id="title">
+    <div class="title-inner">
+      <p class="eyebrow">An endless drive</p>
+      <h1>Meridian</h1>
+      <p class="lede">No rivals. No clock. Just the road, the light, and the line you carve through it. Drive smooth, carry your speed, stay on the asphalt — the music finds you.</p>
+      <button class="btn primary" id="startBtn" data-interactive>Begin the drive</button>
+      <div class="controls">
+        <div><kbd>W</kbd><kbd>↑</kbd> throttle</div>
+        <div><kbd>S</kbd><kbd>↓</kbd> brake</div>
+        <div><kbd>A</kbd><kbd>D</kbd> steer</div>
+        <div><kbd>Space</kbd> handbrake</div>
+        <div><kbd>C</kbd> camera</div>
+        <div><kbd>Esc</kbd> pause</div>
+      </div>
+      <p class="hint">Rails assist is on: steer to slide your line across the road, let go and the car holds it. Flow builds when you stay straight and steady. Switch to Light or Off in the pause menu for full control.</p>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div class="screen pause hidden" id="pause">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div class="row"><span>Camera</span><div class="seg" data-setting="camera"><button data-v="chase">Chase</button><button data-v="far">Far</button><button data-v="hood">Hood</button></div></div>
+      <div class="row"><span>Paint</span><div class="seg" data-setting="paint"><button data-v="pearl">Pearl</button><button data-v="graphite">Graphite</button><button data-v="midnight">Midnight</button><button data-v="ember">Ember</button></div></div>
+      <div class="row"><span>Units</span><div class="seg" data-setting="units"><button data-v="mph">mph</button><button data-v="kmh">km/h</button></div></div>
+      <div class="row"><span>Assists</span><div class="seg" data-setting="assist"><button data-v="rails">Rails</button><button data-v="light">Light</button><button data-v="off">Off</button></div></div>
+      <div class="row"><span>Guide line</span><div class="seg" data-setting="guide"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+      <div class="row"><span>Music</span><input type="range" min="0" max="100" value="70" id="musicVol" /></div>
+      <div class="row"><span>Engine & world</span><input type="range" min="0" max="100" value="70" id="sfxVol" /></div>
+      <div class="row"><span>HUD</span><div class="seg" data-setting="hud"><button data-v="on">On</button><button data-v="minimal">Minimal</button><button data-v="off">Off</button></div></div>
+      <p class="tip">Assists Off disables traction control and steering help — throttle out of corners carefully, the rear will step out.</p>
+      <div class="actions">
+        <button class="btn" id="resetBtn">Reset to road</button>
+        <button class="btn primary" id="resumeBtn">Resume</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Touch controls -->
+  <div class="touch hidden" id="touch">
+    <div class="tzone steer" id="tSteer"><div class="tknob" id="tKnob"></div></div>
+    <div class="tpedals">
+      <button class="tbtn" id="tBrake">Brake</button>
+      <button class="tbtn gas" id="tGas">Gas</button>
+    </div>
+    <button class="tpause" id="tPause" aria-label="Pause">II</button>
+  </div>
+
+  <div class="fade" id="fade"></div>
+  <div class="debug" id="debug"></div>
+</div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

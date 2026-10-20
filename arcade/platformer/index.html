@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>dHP — Room</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <canvas id="scene"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="bar"><div id="hpFill" class="fill"></div></div>
+    <div class="bar"><div id="mpFill" class="fill"></div></div>
+    <div class="bar"><div id="spFill" class="fill"></div></div>
+  </div>
+
+  <!-- full-screen look / drag zone -->
+  <div id="look"></div>
+
+  <!-- left joystick -->
+  <div id="stick"><div id="knob"></div></div>
+
+  <!-- right buttons -->
+  <button id="btnJump">JUMP</button>
+  <button id="btnSprint">RUN</button>
+  <button id="btnInteract">USE</button>
+
+  <!-- damage flash -->
+  <div id="flash"></div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
