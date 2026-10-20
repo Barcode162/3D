@@ -209,7 +209,7 @@ judged on the user's phone.
   at `/`, the bar at `/bar/`). `relay.php` is the old multiplayer relay, no
   longer used by the game (Cloudflare replaced it, 2026-10-18).
 - `tools/` holds dev scripts: `setup.sh` (toolchain), `smoke.mjs` (headless test),
-  `check_live.mjs` (loads the deployed site headlessly), `menu_test.mjs`
+  `check_live.mjs` (loads the deployed site headlessly), `menu_test.mjs`, `menu_games_test.mjs` (the menu after every game)
   (menus ↔ game through the mailbox), `mp_test.mjs`
   (two players through the room on local wrangler dev), `voice_test.mjs` (WebRTC voice
   between two players, handshake through the room), `shots.mjs` (screenshots with page options).

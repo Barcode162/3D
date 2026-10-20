@@ -145,6 +145,9 @@ jobs:
       - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
         run: node tools/menu_test.mjs
 
+      - name: "Test: the menu still answers after every game"
+        run: node tools/menu_games_test.mjs
+
       # Meridian (the user's driving game) opens from a racing rig and back.
       - name: "Test: Meridian inside the bar"
         continue-on-error: true

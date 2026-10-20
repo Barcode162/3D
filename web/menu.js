@@ -74,11 +74,36 @@ window.bar3dUi = (function () {
   var LOOK_COLORS = ['#232326', '#ececE6', '#0d0d0d', '#bf1a1a', '#141a38', '#ff40a6', '#2e6138', '#5a5e6b'];
 
   function cmd(name, a, b, text, text2) { if (window.bar3dBridge) bar3dBridge.command(name, a, b, text, text2); }
+  // A button that answers even if the browser drops the click after a
+  // finger lifts on it (an open bug: after some games the Menu button and a
+  // panel's ✕ stopped answering on the phone). A short tap that gets no
+  // click within half a second runs the handler anyway, and says so in the
+  // log (so a report shows it).
+  function onTap(e, fn) {
+    var down = null, pending = 0;
+    e.addEventListener('pointerdown', function (ev) { down = { x: ev.clientX, y: ev.clientY }; });
+    e.addEventListener('pointerup', function (ev) {
+      if (!down || Math.abs(ev.clientX - down.x) > 10 || Math.abs(ev.clientY - down.y) > 10) { down = null; return; }
+      down = null;
+      clearTimeout(pending);
+      pending = setTimeout(function () {
+        pending = 0;
+        if (!e.isConnected) return;
+        if (window.bar3dLog) bar3dLog.add('warn', 'Menu: a tap on "' + (e.textContent || e.id).slice(0, 24) + '" got no click; handled it anyway.');
+        fn(ev);
+      }, 500);
+    });
+    e.addEventListener('click', function (ev) {
+      if (pending) { clearTimeout(pending); pending = 0; }
+      fn(ev);
+    });
+  }
   function el(tag, attrs, children) {
     var e = document.createElement(tag);
     for (var k in attrs || {}) {
       if (k === 'style') e.style.cssText = attrs[k];
       else if (k === 'text') e.textContent = attrs[k];
+      else if (k === 'onclick' && tag === 'button') onTap(e, attrs[k]);
       else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), attrs[k]);
       else e.setAttribute(k, attrs[k]);
     }
@@ -134,7 +159,7 @@ window.bar3dUi = (function () {
       '.mList button.on{border-color:#ff5ab4;background:#3d2040;}',
       '#menuToast{position:fixed;left:50%;top:calc(42px + env(safe-area-inset-top));transform:translateX(-50%);z-index:9;',
       'background:#1a1220ee;color:#f5ecf8;padding:8px 14px;border-radius:14px;font:14px -apple-system,system-ui;',
-      'max-width:86vw;text-align:center;display:none;white-space:pre-line;}',
+      'max-width:86vw;text-align:center;display:none;white-space:pre-line;pointer-events:none;}',
       '#hudMenu,#hudMic{pointer-events:auto;font:inherit;color:inherit;background:#0008;border:1px solid #f5d9a855;',
       'border-radius:6px;padding:4px 8px;margin-right:6px;}',
       '#hudMic.live{background:#2d7a3a;border-color:#7dff8a;}#hudMic.muted{background:#7a2d3a;}',
