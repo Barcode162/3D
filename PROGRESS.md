@@ -132,7 +132,18 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
   live Car setup panel (SETUP button) with Old physics switch and telemetry;
   tests `tools/native/drive_lab.cpp` + race_test. Phone check 1: "so much nicer"; round 2
   (same day): joystick steering, quicker wheel, clutch power bug, tighter lock, drift.
-- [ ] Next: R-0 research pass, then stages 1-22 (the spec's table).
+  Live as build 0dbaf9c (and later). Phone check 2 (user, 2026-10-20): "way better".
+- [ ] **Hub card not updated yet** (that session had no valid HUB_KEY). Next
+  session with the key: `node tools/hub.mjs report 5ddbcf678b --stage check
+  --build 0dbaf9c --report "MVP + round 2 live: GS on the new physics, skid
+  pad, Car setup, joystick steering, quicker wheel, power fix, 36 deg lock,
+  light TC for drifting. Phone: 'way better'."`, then `say` on card
+  `8fceaf0e4a` (Racing rigs visuals) is still waiting on the user's answer:
+  their plan stops at "The rigs themselves are..."; recommended doing the
+  visual upgrade on the rebuilt track (rework stage 14).
+- [ ] Next for driving: the user's open wishes from the phone checks (more
+  steering polish if they ask), then the R-0 research pass and stages 1-22
+  (the spec's table).
 
 ### Parked (not now; the user promotes items at "start")
 - Kids edition: a separate, simpler game in the same universe (under 13).
