@@ -1269,3 +1269,13 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - **Entity ids**: "kind@x,z" (seats) / "thing.action@x,y,z" (things) /
   "mirror@..." / "prop.pint@..." in decimetres; net id = FNV-1a folded to
   16 bits. Moving a thing changes its id on purpose (the golden list shows it).
+## Looped (2026-10-20, the user in chat)
+- One repo, strict folders (looped/ engine, bar/ game with bar/projects/,
+  tools); a separate engine repo later if ever needed. Site URLs stay.
+- Private: the game at joshuavelasco.com/bar behind a PHP gate (cookie from
+  account.php; owner + admins + invited); GitHub Pages can't do logins and
+  free Pages needs a public repo, so github.io goes away when the repo turns
+  private. The pre-push build stays public as /classic (open room "main");
+  the private build uses room "looped", which checks the login may play.
+- Free only: no GitHub Pro; watch the private-repo Actions minutes.
+- Order and details: `docs/LOOPED.md`.

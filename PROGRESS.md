@@ -1,7 +1,10 @@
 # Progress
 
 **Live site:** https://barcode162.github.io/3D/
-**Current focus:** the master list below; step 1 is the performance pass.
+**Current focus (2026-10-20): Looped, `docs/LOOPED.md`** (top priority, ahead of
+the master list): A private site → B folder split (Looped engine, the bar,
+the bar's projects) → C new hub (news feed + map, no cards) and public news →
+D lighting, then loops. Bar features pause until B and D are built.
 
 ## The hub (2026-10-20)
 The user's board at **joshuavelasco.com/hub** is now the place to plan: cards
@@ -153,8 +156,7 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
   tests `tools/native/drive_lab.cpp` + race_test. Phone check 1: "so much nicer"; round 2
   (same day): joystick steering, quicker wheel, clutch power bug, tighter lock, drift.
   Live as build 0dbaf9c (and later). Phone check 2 (user, 2026-10-20): "way better".
-- [ ] **Hub card not updated yet** (that session had no valid HUB_KEY). Next
-  session with the key: `node tools/hub.mjs report 5ddbcf678b --stage check
+- [x] Hub card updated (2026-10-20, Looped session): `node tools/hub.mjs report 5ddbcf678b --stage check
   --build 0dbaf9c --report "MVP + round 2 live: GS on the new physics, skid
   pad, Car setup, joystick steering, quicker wheel, power fix, 36 deg lock,
   light TC for drifting. Phone: 'way better'."`, then `say` on card

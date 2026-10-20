@@ -225,3 +225,28 @@ detailed plan from A to Z." Plan: `docs/DRIVING_REWORK.md`.
   later. Must-have car: the **2017 C7 Corvette Grand Sport**; the other
   three are Claude's pick. Models by script for now. MVP first: simple,
   playable, for feel and adjusting.
+
+## Looped: the engine, loops, a private site, a new hub (user, 2026-10-20)
+Plan: `docs/LOOPED.md` (top priority).
+- **Split everything:** the engine (named **Looped** for now) gets its own body;
+  Bar3D is the main project that combines everything; the user's other
+  projects become parts of it ("a function for my big project"), kept in the
+  bar's folder. Upgrading the engine makes everything built on it better.
+- **Lighting like a real engine, with clever tricks:** baked light in images
+  (the user's "PNG that is the light" idea), probes, reflections, glow,
+  mood. "Make it feel like it runs on the UNITY KILLER 9001."
+- **Loops (the user's own idea):** like FL Studio, every thing in the world
+  plays its own pre-made pattern (flies, the fan, the bartender, signs), so
+  the world is alive on its own, not only reacting to input. One shared clock
+  for everyone, locked to the music. The user says what a loop is; Claude
+  makes it. The loop system is the backbone and the engine's identity.
+- **Private:** private repo and a private site with logins; the owner, the
+  admins they add, the people they invite. The build from before this push
+  stays public. Free only for now ($0; IONOS is paid for a year).
+- **The hub, no cards:** cards take too much space and split things into "100
+  tabs". Home is a news feed with versions and screenshots and one-tap
+  decisions; Explore is the bar as a map with the engine under the floor.
+  The simplest format anyone could understand, lively (waves, motion,
+  colors), "a sort of game" itself; the hub is the interface to the engine
+  (planning, and later live controls). Published posts make a public news
+  board / changelog.

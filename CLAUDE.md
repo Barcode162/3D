@@ -5,6 +5,8 @@ VRChat-style **3D hangout bar**: walkable, every object interactive, an avatar
 visible in a mirror, and real music.
 
 ## Start of every session (the user often starts fresh chats to save tokens)
+0. **Top priority since 2026-10-20: `docs/LOOPED.md`** (Looped engine split,
+   private site, the new hub without cards, then lighting and loops).
 1. Read **`PROGRESS.md`** (the master list and Parked), **`docs/VISION.md`**
    (the user's dream; "The product" is the current direction) and
    **`docs/DECISIONS.md`** (what was chosen, why, and what failed).
