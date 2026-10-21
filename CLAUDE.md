@@ -178,8 +178,12 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   profiler and performance overlay (`profiler.*`, `?perf=1`), and **the world
   core** (`looped/world/`: things, kinds, places, states, rules, loops on the
   shared clock; docs/ENGINE.md).
-- `bar/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
-  colliders, interactables and mirrors. `renderer.cpp` draws the scene,
+- `bar/` is the bar world itself. **The layout is a file:**
+  `assets/world/places/bar.json` (every thing, where it sits, its parts) with
+  `assets/world/kinds/bar.json` (what each kind is: model, shapes, seats, tap
+  areas, loops); `bar_scene.cpp` reads them into the lists the game uses
+  (`bar/world_files.*` finds the files: built into the game, handed to the
+  room's physics). Reformat after editing: `python3 tools/place_format.py <file>`. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
   `jukebox.cpp` is the playlist and its menu. `players.cpp` is the other
   players (multiplayer smoothing, their state slots), `shared_world.cpp`
@@ -190,8 +194,7 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   input → interaction → physics → net in → games → claims → net out →
   render), seats and things to use; `app_state.h` the shared App state, `hud.cpp` the on-screen text,
   `local_player.cpp` your camera, walking and held things. `world_bar.*`
-  plays the bar's world (every thing's loop, `assets/world/kinds/bar.json`);
-  `bar_place.*` turns today's layout into things. `loader.*` is the loading screen's stages,
+  plays the bar's world (every thing's loop, `assets/world/kinds/bar.json`). `loader.*` is the loading screen's stages,
   `test_hooks.*` the test page options (`?cam`, `?still`, `?sit`...).
 - `looped/shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every

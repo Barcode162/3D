@@ -129,8 +129,17 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   `attach` (re-parent, no jump), `check()` (every thing alive).
 - `assets/world/kinds/bar.json`: every kind in the bar; `assets/world/songs.json`:
   the built-in songs' tempo and first beat.
-- `bar/bar_place.*`: the bridge from today's layout (bar_scene.cpp) to things;
-  `bar/world_bar.*`: plays the world each frame and hands it to the renderer
+- `assets/world/places/bar.json`: the bar itself, every thing and where it
+  sits. Thing parts are in the thing's own space (they turn with it), except
+  floor rectangles (`blocks`, `floors`) and tap boxes (`uses[].box`), which
+  keep the world's axes. Parts every thing of a kind shares live in the kind
+  (a bar stool comes with its seat and box shapes; a jukebox with its tap
+  area, shape and speaker).
+- `bar/bar_scene.cpp`: reads the place into the game's lists (models,
+  colliders, blockers, seats, things to use, lights, mirrors, the bar's
+  special spots); `bar/scene_names.*`: the words for materials, actions, seat
+  kinds; `bar/world_files.*`: where the files come from.
+- `bar/world_bar.*`: plays the world each frame and hands it to the renderer
   (`setModelPose`, `setModelLook`, `setLightScale`, glowing boxes).
 - Tests: `tools/native/world_test.cpp` (the core), `bar_world_test.cpp` (the
   real bar: every thing alive, the bar's events).
@@ -138,8 +147,9 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
 ## How to add life (for Claude)
 - A new loop for an object: edit its kind in `assets/world/kinds/bar.json`
   (a model's kind is its file name). Units: metres, degrees, seconds or beats.
-- Something new that lives on its own (moths, sparks): a kind with a
-  "glowbox" part, placed in `bar/bar_place.cpp` → kExtras (until places are files).
+- A new object in the bar: a kind (with its model, shapes, seat, tap area) and
+  one line in `places/bar.json`. Something that lives on its own (moths,
+  sparks): a kind with a "glowbox" part, placed the same way.
 - A reaction: a state with a rule (`"on": {"music": "playing"}`); the bar sends
   "music" / "quiet" and "fire-on" / "fire-off" to every thing.
 - Run `tools/native/bar_world_test` after: it fails if anything isn't alive.
@@ -160,7 +170,11 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   no errors. The world costs ≈ 0.25 ms a frame (the "scene" phase; 0.03 before).
   One 35 ms CPU spike in "interaction" (no touch): watch if it repeats.
   User: "perfect everywhere, I love it".
-- [ ] **E2 second pass, with E3**: the layout itself into `places/bar.json`
-  (seats, colliders, things to use become parts), bar_scene.cpp retired.
+- [x] **E2 second pass** (2026-10-21): the layout is `places/bar.json` (171
+  things) and the kinds carry their parts. Converted by a one-time tool and
+  proven identical value by value (tools/native/scene_compare.cpp, in git
+  history at the conversion commit), except on purpose: round stools face
+  where their seat faces (shapes turn with them), the darts table got the
+  leg shapes every round table has. The room's physics reads the same files.
 - [ ] E3 logic and sync: taps and seats through rules; `Change` over the room
   protocol; the room runs the world (cloud/sim) and has the last word.

@@ -1318,3 +1318,27 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - A loop's name is its key in the kind, not the label used in error messages.
 - Timed states from the start of the clock (a sign blinking since 1970) would
   take millions of steps: a chain that comes back round skips whole rounds.
+
+## The bar's layout is a file (2026-10-21, ENGINE.md E2 second pass)
+- `assets/world/places/bar.json` + `kinds/bar.json` replace the layout code.
+  The game builds them in (`--embed-file`, read synchronously at start: no
+  extra download, no wait); native tests read the repo's copy; the room's
+  physics (standalone wasm, no files) gets their text from `cloud/room.js`,
+  which bundles the JSON (`sim_text` / `sim_file`, built with
+  `-DWORLD_FILES_GIVEN_ONLY` so no file calls are linked).
+- Parts turn with their thing, but floor rectangles and tap boxes keep the
+  world's axes (they're axis-aligned boxes; turning them would grow them).
+  When homes turn furniture in 90° steps, rotate those rectangles then.
+- A kind holds the parts all its things share, so a new jukebox anywhere
+  comes with its shape, tap area and speaker.
+- Net ids are a 16-bit hash of the thing's id; on a clash the later thing
+  takes the next free number (same files → same ids everywhere). Two clashes
+  happened among the bar's 171 things.
+- Seats, models, lights and mirrors keep the old order (seat numbers are on
+  the wire, `?sit=30` is the racing rig); tap areas may come in another order.
+
+### Layout gotchas (2026-10-21)
+- A seat's name is a std::string now: printf needs `.c_str()` (clang refuses
+  to compile it without, g++ only warns).
+- The stage stool's entity id moved from `@-6.8,6.4` to `@-6.8,6.3` (6.35
+  rounds either way): bar/entity_ids.txt updated on purpose.

@@ -3,9 +3,7 @@
 objects stay on one line, the rest one entry per line, so a place or kind
 file reads like a list of things.
 
-  python3 tools/place_format.py <file.json>          # reformat in place
-  python3 tools/place_format.py --dump <dump.json>   # the converter's output
-      (tools/native/place_dump.cpp) → places/bar.json + parts into kinds/bar.json
+  python3 tools/place_format.py assets/world/places/bar.json ...   # reformat in place
 """
 import json
 import sys
@@ -31,25 +29,8 @@ def write(path, data):
 
 
 def main():
-    if sys.argv[1] == '--dump':
-        dump = json.load(open(sys.argv[2]))
-        write('assets/world/places/bar.json', dump['place'])
-        kinds = json.load(open('assets/world/kinds/bar.json'))
-        have = {k['id']: k for k in kinds['kinds']}
-        for kid, parts in dump['kindParts'].items():
-            k = have.get(kid)
-            if k is None:
-                print('no kind', kid)
-                continue
-            k.setdefault('parts', {}).update(parts)
-        for k in kinds['kinds']:
-            ordered = {x: k[x] for x in ['id', 'is', 'about', 'still', 'pivot', 'parts'] if x in k}
-            ordered.update({x: v for x, v in k.items() if x not in ordered})
-            k.clear()
-            k.update(ordered)
-        write('assets/world/kinds/bar.json', kinds)
-    else:
-        write(sys.argv[1], json.load(open(sys.argv[1])))
+    for path in sys.argv[1:]:
+        write(path, json.load(open(path)))
 
 
 main()

@@ -2,8 +2,8 @@
 // the rooms, the walls and furniture you can't walk through, and every
 // thing you can use, in metres (x, z on the floor). Rebuild it after the
 // layout changes:
-//   g++ -std=c++20 -O1 -I. tools/native/map_dump.cpp bar/bar_scene.cpp bar/materials.cpp \
-//       looped/procedural.cpp looped/mesh_data.cpp -o build/map_dump && build/map_dump > hub/projects/bar3d-map.json
+//   g++ -std=c++20 -O1 -I. tools/native/map_dump.cpp bar/bar_scene.cpp bar/scene_names.cpp bar/world_files.cpp \
+//       bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp looped/json.cpp looped/world/*.cpp -o build/map_dump && build/map_dump > hub/projects/bar3d-map.json
 #include <cstdio>
 #include <string>
 
