@@ -259,3 +259,19 @@ Plan: `docs/LOOPED.md` (top priority).
   (`tools/assets/credit_coin.py` → `assets/models/credit_coin.glb`; the menu
   icon `bar/web/icons/credit.png` from `coin_icon.py`). It pops out and spins
   when you earn credits (`bar/coin_pop.*`).
+
+## The Studio, the Dials, a new look (user, 2026-10-21)
+Plan: `docs/STUDIO.md` (top priority after the engine's phone check).
+- "I created an engine, I want a real way to use it": a **Studio** at
+  joshuavelasco.com/studio where the user changes and builds the world
+  themselves, by touch, on the iPhone (select exactly what they mean, move,
+  resize, extend a side, build, light, loops), then publishes it.
+- **No AI inside** for now: the user works with Claude through Claude Pro
+  only. Build it so an AI can plug in later.
+- **The hub stays the barebones one**: every dial listed, every little thing,
+  to tweak and to show Claude. Hub and Studio must be one coherent system.
+- The user pasted a generic touch-editor plan and asked for it to be reworked
+  hard for this engine.
+- **A new look for everything** (bar, hub, news, home page): the user doesn't
+  like any of the current themes.
+
