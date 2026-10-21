@@ -10,6 +10,7 @@
 
 #include "bar/bar_scene.h"
 #include "bar/scene_names.h"
+#include "looped/world/catalog.h"
 #include "looped/world/world.h"
 
 using namespace engine;
@@ -189,6 +190,23 @@ int main() {
   for (size_t i = 0; i < w.size(); ++i)
     for (float v : w.thing(static_cast<int>(i)).world.m) finite = finite && std::isfinite(v);
   check(finite, "every thing's place is a real number");
+
+  // E7.4: the catalog lists real kinds with prices; only a few trade.
+  {
+    std::string err;
+    const auto items = engine::world::parseCatalog(readFile("assets/world/catalog.json"), &err);
+    check(err.empty() && items.size() >= 10, "the catalog reads cleanly (" + std::to_string(items.size()) + " items)" + err);
+    bool real = true;
+    int trade = 0;
+    for (const auto& it : items) {
+      bool kindExists = false;
+      for (size_t i = 0; i < w.size(); ++i) kindExists = kindExists || w.thing(static_cast<int>(i)).kind->id == it.kind;
+      if (!kindExists) real = false, std::printf("     no kind \"%s\" in the bar\n", it.kind.c_str());
+      trade += it.tradeable;
+    }
+    check(real, "every item is a kind the bar has");
+    check(trade > 0 && trade * 4 <= static_cast<int>(items.size()), "a few items trade, most don't");
+  }
 
   // E7.2: a second place is just a file (the test home, made of plain boxes
   // and the bar's furniture).

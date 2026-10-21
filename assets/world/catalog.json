@@ -1,0 +1,93 @@
+{
+  "about": "Every kind you could own (docs/VISION.md: homes, the mall, the VIP shop read this). Prices are in credits (valued like the dollar). Only a small set is tradeable, on purpose. tools/native/bar_world_test.cpp checks each item is a real kind.",
+  "items": [
+    {
+      "kind": "candle",
+      "name": "Table candle",
+      "category": "decor",
+      "price": 5,
+      "tradeable": false,
+      "about": "A candle for a table: it flickers, and you can blow it out."
+    },
+    {
+      "kind": "table_stool",
+      "name": "Table stool",
+      "category": "seating",
+      "price": 40,
+      "tradeable": false,
+      "about": "A round stool for a high table."
+    },
+    {
+      "kind": "bar_stool",
+      "name": "Bar stool",
+      "category": "seating",
+      "price": 60,
+      "tradeable": false,
+      "about": "A swivel stool with a padded seat."
+    },
+    {
+      "kind": "chalkboard",
+      "name": "Chalkboard",
+      "category": "decor",
+      "price": 45,
+      "tradeable": false,
+      "about": "A chalkboard on a nail; knock it and it swings."
+    },
+    {
+      "kind": "pendant_lamp",
+      "name": "Pendant lamp",
+      "category": "lighting",
+      "price": 80,
+      "tradeable": false,
+      "about": "A lamp that hangs from the ceiling and sways."
+    },
+    {
+      "kind": "dartboard",
+      "name": "Dartboard",
+      "category": "games",
+      "price": 70,
+      "tradeable": false,
+      "about": "A dartboard for the wall."
+    },
+    {
+      "kind": "round_table",
+      "name": "High table",
+      "category": "tables",
+      "price": 120,
+      "tradeable": false,
+      "about": "A round high table that rocks a hair on an uneven floor."
+    },
+    {
+      "kind": "jukebox",
+      "name": "Jukebox",
+      "category": "music",
+      "price": 900,
+      "tradeable": true,
+      "about": "Plays the songs; thumps on the beat. Tradeable."
+    },
+    {
+      "kind": "arcade_cabinet",
+      "name": "Arcade machine",
+      "category": "games",
+      "price": 1500,
+      "tradeable": true,
+      "about": "An arcade machine with the platformer. Tradeable."
+    },
+    {
+      "kind": "sim_rig",
+      "name": "Racing rig",
+      "category": "games",
+      "price": 2500,
+      "tradeable": false,
+      "about": "A racing seat with a wheel and screens."
+    },
+    {
+      "kind": "piano",
+      "name": "Grand piano",
+      "category": "music",
+      "price": 4000,
+      "tradeable": false,
+      "about": "A grand piano: play its songs or your own."
+    }
+  ]
+}
