@@ -86,6 +86,9 @@ void presentAvatars(double nowMs) {
     in.eye = cam.position;
     in.songSeconds = g_app.jukebox.songTime();
     if (const app::Song* s = g_app.jukebox.currentSong()) in.songUrl = s->url;
+    in.seated.resize(g_app.scene.seats.size());
+    for (size_t k = 0; k < in.seated.size(); ++k)
+      in.seated[k] = g_app.seat == static_cast<int>(k) || engine::net::claimOwner("seat." + std::to_string(k)) > 0;
     g_app.world.update(in, g_app.boxes, g_app.renderer);
     g_app.lightsDim = g_app.world.stateOf("light-switch") == "dim";
     g_app.fireOn = g_app.world.stateOf("fire_flames") != "out";

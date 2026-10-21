@@ -141,6 +141,7 @@ BarScene buildBarScene() {
       st.boundsMin = {st.hip.x - 0.28f, 0, st.hip.z - 0.28f};
       st.boundsMax = {st.hip.x + 0.28f, st.hip.y + 0.12f, st.hip.z + 0.28f};
       scene.seats.push_back(st);
+      scene.seatThing.push_back(i);
     }
     for (const Json& u : world->part(i, "uses").items()) {
       Interactable it;

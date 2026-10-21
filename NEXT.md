@@ -17,7 +17,7 @@ checked before it's committed; one deploy at the end. If the session ends
 early, the next "go" carries on from the first unticked piece.
 
 E3, the rest (taps, seats, sharing):
-- [ ] **E3.3** Seats as states: a stool sinks a little and stops drifting while someone sits on it (from the room's seat claims).
+- [x] **E3.3** Seats as states: a stool sinks a little and stops drifting while someone sits on it (from the room's seat claims).
 - [ ] **E3.4** The jukebox flourishes (a light sweep) when a new song starts, for everyone.
 - [ ] **E3.5** The dartboard shudders when a dart hits it (yours and other players').
 - [ ] **E3.6b** A late joiner gets every thing's state (mp_test: a third player joins after the fire went out).

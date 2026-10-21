@@ -39,6 +39,7 @@ class BarWorld {
     double nowMs = 0;
     engine::Vec3 eye;
     double songSeconds = -1;  // the jukebox's song as heard (-1 = silent)
+    std::vector<bool> seated;  // per seat (BarScene::seats): someone sits there
     std::string songUrl;
   };
   // Plays every thing's loop and hands the result to the renderer; the
@@ -71,6 +72,7 @@ class BarWorld {
   std::vector<bool> dims_;   // per light: the switch dims it
   bool requested_ = false, built_ = false;
   bool music_ = false;
+  std::vector<bool> seated_;  // last frame's (seats taken → "sit", freed → "stand")
   double lastMs_ = 0, now_ = 0;
 };
 

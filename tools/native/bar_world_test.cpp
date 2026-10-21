@@ -116,6 +116,21 @@ int main() {
     check(w.stateOf(lamp).name == "lit", "and settles back to its sway after one swing");
   }
 
+  // E3.3: a stool someone sits on sinks and holds still; free again, it drifts.
+  {
+    check(scene.seatThing.size() == scene.seats.size(), "every seat belongs to a thing");
+    const int stool = scene.seatThing[0];
+    check(w.thing(stool).kind->id == "bar_stool", "seat 0 is a bar stool");
+    w.send(stool, "sit", c.seconds);
+    check(w.stateOf(stool).name == "taken", "someone sits: the stool is taken");
+    Clock t = c;
+    t.seconds += 2;
+    w.update(t);
+    check(w.thing(stool).motion.ch[kScaleY] < -0.005f, "and sinks a little");
+    w.send(stool, "stand", t.seconds);
+    check(w.stateOf(stool).name == "idle", "they stand up: it drifts again");
+  }
+
   // Every thing moved by a loop is somewhere sensible.
   bool finite = true;
   for (size_t i = 0; i < w.size(); ++i)

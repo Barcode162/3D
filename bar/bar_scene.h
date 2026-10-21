@@ -157,7 +157,7 @@ struct BarScene {
   // The things these lists came from (looped/world): the world itself, built
   // from the place file, and which thing each model and light is.
   std::shared_ptr<const engine::world::World> world;
-  std::vector<int> modelThing, lightThing, useThing;
+  std::vector<int> modelThing, lightThing, useThing, seatThing;
   std::string problems;  // what was wrong in the files ("" = nothing)
   std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;

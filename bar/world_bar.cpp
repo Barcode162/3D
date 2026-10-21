@@ -121,6 +121,14 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
     music_ = music;
     world_.sendAll(music ? "music" : "quiet", clock.seconds);
   }
+  // Seats (E3.3): who sits where is shared already (the room's seat claims),
+  // so every phone tells its own world.
+  seated_.resize(in.seated.size(), false);
+  for (size_t k = 0; k < in.seated.size() && k < scene_->seatThing.size(); ++k) {
+    if (in.seated[k] == seated_[k]) continue;
+    seated_[k] = in.seated[k];
+    world_.send(scene_->seatThing[k], in.seated[k] ? "sit" : "stand", clock.seconds);
+  }
   world_.takeChanges();  // every phone makes these itself (the jukebox's song is shared already)
   now_ = clock.seconds;
   // The room's answers to our touches: a refusal (too far...) takes them back.

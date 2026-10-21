@@ -366,9 +366,19 @@
     },
     {
       "id": "stool",
-      "about": "A stool: it drifts a little on its swivel, as if someone just got up.",
-      "loops": {"drift": {"period": 11, "pieces": [{"ch": "turn.y", "shape": "noise", "amp": 3, "rate": 0.6}]}},
-      "states": {"idle": {"loop": "drift"}},
+      "about": "A stool: it drifts a little on its swivel, as if someone just got up; it sinks a hair and holds still while someone sits on it.",
+      "loops": {
+        "drift": {"period": 11, "pieces": [{"ch": "turn.y", "shape": "noise", "amp": 3, "rate": 0.6}]},
+        "sat": {
+          "period": 9,
+          "blend": 0.4,
+          "pieces": [
+            {"ch": "scale.y", "shape": "hold", "value": -0.012},
+            {"ch": "turn.y", "shape": "noise", "amp": 0.4, "rate": 0.3}
+          ]
+        }
+      },
+      "states": {"idle": {"loop": "drift", "on": {"sit": "taken"}}, "taken": {"loop": "sat", "on": {"stand": "idle"}}},
       "start": "idle"
     },
     {
