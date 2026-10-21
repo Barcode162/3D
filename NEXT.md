@@ -49,5 +49,5 @@ Tests that matter here: `node tools/check.mjs` picks them (room + build +
 native + game; `all` before the push to main).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- `6d4ec39` E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD
+- `ff60ac4` E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD
 - `a2fe850` E2 done: the bar as a place file, every object alive (before this file existed).
