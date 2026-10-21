@@ -80,6 +80,8 @@ for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
 {
   const p3 = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3 });
   await openBar(p3, site.url, 'skipintro&server=off');
+  // The HUD shows once the bar has warmed up (slow on a 3x software screen).
+  await p3.waitForSelector('#hudMenu', { state: 'visible', timeout: 120000 });
   await p3.waitForTimeout(1000);
   const ratio = () => p3.evaluate(() => document.getElementById('canvas').width / document.getElementById('canvas').clientWidth);
   const r0 = await ratio();
