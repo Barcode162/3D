@@ -26,6 +26,7 @@ struct Frame {
   float myVoiceLevel = 0;         // your microphone level 0..1 (0 when muted)
   double lastTouchMs = -1e9;
   int userSongCount = 0;          // songs you loaded from the Files app
+  double musicTime[2] = {-1, -1}; // music sources 0 and 1: seconds into the song as heard (-1 = not playing)
 };
 struct Touch {
   int type;  // 0 start, 1 move, 2 end, 3 cancel

@@ -35,6 +35,8 @@ class Jukebox {
 
   const std::vector<Song>& songs() const { return songs_; }
   int current() const { return current_; }  // -1 = silent
+  // Seconds into the song as heard (-1 = silent): loops lock to its beat.
+  double songTime() const { return current_ >= 0 ? source_.time() : -1; }
   const Song* currentSong() const { return current_ >= 0 ? &songs_[static_cast<size_t>(current_)] : nullptr; }
   // Changes every time a new song starts (for the "now playing" banner).
   int songsStarted() const { return songsStarted_; }

@@ -61,6 +61,8 @@ void pull() {
   f.myVoiceLevel = static_cast<float>(h[15]);
   f.lastTouchMs = h[19];
   f.userSongCount = static_cast<int>(h[20]);
+  f.musicTime[0] = h[22];
+  f.musicTime[1] = h[23];
   const int nt = static_cast<int>(h[16]);
   for (int i = 0; i < nt && i < kMaxTouches; ++i) {
     const double* t = h + kHeader + i * 5;

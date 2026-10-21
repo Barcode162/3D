@@ -1,0 +1,31 @@
+{
+  "about": "The bar's loops (looped/loops.h, docs/LOOPED.md D2). Each one is a little piece of life the world plays by itself, on the room's clock, so everyone sees the same. Ask Claude for a new one in plain words; this file is all it takes.",
+  "songs": {
+    "about": "Tempo and first beat of the built-in songs (measured from the files), so loops on the beat lock to the music. Your own songs play loops in seconds.",
+    "smooth-lovin.m4a": {"bpm": 74.875, "firstBeat": 0.213},
+    "bossa-antigua.m4a": {"bpm": 139.75, "firstBeat": 0.356},
+    "night-on-the-docks-sax.m4a": {"bpm": 97.5, "firstBeat": 0.558},
+    "lobby-time.m4a": {"bpm": 127.75, "firstBeat": 0.169}
+  },
+  "loops": [
+    {"id": "moths-left", "about": "Three moths circling the second lamp over the counter; they dart off if you come close.",
+     "kind": "swarm", "count": 3, "center": [-4.3, 2.4, -4.6], "radius": 0.28, "height": 0.12, "period": 6.5,
+     "size": 0.014, "color": [1.0, 0.86, 0.62], "glow": 0.9, "seed": 11, "shy": 0.7},
+    {"id": "moths-right", "about": "Two moths at the last lamp over the counter.",
+     "kind": "swarm", "count": 2, "center": [0.2, 2.4, -4.6], "radius": 0.24, "height": 0.1, "period": 7.3,
+     "size": 0.014, "color": [1.0, 0.86, 0.62], "glow": 0.9, "seed": 23, "shy": 0.7},
+    {"id": "embers", "about": "Sparks rising over the fireplace while the fire is on.",
+     "kind": "swarm", "when": "fire", "count": 6, "center": [-8.15, 0.95, 0.8], "radius": 0.22, "height": 0.35, "period": 2.6,
+     "size": 0.01, "color": [1.0, 0.55, 0.18], "glow": 2.4, "seed": 5},
+    {"id": "fire-flicker", "about": "The fireplace's light flickers like a real fire.",
+     "kind": "flicker", "lights": [11], "period": 0.5, "amount": 0.4, "seed": 3},
+    {"id": "arcade-sign-buzz", "about": "The pink light by the ARCADE sign buzzes now and then, like old neon.",
+     "kind": "flicker", "lights": [28], "period": 1.2, "amount": 0.6, "seed": 9},
+    {"id": "arcade-neon-wave", "about": "The arcade's colored lights breathe one after another, like a slow wave.",
+     "kind": "pulse", "lights": [22, 24, 23, 25], "period": 5.0, "amount": 0.18, "spread": 0.25},
+    {"id": "jukebox-thump", "about": "The jukebox's glow thumps on every beat of the song (breathes slowly when it's quiet).",
+     "kind": "pulse", "lights": [19], "onBeat": true, "period": 1, "amount": 0.35},
+    {"id": "room-groove", "about": "The ceiling lights swell very softly every two beats while music plays.",
+     "kind": "pulse", "lights": [7, 8, 9], "onBeat": true, "period": 2, "amount": 0.04, "spread": 0.0, "musicOnly": true}
+  ]
+}

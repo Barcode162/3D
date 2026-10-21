@@ -272,6 +272,9 @@ class SceneRenderer {
   wgpu::Buffer lightingBuffer_;
   void buildLighting(const RenderScene& scene);
   std::vector<float> lightIntensity_;  // as built, per light
+  std::vector<GpuLight> gpuLights_;    // what the GPU has (setLightScale changes it, flushLights sends it)
+  size_t lightsDirtyFrom_ = SIZE_MAX, lightsDirtyTo_ = 0;
+  void flushLights();
   void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;

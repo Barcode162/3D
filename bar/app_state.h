@@ -21,6 +21,7 @@
 #include "bar/props.h"
 #include "bar/projects/racing/game.h"
 #include "bar/loader.h"
+#include "bar/loops_bar.h"
 #include "bar/renderer.h"
 #include "looped/quality.h"
 #include "bar/test_hooks.h"
@@ -93,6 +94,7 @@ struct App {
   std::vector<std::vector<Mat4>> otherBones;
   std::vector<int> otherLooks;
   app::Jukebox jukebox;
+  app::BarLoops loops;  // the bar's loops (assets/loops/bar.json): moths, sparks, lights that live
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   app::ChessGame chess;    // the lounge's chessboard

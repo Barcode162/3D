@@ -94,6 +94,9 @@ class MusicSource {
   void resume();
   bool playing() const;
   bool finished() const;  // reached the end of the song
+  // Seconds into the song as heard (from the page each frame; -1 = not
+  // playing, or not one of the first two sources).
+  double time() const;
   void setPosition(Vec3 position);
 
  private:

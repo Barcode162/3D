@@ -139,6 +139,9 @@ window.bar3dBridge = (function () {
       }
       f64[h + 19] = lastTouch;
       f64[h + 20] = A && A['userSongCount'] ? A['userSongCount']() : 0;
+      // Where the first two music sources are in their songs as heard (-1 = not playing): loops lock to the beat.
+      f64[h + 22] = A && A['musicTime'] ? A['musicTime'](0) : -1;
+      f64[h + 23] = A && A['musicTime'] ? A['musicTime'](1) : -1;
       // Who's in the room, only when it changed (-1 = same as before).
       var N = window.bar3dNet;
       var rv = N && N['rosterVersion'] ? N['rosterVersion']() : 0;

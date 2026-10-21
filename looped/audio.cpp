@@ -173,6 +173,10 @@ bool MusicSource::finished() const {
   return EM_ASM_INT({ return window['bar3dAudio']['finished']($0) ? 1 : 0; }, id_);
 }
 
+double MusicSource::time() const {
+  return id_ >= 0 && id_ < 2 ? bridge::frame().musicTime[id_] : -1;
+}
+
 void MusicSource::setPosition(Vec3 p) {
   EM_ASM({ window['bar3dAudio']['setPosition']($0, $1, $2, $3); }, id_, p.x, p.y, p.z);
 }

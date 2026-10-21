@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 
@@ -281,6 +282,7 @@ void SceneRenderer::buildLighting(const RenderScene& scene) {
   }
   lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
   gpu_->queue.WriteBuffer(lightingBuffer_, 0, l.get(), sizeof(LightingUniforms));
+  gpuLights_.assign(l->lights, l->lights + kMaxLights);
   LOG_INFO("Lights: %zu in a %ux%u grid of %.2f m cells%s.", count, nx, nz, cell,
            crowded ? " (some cells have more than 6; the faintest are left out)" : "");
   if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
@@ -525,11 +527,21 @@ void SceneRenderer::setGlow(size_t firstObject, size_t objectCount, size_t first
 
 void SceneRenderer::setLightScale(size_t light, float scale) {
   if (light >= lightIntensity_.size()) return;
+  // Many lights change every frame (loops): kept here and written in one go
+  // at the next render (flushLights).
   const float intensity = lightIntensity_[light] * scale;
-  gpu_->queue.WriteBuffer(lightingBuffer_,
-                          offsetof(LightingUniforms, lights) + light * sizeof(GpuLight) + offsetof(GpuLight, color) +
-                              3 * sizeof(float),
-                          &intensity, sizeof(intensity));
+  if (gpuLights_[light].color[3] == intensity) return;
+  gpuLights_[light].color[3] = intensity;
+  lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
+  lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
+}
+
+void SceneRenderer::flushLights() {
+  if (lightsDirtyFrom_ >= lightsDirtyTo_) return;
+  gpu_->queue.WriteBuffer(lightingBuffer_, offsetof(LightingUniforms, lights) + lightsDirtyFrom_ * sizeof(GpuLight),
+                          &gpuLights_[lightsDirtyFrom_], (lightsDirtyTo_ - lightsDirtyFrom_) * sizeof(GpuLight));
+  lightsDirtyFrom_ = SIZE_MAX;
+  lightsDirtyTo_ = 0;
 }
 
 void SceneRenderer::setModelBaseGlow(size_t model, float glow) {
@@ -1110,6 +1122,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
                            const engine::PictureBillboards& pictures) {
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
+  flushLights();
 
   // The avatar follows you. Only its model matrix changes (it comes first in
   // ObjectUniforms), plus the bone matrices for its pose.

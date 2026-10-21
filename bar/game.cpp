@@ -324,8 +324,14 @@ void applyStyle(const app::AvatarStyle& st, bool remember) {
 void setLights(bool dim, bool fire) {
   g_app.lightsDim = dim;
   g_app.fireOn = fire;
-  for (int l : g_app.scene.roomLights) g_app.renderer.setLightScale(static_cast<size_t>(l), dim ? 0.25f : 1.0f);
-  if (g_app.scene.fireLight >= 0) g_app.renderer.setLightScale(static_cast<size_t>(g_app.scene.fireLight), fire ? 1.0f : 0.0f);
+  for (int l : g_app.scene.roomLights) {
+    g_app.renderer.setLightScale(static_cast<size_t>(l), dim ? 0.25f : 1.0f);
+    g_app.loops.setLightBase(l, dim ? 0.25f : 1.0f);  // loops that move a light start from this
+  }
+  if (g_app.scene.fireLight >= 0) {
+    g_app.renderer.setLightScale(static_cast<size_t>(g_app.scene.fireLight), fire ? 1.0f : 0.0f);
+    g_app.loops.setLightBase(g_app.scene.fireLight, fire ? 1.0f : 0.0f);
+  }
 }
 
 // The room decides who uses a machine (one at a time). False if someone
@@ -1305,6 +1311,7 @@ void onGpuReady(bool ok) {
   g_app.hooks = app::TestHooks::parse();
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   g_app.scene = app::buildBarScene();
+  g_app.loops.load();
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   g_app.chess.init(g_app.scene);
   engine::profiler().stage("scene");

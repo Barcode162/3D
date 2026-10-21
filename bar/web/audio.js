@@ -492,6 +492,11 @@ window.bar3dAudio = (function () {
     resume: function (id) { sources[id].el.play().catch(function () {}); },
     playing: function (id) { var el = sources[id].el; return !el.paused && !el.ended && !el.error; },
     finished: function (id) { return sources[id].el.ended; },
+    // Seconds into the song as heard, -1 when not playing (the per-frame mailbox reads it).
+    musicTime: function (id) {
+      var s = sources[id]; if (!s) return -1;
+      var el = s.el; return !el.paused && !el.ended && !el.error && el.readyState > 2 ? el.currentTime : -1;
+    },
     setPosition: function (id, x, y, z) { var s = sources[id]; s.pos = [x, y, z]; applyPosition(s); },
     // Rectangle in CSS pixels; w = 0 hides the button.
     setSongPickerRect: function (x, y, w, h) {
