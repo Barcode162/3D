@@ -58,7 +58,7 @@ export class Sim {
   thingApply(net, state, start) { this.e.sim_thing_apply(net, state, start); }
   // Where thing `net` is ([x, y, z]) or null if there's no such thing.
   thingAt(net) {
-    if (!this.e.sim_thing_at(net)) return null;
+    if (!this.e.sim_thing_at(net, Date.now() / 1000)) return null;
     const b = this.buf();
     return [b[0], b[1], b[2]];
   }

@@ -190,6 +190,27 @@ await bob.waitForFunction(() => /pendant_lamp-2 is swinging \(the room\)/.test(d
 const daveLog = await logOf(dave), bobThingLog = await logOf(bob);
 console.log('Dave:', (daveLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
 dave.close();
+
+// E3.6b: Fay puts the fire out; Erin, who arrives after, finds it out.
+const loaded = async (page, who) => {
+  await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                             { timeout: 180000, polling: 250 }).catch(() => console.log('timed out loading ' + who));
+  await page.waitForFunction(() => /connected to room/.test(document.getElementById('log').textContent), null,
+                             { timeout: 30000, polling: 250 }).catch(() => console.log(who + ' never connected'));
+};
+const fay = await open('Fay', '-6.6,1.2,0.8,-90,-12');
+await loaded(fay, 'Fay');
+await fay.waitForTimeout(1500);
+await fay.mouse.click(215, 466);
+await fay.waitForTimeout(2000);
+const fayLog = await logOf(fay);
+console.log('Fay:', (fayLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
+fay.close();
+const erin = await open('Erin', '0,1.66,2.5,0,0');
+await loaded(erin, 'Erin');
+await erin.waitForTimeout(1500);
+const erinLog = await logOf(erin);
+erin.close();
 show('Bob', log);
 show('Carol', carolLog);
 show('Carol again', carolLog2);
@@ -214,6 +235,8 @@ const checks = {
     bobThrows.every((t, i) => t[0] === throwsSeen[i].label && t[1] === throwsSeen[i].pts && t[2] === throwsSeen[i].left),
   'Dave touches a lamp and Bob sees it swing (the room ran its rule)':
     /you touched pendant_lamp-2 \(swinging\)/.test(daveLog) && /pendant_lamp-2 is swinging \(the room\)/.test(bobThingLog),
+  'Erin, arriving after Fay put the fire out, finds it out (E3.6b)':
+    /you touched fire_flames \(out\)/.test(fayLog) && /fire_flames is out \(the room\)/.test(erinLog),
   'the room records Carol on seat 5': !!seatOwner && seatOwner.body.d.some((x) => x[1] === 'claim.seat.5' && x[2] === carolSlot),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);

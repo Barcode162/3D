@@ -1381,3 +1381,7 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   around them. Precise picking (triangles) can come with E4.
 - Applied changes don't run enter messages: the room records the whole
   cascade (the fire going out also changes its glow and six sparks).
+- (E3.6b) Bug in build ff60ac4: the room measured "too far" from a thing's
+  matrix before its world had ever been updated (all at the origin), and
+  models made in place (the fire) sit at the origin anyway. Now: update
+  first, then the kind's pivot, else the middle of its solid shapes.

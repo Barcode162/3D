@@ -23,7 +23,7 @@
 //                           thing `net` → number of changes; dbuffer = net,
 //                           state, start for each (max 32)
 //   sim_thing_apply(net, state, start)   a stored change (waking up)
-//   sim_thing_at(net) → 1   buffer = where it is now (x, y, z)
+//   sim_thing_at(net, nowS) → 1   buffer = where it is now (x, y, z)
 //   sim_thing_net() → net   of the thing whose id is in sim_text (0 = none)
 #include <emscripten/emscripten.h>
 
@@ -92,12 +92,27 @@ EMSCRIPTEN_KEEPALIVE void sim_thing_apply(int net, int state, double start) {
   if (things && state >= 0 && state < 256) things->apply({static_cast<uint16_t>(net), static_cast<uint8_t>(state), start});
 }
 
-EMSCRIPTEN_KEEPALIVE int sim_thing_at(int net) {
+EMSCRIPTEN_KEEPALIVE int sim_thing_at(int net, double now) {
   if (!things) return 0;
   const int i = things->findNet(static_cast<uint16_t>(net));
   if (i < 0) return 0;
-  const engine::Mat4& m = things->thing(i).world;
-  buffer[0] = m.at(3, 0), buffer[1] = m.at(3, 1), buffer[2] = m.at(3, 2);
+  engine::world::Clock clock;
+  clock.seconds = now;
+  things->update(clock);  // places worked out (the world starts unplaced)
+  // Where it really is: models made in place sit at the world's origin (the
+  // fire, the counter), so use its pivot, else the middle of its solid
+  // shapes, else its origin.
+  const engine::world::Thing& t = things->thing(i);
+  engine::Vec3 local = t.kind->pivot;
+  if (local.x == 0 && local.y == 0 && local.z == 0) {
+    const engine::Json& solids = things->part(i, "solids");
+    if (solids.size() > 0) {
+      for (const engine::Json& b : solids.items()) local = local + engine::world::readVec3(b["at"], {});
+      local = local * (1.0f / static_cast<float>(solids.size()));
+    }
+  }
+  const engine::Vec4 p = engine::transformPoint(t.world, local);
+  buffer[0] = p.x, buffer[1] = p.y, buffer[2] = p.z;
   return 1;
 }
 
