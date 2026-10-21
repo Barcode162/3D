@@ -250,6 +250,9 @@ void World::deliver(int from, const Send& s, double at, bool record, int depth) 
   } else if (s.to == "children") {
     const std::vector<int> kids = t.children;  // copied: fire() never changes the tree, but be safe
     for (int c : kids) fire(c, s.event, at, record, depth);
+  } else if (s.to == "all") {  // every thing in the place (lights going down...)
+    for (size_t k = 0; k < things_.size(); ++k)
+      if (static_cast<int>(k) != from) fire(static_cast<int>(k), s.event, at, record, depth);
   } else if (!s.to.empty() && s.to[0] == '#') {
     fire(find(std::string_view(s.to).substr(1)), s.event, at, record, depth);
   } else {
@@ -272,6 +275,16 @@ bool World::fire(int i, std::string_view event, double at, bool record, int dept
   if (next < 0) return false;
   enter(i, next, at, record, depth);
   return true;
+}
+
+bool World::reacts(int i, std::string_view event) const {
+  if (i < 0 || static_cast<size_t>(i) >= things_.size()) return false;
+  const Thing& t = things_[static_cast<size_t>(i)];
+  for (const auto& [e, to] : stateOf(i).on)
+    if (e == event) return t.kind->state(to) >= 0;
+  for (const auto& [e, to] : t.kind->on)
+    if (e == event) return t.kind->state(to) >= 0;
+  return false;
 }
 
 bool World::send(int i, std::string_view event, double now) {

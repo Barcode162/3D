@@ -806,7 +806,7 @@
     },
     {
       "id": "light-switch",
-      "kind": "spot",
+      "kind": "light-switch",
       "at": [2.25, 1.2, 6.95],
       "parts": {
         "uses": [

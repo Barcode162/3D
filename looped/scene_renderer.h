@@ -122,6 +122,9 @@ class SceneRenderer {
   // A model's look from its loop: `glow` scales its own glowing parts (1 = as
   // made, 0 = dark), `tint` multiplies its colour ({1,1,1} = as made).
   void setModelLook(size_t index, float glow, engine::Vec3 tint);
+  // Placed model `index`'s box in the world, as drawn now (false until its
+  // file has loaded).
+  bool modelBox(size_t index, engine::Aabb* out) const;
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:

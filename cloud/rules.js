@@ -18,6 +18,8 @@
 //          AvatarStyle). Only that player writes it.
 //   rc     the racing rigs: lobby, picks, start time, results. Written only
 //          by the room (cloud/games/race.js); phones use `race` intents.
+//   t<net> a thing's state (docs/ENGINE.md E3): state, start (server s).
+//          Written only by the room (the `thing` intent runs the bar's rules).
 //   dk<n>  drink on counter spot n (0..7): drink type + 1, 0 = empty.
 //          Serving one (non-zero) needs the bartender badge; taking one is a
 //          `set` intent that expects the drink still there (first one wins).
@@ -55,6 +57,7 @@ export function checkWrite(key, values, ctx) {
     return { ok: false, why: 'the room moves the glasses' };
   }
   if (key === 'rc') return { ok: false, why: 'the room runs the race' };
+  if (/^t\d{1,5}$/.test(key)) return { ok: false, why: 'things change through the thing intent' };
   if ((m = /^a(\d{1,3})$/.exec(key))) {  // a player's custom avatar: only they write it
     if (+m[1] !== ctx.slot) return { ok: false, why: 'that is someone else\'s avatar' };
     if (v.length !== 17 || !v.every((x) => isInt(x, 0, 63))) return { ok: false, why: 'an avatar is 17 small numbers' };

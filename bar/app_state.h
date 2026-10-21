@@ -159,7 +159,7 @@ struct App {
   double lastVoicePlaceMs = 0;
 
   // The room.
-  bool lightsDim = false, fireOn = true;
+  bool lightsDim = false, fireOn = true;  // from the world's switch and fire (presentation.cpp)
 
   // Settings (bar/web/menu.js).
   int settingsVersion = -1;
@@ -213,7 +213,6 @@ int seatHit(Vec3 dir, float reach, float* dist = nullptr);
 int buildStyle(const app::AvatarStyle& st, int index);
 int lookForSlot(int slot);
 void applyStyle(const app::AvatarStyle& st, bool remember);
-void setLights(bool dim, bool fire);
 bool claimMachine(const char* key, const char* what);
 void use(const app::Interactable& it);
 void updateMirrorButtons();

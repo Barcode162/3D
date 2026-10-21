@@ -38,7 +38,8 @@
 namespace engine::world {
 
 // A message a state sends when it begins: `event` to `to` ("self", "parent",
-// "children", a child's id, or "#<thing id>" anywhere in the place).
+// "children", "all" (every thing in the place), a child's id, or "#<thing
+// id>" anywhere in the place).
 struct Send {
   std::string event;
   std::string to = "self";

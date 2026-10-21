@@ -5,8 +5,11 @@
 // flicker and thump; moths and sparks are small glowing shapes. The clock is
 // the room's (the same for everyone), the beat the jukebox's song as heard
 // (tempos in assets/world/songs.json). The bar's events go to every thing:
-// "music" / "quiet", "fire-on" / "fire-off".
+// "music" / "quiet". Touching a thing (a lamp, a table, the fire, the light
+// switch) follows its kind's "tap" rule at once here; online, the room runs
+// the same rule and shares the result (world key t<net>, docs/ENGINE.md E3).
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "bar/bar_scene.h"
@@ -23,13 +26,18 @@ class BarWorld {
   size_t count() const { return world_.size(); }
   const engine::world::World& world() const { return world_; }
 
-  // The bar's own setting for a light (the switch dims it): loops multiply it.
-  void setLightBase(int light, float scale);
+  // Whether thing `i` would react to a touch now (only those are tappable).
+  bool reacts(int i) const { return built_ && world_.reacts(i, "tap"); }
+  // A player touches thing `i`. False if it doesn't react.
+  bool touch(int i);
+  // A thing's state from the room (world key t<net> = state, start).
+  void applyShared(uint16_t net, int state, double start);
+  // The state of the first thing of `kind` ("" if none): the fire, the switch.
+  std::string stateOf(const char* kind) const;
 
   struct Inputs {
     double nowMs = 0;
     engine::Vec3 eye;
-    bool fireOn = true;
     double songSeconds = -1;  // the jukebox's song as heard (-1 = silent)
     std::string songUrl;
   };
@@ -53,10 +61,17 @@ class BarWorld {
   engine::world::World world_;
   std::vector<Tempo> tempos_;
   std::vector<Drawn> drawn_;
-  std::vector<float> base_;  // per light, the bar's own scale
+  struct Pending {  // a touch the room hasn't answered yet
+    int request = 0;
+    std::vector<engine::world::Change> changes;
+  };
+  void undo(const engine::world::Change& c);
+  std::vector<Pending> pending_;
+  std::unordered_map<uint16_t, engine::world::Change> shared_;  // the room's word per thing
+  std::vector<bool> dims_;   // per light: the switch dims it
   bool requested_ = false, built_ = false;
-  bool music_ = false, fire_ = true;
-  double lastMs_ = 0;
+  bool music_ = false;
+  double lastMs_ = 0, now_ = 0;
 };
 
 }  // namespace app

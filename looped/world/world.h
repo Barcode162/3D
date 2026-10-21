@@ -87,6 +87,9 @@ class World {
   // state change it causes (here and in things it sends to) is recorded for
   // takeChanges(). True if anything changed.
   bool send(int i, std::string_view event, double now);
+  // Whether thing `i` has a rule for `event` in the state it's in now (what
+  // a tap can wake: only things that would react are tappable).
+  bool reacts(int i, std::string_view event) const;
   // An event for every thing (the music started, the lights went down):
   // things with a rule for it follow it, the rest ignore it.
   bool sendAll(std::string_view event, double now);

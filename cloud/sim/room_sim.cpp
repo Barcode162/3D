@@ -16,6 +16,14 @@
 //   sim_release(i)          buffer = pos x,y,z, quat x,y,z,w, vel x,y,z: let go there
 //   sim_place(i)            buffer = pos x,y,z, quat x,y,z,w: put down at rest
 //   sim_awake() → count of bodies moving or held
+//
+// Things (docs/ENGINE.md E3): the bar's world, the same rules the phones run.
+//   sim_dbuffer() → 96 doubles for results that need them (times)
+//   sim_thing_event(net, nowS) the event named in sim_text (e.g. "tap") for
+//                           thing `net` → number of changes; dbuffer = net,
+//                           state, start for each (max 32)
+//   sim_thing_apply(net, state, start)   a stored change (waking up)
+//   sim_thing_at(net) → 1   buffer = where it is now (x, y, z)
 #include <emscripten/emscripten.h>
 
 #include <string>
@@ -25,9 +33,12 @@
 #include "bar/world_files.h"
 #include "bar/props.h"
 #include "looped/physics.h"
+#include "looped/world/world.h"
 
 namespace {
 engine::PhysicsWorld* world = nullptr;
+engine::world::World* things = nullptr;  // the bar's things (the scene's world, our own copy)
+double dbuffer[96];
 float buffer[16];
 std::string text;  // a world file on its way in (sim_text → sim_file)
 
@@ -55,12 +66,47 @@ EMSCRIPTEN_KEEPALIVE void sim_file() {
   if (cut != std::string::npos) app::setWorldFile(text.substr(0, cut), text.substr(cut + 1));
 }
 
+EMSCRIPTEN_KEEPALIVE double* sim_dbuffer() { return dbuffer; }
+
+EMSCRIPTEN_KEEPALIVE int sim_thing_event(int net, double now) {
+  if (!things) return 0;
+  const int i = things->findNet(static_cast<uint16_t>(net));
+  if (i < 0) return 0;
+  engine::world::Clock clock;
+  clock.seconds = now;
+  things->update(clock);  // timed states up to now
+  things->takeChanges();
+  if (!things->send(i, text, now)) return 0;
+  const std::vector<engine::world::Change> changes = things->takeChanges();
+  int n = 0;
+  for (const engine::world::Change& c : changes) {
+    if (n >= 32) break;
+    dbuffer[n * 3] = c.net, dbuffer[n * 3 + 1] = c.state, dbuffer[n * 3 + 2] = c.start;
+    ++n;
+  }
+  return n;
+}
+
+EMSCRIPTEN_KEEPALIVE void sim_thing_apply(int net, int state, double start) {
+  if (things && state >= 0 && state < 256) things->apply({static_cast<uint16_t>(net), static_cast<uint8_t>(state), start});
+}
+
+EMSCRIPTEN_KEEPALIVE int sim_thing_at(int net) {
+  if (!things) return 0;
+  const int i = things->findNet(static_cast<uint16_t>(net));
+  if (i < 0) return 0;
+  const engine::Mat4& m = things->thing(i).world;
+  buffer[0] = m.at(3, 0), buffer[1] = m.at(3, 1), buffer[2] = m.at(3, 2);
+  return 1;
+}
+
 EMSCRIPTEN_KEEPALIVE int sim_init() {
   if (!world) {
     world = new engine::PhysicsWorld();
     app::BarScene scene = app::buildBarScene();
     std::vector<int> bodyOfModel;
     app::buildPhysics(scene, *world, bodyOfModel);
+    if (scene.world) things = new engine::world::World(*scene.world);
     // Let the glasses settle on their spots once (they start a hair above).
     for (int k = 0; k < 180; ++k) world->step(engine::PhysicsWorld::kStep);
   }

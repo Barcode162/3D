@@ -43,7 +43,7 @@ int main() {
   const auto still = w.stillKinds();
   std::printf("     standing still, with a reason:\n");
   for (const auto& s : still) std::printf("       %s\n", s.c_str());
-  check(still.size() <= 11, "only room shells, the mirror and invisible spots stand still");
+  check(still.size() <= 12, "only room shells, the mirror and invisible spots stand still");
 
   // The lights with loops of their own.
   auto lightKind = [&](int l) { return w.thing(scene.lightThing[static_cast<size_t>(l)]).kind->id; };
@@ -81,7 +81,15 @@ int main() {
   };
   check(stateOfKind("jukebox") == "idle" && stateOfKind("fire_flames") == "lit", "quiet, the fire burning");
   w.sendAll("music", c.seconds);
-  w.sendAll("fire-off", c.seconds);
+  auto thingOfKind = [&](const char* kind) {
+    for (size_t i = 0; i < w.size(); ++i)
+      if (w.thing(static_cast<int>(i)).kind->id == kind) return static_cast<int>(i);
+    return -1;
+  };
+  w.takeChanges();
+  check(w.reacts(thingOfKind("fire_flames"), "tap") && w.send(thingOfKind("fire_flames"), "tap", c.seconds),
+        "tapping the fire puts it out");
+  check(w.takeChanges().size() == 8, "eight changes to share: the flames, their glow and six sparks");
   c.seconds += 2;
   c.music = true;
   c.beats = 41;
@@ -91,6 +99,23 @@ int main() {
         "a song: the jukebox, its glow, the ceiling and the 4K Mania cabinet move to it");
   check(stateOfKind("fire_flames") == "out" && stateOfKind("ember") == "gone" && stateOfKind("light-fire") == "out",
         "the fire put out: flames sink, sparks stop, its glow goes dark");
+  // Things that react to a touch, and things that don't.
+  for (const char* k : {"pendant_lamp", "round_table", "candle", "dartboard", "chalkboard", "back_bar_tall", "light-switch"})
+    check(w.reacts(thingOfKind(k), "tap"), std::string(k) + " reacts to a tap");
+  for (const char* k : {"hall", "moth", "light-bulb", "pint_glass"})
+    check(!w.reacts(thingOfKind(k), "tap"), std::string(k) + " doesn't");
+  {
+    const int lamp = thingOfKind("pendant_lamp");
+    w.send(lamp, "tap", c.seconds);
+    Clock t = c;
+    t.seconds += 0.4;
+    w.update(t);
+    check(std::fabs(w.thing(lamp).motion.ch[kTurnZ]) > 2, "a touched lamp swings (more than 2 degrees)");
+    t.seconds += 4;
+    w.update(t);
+    check(w.stateOf(lamp).name == "lit", "and settles back to its sway after one swing");
+  }
+
   // Every thing moved by a loop is somewhere sensible.
   bool finite = true;
   for (size_t i = 0; i < w.size(); ++i)

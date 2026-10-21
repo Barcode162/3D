@@ -272,6 +272,13 @@
       "still": "an invisible place to tap; the room's model draws it"
     },
     {
+      "id": "light-switch",
+      "about": "The light switch by the street door: tap to dim the bar's lamps and string lights, tap again for full light.",
+      "still": "the switch is part of the room's model",
+      "states": {"on": {"on": {"tap": "dim"}}, "dim": {"on": {"tap": "on"}}},
+      "start": "on"
+    },
+    {
       "id": "seat-spot",
       "about": "Places to sit built into the room (the sofa, the window seat).",
       "still": "invisible places to sit; the room's model draws them"
@@ -283,9 +290,20 @@
     },
     {
       "id": "polished",
-      "about": "A built-in polished surface: light plays across it.",
-      "loops": {"sheen": {"period": 9, "pieces": [{"ch": "tint", "shape": "noise", "amp": [0.03, 0.025, 0.02], "rate": 0.5}]}},
-      "states": {"idle": {"loop": "sheen"}},
+      "about": "A built-in polished surface: light plays across it, and it shines where you knock.",
+      "loops": {
+        "sheen": {"period": 9, "pieces": [{"ch": "tint", "shape": "noise", "amp": [0.03, 0.025, 0.02], "rate": 0.5}]},
+        "knock": {
+          "period": 0.8,
+          "restart": true,
+          "blend": 0.05,
+          "pieces": [{"ch": "tint", "shape": "beat", "amp": [0.14, 0.12, 0.1], "decay": 5}]
+        }
+      },
+      "states": {
+        "idle": {"loop": "sheen", "on": {"tap": "knocked"}},
+        "knocked": {"loop": "knock", "afterLoops": 1, "next": "idle"}
+      },
       "start": "idle"
     },
     {
@@ -325,7 +343,7 @@
     {
       "id": "back_bar_tall",
       "is": "polished",
-      "about": "The back bar: its shelf lights breathe, the bottles catch the light.",
+      "about": "The back bar: its shelf lights breathe, the bottles catch the light, and they clink and glint when you knock.",
       "parts": {"model": {"file": "back_bar_tall.glb", "material": "dark-wood"}},
       "loops": {
         "sheen": {
@@ -333,6 +351,15 @@
           "pieces": [
             {"ch": "glow", "shape": "noise", "amp": 0.18, "rate": 0.7},
             {"ch": "tint", "shape": "noise", "amp": [0.03, 0.025, 0.02], "rate": 0.5}
+          ]
+        },
+        "knock": {
+          "period": 0.9,
+          "restart": true,
+          "blend": 0.05,
+          "pieces": [
+            {"ch": "glow", "shape": "beat", "amp": 0.6, "decay": 5},
+            {"ch": "tint", "shape": "beat", "amp": [0.1, 0.09, 0.07], "decay": 6}
           ]
         }
       }
@@ -371,7 +398,7 @@
     },
     {
       "id": "round_table",
-      "about": "A round table that rocks a hair on an uneven floor.",
+      "about": "A round table that rocks a hair on an uneven floor, and wobbles when you bump it.",
       "parts": {
         "blocks": [[-0.5, -0.5, 0.5, 0.5]],
         "model": {"file": "round_table.glb", "material": "varnished-wood"},
@@ -388,14 +415,40 @@
             {"ch": "turn.x", "shape": "noise", "amp": 0.35, "rate": 0.9},
             {"ch": "turn.z", "shape": "noise", "amp": 0.35, "rate": 0.9}
           ]
+        },
+        "wobble": {
+          "period": 1.4,
+          "restart": true,
+          "blend": 0.08,
+          "pieces": [
+            {
+              "ch": "turn.x",
+              "shape": "keys",
+              "keys": [
+                [0, 0],
+                [0.143, 1.6],
+                [0.286, -1.333],
+                [0.429, 1.067],
+                [0.571, -0.8],
+                [0.714, 0.533],
+                [0.857, -0.267],
+                [1, 0]
+              ]
+            },
+            {
+              "ch": "turn.z",
+              "shape": "keys",
+              "keys": [[0, 0], [0.143, -0.9], [0.286, 0.75], [0.429, -0.6], [0.571, 0.45], [0.714, -0.3], [0.857, 0.15], [1, 0]]
+            }
+          ]
         }
       },
-      "states": {"idle": {"loop": "rock"}},
+      "states": {"idle": {"loop": "rock", "on": {"tap": "bumped"}}, "bumped": {"loop": "wobble", "afterLoops": 1, "next": "idle"}},
       "start": "idle"
     },
     {
       "id": "pendant_lamp",
-      "about": "A lamp hanging from the ceiling: it sways on its cord, its bulb breathes.",
+      "about": "A lamp hanging from the ceiling: it sways on its cord, its bulb breathes; touch it and it swings.",
       "parts": {"model": {"file": "pendant_lamp.glb", "material": "black-steel"}},
       "loops": {
         "sway": {
@@ -405,14 +458,55 @@
             {"ch": "turn.x", "shape": "wave", "amp": 1.0, "every": 3, "phase": 0.3},
             {"ch": "glow", "shape": "noise", "amp": 0.08, "rate": 2}
           ]
+        },
+        "swing": {
+          "period": 4,
+          "restart": true,
+          "blend": 0.12,
+          "pieces": [
+            {
+              "ch": "turn.z",
+              "shape": "keys",
+              "keys": [
+                [0, 0],
+                [0.125, 8.0],
+                [0.25, -6.857],
+                [0.375, 5.714],
+                [0.5, -4.571],
+                [0.625, 3.429],
+                [0.75, -2.286],
+                [0.875, 1.143],
+                [1, 0]
+              ]
+            },
+            {
+              "ch": "turn.x",
+              "shape": "keys",
+              "keys": [
+                [0, 0],
+                [0.125, -3.0],
+                [0.25, 2.571],
+                [0.375, -2.143],
+                [0.5, 1.714],
+                [0.625, -1.286],
+                [0.75, 0.857],
+                [0.875, -0.429],
+                [1, 0]
+              ]
+            },
+            {"ch": "glow", "shape": "flicker", "amp": 0.35, "rate": 3}
+          ]
         }
       },
-      "states": {"lit": {"loop": "sway"}},
+      "states": {
+        "lit": {"loop": "sway", "on": {"tap": "swinging"}},
+        "swinging": {"loop": "swing", "afterLoops": 1, "next": "lit"}
+      },
       "start": "lit"
     },
     {
       "id": "candle",
-      "about": "A candle on a table: its flame flickers.",
+      "about": "A candle on a table: its flame flickers. Tap to blow it out, tap again to light it.",
       "parts": {
         "model": {"file": "candle.glb", "material": "bottle-glass"},
         "solids": [{"at": [0, 0.04, 0], "half": [0.037, 0.04, 0.037], "material": "bottle-glass"}]
@@ -424,31 +518,88 @@
             {"ch": "glow", "shape": "flicker", "amp": 0.6, "rate": 1.6},
             {"ch": "glow", "shape": "noise", "amp": 0.15, "rate": 3}
           ]
+        },
+        "smoke": {
+          "period": 4,
+          "blend": 0.6,
+          "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.04, "offset": -0.93, "rate": 0.7}]
         }
       },
-      "states": {"lit": {"loop": "flame"}},
+      "states": {"lit": {"loop": "flame", "on": {"tap": "out"}}, "out": {"loop": "smoke", "on": {"tap": "lit"}}},
       "start": "lit"
     },
     {
       "id": "dartboard",
-      "about": "The dartboard hangs on its nail and settles a little.",
+      "about": "The dartboard hangs on its nail and settles a little; knock it and it swings.",
       "pivot": [0, 0.34, 0],
       "parts": {
         "dartboard": {"face": [0, 0, 0.0402], "oche": [0, -0.08, 2.56]},
         "model": {"file": "dartboard.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 0, 0.04], "half": [0.66, 0.32, 0.04], "turn": 180, "material": "dark-wood"}]
       },
-      "loops": {"hang": {"period": 12, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.5, "rate": 0.4}]}},
-      "states": {"idle": {"loop": "hang"}},
+      "loops": {
+        "hang": {"period": 12, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.5, "rate": 0.4}]},
+        "knock": {
+          "period": 1.6,
+          "restart": true,
+          "blend": 0.08,
+          "pieces": [
+            {
+              "ch": "turn.z",
+              "shape": "keys",
+              "keys": [
+                [0, 0],
+                [0.143, 2.5],
+                [0.286, -2.083],
+                [0.429, 1.667],
+                [0.571, -1.25],
+                [0.714, 0.833],
+                [0.857, -0.417],
+                [1, 0]
+              ]
+            }
+          ]
+        }
+      },
+      "states": {
+        "idle": {"loop": "hang", "on": {"tap": "knocked"}},
+        "knocked": {"loop": "knock", "afterLoops": 1, "next": "idle"}
+      },
       "start": "idle"
     },
     {
       "id": "chalkboard",
-      "about": "The chalkboard hangs on its nail.",
+      "about": "The chalkboard hangs on its nail; knock it and it swings.",
       "pivot": [0, 0.44, 0],
       "parts": {"model": {"file": "chalkboard.glb", "material": "dark-wood"}},
-      "loops": {"hang": {"period": 13, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.4, "rate": 0.4}]}},
-      "states": {"idle": {"loop": "hang"}},
+      "loops": {
+        "hang": {"period": 13, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.4, "rate": 0.4}]},
+        "knock": {
+          "period": 1.6,
+          "restart": true,
+          "blend": 0.08,
+          "pieces": [
+            {
+              "ch": "turn.z",
+              "shape": "keys",
+              "keys": [
+                [0, 0],
+                [0.143, 2.5],
+                [0.286, -2.083],
+                [0.429, 1.667],
+                [0.571, -1.25],
+                [0.714, 0.833],
+                [0.857, -0.417],
+                [1, 0]
+              ]
+            }
+          ]
+        }
+      },
+      "states": {
+        "idle": {"loop": "hang", "on": {"tap": "knocked"}},
+        "knocked": {"loop": "knock", "afterLoops": 1, "next": "idle"}
+      },
       "start": "idle"
     },
     {
@@ -583,7 +734,7 @@
     },
     {
       "id": "fire_flames",
-      "about": "The fireplace's flames: they lick and flicker; when the fire is put out they sink to embers.",
+      "about": "The fireplace's flames: they lick and flicker. Tap to put the fire out (the flames sink to embers, the glow and sparks go with them); tap again to light it.",
       "pivot": [-8.71, 0.12, 0.8],
       "parts": {
         "model": {"file": "fire_flames.glb", "material": "glow-glass"},
@@ -615,7 +766,10 @@
           ]
         }
       },
-      "states": {"lit": {"loop": "burn", "on": {"fire-off": "out"}}, "out": {"loop": "embers", "on": {"fire-on": "lit"}}},
+      "states": {
+        "lit": {"loop": "burn", "on": {"tap": "out"}, "enter": [{"send": "fire-on", "to": "all"}]},
+        "out": {"loop": "embers", "on": {"tap": "lit"}, "enter": [{"send": "fire-off", "to": "all"}]}
+      },
       "start": "lit"
     },
     {

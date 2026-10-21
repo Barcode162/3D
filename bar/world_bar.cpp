@@ -48,14 +48,55 @@ void BarWorld::build() {
     d.glowbox = world_.part(t, "glowbox").isObject();
     if (d.model >= 0 || d.light >= 0 || d.glowbox) drawn_.push_back(d);
   }
+  dims_.assign(scene_->lights.size(), false);
+  for (int l : scene_->roomLights) dims_[static_cast<size_t>(l)] = true;
   built_ = true;
   LOG_INFO("World: %zu things, %zu alive.", world_.size(), drawn_.size());
 }
 
-void BarWorld::setLightBase(int light, float scale) {
-  if (light < 0) return;
-  if (base_.size() <= static_cast<size_t>(light)) base_.resize(static_cast<size_t>(light) + 1, 1.0f);
-  base_[static_cast<size_t>(light)] = scale;
+bool BarWorld::touch(int i) {
+  if (!reacts(i)) return false;
+  world_.takeChanges();
+  world_.send(i, "tap", now_);
+  std::vector<engine::world::Change> changes = world_.takeChanges();
+  LOG_INFO("World: you touched %s (%s).", world_.thing(i).id.c_str(), world_.stateOf(i).name.c_str());
+  if (engine::net::status() == engine::net::Status::kConnected) {
+    const engine::world::Thing& t = world_.thing(i);
+    const int request = engine::net::request("thing", "{\"n\":" + std::to_string(t.net) + ",\"e\":\"tap\"}");
+    if (request > 0) pending_.push_back({request, std::move(changes)});
+  }
+  return true;
+}
+
+void BarWorld::applyShared(uint16_t net, int state, double start) {
+  if (state < 0 || state > 255) return;
+  const engine::world::Change c{net, static_cast<uint8_t>(state), start};
+  shared_[net] = c;
+  if (!built_) return;
+  const int i = world_.findNet(net);
+  const bool changed = i >= 0 && (world_.thing(i).state != state || world_.thing(i).start != start);
+  world_.apply(c);
+  if (changed) LOG_INFO("World: %s is %s (the room).", world_.thing(i).id.c_str(), world_.stateOf(i).name.c_str());
+}
+
+void BarWorld::undo(const engine::world::Change& c) {
+  // The room said no: back to its word (or how the thing started).
+  const auto it = shared_.find(c.net);
+  if (it != shared_.end()) {
+    world_.apply(it->second);
+    return;
+  }
+  const int i = world_.findNet(c.net);
+  if (i < 0) return;
+  const engine::world::Kind& k = *world_.thing(i).kind;
+  const int start = k.start.empty() ? 0 : std::max(0, k.state(k.start));
+  world_.apply({c.net, static_cast<uint8_t>(start), 0});
+}
+
+std::string BarWorld::stateOf(const char* kind) const {
+  for (size_t i = 0; i < world_.size(); ++i)
+    if (world_.thing(static_cast<int>(i)).kind->id == kind) return world_.stateOf(static_cast<int>(i)).name;
+  return "";
 }
 
 void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, SceneRenderer& renderer) {
@@ -80,14 +121,25 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
     music_ = music;
     world_.sendAll(music ? "music" : "quiet", clock.seconds);
   }
-  if (in.fireOn != fire_) {
-    fire_ = in.fireOn;
-    world_.sendAll(fire_ ? "fire-on" : "fire-off", clock.seconds);
+  world_.takeChanges();  // every phone makes these itself (the jukebox's song is shared already)
+  now_ = clock.seconds;
+  // The room's answers to our touches: a refusal (too far...) takes them back.
+  for (size_t k = 0; k < pending_.size();) {
+    std::string answer;
+    if (!engine::net::takeAnswer(pending_[k].request, answer)) {
+      ++k;
+      continue;
+    }
+    if (!engine::Json::parse(answer)["ok"].integer(0))
+      for (const engine::world::Change& c : pending_[k].changes) undo(c);
+    pending_.erase(pending_.begin() + static_cast<long>(k));
   }
-  world_.takeChanges();  // every phone makes these itself (the jukebox and fire are shared already)
   world_.update(clock);
 
-  auto base = [&](int l) { return static_cast<size_t>(l) < base_.size() ? base_[static_cast<size_t>(l)] : 1.0f; };
+  // The light switch (a thing with states on / dim) turns the lamps and
+  // string lights down to a quarter.
+  const bool dim = stateOf("light-switch") == "dim";
+  auto base = [&](int l) { return dim && dims_[static_cast<size_t>(l)] ? 0.25f : 1.0f; };
   for (Drawn& d : drawn_) {
     const engine::world::Thing& t = world_.thing(d.thing);
     const engine::world::Motion& m = t.motion;

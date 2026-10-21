@@ -51,7 +51,8 @@ const PERSISTENT_ROOM = 'main';
 const PERSISTENT_ROOMS = new Set(['main', 'looped']);
 const PRIVATE_ROOMS = new Set(['looped']);
 const MAX_SOCKETS = MAX_SLOTS * 2;  // players + sockets still saying hello
-const MAX_KV_KEYS = 96;
+const MAX_KV_KEYS = 160;  // bar keys (~40) + thing states t<net> (one per thing that ever changed)
+const THING_REACH = 6;     // metres: you touch things near you
 const MAX_CLAIMS_PER_PLAYER = 8;
 const CLAIM_KEY = /^[A-Za-z0-9_.-]{1,40}$/;
 // Rate limits per socket (PROTOCOL §7): messages, bytes, intents.
@@ -119,9 +120,11 @@ export class Room {
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
     this.games = {};             // games the room runs: darts → {owner slot, session}
     this.race = race.empty();    // the racing rigs (cloud/games/race.js), shared as world key rc
-    this.glasses = new Glasses(new Sim(simWasm, {  // the bar's physics: every glass
+    this.sim = new Sim(simWasm, {  // the bar's physics (every glass) and its things
       'places/bar.json': JSON.stringify(barPlace), 'kinds/bar.json': JSON.stringify(barKinds),
-    }));
+    });
+    this.glasses = new Glasses(this.sim);
+    this.thingsSynced = false;  // the stored thing states handed to this.sim yet
     this.lastSimMs = 0;
     this.lastSeq = 0;
     this.ticker = null;
@@ -463,6 +466,7 @@ export class Room {
     if (body.k === 'dart') return this.throwDart(slot, body);
     if (body.k === 'race') return this.raceIntent(slot, body);
     if (body.k === 'grab' || body.k === 'drop' || body.k === 'throw') return this.glassIntent(slot, body);
+    if (body.k === 'thing') return this.thingIntent(slot, body);
     if (body.k === 'set') {
       // A world write that only happens if the key still holds `expect`
       // (e.g. taking a drink: the first one to ask gets it).
@@ -537,6 +541,33 @@ export class Room {
 
   // Glasses (cloud/games/glasses.js): grab, put down (`pos`) or throw (`vel`).
   // The room's physics moves them; holding one is the claim `glass.<n>`.
+  // Things (docs/ENGINE.md E3): a player touches a thing; the room runs the
+  // bar's own rules (the same files and C++ as the phones) and shares every
+  // state change it makes as world key t<net> = [state, start (server s)],
+  // written by the room (-1), so every phone ends on the room's word.
+  thingIntent(slot, body) {
+    const n = body.n, e = body.e;
+    if (!Number.isInteger(n) || n < 1 || n > 65535 || typeof e !== 'string' || !/^[a-z-]{1,16}$/.test(e)) return { ok: 0, why: 'bad thing' };
+    if (e !== 'tap') return { ok: 0, why: 'players can only touch things' };
+    if (!this.thingsSynced) {
+      for (const [key, entry] of this.kv) {
+        const m = /^t(\d{1,5})$/.exec(key);
+        if (m && entry.values.length === 2) this.sim.thingApply(+m[1], entry.values[0], entry.values[1]);
+      }
+      this.thingsSynced = true;
+    }
+    const at = this.sim.thingAt(n);
+    if (!at) return { ok: 0, why: 'no such thing' };
+    const eyes = this.eyes(slot);
+    if (!eyes || Math.hypot(eyes.x - at[0], eyes.y - at[1], eyes.z - at[2]) > THING_REACH) return { ok: 0, why: 'too far' };
+    const changes = this.sim.thingEvent(n, e, Date.now() / 1000);
+    if (!changes.length) return { ok: 0, why: 'nothing happens' };
+    const entries = changes.map(([net, state, start]) => this.storeKv(-1, 't' + net, [state, start]));
+    for (let i = 0; i < entries.length; i += 64) this.broadcast(text('K', { w: entries.slice(i, i + 64) }));
+    this.scheduleFlush();
+    return { ok: 1, n: entries.length };
+  }
+
   glassIntent(slot, body) {
     const g = body.g, key = 'glass.' + g;
     const eyes = this.eyes(slot);

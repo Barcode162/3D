@@ -357,6 +357,30 @@ int main() {
     check(same4 && near(wp.thing(cup).scale.x, 1, 1e-3f), "and taken off again, the same (its size unchanged)");
   }
 
+  // ---- Messages to everyone, and what reacts ----
+  {
+    Library lib;
+    lib.add(R"({"kinds": [
+      {"id": "switch", "still": "part of the wall",
+       "states": {"on": {"on": {"tap": "off"}, "enter": [{"send": "bright", "to": "all"}]},
+                  "off": {"on": {"tap": "on"}, "enter": [{"send": "dark", "to": "all"}]}}},
+      {"id": "lamp", "loops": {"l": {"period": 2, "pieces": [{"ch": "light", "shape": "wave", "amp": 0.1}]}},
+       "states": {"lit": {"loop": "l", "on": {"dark": "out"}}, "out": {"loop": "l", "on": {"bright": "lit"}}}}]})",
+            "all");
+    lib.resolve();
+    std::string err;
+    const Place p = parsePlace(R"({"things": [{"id": "sw", "kind": "switch"}, {"id": "a", "kind": "lamp"},
+                                              {"id": "b", "kind": "lamp", "at": [3, 0, 0]}]})", &err);
+    World ww;
+    ww.build(lib, p, &err);
+    check(ww.reacts(ww.find("sw"), "tap") && !ww.reacts(ww.find("a"), "tap"), "a switch reacts to a tap, a lamp doesn't");
+    check(ww.send(ww.find("sw"), "tap", 10) && ww.stateOf(ww.find("a")).name == "out" && ww.stateOf(ww.find("b")).name == "out",
+          "the switch's message to all puts every lamp out");
+    check(ww.takeChanges().size() == 3, "three changes to share (the switch and two lamps)");
+    ww.send(ww.find("sw"), "tap", 11);
+    check(ww.stateOf(ww.find("b")).name == "lit", "and back on");
+  }
+
   // ---- Shapes ----
   {
     std::string err;

@@ -272,6 +272,29 @@ try {
   await wait(200);
   ra.send('I', { i: 4, k: 'grab', g: 2 });
   check((await ra.until(() => ra.find('R', (r) => r.r === 4)))?.body.why === 'too far', 'a glass out of reach can\'t be grabbed');
+  // Things (docs/ENGINE.md E3): touching one runs the bar's rules in the room.
+  const netOf = (id) => {  // looped/world/world.cpp World::netIdOf (no clash for these ids)
+    let h = 2166136261;
+    for (const c of Buffer.from(id)) { h ^= c; h = Math.imul(h, 16777619) >>> 0; }
+    return ((h >>> 16) ^ (h & 0xffff)) || 1;
+  };
+  ra.send('I', { i: 43, k: 'thing', n: netOf('fire_flames'), e: 'tap' });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 43)))?.body.why === 'too far', 'a thing across the room is out of reach');
+  ra.state(3, -4.3, { y: 1.65, z: -3.4 });  // under the second lamp over the counter
+  await wait(200);
+  const lamp = netOf('pendant_lamp-2');
+  ra.send('I', { i: 40, k: 'thing', n: lamp, e: 'tap' });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 40)))?.body.ok === 1, 'Ana touches a lamp');
+  const swing = await rb.until(() => rb.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 't' + lamp));
+  check(!!swing && swing[2] === -1 && swing[3][0] === 1 && Math.abs(swing[3][1] - Date.now() / 1000) < 5,
+    `everyone gets its new state from the room (swinging, now) (${swing && JSON.stringify(swing[3])})`);
+  ra.send('I', { i: 41, k: 'thing', n: netOf('hall'), e: 'tap' });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 41)))?.body.why === 'nothing happens', 'touching a wall does nothing');
+  ra.send('I', { i: 42, k: 'thing', n: lamp, e: 'fire-off' });
+  check((await ra.until(() => ra.find('R', (r) => r.r === 42)))?.body.ok === 0, 'players can only touch things, not send other events');
+  ra.send('K', { w: { ['t' + lamp]: [0, 1] } });
+  await wait(300);
+  check(!rb.all('K').flatMap((m) => m.body.w).some((e) => e[1] === 't' + lamp && e[2] !== -1), 'phones can\'t write a thing\'s state');
   ra.send('I', { i: 6, k: 'claim', key: 'glass.3' });
   check((await ra.until(() => ra.find('R', (r) => r.r === 6)))?.body.ok === 0, 'glasses can\'t be claimed around the physics');
   const okBefore = ra.all('K').length;

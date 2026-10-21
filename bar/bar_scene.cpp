@@ -155,6 +155,7 @@ BarScene buildBarScene() {
       if (u["lights"].boolean(false) && model >= 0) it.firstModel = static_cast<size_t>(model), it.modelCount = 1;
       if (u.has("mirror")) mirrorUses.push_back({scene.interactables.size(), u["mirror"].string()});
       scene.interactables.push_back(it);
+      scene.useThing.push_back(i);
     }
     if (const Json& l = world->part(i, "light"); l.has("color")) {
       if (l["dims"].boolean(false)) scene.roomLights.push_back(static_cast<int>(scene.lights.size()));

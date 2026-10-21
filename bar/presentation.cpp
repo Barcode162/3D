@@ -84,10 +84,11 @@ void presentAvatars(double nowMs) {
     app::BarWorld::Inputs in;
     in.nowMs = nowMs;
     in.eye = cam.position;
-    in.fireOn = g_app.fireOn;
     in.songSeconds = g_app.jukebox.songTime();
     if (const app::Song* s = g_app.jukebox.currentSong()) in.songUrl = s->url;
     g_app.world.update(in, g_app.boxes, g_app.renderer);
+    g_app.lightsDim = g_app.world.stateOf("light-switch") == "dim";
+    g_app.fireOn = g_app.world.stateOf("fire_flames") != "out";
   }
   g_app.renderer.setBoxes(g_app.boxes);
   g_app.renderer.streamRooms(cam.position, nowMs);  // nearby rooms' models

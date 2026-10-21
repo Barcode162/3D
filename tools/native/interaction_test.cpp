@@ -38,6 +38,14 @@ int main() {
     const TapTarget t = app::pickTap({{TargetKind::kSeat, 3, 0.8f}, {TargetKind::kThing, 2, 1.4f}});
     check(t.kind == TargetKind::kSeat && t.index == 3, "the nearer seat wins over a farther thing");
   }
+  {
+    const TapTarget t = app::pickTap({{TargetKind::kSeat, 2, 1.2f}, {TargetKind::kTouch, 7, 1.0f}});
+    check(t.kind == TargetKind::kSeat, "a stool's seat beats touching the table just in front of it");
+    const TapTarget u = app::pickTap({{TargetKind::kSeat, 2, 2.5f}, {TargetKind::kTouch, 7, 1.0f}});
+    check(u.kind == TargetKind::kTouch && u.index == 7, "a lamp clearly nearer than a seat gets the touch");
+    const TapTarget v = app::pickTap({{TargetKind::kTouch, 7, 1.0f}});
+    check(v.kind == TargetKind::kTouch, "a touch alone wins");
+  }
   std::printf(failed ? "INTERACTION TEST FAILED (%d)\n" : "INTERACTION TEST PASSED\n", failed);
   return failed ? 1 : 0;
 }

@@ -175,6 +175,21 @@ const throwsSeen = sitter.got.filter((m) => m.letter === 'D').flatMap((m) => m.b
 const bobThrows = [...(await logOf(bob)).matchAll(/Darts: (\S+) = (\d+), (\d+) left \(scored by the room\)/g)].map((m) => [m[1], +m[2], +m[3]]);
 console.log('Bob\'s darts:', JSON.stringify(bobThrows), 'room told the others:', JSON.stringify(throwsSeen.map((t) => [t.label, t.pts, t.left])));
 sitter.close();
+
+// Things (docs/ENGINE.md E3): Dave touches a lamp over the counter; the room
+// runs its rule and everyone sees it swing.
+const dave = await open('Dave', '-4.3,1.66,-2.6,0,24');
+await dave.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                           { timeout: 180000, polling: 250 }).catch(() => console.log('timed out loading Dave'));
+await dave.waitForFunction(() => /connected to room/.test(document.getElementById('log').textContent), null,
+                           { timeout: 30000, polling: 250 }).catch(() => console.log('Dave never connected'));
+await dave.waitForTimeout(1500);
+await dave.mouse.click(215, 466);
+await bob.waitForFunction(() => /pendant_lamp-2 is swinging \(the room\)/.test(document.getElementById('log').textContent), null,
+                          { timeout: 15000, polling: 250 }).catch(() => {});
+const daveLog = await logOf(dave), bobThingLog = await logOf(bob);
+console.log('Dave:', (daveLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
+dave.close();
 show('Bob', log);
 show('Carol', carolLog);
 show('Carol again', carolLog2);
@@ -197,6 +212,8 @@ const checks = {
   'the room refuses Bob the darts someone else is playing': /Machine machine.darts: Sitter is (throwing|using it)/.test(bobDartsLog),
   'the room scores Bob\'s three darts and everyone gets the same numbers': bobThrows.length === 3 && throwsSeen.length === 3 &&
     bobThrows.every((t, i) => t[0] === throwsSeen[i].label && t[1] === throwsSeen[i].pts && t[2] === throwsSeen[i].left),
+  'Dave touches a lamp and Bob sees it swing (the room ran its rule)':
+    /you touched pendant_lamp-2 \(swinging\)/.test(daveLog) && /pendant_lamp-2 is swinging \(the room\)/.test(bobThingLog),
   'the room records Carol on seat 5': !!seatOwner && seatOwner.body.d.some((x) => x[1] === 'claim.seat.5' && x[2] === carolSlot),
 };
 for (const [k, v] of Object.entries(checks)) console.log((v ? 'ok   ' : 'FAIL ') + k);

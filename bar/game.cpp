@@ -236,6 +236,26 @@ float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax) {
 }
 
 // The world-space ray through a point on the screen (0..1 fractions).
+// The nearest living thing a tap's ray touches (a lamp, a table, a candle:
+// models whose kind has a "tap" rule now), or -1. Big things (the counter,
+// the back bar) are left out: their boxes cover the floor around them.
+int touchAt(Vec3 dir, float* distance) {
+  const Vec3 eye = g_app.camera.position;
+  int best = -1;
+  float nearest = kTapReach;
+  for (size_t m = 0; m < g_app.scene.models.size() && m < g_app.scene.modelThing.size(); ++m) {
+    const int thing = g_app.scene.modelThing[m];
+    if (!g_app.world.reacts(thing)) continue;
+    engine::Aabb box;
+    if (!g_app.renderer.modelBox(m, &box)) continue;
+    if (std::max(box.max.x - box.min.x, box.max.z - box.min.z) > 2.5f) continue;
+    const float t = rayBoxDistance(eye, dir, box.min, box.max);
+    if (t >= 0 && t < nearest) nearest = t, best = thing;
+  }
+  *distance = nearest;
+  return best;
+}
+
 Vec3 screenRay(engine::Vec2 tap) {
   const engine::FirstPersonCamera& cam = g_app.camera;
   const Vec3 forward = cam.forward();
@@ -321,18 +341,6 @@ void applyStyle(const app::AvatarStyle& st, bool remember) {
   }
 }
 
-void setLights(bool dim, bool fire) {
-  g_app.lightsDim = dim;
-  g_app.fireOn = fire;
-  for (int l : g_app.scene.roomLights) {
-    g_app.renderer.setLightScale(static_cast<size_t>(l), dim ? 0.25f : 1.0f);
-    g_app.world.setLightBase(l, dim ? 0.25f : 1.0f);  // loops that move a light start from this
-  }
-  if (g_app.scene.fireLight >= 0) {
-    g_app.renderer.setLightScale(static_cast<size_t>(g_app.scene.fireLight), fire ? 1.0f : 0.0f);
-    g_app.world.setLightBase(g_app.scene.fireLight, fire ? 1.0f : 0.0f);
-  }
-}
 
 // The room decides who uses a machine (one at a time). False if someone
 // else has it; otherwise asks for it (and you start right away).
@@ -347,6 +355,13 @@ bool claimMachine(const char* key, const char* what) {
   g_app.machineKey = key;
   g_app.machineClaim = engine::net::claim(key);
   return true;
+}
+
+// The world thing a thing to use belongs to (assets/world/places/bar.json).
+int thingOf(const app::Interactable& it) {
+  const auto& items = g_app.scene.interactables;
+  const size_t i = static_cast<size_t>(&it - items.data());
+  return i < g_app.scene.useThing.size() ? g_app.scene.useThing[i] : -1;
 }
 
 void use(const app::Interactable& it) {
@@ -425,20 +440,16 @@ void use(const app::Interactable& it) {
       g_app.onMic = !g_app.onMic;
       showToast(g_app.onMic ? "You're on the mic: everyone in the bar hears you clearly." : "Off the mic.");
       break;
-    case Action::kLightSwitch: {
-      setLights(!g_app.lightsDim, g_app.fireOn);
+    // The switch and the fire are things with rules (assets/world/kinds/bar.json):
+    // a touch follows them here and in the room, which shares the result.
+    case Action::kLightSwitch:
+      g_app.world.touch(thingOf(it));
       playSfx(engine::synth::Effect::kClick, where);
-      const double v[2] = {g_app.lightsDim ? 1.0 : 0.0, g_app.fireOn ? 1.0 : 0.0};
-      engine::net::setWorld("lt", v, 2);
       break;
-    }
-    case Action::kFireplace: {
-      setLights(g_app.lightsDim, !g_app.fireOn);
-      const double v[2] = {g_app.lightsDim ? 1.0 : 0.0, g_app.fireOn ? 1.0 : 0.0};
-      engine::net::setWorld("lt", v, 2);
-      showToast(g_app.fireOn ? "The fire crackles back to life." : "The fire dies down.");
+    case Action::kFireplace:
+      g_app.world.touch(thingOf(it));
+      showToast(g_app.world.stateOf("fire_flames") == "lit" ? "The fire crackles back to life." : "The fire dies down.");
       break;
-    }
     case Action::kDoor:
       playSfx(engine::synth::Effect::kKnock, where, 0.8f, true);
       showToast("The street outside isn't built yet.");
@@ -686,7 +697,9 @@ void sendInfo() {
 // Lights, the fireplace, sounds and piano notes from other players.
 void handleShared(std::vector<engine::net::WorldEntry>& world, std::vector<engine::net::Event>& events) {
   for (const engine::net::WorldEntry& e : world) {
-    if (e.key == "lt" && e.values.size() >= 2) setLights(e.values[0] != 0, e.values[1] != 0);
+    // A thing's state, decided by the room (world key t<net>, docs/ENGINE.md E3).
+    if (e.key.size() >= 2 && e.key[0] == 't' && std::isdigit(static_cast<unsigned char>(e.key[1])) && e.values.size() >= 2)
+      g_app.world.applyShared(static_cast<uint16_t>(std::atoi(e.key.c_str() + 1)), static_cast<int>(e.values[0]), e.values[1]);
     if (e.key == "rc") g_app.race.onRoomRace(e.values);
     if (e.key == "ch") g_app.chess.onRoom(e.values);  // the lounge's chess game
     // Another player's custom avatar (world key a<slot>, bar/avatar.h AvatarStyle).
@@ -848,7 +861,15 @@ void updateInteraction(double nowMs, float dt) {
       if (hit >= 0) hits.push_back({app::TargetKind::kThing, hit, nearest});
       if (const int seat = seatHit(dir, kDirectReach, &d); seat >= 0) hits.push_back({app::TargetKind::kSeat, seat, d});
     }
+    if (const int thing = touchAt(dir, &d); thing >= 0) hits.push_back({app::TargetKind::kTouch, thing, d});
     const app::TapTarget target = app::pickTap(hits);
+    if (target.kind == app::TargetKind::kTouch) {
+      if (g_app.world.touch(target.index)) {
+        const engine::Mat4& m = g_app.world.world().thing(target.index).world;
+        playSfx(engine::synth::Effect::kClick, {m.at(3, 0), m.at(3, 1), m.at(3, 2)}, 0.35f);
+      }
+      continue;
+    }
     if (target.kind == app::TargetKind::kProp) {
       pickUp(target.index);
       continue;

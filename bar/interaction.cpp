@@ -7,6 +7,7 @@ float bias(TargetKind k) {
   switch (k) {
     case TargetKind::kProp: return kPropBias;
     case TargetKind::kPlayer: return kPlayerBias;
+    case TargetKind::kTouch: return kTouchBias;
     default: return 0;
   }
 }

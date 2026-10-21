@@ -769,6 +769,13 @@ void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat 
   setModelPose(index, modelMatrix(position, rotation, models_[index].scale));
 }
 
+bool SceneRenderer::modelBox(size_t index, engine::Aabb* out) const {
+  if (index >= models_.size() || !models_[index].gpu) return false;
+  const ModelDraw& m = models_[index];
+  *out = engine::transformAabb(m.world, {m.gpu->boundsMin, m.gpu->boundsMax});
+  return true;
+}
+
 void SceneRenderer::setModelPose(size_t index, const Mat4& world) {
   if (index >= models_.size()) return;
   ModelDraw& m = models_[index];
