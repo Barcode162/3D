@@ -170,7 +170,7 @@ Every project is a folder `bar/projects/<id>/` with a `project.json`:
 - [x] A1-A5 built (2026-10-20, `fc02cc1`): gate.php + gate.html, invites and
   admins in account.php, room "looped", classic.yml (the `classic` branch
   holds build 105f593), gh-pages a signpost; `tools/gate_test.mjs`.
-  [ ] A6: the user's taps (repo → private) after the deploy works.
+  [x] A6: the repo is private (the user, 2026-10-21).
 - [x] B2-B4 (2026-10-20): the layout above; `looped/` namespace stays
   `engine`; CI fails if looped/ includes bar/. Screenshots identical.
 - [x] B1 (part): the scene renderer is Looped's (`looped/scene_renderer.*`,
@@ -189,3 +189,6 @@ Every project is a folder `bar/projects/<id>/` with a `project.json`:
   for more kinds, hub controls (list / on-off / speed), loops on models.
 - To ask for a loop: say what it is in words ("a moth at the piano lamp");
   Claude adds a recipe to assets/loops/bar.json.
+
+**2026-10-21:** next is the whole engine, `docs/ENGINE.md` (D1b-D1c and the
+rest of D2 are its steps E4 and E1-E2).
