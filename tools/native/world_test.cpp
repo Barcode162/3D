@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <set>
 #include <string>
 
 #include "looped/world/world.h"
@@ -402,6 +403,9 @@ int main() {
     const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - a).count() / 60;
     std::printf("     %zu things: %.3f ms per update\n", wb.size(), ms);
     check(ms < 8, "4000 things update in under 8 ms here");
+    std::set<uint16_t> nets;
+    for (size_t i = 0; i < wb.size(); ++i) nets.insert(wb.thing(int(i)).net);
+    check(nets.size() == wb.size() && !nets.count(0), "every one of 4000 things has its own net id");
   }
 
   std::printf(failed ? "%d FAILED\n" : "WORLD TESTS PASSED\n", failed);

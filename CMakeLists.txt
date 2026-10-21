@@ -23,6 +23,8 @@ set_source_files_properties(${ENGINE_SOURCES} PROPERTIES COMPILE_OPTIONS "-Werro
 target_link_options(app PRIVATE
   --use-port=emdawnwebgpu
   "--embed-file=${CMAKE_SOURCE_DIR}/looped/shaders@/shaders"
+  # The world's kinds and places (bar/world_files.h reads assets/world/...).
+  "--embed-file=${CMAKE_SOURCE_DIR}/assets/world@/assets/world"
   -sALLOW_MEMORY_GROWTH=1
   # Start with enough memory for the whole bar (peak ~76 MB headless), so the
   # heap doesn't grow (and copy itself) again and again while loading.
@@ -44,6 +46,9 @@ endif()
 # Re-link when shaders change (they are embedded into the binary).
 file(GLOB SHADER_FILES CONFIGURE_DEPENDS looped/shaders/*.wgsl)
 set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${SHADER_FILES})
+# ... and when the world's files change (kinds, places: embedded too).
+file(GLOB_RECURSE WORLD_FILES CONFIGURE_DEPENDS assets/world/*.json)
+set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${WORLD_FILES})
 
 # The site folder (build/site): one staging step. Every file is its own
 # build rule, so only changed files are copied (and models re-gzipped).

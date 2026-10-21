@@ -39,7 +39,7 @@ struct Change {
 
 struct Thing {
   std::string id;
-  uint16_t net = 0;         // the id's 16-bit hash (what the network carries)
+  uint16_t net = 0;         // the id's 16-bit hash, made unique (what the network carries)
   const Kind* kind = nullptr;
   int parent = -1;          // index, -1 = the place itself
   std::vector<int> children;
@@ -113,7 +113,7 @@ class World {
 
   // ---- Checks ----
   // Every rule's target exists, every state plays a loop with something in
-  // it (or the kind says why it's "still"), ids and net ids are unique.
+  // it (or the kind says why it's "still").
   // One line per problem; empty when all is well.
   std::vector<std::string> check() const;
   // Kinds marked "still" that are used here (to keep that list short).
@@ -139,7 +139,6 @@ class World {
   std::vector<int> order_;  // parents before children
   bool orderDirty_ = true;
   std::vector<Change> changes_;
-  std::vector<std::string> netClashes_;
 };
 
 }  // namespace engine::world

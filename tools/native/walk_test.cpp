@@ -91,11 +91,11 @@ int main() {
     int mi, mk;
     if (cellOf(p, mi, mk)) map[static_cast<size_t>(mk)][static_cast<size_t>(mi)] = ok ? 'S' : '!';
     if (!ok) {
-      std::printf("FAIL seat %zu (%s) at %.2f, %.2f: standing up puts you at %.2f, %.2f (%.1f m away)%s\n", n, s.name,
+      std::printf("FAIL seat %zu (%s) at %.2f, %.2f: standing up puts you at %.2f, %.2f (%.1f m away)%s\n", n, s.name.c_str(),
                   s.hip.x, s.hip.z, p.x, p.z, away, app::reachableOnFoot(scene, p) ? "" : ", cut off from the room");
       ++failed;
     } else if (std::getenv("SEATS")) {
-      std::printf("seat %zu (%s): stand at %.2f, %.2f (%.1f m)\n", n, s.name, p.x, p.z, away);
+      std::printf("seat %zu (%s): stand at %.2f, %.2f (%.1f m)\n", n, s.name.c_str(), p.x, p.z, away);
     }
   }
   // Things to use: some reachable floor within 2.2 m of them (the prompt distance).

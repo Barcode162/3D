@@ -6,6 +6,9 @@
 // bounce and settle exactly once, for everyone.
 //
 // Calls (all numbers go through one float buffer, sim_buffer()):
+//   sim_text(n) → a place for n bytes: "path\0text" of a world file
+//   sim_file()              takes that file (the bar's place and kinds,
+//                           assets/world/: sim.js hands both over first)
 //   sim_init() → number of bodies (glasses), at their layout spots
 //   sim_step(dt)            advance dt seconds (fixed 60 Hz steps inside)
 //   sim_get(i) → 1          buffer = pos x,y,z, quat x,y,z,w, vel x,y,z, asleep, held
@@ -15,15 +18,18 @@
 //   sim_awake() → count of bodies moving or held
 #include <emscripten/emscripten.h>
 
+#include <string>
 #include <vector>
 
 #include "bar/bar_scene.h"
+#include "bar/world_files.h"
 #include "bar/props.h"
 #include "looped/physics.h"
 
 namespace {
 engine::PhysicsWorld* world = nullptr;
 float buffer[16];
+std::string text;  // a world file on its way in (sim_text → sim_file)
 
 engine::Quat quatAt(const float* b) {
   engine::Quat q{b[0], b[1], b[2], b[3]};
@@ -38,6 +44,16 @@ bool valid(int i) { return world && i >= 0 && static_cast<size_t>(i) < world->bo
 extern "C" {
 
 EMSCRIPTEN_KEEPALIVE float* sim_buffer() { return buffer; }
+
+EMSCRIPTEN_KEEPALIVE char* sim_text(int n) {
+  text.assign(static_cast<size_t>(n > 0 ? n : 0), '\0');
+  return text.data();
+}
+
+EMSCRIPTEN_KEEPALIVE void sim_file() {
+  const size_t cut = text.find('\0');
+  if (cut != std::string::npos) app::setWorldFile(text.substr(0, cut), text.substr(cut + 1));
+}
 
 EMSCRIPTEN_KEEPALIVE int sim_init() {
   if (!world) {

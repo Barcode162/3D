@@ -128,9 +128,11 @@ int World::make(const Library& lib, const ThingSpec& spec, int parent, const std
   t.state = std::max(0, s);
   const int index = static_cast<int>(things_.size());
   byId_[id] = index;
-  auto [it, fresh] = byNet_.emplace(t.net, index);
-  if (!fresh) netClashes_.push_back(id + " and " + things_[static_cast<size_t>(it->second)].id + " share net id " +
-                                    std::to_string(t.net));
+  // Two ids can hash alike (16 bits): the later one takes the next free
+  // number. Every phone and the room read the same files in the same order,
+  // so they all agree.
+  while (byNet_.count(t.net)) t.net = static_cast<uint16_t>(t.net + 1 ? t.net + 1 : 1);
+  byNet_.emplace(t.net, index);
   things_.push_back(std::move(t));
   if (parent >= 0) things_[static_cast<size_t>(parent)].children.push_back(index);
   schedule(index);
@@ -151,7 +153,6 @@ bool World::build(const Library& source, const Place& place, std::string* errors
   byId_.clear();
   byNet_.clear();
   changes_.clear();
-  netClashes_.clear();
   std::string err;
   std::vector<std::pair<int, const ThingSpec*>> made;
   for (const ThingSpec& spec : place.things) {
@@ -469,7 +470,6 @@ std::vector<std::string> World::check() const {
   auto say = [&](const std::string& s) {
     if (seen.insert(s).second) out.push_back(s);
   };
-  for (const std::string& c : netClashes_) say(c);
   for (size_t i = 0; i < things_.size(); ++i) {
     const Thing& t = things_[i];
     const Kind& k = *t.kind;

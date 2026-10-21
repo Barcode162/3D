@@ -1,6 +1,10 @@
 #pragma once
 // The bar's layout: which shapes go where, their colors, the lights and the
-// walls/furniture you can't walk through. Pure data, no GPU code.
+// walls/furniture you can't walk through. Pure data, no GPU code. Since
+// 2026-10-21 (docs/ENGINE.md E2) it's made from the bar's place file
+// (assets/world/places/bar.json): every thing there with its parts (model,
+// solids, blocks, seats, uses, light...) turned into these lists.
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -9,6 +13,7 @@
 #include "bar/materials.h"
 #include "looped/procedural.h"
 #include "looped/render_scene.h"
+#include "looped/world/world.h"
 
 namespace app {
 
@@ -90,7 +95,7 @@ struct FloorArea {
 enum class SeatKind { kStool, kChair, kSofa, kPianoBench, kSim };
 
 struct Seat {
-  const char* name;      // "Bar stool", "Sofa"...
+  std::string name;      // "Bar stool", "Sofa"...
   engine::Vec3 hip;      // where the sitter's hip joint goes
   float yaw = 0;         // which way the sitter faces (camera yaw convention)
   float lowSeat = 0;     // 0 = stool height, 1 = low sofa (knees bend more)
@@ -149,6 +154,11 @@ struct BarScene {
   engine::Vec3 chessCenter;
   float chessSquare = 0.055f;
   int coinModel = -1;  // the credit coin (bar/coin_pop.h), under the floor until you earn credits
+  // The things these lists came from (looped/world): the world itself, built
+  // from the place file, and which thing each model and light is.
+  std::shared_ptr<const engine::world::World> world;
+  std::vector<int> modelThing, lightThing;
+  std::string problems;  // what was wrong in the files ("" = nothing)
   std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;
@@ -173,6 +183,7 @@ struct BarScene {
   std::vector<int> roomLights;   // lights the switch turns down
 };
 
+// Reads the bar's kinds and place (bar/world_files.h) and lays it out.
 BarScene buildBarScene();
 
 // What the renderer needs from the bar (looped/render_scene.h): the shapes

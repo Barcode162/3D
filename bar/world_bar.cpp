@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include "bar/bar_place.h"
 #include "looped/fetch.h"
 #include "looped/json.h"
 #include "looped/log.h"
@@ -13,7 +12,6 @@ namespace app {
 
 namespace {
 constexpr float kShyDistance = 1.2f;  // metres: closer than this, shy things dart away
-constexpr char kKindsFile[] = "assets/world/kinds/bar.json";
 constexpr char kSongsFile[] = "assets/world/songs.json";
 }  // namespace
 
@@ -21,47 +19,37 @@ void BarWorld::load(const BarScene& scene) {
   if (requested_) return;
   requested_ = true;
   scene_ = &scene;
-  engine::fetchFile(kKindsFile, [this](bool ok, std::vector<uint8_t> bytes) {
-    if (!ok) LOG_ERROR("World: %s didn't load.", kKindsFile);
-    kindsText_.assign(bytes.begin(), bytes.end());
-    if (++files_ == 2) build();
-  });
+  if (!scene.problems.empty()) LOG_ERROR("World: %s", scene.problems.c_str());
+  build();
   engine::fetchFile(kSongsFile, [this](bool ok, std::vector<uint8_t> bytes) {
-    if (ok) {
-      const engine::Json root = engine::Json::parse(std::string(bytes.begin(), bytes.end()));
-      for (const auto& [file, song] : root.members())
-        if (song.isObject()) tempos_.push_back({file, song["bpm"].number(0), song["firstBeat"].number(0)});
-    }
-    if (++files_ == 2) build();
+    if (!ok) return;
+    const engine::Json root = engine::Json::parse(std::string(bytes.begin(), bytes.end()));
+    for (const auto& [file, song] : root.members())
+      if (song.isObject()) tempos_.push_back({file, song["bpm"].number(0), song["firstBeat"].number(0)});
+    LOG_INFO("World: %zu songs with a beat.", tempos_.size());
   });
 }
 
 void BarWorld::build() {
-  if (kindsText_.empty()) return;
-  engine::world::Library kinds;
-  kinds.add(kindsText_, kKindsFile);
-  kinds.resolve();
-  if (!kinds.errors().empty()) LOG_ERROR("World: %s", kinds.errors().c_str());
-  std::string errors;
-  world_.build(kinds, barPlace(*scene_, kinds), &errors);
-  if (!errors.empty()) LOG_ERROR("World: %s", errors.c_str());
+  if (!scene_->world) return;
+  world_ = *scene_->world;  // its own copy: the scene's stays as built
   for (const std::string& p : world_.check()) LOG_ERROR("World: %s", p.c_str());
+  std::vector<int> modelOf(world_.size(), -1), lightOf(world_.size(), -1);
+  for (size_t m = 0; m < scene_->modelThing.size(); ++m) modelOf[static_cast<size_t>(scene_->modelThing[m])] = static_cast<int>(m);
+  for (size_t l = 0; l < scene_->lightThing.size(); ++l) lightOf[static_cast<size_t>(scene_->lightThing[l])] = static_cast<int>(l);
   drawn_.clear();
   for (size_t i = 0; i < world_.size(); ++i) {
     const int t = static_cast<int>(i);
-    const engine::world::Thing& th = world_.thing(t);
-    if (!th.kind->still.empty()) continue;  // nothing to play
+    if (!world_.thing(t).kind->still.empty()) continue;  // nothing to play
     Drawn d;
     d.thing = t;
-    const engine::Json& slot = world_.part(t, "slot");
-    d.model = slot["model"].integer(-1);
-    d.light = slot["light"].integer(-1);
+    d.model = modelOf[i];
+    d.light = lightOf[i];
     d.glowbox = world_.part(t, "glowbox").isObject();
     if (d.model >= 0 || d.light >= 0 || d.glowbox) drawn_.push_back(d);
   }
   built_ = true;
-  LOG_INFO("World: %zu things alive (%zu kinds, %zu songs with a beat).", drawn_.size(), kinds.kinds().size(),
-           tempos_.size());
+  LOG_INFO("World: %zu things, %zu alive.", world_.size(), drawn_.size());
 }
 
 void BarWorld::setLightBase(int light, float scale) {

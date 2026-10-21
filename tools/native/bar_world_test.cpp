@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#include "bar/bar_place.h"
+#include "bar/bar_scene.h"
 #include "looped/world/world.h"
 
 using namespace engine;
@@ -29,21 +29,13 @@ static std::string readFile(const char* path) {
 
 int main() {
   const app::BarScene scene = app::buildBarScene();
-  Library kinds;
-  kinds.add(readFile("assets/world/kinds/bar.json"), "assets/world/kinds/bar.json");
-  kinds.resolve();
-  check(kinds.errors().empty(), "the bar's kinds file reads cleanly" + (kinds.errors().empty() ? "" : ": " + kinds.errors()));
-
-  for (const app::ModelPlacement& m : scene.models)
-    if (app::kindForModel(kinds, m.file).empty()) check(false, "a kind for " + m.file);
-  check(app::kindForModel(kinds, "chess_king_w.glb") == "chess", "a chess piece's kind is chess (the nearest shorter name)");
-
-  const Place place = app::barPlace(scene, kinds);
-  World w;
-  std::string err;
-  check(w.build(kinds, place, &err), "the bar builds as things" + (err.empty() ? "" : ": " + err));
+  check(scene.problems.empty(), "the bar's place and kinds files read cleanly" + (scene.problems.empty() ? "" : ": " + scene.problems));
+  check(scene.world != nullptr, "the bar is a world of things");
+  World w = *scene.world;
   std::printf("     %zu things: %zu models, %zu lights, and small living things\n", w.size(), scene.models.size(),
               scene.lights.size());
+  check(scene.modelThing.size() == scene.models.size() && scene.lightThing.size() == scene.lights.size(),
+        "every model and light is a thing");
 
   const auto problems = w.check();
   check(problems.empty(), "every thing in the bar plays a live loop");
@@ -51,22 +43,22 @@ int main() {
   const auto still = w.stillKinds();
   std::printf("     standing still, with a reason:\n");
   for (const auto& s : still) std::printf("       %s\n", s.c_str());
-  check(still.size() <= 8, "only room shells and the mirror stand still");
+  check(still.size() <= 11, "only room shells, the mirror and invisible spots stand still");
 
-  // The lights with loops of their own are where their names say.
-  float phase;
-  auto lightKind = [&](int i) { return app::kindForLight(scene, static_cast<size_t>(i), &phase); };
+  // The lights with loops of their own.
+  auto lightKind = [&](int l) { return w.thing(scene.lightThing[static_cast<size_t>(l)]).kind->id; };
   check(lightKind(scene.fireLight) == "light-fire", "the fire's light flickers like fire");
-  for (int i : {7, 8, 9}) check(scene.lights[static_cast<size_t>(i)].position.y > 3 && lightKind(i) == "light-groove",
-                                "ceiling light " + std::to_string(i) + " grooves with the music");
-  for (int i : {22, 23, 24, 25})
-    check(scene.lights[static_cast<size_t>(i)].position.z < -9 && lightKind(i) == "light-neon-wave",
-          "arcade light " + std::to_string(i) + " is in the arcade's neon wave");
-  check(engine::distance(scene.lights[28].position, scene.arcadeDoor) < 2.5f && lightKind(28) == "light-sign",
-        "light 28 is by the ARCADE sign");
-  int jukeLights = 0;
-  for (size_t i = 0; i < scene.lights.size(); ++i) jukeLights += lightKind(static_cast<int>(i)) == "light-jukebox";
-  check(jukeLights == 1, "exactly one light is the jukebox's glow");
+  int grooves = 0, waves = 0, signs = 0, jukes = 0;
+  for (size_t l = 0; l < scene.lights.size(); ++l) {
+    const std::string k = lightKind(static_cast<int>(l));
+    const engine::Vec3 p = scene.lights[l].position;
+    if (k == "light-groove") grooves += p.y > 3;
+    if (k == "light-neon-wave") waves += p.z < -9;
+    if (k == "light-sign") signs += engine::distance(p, scene.arcadeDoor) < 2.5f;
+    if (k == "light-jukebox") jukes += engine::distance(p, scene.jukeboxSpeaker) < 1.5f;
+  }
+  check(grooves == 3 && waves == 4 && signs == 1 && jukes == 1,
+        "three ceiling lights groove, four arcade lights wave, one buzzes by the sign, one is the jukebox's glow");
 
   // Moths sit on their lamp and sway with it.
   int moths = 0, onLamp = 0;

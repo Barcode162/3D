@@ -29,6 +29,9 @@ import * as race from './games/race.js';
 import { Glasses, eyesOf } from './games/glasses.js';
 import { Sim } from './sim/sim.js';
 import simWasm from './sim/room_sim.wasm';
+// The bar's layout comes from its world files (docs/ENGINE.md), bundled in.
+import barPlace from '../assets/world/places/bar.json';
+import barKinds from '../assets/world/kinds/bar.json';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -116,7 +119,9 @@ export class Room {
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
     this.games = {};             // games the room runs: darts → {owner slot, session}
     this.race = race.empty();    // the racing rigs (cloud/games/race.js), shared as world key rc
-    this.glasses = new Glasses(new Sim(simWasm));  // the bar's physics: every glass
+    this.glasses = new Glasses(new Sim(simWasm, {  // the bar's physics: every glass
+      'places/bar.json': JSON.stringify(barPlace), 'kinds/bar.json': JSON.stringify(barKinds),
+    }));
     this.lastSimMs = 0;
     this.lastSeq = 0;
     this.ticker = null;

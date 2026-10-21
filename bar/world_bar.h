@@ -1,6 +1,6 @@
 #pragma once
-// The bar's world, live (docs/ENGINE.md): the bar as things (bar/bar_place.h)
-// with the kinds in assets/world/kinds/bar.json, played every frame on the
+// The bar's world, live (docs/ENGINE.md): the things of the bar's place file
+// (assets/world/places/bar.json, kinds in kinds/bar.json), played every frame on the
 // shared clock and drawn: models move, turn, glow and tint; lights breathe,
 // flicker and thump; moths and sparks are small glowing shapes. The clock is
 // the room's (the same for everyone), the beat the jukebox's song as heard
@@ -17,7 +17,7 @@ namespace app {
 
 class BarWorld {
  public:
-  // Fetches the kinds and tempos (once), then builds the world.
+  // Takes the scene's world (made from the place file) and fetches the tempos.
   void load(const BarScene& scene);
   bool ready() const { return built_; }
   size_t count() const { return world_.size(); }
@@ -50,12 +50,10 @@ class BarWorld {
     engine::Vec3 away;  // a shy thing: how far it has darted from you
   };
   const BarScene* scene_ = nullptr;
-  std::string kindsText_;
   engine::world::World world_;
   std::vector<Tempo> tempos_;
   std::vector<Drawn> drawn_;
   std::vector<float> base_;  // per light, the bar's own scale
-  int files_ = 0;
   bool requested_ = false, built_ = false;
   bool music_ = false, fire_ = true;
   double lastMs_ = 0;
