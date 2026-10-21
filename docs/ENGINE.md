@@ -155,6 +155,11 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   jukebox and 4K Mania cabinet thump on the beat, back-bar lights breathe,
   glass and polish catch the light, lights breathe/buzz/groove. The old loop
   system is gone. Renderer: model moves batched into one upload per frame.
+- Phone check of E2 (report 63H3FJ, build 81eeb58, 8 min): avg 16.7 ms (60
+  fps), p95 17, CPU 1.1 ms, GPU 8.8 ms, 144 draws / 160k triangles, heap 80 MB,
+  no errors. The world costs ≈ 0.25 ms a frame (the "scene" phase; 0.03 before).
+  One 35 ms CPU spike in "interaction" (no touch): watch if it repeats.
+  User: "perfect everywhere, I love it".
 - [ ] **E2 second pass, with E3**: the layout itself into `places/bar.json`
   (seats, colliders, things to use become parts), bar_scene.cpp retired.
 - [ ] E3 logic and sync: taps and seats through rules; `Change` over the room
