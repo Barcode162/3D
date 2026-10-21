@@ -116,6 +116,20 @@ int main() {
     check(w.stateOf(lamp).name == "lit", "and settles back to its sway after one swing");
   }
 
+  // E4.3: a candle blown out sends up its wisps of smoke, which then go.
+  {
+    const int candle = thingOfKind("candle");
+    const int wisp = w.find(w.thing(candle).id + "/smoke-1");
+    check(wisp >= 0 && w.stateOf(wisp).name == "gone", "a candle carries its smoke, not showing");
+    w.send(candle, "tap", c.seconds);
+    check(w.stateOf(candle).name == "out" && w.stateOf(wisp).name == "curling", "blown out: the smoke curls up");
+    Clock t = c;
+    t.seconds += 5;
+    w.update(t);
+    check(w.stateOf(wisp).name == "gone", "a few seconds later it's gone");
+    w.send(candle, "tap", t.seconds);
+  }
+
   // E3.7: the mirror's modes are its states; the glass steps, a button picks.
   {
     const int mirror = scene.mirrorThing[0];

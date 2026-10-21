@@ -26,7 +26,7 @@ E3, the rest (taps, seats, sharing):
 E4, drawing:
 - [x] **E4.1** Precise touches: big things (the counter, the back bar, the piano) are touched through their solid shapes, not their boxes; knock on them and they shine.
 - [x] **E4.2** Soft shadows on the floor under every avatar.
-- [ ] **E4.3** Particles as a part of a kind: smoke from a candle you blew out, a puff of sparks when the fire is lit.
+- [x] **E4.3** Particles as small things a kind carries: a candle you blow out sends up three wisps of smoke (the fire already has its sparks).
 - [ ] **E4.4** Reflections: the bar is captured once into a cube picture; brass, lacquer and glass reflect the real neon and bulbs.
 
 E5, avatars:

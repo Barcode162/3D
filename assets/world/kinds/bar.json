@@ -531,7 +531,7 @@
     },
     {
       "id": "candle",
-      "about": "A candle on a table: its flame flickers. Tap to blow it out, tap again to light it.",
+      "about": "A candle on a table: its flame flickers. Tap to blow it out (a wisp of smoke curls up), tap again to light it.",
       "parts": {
         "model": {"file": "candle.glb", "material": "bottle-glass"},
         "solids": [{"at": [0, 0.04, 0], "half": [0.037, 0.04, 0.037], "material": "bottle-glass"}]
@@ -550,8 +550,16 @@
           "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.04, "offset": -0.93, "rate": 0.7}]
         }
       },
-      "states": {"lit": {"loop": "flame", "on": {"tap": "out"}}, "out": {"loop": "smoke", "on": {"tap": "lit"}}},
-      "start": "lit"
+      "states": {
+        "lit": {"loop": "flame", "on": {"tap": "out"}, "enter": [{"send": "clear", "to": "children"}]},
+        "out": {"loop": "smoke", "on": {"tap": "lit"}, "enter": [{"send": "puff", "to": "children"}]}
+      },
+      "start": "lit",
+      "things": [
+        {"id": "smoke-1", "kind": "smoke", "at": [0, 0.11, 0]},
+        {"id": "smoke-2", "kind": "smoke", "at": [0, 0.11, 0], "phase": 0.33},
+        {"id": "smoke-3", "kind": "smoke", "at": [0, 0.11, 0], "phase": 0.66}
+      ]
     },
     {
       "id": "dartboard",
@@ -923,6 +931,30 @@
       },
       "states": {"rising": {"loop": "rise", "on": {"fire-off": "gone"}}, "gone": {"loop": "gone", "on": {"fire-on": "rising"}}},
       "start": "rising"
+    },
+    {
+      "id": "smoke",
+      "about": "A wisp of smoke: it curls up from a candle just blown out, a few times, then it's gone.",
+      "parts": {"glowbox": {"size": 0.018, "color": [0.55, 0.52, 0.5], "glow": 0.15}},
+      "loops": {
+        "gone": {"period": 2, "pieces": [{"ch": "scale", "shape": "hold", "value": -1}]},
+        "curl": {
+          "period": 2.2,
+          "restart": true,
+          "blend": 0.05,
+          "pieces": [
+            {"ch": "move.y", "shape": "keys", "ease": "linear", "keys": [[0, 0], [1, 0.32]]},
+            {"ch": "move.x", "shape": "wave", "amp": 0.025, "every": 2},
+            {"ch": "move.z", "shape": "wave", "amp": 0.02, "every": 3, "phase": 0.25},
+            {"ch": "scale", "shape": "keys", "keys": [[0, -0.6], [0.3, 0.4], [1, -1]]}
+          ]
+        }
+      },
+      "states": {
+        "gone": {"loop": "gone", "on": {"puff": "curling"}},
+        "curling": {"loop": "curl", "afterLoops": 2, "next": "gone", "on": {"clear": "gone"}}
+      },
+      "start": "gone"
     },
     {"id": "light", "about": "A light in the bar (lights don't move; their brightness lives).", "parts": {"light": {}}},
     {
