@@ -116,6 +116,18 @@ int main() {
     check(w.stateOf(lamp).name == "lit", "and settles back to its sway after one swing");
   }
 
+  // E3.7: the mirror's modes are its states; the glass steps, a button picks.
+  {
+    const int mirror = scene.mirrorThing[0];
+    check(w.stateOf(mirror).name == "full", "the mirror starts full");
+    w.send(mirror, "tap", c.seconds);
+    check(w.stateOf(mirror).name == "avatars", "tap the glass: avatars only");
+    w.send(thingOfKind("mirror-button-off"), "tap", c.seconds);
+    check(w.stateOf(mirror).name == "off", "press its off button: off");
+    w.send(thingOfKind("mirror-button-full"), "tap", c.seconds);
+    check(w.stateOf(mirror).name == "full", "press full: the whole room again");
+  }
+
   // E3.4: a new song makes the jukebox flourish, then it grooves on.
   {
     const int juke = thingOfKind("jukebox");

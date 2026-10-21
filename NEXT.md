@@ -21,7 +21,7 @@ E3, the rest (taps, seats, sharing):
 - [x] **E3.4** The jukebox flourishes (a light sweep) when a new song starts, for everyone.
 - [x] **E3.5** The dartboard shudders when a dart hits it (yours and other players').
 - [x] **E3.6b** A late joiner gets every thing's state (mp_test: a third player joins after the fire went out).
-- [ ] **E3.7** Mirror modes are the mirror's states (its buttons send it "full" / "avatars" / "off"); the old m<n> key goes.
+- [x] **E3.7** Mirror modes are the mirror's states (its buttons send it "full" / "avatars" / "off"); the old m<n> key goes.
 
 E4, drawing:
 - [ ] **E4.1** Precise touches: big things (the counter, the back bar, the piano) are touched through their solid shapes, not their boxes; knock on them and they shine.

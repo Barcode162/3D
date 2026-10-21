@@ -240,7 +240,7 @@
     {"id": "construction", "is": "room", "parts": {"model": {"file": "construction.glb", "material": "door-wood"}}},
     {
       "id": "big_mirror",
-      "about": "The big mirror.",
+      "about": "The big mirror: full (the whole room), avatars only, or off. Tap the glass to step through them; its three buttons pick one.",
       "still": "its glass must stay true to the reflection",
       "parts": {
         "mirror": {
@@ -264,7 +264,13 @@
             "mirror": "big_mirror"
           }
         ]
-      }
+      },
+      "states": {
+        "full": {"on": {"tap": "avatars", "avatars": "avatars", "off": "off"}},
+        "avatars": {"on": {"tap": "off", "full": "full", "off": "off"}},
+        "off": {"on": {"tap": "full", "full": "full", "avatars": "avatars"}}
+      },
+      "start": "full"
     },
     {
       "id": "spot",
@@ -630,9 +636,44 @@
       "id": "mirror_button",
       "about": "A mirror button: it breathes so you notice it.",
       "parts": {"model": {"file": "mirror_button.glb", "material": "brass"}},
-      "loops": {"breathe": {"period": 2.5, "pieces": [{"ch": "tint", "shape": "wave", "amp": 0.1}]}},
+      "loops": {
+        "breathe": {"period": 2.5, "pieces": [{"ch": "tint", "shape": "wave", "amp": 0.1}]},
+        "press": {
+          "period": 0.5,
+          "restart": true,
+          "blend": 0.03,
+          "pieces": [{"ch": "tint", "shape": "beat", "amp": 0.35, "decay": 6}]
+        }
+      },
       "states": {"idle": {"loop": "breathe"}},
       "start": "idle"
+    },
+    {
+      "id": "mirror-button-full",
+      "is": "mirror_button",
+      "about": "The mirror's button for the whole room: press it and the mirror switches.",
+      "states": {
+        "idle": {"loop": "breathe", "on": {"tap": "pressed"}},
+        "pressed": {"loop": "press", "afterLoops": 1, "next": "idle", "enter": [{"send": "full", "to": "#big_mirror"}]}
+      }
+    },
+    {
+      "id": "mirror-button-avatars",
+      "is": "mirror_button",
+      "about": "The mirror's button for avatars only: press it and the mirror switches.",
+      "states": {
+        "idle": {"loop": "breathe", "on": {"tap": "pressed"}},
+        "pressed": {"loop": "press", "afterLoops": 1, "next": "idle", "enter": [{"send": "avatars", "to": "#big_mirror"}]}
+      }
+    },
+    {
+      "id": "mirror-button-off",
+      "is": "mirror_button",
+      "about": "The mirror's button for off: press it and the mirror switches.",
+      "states": {
+        "idle": {"loop": "breathe", "on": {"tap": "pressed"}},
+        "pressed": {"loop": "press", "afterLoops": 1, "next": "idle", "enter": [{"send": "off", "to": "#big_mirror"}]}
+      }
     },
     {
       "id": "jukebox",

@@ -517,7 +517,7 @@
     {"id": "big_mirror", "kind": "big_mirror", "at": [0, 0, 0]},
     {
       "id": "mirror_button-1",
-      "kind": "mirror_button",
+      "kind": "mirror-button-full",
       "at": [8.988, 1.39, 0.89],
       "parts": {
         "uses": [
@@ -533,7 +533,7 @@
     },
     {
       "id": "mirror_button-2",
-      "kind": "mirror_button",
+      "kind": "mirror-button-avatars",
       "at": [8.988, 1.3, 0.89],
       "parts": {
         "uses": [
@@ -550,7 +550,7 @@
     },
     {
       "id": "mirror_button-3",
-      "kind": "mirror_button",
+      "kind": "mirror-button-off",
       "at": [8.988, 1.21, 0.89],
       "parts": {
         "uses": [

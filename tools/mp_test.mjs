@@ -128,7 +128,7 @@ await carol.screenshot({ path: 'build/mp-carol.png' });
 await carol.mouse.click(vw / 2, vh / 2);
 await carol.waitForTimeout(2500);
 await bob.bringToFront();
-await waitLog(bob, /mirror 0 set to avatars only/, 20000);
+await waitLog(bob, /big_mirror is avatars \(the room\)/, 20000);
 await waitLog(bob, /Everything loaded/, 180000);
 // Jukebox: a stand-in player picks song 2 ("Bossa Antigua"); Bob, after a
 // tap (phones only play sound after one), must start the same song.
@@ -226,7 +226,7 @@ const checks = {
   'Bob sees Alice away when her page is hidden, and back after': awayOk && backOk && awayMs < 2000,
   'Bob sees the glass land where Carol put it': near(rested),
   'Carol finds the glass there after rejoining': near(rejoined),
-  'Bob sees the mirror switch to avatars only': /mirror 0 set to avatars only/.test(log),
+  'Bob sees the mirror switch to avatars only': /big_mirror is avatars \(the room\)/.test(log),
   'Bob plays the song another player picked': /Bossa Antigua" \(chosen by another player\)/.test(log),
   'the room refuses Bob a seat someone else has': sitterOk && /Sitter (sat there first|is sitting there)/.test(bobSeatLog),
   'the room records Carol holding the glass, then frees it': glassClaims.length >= 2 && glassClaims[0] >= 0 && glassClaims[glassClaims.length - 1] === -1,

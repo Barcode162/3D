@@ -92,6 +92,13 @@ void presentAvatars(double nowMs) {
       in.seated[k] = g_app.seat == static_cast<int>(k) || engine::net::claimOwner("seat." + std::to_string(k)) > 0;
     g_app.world.update(in, g_app.boxes, g_app.renderer);
     g_app.lightsDim = g_app.world.stateOf("light-switch") == "dim";
+    // Each mirror shows its thing's state.
+    for (size_t k = 0; k < g_app.scene.mirrors.size() && k < g_app.scene.mirrorThing.size(); ++k) {
+      const std::string& mode = g_app.world.world().stateOf(g_app.scene.mirrorThing[k]).name;
+      app::Mirror& m = g_app.scene.mirrors[k];
+      m.on = mode != "off";
+      if (m.on) m.mode = mode == "avatars" ? app::MirrorMode::kAvatarsOnly : app::MirrorMode::kFull;
+    }
     g_app.fireOn = g_app.world.stateOf("fire_flames") != "out";
   }
   g_app.renderer.setBoxes(g_app.boxes);

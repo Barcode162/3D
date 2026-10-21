@@ -100,17 +100,19 @@ EMSCRIPTEN_KEEPALIVE int sim_thing_at(int net, double now) {
   clock.seconds = now;
   things->update(clock);  // places worked out (the world starts unplaced)
   // Where it really is: models made in place sit at the world's origin (the
-  // fire, the counter), so use its pivot, else the middle of its solid
-  // shapes, else its origin.
+  // fire, the mirror), so use its pivot, else the middle of its tap spots,
+  // else of its solid shapes, else its origin.
   const engine::world::Thing& t = things->thing(i);
   engine::Vec3 local = t.kind->pivot;
-  if (local.x == 0 && local.y == 0 && local.z == 0) {
-    const engine::Json& solids = things->part(i, "solids");
-    if (solids.size() > 0) {
-      for (const engine::Json& b : solids.items()) local = local + engine::world::readVec3(b["at"], {});
-      local = local * (1.0f / static_cast<float>(solids.size()));
-    }
-  }
+  auto middle = [&](const char* part, const char* key) {
+    const engine::Json& list = things->part(i, part);
+    if (list.size() == 0) return false;
+    engine::Vec3 sum;
+    for (const engine::Json& b : list.items()) sum = sum + engine::world::readVec3(b[key], {});
+    local = sum * (1.0f / static_cast<float>(list.size()));
+    return true;
+  };
+  if (local.x == 0 && local.y == 0 && local.z == 0 && !middle("uses", "tag")) middle("solids", "at");
   const engine::Vec4 p = engine::transformPoint(t.world, local);
   buffer[0] = p.x, buffer[1] = p.y, buffer[2] = p.z;
   return 1;

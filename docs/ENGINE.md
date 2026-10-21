@@ -181,5 +181,10 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   room runs the same rule (`thing` intent → cloud/sim `sim_thing_event`) and
   shares the changes as world keys `t<net>`; a refused touch is taken back.
   Fire and light switch are things with rules (enter messages to "all").
-- [ ] E3 logic and sync (rest: seats, jukebox, darts, glasses, mirrors): taps and seats through rules; `Change` over the room
+- [x] **E3 done** (2026-10-21, batch): seats as states (stools sink while
+  taken), the jukebox flares on a new song, the dartboard shudders on a hit
+  (the room's darts game sends it), late joiners get every state, the
+  mirror's modes are its states (buttons are kinds that message it). Glass
+  physics and the song stay their own shared data (they're data, not states).
+- [x] E3 logic and sync (was): taps and seats through rules; `Change` over the room
   protocol; the room runs the world (cloud/sim) and has the last word.

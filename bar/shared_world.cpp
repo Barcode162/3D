@@ -74,11 +74,6 @@ void SharedWorld::letGo(int body, engine::Body& b, bool putDown) {
   b.targetRotation = b.rotation;
 }
 
-void SharedWorld::mirrorChanged(int mirror, bool on, bool avatarsOnly) {
-  if (!on_) return;
-  const double v[2] = {on ? 1.0 : 0.0, avatarsOnly ? 1.0 : 0.0};
-  engine::net::setWorld("m" + std::to_string(mirror), v, 2);
-}
 
 void SharedWorld::applyJukebox(Jukebox& jukebox) {
   if (!engine::audio::ready()) return;  // phones only play sound after a tap
@@ -102,19 +97,7 @@ void SharedWorld::receive(double nowMs, engine::PhysicsWorld& physics, BarScene&
   engine::net::receiveWorld(entries);
   for (const engine::net::WorldEntry& e : entries) {
     const std::vector<double>& v = e.values;
-    if (e.key.size() >= 2 && e.key[0] == 'm' && std::isdigit(static_cast<unsigned char>(e.key[1])) && !v.empty()) {
-      const int i = std::atoi(e.key.c_str() + 1);
-      if (i < 0 || i >= static_cast<int>(scene.mirrors.size())) continue;
-      Mirror& m = scene.mirrors[static_cast<size_t>(i)];
-      const bool on = v[0] != 0;
-      const MirrorMode mode = v.size() >= 2 && v[1] != 0 ? MirrorMode::kAvatarsOnly : MirrorMode::kFull;
-      if (m.on != on || (on && m.mode != mode)) {
-        LOG_INFO("Multiplayer: mirror %d set to %s by another player.", i,
-                 !on ? "off" : mode == MirrorMode::kFull ? "full" : "avatars only");
-      }
-      m.on = on;
-      m.mode = mode;
-    } else if (e.key == "jb" && v.size() >= 2) {
+    if (e.key == "jb" && v.size() >= 2) {
       const int song = static_cast<int>(v[0]);
       const int count = static_cast<int>(jukebox.songs().size());
       if (song >= count) continue;

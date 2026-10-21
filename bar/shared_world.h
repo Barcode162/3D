@@ -1,5 +1,5 @@
 #pragma once
-// The shared bar: glasses, the jukebox song and the mirrors look the same
+// The shared bar: glasses and the jukebox song look the same
 // for everyone in the room. Each thing is a small "world entry" in the room
 // (looped/net.h). Glasses are moved by the room's own physics
 // (cloud/games/glasses.js): this phone asks to grab, put down or throw one,
@@ -24,7 +24,6 @@ class SharedWorld {
   // You put it down (where it stands now) or threw it (its velocity now):
   // the room's physics takes it from here.
   void letGo(int body, engine::Body& b, bool putDown);
-  void mirrorChanged(int mirror, bool on, bool avatarsOnly);
   // False if someone else is holding it right now.
   bool canPickUp(int body) const;
 

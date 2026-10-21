@@ -174,6 +174,7 @@ BarScene buildBarScene() {
       mirrorButtons.push_back({scene.mirrors.size(), buttons});
       mirrorOf[t.id] = static_cast<int>(scene.mirrors.size());
       scene.mirrors.push_back(mr);
+      scene.mirrorThing.push_back(i);
     }
     // The bar's special spots.
     if (const Json& d = world->part(i, "dartboard"); d.isObject()) {

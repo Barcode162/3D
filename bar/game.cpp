@@ -382,18 +382,13 @@ void use(const app::Interactable& it) {
       setActivity(Activity::kRhythm);
       break;
     }
+    // The mirror's modes are its states (full / avatars / off): tapping the
+    // glass steps through them, a button picks one (assets/world/kinds/bar.json).
     case Action::kMirror:
-    case Action::kMirrorMode: {
-      app::Mirror& m = g_app.scene.mirrors[static_cast<size_t>(it.mirror)];
-      // Tapping the glass steps through full -> avatars only -> off -> full;
-      // the panel's buttons pick one directly.
-      int mode = !m.on ? 2 : m.mode == app::MirrorMode::kFull ? 0 : 1;
-      mode = it.action == Action::kMirror ? (mode + 1) % 3 : it.value;
-      m.on = mode != 2;
-      if (mode != 2) m.mode = mode == 0 ? app::MirrorMode::kFull : app::MirrorMode::kAvatarsOnly;
-      g_app.shared.mirrorChanged(it.mirror, m.on, mode == 1);
+    case Action::kMirrorMode:
+      g_app.world.touch(thingOf(it));
+      playSfx(engine::synth::Effect::kClick, where, 0.4f);
       break;
-    }
     case Action::kDarts: {
       if (const std::string why = g_app.act.blocked(Activity::kDarts, 0); !why.empty()) {
         showToast(why);
