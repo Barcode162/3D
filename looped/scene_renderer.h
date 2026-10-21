@@ -21,6 +21,7 @@
 #include "looped/mesh.h"
 #include "looped/model.h"
 #include "looped/post.h"
+#include "looped/shadows.h"
 #include "looped/render_scene.h"
 #include "looped/skinned_mesh.h"
 #include "looped/text.h"
@@ -125,6 +126,9 @@ class SceneRenderer {
   // Placed model `index`'s box in the world, as drawn now (false until its
   // file has loaded).
   bool modelBox(size_t index, engine::Aabb* out) const;
+  // Soft shadows on the floor this frame (E4.2): x, y (the floor's height), z,
+  // radius; drawn after the scene.
+  void setShadows(std::vector<engine::Vec4> discs) { shadowDiscs_ = std::move(discs); }
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:
@@ -274,6 +278,8 @@ class SceneRenderer {
   std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
   // The placed models' uniforms as the GPU has them (one kObjectStride slot
   // each, from firstModelOffset_); changes are sent in one write per frame.
+  engine::FloorShadows shadows_;
+  std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
   uint32_t firstModelOffset_ = 0;
   size_t modelsDirtyFrom_ = SIZE_MAX, modelsDirtyTo_ = 0;

@@ -122,6 +122,7 @@ void setVec4(float out[4], Vec3 v, float w) {
 }  // namespace
 
 bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars) {
+  if (!shadows_.init(gpu.device, gpu.surfaceFormat, engine::Gpu::kDepthFormat)) LOG_ERROR("Floor shadows: no shader.");
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrorCount;
@@ -1234,6 +1235,10 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     engine::prof::draw(6);
   }
 
+  shadows_.begin(viewProj);
+  for (const engine::Vec4& d : shadowDiscs_) shadows_.add({d.x, d.y, d.z}, d.w, 0.55f);
+  shadows_.upload(queue);
+  shadows_.draw(pass);  // soft shadows under the avatars
   pictures.draw(pass);  // profile pictures over heads
   if (!post) text.draw(pass);  // after the scene: text is see-through and on top
   pass.End();

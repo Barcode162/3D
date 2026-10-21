@@ -72,6 +72,16 @@ void presentAvatars(double nowMs) {
     }
   }
   g_app.otherBones.resize(g_app.otherTransforms.size());
+  // Soft shadows on the floor (E4.2): under you and under everyone else.
+  {
+    std::vector<engine::Vec4> discs;
+    auto under = [&](Vec3 p, float r) {
+      discs.push_back({p.x, app::groundHeight(g_app.scene, p), p.z, r});
+    };
+    under(cam.position, 0.42f);
+    for (const Mat4& t : g_app.otherTransforms) under({t.at(3, 0), 0, t.at(3, 2)}, 0.42f);
+    g_app.renderer.setShadows(std::move(discs));
+  }
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
   // Earned credits: the coin pops out in front of you (?coin = once at start, for tests).
   if (g_app.darts.payouts() != g_app.coinPayoutsSeen || (g_app.hooks.coin && !g_app.coinShownForTest && g_app.entered)) {
