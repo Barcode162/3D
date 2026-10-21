@@ -20,6 +20,7 @@
 #include "bar/players.h"
 #include "bar/props.h"
 #include "bar/projects/racing/game.h"
+#include "bar/coin_pop.h"
 #include "bar/loader.h"
 #include "bar/loops_bar.h"
 #include "bar/renderer.h"
@@ -94,6 +95,9 @@ struct App {
   std::vector<std::vector<Mat4>> otherBones;
   std::vector<int> otherLooks;
   app::Jukebox jukebox;
+  app::CoinPop coinPop;    // the credit coin when you earn credits
+  int coinPayoutsSeen = 0;
+  bool coinShownForTest = false;
   app::BarLoops loops;  // the bar's loops (assets/loops/bar.json): moths, sparks, lights that live
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet

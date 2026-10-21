@@ -37,12 +37,15 @@ class Darts {
   void stateFor(float out[5]) const;
   // When the dart in your hand leaves it (for the throw animation).
   double lastThrowMs() const { return lastThrowMs_; }
+  // Goes up each time a game paid you credits.
+  int payouts() const { return payouts_; }
 
   // Score of a spot on the board (u = right, v = up, meters from the
   // center, as seen by the thrower); `label` gets e.g. "T20".
   static int score(float u, float v, std::string* label);
 
  private:
+  int payouts_ = 0;
   struct Dart {
     float u = 0, v = 0;  // where it sticks (board coordinates)
     double thrownMs = 0;

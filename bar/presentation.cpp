@@ -73,6 +73,13 @@ void presentAvatars(double nowMs) {
   }
   g_app.otherBones.resize(g_app.otherTransforms.size());
   g_app.renderer.setOthers(g_app.otherTransforms, g_app.otherBones, g_app.otherLooks);
+  // Earned credits: the coin pops out in front of you (?coin = once at start, for tests).
+  if (g_app.darts.payouts() != g_app.coinPayoutsSeen || (g_app.hooks.coin && !g_app.coinShownForTest && g_app.entered)) {
+    g_app.coinPayoutsSeen = g_app.darts.payouts();
+    g_app.coinShownForTest = true;
+    g_app.coinPop.start(nowMs, cam.position, cam.flatForward());
+  }
+  g_app.coinPop.update(nowMs, g_app.renderer, g_app.scene.coinModel);
   {  // The bar's loops: moths, sparks, lights that live (bar/loops_bar.h).
     app::BarLoops::Inputs in;
     in.nowMs = nowMs;

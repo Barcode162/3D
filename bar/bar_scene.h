@@ -148,6 +148,7 @@ struct BarScene {
   // The chessboard: its middle (on the surface), one square's size, the pieces.
   engine::Vec3 chessCenter;
   float chessSquare = 0.055f;
+  int coinModel = -1;  // the credit coin (bar/coin_pop.h), under the floor until you earn credits
   std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;

@@ -250,3 +250,12 @@ Plan: `docs/LOOPED.md` (top priority).
   colors), "a sort of game" itself; the hub is the interface to the engine
   (planning, and later live controls). Published posts make a public news
   board / changelog.
+
+## Open bar, private hub, and credits with a coin (user, 2026-10-21)
+- The bar is open: guests ("Come in as a guest") and any account get in. Only
+  the hub stays private (the owner's, to work from).
+- No "$": the money is **credits** (working name), with its own 3D coin, a
+  gold token with a ridged edge, a glowing pink ring and the Looped loop
+  (`tools/assets/credit_coin.py` → `assets/models/credit_coin.glb`; the menu
+  icon `bar/web/icons/credit.png` from `coin_icon.py`). It pops out and spins
+  when you earn credits (`bar/coin_pop.*`).

@@ -235,7 +235,12 @@ window.bar3dUi = (function () {
   }
 
   // Your credits (cloud/ledger.js): shown when you're logged in.
-  function money(cents) { return '$' + (cents / 100).toFixed(2); }
+  // Credits as people read them ("5", "47.50"), with the coin (bar/web/icons/credit.png).
+  function credits(cents) { return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2); }
+  function coin(cents) {
+    return el('span', { class: 'mCredits' }, [el('img', { src: 'icons/credit.png', alt: '', class: 'mCoin', draggable: 'false' }),
+      el('b', { text: credits(cents) })]);
+  }
   function walletLine() {
     var line = el('div', { class: 'mSmall', style: 'text-align:center;margin:0 0 8px;font-size:15px;' });
     var A = window.bar3dAccount, N = window.bar3dNet;
@@ -249,7 +254,9 @@ window.bar3dUi = (function () {
       .then(function (r) { return r.json(); })
       .then(function (w) {
         if (!w || !w.ok) { line.textContent = ''; return; }
-        line.textContent = 'Credits: ' + money(w.balance) + '  ·  earned today ' + money(w.earnedToday) + ' of ' + money(w.cap);
+        line.textContent = '';
+        line.appendChild(coin(w.balance));
+        line.appendChild(el('span', { text: ' credits  ·  earned today ' + credits(w.earnedToday) + ' of ' + credits(w.cap) }));
       })
       .catch(function () { line.textContent = ''; });
     return line;

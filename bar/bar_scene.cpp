@@ -683,6 +683,8 @@ BarScene buildBarScene() {
   buildConstruction(b);
   buildArcade(b);
   b.room = -1;
+  // The credit coin, kept under the floor until you earn credits (bar/coin_pop.h).
+  scene.coinModel = static_cast<int>(b.model("credit_coin.glb", {0, -20, 0}, kBrass));
   return scene;
 }
 
