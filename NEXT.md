@@ -30,7 +30,7 @@ E4, drawing:
 - [x] **E4.4** Reflections: the bar is captured once into a cube picture; brass, lacquer and glass reflect the real neon and bulbs.
 
 E5, avatars:
-- [ ] **E5.1** Idle life: standing avatars shift their weight and glance around now and then (seeded, so everyone sees the same).
+- [x] **E5.1** Idle life: standing avatars shift their weight and glance around now and then (seeded, so everyone sees the same).
 - [ ] **E5.2** Heads turn to look at the nearest player who's talking (or close by).
 
 E6, sound:

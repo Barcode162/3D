@@ -572,11 +572,23 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   const float w = engine::smoothstep(0.0f, 1.0f, m.walkAmount);
   const float wf = engine::smoothstep(0.0f, 0.2f, m.walkAmount);  // the feet: walking ones almost at once
   const float idle = 1.0f - w;
-  const float breath = std::sin(m.time * 2.0f * engine::kPi / 4.2f);
-  const float sway = std::sin(m.time * 2.0f * engine::kPi / 7.0f);
+  // Each player's own rhythm (E5.1): their seed shifts every idle cycle and
+  // stretches it a little, so a room full of people doesn't breathe in step.
+  const float r1 = static_cast<float>((m.seed * 2654435761u >> 8) & 0xffff) / 65535.0f;
+  const float r2 = static_cast<float>((m.seed * 40503u + 977u) & 0xffff) / 65535.0f;
+  const float tm = m.time + 97.0f * r1;
+  const float pace = 0.9f + 0.2f * r2;
+  const float breath = std::sin(tm * 2.0f * engine::kPi / (4.2f * pace));
+  const float sway = std::sin(tm * 2.0f * engine::kPi / (7.0f * pace));
   // Idle weight shift: slowly from one leg to the other (and a little extra
   // wobble so it doesn't look like a metronome).
-  const float shift = std::sin(m.time * 2.0f * engine::kPi / 9.0f) + 0.3f * std::sin(m.time * 2.0f * engine::kPi / 3.7f);
+  const float shift = std::sin(tm * 2.0f * engine::kPi / (9.0f * pace)) + 0.3f * std::sin(tm * 2.0f * engine::kPi / 3.7f);
+  // Now and then a fidget: a look down and aside, a hand coming up a little
+  // (every 13-19 s, for a moment; which way depends on the player).
+  const float fidgetEvery = 13.0f + 6.0f * r2;
+  const float fu = tm / fidgetEvery - std::floor(tm / fidgetEvery);
+  const float fidget = fu < 0.12f ? std::sin(engine::kPi * fu / 0.12f) : 0.0f;
+  const float fidgetSide = r1 < 0.5f ? -1.0f : 1.0f;
   // The walk: each leg's cycle from heel strike (0) through stance (to
   // kStance) and swing (back to 1). The left leg strikes at walkPhase pi/2.
   constexpr float kStance = 0.56f;
@@ -662,9 +674,14 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
     bone("forearm" + n) = X(14.0f + 2.0f * breath * idle + 22.0f * std::max(0.0f, armSwing));
     bone("hand" + n) = X(-6.0f - 6.0f * std::max(0.0f, -armSwing)) * Z(s * 4.0f);
   }
-  // Head steady while the chest twists; idle: glances around now and then.
-  const float glance = std::sin(m.time * 0.37f) * std::sin(m.time * 0.23f + 1.0f);
-  bone("neck") = Y(0.6f * twist + 8.0f * glance * idle);
+  // Head steady while the chest twists; idle: glances around now and then,
+  // and the fidget's look down and aside.
+  const float glance = std::sin(tm * 0.37f) * std::sin(tm * 0.23f + 1.0f);
+  bone("neck") = Y(0.6f * twist + (8.0f * glance + 22.0f * fidgetSide * fidget) * idle) * X(-12.0f * fidget * idle);
+  if (fidget > 0) {
+    const std::string n = fidgetSide < 0 ? ".L" : ".R";
+    bone("forearm" + n) = X(14.0f + 38.0f * fidget * idle);
+  }
 
   // ---- Activities (crude key poses, see docs/REMASTER.md) ----
   const float t = m.actionTime;

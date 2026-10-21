@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 // Your body in the bar: a skeleton (18 bones) plus one smooth "skinned" mesh
 // that bends with it. It stands where you stand, turns with you, and tilts
 // its head as you look up and down. Seen in the mirrors.
@@ -24,7 +25,8 @@ struct AvatarMotion {
   float walkAmount = 0;  // 0 = standing, 1 = full walking speed
   float walkCycle = 1.3f;  // meters per walk cycle right now (shorter when slow)
   float walkDir = 0;     // the walk's direction from facing (radians, + = to the right; backward is mirrored)
-  float time = 0;        // seconds, for idle breathing and sway
+  float time = 0;        // seconds, for idle breathing and sway (the room's clock: the same on every phone)
+  uint32_t seed = 0;     // whose body: each player's idle life has its own rhythm and fidgets (E5.1)
   Activity activity = Activity::kNone;
   Emote emote = Emote::kNone;
   float actionTime = 0;  // seconds since the activity or emote started

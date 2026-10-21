@@ -4,6 +4,8 @@
 // game.cpp so the frame's phases stay short.
 #include "bar/presentation.h"
 
+#include <cmath>
+
 namespace barapp {
 
 // Seated others sit on their seat; everyone else stands where their eyes are.
@@ -44,7 +46,12 @@ void presentScene(double nowMs) {
 void presentAvatars(double nowMs) {
   const engine::FirstPersonCamera& cam = g_app.camera;
   g_app.avatarMotion.pitch = cam.pitch;
-  g_app.avatarMotion.time = g_app.hooks.still ? 0.0f : static_cast<float>(nowMs / 1000.0);
+  // Idle life runs on the room's clock (E5.1), so everyone sees the same
+  // fidget at the same moment (kept small: a float can't hold the whole date).
+  const double server = engine::net::serverTime();
+  const float idleTime = static_cast<float>(std::fmod(server > 0 ? server : nowMs / 1000.0, 100000.0));
+  g_app.avatarMotion.time = g_app.hooks.still ? 0.0f : idleTime;
+  g_app.avatarMotion.seed = static_cast<uint32_t>(engine::net::mySlot() + 1);
   const app::Avatar& body = g_app.avatars[0];  // the skeleton is the same for every look
   body.pose(g_app.avatarMotion, g_app.avatarBones);
   body.hideHead(g_app.avatarBones, g_app.firstPersonBones);
@@ -56,6 +63,8 @@ void presentAvatars(double nowMs) {
     const app::OtherPlayer& o = others[i];
     if (!o.placed) continue;
     app::AvatarMotion motion = o.motion;
+    motion.time = idleTime;
+    motion.seed = static_cast<uint32_t>(engine::net::slotOfPlayer(o.id) + 1);
     const Mat4 transform = otherTransform(o, motion);
     body.pose(motion, g_app.otherBones[g_app.otherTransforms.size()]);
     g_app.otherTransforms.push_back(transform);
