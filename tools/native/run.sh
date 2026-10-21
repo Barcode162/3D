@@ -19,6 +19,7 @@ declare -A TESTS=(
   [chess_test]="tools/native/chess_test.cpp bar/projects/chess/chess_rules.cpp"
   [activity_test]="tools/native/activity_test.cpp bar/activity.cpp"
   [interaction_test]="tools/native/interaction_test.cpp bar/interaction.cpp"
+  [loops_test]="tools/native/loops_test.cpp looped/loops.cpp looped/json.cpp"
   [walk_test]="tools/native/walk_test.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp"
   [physics_test]="tools/native/physics_test.cpp looped/physics.cpp looped/mesh_data.cpp bar/props.cpp bar/bar_scene.cpp bar/materials.cpp looped/procedural.cpp"
 )
