@@ -15,6 +15,9 @@ namespace app {
 namespace {
 constexpr float kShyDistance = 1.2f;  // metres: closer than this, shy things dart away
 constexpr char kSongsFile[] = "assets/world/songs.json";
+// The hub's live tuning (hub/world.html): {"kinds": {"stool": {"speed": 2, "off": false}}}.
+// Missing (a local server, the hub down) → everything at its own speed.
+constexpr char kTuningUrl[] = "../hub/hub.php?tuning=1";
 }  // namespace
 
 void BarWorld::load(const BarScene& scene) {
@@ -30,6 +33,21 @@ void BarWorld::load(const BarScene& scene) {
       if (song.isObject()) tempos_.push_back({file, song["bpm"].number(0), song["firstBeat"].number(0)});
     LOG_INFO("World: %zu songs with a beat.", tempos_.size());
   });
+  engine::fetchFile(kTuningUrl, [this](bool ok, std::vector<uint8_t> bytes) {
+    if (!ok || bytes.empty() || bytes[0] != '{') return;
+    const engine::Json root = engine::Json::parse(std::string(bytes.begin(), bytes.end()));
+    for (const auto& [kind, t] : root["kinds"].members())
+      if (t.isObject()) tuning_.push_back({kind, static_cast<float>(t["speed"].number(1)), t["off"].boolean(false)});
+    applyTuning();
+  });
+}
+
+void BarWorld::applyTuning() {
+  for (const Tune& t : tuning_) {
+    const int n = world_.tune(t.kind, t.speed, t.off);
+    if (n > 0) LOG_INFO("World: %s tuned from the hub (%s, %d things).", t.kind.c_str(),
+                        t.off ? "off" : (std::to_string(t.speed).substr(0, 4) + "x").c_str(), n);
+  }
 }
 
 void BarWorld::build() {
@@ -68,6 +86,7 @@ void BarWorld::build() {
   }
   dims_.assign(scene_->lights.size(), false);
   for (int l : scene_->roomLights) dims_[static_cast<size_t>(l)] = true;
+  applyTuning();  // (none yet on the first build: it comes with the hub's answer)
   built_ = true;
   LOG_INFO("World: %zu things, %zu alive.", world_.size(), drawn_.size());
 }

@@ -25,6 +25,9 @@ for (const [name, [cam, want]] of Object.entries(SPOTS)) {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  // The hub's live tuning (E8.2), as the hub would answer: lamps sway twice as fast.
+  if (name === 'lamp') await page.route('**/hub/hub.php?tuning=1', (r) => r.fulfill({ contentType: 'application/json',
+    body: JSON.stringify({ kinds: { pendant_lamp: { speed: 2, off: false }, nope: { speed: 3 } } }) }));
   await openBar(page, url, `skipintro&server=off&cam=${encodeURIComponent(cam)}`);
   // Every model in (a touch needs the model's box), then a moment more.
   await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
@@ -35,6 +38,7 @@ for (const [name, [cam, want]] of Object.entries(SPOTS)) {
   const log = await logText(page);
   const touched = (log.match(/World: you touched [^\n]*/) || ['(nothing touched)'])[0];
   check(`${name}: a tap touches it`, want.test(log), ` — ${touched}`);
+  if (name === 'lamp') check('lamp: the hub\'s tuning reaches the bar', /World: pendant_lamp tuned from the hub \(2\.00x, \d+ things\)/.test(log));
   if (!want.test(log)) await page.screenshot({ path: `build/touch-${name}.png` });
   check(`${name}: no errors`, errors.length === 0 && !/error/i.test(log.split('\n').filter((l) => /World|touch/.test(l)).join('\n')), errors.join(' '));
   await page.close();

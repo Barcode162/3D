@@ -51,6 +51,10 @@ struct Thing {
   float phase = 0;          // its loops run this much of a cycle later
   std::vector<std::pair<std::string, Json>> parts;  // overrides (the kind's are the rest)
   std::vector<Loop> loops;                          // overrides
+  // Tuning (the hub's World page): its loops run `speed` times as fast, or
+  // not at all. Looks only: rules and timed states keep the shared clock.
+  float speed = 1;
+  bool off = false;
   // Now.
   int state = 0;
   double start = 0;
@@ -101,6 +105,9 @@ class World {
   void apply(const Change& c);
   // The changes made by send/setState since the last call.
   std::vector<Change> takeChanges();
+
+  // Tunes every thing of kind `kind` (see Thing::speed). Returns how many.
+  int tune(std::string_view kind, float speed, bool off);
 
   // ---- Each frame ----
   // Timed rules up to `clock`, then every thing's motion and place.

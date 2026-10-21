@@ -188,6 +188,19 @@ int main() {
     check(a != b && std::fabs(a) <= 0.6f && std::fabs(b) <= 0.6f, "two stools creak, not in step, within 0.6 degrees");
   }
   {
+    // Tuning (the hub): a kind's loops at another speed, or off; others as before.
+    World t = makeWorld(nullptr);
+    const int s1 = t.find("stool-1");
+    check(t.tune("stool", 2, false) >= 2, "tuning reaches every stool");
+    t.update(c);
+    const float fast = t.thing(s1).motion.ch[kTurnY];
+    check(fast != w2.thing(s1).motion.ch[kTurnY], "a faster stool is somewhere else in its sway");
+    t.tune("stool", 1, true);
+    t.update(c);
+    check(t.thing(s1).motion.ch[kTurnY] == 0 && sameMat(t.thing(juke).world, w2.thing(juke).world),
+          "a kind turned off stands still; the rest don't change");
+  }
+  {
     Clock m = c;
     m.music = true;
     m.beats = 100.0;  // exactly on a beat: the thump is at its top

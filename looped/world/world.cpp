@@ -357,6 +357,17 @@ Mat4 World::moved(const Thing& t) const {
 
 Mat4 World::local(const Thing& t) const { return rest(t) * moved(t); }
 
+int World::tune(std::string_view kind, float speed, bool off) {
+  int n = 0;
+  for (Thing& t : things_)
+    if (t.kind && t.kind->id == kind) {
+      t.speed = std::clamp(speed, 0.0f, 8.0f);
+      t.off = off;
+      ++n;
+    }
+  return n;
+}
+
 void World::update(const Clock& clock) {
   const double now = clock.seconds;
   // Timed rules, in the order they fall due (so chains come out the same on
@@ -414,8 +425,10 @@ void World::update(const Clock& clock) {
   for (size_t i = 0; i < things_.size(); ++i) {
     Thing& t = things_[i];
     Motion m;
+    if (t.off) { t.motion = m; t.prevState = -1; continue; }
+    const double sp = t.speed;
     if (const Loop* l = loopOf(static_cast<int>(i), t.state))
-      l->add(l->cycles(clock, t.start, t.seed) + t.phase, t.seed, 1, m);
+      l->add(l->cycles(clock, t.start, t.seed) * sp + t.phase, t.seed, 1, m);
     if (t.prevState >= 0) {
       const Loop* cur = loopOf(static_cast<int>(i), t.state);
       const float blend = cur ? cur->blend : 0.3f;
@@ -425,7 +438,7 @@ void World::update(const Clock& clock) {
       } else {
         Motion pm;
         if (const Loop* p = loopOf(static_cast<int>(i), t.prevState))
-          p->add(p->cycles(clock, t.prevStart, t.seed) + t.phase, t.seed, 1, pm);
+          p->add(p->cycles(clock, t.prevStart, t.seed) * sp + t.phase, t.seed, 1, pm);
         m = mix(pm, m, smoothstep(0, 1, static_cast<float>(w)));
       }
     }
