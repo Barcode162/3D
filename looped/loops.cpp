@@ -131,7 +131,7 @@ Vec3 swarmPosition(const Recipe& r, const Clock& c, int member) {
   const double jx = noise(t * 9.0, s + 5) - 0.5, jz = noise(t * 9.0, s + 6) - 0.5;
   return {r.center.x + static_cast<float>(r.radius * wob * std::cos(a) + 0.04 * jx),
           r.center.y + static_cast<float>(r.height * up),
-          r.center.z + static_cast<float>(r.radius * wob * std::sin(a * (1 + 0.1 * kGolden)) + 0.04 * jz)};
+          r.center.z + static_cast<float>(r.radius * wob * std::sin(a) + 0.04 * jz)};
 }
 
 float swarmTwinkle(const Recipe& r, const Clock& c, int member) {

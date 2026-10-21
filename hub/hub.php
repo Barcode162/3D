@@ -90,8 +90,10 @@ function owner_of_token($token) {
   if (!$u) return null;
   $admins = read_json("$accounts/admins.json");
   $names = read_json("$accounts/names.json") ?? [];
-  $owner = is_array($admins) ? in_array($u['user'], $admins, true)
-                             : (count($names) && array_key_first($names) === $u['user']);
+  // Only the bar's owner (the first admin): admins chosen to invite people
+  // don't get the hub.
+  $owner = is_array($admins) ? (string)(array_values($admins)[0] ?? '') === $u['user']
+                             : (count($names) && (string)array_key_first($names) === $u['user']);
   return $owner ? $u : null;
 }
 
@@ -112,8 +114,10 @@ function who($in) {
   if (!$u) fail('Please log in again.', 401);
   $admins = read_json("$accounts/admins.json");
   $names = read_json("$accounts/names.json") ?? [];
-  $owner = is_array($admins) ? in_array($u['user'], $admins, true)
-                             : (count($names) && array_key_first($names) === $u['user']);
+  // Only the bar's owner (the first admin): admins chosen to invite people
+  // don't get the hub.
+  $owner = is_array($admins) ? (string)(array_values($admins)[0] ?? '') === $u['user']
+                             : (count($names) && (string)array_key_first($names) === $u['user']);
   if (!$owner) fail('This hub is private.', 403);
   return ['role' => 'owner', 'name' => $u['name'] ?: $u['user']];
 }

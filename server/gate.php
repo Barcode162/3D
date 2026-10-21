@@ -90,6 +90,13 @@ function gate_serve($rel) {
   if ($rel === '' || preg_match('#(^|/)\.|(^|/)(accounts|rooms)(/|$)|\.php$#i', $rel)) gate_missing();
   $file = realpath("$site/$rel");
   $rootReal = realpath($site);
+  if ($file !== false && is_dir($file) && strpos($file . DIRECTORY_SEPARATOR, $rootReal . DIRECTORY_SEPARATOR) === 0) {
+    // A folder without its slash (/bar/meridian): send it to /bar/meridian/.
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    $q = $_SERVER['QUERY_STRING'] ?? '';
+    header('Location: ' . rtrim($uri, '/') . '/' . ($q !== '' ? "?$q" : ''), true, 301);
+    exit;
+  }
   if ($file === false || strpos($file, $rootReal . DIRECTORY_SEPARATOR) !== 0 || !is_file($file)) gate_missing();
   $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
   $size = filesize($file);

@@ -609,6 +609,7 @@ export class Room {
     }
     if (PRIVATE_ROOMS.has(this.name)) {
       const who = h.ticket ? await this.checkToken(h.ticket) : null;
+      if (ws.readyState !== 1) return;  // it closed while we asked: no ghost
       if (!who || !who.play) { this.close(ws, 4006, 'invite only'); return; }
     }
     // Same resume token → same slot (the old socket, if still open, is replaced).
@@ -1037,7 +1038,9 @@ export class Room {
       } catch (e) {}
     }
     if (this.tokens.size > 500) this.tokens.clear();
-    this.tokens.set(tok, { who, until: now + TOKEN_CACHE_MS });
+    // A failed check isn't remembered (IONOS was slow: try again next time);
+    // "not invited yet" only briefly, so a fresh invite works within a minute.
+    if (who) this.tokens.set(tok, { who, until: now + (who.play ? TOKEN_CACHE_MS : 30000) });
     return who;
   }
 }

@@ -375,7 +375,7 @@ try {
 
   const { SONGS } = await import('../cloud/games/jukebox.js');
   const { readFileSync } = await import('node:fs');
-  const cppSongs = [...readFileSync(new URL('../app/jukebox.cpp', import.meta.url), 'utf8').matchAll(/\{"([a-z0-9-]+\.m4a)"/g)].map((m) => m[1]);
+  const cppSongs = [...readFileSync(new URL('../bar/jukebox.cpp', import.meta.url), 'utf8').matchAll(/\{"([a-z0-9-]+\.m4a)"/g)].map((m) => m[1]);
   check(JSON.stringify(cppSongs) === JSON.stringify(SONGS.map((x) => x.file)), `the room's song list matches the game's (${cppSongs.length} songs)`);
   // ---- The jukebox run by the room (cloud/games/jukebox.js; songs 2 s long here) ----
   const r13 = room('jukebox');

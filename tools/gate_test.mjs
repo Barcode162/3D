@@ -162,6 +162,16 @@ try {
   r = await mia.get('');
   check(r.status === 401, 'removed → back to waiting');
 
+  // Safari cleared the page's storage, the cookie remains: the same login comes back.
+  const back = await fetch(base + 'account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain', Cookie: `bar_t=${josh.jar.bar_t}` }, body: JSON.stringify({ a: 'session' }) }).then((x) => x.json());
+  check(back.ok === 1 && back.token === josh.jar.bar_t && back.me.user === 'josh', 'the cookie gives the game its login back');
+  check((await fetch(base + 'account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ a: 'session' }) }).then((x) => x.json())).ok === 0,
+        'no cookie, no login');
+  r = await josh.get('assets', { });
+  check(r.status === 200 || r.redirected, 'a folder without its slash is sent to the folder (' + r.status + ')');
+  const red = await fetch(base + 'assets', { headers: { Cookie: `bar_t=${josh.jar.bar_t}` }, redirect: 'manual' });
+  check(red.status === 301 && /\/bar\/assets\/$/.test(red.headers.get('location') || ''), `…with a 301 to /bar/assets/ (${red.status} ${red.headers.get('location')})`);
+
   // Claude's checks.
   const claude = person();
   r = await claude.get('', { 'X-Hub-Key': KEY });

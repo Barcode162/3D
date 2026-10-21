@@ -465,6 +465,10 @@ window.bar3dAccount = (function () {
     token = store('bar3dToken');
     try { me = JSON.parse(store('bar3dProfile') || 'null'); } catch (e) { me = null; }
     refreshBadges();
+    if (!token && server && !/^https?:/.test(server)) {  // same site: the gate's cookie may still hold your login
+      call({ a: 'session' }).then(function (r) { setSession(r.token, r.me); info('Account: signed in again as ' + r.me.name + '.'); })
+        .catch(function () {});
+    }
     if (token) {  // check the saved login is still good, refresh the profile
       call({ a: 'me', token: token })
         .then(function (r) { setSession(token, r.me); info('Account: signed in as ' + r.me.name + '.'); })

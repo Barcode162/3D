@@ -41,7 +41,7 @@ function blocks(src) {
 }
 
 let problems = 0;
-for (const file of [...files('engine'), ...files('app')]) {
+for (const file of [...files('looped'), ...files('bar')]) {
   const src = readFileSync(file, 'utf8');
   for (const { start, body } of blocks(src)) {
     const checks = [/\b(?:window|Module)\.(\w+)/g, /\]\s*\.(\w+)/g];

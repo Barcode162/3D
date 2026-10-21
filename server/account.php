@@ -102,7 +102,7 @@ function admin_list() {
   $admins = read_json("$base/admins.json");
   if (is_array($admins)) return array_values($admins);
   $names = read_json("$base/names.json");
-  return is_array($names) && count($names) ? [array_key_first($names)] : [];
+  return is_array($names) && count($names) ? [(string)array_key_first($names)] : [];
 }
 // Owners (admins) can give badges (see the top of this file).
 function is_owner($u) { return in_array($u['user'], admin_list(), true); }
@@ -260,6 +260,16 @@ if ($a === 'reset') {
   reply(['ok' => 1, 'token' => $token, 'me' => own_profile($u)]);
 }
 
+// The page lost its saved login (Safari clears site storage after a week
+// away) but the gate's cookie still holds it: hand the same login back.
+// Same site only: cookies aren't sent with other sites' requests.
+if ($a === 'session') {
+  $t = $_COOKIE['bar_t'] ?? '';
+  if (!is_string($t) || !preg_match('/^[0-9a-f]{48}$/', $t)) fail('Please log in.', 401);
+  $u = user_for_token($t);
+  reply(['ok' => 1, 'token' => $t, 'me' => own_profile($u)]);
+}
+
 $u = user_for_token($in['token'] ?? '');
 
 // Change your password (needs the current one).
@@ -305,6 +315,7 @@ if ($a === 'people') {
   $players = player_list();
   $out = [];
   foreach (read_json("$base/names.json") ?? [] as $name => $id) {
+    $name = (string)$name;  // "123" comes back from JSON as a number key
     $p = read_json(user_path($id));
     if (!$p) continue;
     $status = ($admins[0] ?? '') === $name ? 'owner' : (in_array($name, $admins, true) ? 'admin'

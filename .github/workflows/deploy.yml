@@ -261,29 +261,6 @@ jobs:
             gh api -X POST "repos/$repo/pages/deployments/$sha/cancel" || true
           done
 
-      # The game is private now (docs/LOOPED.md A1): gh-pages keeps only a
-      # signpost to joshuavelasco.com/bar, and its commit message records the
-      # live build for the `changes` job above.
-      - name: Publish to gh-pages
-        run: |
-          mkdir -p build/pages && cd build/pages
-          cat > index.html <<'HTML'
-          <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-          <title>Bar3D has moved</title><meta http-equiv="refresh" content="0; url=https://joshuavelasco.com/bar/">
-          <style>body{font:18px system-ui,sans-serif;background:#0b0716;color:#f6f0ff;display:grid;place-items:center;min-height:90vh;text-align:center}a{color:#5ad1ff}</style>
-          <p>Bar3D lives at <a href="https://joshuavelasco.com/bar/">joshuavelasco.com/bar</a> now.<br>
-          The public version: <a href="https://joshuavelasco.com/classic/">Bar3D classic</a>.</p>
-          HTML
-          cp index.html 404.html
-          echo "${GITHUB_SHA::7}" > version.txt
-          touch .nojekyll
-          git init -q -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Site build ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
-
       # The multiplayer relay (server/relay.php) runs on the IONOS web
       # hosting, next to a second copy of the game. mirror sends files whose
       # size or time differ (no --ignore-time: it skipped same-size edits),
@@ -312,3 +289,27 @@ jobs:
           cls -l
           bye
           EOF
+
+      # The game is private now (docs/LOOPED.md A1): gh-pages keeps only a
+      # signpost to joshuavelasco.com/bar, and its commit message records the
+      # live build for the `changes` job above. After the IONOS upload, so a
+      # failed upload isn't recorded as live.
+      - name: Publish to gh-pages
+        run: |
+          mkdir -p build/pages && cd build/pages
+          cat > index.html <<'HTML'
+          <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Bar3D has moved</title><meta http-equiv="refresh" content="0; url=https://joshuavelasco.com/bar/">
+          <style>body{font:18px system-ui,sans-serif;background:#0b0716;color:#f6f0ff;display:grid;place-items:center;min-height:90vh;text-align:center}a{color:#5ad1ff}</style>
+          <p>Bar3D lives at <a href="https://joshuavelasco.com/bar/">joshuavelasco.com/bar</a> now.<br>
+          The public version: <a href="https://joshuavelasco.com/classic/">Bar3D classic</a>.</p>
+          HTML
+          cp index.html 404.html
+          echo "${GITHUB_SHA::7}" > version.txt
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Site build ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

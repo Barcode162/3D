@@ -152,6 +152,7 @@ window.bar3dNet = (function () {
     ws.onerror = function () {};
   }
 
+  var triedInvite = false;
   function closed(code, reason) {
     ws = null;
     open = false;
@@ -161,7 +162,11 @@ window.bar3dNet = (function () {
     if (code === 4002) { stop('A new version is out: reloading when it\'s ready.'); waitForNewVersion(); return; }
     if (code === 4003) return stop('This bar is open in another tab.');
     if (code === 4005) return stop('Disconnected (too many messages).');
-    if (code === 4006) return stop('Multiplayer is for invited accounts: log in with yours.');
+    if (code === 4006) {
+      // Once more a moment later (the login may still have been on its way).
+      if (!triedInvite) { triedInvite = true; info('Multiplayer: checking your invite again...'); setTimeout(connect, 3000); return; }
+      return stop('Multiplayer is for invited accounts: log in with yours.');
+    }
     if (code === 4004) {
       // Idle too long: rejoin on the next tap (no automatic retry).
       stop(/away/.test(reason || '') ? 'Away for a while: tap to rejoin.' : 'Connection went quiet: tap to rejoin.');
