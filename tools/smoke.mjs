@@ -21,7 +21,7 @@ await page.waitForTimeout(1500);
 const log = await logText(page);
 const errors = await logErrors(page);
 const status = await page.$eval('#status', (el) => el.textContent);
-await page.screenshot({ path: shotPath });
+await page.screenshot({ path: shotPath, timeout: 90000 });  // software WebGPU on a busy runner is slow
 const spread = brightnessSpread(readPng(shotPath));
 // Frame profiler numbers (looped/profiler.cpp). Headless runs at 1-2 fps,
 // so judge phase costs and counts here, never the frame rate.
@@ -45,7 +45,7 @@ await page.mouse.down();
 await page.mouse.move(415, 420, { steps: 10 });
 await page.mouse.up();
 await page.waitForTimeout(800);
-await page.screenshot({ path: shotPath.replace(/\.png$/, '-walk.png') });
+await page.screenshot({ path: shotPath.replace(/\.png$/, '-walk.png'), timeout: 90000 });
 
 // Look down at your own body (first-person avatar).
 await page.mouse.move(215, 300);
@@ -53,7 +53,7 @@ await page.mouse.down();
 await page.mouse.move(215, 520, { steps: 10 });  // about 70 degrees down
 await page.mouse.up();
 await page.waitForTimeout(500);
-await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png') });
+await page.screenshot({ path: shotPath.replace(/\.png$/, '-down.png'), timeout: 90000 });
 
 // Calls from the game into JavaScript per frame (?crossings counts them).
 {
@@ -145,7 +145,7 @@ if (process.env.CAM) {
     await openBar(camPage, site.url, `skipintro&cam=${encodeURIComponent(cams[i])}`);
     await camPage.waitForTimeout(1500);
     const suffix = cams.length === 1 ? '-cam.png' : `-cam-${i + 1}.png`;
-    await camPage.screenshot({ path: shotPath.replace(/\.png$/, suffix) });
+    await camPage.screenshot({ path: shotPath.replace(/\.png$/, suffix), timeout: 90000 });
     await camPage.close();
   }
 }
