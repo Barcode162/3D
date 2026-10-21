@@ -176,5 +176,10 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   history at the conversion commit), except on purpose: round stools face
   where their seat faces (shapes turn with them), the darts table got the
   leg shapes every round table has. The room's physics reads the same files.
-- [ ] E3 logic and sync: taps and seats through rules; `Change` over the room
+- [~] **E3 first pieces** (2026-10-21): touching a thing (`BarWorld::touch`,
+  tap kind `kTouch` in bar/interaction.h) follows its "tap" rule at once; the
+  room runs the same rule (`thing` intent → cloud/sim `sim_thing_event`) and
+  shares the changes as world keys `t<net>`; a refused touch is taken back.
+  Fire and light switch are things with rules (enter messages to "all").
+- [ ] E3 logic and sync (rest: seats, jukebox, darts, glasses, mirrors): taps and seats through rules; `Change` over the room
   protocol; the room runs the world (cloud/sim) and has the last word.

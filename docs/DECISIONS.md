@@ -1366,3 +1366,18 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - GitHub's runners are sometimes slow: two runs in a row failed on timing
   (a 30 s screenshot wait, a 7 s room leave wait) that pass locally every
   time; both waits were widened. Claude can't re-run jobs (403).
+
+## Things over the room (2026-10-21, E3 first pieces)
+- No new message type: a thing's state is a world key `t<net>` the room alone
+  writes (by -1, so every phone, the toucher too, ends on the room's word);
+  the room's KV storage gives persistence and late joiners for free.
+  MAX_KV_KEYS 96 → 160.
+- Phones may only send "tap"; every other event is the room's own (timed
+  states, messages between things). The room checks 6 m from your eyes.
+- A touch plays at once on your phone (prediction); a refusal puts the things
+  back to the room's last word, or their kind's start state.
+- Touch picking uses each model's world box; things wider than 2.5 m (the
+  counter, the back bar, the piano) are left out, their boxes cover the floor
+  around them. Precise picking (triangles) can come with E4.
+- Applied changes don't run enter messages: the room records the whole
+  cascade (the fire going out also changes its glow and six sparks).

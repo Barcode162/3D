@@ -138,6 +138,7 @@ props that changed since the previous TICK.
 | `throw` | `g`, `vel` [x,y,z] m/s (capped at 12) | as `drop` | as `drop`; it flies in the room's physics |
 | `dart` | `u`, `v`: where you aimed on the board (m from the centre, u = right, v = up) | needs the claim `machine.darts`. `ok:1` + `u`, `v` (where it landed: the room adds the hand's wobble), `pts`, `label` ("T20"...), `left`, `bust`, `won`, `turnOver`, `games` | DELTA `darts` = that same result, to the others |
 | `race` | `op` (`join`, `ready`, `unready`, `finish`, `leave`), `rig` 0/1, `car` 0..2, `paint` 0..11, `rim` 0..7; `solo:1` with `ready` = race the bots now; `ms` with `finish` = your race time | needs the claim `machine.rig<rig>`. `ok:1`, or `ok:0` (`not on that rig`, `bad car`, `you are racing`, `too fast`, `too soon`) | world key `rc` (by -1) |
+| `thing` | `n`: a thing's net id (1..65535, looped/world: hash of its id in the place file), `e`: `"tap"` (the only event players may send) | `ok:1 n` (changes made), or `ok:0` with `why`: `bad thing`, `players can only touch things`, `no such thing`, `too far` (more than 6 m from your eyes), `nothing happens` (no rule for it now) | the room runs the bar's own rules (cloud/sim, the same files as the phones) and writes world key `t<net>` = [state, start] (by -1) for every thing that changed, to everyone |
 | other | | `ok:0 why:"unknown intent"` | |
 
 **Glasses** (`cloud/games/glasses.js`) are simulated by the room with the bar's own C++
@@ -170,7 +171,8 @@ back). Counted as `refused` in the usage on `/health`.
 | `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | written only by the room's physics (resting spots); phones use `grab`/`drop`/`throw`. Claims `glass.*` can't be asked for directly |
 | `m<n>` (0..9) | mirror on, avatars only (two 0/1) | |
 | `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock. `jb`: when a built-in song ends the room writes the next one itself (`by` -1, `cloud/games/jukebox.js`); nobody connected → `[-1, 0]` |
-| `lt` | lights dim, fire on (two 0/1) | |
+| `lt` | lights dim, fire on (two 0/1) | no longer written by the game (the switch and the fire are things now, `t<net>`) |
+| `t<net>` | a thing's state: state index, start (server s) | written only by the room (`thing` intent) |
 | `dk<n>` (0..7) | drink type + 1, 0 = empty | serving (non-zero) needs the `bartender` or `owner` badge; taking (0) only through a `set` intent that expects the drink |
 | `rc` | the racing rigs: phase, goAt (server s), laps, seed, then per rig slot, car, paint, rim, state (0 garage, 1 ready, 2 racing, 3 finished, 4 didn't finish), time (s) (16) | written only by the room (`race` intents) |
 | anything else | | refused |
