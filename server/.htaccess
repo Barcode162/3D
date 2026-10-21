@@ -3,10 +3,10 @@ RedirectMatch 403 ^.*/rooms/
 # Accounts (passwords as hashes, tokens, profiles) are private too;
 # account.php serves what may be public.
 RedirectMatch 403 ^.*/accounts/
-# The private bar (gate.php, docs/LOOPED.md A1): every request goes through
-# the gate except the servers and the build code.
-DirectoryIndex index.html
-RewriteEngine On
-RewriteRule ^(account|report|relay|gate)\.php$ - [L]
-RewriteRule ^version\.txt$ - [L]
-RewriteRule ^ gate.php [L,QSA]
+# The bar opens straight into its loading screen (user, 2026-10-21): no
+# sign-in page in front; you sign in inside the game. gate.php stays for the
+# People screen (gate.php?people) and could guard the bar again by adding:
+#   RewriteEngine On
+#   RewriteRule ^(account|report|relay|gate)\.php$ - [L]
+#   RewriteRule ^version\.txt$ - [L]
+#   RewriteRule ^ gate.php [L,QSA]
