@@ -1015,7 +1015,10 @@ void updateLoadingScreen() {
   // captured into a cube from the middle of the room.
   if (!g_app.reflectionsAsked && !g_app.hooks.noReflect && g_app.loader.filesDone() && engine::pendingJobs() == 0 && !g_app.scene.rooms.empty()) {
     g_app.reflectionsAsked = true;
-    g_app.renderer.captureReflections({-1.0f, 1.8f, -1.0f}, g_app.scene.rooms[0]);
+    const engine::Aabb& room = g_app.scene.rooms[0];  // the first room (the bar; a home)
+    const engine::Vec3 middle = g_app.scene.place == "bar" ? engine::Vec3{-1.0f, 1.8f, -1.0f}
+                                                            : engine::Vec3{(room.min.x + room.max.x) / 2, 1.8f, (room.min.z + room.max.z) / 2};
+    g_app.renderer.captureReflections(middle, room);
   }
 }
 
@@ -1352,7 +1355,7 @@ void onGpuReady(bool ok) {
   engine::profiler().stage("gpu");
   g_app.hooks = app::TestHooks::parse();
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
-  g_app.scene = app::buildBarScene();
+  g_app.scene = app::buildBarScene(g_app.hooks.place);  // the bar, or another place (E7)
   g_app.world.load(g_app.scene);
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);
   g_app.chess.init(g_app.scene);

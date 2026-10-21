@@ -1,0 +1,46 @@
+{
+  "id": "home",
+  "about": "A small test home (E7.2): proof that a new place is a file. Built from plain boxes and the bar's furniture.",
+  "kinds": ["kinds/bar.json", "kinds/home.json"],
+  "air": {"ambient": [0.08, 0.06, 0.05], "fog": [0.02, 0.015, 0.015], "fogDensity": 0.01},
+  "spawn": {"at": [0, 1.65, 2.2], "yaw": 0},
+  "lightGrid": {"min": [-4, 0, -4], "max": [4, 0, 4]},
+  "rooms": [{"id": "home", "min": [-3.25, -0.2, -3.25], "max": [3.25, 3.3, 3.25]}],
+  "doorways": [],
+  "areas": {"arcade": {"min": [0, 0, 0], "max": [0, 0, 0]}},
+  "points": {"arcade-door": [0, 0, 0]},
+  "things": [
+    {"id": "room", "kind": "home-room", "at": [0, 0, 0]},
+    {"id": "table", "kind": "round_table", "at": [0, 0, 0]},
+    {"id": "candle", "kind": "candle", "at": [0, 0.785, 0]},
+    {"id": "stool-1", "kind": "table_stool", "at": [0.78, 0, 0], "turn": 90},
+    {"id": "stool-2", "kind": "table_stool", "at": [-0.78, 0, 0], "turn": -90},
+    {"id": "lamp", "kind": "pendant_lamp", "at": [0, 2.94, 0]},
+    {"id": "jukebox", "kind": "jukebox", "at": [0, 0, -2.55]},
+    {"id": "chalkboard", "kind": "chalkboard", "at": [2.97, 1.6, 0.6], "turn": -90},
+    {
+      "id": "lamp-light",
+      "kind": "light-bulb",
+      "at": [0, 2.15, 0],
+      "parts": {"light": {"color": [1, 0.68, 0.38], "intensity": 1.8, "range": 5.5, "radius": 0.08, "dims": true}}
+    },
+    {
+      "id": "corner-light",
+      "kind": "light-bulb",
+      "at": [2.2, 2.6, 2.2],
+      "parts": {"light": {"color": [1, 0.8, 0.6], "intensity": 0.9, "range": 4.5, "radius": 0.3}}
+    },
+    {
+      "id": "jukebox-glow",
+      "kind": "light-jukebox",
+      "at": [0, 1.2, -1.9],
+      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3}}
+    },
+    {
+      "id": "neon",
+      "kind": "light-neon",
+      "at": [-2.8, 2.3, -2.8],
+      "parts": {"light": {"color": [1, 0.2, 0.6], "intensity": 0.8, "range": 3.5, "radius": 0.3}}
+    }
+  ]
+}

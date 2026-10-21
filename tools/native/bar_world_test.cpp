@@ -190,6 +190,21 @@ int main() {
     for (float v : w.thing(static_cast<int>(i)).world.m) finite = finite && std::isfinite(v);
   check(finite, "every thing's place is a real number");
 
+  // E7.2: a second place is just a file (the test home, made of plain boxes
+  // and the bar's furniture).
+  {
+    const app::BarScene home = app::buildBarScene("home");
+    check(home.problems.empty(), "the test home reads cleanly" + (home.problems.empty() ? "" : ": " + home.problems));
+    check(home.world && home.world->check().empty(), "every thing in the home is alive (or still for a reason)");
+    check(home.objects.size() == 7, "its floor, ceiling, walls and rug are plain boxes (" + std::to_string(home.objects.size()) + ")");
+    check(home.seats.size() == 2 && home.models.size() == 7, "two stools to sit on, seven models from the bar's kinds");
+    check(home.lights.size() == 4 && home.interactables.size() >= 1, "four lights, the jukebox to tap");
+    check(engine::length(home.jukeboxSpeaker) > 1, "the jukebox's speaker came with it");
+    const engine::Vec3 inside = app::resolveCollisions(home, {0, 0, 2.95f}, 0.3f);
+    check(inside.z < 2.75f, "its walls keep you in");
+    check(app::groundHeight(home, {1, 0, 1}) == 0, "and its floor is the floor");
+  }
+
   std::printf(failed ? "%d FAILED\n" : "BAR WORLD TESTS PASSED\n", failed);
   return failed ? 1 : 0;
 }

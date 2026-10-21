@@ -159,6 +159,7 @@ struct BarScene {
   std::shared_ptr<const engine::world::World> world;
   std::vector<int> modelThing, lightThing, useThing, seatThing, mirrorThing, colliderThing;
   std::string problems;  // what was wrong in the files ("" = nothing)
+  std::string place = "bar";  // which place this is
   std::vector<ChessPiece> chessPieces;      // the middle of its doorway (bar side): the music leaks out here
   engine::Vec3 spawnPosition;
   float spawnYaw;
@@ -183,8 +184,9 @@ struct BarScene {
   std::vector<int> roomLights;   // lights the switch turns down
 };
 
-// Reads the bar's kinds and place (bar/world_files.h) and lays it out.
-BarScene buildBarScene();
+// Reads a place (assets/world/places/<place>.json) and its kinds
+// (bar/world_files.h) and lays it out: "bar", or another place (E7: "home").
+BarScene buildBarScene(const std::string& place = "bar");
 
 // What the renderer needs from the bar (looped/render_scene.h): the shapes
 // with their materials' looks, the models, lights, rooms, air and textures.

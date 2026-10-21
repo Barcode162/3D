@@ -38,8 +38,8 @@ E6, sound:
 - [x] **E6.2** Touch sounds per kind: a knock on wood, a clink on the back bar, a soft bong on a lamp.
 
 E7, places:
-- [ ] **E7.1** Boxes as parts (floors, walls, shelves made from plain shapes), so a place doesn't need its own model.
-- [ ] **E7.2** A second place, a small test home (places/home.json), built from boxes and the bar's furniture.
+- [x] **E7.1** Boxes as parts (floors, walls, shelves made from plain shapes), so a place doesn't need its own model.
+- [x] **E7.2** A second place, a small test home (places/home.json), built from boxes and the bar's furniture.
 - [ ] **E7.3** Travel: Menu → "Visit the test home" / "Back to the bar"; each place has its own room.
 - [ ] **E7.4** The catalog (assets/world/catalog.json): every kind you could own, with a price and whether it's tradeable; a test keeps it in step with the kinds.
 

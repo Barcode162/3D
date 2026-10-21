@@ -1,0 +1,28 @@
+{
+  "about": "Kinds only the test home uses (the rest come from kinds/bar.json).",
+  "kinds": [
+    {
+      "id": "home-room",
+      "about": "The test home's shell: a floor, four walls and a ceiling made of plain boxes (E7.1), no model of its own.",
+      "still": "a room's shell; its lights and everything in it loop",
+      "parts": {
+        "boxes": [
+          {"at": [0, -0.05, 0], "size": [6.4, 0.1, 6.4], "material": "oak-floor"},
+          {"at": [0, 3.05, 0], "size": [6.4, 0.1, 6.4], "material": "plaster", "color": [0.55, 0.5, 0.46]},
+          {"at": [0, 1.5, -3.1], "size": [6.4, 3, 0.2], "material": "brick"},
+          {"at": [0, 1.5, 3.1], "size": [6.4, 3, 0.2], "material": "plaster", "color": [0.42, 0.36, 0.32]},
+          {"at": [-3.1, 1.5, 0], "size": [0.2, 3, 6.4], "material": "plaster", "color": [0.42, 0.36, 0.32]},
+          {"at": [3.1, 1.5, 0], "size": [0.2, 3, 6.4], "material": "plaster", "color": [0.42, 0.36, 0.32]},
+          {
+            "at": [-1.6, 0.02, 1.2],
+            "size": [2.2, 0.04, 1.5],
+            "material": "leather",
+            "color": [0.35, 0.08, 0.08],
+            "solid": false
+          }
+        ],
+        "blocks": [[-4, -4, 4, -3], [-4, 3, 4, 4], [-4, -4, -3, 4], [3, -4, 4, 4]]
+      }
+    }
+  ]
+}

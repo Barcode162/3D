@@ -39,15 +39,18 @@ engine::Aabb box(const Json& j) { return {readVec3(j["min"], {}), readVec3(j["ma
 
 }  // namespace
 
-BarScene buildBarScene() {
+BarScene buildBarScene(const std::string& placeName) {
   BarScene scene;
+  scene.place = placeName;
   std::string problems;
   engine::world::Library kinds;
-  const Json placeJson = Json::parse(worldFile("places/bar.json"), &problems, {64, 1 << 16});
+  const std::string placeFile = "places/" + placeName + ".json";
+  const Json placeJson = Json::parse(worldFile(placeFile), &problems, {64, 1 << 16});
+  if (!placeJson.isObject()) problems += "no place \"" + placeName + "\"\n";
   for (const Json& f : placeJson["kinds"].items()) kinds.add(worldFile(f.string()), f.string());
   kinds.resolve();
   problems += kinds.errors();
-  const engine::world::Place place = engine::world::parsePlace(worldFile("places/bar.json"), &problems);
+  const engine::world::Place place = engine::world::parsePlace(worldFile(placeFile), &problems);
   auto world = std::make_shared<engine::world::World>();
   world->build(kinds, place, &problems);
 
@@ -120,6 +123,21 @@ BarScene buildBarScene() {
                                  engine::normalized(rot * Quat::axisAngle({0, 1, 0}, engine::radians(turn))),
                                  material(s["material"], kDarkWood)});
       scene.colliderThing.push_back(i);
+    }
+    // Plain boxes (E7.1): floors, walls, shelves a place is built from
+    // without a model of its own; solid unless "solid": false.
+    for (const Json& b : world->part(i, "boxes").items()) {
+      const Vec3 size = readVec3(b["size"], {1, 1, 1});
+      const Quat r = engine::normalized(rot * Quat::axisAngle({0, 1, 0}, engine::radians(static_cast<float>(b["turn"].number(0)))));
+      const MaterialId m = material(b["material"], kPlaster);
+      const engine::Material& look = app::material(m);
+      SceneObject o{engine::makeBox(size), at(b["at"]), r, m, readVec3(b["color"], look.color),
+                    static_cast<float>(b["glow"].number(look.emissive)), look.textureScale};
+      scene.objects.push_back(std::move(o));
+      if (b["solid"].boolean(true)) {
+        scene.colliders.push_back({at(b["at"]), size * 0.5f, r, m});
+        scene.colliderThing.push_back(i);
+      }
     }
     for (const Json& b : world->part(i, "blocks").items())
       scene.blockers.push_back({pos.x + static_cast<float>(b[0].number()), pos.z + static_cast<float>(b[1].number()),
