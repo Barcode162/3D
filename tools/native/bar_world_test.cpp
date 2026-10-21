@@ -116,6 +116,17 @@ int main() {
     check(w.stateOf(lamp).name == "lit", "and settles back to its sway after one swing");
   }
 
+  // E3.4: a new song makes the jukebox flourish, then it grooves on.
+  {
+    const int juke = thingOfKind("jukebox");
+    w.sendAll("song", c.seconds);
+    check(w.stateOf(juke).name == "flourish", "a new song: the jukebox flares");
+    Clock t = c;
+    t.seconds += 1.5;
+    w.update(t);
+    check(w.stateOf(juke).name == "playing", "then it grooves on the beat again");
+  }
+
   // E3.3: a stool someone sits on sinks and holds still; free again, it drifts.
   {
     check(scene.seatThing.size() == scene.seats.size(), "every seat belongs to a thing");

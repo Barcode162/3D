@@ -121,6 +121,10 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
     music_ = music;
     world_.sendAll(music ? "music" : "quiet", clock.seconds);
   }
+  // A new song (E3.4): the song itself is shared already (world key jb), so
+  // every phone sends this to its own world at the same moment.
+  if (music && in.songUrl != song_) world_.sendAll("song", clock.seconds);
+  song_ = music ? in.songUrl : "";
   // Seats (E3.3): who sits where is shared already (the room's seat claims),
   // so every phone tells its own world.
   seated_.resize(in.seated.size(), false);

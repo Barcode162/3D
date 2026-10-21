@@ -622,7 +622,7 @@
     },
     {
       "id": "jukebox",
-      "about": "The jukebox: its lights breathe while it waits, and it thumps on every beat while a song plays.",
+      "about": "The jukebox: its lights breathe while it waits, flare in a sweep when a new song starts, and thump on every beat while it plays.",
       "parts": {
         "blocks": [[-0.5, -0.35, 0.5, 0.35]],
         "model": {"file": "jukebox.glb", "material": "lacquer"},
@@ -649,9 +649,22 @@
             {"ch": "glow", "shape": "beat", "amp": 0.9, "offset": -0.3, "decay": 6},
             {"ch": "scale", "shape": "beat", "amp": 0.012, "decay": 8}
           ]
+        },
+        "flourish": {
+          "period": 1.4,
+          "restart": true,
+          "blend": 0.1,
+          "pieces": [
+            {"ch": "glow", "shape": "keys", "keys": [[0, 0], [0.15, 1.6], [0.35, 0.4], [0.5, 1.2], [0.75, 0.2], [1, 0]]},
+            {"ch": "scale", "shape": "keys", "keys": [[0, 0], [0.12, 0.02], [0.3, -0.006], [0.5, 0.008], [1, 0]]}
+          ]
         }
       },
-      "states": {"idle": {"loop": "wait", "on": {"music": "playing"}}, "playing": {"loop": "groove", "on": {"quiet": "idle"}}},
+      "states": {
+        "idle": {"loop": "wait", "on": {"music": "playing", "song": "flourish"}},
+        "playing": {"loop": "groove", "on": {"quiet": "idle", "song": "flourish"}},
+        "flourish": {"loop": "flourish", "afterLoops": 1, "next": "playing", "on": {"quiet": "idle"}}
+      },
       "start": "idle"
     },
     {

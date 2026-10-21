@@ -72,6 +72,7 @@ class BarWorld {
   std::vector<bool> dims_;   // per light: the switch dims it
   bool requested_ = false, built_ = false;
   bool music_ = false;
+  std::string song_;  // the song playing (a new one: "song")
   std::vector<bool> seated_;  // last frame's (seats taken → "sit", freed → "stand")
   double lastMs_ = 0, now_ = 0;
 };
