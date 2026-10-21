@@ -1342,3 +1342,14 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   to compile it without, g++ only warns).
 - The stage stool's entity id moved from `@-6.8,6.4` to `@-6.8,6.3` (6.35
   rounds either way): bar/entity_ids.txt updated on purpose.
+
+## Live first, long tests after (2026-10-21, the user)
+- The user kept waiting ~30 minutes per deploy for nothing. deploy.yml now:
+  build → quick checks (lint, protocol, room + ledger tests: the shared server
+  goes live with the build) → room deploy → upload → gh-pages record → then
+  native and all browser tests. Live in ~6 minutes; the same tests still run
+  (Claude runs them locally before pushing too). A red test after upload
+  means a broken build may be live: fix forward at once.
+- GitHub's runners are sometimes slow: two runs in a row failed on timing
+  (a 30 s screenshot wait, a 7 s room leave wait) that pass locally every
+  time; both waits were widened. Claude can't re-run jobs (403).

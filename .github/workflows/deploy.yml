@@ -108,13 +108,11 @@ jobs:
           # The room's physics (the bar's C++ for the Cloudflare Worker).
           bash cloud/sim/build.sh
 
-      # --- Tests: a failing step stops the job, so nothing broken is
-      # published. (restructure step 0.4)
-      - name: "Test: native (g++ and em++ + node)"
-        run: |
-          source ./emsdk/emsdk_env.sh
-          bash tools/native/run.sh
-
+      # --- Quick tests before anything goes live (seconds), and the room's
+      # (the shared server goes live with this build). The game's own tests
+      # run after the upload (user, 2026-10-21: the new build is on the phone
+      # in ~6 minutes, not ~30). Claude runs them all locally before every
+      # push; a red one here means: fix it right away (docs/DECISIONS.md).
       - name: "Test: PHP syntax and EM_ASM lint"
         run: |
           for f in server/*.php; do php -l "$f"; done
@@ -133,64 +131,6 @@ jobs:
       - name: "Test: the ledger (money and owned things, wrangler dev)"
         run: node tools/ledger_test.mjs
 
-
-      - name: Install Playwright
-        run: |
-          npm i --no-save --no-package-lock playwright@1.56.1
-          npx playwright install --with-deps chromium
-
-      # Software WebGPU (SwiftShader) works on GitHub's runners (first green
-      # run 2026-10-17), so a failing smoke blocks the deploy.
-      - name: "Test: browser smoke (Release build)"
-        run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
-
-      - name: "Test: the private bar's door (gate.php, invites, admins)"
-        run: node tools/gate_test.mjs
-
-      - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
-        run: node tools/menu_test.mjs
-
-      - name: "Test: the menu still answers after every game"
-        run: node tools/menu_games_test.mjs
-
-      # Meridian (the user's driving game) opens from a racing rig and back.
-      - name: "Test: Meridian inside the bar"
-        continue-on-error: true
-        run: node tools/meridian_test.mjs
-
-      # Two players through the Cloudflare room (run locally with wrangler
-      # dev): movement, away, glasses, mirror, jukebox, seats decided by the
-      # room. Non-blocking until it has passed once on GitHub's runners.
-      - name: "Test: multiplayer (two players + the room)"
-        continue-on-error: true
-        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
-
-      # 4K Mania: the song select opens, a song is charted and played (autoplay).
-      - name: "Test: 4K Mania"
-        continue-on-error: true
-        run: |
-          command -v ffmpeg >/dev/null || sudo apt-get install -y -q ffmpeg >/dev/null
-          node tools/rhythm_test.mjs
-
-      # The lounge's chessboard: tap e2, e4 on the 3D board; the computer answers.
-      - name: "Test: chess"
-        continue-on-error: true
-        run: node tools/chess_test.mjs
-
-      # The avatar customizer: make your own look, it stays after a reload.
-      - name: "Test: avatar customizer"
-        continue-on-error: true
-        run: node tools/avatar_test.mjs
-
-      # The arcade: tap the platformer machine, the user's game opens and draws.
-      - name: "Test: the arcade's platformer"
-        continue-on-error: true
-        run: node tools/arcade_test.mjs
-
-      # Two players race each other on the two rigs (the room starts the race).
-      - name: "Test: two-player race"
-        continue-on-error: true
-        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/race_mp_test.mjs
 
       # Prints only whether the Cloudflare secrets exist, whether wrangler
       # accepts the token, and whether a workers.dev subdomain is registered.
@@ -313,3 +253,68 @@ jobs:
           git add -A
           git commit -q -m "Site build ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      # --- The game's tests, after it's live (they take ~20 minutes). A
+      # failure turns this run red: Claude fixes it right away.
+      - name: "Test: native (g++ and em++ + node)"
+        run: |
+          source ./emsdk/emsdk_env.sh
+          bash tools/native/run.sh
+
+      - name: Install Playwright
+        run: |
+          npm i --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      # Software WebGPU (SwiftShader) works on GitHub's runners (first green
+      # run 2026-10-17), so a failing smoke blocks the deploy.
+      - name: "Test: browser smoke (Release build)"
+        run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
+
+      - name: "Test: the private bar's door (gate.php, invites, admins)"
+        run: node tools/gate_test.mjs
+
+      - name: "Test: menus (mailbox commands, JSON escaping, one panel at a time)"
+        run: node tools/menu_test.mjs
+
+      - name: "Test: the menu still answers after every game"
+        run: node tools/menu_games_test.mjs
+
+      # Meridian (the user's driving game) opens from a racing rig and back.
+      - name: "Test: Meridian inside the bar"
+        continue-on-error: true
+        run: node tools/meridian_test.mjs
+
+      # Two players through the Cloudflare room (run locally with wrangler
+      # dev): movement, away, glasses, mirror, jukebox, seats decided by the
+      # room. Non-blocking until it has passed once on GitHub's runners.
+      - name: "Test: multiplayer (two players + the room)"
+        continue-on-error: true
+        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/mp_test.mjs
+
+      # 4K Mania: the song select opens, a song is charted and played (autoplay).
+      - name: "Test: 4K Mania"
+        continue-on-error: true
+        run: |
+          command -v ffmpeg >/dev/null || sudo apt-get install -y -q ffmpeg >/dev/null
+          node tools/rhythm_test.mjs
+
+      # The lounge's chessboard: tap e2, e4 on the 3D board; the computer answers.
+      - name: "Test: chess"
+        continue-on-error: true
+        run: node tools/chess_test.mjs
+
+      # The avatar customizer: make your own look, it stays after a reload.
+      - name: "Test: avatar customizer"
+        continue-on-error: true
+        run: node tools/avatar_test.mjs
+
+      # The arcade: tap the platformer machine, the user's game opens and draws.
+      - name: "Test: the arcade's platformer"
+        continue-on-error: true
+        run: node tools/arcade_test.mjs
+
+      # Two players race each other on the two rigs (the room starts the race).
+      - name: "Test: two-player race"
+        continue-on-error: true
+        run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/race_mp_test.mjs

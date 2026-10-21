@@ -113,10 +113,13 @@ that changed get rebuilt (docs/DECISIONS.md → Deploys by system).
   changes. Record new decisions or gotchas in `docs/DECISIONS.md`, and new
   ideas from the user in `docs/VISION.md`. A fresh session only knows what's
   written in the repo.
-- After the push to `main`, watch the **Actions runs** (not the site): a red
-  run is fixed right away. When green, run
-  `NODE_PATH=$(npm root -g) node tools/check_live.mjs` for game deploys, and
-  tell the user the build code to look for.
+- **Don't make the user wait (user, 2026-10-21).** The deploy puts the game
+  live ~6 minutes after the push (build + room tests + upload); the game's
+  long tests run after it's live. So: run every relevant test locally
+  first, push, and give the "How to check it" list **right away** (the build
+  code on screen says when it's live). Don't sit in chat watching CI: start a
+  background watcher on the Actions run, keep working, and if a run goes red,
+  fix it at once and tell the user. `check_live.mjs` when it's up.
 
 ## Build and test
 ```sh
