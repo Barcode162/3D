@@ -40,7 +40,7 @@ E6, sound:
 E7, places:
 - [x] **E7.1** Boxes as parts (floors, walls, shelves made from plain shapes), so a place doesn't need its own model.
 - [x] **E7.2** A second place, a small test home (places/home.json), built from boxes and the bar's furniture.
-- [ ] **E7.3** Travel: Menu → "Visit the test home" / "Back to the bar"; each place has its own room.
+- [x] **E7.3** Travel: Menu → "Visit the test home" / "Back to the bar"; each place has its own room.
 - [ ] **E7.4** The catalog (assets/world/catalog.json): every kind you could own, with a price and whether it's tradeable; a test keeps it in step with the kinds.
 
 E8, the hub as the control room:

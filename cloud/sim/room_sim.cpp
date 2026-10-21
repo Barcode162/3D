@@ -127,7 +127,9 @@ EMSCRIPTEN_KEEPALIVE int sim_thing_net() {
 EMSCRIPTEN_KEEPALIVE int sim_init() {
   if (!world) {
     world = new engine::PhysicsWorld();
-    app::BarScene scene = app::buildBarScene();
+    // The place this room is (a world file "place" from sim.js: "bar", "home").
+    const std::string place = app::worldFile("place");
+    app::BarScene scene = app::buildBarScene(place.empty() ? "bar" : place);
     std::vector<int> bodyOfModel;
     app::buildPhysics(scene, *world, bodyOfModel);
     if (scene.world) things = new engine::world::World(*scene.world);

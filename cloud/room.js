@@ -32,6 +32,8 @@ import simWasm from './sim/room_sim.wasm';
 // The bar's layout comes from its world files (docs/ENGINE.md), bundled in.
 import barPlace from '../assets/world/places/bar.json';
 import barKinds from '../assets/world/kinds/bar.json';
+import homePlace from '../assets/world/places/home.json';
+import homeKinds from '../assets/world/kinds/home.json';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -120,11 +122,14 @@ export class Room {
     this.intentResults = new Map();  // slot → Map(request id → RESULT text)
     this.games = {};             // games the room runs: darts → {owner slot, session}
     this.race = race.empty();    // the racing rigs (cloud/games/race.js), shared as world key rc
-    this.sim = new Sim(simWasm, {  // the bar's physics (every glass) and its things
+    // The place's physics (every glass) and its things (E7.3): the bar, or
+    // the test home for rooms named home*. Remade once the room knows its name.
+    this.simFiles = {
       'places/bar.json': JSON.stringify(barPlace), 'kinds/bar.json': JSON.stringify(barKinds),
-    });
-    this.glasses = new Glasses(this.sim);
-    this.thingsSynced = false;  // the stored thing states handed to this.sim yet
+      'places/home.json': JSON.stringify(homePlace), 'kinds/home.json': JSON.stringify(homeKinds),
+    };
+    this.place = '';
+    this.usePlace();
     this.lastSimMs = 0;
     this.lastSeq = 0;
     this.ticker = null;
@@ -141,6 +146,7 @@ export class Room {
       const a = ws.deserializeAttachment();
       if (!a) continue;
       if (a.room) this.name = a.room;
+      this.usePlace();
       if (a.slot < 0) continue;
       this.players.set(a.slot, { ...a, ws, graceUntil: 0, away: a.away || 0 });
       if (a.st) this.states.set(a.slot, { seq: a.st.seq, raw: hexToBytes(a.st.raw) });
@@ -150,6 +156,17 @@ export class Room {
       this.lastActive.set(a.slot, now);
     }
     ctx.blockConcurrencyWhile(() => this.load());
+  }
+
+  // Which place this room is (from its name), and its world made for it.
+  usePlace() {
+    const place = /^home/.test(this.name) ? 'home' : 'bar';
+    if (place === this.place) return;
+    this.place = place;
+    this.sim = new Sim(simWasm, { ...this.simFiles, place });
+    this.glasses = new Glasses(this.sim);
+    this.thingsSynced = false;  // the stored thing states handed to this.sim yet
+    if (this.kv.size) this.glasses.restore(this.kv);
   }
 
   async load() {
@@ -197,6 +214,7 @@ export class Room {
   async fetch(request) {
     const url = new URL(request.url);
     this.name = request.headers.get('X-Room') || this.name;
+    this.usePlace();
     if (url.pathname === '/stats') return Response.json(this.stats());
     if (this.dev && url.pathname.endsWith('/debug')) {
       const keys = await this.ctx.storage.list();

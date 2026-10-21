@@ -189,7 +189,7 @@ await bob.waitForFunction(() => /pendant_lamp-2 is swinging \(the room\)/.test(d
                           { timeout: 15000, polling: 250 }).catch(() => {});
 const daveLog = await logOf(dave), bobThingLog = await logOf(bob);
 console.log('Dave:', (daveLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
-dave.close();
+await dave.close();
 
 // E3.6b: Fay puts the fire out; Erin, who arrives after, finds it out.
 const loaded = async (page, who) => {
@@ -205,12 +205,12 @@ await fay.mouse.click(215, 466);
 await fay.waitForTimeout(2000);
 const fayLog = await logOf(fay);
 console.log('Fay:', (fayLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
-fay.close();
+await fay.close();
 const erin = await open('Erin', '0,1.66,2.5,0,0');
 await loaded(erin, 'Erin');
 await erin.waitForTimeout(1500);
 const erinLog = await logOf(erin);
-erin.close();
+await erin.close();
 show('Bob', log);
 show('Carol', carolLog);
 show('Carol again', carolLog2);

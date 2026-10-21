@@ -228,6 +228,15 @@ window.bar3dUi = (function () {
       ['menu_bartender', 'Bartender', bartenderPanel], ['menu_help', 'Help', helpPanel],
     ];
     if (info.seated) tiles.push(['menu_standup', 'Stand up', function () { cmd('standUp'); close(); }]);
+    // Travel between places (docs/ENGINE.md E7.3): the page reloads into the
+    // other place, which has its own room.
+    var url = new URL(location.href);
+    var away = url.searchParams.get('place') && url.searchParams.get('place') !== 'bar';
+    tiles.push(['menu_home', away ? 'Back to the bar' : 'Visit the test home', function () {
+      if (away) { url.searchParams.delete('place'); url.searchParams.delete('room'); }
+      else { url.searchParams.set('place', 'home'); url.searchParams.set('room', 'home'); }
+      location.href = url.toString();
+    }]);
     show('Menu', [walletLine(), el('div', { class: 'mGrid' }, tiles.map(function (t) {
       return el('button', { class: 'mTile', onclick: t[2] }, [icon(t[0]), t[1]]);
     }))]);

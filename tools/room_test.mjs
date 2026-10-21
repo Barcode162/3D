@@ -324,6 +324,19 @@ try {
   check(ta5 && tb6 && ta5.body.ok + tb6.body.ok === 1, `two people take the same drink: exactly one gets it (${ta5?.body.ok}, ${tb6?.body.ok})`);
   [ra, rb].forEach((c) => c.ws.close(1000));
 
+  // ---- Places (E7.3): a room named home* runs the test home's world ----
+  {
+    const rh = 'home-' + Math.floor(Math.random() * 1e6);  // (not room(): its names start with t)
+    const hx = await joined(rh, { name: 'Hal' });
+    hx.state(1, 0, { y: 1.65, z: 1.5 });  // in the home, by its table
+    await wait(200);
+    hx.send('I', { i: 1, k: 'thing', n: netOf('lamp'), e: 'tap' });
+    check((await hx.until(() => hx.find('R', (r) => r.r === 1)))?.body.ok === 1, 'in a home room, the home\'s own lamp can be touched');
+    hx.send('I', { i: 2, k: 'thing', n: netOf('pendant_lamp-2'), e: 'tap' });
+    check((await hx.until(() => hx.find('R', (r) => r.r === 2)))?.body.why === 'no such thing', 'and the bar\'s lamps aren\'t there');
+    hx.ws.close(1000);
+  }
+
   // ---- Darts run by the room (cloud/games/darts.js) ----
   const { score: dscore, throwDart: dthrow, newSession: dnew, payout } = await import('../cloud/games/darts.js');
   check(payout(6) === 5000 && payout(10) === 4000 && payout(40) === 500,
