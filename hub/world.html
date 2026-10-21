@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>World · Bar3D hub</title>
+<!-- The hub's World page (docs/ENGINE.md E8): every kind of thing in the bar,
+     what it does in plain words (its states and rules), how many there are,
+     and live tuning: a loop's speed and on/off, saved by hub.php (tune) and
+     read by the bar when it loads (hub.php?tuning). -->
+<style>
+  :root {
+    --bg: #0b0716; --bg2: #140c26; --ink: #f6f0ff; --dim: #b4a7d4; --faint: rgba(255,255,255,.08);
+    --edge: rgba(255,255,255,.14); --glass: rgba(255,255,255,.06);
+    --pink: #ff5ab4; --gold: #ffb35a; --cyan: #5ad1ff; --mint: #7dff8a; --violet: #b38bff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif; }
+  a { color: var(--cyan); }
+  main { max-width: 760px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 14px) 16px 60px; }
+  h1 { font-size: 30px; margin: 4px 0 2px; background: linear-gradient(180deg, #fff, var(--pink) 65%, var(--violet));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: var(--dim); margin: 0 0 14px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+  .chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass); color: var(--ink);
+    font: inherit; font-size: 14px; text-decoration: none; }
+  .chip.on { border-color: var(--pink); background: rgba(255,90,180,.18); }
+  .kind { border: 1px solid var(--edge); background: var(--glass); border-radius: 16px; padding: 12px 14px; margin: 0 0 10px; }
+  .kind h2 { font-size: 17px; margin: 0; display: flex; justify-content: space-between; gap: 8px; }
+  .kind h2 small { color: var(--dim); font-weight: 500; }
+  .about { color: var(--dim); font-size: 14px; margin: 4px 0 6px; }
+  .states { font-size: 14px; margin: 6px 0 0; padding: 0; list-style: none; }
+  .states li { margin: 2px 0; }
+  .states b { color: var(--gold); font-weight: 650; }
+  .still { color: var(--violet); font-size: 13px; }
+  .tune { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; flex-wrap: wrap; }
+  .tune input[type=range] { flex: 1; min-width: 140px; accent-color: var(--pink); }
+  .tune .v { width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
+  .tune label { display: flex; align-items: center; gap: 6px; }
+  .note { color: var(--dim); font-size: 13px; }
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 16px); transform: translateX(-50%);
+    background: #2a1f33; border: 1px solid var(--edge); padding: 8px 14px; border-radius: 12px; opacity: 0; transition: opacity .2s; }
+  .toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<main>
+  <a class="chip" href="index.html">← Hub</a>
+  <h1>The world</h1>
+  <p class="sub">Every kind of thing in the bar: what it does, and how lively it is. Changes apply the next time the bar loads.</p>
+  <div class="bar" id="filters"></div>
+  <div id="list"><p class="note">Loading…</p></div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const API = 'hub.php', WORLD = '../bar/assets/world/';
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } } };
+const token = store.get('hubToken') || store.get('bar3dToken') || '';
+let tuning = { kinds: {} }, filter = 'alive';
+
+function el(tag, attrs, kids) {
+  const e = document.createElement(tag);
+  for (const k in attrs || {}) {
+    if (k === 'text') e.textContent = attrs[k];
+    else if (k.startsWith('on')) e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const c of kids || []) if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  return e;
+}
+function toast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1800);
+}
+function api(body) {
+  body.token = token;
+  return fetch(API, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' }, cache: 'no-store' })
+    .then((r) => r.json()).then((r) => { if (!r || !r.ok) throw new Error((r && r.error) || 'Something went wrong.'); return r; });
+}
+
+// A kind with what it builds on ("is") filled in, as looped/world does.
+function resolve(byId, id, depth = 0) {
+  const k = byId[id];
+  if (!k || !k.is || depth > 16) return k;
+  const base = resolve(byId, k.is, depth + 1) || {};
+  return { ...base, ...k, parts: { ...(base.parts || {}), ...(k.parts || {}) }, loops: { ...(base.loops || {}), ...(k.loops || {}) },
+           states: { ...(base.states || {}), ...(k.states || {}) }, on: { ...(base.on || {}), ...(k.on || {}) } };
+}
+// A state in plain words: its rules and when it moves on.
+function stateWords(name, st) {
+  const bits = [];
+  for (const [e, to] of Object.entries(st.on || {})) bits.push(`${e === 'tap' ? 'a touch' : '“' + e + '”'} → ${to}`);
+  if (st.afterLoops != null) bits.push(`after ${st.afterLoops} loop${st.afterLoops === 1 ? '' : 's'} → ${st.next}`);
+  if (st.after != null) bits.push(`after ${st.after} s → ${st.next}`);
+  for (const s of st.enter || []) bits.push(`tells ${s.to === 'all' ? 'everything' : s.to} “${s.send}”`);
+  return el('li', {}, [el('b', { text: name }), bits.length ? ': ' + bits.join(' · ') : '']);
+}
+
+function save(kind, speed, off) {
+  clearTimeout(save[kind]);
+  save[kind] = setTimeout(() => {
+    api({ a: 'tune', kind, speed, off }).then((r) => { tuning = r.tuning; toast(`${kind}: saved`); })
+      .catch((e) => toast(e.message));
+  }, 350);
+}
+
+function render(kinds, counts) {
+  const list = document.getElementById('list');
+  list.textContent = '';
+  const shown = kinds.filter((k) => (filter === 'all' || (filter === 'alive' ? !k.still : !!k.still)) && counts[k.id]);
+  shown.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0) || a.id.localeCompare(b.id));
+  for (const k of shown) {
+    const t = (tuning.kinds || {})[k.id] || { speed: 1, off: false };
+    const value = el('span', { class: 'v', text: t.speed.toFixed(2) + '×' });
+    const range = el('input', { type: 'range', min: '0.25', max: '3', step: '0.05', value: String(t.speed), 'aria-label': `${k.id} speed` });
+    const off = el('input', { type: 'checkbox' });
+    off.checked = !!t.off;
+    range.oninput = () => { value.textContent = (+range.value).toFixed(2) + '×'; save(k.id, +range.value, off.checked); };
+    off.onchange = () => save(k.id, +range.value, off.checked);
+    list.appendChild(el('div', { class: 'kind' }, [
+      el('h2', {}, [k.id, el('small', { text: `${counts[k.id]} in the bar` })]),
+      k.about ? el('p', { class: 'about', text: k.about }) : null,
+      k.still ? el('div', { class: 'still', text: 'Stands still: ' + k.still }) : null,
+      Object.keys(k.states || {}).length ? el('ul', { class: 'states' }, Object.entries(k.states).map(([n, st]) => stateWords(n, st))) : null,
+      !k.still && Object.keys(k.loops || {}).length ? el('div', { class: 'tune' }, [
+        el('span', { text: 'Speed' }), range, value, el('label', {}, [off, 'Off']),
+      ]) : null,
+    ]));
+  }
+  if (!shown.length) list.appendChild(el('p', { class: 'note', text: 'Nothing here.' }));
+}
+
+Promise.all([
+  fetch(WORLD + 'kinds/bar.json', { cache: 'no-store' }).then((r) => r.json()),
+  fetch(WORLD + 'places/bar.json', { cache: 'no-store' }).then((r) => r.json()),
+  token ? api({ a: 'tuning' }).then((r) => r.tuning).catch(() => null) : Promise.resolve(null),
+]).then(([kindsFile, place, t]) => {
+  if (t) tuning = t;
+  if (!token) document.querySelector('.sub').append(el('br'), el('a', { href: 'index.html', text: 'Sign in on the hub to tune things.' }));
+  const byId = {};
+  for (const k of kindsFile.kinds) byId[k.id] = k;
+  const kinds = kindsFile.kinds.map((k) => resolve(byId, k.id));
+  const counts = {};
+  const countIn = (things) => { for (const th of things) counts[th.kind] = (counts[th.kind] || 0) + (th.row ? th.row.count : 1); };
+  countIn(place.things);
+  for (const k of kinds) for (const c of k.things || []) counts[c.kind] = (counts[c.kind] || 0) + (counts[k.id] || 0);
+  const filters = document.getElementById('filters');
+  for (const [id, label] of [['alive', 'Alive'], ['still', 'Standing still'], ['all', 'Everything']]) {
+    filters.appendChild(el('button', { class: 'chip' + (id === filter ? ' on' : ''), text: label, onclick: (e) => {
+      filter = id;
+      for (const c of filters.children) c.classList.toggle('on', c === e.target);
+      render(kinds, counts);
+    } }));
+  }
+  render(kinds, counts);
+}).catch((e) => { document.getElementById('list').textContent = 'Couldn’t read the world: ' + e.message; });
+</script>
+</body>
+</html>

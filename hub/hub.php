@@ -231,6 +231,14 @@ if ($method === 'GET' && isset($_GET['shot'])) {
   readfile($path);
   exit;
 }
+// Live tuning of the bar's loops (docs/ENGINE.md E8.2): anyone may read it
+// (the bar does when it loads); only the owner changes it (action "tune").
+if ($method === 'GET' && isset($_GET['tuning'])) {
+  header('Content-Type: application/json');
+  header('Cache-Control: no-store');
+  echo json_encode(read_json("$data/tuning.json") ?? ['kinds' => new stdClass()]);
+  exit;
+}
 if ($method !== 'POST') fail('POST only', 405);
 $in = json_decode(file_get_contents('php://input'), true);
 if (!is_array($in)) fail('Bad request.');
@@ -667,6 +675,22 @@ if ($a === 'delete') {
     array_splice($b['cards'], $i, 1);
     return ['ok' => 1, '_save' => true];
   }));
+}
+
+if ($a === 'tuning') reply(['ok' => 1, 'tuning' => read_json("$data/tuning.json") ?? ['kinds' => new stdClass()]]);
+if ($a === 'tune') {
+  if ($me['role'] !== 'owner') fail('Only the owner tunes the bar.', 403);
+  $kind = is_string($in['kind'] ?? null) ? $in['kind'] : '';
+  if (!preg_match('/^[a-z0-9_-]{1,40}$/', $kind)) fail('Which kind?');
+  $speed = is_numeric($in['speed'] ?? null) ? max(0.25, min(4.0, (float)$in['speed'])) : 1.0;
+  $off = !empty($in['off']);
+  $t = read_json("$data/tuning.json") ?? ['kinds' => []];
+  if (!is_array($t['kinds'] ?? null)) $t['kinds'] = [];
+  if (abs($speed - 1.0) < 0.001 && !$off) unset($t['kinds'][$kind]);
+  else $t['kinds'][$kind] = ['speed' => round($speed, 2), 'off' => $off];
+  if (!count($t['kinds'])) $t['kinds'] = new stdClass();
+  write_json("$data/tuning.json", $t);
+  reply(['ok' => 1, 'tuning' => $t]);
 }
 
 if ($a === 'key') {
