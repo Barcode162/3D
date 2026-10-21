@@ -3,6 +3,19 @@
 The record of what was chosen, why, and what was tried and failed, so no
 future session re-litigates or repeats it.
 
+## The one-word routine: "go" (2026-10-21)
+- The user only says "go" and wants a whole step done per go, with breakage
+  easy to pinpoint. Chosen: `NEXT.md` (short: the next step split into tagged
+  pieces + a build log) is all a session reads to start; `CLAUDE.md` is a short
+  guide, the long one moved to `docs/REFERENCE.md`. One piece = one commit
+  (`E3.2 ...`) with its own phone check, so "broke E3.2" names the commit;
+  "undo" reverts a whole step. `tools/check.mjs` runs the tests for what changed
+  and prints PASS/FAIL per system with the failing log's first error lines.
+- Why: the old start → plan → go → wrap up loop, the hub busywork and reading
+  800+ lines of notes per session cost more tokens than the work itself.
+- Usage limits: the plan's cap can't be avoided; one step per go and safe
+  stopping (every piece pushed to `work-go`) make each run count.
+
 ## Tech choices
 | Decision | Choice | Why |
 |---|---|---|
