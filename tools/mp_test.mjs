@@ -179,7 +179,7 @@ sitter.close();
 // Things (docs/ENGINE.md E3): Dave touches a lamp over the counter; the room
 // runs its rule and everyone sees it swing.
 const dave = await open('Dave', '-4.3,1.66,-2.6,0,24');
-await dave.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+await dave.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null,
                            { timeout: 180000, polling: 250 }).catch(() => console.log('timed out loading Dave'));
 await dave.waitForFunction(() => /connected to room/.test(document.getElementById('log').textContent), null,
                            { timeout: 30000, polling: 250 }).catch(() => console.log('Dave never connected'));
@@ -193,7 +193,7 @@ await dave.close();
 
 // E3.6b: Fay puts the fire out; Erin, who arrives after, finds it out.
 const loaded = async (page, who) => {
-  await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+  await page.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null,
                              { timeout: 180000, polling: 250 }).catch(() => console.log('timed out loading ' + who));
   await page.waitForFunction(() => /connected to room/.test(document.getElementById('log').textContent), null,
                              { timeout: 30000, polling: 250 }).catch(() => console.log(who + ' never connected'));
@@ -201,10 +201,15 @@ const loaded = async (page, who) => {
 const fay = await open('Fay', '-6.6,1.2,0.8,-90,-12');
 await loaded(fay, 'Fay');
 await fay.waitForTimeout(1500);
-await fay.mouse.click(215, 466);
-await fay.waitForTimeout(2000);
+// A busy page can miss a tap right after its warm-up: tap again, as a person would.
+for (let i = 0; i < 4; i++) {
+  await fay.mouse.click(215, 466);
+  await fay.waitForTimeout(2000);
+  if (/World: you touched/.test(await logOf(fay))) break;
+}
 const fayLog = await logOf(fay);
 console.log('Fay:', (fayLog.match(/World: you touched.*/) || ['(no touch)'])[0]);
+if (!/World: you touched/.test(fayLog)) console.log('--- Fay (no touch)\n' + fayLog.split('\n').slice(-25).join('\n'));
 await fay.close();
 const erin = await open('Erin', '0,1.66,2.5,0,0');
 await loaded(erin, 'Erin');

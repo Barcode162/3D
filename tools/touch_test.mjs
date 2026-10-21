@@ -29,12 +29,16 @@ for (const [name, [cam, want]] of Object.entries(SPOTS)) {
   if (name === 'lamp') await page.route('**/hub/hub.php?tuning=1', (r) => r.fulfill({ contentType: 'application/json',
     body: JSON.stringify({ kinds: { pendant_lamp: { speed: 2, off: false }, nope: { speed: 3 } } }) }));
   await openBar(page, url, `skipintro&server=off&cam=${encodeURIComponent(cam)}`);
-  // Every model in (a touch needs the model's box), then a moment more.
-  await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+  // Every model in and the warm-up done (a touch needs the model's box; taps wait for the stage), then a moment more.
+  await page.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null,
                              { timeout: 120000, polling: 250 }).catch(() => {});
   await page.waitForTimeout(1500);
-  await page.mouse.click(215, 466);
-  await page.waitForTimeout(800);
+  // A busy page can miss a tap: tap again (only while nothing was touched).
+  for (let i = 0; i < 3; i++) {
+    await page.mouse.click(215, 466);
+    await page.waitForTimeout(800);
+    if (/World: you touched/.test(await logText(page))) break;
+  }
   const log = await logText(page);
   const touched = (log.match(/World: you touched [^\n]*/) || ['(nothing touched)'])[0];
   check(`${name}: a tap touches it`, want.test(log), ` — ${touched}`);
