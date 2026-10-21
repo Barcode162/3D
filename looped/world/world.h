@@ -48,6 +48,7 @@ struct Thing {
   Quat rot;
   Vec3 scale{1, 1, 1};
   uint32_t seed = 1;
+  float phase = 0;          // its loops run this much of a cycle later
   std::vector<std::pair<std::string, Json>> parts;  // overrides (the kind's are the rest)
   std::vector<Loop> loops;                          // overrides
   // Now.
@@ -57,6 +58,8 @@ struct Thing {
   double prevStart = 0;
   double due = std::numeric_limits<double>::infinity();  // a timed rule's moment
   // Results of update(): the loop's offsets and the place in the world.
+  // A loop moves, turns and scales a thing in its own space, around its
+  // kind's pivot; what sits on it goes along.
   Motion motion;
   Mat4 world;
 };
@@ -84,6 +87,9 @@ class World {
   // state change it causes (here and in things it sends to) is recorded for
   // takeChanges(). True if anything changed.
   bool send(int i, std::string_view event, double now);
+  // An event for every thing (the music started, the lights went down):
+  // things with a rule for it follow it, the rest ignore it.
+  bool sendAll(std::string_view event, double now);
   // Puts a thing in a state directly (the room, tests, a game's own logic).
   // Runs the state's enter messages like any change.
   bool setState(int i, std::string_view state, double now);
@@ -122,7 +128,9 @@ class World {
   bool fire(int i, std::string_view event, double at, bool record, int depth);
   void schedule(int i);
   void order();
-  Mat4 local(const Thing& t) const;
+  Mat4 rest(const Thing& t) const;   // where it sits on its parent
+  Mat4 moved(const Thing& t) const;  // its loop, in its own space around the pivot
+  Mat4 local(const Thing& t) const;  // rest * moved
 
   std::shared_ptr<const Library> library_;  // the kinds things point into (shared by copies)
   std::vector<Thing> things_;

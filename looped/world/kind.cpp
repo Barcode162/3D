@@ -58,6 +58,7 @@ Kind parseKind(const Json& j, std::string_view file, std::string& errors) {
   k.is = j["is"].string();
   k.still = j["still"].string();
   k.start = j["start"].string();
+  k.pivot = readVec3(j["pivot"], {});
   for (const auto& [name, part] : j["parts"].members()) putByName(k.parts, name, part);
   std::string err;
   for (const auto& [name, lj] : j["loops"].members()) {
@@ -122,6 +123,7 @@ ThingSpec parseThing(const Json& j, std::string_view where, std::string* error) 
   t.turn = turn.isNumber() ? Vec3{0, static_cast<float>(turn.number()), 0} : readVec3(turn, {});
   t.scale = readVec3(j["scale"], {1, 1, 1});
   t.state = j["state"].string();
+  t.phase = static_cast<float>(j["phase"].number(0));
   t.seed = static_cast<uint32_t>(j["seed"].number(0));
   for (const auto& [name, part] : j["parts"].members()) putByName(t.parts, name, part);
   for (const auto& [name, lj] : j["loops"].members()) {
@@ -192,6 +194,7 @@ bool Library::resolveOne(size_t i, int depth) {
   merged.about = own.about.empty() ? merged.about : own.about;
   merged.still = own.still.empty() ? merged.still : own.still;
   merged.start = own.start.empty() ? merged.start : own.start;
+  if (own.pivot.x != 0 || own.pivot.y != 0 || own.pivot.z != 0) merged.pivot = own.pivot;
   for (const auto& [n, p] : own.parts) putByName(merged.parts, n, p);
   for (const Loop& l : own.loops) putLoop(merged.loops, l);
   for (const State& s : own.states) putState(merged.states, s);

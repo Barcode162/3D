@@ -115,6 +115,13 @@ class SceneRenderer {
   // Moves placed model `index` (RenderScene::models order), e.g. a glass that
   // physics is moving.
   void setModelTransform(size_t index, engine::Vec3 position, engine::Quat rotation);
+  // A placed model's whole place as one matrix (position, turn and size: a
+  // thing's world matrix, looped/world). Many move every frame (loops): kept
+  // here and sent in one go at the next render, like the lights.
+  void setModelPose(size_t index, const engine::Mat4& world);
+  // A model's look from its loop: `glow` scales its own glowing parts (1 = as
+  // made, 0 = dark), `tint` multiplies its colour ({1,1,1} = as made).
+  void setModelLook(size_t index, float glow, engine::Vec3 tint);
 
  private:
   static constexpr uint32_t kMaxLights = 32;       // matches looped/shaders/scene.wgsl
@@ -261,6 +268,19 @@ class SceneRenderer {
   double streamStartMs_ = -1;
   std::vector<bool> roomOnScreen_;  // last frame's main view: rooms seen through a doorway
   std::vector<float> modelBaseGlow_, modelHighlight_;  // per placed model
+  // The placed models' uniforms as the GPU has them (one kObjectStride slot
+  // each, from firstModelOffset_); changes are sent in one write per frame.
+  std::vector<uint8_t> modelData_;
+  uint32_t firstModelOffset_ = 0;
+  size_t modelsDirtyFrom_ = SIZE_MAX, modelsDirtyTo_ = 0;
+  std::vector<engine::Vec3> roomsCheckedAt_;  // where each model was when its rooms were worked out
+  uint8_t* modelSlot(size_t i) { return modelData_.data() + i * kObjectStrideBytes; }
+  void markModel(size_t i) {
+    modelsDirtyFrom_ = std::min(modelsDirtyFrom_, i);
+    modelsDirtyTo_ = std::max(modelsDirtyTo_, i + 1);
+  }
+  void flushModels();
+  static constexpr size_t kObjectStrideBytes = 256;  // = kObjectStride in the .cpp
   size_t filesDone_ = 0;
   size_t filesFailed_ = 0;
   bool criticalFailed_ = false;

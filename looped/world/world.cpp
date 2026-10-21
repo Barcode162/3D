@@ -28,6 +28,61 @@ std::string autoId(const ThingSpec& s) {
   return s.kind + buf;
 }
 
+// The inverse of a place-turn-size matrix (no perspective).
+Mat4 affineInverse(const Mat4& m) {
+  const float a = m.at(0, 0), b = m.at(1, 0), c = m.at(2, 0);
+  const float d = m.at(0, 1), e = m.at(1, 1), f = m.at(2, 1);
+  const float g = m.at(0, 2), h = m.at(1, 2), k = m.at(2, 2);
+  const float A = e * k - f * h, B = -(d * k - f * g), C = d * h - e * g;
+  const float det = a * A + b * B + c * C;
+  Mat4 r;
+  if (std::fabs(det) < 1e-12f) return r;
+  const float s = 1.0f / det;
+  r.at(0, 0) = A * s;
+  r.at(1, 0) = -(b * k - c * h) * s;
+  r.at(2, 0) = (b * f - c * e) * s;
+  r.at(0, 1) = B * s;
+  r.at(1, 1) = (a * k - c * g) * s;
+  r.at(2, 1) = -(a * f - c * d) * s;
+  r.at(0, 2) = C * s;
+  r.at(1, 2) = -(a * h - b * g) * s;
+  r.at(2, 2) = (a * e - b * d) * s;
+  const Vec3 t{m.at(3, 0), m.at(3, 1), m.at(3, 2)};
+  for (int row = 0; row < 3; ++row)
+    r.at(3, row) = -(r.at(0, row) * t.x + r.at(1, row) * t.y + r.at(2, row) * t.z);
+  return r;
+}
+
+// Position, turn and size back out of a matrix (no shear).
+void decompose(const Mat4& m, Vec3* pos, Quat* rot, Vec3* scale) {
+  *pos = {m.at(3, 0), m.at(3, 1), m.at(3, 2)};
+  Vec3 col[3];
+  for (int c = 0; c < 3; ++c) col[c] = {m.at(c, 0), m.at(c, 1), m.at(c, 2)};
+  *scale = {length(col[0]), length(col[1]), length(col[2])};
+  for (int c = 0; c < 3; ++c) {
+    const float l = (&scale->x)[c];
+    if (l > 1e-8f) col[c] = col[c] * (1.0f / l);
+  }
+  // Rotation matrix (columns) → quaternion.
+  const float m00 = col[0].x, m11 = col[1].y, m22 = col[2].z;
+  const float tr = m00 + m11 + m22;
+  Quat q;
+  if (tr > 0) {
+    const float s = std::sqrt(tr + 1.0f) * 2;
+    q = {(col[1].z - col[2].y) / s, (col[2].x - col[0].z) / s, (col[0].y - col[1].x) / s, 0.25f * s};
+  } else if (m00 > m11 && m00 > m22) {
+    const float s = std::sqrt(1.0f + m00 - m11 - m22) * 2;
+    q = {0.25f * s, (col[1].x + col[0].y) / s, (col[2].x + col[0].z) / s, (col[1].z - col[2].y) / s};
+  } else if (m11 > m22) {
+    const float s = std::sqrt(1.0f + m11 - m00 - m22) * 2;
+    q = {(col[1].x + col[0].y) / s, 0.25f * s, (col[2].y + col[1].z) / s, (col[2].x - col[0].z) / s};
+  } else {
+    const float s = std::sqrt(1.0f + m22 - m00 - m11) * 2;
+    q = {(col[2].x + col[0].z) / s, (col[2].y + col[1].z) / s, 0.25f * s, (col[0].y - col[1].x) / s};
+  }
+  *rot = normalized(q);
+}
+
 Mat4 scaling(Vec3 s) {
   Mat4 m;
   m.at(0, 0) = s.x;
@@ -61,7 +116,8 @@ int World::make(const Library& lib, const ThingSpec& spec, int parent, const std
   t.kind = kind;
   t.parent = parent;
   t.at = spec.at;
-  t.rot = eulerDegrees(spec.turn);
+  t.rot = normalized(eulerDegrees(spec.turn) * spec.rotation);
+  t.phase = spec.phase;
   t.scale = spec.scale;
   t.seed = spec.seed ? spec.seed : (hash32(id) | 1u);
   t.parts = spec.parts;
@@ -222,6 +278,12 @@ bool World::send(int i, std::string_view event, double now) {
   return fire(i, event, now, true, 0);
 }
 
+bool World::sendAll(std::string_view event, double now) {
+  bool any = false;
+  for (size_t i = 0; i < things_.size(); ++i) any = fire(static_cast<int>(i), event, now, true, 0) || any;
+  return any;
+}
+
 bool World::setState(int i, std::string_view state, double now) {
   if (i < 0 || static_cast<size_t>(i) >= things_.size()) return false;
   const int s = things_[static_cast<size_t>(i)].kind->state(state);
@@ -267,13 +329,19 @@ void World::order() {
   orderDirty_ = false;
 }
 
-Mat4 World::local(const Thing& t) const {
-  const Vec3 pos = t.at + t.motion.move();
-  const Quat rot = t.rot * eulerDegrees(t.motion.turn());
-  const Vec3 s = t.motion.scale();
-  const Vec3 scale = mulComponents(t.scale, Vec3{1 + s.x, 1 + s.y, 1 + s.z});
-  return Mat4::translation(pos) * Mat4::rotation(rot) * scaling(scale);
+Mat4 World::rest(const Thing& t) const {
+  return Mat4::translation(t.at) * Mat4::rotation(t.rot) * scaling(t.scale);
 }
+
+Mat4 World::moved(const Thing& t) const {
+  // In its own space, around the pivot: there, move, turn, scale, back.
+  const Vec3 s = t.motion.scale();
+  const Vec3 p = t.kind->pivot;
+  return Mat4::translation(p + t.motion.move()) * Mat4::rotation(eulerDegrees(t.motion.turn())) *
+         scaling({1 + s.x, 1 + s.y, 1 + s.z}) * Mat4::translation(Vec3{} - p);
+}
+
+Mat4 World::local(const Thing& t) const { return rest(t) * moved(t); }
 
 void World::update(const Clock& clock) {
   const double now = clock.seconds;
@@ -332,7 +400,8 @@ void World::update(const Clock& clock) {
   for (size_t i = 0; i < things_.size(); ++i) {
     Thing& t = things_[i];
     Motion m;
-    if (const Loop* l = loopOf(static_cast<int>(i), t.state)) l->add(l->cycles(clock, t.start, t.seed), t.seed, 1, m);
+    if (const Loop* l = loopOf(static_cast<int>(i), t.state))
+      l->add(l->cycles(clock, t.start, t.seed) + t.phase, t.seed, 1, m);
     if (t.prevState >= 0) {
       const Loop* cur = loopOf(static_cast<int>(i), t.state);
       const float blend = cur ? cur->blend : 0.3f;
@@ -342,7 +411,7 @@ void World::update(const Clock& clock) {
       } else {
         Motion pm;
         if (const Loop* p = loopOf(static_cast<int>(i), t.prevState))
-          p->add(p->cycles(clock, t.prevStart, t.seed), t.seed, 1, pm);
+          p->add(p->cycles(clock, t.prevStart, t.seed) + t.phase, t.seed, 1, pm);
         m = mix(pm, m, smoothstep(0, 1, static_cast<float>(w)));
       }
     }
@@ -365,29 +434,18 @@ void World::setRest(int i, Vec3 at, Quat rot) {
 }
 
 void World::attach(int i, int parent) {
-  // Keep it exactly where it is now: its pose in the world (loops included,
-  // so a parent's sway doesn't make it jump), put into the new parent's
-  // space, minus its own loop (which comes back on the next update).
-  auto pose = [&](int k, Vec3* pos, Quat* rot) {
-    Vec3 p;
-    Quat r;
-    std::vector<int> chain;
-    for (int q = k; q >= 0; q = things_[static_cast<size_t>(q)].parent) chain.push_back(q);
-    for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-      const Thing& c = things_[static_cast<size_t>(*it)];
-      p = p + r.rotate(c.at + c.motion.move());
-      r = r * c.rot * eulerDegrees(c.motion.turn());
-    }
-    *pos = p, *rot = r;
-  };
+  // Keep it exactly where it is now (loops included, so a parent's sway
+  // doesn't make it jump): its new rest is what, on the new parent and with
+  // its own loop added back, lands on the same place.
+  //   parentWorld * rest' * moved = world  →  rest' = parentWorld⁻¹ * world * moved⁻¹
   const Thing& t = things_[static_cast<size_t>(i)];
-  Vec3 wp, pp;
-  Quat wr, pr;
-  pose(i, &wp, &wr);
-  if (parent >= 0) pose(parent, &pp, &pr);
-  const Vec3 at = (parent >= 0 ? conjugate(pr).rotate(wp - pp) : wp) - t.motion.move();
-  const Quat rot = (parent >= 0 ? conjugate(pr) * wr : wr) * conjugate(eulerDegrees(t.motion.turn()));
-  attach(i, parent, at, normalized(rot));
+  Mat4 r = t.world * affineInverse(moved(t));
+  if (parent >= 0) r = affineInverse(things_[static_cast<size_t>(parent)].world) * r;
+  Vec3 at, scale;
+  Quat rot;
+  decompose(r, &at, &rot, &scale);
+  attach(i, parent, at, rot);
+  things_[static_cast<size_t>(i)].scale = scale;
 }
 
 void World::attach(int i, int parent, Vec3 at, Quat rot) {

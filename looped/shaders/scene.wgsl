@@ -245,7 +245,9 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let glowPattern = textureSample(emissiveMap, modelSampler, in.uv).rgb;
 
   let alpha = baseSample.a * m.baseColor.a;
-  var base = baseSample.rgb * m.baseColor.rgb;
+  // object.color: rgb tints the colour, a scales the model's own glow (its
+  // loop, looped/world; 1 and 1 = as made).
+  var base = baseSample.rgb * m.baseColor.rgb * object.color.rgb;
   // See-through surfaces only scatter light in proportion to their opacity;
   // their reflections stay at full strength.
   if (seeThrough) {
@@ -258,7 +260,7 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let n = normalize(t * (nt.x * m.params.z) + b * (nt.y * m.params.z) + n0 * nt.z);
   let ao = mix(1.0, occlusion, m.params.w);
   // object.material.x = highlight glow when you stand at something.
-  var emission = m.emissive.rgb * glowPattern + base * object.material.x;
+  var emission = m.emissive.rgb * glowPattern * object.color.a + base * object.material.x;
   // See-through glow (flames) only shines where the image is opaque.
   if (seeThrough) {
     emission = emission * alpha;

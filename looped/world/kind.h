@@ -66,6 +66,9 @@ struct ThingSpec {
   Vec3 at;
   Vec3 turn;           // degrees (x pitch, y yaw, z roll); a number = yaw
   Vec3 scale{1, 1, 1};
+  Quat rotation;       // turned further by this (code that has a quaternion)
+  float phase = 0;     // its loops start this much of a cycle later (0..1):
+                       // a row of lights that breathe one after another
   std::string state;   // "" = the kind's start
   uint32_t seed = 0;   // 0 = from the id
   std::vector<std::pair<std::string, Json>> parts;  // overrides, by part name
@@ -81,6 +84,9 @@ struct Kind {
   std::vector<std::pair<std::string, std::string>> on;  // rules in every state
   std::string start;
   std::vector<ThingSpec> things;
+  // The point its loops turn and scale around, in its own space (a hanging
+  // lamp: the hook; a stool: the floor under its middle). Default: its origin.
+  Vec3 pivot;
 
   const Json& part(std::string_view name) const;
   const Loop* loop(std::string_view name) const;

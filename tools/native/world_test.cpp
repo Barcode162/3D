@@ -134,8 +134,11 @@ int main() {
             "bad");
     lib.resolve();
     Place p;
-    p.things.push_back({"rock", "rock"});
-    p.things.push_back({"pebble", "pebble"});
+    ThingSpec rock, pebble;
+    rock.id = rock.kind = "rock";
+    pebble.id = pebble.kind = "pebble";
+    p.things.push_back(rock);
+    p.things.push_back(pebble);
     World bad;
     bad.build(lib, p, nullptr);
     const auto bp = bad.check();
@@ -296,6 +299,61 @@ int main() {
     wf.attach(glass, -1, {1, 2, 3}, {});
     wf.update(t);
     check(distance(posOf(wf.thing(glass).world), {1, 2, 3}) < 0.01f, "and goes where it's put");
+  }
+
+  // ---- Pivots, phases, events for everyone ----
+  {
+    Library lib;
+    lib.add(R"({"kinds": [
+      {"id": "flames", "pivot": [-8.7, 0.1, 0.8], "loops": {"lick": {"period": 1, "desync": false,
+        "pieces": [{"ch": "scale.y", "shape": "hold", "value": 0.5}, {"ch": "turn.y", "shape": "hold", "value": 90}]}},
+       "states": {"lit": {"loop": "lick"}}},
+      {"id": "bulb", "loops": {"breathe": {"period": 4, "desync": false,
+        "pieces": [{"ch": "light", "shape": "wave", "amp": 1}]}, "beat": {"period": 1, "pieces": [{"ch": "light", "shape": "hold", "value": 2}]}},
+       "states": {"idle": {"loop": "breathe", "on": {"music": "groove"}}, "groove": {"loop": "beat", "on": {"quiet": "idle"}}}},
+      {"id": "box", "loops": {"spin": {"period": 3, "pieces": [{"ch": "turn.y", "shape": "wave", "amp": 20}]}},
+       "states": {"s": {"loop": "spin"}}}]})",
+            "pivots");
+    lib.resolve();
+    std::string err;
+    const Place p = parsePlace(R"({"things": [
+      {"id": "fire", "kind": "flames"},
+      {"id": "b1", "kind": "bulb", "at": [0, 3, 0]}, {"id": "b2", "kind": "bulb", "at": [1, 3, 0], "phase": 0.25},
+      {"id": "shelf", "kind": "box", "at": [2, 1, 0], "turn": [0, 90, 0], "scale": 2},
+      {"id": "cup", "kind": "box", "at": [3, 1.5, 1], "turn": [10, 20, 0]}]})",
+                               &err);
+    World wp;
+    check(wp.build(lib, p, &err) && err.empty() && lib.errors().empty(), "pivot, phase and scale read" + err);
+    Clock t;
+    t.seconds = 1;
+    wp.update(t);
+    const Mat4& f = wp.thing(wp.find("fire")).world;
+    const Vec4 pv = transformPoint(f, {-8.7f, 0.1f, 0.8f});
+    check(near(pv.x, -8.7f) && near(pv.y, 0.1f) && near(pv.z, 0.8f), "flames turn and stretch around their pivot, which stays put");
+    const Vec4 top = transformPoint(f, {-8.7f, 0.6f, 0.8f});
+    check(near(top.y, 0.1f + 0.75f), "and grow from it (half again as tall)");
+    const float l1 = wp.thing(wp.find("b1")).motion.ch[kLight], l2 = wp.thing(wp.find("b2")).motion.ch[kLight];
+    check(near(l1, 1, 1e-3f) && near(l2, 0, 1e-3f), "a phase of a quarter puts the second bulb a quarter-cycle on (top → middle)");
+    check(wp.sendAll("music", 1) && wp.stateOf(wp.find("b1")).name == "groove" && wp.stateOf(wp.find("b2")).name == "groove" &&
+              wp.stateOf(wp.find("fire")).name == "lit",
+          "an event for everyone moves the things with a rule for it, and only those");
+    // Onto a turned, scaled, swaying shelf and back off: no jump either way.
+    t.seconds = 2.2;
+    wp.update(t);
+    const int cup = wp.find("cup"), shelf = wp.find("shelf");
+    const Mat4 before = wp.thing(cup).world;
+    wp.attach(cup, shelf);
+    wp.update(t);
+    bool same3 = true;
+    for (int k = 0; k < 16; ++k)
+      if (!near(before.m[k], wp.thing(cup).world.m[k], 1e-3f)) same3 = false;
+    check(same3, "a cup put on a turned, scaled, swaying shelf stays exactly where it was");
+    wp.attach(cup, -1);
+    wp.update(t);
+    bool same4 = true;
+    for (int k = 0; k < 16; ++k)
+      if (!near(before.m[k], wp.thing(cup).world.m[k], 1e-3f)) same4 = false;
+    check(same4 && near(wp.thing(cup).scale.x, 1, 1e-3f), "and taken off again, the same (its size unchanged)");
   }
 
   // ---- Shapes ----

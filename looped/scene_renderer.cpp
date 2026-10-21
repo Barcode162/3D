@@ -81,6 +81,7 @@ Mat4 obliqueNearPlane(const Mat4& m, const float plane[4]) {
 
 // WebGPU requires dynamic uniform offsets to be multiples of 256 bytes.
 constexpr uint64_t kObjectStride = 256;
+static_assert(kObjectStride == SceneRenderer::kObjectStrideBytes);
 constexpr wgpu::Color kClearColor{0.02, 0.015, 0.015, 1.0};
 constexpr wgpu::Color kAvatarBackdrop{0.10, 0.10, 0.13, 1.0};
 
@@ -553,8 +554,26 @@ void SceneRenderer::setModelBaseGlow(size_t model, float glow) {
 // Models: only the glow (material.x) changes; their other values are zero.
 void SceneRenderer::writeModelGlow(size_t i) {
   const float material[4] = {modelBaseGlow_[i] + modelHighlight_[i], 0, 0, 0};
-  gpu_->queue.WriteBuffer(objectBuffer_, models_[i].uniformOffset + offsetof(ObjectUniforms, material), material,
-                          sizeof(material));
+  std::memcpy(modelSlot(i) + offsetof(ObjectUniforms, material), material, sizeof(material));
+  markModel(i);
+}
+
+void SceneRenderer::setModelLook(size_t i, float glow, Vec3 tint) {
+  if (i >= models_.size()) return;
+  float color[4];
+  setVec4(color, tint, std::max(0.0f, glow));
+  float* now = reinterpret_cast<float*>(modelSlot(i) + offsetof(ObjectUniforms, color));
+  if (std::memcmp(now, color, sizeof(color)) == 0) return;
+  std::memcpy(now, color, sizeof(color));
+  markModel(i);
+}
+
+void SceneRenderer::flushModels() {
+  if (modelsDirtyFrom_ >= modelsDirtyTo_) return;
+  const size_t from = modelsDirtyFrom_ * kObjectStride, to = modelsDirtyTo_ * kObjectStride;
+  gpu_->queue.WriteBuffer(objectBuffer_, firstModelOffset_ + from, modelData_.data() + from, to - from);
+  modelsDirtyFrom_ = SIZE_MAX;
+  modelsDirtyTo_ = 0;
 }
 
 // Reflection textures match the screen, so the glass can read them 1:1.
@@ -636,7 +655,7 @@ void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& o
     ObjectUniforms u = {};
     u.model = modelMatrix(p.position, p.rotation, p.scale);
     models_.push_back({nullptr, offset, p.position, p.scale, u.model, -1, {}});
-    setVec4(u.color, {1, 1, 1}, 0);
+    setVec4(u.color, {1, 1, 1}, 1);  // models: rgb tints the colour, a scales their own glow
     std::memcpy(objectData.data() + offset, &u, sizeof(u));
     const auto it = std::find(files.begin(), files.end(), p.file);
     if (it == files.end()) {
@@ -649,6 +668,11 @@ void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& o
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
   modelBaseGlow_.assign(models_.size(), 0.0f);
   modelHighlight_.assign(models_.size(), 0.0f);
+  firstModelOffset_ = static_cast<uint32_t>(firstSlot * kObjectStride);
+  modelData_.assign(objectData.begin() + firstModelOffset_,
+                    objectData.begin() + firstModelOffset_ + static_cast<long>(models_.size() * kObjectStride));
+  roomsCheckedAt_.clear();
+  for (const ModelDraw& m : models_) roomsCheckedAt_.push_back(m.position);
   fileNames_ = files;
   fileUsers_ = users;
   fileCritical_.assign(files.size(), false);
@@ -742,13 +766,24 @@ float SceneRenderer::loadProgress() const {
 
 void SceneRenderer::setModelTransform(size_t index, Vec3 position, engine::Quat rotation) {
   if (index >= models_.size()) return;
+  setModelPose(index, modelMatrix(position, rotation, models_[index].scale));
+}
+
+void SceneRenderer::setModelPose(size_t index, const Mat4& world) {
+  if (index >= models_.size()) return;
   ModelDraw& m = models_[index];
-  m.position = position;
-  const Mat4 model = modelMatrix(position, rotation, m.scale);
-  m.world = model;
-  if (m.gpu) assignRooms(m);  // it may have been carried into another room
+  if (std::memcmp(&m.world, &world, sizeof(Mat4)) == 0) return;
+  m.world = world;
+  m.position = {world.at(3, 0), world.at(3, 1), world.at(3, 2)};
+  // It may have been carried into another room; loops only sway things a
+  // little, so the rooms are worked out again only after a real move.
+  if (m.gpu && engine::distance(m.position, roomsCheckedAt_[index]) > 0.2f) {
+    assignRooms(m);
+    roomsCheckedAt_[index] = m.position;
+  }
   // Only the matrix (the start of ObjectUniforms) changes.
-  gpu_->queue.WriteBuffer(objectBuffer_, m.uniformOffset, &model, sizeof(model));
+  std::memcpy(modelSlot(index), &world, sizeof(Mat4));
+  markModel(index);
 }
 
 int SceneRenderer::roomAt(Vec3 p) const {
@@ -1123,6 +1158,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
   flushLights();
+  flushModels();
 
   // The avatar follows you. Only its model matrix changes (it comes first in
   // ObjectUniforms), plus the bone matrices for its pose.
