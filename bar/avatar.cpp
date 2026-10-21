@@ -557,10 +557,10 @@ float emoteLength(Emote e) {
   }
 }
 
-void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
+void Avatar::rotations(const AvatarMotion& m, std::vector<engine::Quat>& rot, Vec3& offsetOut, float& bobOut) const {
   using engine::Quat;
   using engine::radians;
-  std::vector<Quat> rot(skeleton_.bones.size());
+  rot.assign(skeleton_.bones.size(), Quat{});
   const Vec3 xAxis{1, 0, 0}, yAxis{0, 1, 0}, zAxis{0, 0, 1};
   auto bone = [&](const std::string& name) -> Quat& { return rot[static_cast<size_t>(skeleton_.find(name))]; };
   auto X = [&](float deg) { return Quat::axisAngle(xAxis, radians(deg)); };
@@ -858,6 +858,32 @@ void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
   const Quat headExtra = bone("head");  // emotes may tilt the head
   bone("neck") = Quat::axisAngle(yAxis, -turn * 0.4f) * Quat::axisAngle(xAxis, look * 0.35f) * bone("neck");
   bone("head") = Quat::axisAngle(yAxis, -turn * 0.6f) * Quat::axisAngle(xAxis, look * 0.65f) * headExtra;
+  offsetOut = offset;
+  bobOut = bob;
+}
+
+void Avatar::pose(const AvatarMotion& m, std::vector<engine::Mat4>& out) const {
+  std::vector<engine::Quat> rot;
+  Vec3 offset;
+  float bob;
+  rotations(m, rot, offset, bob);
+  // A change of activity or emote (E5.2): the pose before it fades into the
+  // new one over a quarter second instead of snapping (sitting down, standing
+  // up, a wave starting or ending).
+  if (m.blend < 1 && (m.fromActivity != m.activity || m.fromEmote != m.emote)) {
+    AvatarMotion before = m;
+    before.activity = m.fromActivity;
+    before.emote = m.fromEmote;
+    before.actionTime = m.fromTime;
+    std::vector<engine::Quat> was;
+    Vec3 wasOffset;
+    float wasBob;
+    rotations(before, was, wasOffset, wasBob);
+    const float t = engine::smoothstep(0.0f, 1.0f, m.blend);
+    for (size_t i = 0; i < rot.size() && i < was.size(); ++i) rot[i] = engine::slerp(was[i], rot[i], t);
+    offset = engine::lerp(wasOffset, offset, t);
+    bob = wasBob + (bob - wasBob) * t;
+  }
   skeleton_.skinMatrices(rot, out);
 
   // Bob: the body is lowest when the legs are spread, highest mid-step.

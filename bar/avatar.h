@@ -27,6 +27,12 @@ struct AvatarMotion {
   float walkDir = 0;     // the walk's direction from facing (radians, + = to the right; backward is mirrored)
   float time = 0;        // seconds, for idle breathing and sway (the room's clock: the same on every phone)
   uint32_t seed = 0;     // whose body: each player's idle life has its own rhythm and fidgets (E5.1)
+  // The activity and emote before the last change, how far it was into them,
+  // and how far the change has blended (0 = just changed, 1 = done; E5.2).
+  Activity fromActivity = Activity::kNone;
+  Emote fromEmote = Emote::kNone;
+  float fromTime = 0;
+  float blend = 1;
   Activity activity = Activity::kNone;
   Emote emote = Emote::kNone;
   float actionTime = 0;  // seconds since the activity or emote started
@@ -109,6 +115,8 @@ class Avatar {
   // Bone matrices for this frame: idle breathing/sway blended with the walk
   // cycle, plus the head following where you look.
   void pose(const AvatarMotion& motion, std::vector<engine::Mat4>& boneMatrices) const;
+  // Every bone's turn for a motion, and how far the body is moved and lifted.
+  void rotations(const AvatarMotion& motion, std::vector<engine::Quat>& rot, engine::Vec3& offset, float& bob) const;
 
   // First-person version of a pose: the head and neck shrink to a point at
   // the base of the neck, so they don't block your view while you can

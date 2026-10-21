@@ -31,7 +31,7 @@ E4, drawing:
 
 E5, avatars:
 - [x] **E5.1** Idle life: standing avatars shift their weight and glance around now and then (seeded, so everyone sees the same).
-- [ ] **E5.2** Heads turn to look at the nearest player who's talking (or close by).
+- [x] **E5.2** Smooth changes: sitting down, standing up, an emote starting or ending blend over a quarter second instead of snapping (heads already follow where each player really looks, so no fake look-at).
 
 E6, sound:
 - [ ] **E6.1** Things make their own sounds: the fire crackles, the neon sign buzzes, near them only (a "sound" part).

@@ -4,7 +4,9 @@
 // game.cpp so the frame's phases stay short.
 #include "bar/presentation.h"
 
+#include <algorithm>
 #include <cmath>
+#include <unordered_map>
 
 namespace barapp {
 
@@ -43,7 +45,36 @@ void presentScene(double nowMs) {
   }
 }
 
+// Changes of activity or emote, per body (E5.2): the pose before a change
+// fades into the new one over a quarter second.
+struct PoseChange {
+  app::Activity activity = app::Activity::kNone;
+  app::Emote emote = app::Emote::kNone;
+  float actionTime = 0;
+  app::Activity fromActivity = app::Activity::kNone;
+  app::Emote fromEmote = app::Emote::kNone;
+  float fromTime = 0;
+  double changedMs = -1e9;
+};
+void blendChange(PoseChange& c, app::AvatarMotion& m, double nowMs) {
+  if (m.activity != c.activity || m.emote != c.emote) {
+    c.fromActivity = c.activity;
+    c.fromEmote = c.emote;
+    c.fromTime = c.actionTime;
+    c.changedMs = nowMs;
+    c.activity = m.activity;
+    c.emote = m.emote;
+  }
+  c.actionTime = m.actionTime;
+  m.fromActivity = c.fromActivity;
+  m.fromEmote = c.fromEmote;
+  m.fromTime = c.fromTime;
+  m.blend = static_cast<float>(std::clamp((nowMs - c.changedMs) / 250.0, 0.0, 1.0));
+}
+
 void presentAvatars(double nowMs) {
+  static PoseChange selfChange;
+  static std::unordered_map<int, PoseChange> otherChanges;
   const engine::FirstPersonCamera& cam = g_app.camera;
   g_app.avatarMotion.pitch = cam.pitch;
   // Idle life runs on the room's clock (E5.1), so everyone sees the same
@@ -52,6 +83,7 @@ void presentAvatars(double nowMs) {
   const float idleTime = static_cast<float>(std::fmod(server > 0 ? server : nowMs / 1000.0, 100000.0));
   g_app.avatarMotion.time = g_app.hooks.still ? 0.0f : idleTime;
   g_app.avatarMotion.seed = static_cast<uint32_t>(engine::net::mySlot() + 1);
+  blendChange(selfChange, g_app.avatarMotion, nowMs);
   const app::Avatar& body = g_app.avatars[0];  // the skeleton is the same for every look
   body.pose(g_app.avatarMotion, g_app.avatarBones);
   body.hideHead(g_app.avatarBones, g_app.firstPersonBones);
@@ -65,6 +97,7 @@ void presentAvatars(double nowMs) {
     app::AvatarMotion motion = o.motion;
     motion.time = idleTime;
     motion.seed = static_cast<uint32_t>(engine::net::slotOfPlayer(o.id) + 1);
+    blendChange(otherChanges[o.id], motion, nowMs);
     const Mat4 transform = otherTransform(o, motion);
     body.pose(motion, g_app.otherBones[g_app.otherTransforms.size()]);
     g_app.otherTransforms.push_back(transform);
