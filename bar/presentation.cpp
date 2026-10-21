@@ -143,6 +143,8 @@ void presentAvatars(double nowMs) {
     for (size_t k = 0; k < in.seated.size(); ++k)
       in.seated[k] = g_app.seat == static_cast<int>(k) || engine::net::claimOwner("seat." + std::to_string(k)) > 0;
     g_app.world.update(in, g_app.boxes, g_app.renderer);
+    for (const app::BarWorld::Cue& q : g_app.world.takeSounds())
+      playSfx(static_cast<engine::synth::Effect>(q.effect), q.at, q.gain);
     g_app.lightsDim = g_app.world.stateOf("light-switch") == "dim";
     // Each mirror shows its thing's state.
     for (size_t k = 0; k < g_app.scene.mirrors.size() && k < g_app.scene.mirrorThing.size(); ++k) {

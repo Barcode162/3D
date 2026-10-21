@@ -313,6 +313,40 @@ std::vector<float> effect(Effect e) {
       lowPass(out, 3000);
       break;
     }
+    case Effect::kCrackle: {
+      // Three to five pops at random moments, each a burst of noise that dies in milliseconds.
+      out = samples(0.35f);
+      const int pops = 3 + static_cast<int>((noise.next() * 0.5f + 0.5f) * 3.0f);
+      for (int k = 0; k < pops; ++k) {
+        const size_t o = static_cast<size_t>((noise.next() * 0.5f + 0.5f) * 0.28f * kRate);
+        const float amp = 0.4f + 0.6f * (noise.next() * 0.5f + 0.5f);
+        for (size_t i = 0; i < static_cast<size_t>(0.012f * kRate) && o + i < out.size(); ++i)
+          out[o + i] += amp * noise.next() * std::exp(-static_cast<float>(i) / (0.0025f * kRate));
+      }
+      break;
+    }
+    case Effect::kBuzz: {
+      out = samples(0.9f);
+      for (size_t i = 0; i < out.size(); ++i) {
+        const float t = static_cast<float>(i) / kRate;
+        const float env = std::sin(0.5f * kTwoPi * t / 0.9f);
+        const float hum = std::sin(kTwoPi * 120 * t) + 0.5f * std::sin(kTwoPi * 240 * t) +
+                          0.25f * std::sin(kTwoPi * 360 * t) + 0.15f * noise.next();
+        out[i] = 0.3f * env * env * hum;
+      }
+      break;
+    }
+    case Effect::kBong:
+      out = samples(1.2f);
+      addPartial(out, 520, 1.0f, 0.5f);
+      addPartial(out, 1316, 0.5f, 0.3f);
+      addPartial(out, 2140, 0.25f, 0.18f);
+      break;
+    case Effect::kWood:
+      out = samples(0.2f);
+      addPartial(out, 160, 1.0f, 0.05f);
+      addPartial(out, 410, 0.5f, 0.03f);
+      break;
     case Effect::kCount: break;
   }
   normalize(out, 0.5f);

@@ -34,6 +34,9 @@ constexpr const char* kActions[] = {"none",       "jukebox",  "mirror", "mirror-
 static_assert(std::size(kActions) == static_cast<size_t>(Action::kArcade) + 1);
 constexpr const char* kSeatKinds[] = {"stool", "chair", "sofa", "piano-bench", "sim"};
 constexpr const char* kProps[] = {"", "pint", "rocks"};
+constexpr const char* kEffects[] = {"bell", "thunk", "clink", "pour", "shake", "click", "engine", "whoosh",
+                                    "knock", "cheer", "crackle", "buzz", "bong", "wood"};
+static_assert(std::size(kEffects) == static_cast<size_t>(engine::synth::Effect::kCount));
 
 }  // namespace
 
@@ -45,5 +48,6 @@ const char* seatKindName(SeatKind k) { return nameOf(kSeatKinds, k); }
 bool seatKindFromName(std::string_view n, SeatKind* out) { return fromName(kSeatKinds, n, out); }
 const char* propName(Prop p) { return nameOf(kProps, p); }
 bool propFromName(std::string_view n, Prop* out) { return fromName(kProps, n, out); }
+bool effectFromName(std::string_view n, engine::synth::Effect* out) { return fromName(kEffects, n, out); }
 
 }  // namespace app

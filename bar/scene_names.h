@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "bar/bar_scene.h"
+#include "looped/synth.h"
 
 namespace app {
 
@@ -17,5 +18,7 @@ const char* seatKindName(SeatKind k);
 bool seatKindFromName(std::string_view name, SeatKind* out);
 const char* propName(Prop p);  // "" for none
 bool propFromName(std::string_view name, Prop* out);
+// Sound effects by name ("crackle", "bong"...: looped/synth.h).
+bool effectFromName(std::string_view name, engine::synth::Effect* out);
 
 }  // namespace app

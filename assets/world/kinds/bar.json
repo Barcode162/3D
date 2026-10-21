@@ -313,7 +313,8 @@
           {"at": [1.37571, 1.05, -7.10184], "half": [0.31816, 0.03, 0.38], "turn": 90, "material": "varnished-wood"},
           {"at": [1.72571, 1.11, -7.10184], "half": [0.31816, 0.03, 0.045], "turn": 90, "material": "leather"},
           {"at": [1.35571, 0.5, -7.10184], "half": [0.31816, 0.5, 0.27], "turn": 90, "material": "dark-wood"}
-        ]
+        ],
+        "touchSound": {"effect": "wood", "gain": 0.6}
       }
     },
     {
@@ -358,7 +359,8 @@
           {"at": [-3.95, 2.4, -7.24], "half": [4.85, 0.0175, 0.15], "material": "dark-wood"},
           {"at": [-3.95, 2.76, -7.24], "half": [4.85, 0.0175, 0.15], "material": "dark-wood"},
           {"at": [-3.95, 2.05, -7.27], "half": [4.85, 1.05, 0.13], "material": "bottle-glass"}
-        ]
+        ],
+        "touchSound": {"effect": "clink", "gain": 0.6}
       },
       "loops": {
         "sheen": {
@@ -431,7 +433,8 @@
           {"at": [0, 0.7625, 0], "half": [0.45, 0.0225, 0.45], "material": "varnished-wood"},
           {"at": [0, 0.37, 0], "half": [0.05, 0.37, 0.05], "material": "black-steel"},
           {"at": [0, 0.025, 0], "half": [0.25, 0.025, 0.25], "material": "black-steel"}
-        ]
+        ],
+        "touchSound": {"effect": "wood", "gain": 0.6}
       },
       "loops": {
         "rock": {
@@ -474,7 +477,7 @@
     {
       "id": "pendant_lamp",
       "about": "A lamp hanging from the ceiling: it sways on its cord, its bulb breathes; touch it and it swings.",
-      "parts": {"model": {"file": "pendant_lamp.glb", "material": "black-steel"}},
+      "parts": {"model": {"file": "pendant_lamp.glb", "material": "black-steel"}, "touchSound": {"effect": "bong", "gain": 0.45}},
       "loops": {
         "sway": {
           "period": 14,
@@ -534,7 +537,8 @@
       "about": "A candle on a table: its flame flickers. Tap to blow it out (a wisp of smoke curls up), tap again to light it.",
       "parts": {
         "model": {"file": "candle.glb", "material": "bottle-glass"},
-        "solids": [{"at": [0, 0.04, 0], "half": [0.037, 0.04, 0.037], "material": "bottle-glass"}]
+        "solids": [{"at": [0, 0.04, 0], "half": [0.037, 0.04, 0.037], "material": "bottle-glass"}],
+        "touchSound": {"effect": "whoosh", "gain": 0.25}
       },
       "loops": {
         "flame": {
@@ -568,7 +572,8 @@
       "parts": {
         "dartboard": {"face": [0, 0, 0.0402], "oche": [0, -0.08, 2.56]},
         "model": {"file": "dartboard.glb", "material": "dark-wood"},
-        "solids": [{"at": [0, 0, 0.04], "half": [0.66, 0.32, 0.04], "turn": 180, "material": "dark-wood"}]
+        "solids": [{"at": [0, 0, 0.04], "half": [0.66, 0.32, 0.04], "turn": 180, "material": "dark-wood"}],
+        "touchSound": {"effect": "wood", "gain": 0.5}
       },
       "loops": {
         "hang": {"period": 12, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.5, "rate": 0.4}]},
@@ -618,7 +623,7 @@
       "id": "chalkboard",
       "about": "The chalkboard hangs on its nail; knock it and it swings.",
       "pivot": [0, 0.44, 0],
-      "parts": {"model": {"file": "chalkboard.glb", "material": "dark-wood"}},
+      "parts": {"model": {"file": "chalkboard.glb", "material": "dark-wood"}, "touchSound": {"effect": "wood", "gain": 0.5}},
       "loops": {
         "hang": {"period": 13, "pieces": [{"ch": "turn.z", "shape": "noise", "amp": 0.4, "rate": 0.4}]},
         "knock": {
@@ -841,7 +846,8 @@
             "box": [[-8.9, 0.1, 0], [-8.1, 1.1, 1.6]],
             "direct": true
           }
-        ]
+        ],
+        "sound": {"effect": "crackle", "every": [0.25, 1.1], "gain": 0.4, "near": 7, "while": ["lit"]}
       },
       "loops": {
         "burn": {
@@ -1028,7 +1034,10 @@
       "id": "light-sign",
       "is": "light",
       "about": "The pink light by the ARCADE sign: it buzzes now and then, like old neon.",
-      "parts": {"light": {"color": [1, 0.2, 0.65], "intensity": 0.7, "range": 2.5, "radius": 0.2}},
+      "parts": {
+        "light": {"color": [1, 0.2, 0.65], "intensity": 0.7, "range": 2.5, "radius": 0.2},
+        "sound": {"effect": "buzz", "every": [4, 11], "gain": 0.18, "near": 4}
+      },
       "loops": {"buzz": {"period": 1.2, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.6}]}},
       "states": {"on": {"loop": "buzz"}},
       "start": "on"

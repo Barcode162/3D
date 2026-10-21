@@ -34,8 +34,8 @@ E5, avatars:
 - [x] **E5.2** Smooth changes: sitting down, standing up, an emote starting or ending blend over a quarter second instead of snapping (heads already follow where each player really looks, so no fake look-at).
 
 E6, sound:
-- [ ] **E6.1** Things make their own sounds: the fire crackles, the neon sign buzzes, near them only (a "sound" part).
-- [ ] **E6.2** Touch sounds per kind: a knock on wood, a clink on the back bar, a soft bong on a lamp.
+- [x] **E6.1** Things make their own sounds: the fire crackles, the neon sign buzzes, near them only (a "sound" part).
+- [x] **E6.2** Touch sounds per kind: a knock on wood, a clink on the back bar, a soft bong on a lamp.
 
 E7, places:
 - [ ] **E7.1** Boxes as parts (floors, walls, shelves made from plain shapes), so a place doesn't need its own model.

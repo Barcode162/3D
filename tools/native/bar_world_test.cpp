@@ -9,6 +9,7 @@
 #include <string>
 
 #include "bar/bar_scene.h"
+#include "bar/scene_names.h"
 #include "looped/world/world.h"
 
 using namespace engine;
@@ -140,6 +141,21 @@ int main() {
     check(w.stateOf(mirror).name == "off", "press its off button: off");
     w.send(thingOfKind("mirror-button-full"), "tap", c.seconds);
     check(w.stateOf(mirror).name == "full", "press full: the whole room again");
+  }
+
+  // E6: every sound a kind names exists.
+  {
+    int sounds = 0;
+    bool known = true;
+    for (size_t i = 0; i < w.size(); ++i)
+      for (const char* part : {"sound", "touchSound"}) {
+        const engine::Json& p = w.part(static_cast<int>(i), part);
+        if (!p.isObject()) continue;
+        ++sounds;
+        engine::synth::Effect e;
+        if (!app::effectFromName(p["effect"].string(), &e)) known = false, std::printf("     no sound \"%s\"\n", p["effect"].string().c_str());
+      }
+    check(known && sounds > 10, "every sound the kinds name exists (" + std::to_string(sounds) + " things make sounds)");
   }
 
   // E3.4: a new song makes the jukebox flourish, then it grooves on.

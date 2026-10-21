@@ -26,6 +26,10 @@ enum class Effect {
   kWhoosh,    // something thrown
   kKnock,     // knocking on a door
   kCheer,     // a small crowd cheer (a 180 in darts)
+  kCrackle,   // a fire's crackle: a few sharp pops (E6)
+  kBuzz,      // old neon's hum, swelling and fading
+  kBong,      // a metal lamp shade knocked
+  kWood,      // a knuckle on a wooden table
   kCount,
 };
 std::vector<float> effect(Effect e);

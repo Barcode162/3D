@@ -1,5 +1,7 @@
 #include "bar/world_bar.h"
 
+#include "bar/scene_names.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -48,6 +50,22 @@ void BarWorld::build() {
     d.glowbox = world_.part(t, "glowbox").isObject();
     if (d.model >= 0 || d.light >= 0 || d.glowbox) drawn_.push_back(d);
   }
+  // Things that make their own sounds (E6.1).
+  voices_.clear();
+  for (size_t i = 0; i < world_.size(); ++i) {
+    const engine::Json& p = world_.part(static_cast<int>(i), "sound");
+    engine::synth::Effect e;
+    if (!p.isObject() || !effectFromName(p["effect"].string(), &e)) continue;
+    Voice v;
+    v.thing = static_cast<int>(i);
+    v.effect = static_cast<int>(e);
+    v.minS = static_cast<float>(p["every"][0].number(2));
+    v.maxS = static_cast<float>(p["every"][1].number(v.minS));
+    v.gain = static_cast<float>(p["gain"].number(0.3));
+    v.near = static_cast<float>(p["near"].number(6));
+    for (const engine::Json& st : p["while"].items()) v.states.push_back(st.string());
+    voices_.push_back(v);
+  }
   dims_.assign(scene_->lights.size(), false);
   for (int l : scene_->roomLights) dims_[static_cast<size_t>(l)] = true;
   built_ = true;
@@ -91,6 +109,21 @@ void BarWorld::undo(const engine::world::Change& c) {
   const engine::world::Kind& k = *world_.thing(i).kind;
   const int start = k.start.empty() ? 0 : std::max(0, k.state(k.start));
   world_.apply({c.net, static_cast<uint8_t>(start), 0});
+}
+
+engine::Vec3 BarWorld::where(int i) const {
+  const engine::world::Thing& t = world_.thing(i);
+  const engine::Vec4 p = engine::transformPoint(t.world, t.kind->pivot);
+  return {p.x, p.y, p.z};
+}
+
+bool BarWorld::touchSound(int i, int* effect, float* gain) const {
+  const engine::Json& p = world_.part(i, "touchSound");
+  engine::synth::Effect e;
+  if (!p.isObject() || !effectFromName(p["effect"].string(), &e)) return false;
+  *effect = static_cast<int>(e);
+  *gain = static_cast<float>(p["gain"].number(0.5));
+  return true;
 }
 
 std::string BarWorld::stateOf(const char* kind) const {
@@ -158,6 +191,21 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
   // The light switch (a thing with states on / dim) turns the lamps and
   // string lights down to a quarter.
   const bool dim = stateOf("light-switch") == "dim";
+  // Sounds things make by themselves, near you only, at seeded moments.
+  for (Voice& v : voices_) {
+    const engine::Vec3 at = where(v.thing);
+    if (engine::distance(at, in.eye) > v.near) continue;
+    if (!v.states.empty() &&
+        std::find(v.states.begin(), v.states.end(), world_.stateOf(v.thing).name) == v.states.end())
+      continue;
+    const uint32_t seed = world_.thing(v.thing).seed;
+    auto gap = [&] { return v.minS + (v.maxS - v.minS) * static_cast<float>(engine::world::hash01(seed, v.count++)); };
+    if (v.next <= 0 || v.next > clock.seconds + v.maxS * 2) v.next = clock.seconds + gap();
+    if (clock.seconds < v.next) continue;
+    sounds_.push_back({v.effect, at, v.gain});
+    v.next = clock.seconds + gap();
+  }
+
   auto base = [&](int l) { return dim && dims_[static_cast<size_t>(l)] ? 0.25f : 1.0f; };
   for (Drawn& d : drawn_) {
     const engine::world::Thing& t = world_.thing(d.thing);

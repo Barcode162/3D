@@ -877,8 +877,11 @@ void updateInteraction(double nowMs, float dt) {
     const app::TapTarget target = app::pickTap(hits);
     if (target.kind == app::TargetKind::kTouch) {
       if (g_app.world.touch(target.index)) {
-        const engine::Mat4& m = g_app.world.world().thing(target.index).world;
-        playSfx(engine::synth::Effect::kClick, {m.at(3, 0), m.at(3, 1), m.at(3, 2)}, 0.35f);
+        // Its own sound (a lamp bongs, a table knocks: "touchSound", E6.2), else a click.
+        int effect = static_cast<int>(engine::synth::Effect::kClick);
+        float gain = 0.35f;
+        g_app.world.touchSound(target.index, &effect, &gain);
+        playSfx(static_cast<engine::synth::Effect>(effect), g_app.world.where(target.index), gain);
       }
       continue;
     }
