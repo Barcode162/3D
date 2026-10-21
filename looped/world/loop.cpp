@@ -167,7 +167,7 @@ void Piece::add(double cycles, uint32_t seed, float weight, Motion& out) const {
       break;
     case Shape::kFlicker: {
       // Fast noise for the buzz, slow noise for when a dip happens (from
-      // the first loops, looped/loops.cpp). 0 most of the time, down to -amp.
+      // the first loops). 0 most of the time, down to -amp.
       const double slow = noise1(t * rate * 0.7, s);
       const double fast = noise1(t * rate * 23.0, s + 1);
       double d = -0.15 * fast;

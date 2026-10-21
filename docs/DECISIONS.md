@@ -1293,3 +1293,28 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
 - Safari can clear localStorage after a week away; the gate's HttpOnly cookie
   survives, so account.php `session` hands the login back to the game.
 - Helpers (subagents) in worktrees: `.claude/worktrees/` is git-ignored.
+
+## Looped 2: the world core (2026-10-21, docs/ENGINE.md)
+- Everything is a thing on a parent, in a state, playing that state's loop
+  on the shared clock. The network will carry only (thing, state, start);
+  timed states are worked out from the clock by everyone (no messages).
+- Loops act in the thing's **own space, around its kind's pivot** (a hanging
+  lamp swings from its hook; the fire's model sits at the world's origin, so
+  its kind has a pivot at the flames' base). What sits on a thing goes along.
+- Motion is a flat array of channels (move, turn, scale, glow, light, alpha,
+  tint, 9 custom): adding and blending are plain sums.
+- "Every thing has a live loop" is a test (`World::check`). A kind may say
+  `"still": "<why>"` (room shells, the mirror); the test lists them.
+- Models: rgb of the object colour tints them, alpha scales their own glow
+  (looped/shaders/scene.wgsl); all model matrices and looks go to the GPU in
+  one write per frame (`flushModels`), rooms re-worked out only after a move
+  of more than 0.2 m.
+- Things the games move (glasses, chess pieces, the coin) are in a `free`
+  state: the world plays their look, the game places them.
+
+### World gotchas (2026-10-21)
+- The world keeps its own shared copy of the kinds (things point into it): a
+  World built from a Library that then went away crashed.
+- A loop's name is its key in the kind, not the label used in error messages.
+- Timed states from the start of the clock (a sign blinking since 1970) would
+  take millions of steps: a chain that comes back round skips whole rounds.

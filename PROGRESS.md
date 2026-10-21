@@ -2,7 +2,8 @@
 
 **Live site:** https://joshuavelasco.com/bar/ (open: guests + accounts; the hub is private; github.io only points here; the old public build is /classic)
 **Current focus (2026-10-21): Looped 2, `docs/ENGINE.md`** (the whole engine
-rebuilt around things with always-live loops; models later). Before that,
+rebuilt around things with always-live loops; models later; E1 and E2's first
+pass done 2026-10-21: the whole bar is alive). Before that,
 **Looped, `docs/LOOPED.md`** (top priority, ahead of
 the master list): A private site → B folder split (Looped engine, the bar,
 the bar's projects) → C new hub (news feed + map, no cards) and public news →

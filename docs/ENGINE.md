@@ -118,5 +118,44 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
 - Two phones (headless) show identical loops and states (mp_test).
 - The bar keeps working after every step: the full test list in CLAUDE.md.
 
+## Where things are (2026-10-21)
+- `looped/world/loop.*`: the clock, channels, pieces (shapes: hold, wave, keys,
+  steps, noise, flicker, orbit, beat, spin), loops.
+- `looped/world/kind.*`: kinds (parts, loops, states, rules, things inside,
+  pivot, "is" to build on another kind, "still" with a reason), places (rows).
+- `looped/world/world.*`: the running world: things on things, states, rules
+  (`send`, `sendAll`, `setState`), timed states worked out from the clock (a
+  late joiner skips whole rounds), `Change` for the network, `apply`,
+  `attach` (re-parent, no jump), `check()` (every thing alive).
+- `assets/world/kinds/bar.json`: every kind in the bar; `assets/world/songs.json`:
+  the built-in songs' tempo and first beat.
+- `bar/bar_place.*`: the bridge from today's layout (bar_scene.cpp) to things;
+  `bar/world_bar.*`: plays the world each frame and hands it to the renderer
+  (`setModelPose`, `setModelLook`, `setLightScale`, glowing boxes).
+- Tests: `tools/native/world_test.cpp` (the core), `bar_world_test.cpp` (the
+  real bar: every thing alive, the bar's events).
+
+## How to add life (for Claude)
+- A new loop for an object: edit its kind in `assets/world/kinds/bar.json`
+  (a model's kind is its file name). Units: metres, degrees, seconds or beats.
+- Something new that lives on its own (moths, sparks): a kind with a
+  "glowbox" part, placed in `bar/bar_place.cpp` → kExtras (until places are files).
+- A reaction: a state with a rule (`"on": {"music": "playing"}`); the bar sends
+  "music" / "quiet" and "fire-on" / "fire-off" to every thing.
+- Run `tools/native/bar_world_test` after: it fails if anything isn't alive.
+
 ## Progress
-- [x] Plan agreed in chat (2026-10-21). Next: E1 on "go".
+- [x] Plan agreed in chat (2026-10-21).
+- [x] **E1 the core** (2026-10-21): everything above in `looped/world/`, 70 checks;
+  4,000 things update in under 1 ms (native and wasm).
+- [x] **E2 first pass** (2026-10-21): the bar as 146 things (106 models, 29
+  lights, 5 moths, 6 sparks), 42 kinds; 138 alive, 8 still with a reason (room
+  shells, the mirror). Stools drift on their swivels, tables rock a hair, lamps
+  sway with their moths, candles and the fire flicker (out = embers), the
+  jukebox and 4K Mania cabinet thump on the beat, back-bar lights breathe,
+  glass and polish catch the light, lights breathe/buzz/groove. The old loop
+  system is gone. Renderer: model moves batched into one upload per frame.
+- [ ] **E2 second pass, with E3**: the layout itself into `places/bar.json`
+  (seats, colliders, things to use become parts), bar_scene.cpp retired.
+- [ ] E3 logic and sync: taps and seats through rules; `Change` over the room
+  protocol; the room runs the world (cloud/sim) and has the last word.

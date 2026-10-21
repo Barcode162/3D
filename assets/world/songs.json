@@ -1,0 +1,19 @@
+{
+  "about": "Tempo and first beat of the built-in songs (measured from the files), so loops on the beat lock to the music. Your own songs play loops in seconds.",
+  "smooth-lovin.m4a": {
+    "bpm": 74.875,
+    "firstBeat": 0.213
+  },
+  "bossa-antigua.m4a": {
+    "bpm": 139.75,
+    "firstBeat": 0.356
+  },
+  "night-on-the-docks-sax.m4a": {
+    "bpm": 97.5,
+    "firstBeat": 0.558
+  },
+  "lobby-time.m4a": {
+    "bpm": 127.75,
+    "firstBeat": 0.169
+  }
+}

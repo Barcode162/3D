@@ -22,7 +22,7 @@
 #include "bar/projects/racing/game.h"
 #include "bar/coin_pop.h"
 #include "bar/loader.h"
-#include "bar/loops_bar.h"
+#include "bar/world_bar.h"
 #include "bar/renderer.h"
 #include "looped/quality.h"
 #include "bar/test_hooks.h"
@@ -98,7 +98,7 @@ struct App {
   app::CoinPop coinPop;    // the credit coin when you earn credits
   int coinPayoutsSeen = 0;
   bool coinShownForTest = false;
-  app::BarLoops loops;  // the bar's loops (assets/loops/bar.json): moths, sparks, lights that live
+  app::BarWorld world;  // the bar as things, every one alive (bar/world_bar.h, docs/ENGINE.md)
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   app::ChessGame chess;    // the lounge's chessboard

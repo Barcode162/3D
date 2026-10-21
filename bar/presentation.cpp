@@ -80,14 +80,14 @@ void presentAvatars(double nowMs) {
     g_app.coinPop.start(nowMs, cam.position, cam.flatForward());
   }
   g_app.coinPop.update(nowMs, g_app.renderer, g_app.scene.coinModel);
-  {  // The bar's loops: moths, sparks, lights that live (bar/loops_bar.h).
-    app::BarLoops::Inputs in;
+  {  // The bar's world: every thing plays its loop (bar/world_bar.h).
+    app::BarWorld::Inputs in;
     in.nowMs = nowMs;
     in.eye = cam.position;
     in.fireOn = g_app.fireOn;
     in.songSeconds = g_app.jukebox.songTime();
     if (const app::Song* s = g_app.jukebox.currentSong()) in.songUrl = s->url;
-    g_app.loops.update(in, g_app.boxes, g_app.renderer);
+    g_app.world.update(in, g_app.boxes, g_app.renderer);
   }
   g_app.renderer.setBoxes(g_app.boxes);
   g_app.renderer.streamRooms(cam.position, nowMs);  // nearby rooms' models

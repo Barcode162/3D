@@ -187,8 +187,9 @@ Every project is a folder `bar/projects/<id>/` with a `project.json`:
   22-23), `assets/loops/bar.json` (8 loops; tempos measured with ffmpeg),
   `bar/loops_bar.*`; test `tools/native/loops_test.cpp`. Next: touch → react
   for more kinds, hub controls (list / on-off / speed), loops on models.
-- To ask for a loop: say what it is in words ("a moth at the piano lamp");
-  Claude adds a recipe to assets/loops/bar.json.
+- **Replaced 2026-10-21 by the world core (docs/ENGINE.md):** looped/loops.*,
+  bar/loops_bar.* and assets/loops/bar.json are gone; every loop is now a
+  kind's state in `assets/world/kinds/bar.json`.
 
 **2026-10-21:** next is the whole engine, `docs/ENGINE.md` (D1b-D1c and the
 rest of D2 are its steps E4 and E1-E2).

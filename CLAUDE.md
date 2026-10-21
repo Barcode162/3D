@@ -175,7 +175,9 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   (`vehicle.*`; the new driving physics in `drive/`, docs/DRIVING_REWORK.md), gamepads, smooth GPU uploads (`gpu_upload.*`), the background job queue
   (`jobs.*`), async pipelines (`pipeline_cache.*`), the room protocol codec
   (`netproto.*`), the frame
-  profiler and performance overlay (`profiler.*`, `?perf=1`).
+  profiler and performance overlay (`profiler.*`, `?perf=1`), and **the world
+  core** (`looped/world/`: things, kinds, places, states, rules, loops on the
+  shared clock; docs/ENGINE.md).
 - `bar/` is the bar world itself. `bar_scene.cpp` holds the layout, lights,
   colliders, interactables and mirrors. `renderer.cpp` draws the scene,
   mirrors and avatar. `avatar.cpp` builds the body, skeleton and animation.
@@ -187,7 +189,9 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   `main.cpp` is the entry point; `game.cpp` the frame's phases (a table:
   input → interaction → physics → net in → games → claims → net out →
   render), seats and things to use; `app_state.h` the shared App state, `hud.cpp` the on-screen text,
-  `local_player.cpp` your camera, walking and held things. `loader.*` is the loading screen's stages,
+  `local_player.cpp` your camera, walking and held things. `world_bar.*`
+  plays the bar's world (every thing's loop, `assets/world/kinds/bar.json`);
+  `bar_place.*` turns today's layout into things. `loader.*` is the loading screen's stages,
   `test_hooks.*` the test page options (`?cam`, `?still`, `?sit`...).
 - `looped/shaders/` holds WGSL shaders, embedded into the binary at `/shaders/...`.
 - `assets/` holds files streamed at runtime, copied to `site/assets/`. Every
