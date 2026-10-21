@@ -1,6 +1,6 @@
 # Progress
 
-**Live site:** https://barcode162.github.io/3D/
+**Live site:** https://joshuavelasco.com/bar/ (open: guests + accounts; the hub is private; github.io only points here; the old public build is /classic)
 **Current focus (2026-10-20): Looped, `docs/LOOPED.md`** (top priority, ahead of
 the master list): A private site → B folder split (Looped engine, the bar,
 the bar's projects) → C new hub (news feed + map, no cards) and public news →
