@@ -186,5 +186,11 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   (the room's darts game sends it), late joiners get every state, the
   mirror's modes are its states (buttons are kinds that message it). Glass
   physics and the song stay their own shared data (they're data, not states).
+- [x] **E4–E7** (2026-10-21, batch): precise touches through solid shapes,
+  soft floor shadows under avatars, candle smoke as child things, a captured
+  cube reflection (?reflect=0 turns it off); idle life and smooth pose blends;
+  sound parts (fire crackle, neon buzz) and touch sounds per kind; boxes as
+  parts, a second place (the test home) with travel from the menu and its own
+  room; the catalog of ownable kinds.
 - [x] E3 logic and sync (was): taps and seats through rules; `Change` over the room
   protocol; the room runs the world (cloud/sim) and has the last word.

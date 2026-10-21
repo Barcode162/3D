@@ -53,6 +53,8 @@ for (const [q, name] of [['rhythm=menu', '4K Mania'], ['chess', 'chess'], ['sit=
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
   check(await openBar(page, url, `skipintro&server=off&${q}`), `the bar loads (${q})`);
   await page.waitForTimeout(1500);
+  // A rig's race starts only once the bar has warmed up: leave it after it began.
+  if (q.startsWith('sit=')) await page.waitForFunction(() => document.body.classList.contains('racing'), null, { timeout: 60000 }).catch(() => {});
   await closePanel(page);  // (a rig opens the sim panel)
   await escape(page);
   check(!(await page.evaluate(() => document.body.classList.contains('racing'))), `after ${name}: the top bar is back`);

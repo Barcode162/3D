@@ -54,5 +54,6 @@ E9, projects plugged in, old code gone:
 Tests: `node tools/check.mjs` (build, native, game, room) per piece; `all` before the push to main.
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
+- (this push) E3.3–E3.7, E4.1–E4.4, E5.1–E5.2, E6.1–E6.2, E7.1–E7.4 → e807e99..d2a15c8
 - `ff60ac4` E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD
 - `a2fe850` E2 done: the bar as a place file, every object alive (before this file existed).
