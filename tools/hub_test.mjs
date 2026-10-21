@@ -201,7 +201,8 @@ try {
                           { 'X-Hub-Key': key });
   check(news.ok === 1 && news.post.shots[0].url.includes('abc1234-door.jpg') && !news.post.published, 'Claude writes a news post (private until published)');
   check((await post('/hub/hub.php', { a: 'publish', id: news.post.id, on: 1 }, { 'X-Hub-Key': key })).status === 403, 'only the owner publishes');
-  check((await fetch(base + '/hub/hub.php?shot=bar3d/abc1234-door.jpg')).status === 403, 'a screenshot needs a login');
+  const status = async (url) => { const r = await fetch(url); await r.arrayBuffer(); return r.status; };  // always read the body (undici)
+  check((await status(base + '/hub/hub.php?shot=bar3d/abc1234-door.jpg')) === 403, 'a screenshot needs a login');
 
   // Home: the question as a bubble; one tap answers it.
   await page.goto(base + '/hub/');
@@ -222,7 +223,7 @@ try {
   await wait(800);
   const pub = (await fetch(base + '/news/?json').then((r) => r.json())).posts;
   check(pub.length === 1 && pub[0].title === 'Neon lanes', 'Publish puts the post on the public news board');
-  check((await fetch(base + '/news/' + pub[0].shots[0])).status === 200 && (await fetch(base + '/news/?shot=bar3d/abc1234-other.jpg')).status === 404,
+  check((await status(base + '/news/' + pub[0].shots[0])) === 200 && (await status(base + '/news/?shot=bar3d/abc1234-other.jpg')) === 404,
         'the board shows the published post\'s picture, nothing else');
   const newsPage = await browser.newPage({ viewport: { width: 430, height: 932 } });
   await newsPage.goto(base + '/news/');
