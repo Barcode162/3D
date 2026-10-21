@@ -10,43 +10,48 @@ How: `CLAUDE.md`. The full engine plan: `docs/ENGINE.md` (E1-E9).
 - Left: E3 sync · E4 drawing/lighting · E5 avatar · E6 sound/physics ·
   E7 places/travel · E8 hub control room · E9 games re-plugged, old code gone.
 
-## The next step: E3, taps, seats and sharing through the world
-Today taps, seats, the jukebox, darts and glasses each have their own sync code
-(`bar/shared_world.*`, `bar/game.cpp`, `cloud/games/*`). After E3 they all go
-through the world: a tap sends an event, a rule changes a state, the `Change`
-goes over the room, and the room (running the same world, `cloud/sim/`) has
-the last word. Nothing should look different on the phone, except that what
-other players see stays in step.
+## The next steps: E3 (rest) to E9, in one batch (user, 2026-10-21)
+The user asked for as much of E3-E9 as possible coded in one go, tested
+together on the phone at the end. Each piece is its own commit (tag first),
+checked before it's committed; one deploy at the end. If the session ends
+early, the next "go" carries on from the first unticked piece.
 
-The pieces (refine them after reading the code, keep each one small and
-checkable; one commit each):
-- [x] **E3.1** Thing states over the room: no new codec needed. A state rides
-  the room's world keys as `t<net>` = [state, start] (stored, sent to late
-  joiners, written only by the room); the `thing` intent asks for an event.
-  docs/PROTOCOL.md §4.3, §4.5.
-- [x] **E3.2** Taps through rules: tapping a thing sends "tap" to the world.
-  The fire and the light switch are states with rules (the old `lt` key is
-  gone); lamps swing, tables wobble, candles blow out, the dartboard and the
-  chalkboard swing on their nails, all shared through the room.
-  (Mirrors: still their own key, folded in with E3.7.)
-- [x] **E3.6 (first half)** The room runs the world (`cloud/sim/`: the same
-  files and C++): it checks you're within 6 m, runs the rule, shares every
-  change (a fire going out = 8: flames, glow, 6 sparks). mp_test: Dave taps a
-  lamp on his screen, Bob's game sees it swing.
-- [ ] **E3.3** Seats as states (free / taken by a player). Phone: sit on a
-  stool and the sofa, stand up; a second player can't take your seat.
-- [ ] **E3.4** The jukebox through the world (song, start time as states).
-  Phone: pick a song; it plays and the jukebox thumps on the beat.
-- [ ] **E3.5** Darts and glasses through the world (the room's games become
-  rules). Phone: throw darts (score shows), pick up and drop a glass.
-- [ ] **E3.6 (second half)** A late joiner gets every state (mp_test with a
-  third player joining after a change).
-- [ ] **E3.7** Mirrors to states, delete the old sync paths
-  (`bar/shared_world.*` keys, rules.js entries); `docs/ENGINE.md` E3 ticked.
-  Phone: everything in E3.2-E3.5 once more.
+E3, the rest (taps, seats, sharing):
+- [ ] **E3.3** Seats as states: a stool sinks a little and stops drifting while someone sits on it (from the room's seat claims).
+- [ ] **E3.4** The jukebox flourishes (a light sweep) when a new song starts, for everyone.
+- [ ] **E3.5** The dartboard shudders when a dart hits it (yours and other players').
+- [ ] **E3.6b** A late joiner gets every thing's state (mp_test: a third player joins after the fire went out).
+- [ ] **E3.7** Mirror modes are the mirror's states (its buttons send it "full" / "avatars" / "off"); the old m<n> key goes.
 
-Tests that matter here: `node tools/check.mjs` picks them (room + build +
-native + game; `all` before the push to main).
+E4, drawing:
+- [ ] **E4.1** Precise touches: big things (the counter, the back bar, the piano) are touched through their solid shapes, not their boxes; knock on them and they shine.
+- [ ] **E4.2** Soft shadows on the floor under every avatar.
+- [ ] **E4.3** Particles as a part of a kind: smoke from a candle you blew out, a puff of sparks when the fire is lit.
+- [ ] **E4.4** Reflections: the bar is captured once into a cube picture; brass, lacquer and glass reflect the real neon and bulbs.
+
+E5, avatars:
+- [ ] **E5.1** Idle life: standing avatars shift their weight and glance around now and then (seeded, so everyone sees the same).
+- [ ] **E5.2** Heads turn to look at the nearest player who's talking (or close by).
+
+E6, sound:
+- [ ] **E6.1** Things make their own sounds: the fire crackles, the neon sign buzzes, near them only (a "sound" part).
+- [ ] **E6.2** Touch sounds per kind: a knock on wood, a clink on the back bar, a soft bong on a lamp.
+
+E7, places:
+- [ ] **E7.1** Boxes as parts (floors, walls, shelves made from plain shapes), so a place doesn't need its own model.
+- [ ] **E7.2** A second place, a small test home (places/home.json), built from boxes and the bar's furniture.
+- [ ] **E7.3** Travel: Menu → "Visit the test home" / "Back to the bar"; each place has its own room.
+- [ ] **E7.4** The catalog (assets/world/catalog.json): every kind you could own, with a price and whether it's tradeable; a test keeps it in step with the kinds.
+
+E8, the hub as the control room:
+- [ ] **E8.1** The hub's World page: every kind and thing of the bar, with its loops and states in plain words.
+- [ ] **E8.2** Live tuning: a loop's speed and on/off set in the hub; the bar reads them when it loads.
+
+E9, projects plugged in, old code gone:
+- [ ] **E9.1** Projects as a part (`project`: the arcade machine, the rigs, 4K Mania, the chessboard name what they open).
+- [ ] **E9.2** Old paths deleted (lt, m<n>, leftovers); docs/ENGINE.md ticked.
+
+Tests: `node tools/check.mjs` (build, native, game, room) per piece; `all` before the push to main.
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
 - `ff60ac4` E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD
