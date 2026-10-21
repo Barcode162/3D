@@ -236,20 +236,37 @@ float rayBoxDistance(Vec3 origin, Vec3 dir, Vec3 boxMin, Vec3 boxMax) {
 }
 
 // The world-space ray through a point on the screen (0..1 fractions).
-// The nearest living thing a tap's ray touches (a lamp, a table, a candle:
-// models whose kind has a "tap" rule now), or -1. Big things (the counter,
-// the back bar) are left out: their boxes cover the floor around them.
+// Where a ray first meets a turned box (center, half sizes, turn), or -1.
+float rayTurnedBoxDistance(Vec3 origin, Vec3 dir, const app::Collider& c) {
+  const engine::Quat back = engine::conjugate(c.rotation);
+  return rayBoxDistance(back.rotate(origin - c.center), back.rotate(dir), Vec3{} - c.half, c.half);
+}
+
+// The nearest living thing a tap's ray touches (models whose kind has a "tap"
+// rule now: a lamp, a table, a candle, the counter), or -1. Small things by
+// their model's box; big ones (the counter, the back bar, the piano) by their
+// solid shapes, since their boxes cover the floor around them (E4.1).
 int touchAt(Vec3 dir, float* distance) {
   const Vec3 eye = g_app.camera.position;
   int best = -1;
   float nearest = kTapReach;
+  std::vector<int> big;
   for (size_t m = 0; m < g_app.scene.models.size() && m < g_app.scene.modelThing.size(); ++m) {
     const int thing = g_app.scene.modelThing[m];
     if (!g_app.world.reacts(thing)) continue;
     engine::Aabb box;
     if (!g_app.renderer.modelBox(m, &box)) continue;
-    if (std::max(box.max.x - box.min.x, box.max.z - box.min.z) > 2.5f) continue;
+    if (std::max(box.max.x - box.min.x, box.max.z - box.min.z) > 2.5f) {
+      big.push_back(thing);
+      continue;
+    }
     const float t = rayBoxDistance(eye, dir, box.min, box.max);
+    if (t >= 0 && t < nearest) nearest = t, best = thing;
+  }
+  for (size_t k = 0; k < g_app.scene.colliders.size() && k < g_app.scene.colliderThing.size() && !big.empty(); ++k) {
+    const int thing = g_app.scene.colliderThing[k];
+    if (std::find(big.begin(), big.end(), thing) == big.end()) continue;
+    const float t = rayTurnedBoxDistance(eye, dir, g_app.scene.colliders[k]);
     if (t >= 0 && t < nearest) nearest = t, best = thing;
   }
   *distance = nearest;

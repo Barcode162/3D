@@ -119,6 +119,7 @@ BarScene buildBarScene() {
       scene.colliders.push_back({at(s["at"]), readVec3(s["half"], {}),
                                  engine::normalized(rot * Quat::axisAngle({0, 1, 0}, engine::radians(turn))),
                                  material(s["material"], kDarkWood)});
+      scene.colliderThing.push_back(i);
     }
     for (const Json& b : world->part(i, "blocks").items())
       scene.blockers.push_back({pos.x + static_cast<float>(b[0].number()), pos.z + static_cast<float>(b[1].number()),
