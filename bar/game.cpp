@@ -160,6 +160,8 @@ void standUp() {
   setActivity(Activity::kNone);
 }
 
+void logProject(int thing);
+
 // The race on the rig you're sitting in.
 void startRace(bool straightIn, bool pad) {
   if (g_app.seat < 0) return;
@@ -198,6 +200,7 @@ void sitOn(int index) {
   g_app.camera.position = app::seatedEye(s.hip, s.yaw, s.lowSeat);
   g_app.camera.yaw = s.yaw;
   g_app.camera.pitch = s.kind == app::SeatKind::kPianoBench ? engine::radians(-58.0f) : 0;
+  if (static_cast<size_t>(index) < g_app.scene.seatThing.size()) logProject(g_app.scene.seatThing[static_cast<size_t>(index)]);
   if (s.kind == app::SeatKind::kSim) {
     setActivity(Activity::kDrive);
     // Pick a game: the race with bots or Meridian (bar/web/menu.js "sim"). The
@@ -381,9 +384,18 @@ int thingOf(const app::Interactable& it) {
   return i < g_app.scene.useThing.size() ? g_app.scene.useThing[i] : -1;
 }
 
+// A thing that opens a project (its "project" part: the arcade cabinet, 4K
+// Mania, the rigs, chess, darts) says which, for reports and the hub.
+void logProject(int thing) {
+  if (thing < 0) return;
+  const engine::Json& p = g_app.world.world().part(thing, "project");
+  if (p.isObject()) LOG_INFO("Project: %s (%s).", p["name"].string().c_str(), p["id"].string().c_str());
+}
+
 void use(const app::Interactable& it) {
   using app::Action;
   const Vec3 where = (it.boundsMin + it.boundsMax) * 0.5f;
+  logProject(thingOf(it));
   switch (it.action) {
     case Action::kJukebox: g_app.jukeboxMenu.open(); break;
     case Action::kRhythm: {

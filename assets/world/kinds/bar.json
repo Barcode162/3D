@@ -750,6 +750,7 @@
       "parts": {
         "blocks": [[-0.42, -0.5, 0.42, 0.5]],
         "model": {"file": "arcade_cabinet.glb", "material": "lacquer"},
+        "project": {"id": "platformer", "name": "Platformer", "about": "A side-scrolling jump game in the arcade cabinet."},
         "room": "arcade",
         "solids": [{"at": [0, 0.93, 0], "half": [0.37, 0.93, 0.44], "material": "lacquer"}],
         "speaker": {"music": "arcade", "at": [0, 1.6, 0.3]},
@@ -789,6 +790,7 @@
           [-1.90635, -0.35071, -1.34635, 0.20929]
         ],
         "model": {"file": "rhythm.glb", "material": "lacquer"},
+        "project": {"id": "4k-mania", "name": "4K Mania", "about": "The four-lane rhythm game, played to the bar's songs."},
         "screen": [[-0.28, 1.19001, 0.52758], [0.28, 1.19001, 0.52758], [0.28, 2.16297, 0.41026], [-0.28, 2.16297, 0.41026]],
         "seats": [{"name": "Beanbag", "hip": [1.15, 0.35, 1.35], "facing": 180, "low": 1, "kind": "sofa"}],
         "solids": [
@@ -822,6 +824,7 @@
       "parts": {
         "blocks": [[-0.6, -0.5, 1.25, 0.5], [0.9, -0.98, 1.25, 0.98]],
         "model": {"file": "sim_rig.glb", "material": "black-steel"},
+        "project": {"id": "racing", "name": "Racing", "about": "Sit in a rig: a race against bots (or the other rig)."},
         "solids": [
           {"at": [0, 0.35, 0.3], "half": [0.35, 0.35, 0.3], "turn": 90, "material": "leather"},
           {"at": [0, 0.42, -0.45], "half": [0.12, 0.42, 0.32], "turn": 90, "material": "black-steel"},

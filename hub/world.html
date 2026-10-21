@@ -34,6 +34,7 @@
   .states li { margin: 2px 0; }
   .states b { color: var(--gold); font-weight: 650; }
   .still { color: var(--violet); font-size: 13px; }
+  .opens { color: var(--mint); font-size: 13px; font-weight: 600; }
   .tune { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; flex-wrap: wrap; }
   .tune input[type=range] { flex: 1; min-width: 140px; accent-color: var(--pink); }
   .tune .v { width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
@@ -123,6 +124,7 @@ function render(kinds, counts) {
     list.appendChild(el('div', { class: 'kind' }, [
       el('h2', {}, [k.id, el('small', { text: `${counts[k.id]} in the bar` })]),
       k.about ? el('p', { class: 'about', text: k.about }) : null,
+      k.parts && k.parts.project ? el('div', { class: 'opens', text: '▶ Opens ' + k.parts.project.name }) : null,
       k.still ? el('div', { class: 'still', text: 'Stands still: ' + k.still }) : null,
       Object.keys(k.states || {}).length ? el('ul', { class: 'states' }, Object.entries(k.states).map(([n, st]) => stateWords(n, st))) : null,
       !k.still && Object.keys(k.loops || {}).length ? el('div', { class: 'tune' }, [

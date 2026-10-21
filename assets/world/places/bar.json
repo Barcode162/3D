@@ -858,6 +858,7 @@
       "at": [-6.95, 0.38, 0.8],
       "parts": {
         "chessboard": {"center": [0, 0.0905, 0], "square": 0.055},
+        "project": {"id": "chess", "name": "Chess", "about": "A game of chess on the fireside table, against a friend or the bar."},
         "uses": [
           {
             "prompt": "Chess\nTap: play a game",
@@ -906,6 +907,7 @@
       "kind": "spot",
       "at": [6, -0.15, 4.44],
       "parts": {
+        "project": {"id": "darts", "name": "Darts", "about": "501 at the dartboard; the room keeps the score."},
         "uses": [
           {
             "name": "DARTS",

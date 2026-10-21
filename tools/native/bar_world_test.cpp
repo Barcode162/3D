@@ -2,6 +2,7 @@
 // and the real kinds file (assets/world/kinds/bar.json) make a world where
 // every thing has a kind and every kind a live loop, and the bar's events
 // (music, the fire) move the right things.
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -221,6 +222,24 @@ int main() {
     const engine::Vec3 inside = app::resolveCollisions(home, {0, 0, 2.95f}, 0.3f);
     check(inside.z < 2.75f, "its walls keep you in");
     check(app::groundHeight(home, {1, 0, 1}) == 0, "and its floor is the floor");
+  }
+
+  // E9.1: every game you open in the bar comes from a thing naming its project.
+  {
+    const engine::world::World& bw = *scene.world;
+    auto project = [&](int t) { return t >= 0 ? bw.part(t, "project")["id"].string() : std::string(); };
+    std::vector<std::string> opened;
+    for (size_t u = 0; u < scene.interactables.size(); ++u) {
+      const app::Action a = scene.interactables[u].action;
+      if (a != app::Action::kArcade && a != app::Action::kRhythm && a != app::Action::kChess && a != app::Action::kDarts) continue;
+      opened.push_back(project(scene.useThing[u]));
+    }
+    int rigs = 0, racing = 0;
+    for (size_t k = 0; k < scene.seats.size(); ++k)
+      if (scene.seats[k].kind == app::SeatKind::kSim) ++rigs, racing += project(scene.seatThing[k]) == "racing";
+
+    const bool named = opened.size() == 4 && std::count(opened.begin(), opened.end(), std::string()) == 0;
+    check(named && rigs == 2 && racing == 2, "the arcade, 4K Mania, chess, darts and the rigs each name their project");
   }
 
   std::printf(failed ? "%d FAILED\n" : "BAR WORLD TESTS PASSED\n", failed);

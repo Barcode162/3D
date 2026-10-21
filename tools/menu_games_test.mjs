@@ -55,6 +55,7 @@ for (const [q, name] of [['rhythm=menu', '4K Mania'], ['chess', 'chess'], ['sit=
   await page.waitForTimeout(1500);
   // A rig's race starts only once the bar has warmed up: leave it after it began.
   if (q.startsWith('sit=')) await page.waitForFunction(() => document.body.classList.contains('racing'), null, { timeout: 60000 }).catch(() => {});
+  if (q.startsWith('sit=')) check(/Project: Racing \(racing\)/.test(await logText(page)), 'the rig says which project it opens (E9.1)');
   await closePanel(page);  // (a rig opens the sim panel)
   await escape(page);
   check(!(await page.evaluate(() => document.body.classList.contains('racing'))), `after ${name}: the top bar is back`);
