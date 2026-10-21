@@ -48,6 +48,13 @@ export class Sim {
     for (let k = 0; k < n; k++) out.push([d[k * 3], d[k * 3 + 1], d[k * 3 + 2]]);
     return out;
   }
+  // A thing's net id from its id in the place file ("dartboard"), 0 = none.
+  thingNet(id) {
+    const bytes = new TextEncoder().encode(id);
+    const at = this.e.sim_text(bytes.length);
+    new Uint8Array(this.e.memory.buffer, at, bytes.length).set(bytes);
+    return this.e.sim_thing_net();
+  }
   thingApply(net, state, start) { this.e.sim_thing_apply(net, state, start); }
   // Where thing `net` is ([x, y, z]) or null if there's no such thing.
   thingAt(net) {

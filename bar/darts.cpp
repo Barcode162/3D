@@ -191,6 +191,7 @@ void Darts::update(double nowMs) {
     }
     const Vec3 at = boardPoint(board_, d.u, d.v);
     thunk_.play(pts > 0 ? 0.9f : 0.5f, &at);
+    if (pts > 0) ++hits_;
     char text[96];
     if (d.scored && !d.bust) scoreLeft_ = d.left + pts;  // so the local count below lands on the room's
     if (d.scored ? d.bust : (scoreLeft_ - pts < 0 || scoreLeft_ - pts == 1)) {

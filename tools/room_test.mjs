@@ -350,6 +350,8 @@ try {
   check(res.some((r) => r.u !== 0 || Math.abs(r.v - 0.103) > 1e-6), 'the room adds the hand\'s wobble (darts don\'t land exactly on the aim)');
   const seen = await db.until(() => { const d = db.all('D').flatMap((m) => m.body.d).filter((x) => x[1] === 'darts'); return d.length >= 3 ? d : null; });
   check(seen && seen[2][2].left === res[2].left && seen.every((x) => x[3] === da.find('W').body.slot), 'the others see every throw and the score');
+  const thud = await db.until(() => db.all('K').flatMap((m) => m.body.w).find((e) => e[1] === 't' + netOf('dartboard')));
+  check(!!thud && thud[2] === -1 && thud[3][0] === 2, 'the room tells everyone the dartboard shudders (E3.5)');
   db.send('I', { i: 9, k: 'dart', u: 0, v: 0 });
   check((await db.until(() => db.find('R', (r) => r.r === 9)))?.body.ok === 0, 'someone else can\'t throw on your turn');
   [da, db].forEach((c) => c.ws.close(1000));

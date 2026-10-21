@@ -133,6 +133,13 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
     seated_[k] = in.seated[k];
     world_.send(scene_->seatThing[k], in.seated[k] ? "sit" : "stand", clock.seconds);
   }
+  // Your dart hit the board (E3.5): it shudders here at once; the room tells
+  // everyone else (and has the last word).
+  if (in.dartHits > dartHits_) {
+    for (size_t i = 0; i < world_.size(); ++i)
+      if (world_.thing(static_cast<int>(i)).kind->id == "dartboard") world_.send(static_cast<int>(i), "hit", clock.seconds);
+  }
+  dartHits_ = in.dartHits;
   world_.takeChanges();  // every phone makes these itself (the jukebox's song is shared already)
   now_ = clock.seconds;
   // The room's answers to our touches: a refusal (too far...) takes them back.

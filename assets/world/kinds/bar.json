@@ -540,7 +540,7 @@
     },
     {
       "id": "dartboard",
-      "about": "The dartboard hangs on its nail and settles a little; knock it and it swings.",
+      "about": "The dartboard hangs on its nail and settles a little; it shudders when a dart hits it; knock it and it swings.",
       "pivot": [0, 0.34, 0],
       "parts": {
         "dartboard": {"face": [0, 0, 0.0402], "oche": [0, -0.08, 2.56]},
@@ -569,11 +569,25 @@
               ]
             }
           ]
+        },
+        "thud": {
+          "period": 0.7,
+          "restart": true,
+          "blend": 0.04,
+          "pieces": [
+            {
+              "ch": "turn.z",
+              "shape": "keys",
+              "keys": [[0, 0], [0.08, 0.9], [0.25, -0.6], [0.45, 0.35], [0.7, -0.15], [1, 0]]
+            },
+            {"ch": "move.z", "shape": "beat", "amp": -0.006, "decay": 9}
+          ]
         }
       },
       "states": {
-        "idle": {"loop": "hang", "on": {"tap": "knocked"}},
-        "knocked": {"loop": "knock", "afterLoops": 1, "next": "idle"}
+        "idle": {"loop": "hang", "on": {"tap": "knocked", "hit": "thud"}},
+        "knocked": {"loop": "knock", "afterLoops": 1, "next": "idle", "on": {"hit": "thud"}},
+        "thud": {"loop": "thud", "afterLoops": 1, "next": "idle", "on": {"hit": "thud", "tap": "knocked"}}
       },
       "start": "idle"
     },

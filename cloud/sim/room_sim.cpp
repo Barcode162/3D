@@ -24,6 +24,7 @@
 //                           state, start for each (max 32)
 //   sim_thing_apply(net, state, start)   a stored change (waking up)
 //   sim_thing_at(net) → 1   buffer = where it is now (x, y, z)
+//   sim_thing_net() → net   of the thing whose id is in sim_text (0 = none)
 #include <emscripten/emscripten.h>
 
 #include <string>
@@ -98,6 +99,12 @@ EMSCRIPTEN_KEEPALIVE int sim_thing_at(int net) {
   const engine::Mat4& m = things->thing(i).world;
   buffer[0] = m.at(3, 0), buffer[1] = m.at(3, 1), buffer[2] = m.at(3, 2);
   return 1;
+}
+
+EMSCRIPTEN_KEEPALIVE int sim_thing_net() {
+  if (!things) return 0;
+  const int i = things->find(text);
+  return i < 0 ? 0 : things->thing(i).net;
 }
 
 EMSCRIPTEN_KEEPALIVE int sim_init() {

@@ -86,6 +86,7 @@ void presentAvatars(double nowMs) {
     in.eye = cam.position;
     in.songSeconds = g_app.jukebox.songTime();
     if (const app::Song* s = g_app.jukebox.currentSong()) in.songUrl = s->url;
+    in.dartHits = g_app.darts.hits();
     in.seated.resize(g_app.scene.seats.size());
     for (size_t k = 0; k < in.seated.size(); ++k)
       in.seated[k] = g_app.seat == static_cast<int>(k) || engine::net::claimOwner("seat." + std::to_string(k)) > 0;

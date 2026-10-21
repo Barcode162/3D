@@ -497,6 +497,7 @@ export class Room {
     const r = darts.throwDart(session, body.u, body.v);
     this.saveAttachment(slot);
     this.broadcast(text('D', { d: [[this.nextSeq(), 'darts', r, slot]] }), slot);
+    this.roomEvent('dartboard', 'hit');  // the board shudders for everyone (E3.5)
     if (!r.won) return { ok: 1, ...r };
     // A finished game pays (logged-in players): the answer carries what the
     // Ledger actually credited (the daily cap can make it less).
@@ -549,23 +550,41 @@ export class Room {
     const n = body.n, e = body.e;
     if (!Number.isInteger(n) || n < 1 || n > 65535 || typeof e !== 'string' || !/^[a-z-]{1,16}$/.test(e)) return { ok: 0, why: 'bad thing' };
     if (e !== 'tap') return { ok: 0, why: 'players can only touch things' };
-    if (!this.thingsSynced) {
-      for (const [key, entry] of this.kv) {
-        const m = /^t(\d{1,5})$/.exec(key);
-        if (m && entry.values.length === 2) this.sim.thingApply(+m[1], entry.values[0], entry.values[1]);
-      }
-      this.thingsSynced = true;
-    }
+    this.syncThings();
     const at = this.sim.thingAt(n);
     if (!at) return { ok: 0, why: 'no such thing' };
     const eyes = this.eyes(slot);
     if (!eyes || Math.hypot(eyes.x - at[0], eyes.y - at[1], eyes.z - at[2]) > THING_REACH) return { ok: 0, why: 'too far' };
+    const n2 = this.shareThingEvent(n, e);
+    return n2 ? { ok: 1, n: n2 } : { ok: 0, why: 'nothing happens' };
+  }
+
+  // The stored thing states handed to the room's world (once, after waking).
+  syncThings() {
+    if (this.thingsSynced) return;
+    for (const [key, entry] of this.kv) {
+      const m = /^t(\d{1,5})$/.exec(key);
+      if (m && entry.values.length === 2) this.sim.thingApply(+m[1], entry.values[0], entry.values[1]);
+    }
+    this.thingsSynced = true;
+  }
+
+  // Runs event `e` on thing `n` in the room's world and shares every change
+  // (world keys t<net>, by -1). → how many things changed.
+  shareThingEvent(n, e) {
     const changes = this.sim.thingEvent(n, e, Date.now() / 1000);
-    if (!changes.length) return { ok: 0, why: 'nothing happens' };
+    if (!changes.length) return 0;
     const entries = changes.map(([net, state, start]) => this.storeKv(-1, 't' + net, [state, start]));
     for (let i = 0; i < entries.length; i += 64) this.broadcast(text('K', { w: entries.slice(i, i + 64) }));
     this.scheduleFlush();
-    return { ok: 1, n: entries.length };
+    return entries.length;
+  }
+
+  // The room's own games tell things what happened (a dart hit the board).
+  roomEvent(id, e) {
+    this.syncThings();
+    const n = this.sim.thingNet(id);
+    if (n) this.shareThingEvent(n, e);
   }
 
   glassIntent(slot, body) {

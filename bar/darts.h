@@ -39,6 +39,8 @@ class Darts {
   double lastThrowMs() const { return lastThrowMs_; }
   // Goes up each time a game paid you credits.
   int payouts() const { return payouts_; }
+  // Darts that have hit the board since the start (the board shudders, E3.5).
+  int hits() const { return hits_; }
 
   // Score of a spot on the board (u = right, v = up, meters from the
   // center, as seen by the thrower); `label` gets e.g. "T20".
@@ -46,6 +48,7 @@ class Darts {
 
  private:
   int payouts_ = 0;
+  int hits_ = 0;
   struct Dart {
     float u = 0, v = 0;  // where it sticks (board coordinates)
     double thrownMs = 0;
