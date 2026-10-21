@@ -1280,3 +1280,16 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   the private build uses room "looped", which checks the login may play.
 - Free only: no GitHub Pro; watch the private-repo Actions minutes.
 - Order and details: `docs/LOOPED.md`.
+
+### Looped gotchas (2026-10-21)
+- Native tests build bar_scene.cpp with g++: nothing it includes may pull in
+  `<webgpu/webgpu_cpp.h>` (render_scene.h uses mood.h, not post.h;
+  renderSceneOf lives in bar/scene_render.cpp).
+- After a folder move, grep for paths built in pieces ('../app/', files('app')):
+  lint_emasm silently checked zero files until fixed.
+- The room must not cache a failed account check: one slow IONOS answer
+  locked invited players out for 10 minutes (now: not cached; "not invited"
+  30 s).
+- Safari can clear localStorage after a week away; the gate's HttpOnly cookie
+  survives, so account.php `session` hands the login back to the game.
+- Helpers (subagents) in worktrees: `.claude/worktrees/` is git-ignored.

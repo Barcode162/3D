@@ -177,5 +177,15 @@ Every project is a folder `bar/projects/<id>/` with a `project.json`:
   fed a `RenderScene` from `bar/bar_scene.cpp` → `renderSceneOf`). Left in
   bar/ on purpose: avatar.cpp (the bar's body; the skeleton system is
   already looped/), loader, interaction, materials (the bar's own data).
-- [ ] C1-C5.
-- [ ] D1, D2.
+- [x] C1-C5 (2026-10-20): hub v3 (index.html; old board list.html), places
+  (`hub/projects/bar3d-spots.json` + the floor plan `bar3d-map.json` from
+  `tools/native/map_dump.cpp`), posts + screenshots, Publish → news/.
+- [x] D1a (2026-10-20): glow and mood (`looped/post.*`, `looped/mood.h`).
+- [ ] D1b-D1c: baked light, probes, reflection capture: `docs/LIGHTING.md`.
+- [x] D2 first version (2026-10-21): `looped/loops.*` (swarm, pulse, flicker;
+  the room's clock; beat lock from the music's real position, mailbox slots
+  22-23), `assets/loops/bar.json` (8 loops; tempos measured with ffmpeg),
+  `bar/loops_bar.*`; test `tools/native/loops_test.cpp`. Next: touch → react
+  for more kinds, hub controls (list / on-off / speed), loops on models.
+- To ask for a loop: say what it is in words ("a moth at the piano lamp");
+  Claude adds a recipe to assets/loops/bar.json.
