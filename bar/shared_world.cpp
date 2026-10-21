@@ -27,7 +27,7 @@ std::string glassClaim(int index) { return "glass." + std::to_string(index); }
 
 }  // namespace
 
-void SharedWorld::start(bool online, size_t bodyCount, size_t /*mirrorCount*/) {
+void SharedWorld::start(bool online, size_t bodyCount) {
   on_ = online;
   glasses_.assign(bodyCount, {});
 }

@@ -15,7 +15,7 @@ void joinRoom() {
   if (g_app.joined || !g_app.sceneReady) return;
   g_app.joined = true;
   g_app.others.start();
-  g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount(), g_app.scene.mirrors.size());
+  g_app.shared.start(g_app.others.online(), g_app.physics.bodyCount());
   engine::ui::entered();
   g_app.piano.prepareSamples();  // note samples in background jobs
   g_app.race.prepare();          // the race track, so sitting in a rig is instant

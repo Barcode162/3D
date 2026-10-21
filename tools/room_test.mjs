@@ -189,16 +189,16 @@ try {
   check(!!(await late.until(() => late.find('T', (t) => t.players.some((p) => p.slot === sa)))), 'a newcomer gets everyone\'s pose at once');
 
   // Both write the same world key 50 times at once → the same final value everywhere.
-  for (let i = 0; i < 50; i++) { ta.send('K', { w: { lt: [i % 2, 0] } }); tb.send('K', { w: { lt: [(i + 1) % 2, 1] } }); }
+  for (let i = 0; i < 50; i++) { ta.send('K', { w: { pso: [i % 2, 0] } }); tb.send('K', { w: { pso: [(i + 1) % 2, 0] } }); }
   await wait(1200);
-  const final = (c) => { const k = c.all('K').flatMap((m) => m.body.w).filter((e) => e[1] === 'lt'); return k.length ? JSON.stringify(k[k.length - 1]) : ''; };
+  const final = (c) => { const k = c.all('K').flatMap((m) => m.body.w).filter((e) => e[1] === 'pso'); return k.length ? JSON.stringify(k[k.length - 1]) : ''; };
   check(final(ta) && final(ta) === final(tb) && final(ta) === final(late), `same final world value on every phone (${final(ta)})`);
   check(ta.all('K').flatMap((m) => m.body.w).some((e) => e[2] === sa), 'writes are echoed to the writer too');
   const seqs = tb.all('K').flatMap((m) => m.body.w).map((e) => e[0]);
   check(seqs.every((v, i) => i === 0 || v > seqs[i - 1]), 'world writes arrive in rising sequence order');
   const late2 = await joined(r8, { name: 'Dan' });
   const wkv = late2.find('W').body.kv || [];
-  check(wkv.some((e) => e[1] === 'lt' && JSON.stringify(e) === final(ta)), 'a newcomer\'s welcome has the world');
+  check(wkv.some((e) => e[1] === 'pso' && JSON.stringify(e) === final(ta)), 'a newcomer\'s welcome has the world');
 
   // Events: stamped, in order, not back to the sender.
   ta.send('E', { e: [['note', [60]], ['note', [62]]] });
@@ -298,10 +298,10 @@ try {
   ra.send('I', { i: 6, k: 'claim', key: 'glass.3' });
   check((await ra.until(() => ra.find('R', (r) => r.r === 6)))?.body.ok === 0, 'glasses can\'t be claimed around the physics');
   const okBefore = ra.all('K').length;
-  ra.send('K', { w: { lt: [5, 0], zz: [1], g0: [99, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2] } });
+  ra.send('K', { w: { pso: [1000, 0], lt: [1, 0], m0: [1, 0], zz: [1], g0: [99, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2] } });
   await wait(300);
-  check(rb.all('K').every((m) => m.body.w.every((e) => !['zz', 'g0'].includes(e[1]) && !(e[1] === 'lt' && e[3][0] === 5))) && ra.all('K').length === okBefore,
-    'out-of-range values, unknown keys and glasses outside the bar are refused');
+  check(rb.all('K').every((m) => m.body.w.every((e) => !['zz', 'g0', 'lt', 'm0'].includes(e[1]) && !(e[1] === 'pso' && e[3][0] === 1000))) && ra.all('K').length === okBefore,
+    'out-of-range values, unknown and old keys (lt, m<n>) and glasses outside the bar are refused');
   // Custom avatars (a<slot>): only your own, 17 small numbers.
   const sBo = rb.find('W').body.slot;
   const look = [1, 2, 3, 4, 5, 1, 3, 7, 8, 2, 1, 9, 10, 1, 2, 3, 0];
@@ -457,11 +457,11 @@ try {
   const mw = await joined('main', { name: 'Writer' });
   const before = (await debug('main')).usage.rows;
   const t0 = Date.now();
-  while (Date.now() - t0 < 6000) { mw.send('K', { w: { m1: [Math.floor(Date.now() / 100) % 2, 0] } }); mw.state(Math.floor((Date.now() - t0) / 100) + 1, (Date.now() - t0) / 1000); await wait(100); }
+  while (Date.now() - t0 < 6000) { mw.send('K', { w: { pso: [Math.floor(Date.now() / 100) % 2, 0] } }); mw.state(Math.floor((Date.now() - t0) / 100) + 1, (Date.now() - t0) / 1000); await wait(100); }
   for (let i = 0; i < 6; i++) { mw.ws.send('ping'); await wait(500); }
   const rows = (await debug('main')).usage.rows - before;
   check(rows <= 6, `6 s of 10 Hz world writes → ${rows} rows written (≤ 30 per minute)`);
-  check((await debug('main')).storageKeys.includes('kv:m1'), 'the world key is saved');
+  check((await debug('main')).storageKeys.includes('kv:pso'), 'the world key is saved');
   for (let i = 0; i < 5; i++) { mw.ws.send('ping'); await wait(500); }
   const idle = await debug('main');
   check(!idle.ticking && idle.deadlines.ghost > Date.now(), 'an idle room stops ticking and sets one ghost-check alarm');

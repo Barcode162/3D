@@ -169,10 +169,8 @@ back). Counted as `refused` in the usage on `/health`.
 | Key | Values | Rule |
 |---|---|---|
 | `g<n>` (0..31) | glass: x,y,z, quaternion, velocity, state 0/1/2 (11) | written only by the room's physics (resting spots); phones use `grab`/`drop`/`throw`. Claims `glass.*` can't be asked for directly |
-| `m<n>` (0..9) | mirror on, avatars only (two 0/1) | |
 | `jb`, `pso` | song (-1..999), start time (server s) | a start time more than 15 s off the room's clock is replaced by the room's clock. `jb`: when a built-in song ends the room writes the next one itself (`by` -1, `cloud/games/jukebox.js`); nobody connected → `[-1, 0]` |
-| `lt` | lights dim, fire on (two 0/1) | no longer written by the game (the switch and the fire are things now, `t<net>`) |
-| `t<net>` | a thing's state: state index, start (server s) | written only by the room (`thing` intent) |
+| `t<net>` | a thing's state: state index, start (server s) | written only by the room (`thing` intent). The lights, the fire and the mirrors are things (the old `lt` and `m<n>` keys are gone; a room drops them when it loads) |
 | `dk<n>` (0..7) | drink type + 1, 0 = empty | serving (non-zero) needs the `bartender` or `owner` badge; taking (0) only through a `set` intent that expects the drink |
 | `rc` | the racing rigs: phase, goAt (server s), laps, seed, then per rig slot, car, paint, rim, state (0 garage, 1 ready, 2 racing, 3 finished, 4 didn't finish), time (s) (16) | written only by the room (`race` intents) |
 | anything else | | refused |

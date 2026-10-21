@@ -184,7 +184,11 @@ export class Room {
       for (const key of p.claims || []) this.claims.set(key, p.slot);
     }
     const kv = await s.list({ prefix: 'kv:' });
-    for (const [k, v] of kv) this.kv.set(k.slice(3), v);
+    for (const [k, v] of kv) {
+      // Keys from before the things (the lights `lt`, mirrors `m<n>`): gone.
+      if (/^(lt|m\d)$/.test(k.slice(3))) { await s.delete(k); continue; }
+      this.kv.set(k.slice(3), v);
+    }
     for (const e of this.kv.values()) this.lastSeq = Math.max(this.lastSeq, e.seq);
     this.emptySince = (await s.get('emptySince')) || 0;
     const usage = await s.get('usage');

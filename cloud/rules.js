@@ -7,10 +7,8 @@
 //   g<n>   glass n: x,y,z, quaternion x,y,z,w, velocity x,y,z, state
 //          (0 moving, 1 held, 2 resting). Written only by the room's own
 //          physics (cloud/games/glasses.js); phones use grab/drop/throw intents.
-//   m<n>   mirror n: on (0/1), avatars only (0/1)
 //   jb     jukebox: song (-1 = off), server time it started (s)
 //   pso    piano song: song (-1 = none), server time it starts (s)
-//   lt     lights: dim (0/1), fire on (0/1)
 //   ch     the lounge's chess game: board (8 numbers), turn, castling, en
 //          passant, halfmoves, fullmove, last move, two players, move number.
 //          Only a player at the board (claim machine.chess.w / .b) writes it.
@@ -70,20 +68,12 @@ export function checkWrite(key, values, ctx) {
     }
     return { ok: true, values: v };
   }
-  if ((m = /^m(\d)$/.exec(key))) {
-    if (v.length !== 2 || !isBit(v[0]) || !isBit(v[1])) return { ok: false, why: 'a mirror is two 0/1 values' };
-    return { ok: true, values: v };
-  }
   if (key === 'jb' || key === 'pso') {
     if (v.length !== 2 || !isInt(v[0], -1, 999)) return { ok: false, why: 'bad song' };
     // The room's clock decides when a song starts (a phone with a wrong
     // clock can't make everyone jump).
     const start = v[0] >= 0 && Math.abs(v[1] - ctx.nowS) > START_SLACK_S ? ctx.nowS : v[1];
     return { ok: true, values: [v[0], v[0] >= 0 ? start : 0] };
-  }
-  if (key === 'lt') {
-    if (v.length !== 2 || !isBit(v[0]) || !isBit(v[1])) return { ok: false, why: 'lights are two 0/1 values' };
-    return { ok: true, values: v };
   }
   if ((m = /^dk([0-7])$/.exec(key))) {
     if (v.length !== 1 || !isInt(v[0], 0, 63)) return { ok: false, why: 'bad drink' };

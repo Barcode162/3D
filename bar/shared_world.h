@@ -17,7 +17,7 @@ namespace app {
 
 class SharedWorld {
  public:
-  void start(bool online, size_t bodyCount, size_t mirrorCount);
+  void start(bool online, size_t bodyCount);
 
   // Local actions to share.
   void pickedUp(int body);
