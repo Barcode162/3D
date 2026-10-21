@@ -192,5 +192,11 @@ everything else (a chessboard is `idle`/`playing`, its pieces are things).
   sound parts (fire crackle, neon buzz) and touch sounds per kind; boxes as
   parts, a second place (the test home) with travel from the menu and its own
   room; the catalog of ownable kinds.
+- [x] **E8–E9** (2026-10-21): the hub's World page (hub/world.html: every
+  kind in plain words, speed and on/off per kind, owner only) and live tuning
+  (World::tune, read by the bar at load from hub.php?tuning); machines name
+  the project they open (a `project` part: platformer, 4K Mania, racing,
+  chess, darts); the old `lt` and `m<n>` keys are gone (a room drops them on
+  load). **The engine plan E1-E9 is built.**
 - [x] E3 logic and sync (was): taps and seats through rules; `Change` over the room
   protocol; the room runs the world (cloud/sim) and has the last word.

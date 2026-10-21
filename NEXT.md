@@ -5,10 +5,9 @@ commit each, tagged), deploys once, then rewrites this file for the step after.
 How: `CLAUDE.md`. The full engine plan: `docs/ENGINE.md` (E1-E9).
 
 ## Where we are (2026-10-21)
-- Done: **E1** the core (things, states, rules, loops) · **E2** the bar as
-  things (a place file; every object alive; phone check: 60 fps).
-- Left: E3 sync · E4 drawing/lighting · E5 avatar · E6 sound/physics ·
-  E7 places/travel · E8 hub control room · E9 games re-plugged, old code gone.
+- **The engine plan (E1-E9) is all built** (docs/ENGINE.md → Progress). E1-E2
+  phone-checked (60 fps); E3-E7 live as `fa64f17`; E8-E9 in the push after.
+- Next: the user's phone check of the whole batch (below), then fix what broke.
 
 ## The next steps: E3 (rest) to E9, in one batch (user, 2026-10-21)
 The user asked for as much of E3-E9 as possible coded in one go, tested
@@ -44,16 +43,24 @@ E7, places:
 - [x] **E7.4** The catalog (assets/world/catalog.json): every kind you could own, with a price and whether it's tradeable; a test keeps it in step with the kinds.
 
 E8, the hub as the control room:
-- [ ] **E8.1** The hub's World page: every kind and thing of the bar, with its loops and states in plain words.
-- [ ] **E8.2** Live tuning: a loop's speed and on/off set in the hub; the bar reads them when it loads.
+- [x] **E8.1** The hub's World page: every kind and thing of the bar, with its loops and states in plain words.
+- [x] **E8.2** Live tuning: a loop's speed and on/off set in the hub; the bar reads them when it loads.
 
 E9, projects plugged in, old code gone:
-- [ ] **E9.1** Projects as a part (`project`: the arcade machine, the rigs, 4K Mania, the chessboard name what they open).
-- [ ] **E9.2** Old paths deleted (lt, m<n>, leftovers); docs/ENGINE.md ticked.
+- [x] **E9.1** Projects as a part (`project`: the arcade machine, the rigs, 4K Mania, the chessboard name what they open).
+- [x] **E9.2** Old paths deleted (lt, m<n>, leftovers); docs/ENGINE.md ticked.
 
 Tests: `node tools/check.mjs` (build, native, game, room) per piece; `all` before the push to main.
 
+## The next step: P1, the phone check (after the user has gone through it)
+The user walks the check list from the last reply on the phone and says
+"broke <piece>" for anything wrong. On "go" after that:
+- [ ] **P1.1** Fix every "broke" the user reported (one commit each, tagged with the piece it fixes).
+- [ ] **P1.2** A `?perf=1` report in the busy part of the bar (by the fire, the mirror in view): compare with E2's 63H3FJ (16.7 ms avg); if reflections or shadows cost more than 1 ms, make them cheaper.
+- [ ] **P1.3** Tune what the user wants slower/faster on the hub's World page, or turn it into the kinds' own numbers.
+
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) E3.3–E3.7, E4.1–E4.4, E5.1–E5.2, E6.1–E6.2, E7.1–E7.4 → e807e99..d2a15c8
+- (this push) E8.1, E8.2, E9.1, E9.2: the hub's World page and live tuning, projects as a part, old keys gone → fa64f17..HEAD
+- `fa64f17` E3.3–E3.7, E4.1–E4.4, E5.1–E5.2, E6.1–E6.2, E7.1–E7.4 → e807e99..fa64f17
 - `ff60ac4` E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD
 - `a2fe850` E2 done: the bar as a place file, every object alive (before this file existed).

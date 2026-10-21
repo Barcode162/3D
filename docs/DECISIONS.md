@@ -1390,3 +1390,21 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   an endless JS loop in the next). Always set counts. Also,
   Texture::GetDepthOrArrayLayers() isn't reliable in the browser: pass
   layer counts in (encodeMipmaps(..., layers)).
+
+## The E3-E9 batch: gotchas (2026-10-21)
+- A `PipelineLayoutDescriptor` on the stack must set `bindGroupLayoutCount`
+  and `bindGroupLayouts` explicitly: garbage there made the browser loop
+  forever ("RangeError: Invalid array length" at startup).
+- `Texture::GetDepthOrArrayLayers()` isn't reliable in the browser: pass the
+  layer count (6 for the reflection cube) yourself.
+- Mipmap and reflection work waits for the mip pipeline (`mipmapsReady`): it
+  compiles asynchronously, and `setPipeline(null)` kills the frame.
+- The room measures a touch's reach from the thing's pivot (or its tags or
+  solids), after updating its world: unplaced things sit at the origin.
+- Tuning (hub World page) changes looks only: a kind's loops run faster,
+  slower or not at all, but timed rules keep the shared clock, so every
+  phone and the room still agree on states.
+- Gate commits on the check's own verdict (`grep "^ALL .* PASSED"`): a `| tail`
+  hides the exit status.
+- A rig's race starts only after the bar's warm-up (a few seconds after load);
+  tests leave it after `body.racing` is set.
