@@ -26,6 +26,9 @@ for (const [name, [cam, want]] of Object.entries(SPOTS)) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await openBar(page, url, `skipintro&server=off&cam=${encodeURIComponent(cam)}`);
+  // Every model in (a touch needs the model's box), then a moment more.
+  await page.waitForFunction(() => /Everything loaded/.test(document.getElementById('log').textContent), null,
+                             { timeout: 120000, polling: 250 }).catch(() => {});
   await page.waitForTimeout(1500);
   await page.mouse.click(215, 466);
   await page.waitForTimeout(800);
