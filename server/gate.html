@@ -63,6 +63,10 @@
   .go:active { transform: scale(.96); }
   .go[disabled] { filter: grayscale(.6) brightness(.8); }
   @keyframes shine { to { background-position: 200% 0; } }
+  .guest { margin-top: 4px; background: linear-gradient(90deg, var(--cyan), var(--mint), var(--cyan)); background-size: 200% 100%;
+    box-shadow: 0 10px 30px rgba(90,209,255,.3); }
+  .or { display: flex; align-items: center; gap: 10px; color: var(--dim); font-size: 13px; margin: 18px 0 2px; }
+  .or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--edge); }
   .links { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .link { background: none; color: var(--cyan); padding: 6px 2px; font-size: 15px; }
   .link:active { opacity: .6; }
@@ -121,7 +125,9 @@
     <h1 id="title" aria-label="Bar3D"></h1>
 
     <section class="screen" id="signin">
-      <p class="sub">The bar is invite-only. Sign in to come in.</p>
+      <p class="sub">Sign in, or just come in.</p>
+      <button class="go guest" id="guest" type="button">Come in as a guest</button>
+      <div class="or"><span>or sign in</span></div>
       <form id="fLogin" autocomplete="on">
         <label for="lUser">Username</label>
         <input id="lUser" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" required>
@@ -216,7 +222,7 @@
   function enter(j) {
     store('bar3dToken', j.token || store('bar3dToken'));
     store('bar3dProfile', JSON.stringify(j.me));
-    if (j.me.play) {
+    if (j.me) {  // the bar is open: every account comes in
       // A reload that lands here again means the cookie didn't stick: stop instead of looping.
       var last = 0; try { last = +sessionStorage.getItem('gateTry') || 0; } catch (e) {}
       if (Date.now() - last < 8000) { show('signin'); say('Your browser didn\'t keep the login. Allow cookies for this site and try again.'); return; }
@@ -254,6 +260,12 @@
     var done = function () { store('bar3dToken', null); store('bar3dProfile', null); location.href = './'; };
     if (t) call({ a: 'logout', token: t }).then(done); else done();
   }
+  $('guest').addEventListener('click', function () {
+    var secure = location.protocol === 'https:' ? '; secure' : '';
+    document.cookie = 'bar_guest=1; path=/; max-age=31536000; samesite=lax' + secure;
+    say('Come on in!', true);
+    setTimeout(function () { location.reload(); }, 300);
+  });
   $('out1').addEventListener('click', signOut);
   $('out2').addEventListener('click', signOut);
   $('again').addEventListener('click', function () {

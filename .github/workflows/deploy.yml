@@ -239,7 +239,7 @@ jobs:
         run: |
           python3 - <<PY
           import json, os
-          json.dump({"build": os.environ["GITHUB_SHA"][:7], "proto": 1, "ws": os.environ.get("CF_WS", ""), "room": "looped",
+          json.dump({"build": os.environ["GITHUB_SHA"][:7], "proto": 1, "ws": os.environ.get("CF_WS", ""), "room": "main",
                      "accountsUrl": "https://joshuavelasco.com/bar/account.php",
                      "reportUrl": "https://joshuavelasco.com/bar/report.php"},
                     open("build/site/config.json", "w"))

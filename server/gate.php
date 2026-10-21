@@ -38,12 +38,11 @@ function gate_admins() {
   $names = gate_json("$base/names.json");
   return is_array($names) && count($names) ? [array_key_first($names)] : [];
 }
+// The bar is open (user, 2026-10-21): any account, or a guest (the cookie
+// bar_guest the sign-in page sets with "Come in as a guest"). Only the hub
+// stays private (hub/hub.php: the owner).
 function gate_may_play($u) {
-  global $base;
-  if (!$u) return false;
-  if (in_array($u['user'], gate_admins(), true)) return true;
-  $players = gate_json("$base/players.json") ?? [];
-  return in_array($u['user'], $players, true);
+  return $u !== null || ($_COOKIE['bar_guest'] ?? '') === '1';
 }
 function gate_claude() {
   global $hubData;

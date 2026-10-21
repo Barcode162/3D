@@ -101,7 +101,9 @@ try {
   check(j.ok && j.me.play === 0 && j.me.admin === 0, 'a new account may not play yet');
   r = await mia.get('');
   body = await r.text();
-  check(r.status === 401 && body.includes('"mode":"waiting"'), 'a new account sees "waiting for an invite"');
+  check(r.status === 200 && body.includes('THE BAR'), 'the bar is open: a new account gets in (user, 2026-10-21)');
+  r = await person().get('', { Cookie: 'bar_guest=1' });
+  check(r.status === 200 && (await r.text()).includes('THE BAR'), 'a guest gets in');
   j = await mia.api({ a: 'people' });
   check(!j.ok, 'a non-admin can\'t list people');
   j = await mia.api({ a: 'invite', user: 'mia', on: 1 });
@@ -160,7 +162,7 @@ try {
   j = await josh.api({ a: 'admin', user: 'mia', on: 0 });
   j = await josh.api({ a: 'invite', user: 'mia', on: 0 });
   r = await mia.get('');
-  check(r.status === 401, 'removed → back to waiting');
+  check(r.status === 200, 'removed from the list, still in (the bar is open)');
 
   // Safari cleared the page's storage, the cookie remains: the same login comes back.
   const back = await fetch(base + 'account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain', Cookie: `bar_t=${josh.jar.bar_t}` }, body: JSON.stringify({ a: 'session' }) }).then((x) => x.json());
@@ -218,19 +220,17 @@ try {
     await p2.fill('#sPass', 'secret3');
     await p2.fill('#sBirth', '1999-09-09');
     await p2.click('#fSignup .go');
-    await p2.waitForSelector('#waiting.on', { timeout: 5000 }).catch(() => {});
-    check(await p2.$('#waiting.on') !== null, 'browser: a new account lands on "waiting for an invite"');
-    await p2.screenshot({ path: 'build/gate-waiting.png' }).catch(() => {});
+    await p2.waitForSelector('#bar', { timeout: 8000 }).catch(() => {});
+    check(await p2.$('#bar') !== null, 'browser: a new account comes straight in');
     await page.goto(base + 'gate.php?people');
     await page.waitForSelector('.person', { timeout: 5000 }).catch(() => {});
     const names = await page.$$eval('.person b', (b) => b.map((x) => x.textContent));
     check(names.some((n) => n.startsWith('zed')), `browser: People lists the new account (${names.join(', ')})`);
-    await page.locator('.person', { hasText: '@zed' }).locator('.act:not(.off)').click();
-    await page.waitForTimeout(800);
-    await page.screenshot({ path: 'build/gate-people.png' }).catch(() => {});
-    await p2.click('#again');
-    await p2.waitForSelector('#bar', { timeout: 8000 }).catch(() => {});
-    check(await p2.$('#bar') !== null, 'browser: invited from People → "Check again" lets them in');
+    const p3 = await browser.newPage({ viewport: { width: 430, height: 932 } });
+    await p3.goto(base);
+    await p3.click('#guest');
+    await p3.waitForSelector('#bar', { timeout: 8000 }).catch(() => {});
+    check(await p3.$('#bar') !== null, 'browser: "Come in as a guest" lets you in');
     check(errors.length === 0, `browser: no page errors (${errors.join(' | ')})`);
     await browser.close();
   }
