@@ -194,47 +194,59 @@ void prepareMipmaps(const wgpu::Device& device) {
   });
 }
 
-void encodeMipmaps(const wgpu::Device& device, const wgpu::CommandEncoder& encoder, const wgpu::Texture& texture) {
+void encodeMipmaps(const wgpu::Device& device, const wgpu::CommandEncoder& encoder, const wgpu::Texture& texture,
+                   uint32_t layers) {
   const uint32_t levels = texture.GetMipLevelCount();
   if (levels < 2) return;
   MipKit& kit = mipKit(device);
   const wgpu::TextureFormat format = texture.GetFormat();
   wgpu::RenderPipeline pipeline = mipPipeline(kit, format);
-  for (uint32_t level = 1; level < levels; ++level) {
-    wgpu::TextureViewDescriptor src;
-    src.baseMipLevel = level - 1;
-    src.mipLevelCount = 1;
-    wgpu::TextureViewDescriptor dst;
-    dst.baseMipLevel = level;
-    dst.mipLevelCount = 1;
-    wgpu::BindGroupEntry be[2];
-    be[0].binding = 0;
-    be[0].textureView = texture.CreateView(&src);
-    be[1].binding = 1;
-    be[1].sampler = kit.sampler;
-    wgpu::BindGroupDescriptor bd;
-    bd.layout = kit.layout;
-    bd.entryCount = 2;
-    bd.entries = be;
-    wgpu::BindGroup group = device.CreateBindGroup(&bd);
-    wgpu::RenderPassColorAttachment color;
-    color.view = texture.CreateView(&dst);
-    color.loadOp = wgpu::LoadOp::Clear;
-    color.storeOp = wgpu::StoreOp::Store;
-    wgpu::RenderPassDescriptor pass;
-    pass.colorAttachmentCount = 1;
-    pass.colorAttachments = &color;
-    wgpu::RenderPassEncoder p = encoder.BeginRenderPass(&pass);
-    p.SetPipeline(pipeline);
-    p.SetBindGroup(0, group);
-    p.Draw(3);
-    p.End();
+  if (!pipeline) return;  // still compiling (ask mipmapsReady() first)
+  // Every layer (a cube has six), each level from the one above. (The layer
+  // count is passed in: GetDepthOrArrayLayers() isn't reliable in the browser.)
+  for (uint32_t layer = 0; layer < layers; ++layer) {
+    for (uint32_t level = 1; level < levels; ++level) {
+      wgpu::TextureViewDescriptor src;
+      src.dimension = wgpu::TextureViewDimension::e2D;
+      src.baseMipLevel = level - 1;
+      src.mipLevelCount = 1;
+      src.baseArrayLayer = layer;
+      src.arrayLayerCount = 1;
+      wgpu::TextureViewDescriptor dst = src;
+      dst.baseMipLevel = level;
+      wgpu::BindGroupEntry be[2];
+      be[0].binding = 0;
+      be[0].textureView = texture.CreateView(&src);
+      be[1].binding = 1;
+      be[1].sampler = kit.sampler;
+      wgpu::BindGroupDescriptor bd;
+      bd.layout = kit.layout;
+      bd.entryCount = 2;
+      bd.entries = be;
+      wgpu::BindGroup group = device.CreateBindGroup(&bd);
+      wgpu::RenderPassColorAttachment color;
+      color.view = texture.CreateView(&dst);
+      color.loadOp = wgpu::LoadOp::Clear;
+      color.storeOp = wgpu::StoreOp::Store;
+      wgpu::RenderPassDescriptor pass;
+      pass.colorAttachmentCount = 1;
+      pass.colorAttachments = &color;
+      wgpu::RenderPassEncoder p = encoder.BeginRenderPass(&pass);
+      p.SetPipeline(pipeline);
+      p.SetBindGroup(0, group);
+      p.Draw(3);
+      p.End();
+    }
   }
+}
+
+bool mipmapsReady(const wgpu::Device& device, wgpu::TextureFormat format) {
+  return static_cast<bool>(mipPipeline(mipKit(device), format));
 }
 
 void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture) {
   wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
-  encodeMipmaps(device, encoder, texture);
+  encodeMipmaps(device, encoder, texture, 1);
   wgpu::CommandBuffer commands = encoder.Finish();
   device.GetQueue().Submit(1, &commands);
 }

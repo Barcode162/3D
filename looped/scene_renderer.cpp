@@ -191,29 +191,10 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   createMaterials(scene, colorMaps_, bumpMaps_, sampler_);
   engine::profiler().stage("textures");
   buildLighting(scene);
-  for (size_t i = 0; i < 1 + mirrorCount_; ++i) {
-    View v;
-    v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), "frame uniforms");
-    wgpu::BindGroupEntry entries[5];
-    entries[0].binding = 0;
-    entries[0].buffer = v.buffer;
-    entries[0].size = sizeof(FrameUniforms);
-    entries[1].binding = 1;
-    entries[1].textureView = colorMaps_;
-    entries[2].binding = 2;
-    entries[2].textureView = bumpMaps_;
-    entries[3].binding = 3;
-    entries[3].sampler = sampler_;
-    entries[4].binding = 4;
-    entries[4].buffer = lightingBuffer_;
-    entries[4].size = sizeof(LightingUniforms);
-    wgpu::BindGroupDescriptor desc;
-    desc.layout = frameLayout_;
-    desc.entryCount = 5;
-    desc.entries = entries;
-    v.bindGroup = device.CreateBindGroup(&desc);
-    views_.push_back(v);
-  }
+  createEnvironment();
+  for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms"));
+  // The capture's own views: they can't read the cube they draw into.
+  for (View& v : captureViews_) v = makeView(envDummyView_, "capture frame uniforms");
 
   boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + kMaxOthers + kMaxModels) * kObjectStride);
   boxMesh_ = engine::Mesh::upload(device, engine::makeBox({1, 1, 1}));
@@ -303,13 +284,127 @@ wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const ch
   return gpu_->device.CreateBindGroup(&desc);
 }
 
+SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label) {
+  const wgpu::Device& device = gpu_->device;
+  View v;
+  v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), label);
+  wgpu::BindGroupEntry entries[7];
+  entries[0].binding = 0;
+  entries[0].buffer = v.buffer;
+  entries[0].size = sizeof(FrameUniforms);
+  entries[1].binding = 1;
+  entries[1].textureView = colorMaps_;
+  entries[2].binding = 2;
+  entries[2].textureView = bumpMaps_;
+  entries[3].binding = 3;
+  entries[3].sampler = sampler_;
+  entries[4].binding = 4;
+  entries[4].buffer = lightingBuffer_;
+  entries[4].size = sizeof(LightingUniforms);
+  entries[5].binding = 5;
+  entries[5].textureView = env;
+  entries[6].binding = 6;
+  entries[6].sampler = envSampler_;
+  wgpu::BindGroupDescriptor desc;
+  desc.layout = frameLayout_;
+  desc.entryCount = 7;
+  desc.entries = entries;
+  v.bindGroup = device.CreateBindGroup(&desc);
+  return v;
+}
+
+void SceneRenderer::createEnvironment() {
+  const wgpu::Device& device = gpu_->device;
+  wgpu::TextureDescriptor t;
+  t.label = "reflection cube";
+  t.size = {kEnvSize, kEnvSize, 6};
+  t.format = gpu_->surfaceFormat;
+  t.mipLevelCount = kEnvLevels;
+  t.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::RenderAttachment;
+  envTexture_ = device.CreateTexture(&t);
+  wgpu::TextureViewDescriptor cube;
+  cube.dimension = wgpu::TextureViewDimension::Cube;
+  envView_ = envTexture_.CreateView(&cube);
+  t.label = "no reflection yet";
+  t.size = {1, 1, 6};
+  t.mipLevelCount = 1;
+  t.usage = wgpu::TextureUsage::TextureBinding;
+  envDummy_ = device.CreateTexture(&t);
+  envDummyView_ = envDummy_.CreateView(&cube);
+  t.label = "reflection depth";
+  t.size = {kEnvSize, kEnvSize, 1};
+  t.format = engine::Gpu::kDepthFormat;
+  t.usage = wgpu::TextureUsage::RenderAttachment;
+  envDepth_ = device.CreateTexture(&t);
+  envDepthView_ = envDepth_.CreateView();
+  wgpu::SamplerDescriptor sd;
+  sd.magFilter = sd.minFilter = wgpu::FilterMode::Linear;
+  sd.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+  sd.addressModeU = sd.addressModeV = sd.addressModeW = wgpu::AddressMode::ClampToEdge;
+  envSampler_ = device.CreateSampler(&sd);
+}
+
+void SceneRenderer::captureEnvironment(const wgpu::CommandEncoder& encoder) {
+  // One face per axis, oriented the way cube textures are read: right = the
+  // face's s axis, down = its t axis. Drawn with x flipped (and the mirror's
+  // pipelines, whose triangles wind the other way to match).
+  static const Vec3 kForward[6] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+  static const Vec3 kUp[6] = {{0, 1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}, {0, 1, 0}, {0, 1, 0}};
+  Mat4 flip;
+  flip.at(0, 0) = -1;
+  const Mat4 proj = flip * Mat4::perspective(engine::kPi / 2, 1, 0.05f, 60);
+  const int room = roomAt(envCenter_);
+  for (int k = 0; k < 6; ++k) {
+    FrameUniforms f = frame_;
+    f.viewProj = proj * Mat4::lookAt(envCenter_, envCenter_ + kForward[k], kUp[k]);
+    setVec4(f.cameraPos, envCenter_, 1);
+    setVec4(f.clipPlane, {0, 0, 0}, 1);
+    f.env[0] = 1;  // store light (and no reflections of reflections)
+    f.env[1] = 0;
+    gpu_->queue.WriteBuffer(captureViews_[k].buffer, 0, &f, sizeof(f));
+    wgpu::TextureViewDescriptor face;
+    face.dimension = wgpu::TextureViewDimension::e2D;
+    face.baseMipLevel = 0;
+    face.mipLevelCount = 1;
+    face.baseArrayLayer = static_cast<uint32_t>(k);
+    face.arrayLayerCount = 1;
+    wgpu::RenderPassColorAttachment color;
+    color.view = envTexture_.CreateView(&face);
+    color.loadOp = wgpu::LoadOp::Clear;
+    color.storeOp = wgpu::StoreOp::Store;
+    color.clearValue = {0, 0, 0, 1};
+    wgpu::RenderPassDepthStencilAttachment depth;
+    depth.view = envDepthView_;
+    depth.depthLoadOp = wgpu::LoadOp::Clear;
+    depth.depthStoreOp = wgpu::StoreOp::Discard;
+    depth.depthClearValue = 1.0f;
+    wgpu::RenderPassDescriptor passDesc;
+    passDesc.colorAttachmentCount = 1;
+    passDesc.colorAttachments = &color;
+    passDesc.depthStencilAttachment = &depth;
+    const RoomView cull = roomView(f.viewProj, room);
+    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
+    pass.SetPipeline(mirroredPipeline_);
+    pass.SetBindGroup(0, captureViews_[k].bindGroup);
+    drawItems(pass, sceneDraws_, cull);
+    pass.SetPipeline(modelMirroredPipeline_);
+    drawModels(pass, false, envCenter_, cull);
+    pass.SetPipeline(modelBlendMirroredPipeline_);
+    drawModels(pass, true, envCenter_, cull);
+    pass.End();
+  }
+  engine::encodeMipmaps(gpu_->device, encoder, envTexture_, 6);
+  envReady_ = true;
+  LOG_INFO("Reflections: the room captured from %.1f, %.1f, %.1f.", envCenter_.x, envCenter_.y, envCenter_.z);
+}
+
 bool SceneRenderer::createScenePipelines() {
   const wgpu::Device& device = gpu_->device;
   wgpu::ShaderModule module = loadShader(device, "/shaders/scene.wgsl");
   if (!module) return false;
 
   // Group 0: frame uniforms + material textures. Group 1: per-object uniforms.
-  wgpu::BindGroupLayoutEntry frameEntries[5];
+  wgpu::BindGroupLayoutEntry frameEntries[7];
   frameEntries[0].binding = 0;
   frameEntries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
   frameEntries[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -327,8 +422,15 @@ bool SceneRenderer::createScenePipelines() {
   frameEntries[4].visibility = wgpu::ShaderStage::Fragment;
   frameEntries[4].buffer.type = wgpu::BufferBindingType::Uniform;
   frameEntries[4].buffer.minBindingSize = sizeof(LightingUniforms);
+  frameEntries[5].binding = 5;  // the reflection cube (E4.4)
+  frameEntries[5].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[5].texture.sampleType = wgpu::TextureSampleType::Float;
+  frameEntries[5].texture.viewDimension = wgpu::TextureViewDimension::Cube;
+  frameEntries[6].binding = 6;
+  frameEntries[6].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[6].sampler.type = wgpu::SamplerBindingType::Filtering;
   wgpu::BindGroupLayoutDescriptor frameDesc;
-  frameDesc.entryCount = 5;
+  frameDesc.entryCount = 7;
   frameDesc.entries = frameEntries;
   frameLayout_ = device.CreateBindGroupLayout(&frameDesc);
 
@@ -1176,6 +1278,12 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   const size_t fpCount = std::min<size_t>(firstPersonBones.size(), kMaxBones);
   if (fpCount) queue.WriteBuffer(firstPersonBonesBuffer_, 0, firstPersonBones.data(), fpCount * sizeof(Mat4));
 
+  frame_.env[0] = 0;
+  frame_.env[1] = envReady_ ? 1.0f : 0.0f;
+  frame_.env[2] = static_cast<float>(kEnvLevels - 1);
+  setVec4(frame_.envMin, envRoom_.min, 0);
+  setVec4(frame_.envMax, envRoom_.max, 0);
+  setVec4(frame_.envCenter, envCenter_, 1);
   FrameUniforms f = frame_;
   f.viewProj = viewProj;
   setVec4(f.cameraPos, eye, 1);
@@ -1183,6 +1291,11 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   queue.WriteBuffer(views_[0].buffer, 0, &f, sizeof(f));
 
   wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
+  if (capturePending_ && mirroredPipeline_ && modelMirroredPipeline_ && modelBlendMirroredPipeline_ &&
+      engine::mipmapsReady(gpu_->device, gpu_->surfaceFormat)) {
+    capturePending_ = false;
+    captureEnvironment(encoder);
+  }
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
   // With glow and mood on, the scene draws offscreen first (looped/post.h).

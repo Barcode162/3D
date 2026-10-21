@@ -46,7 +46,12 @@ void loadAstcTexture(const wgpu::Device& device, const std::string& url, bool as
 // one above, in linear light for sRGB formats). The texture needs
 // TextureBinding and RenderAttachment usage.
 void generateMipmaps(const wgpu::Device& device, const wgpu::Texture& texture);
-// The same, recorded into an encoder (to batch several textures in one submit).
-void encodeMipmaps(const wgpu::Device& device, const wgpu::CommandEncoder& encoder, const wgpu::Texture& texture);
+// Whether mips can be made for `format` yet (the first call starts compiling
+// its pipeline).
+bool mipmapsReady(const wgpu::Device& device, wgpu::TextureFormat format);
+// The same, recorded into an encoder (to batch several textures in one
+// submit), for `layers` layers (a cube: 6).
+void encodeMipmaps(const wgpu::Device& device, const wgpu::CommandEncoder& encoder, const wgpu::Texture& texture,
+                   uint32_t layers = 1);
 
 }  // namespace engine

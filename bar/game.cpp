@@ -1008,6 +1008,12 @@ void updateLoadingScreen() {
   if (wasLoading && g_app.loader.filesDone()) {
     LOG_INFO("Textures: %d images on the GPU, %.0f MB.", engine::imageTextureCount(), engine::imageTextureMB());
   }
+  // Reflections (E4.4): once every model and texture is in, the bar is
+  // captured into a cube from the middle of the room.
+  if (!g_app.reflectionsAsked && !g_app.hooks.noReflect && g_app.loader.filesDone() && engine::pendingJobs() == 0 && !g_app.scene.rooms.empty()) {
+    g_app.reflectionsAsked = true;
+    g_app.renderer.captureReflections({-1.0f, 1.8f, -1.0f}, g_app.scene.rooms[0]);
+  }
 }
 
 // Closes the profiler's frame on every way out of frame().

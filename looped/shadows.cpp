@@ -42,6 +42,8 @@ bool FloorShadows::init(const wgpu::Device& device, wgpu::TextureFormat colorFor
   wgpu::RenderPipelineDescriptor desc;
   desc.label = "floor shadows";
   wgpu::PipelineLayoutDescriptor layoutDesc;  // no bind groups: everything comes per vertex
+  layoutDesc.bindGroupLayoutCount = 0;  // (not zeroed by default: set it, or it's whatever was on the stack)
+  layoutDesc.bindGroupLayouts = nullptr;
   desc.layout = device.CreatePipelineLayout(&layoutDesc);
   desc.vertex.module = module;
   desc.vertex.entryPoint = "vs_main";

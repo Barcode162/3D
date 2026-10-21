@@ -23,6 +23,12 @@ struct Frame {
   // Mirror views: drop anything behind the glass (dot(xyz, p) + w < 0).
   // The normal view uses (0, 0, 0, 1), which keeps everything.
   clipPlane: vec4f,  // unused: mirrors cut with an oblique near plane instead (no discard, keeps Apple GPUs fast)
+  // Reflections (E4.4): x = 1 while capturing the cube (store light, not
+  // display colour), y = 1 once the cube is ready, z = its last mip level.
+  env: vec4f,
+  envMin: vec4f,     // the room's box: reflections are matched to it
+  envMax: vec4f,
+  envCenter: vec4f,  // where the cube was captured from
 };
 
 // All the lights, and a grid over the floor: each cell lists the (at most
@@ -47,6 +53,8 @@ struct Object {
 @group(0) @binding(2) var bumpMaps: texture_2d_array<f32>;
 @group(0) @binding(3) var mapSampler: sampler;
 @group(0) @binding(4) var<uniform> lighting: Lighting;
+@group(0) @binding(5) var envMap: texture_cube<f32>;
+@group(0) @binding(6) var envSampler: sampler;
 @group(1) @binding(0) var<uniform> object: Object;
 
 // Skinned meshes (the avatar): one matrix per bone, set every frame.
@@ -325,6 +333,22 @@ fn roomGlow(r: vec3f) -> vec3f {
   return frame.ambient.rgb * (2.0 + 5.0 * clamp(r.y, -0.3, 1.0));
 }
 
+// What a shiny surface at `p` sees in direction `r` (E4.4): the room captured
+// into a cube, matched to the room's box (the ray from p is followed to the
+// wall it meets, then looked up from where the cube was captured), blurrier
+// for rougher surfaces. Outside the room, or before the capture, the old glow.
+fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
+  let lo = frame.envMin.xyz;
+  let hi = frame.envMax.xyz;
+  if (frame.env.y < 0.5 || any(p < lo) || any(p > hi)) { return roomGlow(r); }
+  let rr = select(r, vec3f(1e-5), abs(r) < vec3f(1e-5));
+  let far = max((hi - p) / rr, (lo - p) / rr);
+  let dist = min(min(far.x, far.y), far.z);
+  let dir = p + r * dist - frame.envCenter.xyz;
+  let e = textureSampleLevel(envMap, envSampler, dir, roughness * frame.env.z).rgb;
+  return e * e * 8.0;  // stored as sqrt(light / 8)
+}
+
 // Lighting shared by every mesh: physically based point lights, ambient,
 // haze, tone mapping. Light units: diffuse leaves out the 1/pi, so the
 // specular term is multiplied by pi to match.
@@ -382,13 +406,20 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     specular += radiance * spec * (nl * kPi);
   }
   let r = reflect(-v, n);
-  specular += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
+  if (frame.env.x < 0.5) {  // (no reflections of reflections while capturing)
+    specular += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao;
+  } else {
+    specular += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
+  }
 
   var color = diffuseColor * diffuse + specular + emission;
 
   let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);
   color = mix(color, frame.fog.rgb, haze);
+  // Capturing the reflection cube: store the light itself, squeezed into
+  // 0..1 (sqrt of light / 8: bright neon survives in 8 bits).
+  if (frame.env.x > 0.5) { return vec4f(sqrt(clamp(color * 0.125, vec3f(0.0), vec3f(1.0))), 1.0); }
 
   // The surface is a plain (non-sRGB) format, so apply gamma here.
   return vec4f(pow(tonemap(color), vec3f(1.0 / 2.2)), 1.0);

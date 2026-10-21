@@ -1385,3 +1385,8 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   matrix before its world had ever been updated (all at the origin), and
   models made in place (the fire) sit at the origin anyway. Now: update
   first, then the kind's pivot, else the middle of its solid shapes.
+- (E4.2/E4.4) wgpu::PipelineLayoutDescriptor doesn't zero its count: an
+  unset bindGroupLayoutCount was stack garbage (fine by luck in one build,
+  an endless JS loop in the next). Always set counts. Also,
+  Texture::GetDepthOrArrayLayers() isn't reliable in the browser: pass
+  layer counts in (encodeMipmaps(..., layers)).

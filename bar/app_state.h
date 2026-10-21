@@ -159,6 +159,7 @@ struct App {
   double lastVoicePlaceMs = 0;
 
   // The room.
+  bool reflectionsAsked = false;  // the reflection cube (E4.4) is asked for once
   bool lightsDim = false, fireOn = true;  // from the world's switch and fire (presentation.cpp)
 
   // Settings (bar/web/menu.js).

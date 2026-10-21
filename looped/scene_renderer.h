@@ -21,6 +21,7 @@
 #include "looped/mesh.h"
 #include "looped/model.h"
 #include "looped/post.h"
+#include "looped/gpu_upload.h"
 #include "looped/shadows.h"
 #include "looped/render_scene.h"
 #include "looped/skinned_mesh.h"
@@ -129,6 +130,14 @@ class SceneRenderer {
   // Soft shadows on the floor this frame (E4.2): x, y (the floor's height), z,
   // radius; drawn after the scene.
   void setShadows(std::vector<engine::Vec4> discs) { shadowDiscs_ = std::move(discs); }
+  // Reflections (E4.4): the room is captured once into a cube picture from
+  // `center` (at the next render); shiny surfaces inside `room` reflect it.
+  void captureReflections(engine::Vec3 center, const engine::Aabb& room) {
+    envCenter_ = center;
+    envRoom_ = room;
+    capturePending_ = true;
+  }
+  bool reflectionsReady() const { return envReady_; }
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:
@@ -150,6 +159,13 @@ class SceneRenderer {
     float ambient[4];
     float fog[4];
     float clipPlane[4];
+    // Reflections (E4.4): x = 1 while capturing (store light, not colour),
+    // y = 1 once the cube is ready, z = its last mip level; the room's box and
+    // the point it was captured from (reflections are matched to the box).
+    float env[4];
+    float envMin[4];
+    float envMax[4];
+    float envCenter[4];
   };
   // The lights and the light grid: the floor is cut into square cells, and
   // each cell lists the (at most 8) lights that reach it, so a pixel only
@@ -279,6 +295,18 @@ class SceneRenderer {
   // The placed models' uniforms as the GPU has them (one kObjectStride slot
   // each, from firstModelOffset_); changes are sent in one write per frame.
   engine::FloorShadows shadows_;
+  // The reflection cube (E4.4): six faces, mips for rough surfaces.
+  static constexpr uint32_t kEnvSize = 128, kEnvLevels = 6;
+  wgpu::Texture envTexture_, envDepth_, envDummy_;
+  wgpu::TextureView envView_, envDummyView_, envDepthView_;
+  wgpu::Sampler envSampler_;
+  View captureViews_[6];
+  engine::Vec3 envCenter_;
+  engine::Aabb envRoom_;
+  bool capturePending_ = false, envReady_ = false;
+  void createEnvironment();
+  View makeView(const wgpu::TextureView& env, const char* label);
+  void captureEnvironment(const wgpu::CommandEncoder& encoder);
   std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
   uint32_t firstModelOffset_ = 0;

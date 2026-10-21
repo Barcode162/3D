@@ -3,6 +3,7 @@
 // start-up (see CLAUDE.md → Build and test):
 //   ?cam=x,y,z,yaw,pitch  start the camera there (degrees)
 //   ?still                no intro text, no idle motion (screenshot diffs)
+//   ?reflect=0            no reflection cube (E4.4): shiny things as before
 //   ?perf=1               performance overlay on
 //   ?sit=N  ?emote=N  ?pianosong=N  ?rhythm=song,difficulty  ?autoplay
 //   ?shift  ?darts        start a bartending shift / the darts game
@@ -17,6 +18,7 @@
 namespace app {
 
 struct TestHooks {
+  bool noReflect = false;
   bool still = false, perf = false, autoplay = false, shift = false, darts = false;
   bool garage = false;
   bool pad = false, telemetry = false;

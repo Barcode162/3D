@@ -36,6 +36,7 @@ TestHooks TestHooks::parse() {
   TestHooks h;
   std::string v;
   h.still = param(query, "still", v);
+  h.noReflect = param(query, "reflect", v) && v == "0";
   h.perf = param(query, "perf", v) && v == "1";
   h.autoplay = param(query, "autoplay", v);
   h.shift = param(query, "shift", v);
