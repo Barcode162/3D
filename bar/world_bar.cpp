@@ -33,7 +33,7 @@ void BarWorld::load(const BarScene& scene) {
       if (song.isObject()) tempos_.push_back({file, song["bpm"].number(0), song["firstBeat"].number(0)});
     LOG_INFO("World: %zu songs with a beat.", tempos_.size());
   });
-  engine::fetchFile(kTuningUrl, [this](bool ok, std::vector<uint8_t> bytes) {
+  engine::fetchOptional(kTuningUrl, [this](bool ok, std::vector<uint8_t> bytes) {
     if (!ok || bytes.empty() || bytes[0] != '{') return;
     const engine::Json root = engine::Json::parse(std::string(bytes.begin(), bytes.end()));
     for (const auto& [kind, t] : root["kinds"].members())

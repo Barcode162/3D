@@ -15,6 +15,10 @@ namespace engine {
 void fetchFile(const std::string& url, std::function<void(bool ok, std::vector<uint8_t> bytes)> done,
                std::function<void(float fraction)> progress = nullptr);
 
+// Like fetchFile, for a file that may well not be there (another site's
+// optional settings): one try, and a miss is no error, just ok = false.
+void fetchOptional(const std::string& url, std::function<void(bool ok, std::vector<uint8_t> bytes)> done);
+
 // An 8-bit RGBA image, rows top to bottom.
 struct Rgba8Image {
   int width = 0, height = 0;

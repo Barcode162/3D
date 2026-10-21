@@ -24,6 +24,7 @@ struct Download {
   std::string url;
   int attempt = 0;  // retries so far
   std::vector<uint8_t> bytes;  // filled by JavaScript in place (no extra copy)
+  bool optional = false;  // fetchOptional: no retries, a miss isn't an error
 };
 constexpr int kRetries = 3;
 constexpr double kRetryDelayMs[kRetries] = {500, 1500, 4000};
@@ -107,6 +108,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE void engine_fetchDone(int id, uint8_t* data, int
   if (it == pending.end()) return;
   if (size < 0) {
     Download& d = it->second;
+    if (d.optional) {
+      LOG_INFO("Download: %s isn't there (fine: it's optional).", d.url.c_str());
+      Download missed = std::move(d);
+      pending.erase(it);
+      missed.done(false, {});
+      return;
+    }
     if (d.attempt < kRetries) {  // the network hiccuped: try again a bit later
       LOG_WARN("Download: %s failed, retrying (%d of %d).", d.url.c_str(), d.attempt + 1, kRetries);
       emscripten_set_timeout([](void* p) {
@@ -178,6 +186,15 @@ void fetchFile(const std::string& url, FetchDone done, FetchProgress progress) {
   static int nextId = 1;
   const int id = nextId++;
   pendingDownloads()[id] = {std::move(done), std::move(progress), url, 0, {}};
+  js_fetch(id, url.c_str());
+}
+
+void fetchOptional(const std::string& url, FetchDone done) {
+  static int nextId = -1;  // its own ids (negative): never the same as fetchFile's
+  const int id = nextId--;
+  Download d{std::move(done), nullptr, url, 0, {}};
+  d.optional = true;
+  pendingDownloads()[id] = std::move(d);
   js_fetch(id, url.c_str());
 }
 
