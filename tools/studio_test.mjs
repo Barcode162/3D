@@ -278,6 +278,47 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.screenshot({ path: 'build/studio-added.png' });
 }
 
+// ---- S6.2 row, rename, delete ----
+{
+  const idle = () => page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  const stool = (await S()).things.find((t) => t.id === 'bar_stool-3');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), stool.i);
+  await page.waitForTimeout(400);
+  await page.click('#moreKey');
+  await page.click('#thingMenu button[data-act="Row"]');
+  await page.fill('#rowCount', '3');
+  await page.fill('#rowStep', '0.7');
+  await page.click('#rowGo');
+  await page.waitForTimeout(300); await idle();
+  const row = (await S()).things.filter((t) => /^bar_stool-row-1-\d$/.test(t.id));
+  const xs = row.map((t) => +(t.at[0] - stool.at[0]).toFixed(2)).sort((a, b) => a - b);
+  check(row.length === 3 && JSON.stringify(xs) === '[0.7,1.4,2.1]', `S6.2 Row: 3 more bar stools, 70 cm apart (${xs.join(', ')} m along X)`);
+  await page.screenshot({ path: 'build/studio-row.png' });
+  const c7 = (await S()).things.find((t) => t.id === 'candle-7');
+  await page.evaluate((i) => window.bar3dStudio.select(i, false), c7.i);
+  await page.click('#moreKey');
+  await page.click('#thingMenu button[data-act="Rename"]');
+  await page.fill('#renameField', 'my candle');
+  await page.click('#renameGo');
+  await page.waitForTimeout(300); await idle();
+  check(!!(await S()).things.find((t) => t.id === 'my-candle'), 'S6.2 Rename: a new thing can be renamed (my-candle)');
+  await page.click('#moreKey');
+  await page.click('#thingMenu button[data-act="Delete"]');
+  await page.waitForTimeout(300); await idle();
+  check(!(await S()).things.find((t) => t.id === 'my-candle'), 'S6.2 Delete takes it away');
+  await page.click('#undo');
+  await page.waitForTimeout(300); await idle();
+  check(!!(await S()).things.find((t) => t.id === 'my-candle'), 'S6.2 Undo brings it back');
+  const live = (await S()).things.find((t) => t.id === 'bar_stool-3');
+  await page.evaluate((i) => window.bar3dStudio.select(i, false), live.i);
+  await page.click('#moreKey');
+  await page.click('#thingMenu button[data-act="Rename"]');
+  await page.fill('#renameField', 'stoolio');
+  await page.click('#renameGo');
+  await page.waitForTimeout(500);
+  check(!!(await S()).things.find((t) => t.id === 'bar_stool-3'), 'S6.2 a thing from the live world keeps its name');
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).

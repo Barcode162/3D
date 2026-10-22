@@ -33,9 +33,9 @@ body.lp { -webkit-user-select: none; user-select: none; }
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 124px);
   display: grid; gap: 4px; padding: 8px; border-radius: 14px; max-height: 40vh; overflow: auto;
 }
-#hits button, .pop button { all: unset; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: var(--mono); font-size: 13px; }
-#hits button small, .pop button small { color: var(--text-2); font-family: var(--text-font); }
-#hits button:active, #hits button:focus-visible, .pop button:active, .pop button:focus-visible { background: var(--field); }
+#hits > button, .pop > button { all: unset; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: var(--mono); font-size: 13px; }
+#hits > button small, .pop > button small { color: var(--text-2); font-family: var(--text-font); }
+#hits > button:active, #hits > button:focus-visible, .pop > button:active, .pop > button:focus-visible { background: var(--field); }
 
 /* The Monitor: a drawer over the bottom of the world. */
 #monitor {
@@ -146,3 +146,8 @@ body.reloading #world { opacity: .55; transition: opacity .2s; }
 #bottom { gap: 5px; }
 #bottom .key { min-width: 0; flex: 0 1 44px; padding: 0 6px; }
 #bottom .seg { min-width: 0; flex: 1 1 auto; }
+/* The ⋯ menu (S6.2). */
+body.tooling #thingMenu { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 56px); }
+#thingMenu .rowform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+#thingMenu .rowform .field { width: 64px; padding: 7px; }
+#thingMenu .rowform #renameField { flex: 1; width: auto; }

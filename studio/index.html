@@ -28,6 +28,7 @@
   </header>
   <div id="crumb" class="panel over" hidden><span id="crumbPath" class="path"></span>
     <button id="lockKey" class="key small" type="button" aria-label="Lock the selection"><span class="kled"></span><svg class="ico"><use href="/ui/icons.svg#i-lock"/></svg></button>
+    <button id="moreKey" class="key small" type="button" aria-label="Duplicate, row, rename, delete">⋯</button>
     <button id="deselect" class="key small" type="button" aria-label="Deselect"><svg class="ico"><use href="/ui/icons.svg#i-x"/></svg></button></div>
   <div id="tools" class="panel over" hidden>
     <div class="rowk" id="scopeRow"><span class="seg field" id="scopeSeg"><button type="button" class="on" data-every="0">This one</button><button type="button" data-every="1">Every <span id="kindName"></span><span id="kindCount"></span></button></span></div>
@@ -59,6 +60,7 @@
   </div>
   <div id="hits" class="panel over" hidden></div>
   <div id="partList" class="panel over pop" hidden></div>
+  <div id="thingMenu" class="panel over pop" hidden></div>
   <div id="views" class="panel over pop" hidden></div>
   <footer id="bottom" class="panel over">
     <button id="monitorKey" class="key small" type="button" aria-label="Open the Monitor"><svg class="ico"><use href="/ui/icons.svg#i-layers"/></svg></button>

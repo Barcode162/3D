@@ -139,3 +139,98 @@ on('aim', async (e) => {
   await reloadWorld(id);
 });
 $('addKey').addEventListener('click', openLibrary);
+
+// ---- Duplicate, Row, Rename, Delete (S6.2): the ⋯ key on the breadcrumb ----
+import { thingEntry } from './draft.mjs';
+import { remove as removeOp, set as setOp2 } from './ops.mjs';
+const r3 = (v) => +(+v).toFixed(3);
+function current() {
+  const t = S.things[S.selected];
+  if (!t) return null;
+  const e = thingEntry(t.id);
+  if (!e.json) { Looped.toast(e.why); return null; }
+  return { t, e };
+}
+function duplicate() {
+  const c = current();
+  if (!c) return;
+  const id = freshId(c.t.id);
+  const copy = JSON.parse(JSON.stringify(c.e.json));
+  copy.id = id;
+  copy.at = (copy.at || [0, 0, 0]).map((v, k) => r3(v + (k === 0 ? 0.3 : 0)));
+  edit({ op: 'group', label: `${id}: a copy of ${c.t.id}`, ops: [addOp(placeFile(), ['things'], copy)] }, { noReload: true });
+  Looped.toast(`Copied: ${id} (30 cm to the right)`);
+  reloadWorld(id);
+}
+// A row: copies of it in a line, a step apart (one row entry in the files).
+function makeRow(count, step) {
+  const c = current();
+  if (!c) return;
+  const id = freshId(`${c.t.kind}-row`);
+  const copy = JSON.parse(JSON.stringify(c.e.json));
+  copy.id = id;
+  copy.at = (copy.at || [0, 0, 0]).map((v, k) => r3(v + step[k]));
+  copy.row = { count, step: step.map(r3) };
+  edit({ op: 'group', label: `a row of ${count} ${c.t.kind} after ${c.t.id}`, ops: [addOp(placeFile(), ['things'], copy)] }, { noReload: true });
+  Looped.toast(`A row of ${count} more, ${Math.round(Math.hypot(...step) * 100)} cm apart`);
+  reloadWorld(c.t.id);
+}
+function rename(to) {
+  const c = current();
+  if (!c) return;
+  to = String(to || '').trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!to || to === c.t.id) return;
+  // Names players have seen stay (the room and saves use them): only new things get renamed.
+  if ((S.base[placeFile()].things || []).some((x) => x.id === c.t.id)) { Looped.toast(`${c.t.id} is in the live world: its name stays (players' saves use it)`); return; }
+  if ((S.draft[placeFile()].things || []).some((x) => x.id === to) || S.things.some((x) => x.id === to)) { Looped.toast(`${to} is taken`); return; }
+  const ops = [setOp2(placeFile(), [...c.e.path, 'id'], to)];
+  for (const x of S.draft[placeFile()].things || []) if (x.parent === c.t.id) ops.push(setOp2(placeFile(), ['things', { id: x.id }, 'parent'], to));
+  edit({ op: 'group', label: `${c.t.id} renamed ${to}`, ops }, { noReload: true });
+  reloadWorld(to);
+}
+function del() {
+  const c = current();
+  if (!c) return;
+  const on = (S.draft[placeFile()].things || []).filter((x) => x.parent === c.t.id).map((x) => x.id);
+  if (on.length) { Looped.toast(`${on.join(', ')} sit${on.length === 1 ? 's' : ''} on it: move ${on.length === 1 ? 'it' : 'them'} first`); return; }
+  edit({ op: 'group', label: `removed ${c.t.id}`, ops: [removeOp(placeFile(), ['things'], c.t.id)] }, { noReload: true });
+  Looped.toast(`Removed ${c.t.id} (Undo brings it back)`);
+  reloadWorld(null);
+}
+function thingMenu() {
+  const box = $('thingMenu');
+  if (!box.hidden) { box.hidden = true; return; }
+  const c = current();
+  if (!c) return;
+  box.textContent = '';
+  const item = (label, small, f) => { const b = el('button'); b.type = 'button'; b.dataset.act = label; b.append(el('span', '', label), el('small', '', small)); b.onclick = () => { box.hidden = true; f(); }; box.append(b); };
+  item('Duplicate', 'a copy, 30 cm along X', duplicate);
+  item('Row', 'copies in a line', () => {
+    box.hidden = false; box.textContent = '';
+    const count = el('input', 'field num'); count.id = 'rowCount'; count.inputMode = 'numeric'; count.value = '3'; count.setAttribute('aria-label', 'How many more');
+    const step = el('input', 'field num'); step.id = 'rowStep'; step.inputMode = 'decimal'; step.value = '0.7'; step.setAttribute('aria-label', 'How far apart (m)');
+    const axis = el('span', 'seg field'); axis.id = 'rowAxis';
+    ['X', 'Z'].forEach((a, k) => { const b = el('button', k ? '' : 'on', a); b.type = 'button'; b.dataset.axis = a; b.onclick = () => [...axis.children].forEach((x) => x.classList.toggle('on', x === b)); axis.append(b); });
+    const go = el('button', 'key go small', 'Make the row'); go.type = 'button'; go.id = 'rowGo';
+    go.onclick = () => {
+      box.hidden = true;
+      const n = Math.max(1, Math.min(50, parseInt(count.value, 10) || 1)), d = parseFloat(String(step.value).replace(',', '.')) || 0.7;
+      const ax = axis.querySelector('.on').dataset.axis;
+      makeRow(n, ax === 'X' ? [d, 0, 0] : [0, 0, d]);
+    };
+    const row = el('div', 'rowform');
+    row.append(el('span', 'dim', 'More'), count, el('span', 'dim', 'm apart'), step, axis, go);
+    box.append(row);
+  });
+  item('Rename', c.t.id, () => {
+    box.hidden = false; box.textContent = '';
+    const name = el('input', 'field'); name.id = 'renameField'; name.value = c.t.id; name.setAttribute('aria-label', 'New name');
+    const go = el('button', 'key go small', 'Rename'); go.type = 'button'; go.id = 'renameGo';
+    go.onclick = () => { box.hidden = true; rename(name.value); };
+    const row = el('div', 'rowform'); row.append(name, go); box.append(row);
+  });
+  item('Delete', 'Undo brings it back', del);
+  box.hidden = false;
+}
+$('moreKey').addEventListener('click', thingMenu);
+on('select', () => { $('thingMenu').hidden = true; });
