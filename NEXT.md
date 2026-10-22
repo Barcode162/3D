@@ -16,26 +16,28 @@ every piece writes its page in `docs/manual/`).
   picked the **Faceplate** theme (the others stay switchable).
 - Another Claude session built the website (homepage/: Home, Play, Engine, Vision, Sign in, the staff Portal); it owns homepage/.
 
-## The next step: L1, new light (docs/PLAN.md §4.1)
-Today: point lights with GGX highlights, a flat ambient colour, one captured
-reflection cube, blob shadows under avatars only, tone mapping inside the
-scene shader (LDR), bloom and grade in post. L1 makes it a different bar.
+## The next step: L1, real light (docs/PLAN.md §4.1)
+Today: point lights with a hard reach, GGX highlights, a flat ambient colour,
+one captured reflection cube, blob shadows under avatars only, tone mapping
+inside the scene shader (LDR, so nothing can adapt), bloom and grade in post.
+Light hits a surface once and stops. L1 makes light behave like real light.
+**Rule (user, 2026-10-22): light only comes from light sources.** No fake
+fill: ambient is zero in the new lighting. Everything is lit by bulbs,
+flames, neon, screens, glowing things and the sky/street through the windows,
+plus their bounces. Darkness is real; eyes adjusting lets you see in dim
+places (with a limit: a dark corner stays dark, not grey). Classic keeps the
+old look.
 Each piece: an off flag, `tools/shots.mjs` before/after from the same spots
-(bar top, fire, back corner, stage), its manual page `docs/manual/light.md`.
+(bar top, fire, back corner, stage), its page in `docs/manual/light.md`.
 Budget for the whole step on the phone: +4 ms at High, +1.5 ms at Low.
-**Rule for L1 (user, 2026-10-22): light only comes from light sources.** No
-fake fill: the flat ambient colour goes to zero in the new lighting. All you
-see is lit by bulbs, flames, neon, screens, glowing things and the sky/street
-through the windows, plus their bounces (L1.3). A spot no light reaches is
-truly dark; eyes adjusting (L1.1) is what lets you see in dim places, with a
-limit so the darkest corner still reads as dark, not grey. Every emissive
-surface counts as a light source in the bounce. Classic keeps the old ambient.
-- [ ] **L1.1** HDR and eyes that adjust: the scene draws into rgba16float, tone mapping moves to post (a softer filmic curve), auto exposure from a tiny average of the picture (eyes adapt over ~1 s), bloom from real brightness. Settings → Graphics gets **Lighting: New / Classic** so the user can flip old and new on the phone (also `?light=classic`). *Check:* walk from the fire to the dark back corner: the picture brightens slowly as your eyes adjust; bulbs glow without white blobs.
-- [ ] **L1.2** Real shadows from lamps: the strongest lights (a Studio "casts shadows" switch, 4 at most) get shadow cubes in one atlas, soft edges that sharpen near contact; still things are drawn into them once, redrawn only when something near the light moves. `?lampshadows=0`. *Check:* the stools and bottles throw shadows on the bar top; a glass you pick up casts one that moves.
-- [ ] **L1.3** Bounced light the engine works out: a grid of light probes in each room; each one captures a small cube of the room (the E4.4 capture) and keeps it as 9 numbers per colour; two bounces; spread over frames so you **watch the room fill with light** for a few seconds after loading; re-done after a Studio light edit or a publish. Replaces the flat ambient completely (ambient = 0 in New; glowing surfaces and the windows feed the probes as light sources). Probes stuck in walls move out or switch off. `?bounce=0`. *Check:* the ceiling glows warm above the lamps, corners go darker, the red neon tints the wall next to it.
-- [ ] **L1.4** Contact shade: half-resolution ambient occlusion from the depth buffer, blurred, only where things meet (cheap at Low: off). `?ao=0`. *Check:* bottles sit on the shelf instead of floating; dark creases where the bar meets the floor.
-- [ ] **L1.5** Light in the air: soft haze around bulbs and a beam from the stage lights (worked out per light along each view ray, no fog volume), haze strength in the Studio's Air. `?haze=0`. *Check:* a soft halo around every bulb; the stage spot shows a faint beam.
-- [ ] **L1.6** In the Studio: per light "casts shadows" and "haze"; Air gets bounce strength and exposure; the moods (Evening, Party, Closing) retuned for the new light; the budget meter counts shadow lights. *Check:* in the Studio, turn on shadows for the piano lamp and watch them appear; switch Evening → Party.
+- [ ] **L1.1** HDR and real eyes: the scene draws into rgba16float, tone mapping moves to post (softer filmic curve), auto exposure over a wide range (one candle can light a dark room, like your eyes) adapting over ~1 s, bloom from real brightness, ambient 0. Settings → Graphics: **Lighting: New / Classic** (also `?light=classic`). *Check:* walk from the fire to the dark back corner: the picture brightens slowly; flip New/Classic.
+- [ ] **L1.2** Real units, no hard reach: every light gets lumens and colour temperature (Kelvin) instead of guessed strengths; true inverse-square falloff; reach worked out from where the light stops mattering to the eye (no cut-off ring). The 22 bar lights moved to real values (a candle ~12 lm, a 40 W filament bulb ~400 lm). *Check:* a lamp's light fades smoothly across the whole room, no edge where it stops.
+- [ ] **L1.3** Lights with size: bulbs as glowing balls, windows and screens as glowing panels, neon as glowing tubes (area-light highlights and soft falloff); a size field per light in the Studio. *Check:* the neon sign's reflection on the bar top is a long streak, not a dot; the window lights the floor as a soft patch.
+- [ ] **L1.4** Real material brightness: every material checked against measured values (white plaster ~0.8, dark oak ~0.15, brick ~0.3), a table in `docs/manual/light.md`, a test that flags anything brighter or darker than real; fixes. *Check:* walls and ceiling read lighter, wood stays rich.
+- [ ] **L1.5** Radiosity, part 1 (no visible change yet): still surfaces split into patches (~20 cm), and "who sees whom" between patches worked out once per layout (a tool for the shipped world, a background worker in the Studio after a layout edit), saved with the world.
+- [ ] **L1.6** Radiosity, part 2 (the big one): lights hit patches, patches light each other, many bounces each frame until it settles; **you watch the light spread through the room** after loading; a lamp edit in the Studio re-spreads it in a moment; glowing surfaces (neon, jukebox, screens, fire) count as light sources. `?bounce=0`. *Check:* switch off every light but one lamp: the whole room is softly lit, brightest near it, light creeps round corners.
+- [ ] **L1.7** Moving things: a probe grid filled from the patches lights avatars, glasses and stools, so they match the room. *Check:* walk from a lamp into shadow: your avatar dims with the room.
+- [ ] **L1.8** In the Studio: per light lumens, colour temperature, size and shape; Air gets bounce strength and exposure range; the moods (Evening, Party, Closing) retuned in real units; the budget meter counts patches. *Check:* in the Studio, turn the piano lamp to 2000 K and watch the room around it go amber.
 
 ## Waiting on the user: P2, the Studio phone check
 The whole Studio is live; the user tries it on the phone, piece by piece

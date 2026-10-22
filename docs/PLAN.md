@@ -41,59 +41,93 @@ phone check per piece, "broke L1.2" finds it. New on top:
 ## 3. The tracks
 | Tag | Track | What it is |
 |---|---|---|
-| **L** | Light | shadows from lamps, bounced light, light in the air, eyes that adjust, light cues, light that is the music, paint the light |
-| **M** | Materials | textures that never repeat, rounded edges, automatic wear and dirt, bulbs with real colours |
+| **L** | Light | real units and sized lights, light that bounces for real (radiosity), shadows from every light, shaped lamps, real eyes and camera, reflections and caustics, the air, light cues, light that is the music, paint the light |
+| **M** | Materials | textures that never repeat, rounded edges, wear, dirt and smudges, layers (varnish, velvet, brushed metal), light through things (wax, skin, glass thickness), real depth, real sizes |
 | **T** | Timeline & script | the bar script language, the timeline at the centre of the Studio, Launch with checks and bots |
 | **R** | Recipes & modelling | models grown from recipes (built like a carpenter would), Claude building live in the Studio, iPhone scanning |
 | **A** | Avatars | idle life, one body with sliders, skin, hair, eyes, face from selfies, clothes that move, lips that follow voice |
 | **W** | World axes | memory, mood dial, chance, time scrub and ghosts, era dial, scale, layers |
 
 ## 4. The road (one "go" each; wow ★ / foundation ◆)
-1. ★ **L1 New light**: HDR and eyes that adjust, real shadows from lamps,
-   bounced light the engine works out itself, contact shade, light in the
-   air, all of it in the Studio. (Pieces in `NEXT.md`.)
+Why light looks fake today (talk, 2026-10-22): light hits a surface once and
+stops (no bounce), every light has a hard reach limit, the picture can't
+adapt like eyes (tone mapped too early), strengths are guessed not real,
+lights are tiny points, materials may be darker than real ones. And the
+things games skip "because players won't notice" (they do; they just can't
+name it). Every item from that talk is placed below.
+
+1. ★ **L1 Real light**: light only from sources; HDR and real eyes; real
+   units (lumens, colour temperature) with no hard reach; lights with size
+   (bulbs as balls, windows as panels, neon as tubes); real material
+   brightness; **radiosity** (surfaces light each other, many bounces,
+   re-spread in a moment after a Studio lamp edit); probes for moving
+   things. (Pieces in `NEXT.md`.)
 2. ★ **M1 Real surfaces**: textures that never visibly repeat (large
    patterns, blending, per-copy variation), rounded edges, automatic wear
-   (shiny rubbed edges, dust in corners) on every model.
-3. ◆ **T1 Bar script**: the language (built on today's states, rules and
-   loops from S8): parser, a tiny safe runner (step limits, no engine
-   access beyond what a script is given), errors with the line number in the
-   Studio. Rewrite 5 existing behaviours as scripts (candle, neon, bell, light
-   switch, jukebox flare) so nothing looks different but they're now scripts.
-4. ★ **L2 Light show**: light cues (theatre style) and light that is the
-   music, written as scripts; bulbs with real colours (tungsten, neon gas,
-   sodium); a dying bulb that flickers.
-5. ★ **T2 The timeline**: the Studio's centre strip: bar time, tracks per
+   (rubbed edges, dust in corners), dirt and smudges (fingerprints on glass,
+   water rings on the bar, worn handles) changing how light reflects.
+3. ★ **L2 Shadows and shaped light**: every light casts shadows (still
+   shadows saved, cheap ones for small lights); real lamp shapes (measured
+   IES light patterns) and lampshades that glow and colour the light; fire
+   light that moves its shadows; contact shade; specular occlusion (no shine
+   under tables); energy compensation (rough metal and fabric not too dark).
+4. ◆ **T1 Bar script**: the language (built on today's states, rules and
+   loops from S8): parser, a tiny safe runner (step limits, no engine access
+   beyond what a script is given), errors with the line number in the
+   Studio. 5 existing behaviours rewritten as scripts (candle, neon, bell,
+   light switch, jukebox flare), looking the same.
+5. ★ **L3 Eyes and camera**: smooth edges (temporal anti-aliasing, no
+   shimmering bottle necks); white balance that adapts like the eye; seeing
+   in the dark (colour fades, blue-grey: the Purkinje effect); glare (a
+   bright bulb in view veils the dark) and starbursts; faint moving grain in
+   the dark; focus on what you look at.
+6. ★ **M2 Layers**: varnish over wood (clear coat), velvet and fabric sheen,
+   brushed metal and vinyl stretched highlights (anisotropy), wet surfaces.
+7. ★ **L4 Reflections and caustics**: several reflection captures (each
+   thing reflects what's around it, not the room centre), screen reflections
+   on the bar top and floor, light bounced off shiny things (a polished floor
+   lights the ceiling), caustics (amber patterns from a whiskey glass).
+8. ★ **T2 The timeline**: the Studio's centre strip: bar time, tracks per
    thing, drag events on, stack them, loop them, preview by scrubbing; it
    plays for everyone on the shared clock.
-6. ★ **R1 Recipes**: stool, chair, table, bottle, glass grown from recipes;
-   every copy slightly different; the Studio shows the recipe's dials.
-7. ◆ **T3 Launch**: the check (rules, overlaps, blocked doors), bot players
-   walk the draft, a report, then Launch and one-tap undo.
-8. ★ **W1 Memory**: the floor wears where people walk, the dartboard gets
-   holes, your usual stool gets your nameplate.
-9. ★ **A1 Alive avatars**: breathing, blinking, looking at whoever talks,
-   shifting weight, feet planted on stairs; one body with sliders.
-10. ◆ **R2 Claude in the Studio, live**: Claude's edits stream to an open
+9. ★ **L5 The air**: haze and beams from every light, dust specks visible
+   only inside light, smoke thicker near the ceiling, heat shimmer above the
+   fire and candles.
+10. ★ **R1 Recipes**: stool, chair, table, bottle, glass grown from recipes;
+    every copy slightly different; the Studio shows the recipe's dials.
+11. ★ **M3 Light through things and real depth**: wax, marble, milk, skin
+    and lampshades glow from inside (subsurface); glass with thickness bends
+    what's behind it and colours light by thickness; brick and grain with
+    real depth (parallax, tiny self-shadows); every model checked against
+    real-world sizes.
+12. ◆ **T3 Launch**: the check (rules, overlaps, blocked doors), bot players
+    walk the draft, a report, then Launch and one-tap undo.
+13. ★ **W1 Memory**: the floor wears where people walk, the dartboard gets
+    holes, your usual stool gets your nameplate.
+14. ★ **A1 Alive avatars**: breathing, blinking, looking at whoever talks,
+    shifting weight, feet planted on stairs; one body with sliders.
+15. ★ **L6 Light show**: light cues (theatre style) and light that is the
+    music, as scripts; bulbs with real colours (tungsten, neon gas, sodium);
+    a dying bulb that flickers.
+16. ◆ **R2 Claude in the Studio, live**: Claude's edits stream to an open
     Studio one by one ("Claude is working…"), the user comments live and
     presses Launch. No paid API needed (Claude works through the world store
     like `tools/studio.mjs`; a chat box inside the Studio would need an API
     key: the user's call later).
-11. ★ **L3 Living light**: a real sky through the windows (your time and
+17. ★ **L7 Living light**: a real sky through the windows (your time and
     weather), players carry light (lighter, phone torch, glowing drinks),
     neon afterglow.
-12. ★ **W2 Mood and chance**: one cozy↔wild dial for the whole bar;
-    "maybe" events on the timeline (30% rain, a surprise band).
-13. ★ **A2 Real people**: skin light passes into, hair strands with their
+18. ★ **W2 Mood and chance**: one cozy↔wild dial for the whole bar; "maybe"
+    events on the timeline (30% rain, a surprise band).
+19. ★ **A2 Real people**: skin light passes into, hair strands with their
     shine, wet see-through eyes, clothes that swing; lips follow voice.
-14. ★ **R3 Scan it**: bring real things in with the iPhone camera (and the
-    depth sensor where Safari allows).
-15. ★ **W3 Time and era**: scrub time back and see ghosts replay the night,
+20. ★ **R3 Scan it**: bring real things in with the iPhone camera.
+21. ★ **W3 Time and era**: scrub time back and see ghosts replay the night,
     branch a "what if" copy; the era dial (1920s ↔ neon future).
-16. ★ **L4 Paint the light**: brush warmth and shadow in the Studio; the
+22. ★ **L8 Paint the light**: brush warmth and shadow in the Studio; the
     engine places and tunes lamps to match.
-17. ★ **A3 Your face**: an avatar face from a few selfies.
-18. ★ **W4 Scale and layers**: shrink to mouse size; blend two places.
+23. ★ **A3 Your face**: an avatar face from a few selfies.
+24. ★ **W4 Scale and layers**: shrink to mouse size; blend two places.
 
 The order can change at any "start"; new ideas go to Parked first.
 
