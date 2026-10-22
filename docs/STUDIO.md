@@ -574,9 +574,8 @@ the bridge to Claude.
   user picks first (section 4.0), the feedback kit (step light, key LEDs,
   save lamps, meters, state lamps, ring dial, fader, switch, rolling
   numbers, selection ring), the fonts with licences + credits, ~40 icons,
-  and the style page joshuavelasco.com/ui with a theme switcher. *Check:* open /ui: every
-  control on the smoke panel; switch your phone to light mode, it turns to
-  the faceplate.
+  and the style page joshuavelasco.com/ui with a theme switcher. *Check:* open
+  /ui: every control in the chosen theme; the switcher changes them all.
 - **S1.2** The front door in the new look: joshuavelasco.com with three doors,
   Bar · Studio · News. *Check:* the home page, three doors.
 - **S1.3** The schema: `assets/world/schema.json` for every part and field in
