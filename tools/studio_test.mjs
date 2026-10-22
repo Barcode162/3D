@@ -229,6 +229,25 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
 }
 
+// ---- S5.4 Inspect edits every field: a seat's facing ----
+{
+  const s2 = (await S()).things.find((t) => t.id === 'bar_stool-2');
+  await page.evaluate((i) => window.bar3dStudio.select(i, false), s2.i);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="inspect"]');
+  const facing = page.locator('#monitor .ctl:has(.name:text-is("Facing")) input').first();
+  check(await facing.count() === 1, 'S5.4 Inspect shows the seat\'s facing as a field you can change');
+  await facing.fill('90');
+  await facing.press('Enter');
+  await page.waitForTimeout(300);
+  const f = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'bar_stool').parts.seats[0].facing);
+  check(f === 90, `S5.4 typing 90 sets every bar stool's seat facing (${f})`);
+  const period = page.locator('#monitor .ctl:has(.name:text-is("Length")) input').first();
+  check(await period.count() === 1, 'S5.4 its loops\' lengths are editable too');
+  await page.screenshot({ path: 'build/studio-inspect.png' });
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).

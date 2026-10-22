@@ -6,6 +6,8 @@ import { S, on, send, select, api } from './studio.js';
 import { problems as schemaProblems } from './schema.mjs';
 import { kindOf, thingEntry, placeFile, restore, edit, setOp } from './draft.mjs';
 import { add as addOp } from './ops.mjs';
+import { control } from './fields.mjs';
+import { partSource } from './parts.mjs';
 import { changes } from './diff.mjs';
 
 const $ = (id) => document.getElementById(id);
@@ -91,18 +93,27 @@ function drawInspect(body) {
   const t = S.things[S.selected];
   if (!t) { body.append(el('p', 'dim', 'Select something: tap it in the world, or pick it in World.')); return; }
   const tj = thingJson(t.id) || {};
+  const te = thingEntry(t.id);
   const kind = kindOf(t.kind) || {};
   const sch = S.schema;
   body.append(el('h3', '', t.id));
   if (kind.about) body.append(el('p', 'dim', kind.about));
   body.append(el('span', 'label', 'This one'));
-  body.append(fieldRow('Kind', t.kind), fieldRow('Where (in the world)', t.at, 'm'));
-  for (const [k, v] of Object.entries(tj)) {
-    if (k === 'id' || k === 'kind' || k === 'parts' || k === 'loops') continue;
-    const f = sch.thing.fields[k] || {};
-    body.append(fieldRow(f.label || k, v, f.unit, f.about));
+  body.append(fieldRow('Kind', t.kind));
+  const states = Object.keys(kind.states || {});
+  if (te.json) {
+    // Every field of this one, editable (S5.4); where/turn/size always.
+    const shown = { at: [0, 0, 0], turn: 0, scale: 1, ...te.json };
+    for (const [k, v] of Object.entries(shown)) {
+      if (k === 'id' || k === 'kind' || k === 'parts' || k === 'loops' || k === 'parent') continue;
+      const f = sch.thing.fields[k] || {};
+      const c = control(sch, f, f.label || k, v, (nv) => edit({ op: 'group', ops: [setOp(placeFile(), [...te.path, k], nv)], label: `${t.id}: ${f.label || k}` }), { states });
+      body.append(c || fieldRow(f.label || k, v, f.unit, f.about));
+    }
+  } else {
+    body.append(fieldRow('Where (in the world)', t.at, 'm'));
+    if (te.why) body.append(el('p', 'dim', te.why));
   }
-  const te = thingEntry(t.id);
   const own = te.json ? [...Object.keys(te.json.parts || {}).map((n) => ['parts', n]), ...Object.keys(te.json.loops || {}).map((n) => ['loops', n])] : [];
   if (own.length) {
     // What this one has of its own (S5.3): a dot each, Reset to kind, or make it a kind.
@@ -131,17 +142,25 @@ function drawInspect(body) {
     body.append(head);
     if (p.about) body.append(el('p', 'dim', p.about));
     const items = Array.isArray(v) && p.list ? v : [v];
-    items.slice(0, 6).forEach((item) => {
+    const src = partSource(t, name);
+    items.slice(0, 6).forEach((item, i) => {
       if (item && typeof item === 'object' && !Array.isArray(item) && p.fields) {
-        for (const [k, x] of Object.entries(item)) { const f = p.fields[k] || {}; body.append(fieldRow(f.label || k, x, f.unit)); }
+        if (items.length > 1) body.append(el('span', 'dim', `${p.label || name} ${i + 1}${item.name ? ' · ' + item.name : ''}`));
+        for (const [k, x] of Object.entries(item)) {
+          const f = p.fields[k] || {};
+          const path = src ? [...src.path, ...(p.list ? [i] : []), k] : null;
+          const c = path && control(sch, f, f.label || k, x, (nv) => edit({ op: 'group', ops: [setOp(src.file, path, nv)], label: `${src.owner}: ${p.label || name} · ${f.label || k}` }), { states });
+          if (c && mine) c.classList.add('own');
+          body.append(c || fieldRow(f.label || k, x, f.unit));
+        }
       } else body.append(fieldRow(p.label || name, item, p.unit));
     });
     if (items.length > 6) body.append(el('p', 'dim', `…and ${items.length - 6} more`));
   }
-  const states = Object.entries(kind.states || {});
-  if (states.length) {
+  const stateList = Object.entries(kind.states || {});
+  if (stateList.length) {
     body.append(el('span', 'label', 'States'));
-    for (const [name, st] of states) {
+    for (const [name, st] of stateList) {
       const rules = Object.entries(st.on || {}).map(([e, to]) => `${e === 'tap' ? 'a touch' : e} → ${to}`);
       if (st.afterLoops) rules.push(`after ${st.afterLoops} loop(s) → ${st.next}`);
       if (st.after) rules.push(`after ${st.after} s → ${st.next}`);
@@ -151,11 +170,33 @@ function drawInspect(body) {
   const loops = Object.entries(kind.loops || {});
   if (loops.length) {
     body.append(el('span', 'label', 'Loops'));
-    for (const [name, l] of loops) body.append(fieldRow(name, `${l.period}${l.beat ? ' beats' : ' s'}`, '', (l.pieces || []).map((p) => `${p.ch} ${p.shape}`).join(' · ')));
+    for (const [name, l] of loops) {
+      const src = loopSource(t, name);
+      body.append(el('span', 'dim', `${name}: ${(l.pieces || []).map((p) => `${p.ch} ${p.shape}`).join(' · ')}${src ? ' · every ' + src.owner : ''}`));
+      for (const k of ['period', 'blend', 'restart', 'desync']) {
+        if (l[k] === undefined && k !== 'period') continue;
+        const f = sch.loop.fields[k] || {};
+        const c = src && control(sch, f, f.label || k, l[k], (nv) => edit({ op: 'group', ops: [setOp(src.file, [...src.path, k], nv)], label: `every ${src.owner}: ${name} loop ${f.label || k}` }));
+        body.append(c || fieldRow(f.label || k, l[k], f.unit));
+      }
+    }
   }
 }
 // A new kind from a thing (S5.3): it builds on the old kind with this one's
 // own parts and loops; the thing becomes one of it.
+// Where a loop is written: the thing's own, else the kind (or the one it builds on).
+function loopSource(t, name) {
+  const te = thingEntry(t.id);
+  if (te.json && te.json.loops && te.json.loops[name]) return { file: placeFile(), path: [...te.path, 'loops', name], owner: t.id };
+  for (let id = t.kind, n = 0; id && n < 16; n++) {
+    const f = (S.draft[placeFile()].kinds || []).find((x) => (S.draft[x].kinds || []).some((k) => k.id === id));
+    const k = f && S.draft[f].kinds.find((x) => x.id === id);
+    if (!k) return null;
+    if (k.loops && k.loops[name]) return { file: f, path: ['kinds', { id }, 'loops', name], owner: id };
+    id = k.is;
+  }
+  return null;
+}
 function newKindFrom(t, te) {
   const kindFile = (S.draft[placeFile()].kinds || []).find((f) => (S.draft[f].kinds || []).some((k) => k.id === t.kind)) || (S.draft[placeFile()].kinds || [])[0];
   const taken = new Set((S.draft[placeFile()].kinds || []).flatMap((f) => (S.draft[f].kinds || []).map((k) => k.id)));
@@ -222,6 +263,8 @@ async function drawHistory(body) {
 function draw() {
   const box = $('monitor');
   if (box.hidden) return;
+  const old = box.querySelector('.body'), scroll = old ? old.scrollTop : 0, sameTab = M.drawnTab === M.tab;
+  M.drawnTab = M.tab;
   box.textContent = '';
   const grip = el('button', 'grip');
   grip.setAttribute('aria-label', 'Make the Monitor bigger or smaller');
@@ -248,6 +291,8 @@ function draw() {
   else if (M.tab === 'changes') drawChanges(body);
   else if (M.tab === 'history') drawHistory(body);
   else drawProblems(body);
+  Looped.scan();  // the faders in Inspect
+  if (sameTab) body.scrollTop = scroll;  // an edit redraws; you stay where you were
 }
 
 on('world', draw);
