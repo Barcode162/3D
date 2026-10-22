@@ -12,6 +12,9 @@ easy to pinpoint. So on "go":
 1. Read **`NEXT.md`** only (the next step, its pieces, the build log). Open
    other docs only when a piece needs them. No menu, no plan reply, no
    questions unless truly blocked (then: ask once, with a recommendation).
+   **World first:** `node tools/studio.mjs pull` (the world the user published
+   from the Studio → `assets/world/`; commit it as "World: from the studio vN"
+   before any piece). Never edit the store by hand.
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
    **One piece = one commit**, message starting with its tag (`E3.2 ...`),
@@ -20,6 +23,9 @@ easy to pinpoint. So on "go":
 3. End of the step: `node tools/check.mjs` (green), `git fetch origin main &&
    git merge origin/main`, push `main` **once**. CI deploys in ~6 min; the
    `build xxxxxxx` label on screen shows the live commit.
+   If the step changed files in `assets/world/`: once the deploy is live,
+   `node tools/studio.mjs push --note "<pieces>"` (publishes them as a new
+   version by Claude; refused if the user published since: pull, merge, push).
 4. Update `NEXT.md` in the same push: tick the pieces, add one Build log line
    (build sha, the pieces, the commit range), write the **next** step's pieces.
    Tick the step in `docs/ENGINE.md` → Progress. Gotchas → `docs/DECISIONS.md`.
