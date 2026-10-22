@@ -100,6 +100,19 @@ await page.click('#monitor .tabs [data-tab="problems"]');
 await page.waitForFunction(() => /All clear|problem/.test(document.querySelector('#monitor .body').textContent) && !/Asking/.test(document.querySelector('#monitor .body').textContent), null, { timeout: 10000 }).catch(() => {});
 check(/All clear/.test(await page.textContent('#monitor .body')), 'S2.4 Problems: all clear for the bar as it is');
 
+// ---- S2.5 X-ray ----
+await page.click('#monitor .tabs [data-tab="world"]');
+await page.click('.xray [data-layer="1"]');
+await page.waitForTimeout(300);
+check(await page.$eval('.xray [data-layer="1"]', (k) => k.classList.contains('lit')), 'S2.5 the tap-areas key lights up');
+await page.click('#monitor .key[aria-label="Close the Monitor"]');
+const jb = (await S()).things.find((t) => t.id === 'jukebox');
+await page.evaluate((j) => window.bar3dStudio.send('st.view', 0, 0, [j.at[0] + 1.5, 1.8, j.at[2] + 3, 0.3, -0.25, 0, 3].join(',')), jb);
+await page.waitForTimeout(800);
+await page.screenshot({ path: 'build/studio-xray.png' });
+const xrayLog = await engineLog();
+check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws without errors');
+
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

@@ -45,7 +45,7 @@ class SceneRenderer {
     float roughness = 0.6f;
     float metallic = 0;
   };
-  static constexpr size_t kMaxBoxes = 320;
+  static constexpr size_t kMaxBoxes = 720;  // the Studio's X-ray edges need room (bar/studio_mode.cpp)
   void setBoxes(const std::vector<Box>& boxes);
   // Turns one of the scene's lights up or down (1 = as built, 0 = off).
   void setLightScale(size_t light, float scale);

@@ -27,7 +27,8 @@ struct Studio {
   // The selection and the models glowing for it.
   int selected = -1;
   std::vector<size_t> glowing;
-  bool readySent = false;  // the world's list goes to the page after its first update
+  bool readySent = false;
+  int layers = 0;  // X-ray: 1 tap areas, 2 shapes you bump into, 4 seats, 8 lights, 16 where people appear  // the world's list goes to the page after its first update
 } S;
 
 void send(const std::string& json) { engine::bridge::op("[\"studio\"," + json + "]"); }
@@ -313,6 +314,8 @@ bool studioCommand(const engine::ui::Command& c) {
     std::string list = "[";
     for (const std::string& p : g_app.world.world().check()) list += (list.size() > 1 ? "," : "") + engine::jsonQuote(p);
     send("{\"ev\":\"check\",\"problems\":" + list + "]}");
+  } else if (c.name == "st.layers") {  // a: which X-ray layers (bits, see Studio::layers)
+    S.layers = static_cast<int>(c.a);
   } else if (c.name == "st.frame") {
     frameThing(c.a >= 0 ? static_cast<int>(c.a) : S.selected);
   } else {
@@ -321,14 +324,69 @@ bool studioCommand(const engine::ui::Command& c) {
   return true;
 }
 
-void studioPresent(std::vector<app::SceneRenderer::Box>&, double nowMs) {
-  if (!S.readySent) {
+// X-ray (docs/STUDIO.md 5.3): the invisible parts as glowing edges, the
+// nearest first (the renderer draws at most so many boxes).
+struct Region {
+  Vec3 center, half;
+  engine::Quat rot;
+  Vec3 color;
+};
+void xray(std::vector<app::SceneRenderer::Box>& boxes) {
+  if (!S.layers) return;
+  const app::BarScene& sc = g_app.scene;
+  std::vector<Region> regions;
+  auto box = [&](Vec3 mn, Vec3 mx, Vec3 color) { regions.push_back({(mn + mx) * 0.5f, (mx - mn) * 0.5f, {}, color}); };
+  if (S.layers & 1)
+    for (const app::Interactable& it : sc.interactables) box(it.boundsMin, it.boundsMax, {1.0f, 0.55f, 0.17f});
+  if (S.layers & 2)
+    for (const app::Collider& c : sc.colliders) regions.push_back({c.center, c.half, c.rotation, {0.36f, 0.61f, 1.0f}});
+  if (S.layers & 4)
+    for (const app::Seat& st : sc.seats) box(st.boundsMin, st.boundsMax, {0.34f, 0.81f, 0.53f});
+  if (S.layers & 8)
+    for (const auto& l : sc.lights) {
+      const float r = std::min(l.range * 0.25f, 1.2f);
+      box(l.position - Vec3{r, r, r}, l.position + Vec3{r, r, r}, l.color);
+    }
+  if (S.layers & 16) {
+    const Vec3 p = sc.spawnPosition;
+    box({p.x - 0.3f, p.y - 1.65f, p.z - 0.3f}, {p.x + 0.3f, p.y + 0.2f, p.z + 0.3f}, {0.95f, 0.78f, 0.27f});
+  }
+  const Vec3 eye = g_app.camera.position;
+  std::sort(regions.begin(), regions.end(), [&](const Region& a, const Region& b) {
+    return engine::lengthSq(a.center - eye) < engine::lengthSq(b.center - eye);
+  });
+  const float t = 0.012f;  // edge thickness, metres
+  for (const Region& r : regions) {
+    if (boxes.size() + 12 > app::SceneRenderer::kMaxBoxes) break;
+    const Vec3 h = r.half;
+    // 4 edges along each axis.
+    for (int axis = 0; axis < 3; ++axis)
+      for (int k = 0; k < 4; ++k) {
+        const float s1 = (k & 1) ? 1.0f : -1.0f, s2 = (k & 2) ? 1.0f : -1.0f;
+        Vec3 off, size;
+        if (axis == 0) off = {0, s1 * h.y, s2 * h.z}, size = {h.x * 2 + t, t, t};
+        if (axis == 1) off = {s1 * h.x, 0, s2 * h.z}, size = {t, h.y * 2 + t, t};
+        if (axis == 2) off = {s1 * h.x, s2 * h.y, 0}, size = {t, t, h.z * 2 + t};
+        app::SceneRenderer::Box b;
+        b.center = r.center + r.rot.rotate(off);
+        b.rotation = r.rot;
+        b.size = size;
+        b.color = r.color;
+        b.glow = 0.7f;
+        boxes.push_back(b);
+      }
+  }
+}
+
+void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
+  if (!S.readySent && g_app.entered && !g_app.loader.wantsWarmUpFrame()) {
     S.readySent = true;
     sendReady();
   }
   // The selection breathes (docs/STUDIO.md 4.0: the selected thing pulses).
   const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
+  xray(boxes);
 }
 
 }  // namespace barapp

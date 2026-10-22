@@ -61,7 +61,21 @@ function fieldRow(label, value, unit, about) {
   if (about) r.append(el('span', 'about', about));
   return r;
 }
+const LAYERS = [[1, 'Tap areas'], [2, 'Shapes'], [4, 'Seats'], [8, 'Lights'], [16, 'Spawn']];
+function drawLayers(body) {
+  const row = el('div', 'row xray');
+  row.append(el('span', 'label', 'X-ray'));
+  for (const [bit, name] of LAYERS) {
+    const k = el('button', 'key small' + (S.layers & bit ? ' lit' : ''));
+    k.dataset.layer = bit;
+    k.append(el('span', 'kled'), name);
+    k.onclick = () => { S.layers ^= bit; k.classList.toggle('lit', !!(S.layers & bit)); send('st.layers', S.layers); };
+    row.append(k);
+  }
+  body.append(row);
+}
 function drawWorld(body) {
+  drawLayers(body);
   const search = el('input', 'field');
   search.placeholder = `Search ${S.things.length} things`;
   search.setAttribute('aria-label', 'Search things');

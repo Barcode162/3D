@@ -20,6 +20,7 @@ export const S = {
   byId: new Map(),
   place: 'bar',
   selected: -1,
+  layers: 0,             // X-ray layers shown (monitor.js)
   listeners: {},
 };
 export function on(ev, f) { (S.listeners[ev] = S.listeners[ev] || []).push(f); }
