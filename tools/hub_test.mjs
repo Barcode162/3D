@@ -217,7 +217,8 @@ try {
   await wait(900);
   const ans = (await post('/hub/hub.php', { a: 'inbox' }, { 'X-Hub-Key': key })).cards.find((c) => c.id === pool.id);
   check(!!ans && ans.question === '' && ans.choices.length === 0 && ans.thread.at(-1).text === 'Lounge', 'one tap answers Claude\'s question (in Claude\'s inbox)');
-  // The news feed: the post with its picture (the login cookie lets it load).
+  // The news feed (its own tab since S4.1): the post with its picture (the login cookie lets it load).
+  await page.click('nav [data-tab=news]');
   await page.waitForSelector('.post h3:has-text("Neon lanes")', { timeout: 5000 });
   await page.waitForFunction(() => { const i = document.querySelector('.post img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 5000 })
     .catch(() => {});
@@ -239,7 +240,7 @@ try {
   // Explore: the bar's map; a place opens with its things.
   await post('/hub/hub.php', { a: 'save', card: { section: 'bar', title: 'Jukebox glow', stage: 'ready' } }, { 'X-Hub-Key': key });
   await page.reload();
-  await page.waitForSelector('.hello', { timeout: 5000 });
+  await page.waitForSelector('nav [data-tab=explore]', { timeout: 5000 });
   await page.click('nav [data-tab=explore]');
   await page.waitForSelector('svg.map .spot', { timeout: 5000 });
   const places = await page.$$eval('svg.map .spot', (g) => g.map((x) => x.getAttribute('aria-label')));

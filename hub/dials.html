@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-look="faceplate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Dials · Hub</title>
+<!-- The hub's Dials (docs/STUDIO.md §6, S4.1): every number in the world as a
+     dial, from the schema (assets/world/schema.json). Edits go into the same
+     draft the Studio uses (studio/api.php: draft / save), Publish is the same
+     button; "Studio" on a thing opens it there, selected. dials.js. -->
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<style>
+  [hidden] { display: none !important; }
+  main { max-width: 680px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 96px); display: grid; gap: 10px; }
+  header { display: flex; align-items: center; gap: 8px; padding: 8px; position: sticky; top: calc(env(safe-area-inset-top) + 4px); z-index: 5; }
+  header h1 { font-size: 26px; margin: 0 4px; flex: 1; }
+  .saved { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+  .bar { display: flex; gap: 8px; align-items: center; }
+  .bar .seg { flex: 1; }
+  .bar .seg button { min-height: 36px; }
+  #search { flex: 1.3; min-width: 0; }
+  .row { padding: 0; overflow: hidden; }
+  .row > button.head { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; }
+  .row > button.head:focus-visible { outline: 2px solid var(--accent); }
+  .row .id { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row small { color: var(--text-2); font-size: 12px; white-space: nowrap; }
+  .row .more { padding: 0 12px 12px; display: grid; gap: 8px; }
+  .about { color: var(--text-2); font-size: 14px; margin: 0; }
+  h3 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); margin: 6px 2px 0; font-weight: 700; }
+  .dial { display: grid; grid-template-columns: 1fr 92px 22px; gap: 4px 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--field); box-shadow: var(--field-edge); }
+  .dial label { font-size: 14px; }
+  .dial .field { font-size: 15px; padding: 6px 8px; text-align: right; width: 100%; box-sizing: border-box; }
+  .dial .unit { font-size: 12px; color: var(--text-2); }
+  .dial .fader { grid-column: 1 / -1; height: 44px; }
+  .dial .note { grid-column: 1 / -1; font-size: 12px; color: var(--text-2); }
+  .dial.changed { box-shadow: var(--field-edge), inset 3px 0 0 var(--accent); }
+  .flag { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--field); box-shadow: var(--field-edge); font-size: 14px; }
+  .vec { display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 6px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--field); box-shadow: var(--field-edge); font-size: 14px; }
+  .vec .field { font-size: 14px; padding: 6px; text-align: right; min-width: 0; }
+  .lane { display: grid; gap: 6px; padding: 8px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--rule); }
+  .lane > b { font-size: 13px; font-family: var(--mono); color: var(--accent); font-weight: 600; }
+  footer { position: fixed; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom) + 8px); max-width: 664px; margin: 0 auto; display: flex; gap: 8px; padding: 8px; z-index: 6; }
+  footer .key { flex: 1; }
+  #sheet { position: fixed; left: 8px; right: 8px; top: calc(env(safe-area-inset-top) + 70px); max-width: 640px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; z-index: 8; }
+  #sheet h2 { margin: 0; font-size: 26px; }
+  #sheet ul { margin: 0; padding-left: 18px; font-size: 14px; max-height: 30vh; overflow: auto; }
+  #sheet .bar .key { flex: 1; }
+  .empty { padding: 20px; text-align: center; color: var(--text-2); }
+</style>
+</head>
+<body class="lp">
+<main>
+  <header class="panel over">
+    <a class="key small" href="index.html" aria-label="Back to the hub"><svg class="ico"><use href="/ui/icons.svg#i-back"/></svg></a>
+    <h1 class="display">Dials</h1>
+    <span class="saved"><span class="steps" id="steps" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="savedText">Loading…</span></span>
+  </header>
+  <div class="bar">
+    <span class="seg field" id="tabs"><button type="button" class="on" data-tab="kinds">Kinds</button><button type="button" data-tab="things">Things</button></span>
+    <input id="search" class="field" type="search" placeholder="Search" aria-label="Search" autocapitalize="none" autocorrect="off">
+  </div>
+  <div id="list"><p class="empty">Loading the world…</p></div>
+</main>
+<footer class="panel over" id="foot" hidden>
+  <button class="key" id="undo" type="button" disabled><svg class="ico"><use href="/ui/icons.svg#i-undo"/></svg>Undo</button>
+  <a class="key" id="studioKey" href="/studio/"><svg class="ico"><use href="/ui/icons.svg#i-studio"/></svg>Studio</a>
+  <button class="key go" id="publish" type="button" disabled>Publish</button>
+</footer>
+<section id="sheet" class="panel over" hidden aria-label="Publish">
+  <h2 class="display">Publish</h2>
+  <ul id="sheetList"></ul>
+  <input id="note" class="field" maxlength="200" placeholder="A few words: what changed (optional)" aria-label="What changed">
+  <div class="bar"><button class="key" id="cancel" type="button">Not yet</button><button class="key go" id="go" type="button">Publish</button></div>
+</section>
+<script src="/ui/looped.js"></script>
+<script type="module" src="dials.js"></script>
+</body>
+</html>

@@ -90,3 +90,28 @@ export class History {
   get canUndo() { return this.done.length > 0; }
   get canRedo() { return this.undone.length > 0; }
 }
+
+// ---- Publishing over a newer world (S3.5) ----
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Your draft on top of a newer world: every thing or kind you changed is
+// yours, everything else comes from the newer world.
+export function merge(oldBase, draft, newer) {
+  const out = clone(newer);
+  for (const [file, d] of Object.entries(draft)) {
+    const b = oldBase[file], n = out[file];
+    if (!n || !b) { if (!same(d, b)) out[file] = clone(d); continue; }
+    const key = file.startsWith('places/') ? 'things' : file.startsWith('kinds/') ? 'kinds' : null;
+    if (!key) { if (!same(d, b)) out[file] = clone(d); continue; }
+    const bm = new Map((b[key] || []).map((x) => [x.id, x])), dm = new Map((d[key] || []).map((x) => [x.id, x]));
+    let list = [...(n[key] || [])];
+    for (const [id, x] of dm) {
+      if (same(x, bm.get(id))) continue;  // you didn't touch it
+      const i = list.findIndex((y) => y.id === id);
+      if (i >= 0) list[i] = clone(x); else list.push(clone(x));
+    }
+    for (const id of bm.keys()) if (!dm.has(id)) list = list.filter((y) => y.id !== id);  // you removed it
+    n[key] = list;
+    for (const k of Object.keys(d)) if (k !== key && !same(d[k], b[k])) n[k] = clone(d[k]);
+  }
+  return out;
+}

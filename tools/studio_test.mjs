@@ -17,6 +17,7 @@ for (const f of readdirSync('build/site')) symlinkSync(resolve('build/site', f),
 copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
 symlinkSync(resolve('studio'), join(root, 'home/studio'));
 symlinkSync(resolve('ui'), join(root, 'home/ui'));
+symlinkSync(resolve('hub'), join(root, 'home/hub'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
   env: { ...process.env, STUDIO_DATA: join(root, 'private/studio'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
 const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
@@ -251,6 +252,24 @@ await page.waitForSelector('.hist', { timeout: 5000 }).catch(() => {});
 check(/v1 · Moved a table/.test(await page.textContent('#monitor .body')), 'S3.5 History lists it');
 await page.screenshot({ path: 'build/studio-history.png' });
 
+// ---- S4.1 the hub's Dials: the same draft, the same Publish ----
+await page.goto(url + 'hub/dials.html#kind=pendant_lamp');
+await page.waitForSelector('[data-kind="pendant_lamp"] .dial input', { timeout: 15000 }).catch(() => {});
+const lenInput = page.locator('[data-kind="pendant_lamp"] .dial input').first();
+check(await lenInput.count() === 1 && (await page.textContent('[data-kind="pendant_lamp"]')).includes('Loop: sway'), 'S4.1 Dials opens the pendant lamp with its loops');
+await lenInput.fill('7');
+await lenInput.press('Enter');
+await page.waitForFunction(() => /saved/.test(document.getElementById('savedText').textContent), null, { timeout: 8000 }).catch(() => {});
+check(/saved/.test(await page.textContent('#savedText')), 'S4.1 a dial change saves the draft');
+await page.click('#publish');
+check(/sway|pendant/i.test(await page.textContent('#sheetList')), `S4.1 Publish says what changed (${(await page.textContent('#sheetList')).slice(0, 80)})`);
+await page.click('#go');
+await page.waitForFunction(() => /Live · v2/.test(document.getElementById('savedText').textContent), null, { timeout: 8000 }).catch(() => {});
+const v2 = await (await fetch(url + 'studio/api.php?bundle=2')).json().catch(() => ({}));
+const lamp = v2.files && v2.files['kinds/bar.json'].kinds.find((k) => k.id === 'pendant_lamp');
+check(lamp && lamp.loops.sway.period === 7, `S4.1 version 2 has the lamps' new swing length (${lamp && lamp.loops.sway.period} s)`);
+check((await page.getAttribute('[data-kind="pendant_lamp"] a.key', 'href') || '').startsWith('/studio/#thing='), 'S4.1 "Open in the Studio" links to the thing');
+await page.screenshot({ path: 'build/hub-dials.png' });
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

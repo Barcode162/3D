@@ -1,27 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-look="faceplate">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0b0716">
+<meta name="theme-color" content="#0A0908">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Hub</title>
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
 <style>
   /* The hub v3 (docs/LOOPED.md C): Home = what needs you + the news feed;
      Explore = the bar as a map (the engine under the floor, the tools beside
      it). No cards: things live on places. hub.php is the server; the old
      board is list.html ("Everything"). */
+  /* S4.1: the Faceplate look (ui/themes.css gives the fonts and the theme's
+     own tokens; these names are the hub's, mapped onto them). */
   :root {
-    --bg: #0b0716; --bg2: #140c26; --ink: #f6f0ff; --dim: #b4a7d4; --faint: rgba(255,255,255,.08);
-    --edge: rgba(255,255,255,.14); --glass: rgba(255,255,255,.06);
-    --pink: #ff5ab4; --gold: #ffb35a; --cyan: #5ad1ff; --mint: #7dff8a; --violet: #b38bff; --red: #ff6b6b;
+    --bg2: #131210; --ink: var(--text); --dim: var(--text-2); --faint: rgba(255,255,255,.06);
+    --edge: #2C2926; --glass: linear-gradient(180deg, #1C1A18, #141311);
+    --pink: #F28C2C; --gold: #F2C744; --cyan: #7FC8E8; --mint: #56CF86; --violet: #C9A27A; --red: #FF6A64;
     --tabs: calc(66px + env(safe-area-inset-bottom));
   }
+  .sky { display: none; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif; }
+  html, body { margin: 0; background: var(--bg) var(--bg-glow) no-repeat; color: var(--ink);
+    font: 16px/1.45 var(--text-font, -apple-system, system-ui, sans-serif); }
   body { min-height: 100svh; overflow-x: hidden; }
   button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
   a { color: var(--cyan); }
@@ -40,10 +45,9 @@
 
   /* Header: the wavy project name and the live build. */
   header { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
-  .wave { font-weight: 850; font-size: 30px; letter-spacing: .5px; line-height: 1; white-space: nowrap; }
-  .wave span { display: inline-block; background: linear-gradient(180deg, #fff, var(--pink) 65%, var(--violet));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: wave 2.6s ease-in-out infinite; animation-delay: calc(var(--i) * .11s); }
+  .wave { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); letter-spacing: var(--display-ls); font-size: 30px; line-height: 1; white-space: nowrap; }
+  .wave span { display: inline-block; color: var(--text); }
+  .wave span:last-child { color: var(--pink); }
   @keyframes wave { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-6px) rotate(-3deg); }
     50% { transform: translateY(0); } 75% { transform: translateY(2px) rotate(2deg); } }
   header .grow { flex: 1; }
@@ -207,7 +211,8 @@
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   nav a, nav button { flex: 1; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0;
     border-radius: 16px; color: var(--dim); text-decoration: none; font-size: 12px; font-weight: 700; transition: color .2s, background .25s; }
-  nav .e { font-size: 22px; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  nav .e { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  nav .on .e { color: var(--pink); }
   nav .on { color: var(--ink); background: rgba(255,255,255,.08); }
   nav .on .e { transform: translateY(-3px) scale(1.15); }
   nav .badge { position: absolute; margin: -4px 0 0 30px; background: var(--pink); color: #1a0b22; font-size: 11px; border-radius: 999px; padding: 0 6px; }
@@ -231,10 +236,10 @@
 <div class="sky"><i></i><i></i><i></i></div>
 <div id="app"></div>
 <nav id="tabs" hidden>
-  <button data-tab="home"><span class="e">🏠</span>Home<span class="badge" id="homeBadge" hidden></span></button>
-  <button data-tab="explore"><span class="e">🗺️</span>Explore</button>
-  <a id="worldTab" href="world.html"><span class="e">✨</span>World</a>
-  <a id="everything" href="list.html"><span class="e">📋</span>Everything</a>
+  <button data-tab="home"><svg class="e"><use href="/ui/icons.svg#i-note-claude"/></svg>Needs you<span class="badge" id="homeBadge" hidden></span></button>
+  <a id="dialsTab" href="dials.html"><svg class="e"><use href="/ui/icons.svg#i-dial"/></svg>Dials</a>
+  <button data-tab="explore"><svg class="e"><use href="/ui/icons.svg#i-place"/></svg>Board</button>
+  <button data-tab="news"><svg class="e"><use href="/ui/icons.svg#i-news"/></svg>News</button>
 </nav>
 <div class="veil" id="veil"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
@@ -382,8 +387,7 @@ function route(quiet) {
   const app = document.getElementById('app');
   app.classList.toggle('quiet', !!quiet);
   document.getElementById('tabs').hidden = false;
-  document.getElementById('everything').href = 'list.html#/p/' + S.project;
-  const tab = p[0] === 'explore' || p[0] === 'spot' ? 'explore' : 'home';
+  const tab = p[0] === 'explore' || p[0] === 'spot' ? 'explore' : p[0] === 'news' ? 'news' : 'home';
   document.querySelectorAll('nav [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   const n = S.board.cards.filter(needsYou).length;
   const badge = document.getElementById('homeBadge');
@@ -393,6 +397,7 @@ function route(quiet) {
   app.innerHTML = '';
   app.appendChild(head());
   if (tab === 'home') home(app);
+  else if (tab === 'news') news(app);
   else explore(app, p[0] === 'explore' ? (p[1] || 'world') : layerOf(p[1]));
   if (quiet) window.scrollTo(0, y);
   if (p[0] === 'spot') openSpot(p[1], quiet); else closeSheet(true);
@@ -438,6 +443,15 @@ function home(app) {
     ready.slice(0, 4).forEach((c) => w.appendChild(el('button', { class: 'work next', onclick: () => openSpotOf(c) }, [el('span', { class: 'dot' }), 'next: ' + short(c.title, 34)])));
     app.appendChild(w);
   }
+  if (!need.length) app.appendChild(el('div', { class: 'empty rise' }, [el('span', { class: 'big', text: '✓' }), 'Nothing waits on you. Claude asks here when it does.']));
+  app.appendChild(el('h2', { text: 'More' }));
+  app.appendChild(el('div', { class: 'working rise' }, [
+    el('a', { class: 'work', href: '/studio/', text: 'Open the Studio' }),
+    el('a', { class: 'work', href: 'list.html#/p/' + S.project, text: 'Everything (the full board)' }),
+    el('a', { class: 'work', href: 'world.html', text: 'What each thing does' })]));
+}
+// ---- News: every update, with screenshots ----
+function news(app) {
   app.appendChild(el('h2', { text: 'News' }));
   if (!S.posts.length) {
     app.appendChild(el('div', { class: 'empty rise' }, [el('span', { class: 'big', text: '📰' }),

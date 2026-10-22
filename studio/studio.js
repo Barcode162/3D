@@ -178,7 +178,14 @@ $('redo').addEventListener('click', () => undoRedo('redo'));
 on('undo', () => undoRedo('undo'));
 on('redo', () => undoRedo('redo'));
 on('changed', () => { $('undo').disabled = !S.history.canUndo; $('redo').disabled = !S.history.canRedo; });
-on('world', () => { $('undo').disabled = true; $('redo').disabled = true; });
+on('world', () => { $('undo').disabled = true; $('redo').disabled = true; openFromLink(); });
+// A link straight to a thing (the hub's "Open in Studio"): /studio/#thing=<id>.
+function openFromLink() {
+  const m = location.hash.match(/thing=([^&]+)/);
+  const t = m && S.byId && S.byId.get(decodeURIComponent(m[1]));
+  if (t) select(t.i, true);
+}
+window.addEventListener('hashchange', () => { if (S.draft) openFromLink(); });
 
 // ---- Saved views (per place, on this device) ----
 const viewsKey = () => 'studioViews-' + S.place;

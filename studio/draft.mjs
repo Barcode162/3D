@@ -4,7 +4,7 @@
 // tells the engine about every change it can show at once (positions, sizes,
 // what sits on what). Emits 'world' once loaded and 'changed' after edits.
 import { S, on, send, emitEvent, api, setSaved } from './studio.js';
-import { History, apply, get, set as setOp } from './ops.mjs';
+import { History, apply, get, set as setOp, merge } from './ops.mjs';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 export const placeFile = () => `places/${S.place}.json`;
@@ -129,34 +129,11 @@ export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); emitE
 export function redo() { const e = S.history.redo(); if (e) { sync(e.op); emitEvent('changed', e.op); } return e; }
 // Live preview while a finger drags (no history): set, show, and say how to undo it.
 export function preview(op) { const inv = apply(S.draft, op); sync(op); return inv; }
-export { get, setOp };
+export { get, setOp, merge };
 
 on('ready', () => { loadWorld().catch((e) => console.error('Studio: could not read the world', e)); });
 
 // ---- Publishing (S3.5) ----
-const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-// Your draft on top of a newer world: every thing or kind you changed is
-// yours, everything else comes from the newer world.
-export function merge(oldBase, draft, newer) {
-  const out = clone(newer);
-  for (const [file, d] of Object.entries(draft)) {
-    const b = oldBase[file], n = out[file];
-    if (!n || !b) { if (!same(d, b)) out[file] = clone(d); continue; }
-    const key = file.startsWith('places/') ? 'things' : file.startsWith('kinds/') ? 'kinds' : null;
-    if (!key) { if (!same(d, b)) out[file] = clone(d); continue; }
-    const bm = new Map((b[key] || []).map((x) => [x.id, x])), dm = new Map((d[key] || []).map((x) => [x.id, x]));
-    let list = [...(n[key] || [])];
-    for (const [id, x] of dm) {
-      if (same(x, bm.get(id))) continue;  // you didn't touch it
-      const i = list.findIndex((y) => y.id === id);
-      if (i >= 0) list[i] = clone(x); else list.push(clone(x));
-    }
-    for (const id of bm.keys()) if (!dm.has(id)) list = list.filter((y) => y.id !== id);  // you removed it
-    n[key] = list;
-    for (const k of Object.keys(d)) if (k !== key && !same(d[k], b[k])) n[k] = clone(d[k]);
-  }
-  return out;
-}
 export async function publish(note) {
   await saveNow();
   let r = await api({ a: 'publish', base: S.draftBase, note, bundle: { format: 1, files: S.draft } });
