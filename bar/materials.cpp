@@ -5,7 +5,6 @@
 
 #include "bar/world_files.h"
 #include "looped/json.h"
-#include "looped/log.h"
 
 namespace app {
 namespace {
@@ -83,19 +82,16 @@ bool materialFromId(std::string_view name, MaterialId* out) {
   return false;
 }
 
-void loadMaterials() {
+std::string loadMaterials() {
   // Room for every material up front: scenes keep pointers into the table.
   g_table.reserve(256);
   g_table.assign(kMaterials, kMaterials + kMaterialCount);
   g_ids.assign(kIds, kIds + kMaterialCount);
   const std::string text = worldFile("materials.json");
-  if (text.empty()) return;
+  if (text.empty()) return "";
   std::string error;
   const engine::Json root = engine::Json::parse(text, &error, {64, 1 << 16});
-  if (!error.empty()) {
-    LOG_ERROR("Materials: materials.json couldn't be read (%s).", error.c_str());
-    return;
-  }
+  if (!error.empty()) return "materials.json couldn't be read (" + error + ")\n";
   g_names.clear();
   g_names.reserve(256);
   for (const engine::Json& m : root["materials"].items()) {
@@ -124,6 +120,7 @@ void loadMaterials() {
       g_ids.push_back(id);
     }
   }
+  return "";
 }
 
 }  // namespace app

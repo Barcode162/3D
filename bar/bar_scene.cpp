@@ -42,8 +42,7 @@ engine::Aabb box(const Json& j) { return {readVec3(j["min"], {}), readVec3(j["ma
 BarScene buildBarScene(const std::string& placeName) {
   BarScene scene;
   scene.place = placeName;
-  loadMaterials();
-  std::string problems;
+  std::string problems = loadMaterials();
   engine::world::Library kinds;
   const std::string placeFile = "places/" + placeName + ".json";
   const Json placeJson = Json::parse(worldFile(placeFile), &problems, {64, 1 << 16});
