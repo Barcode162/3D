@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { launchBrowser } from './lib/browser.mjs';
 
-const PORT = 8798, url = `http://127.0.0.1:${PORT}/`;
+const PORT = Number(process.env.STUDIO_PORT) || 8798, url = `http://127.0.0.1:${PORT}/`;
 const root = mkdtempSync(join(tmpdir(), 'studio-site-'));
 mkdirSync(join(root, 'home/bar'), { recursive: true });
 mkdirSync(join(root, 'private'), { recursive: true });
@@ -79,7 +79,7 @@ const vBack = await view();
 check(vBack && Math.abs(vBack[0] - v0[0]) < 0.05 && Math.abs(vBack[3] - v0[3]) < 0.01, 'S2.2 a saved view comes back exactly');
 await page.click('#viewsKey');
 await page.click('#views button >> nth=0');
-await page.waitForTimeout(500);
+await page.waitForFunction(() => document.querySelectorAll('#views button').length === 2, null, { timeout: 10000 }).catch(() => {});
 check((await page.$$('#views button')).length === 2, 'S2.2 "Save this view" adds it to the list');
 
 // ---- S2.3 picking ----
@@ -88,8 +88,12 @@ const counter = (await S()).things.find((t) => t.id === 'bar_counter_l');
 await page.evaluate((c) => window.bar3dStudio.send('st.view', 0, 0, [c.at[0] + 1.2, 1.7, c.at[2] + 2.6, -0.4, -0.35, 0, 2.5].join(',')), counter);
 await page.waitForTimeout(400);
 const box = await page.$('#world').then((f) => f.boundingBox());
-await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.55);
-await page.waitForTimeout(600);
+// (A slow machine can miss a quick tap between frames: tap again if nothing came.)
+for (let k = 0; k < 3; k++) {
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.55);
+  if (await page.waitForFunction(() => window.bar3dStudio.S.selected >= 0, null, { timeout: 5000 }).then(() => true).catch(() => false)) break;
+}
+await page.waitForTimeout(300);
 const sel = await S();
 const picked = sel.selected >= 0 ? sel.things[sel.selected] : null;
 check(!!picked, `S2.3 a tap selects a thing (${picked && picked.id})`);

@@ -18,17 +18,19 @@ export async function loadWorld() {
   if (!files[pf]) files[pf] = await (await fetch(base + pf)).json();
   for (const k of files[pf].kinds || []) if (!files[k]) files[k] = await (await fetch(base + k)).json();
   if (!files['catalog.json']) { try { files['catalog.json'] = await (await fetch(base + 'catalog.json')).json(); } catch (e) {} }
-  S.base = files;
-  S.draft = clone(files);
-  // Your draft from last time (the server's, else this phone's copy).
+  // Your draft from last time (the server's, else this phone's copy), on top
+  // of the world; nothing sees the draft until it's whole.
+  const draft = clone(files);
   let saved = null;
   try { const r = await api({ a: 'draft' }); if (r.ok && r.draft) saved = r.draft; } catch (e) {}
   if (!saved) { try { saved = JSON.parse(localStorage.getItem(backupKey()) || 'null'); } catch (e) {} }
   if (saved && saved.files && saved.files[placeFile()]) {
     if ((saved.base || 0) !== (S.live.version || 0)) Looped.toast(`Your draft started from version ${saved.base || 0}; the world is now version ${S.live.version}. Publishing will ask you to update it.`);
-    for (const [k, v] of Object.entries(saved.files)) S.draft[k] = v;
+    for (const [k, v] of Object.entries(saved.files)) draft[k] = v;
     S.draftBase = saved.base || 0;
   } else S.draftBase = S.live.version || 0;
+  S.base = files;
+  S.draft = draft;
   S.history = new History(S.draft);
   emitEvent('world');
   // Show what the draft already changed.
