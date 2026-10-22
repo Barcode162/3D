@@ -54,7 +54,7 @@ void fetchLiveWorld() {
   // shows when the frame reloads (S6.1).
   char* draft = static_cast<char*>(EM_ASM_PTR({
     var b = "";
-    try { var p = window.parent; if (p && p !== window && p['bar3dStudioBundle']) b = String(p['bar3dStudioBundle']); } catch (e) {}
+    try { var p = window['parent']; if (p && p !== window && p['bar3dStudioBundle']) b = String(p['bar3dStudioBundle']); } catch (e) {}
     return stringToNewUTF8(b);
   }));
   const std::string text = draft ? draft : "";
