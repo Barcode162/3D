@@ -210,7 +210,7 @@ fn fs_skinned(in: VsOut) -> @location(0) vec4f {
 struct ModelMaterial {
   baseColor: vec4f,
   params: vec4f,    // x = metallic, y = roughness, z = normal scale, w = occlusion strength
-  emissive: vec4f,  // rgb
+  emissive: vec4f,  // rgb; w = the real-brightness fix (new lighting only)
 };
 // Group 2 is shared with the bones above, so these start at binding 1.
 @group(2) @binding(1) var<uniform> modelMaterial: ModelMaterial;
@@ -262,6 +262,9 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   // object.color: rgb tints the colour, a scales the model's own glow (its
   // loop, looped/world; 1 and 1 = as made).
   var base = baseSample.rgb * m.baseColor.rgb * object.color.rgb;
+  // Real material brightness (L1.4): the new lighting lifts materials darker
+  // (or lowers ones brighter) than anything real into real ranges.
+  if (!classicLight()) { base = base * m.emissive.w; }
   // See-through surfaces only scatter light in proportion to their opacity;
   // their reflections stay at full strength.
   if (seeThrough) {

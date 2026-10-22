@@ -24,6 +24,7 @@
 #include "looped/gpu_upload.h"
 #include "looped/shadows.h"
 #include "looped/render_scene.h"
+#include "looped/scene_geometry.h"
 #include "looped/skinned_mesh.h"
 #include "looped/text.h"
 
@@ -344,6 +345,10 @@ class SceneRenderer {
     modelsDirtyTo_ = std::max(modelsDirtyTo_, i + 1);
   }
   void flushModels();
+  // Real material brightness (L1.4): assets/models/albedo.json, applied to
+  // each model as it (or the table) arrives.
+  engine::AlbedoTable albedo_;
+  void applyAlbedo(size_t file);
   size_t filesDone_ = 0;
   size_t filesFailed_ = 0;
   bool criticalFailed_ = false;

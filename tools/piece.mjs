@@ -95,7 +95,7 @@ if (!has('no-build')) build();
 const tests = (opt('test') ?? 'changed').split(',').filter((t) => t && t !== 'none');
 if (tests.length) {
   step(`tests: ${tests.join(', ')}`);
-  if (!run(`node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }
+  if (!run(`FAST=1 node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }
 }
 
 let shots = { images: [], stats: {}, perf: null, errors: [] };

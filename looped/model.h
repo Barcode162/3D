@@ -37,7 +37,7 @@ class GpuModel {
   struct MaterialUniforms {
     float baseColor[4];
     float params[4];    // metallic, roughness, normal scale, occlusion strength
-    float emissive[4];  // rgb
+    float emissive[4];  // rgb; w = the real-brightness fix (L1.4, new lighting only; 1 = none)
   };
 
   // The bind group layout models are drawn with (group 2 of the model
@@ -59,6 +59,16 @@ class GpuModel {
   std::vector<Part> parts;
   bool hasBlend = false;
   std::vector<wgpu::BindGroup> bindGroups;  // one per material
+  // Per material (the default material last): its name, its uniforms and
+  // their buffer, so the renderer can apply the real-brightness fixes
+  // (assets/models/albedo.json) once both have arrived.
+  std::vector<std::string> materialNames;
+  std::vector<MaterialUniforms> materialValues;
+  std::vector<wgpu::Buffer> materialBuffers;
+  void setAlbedoFix(const wgpu::Queue& queue, size_t material, float fix);
+  // The model's geometry and materials on the CPU (textures left out), for
+  // the bounced light (looped/radiosity.h) to trace rays through.
+  std::shared_ptr<const ModelData> cpu;
   Vec3 boundsMin, boundsMax;                // in model space
 };
 

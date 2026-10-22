@@ -16,7 +16,7 @@ const NP = 'NODE_PATH=$(npm root -g):$PWD/node_modules';
 const CHECKS = {
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
-  native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs']],
+  native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
   game:     [['smoke', `${NP} node tools/smoke.mjs`], ['live_world', `${NP} node tools/live_world_test.mjs`], ['touch', `${NP} node tools/touch_test.mjs`], ['travel', `${NP} node tools/travel_test.mjs`]],
   room:     [['proto', 'node tools/proto_test.mjs'], ['room', 'node tools/room_test.mjs'],
              ['ledger', 'node tools/ledger_test.mjs'], ['mp', `${NP} node tools/mp_test.mjs`]],
@@ -44,6 +44,7 @@ const RULES = [
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
   [/^tools\/ui_test/, ['ui']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
+  [/^assets\/world\/|^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],
   [/^bar\/projects\/mania\//, ['build', 'game', 'mania']],
   [/^bar\/projects\/chess\//, ['build', 'native', 'game', 'chess']],

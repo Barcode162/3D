@@ -218,9 +218,13 @@ void finish(const std::shared_ptr<Loading>& l) {
       u.emissive[0] = m.emissive.x;
       u.emissive[1] = m.emissive.y;
       u.emissive[2] = m.emissive.z;
+      u.emissive[3] = 1;
       wgpu::BindGroupEntry e[7];
       e[0].binding = 1;
-      e[0].buffer = makeBuffer(device, &u, sizeof(u), wgpu::BufferUsage::Uniform);
+      e[0].buffer = makeBuffer(device, &u, sizeof(u), wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst);
+      model->materialNames.push_back(m.name);
+      model->materialValues.push_back(u);
+      model->materialBuffers.push_back(e[0].buffer);
       e[0].size = sizeof(u);
       e[1].binding = 2;
       e[1].textureView = view(m.baseColorImage, true, f.white);
@@ -275,7 +279,9 @@ void finish(const std::shared_ptr<Loading>& l) {
       std::string name = l->url.substr(l->url.find_last_of('/') + 1);  // "assets/models/piano.glb.gz" -> "piano"
       name = name.substr(0, name.find('.'));
       profiler().stage("model:" + name, false);  // already logged above
-      l->data.primitives.clear();  // the GPU has its copy now
+      // The GPU has its copy now; the CPU keeps the shapes (no textures) for rays.
+      l->data.images.clear();
+      l->model->cpu = std::make_shared<const ModelData>(std::move(l->data));
       auto done = std::move(l->done);
       done(std::move(l->model));
     }, JobLane::kNormal, "model-done");
@@ -452,6 +458,12 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
       }, JobLane::kNormal, "model-parse-end");
     }, JobLane::kNormal, "model-parse");
   }, std::move(progress));
+}
+
+void GpuModel::setAlbedoFix(const wgpu::Queue& queue, size_t material, float fix) {
+  if (material >= materialValues.size() || materialValues[material].emissive[3] == fix) return;
+  materialValues[material].emissive[3] = fix;
+  queue.WriteBuffer(materialBuffers[material], 0, &materialValues[material], sizeof(MaterialUniforms));
 }
 
 }  // namespace engine

@@ -10,6 +10,7 @@
 
 #include "looped/frame_time.h"
 #include "looped/light_units.h"
+#include "looped/fetch.h"
 #include "looped/file.h"
 #include "looped/log.h"
 #include "looped/pipeline_cache.h"
@@ -188,6 +189,14 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
     }
   }
   loadModels(scene, objectData);
+  engine::fetchFile("assets/models/albedo.json", [this](bool ok, std::vector<uint8_t> bytes) {
+    std::string error;
+    if (!ok || !albedo_.parse(std::string(bytes.begin(), bytes.end()), &error)) {
+      LOG_ERROR("Material brightness table (albedo.json): %s", ok ? error.c_str() : "not found");
+      return;
+    }
+    for (size_t f = 0; f < fileNames_.size(); ++f) applyAlbedo(f);
+  });
   // The model downloads are on their way; make the avatar textures meanwhile.
   createMaterials(scene, colorMaps_, bumpMaps_, sampler_);
   engine::profiler().stage("textures");
@@ -887,6 +896,7 @@ void SceneRenderer::requestFile(size_t f, bool atStart) {
           models_[i].gpu = model;
           assignRooms(models_[i]);
         }
+        applyAlbedo(f);
         modelsLoaded_ += fileUsers_[f].size();
       },
       // Downloading is most of the wait; decoding textures is the rest.
@@ -894,6 +904,15 @@ void SceneRenderer::requestFile(size_t f, bool atStart) {
         if (atStart) fileProgress_[static_cast<size_t>(slot)] = std::max(fileProgress_[static_cast<size_t>(slot)], 0.85f * fraction);
       },
       gpu_->astc ? modelUrl(fileNames_[f], false) : "");
+}
+
+void SceneRenderer::applyAlbedo(size_t f) {
+  if (!albedo_.loaded() || f >= fileUsers_.size() || fileUsers_[f].empty()) return;
+  const std::shared_ptr<engine::GpuModel>& m = models_[fileUsers_[f][0]].gpu;
+  if (!m) return;
+  for (size_t k = 0; k < m->materialNames.size(); ++k) {
+    m->setAlbedoFix(gpu_->queue, k, albedo_.fix(fileNames_[f], m->materialNames[k]));
+  }
 }
 
 void SceneRenderer::streamRooms(Vec3 eye, double nowMs) {

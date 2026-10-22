@@ -2,6 +2,7 @@
 # Runs the native tests twice: built with g++ (fast) and with em++ run in
 # node (the same compiler as the game, so wasm math is checked too).
 # Usage: bash tools/native/run.sh   (needs emsdk_env.sh sourced for em++)
+#        FAST=1 bash tools/native/run.sh   g++ only (each piece; the full check runs both)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p build/native
@@ -31,7 +32,9 @@ for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"
   g++ -std=c++20 -O2 -I. ${TESTS[$t]} -o build/native/$t
   build/native/$t
-  if command -v em++ >/dev/null; then
+  if [ -n "${FAST:-}" ]; then
+    :  # FAST=1 (tools/piece.mjs): g++ only; the full check runs the wasm build too
+  elif command -v em++ >/dev/null; then
     echo "== $t (em++ + node)"
     em++ -std=c++20 -O2 -I. ${TESTS[$t]} -sENVIRONMENT=node -sNODERAWFS=1 -sALLOW_MEMORY_GROWTH=1 -o build/native/$t.js
     node build/native/$t.js

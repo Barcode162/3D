@@ -62,6 +62,22 @@ Every lamp says how much light it gives the way a bulb's box does, in
 | the room's fill light (until bounced light, L1.6) | `?ambient=14` | 14 |
 | white balance: how much eyes correct warm light | `?white=0.55` `?whitek=2700` | 55% toward white for 2700 K |
 
+### Real material brightness (L1.3)
+How much light a surface reflects (its **albedo**) decides how far light
+spreads: dark surfaces swallow it. Many of the bar's materials were made far
+darker than anything real (the mahogany bar top reflected 0.6% of light;
+real mahogany reflects 4-12%), which is why lamps used to look bright only at
+their core.
+- `python3 tools/albedo_audit.py` measures every material of every model
+  (the average of its colour texture, in linear light) and writes
+  `assets/models/albedo.json`.
+- `assets/models/albedo_rules.json` lists real ranges by material name
+  (white plaster 0.45-0.8, brick 0.15-0.35, mahogany 0.04-0.12, black paint
+  0.025-0.06, ...). A material outside its range is moved to the nearest edge,
+  keeping its colour: 88 of 422 materials, in the new lighting only.
+- `node tools/albedo_test.mjs` (in the checks) makes sure every model is measured.
+- After changing or adding a model: run the audit again.
+
 ## L2 Shadows and shaped light
 
 _Not built yet._
