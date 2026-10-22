@@ -14,6 +14,12 @@ This file explains why it exists and where it's heading.
 - Everything is tested on the user's **iPhone 15 Pro Max (iOS 26, Safari)**,
   their only device.
 
+## Look and feel (user, 2026-10-22)
+Enhanced real life, but animated: "super EXTRA lovely". Real shapes,
+light and physics, pushed warmer and livelier than reality, and a world that
+keeps moving so there is always something to do and keep up with. A bar
+script language (Parked) is the planned way to fill it with living things.
+
 ## North star (updated by the user, 2026-10-15)
 **Build a world simulation, not a set of props.** The bar stays the place
 we build first, but the real goal is engines that simulate what the senses
