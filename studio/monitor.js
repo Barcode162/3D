@@ -4,7 +4,8 @@
 // Problems: what the schema and the engine's own checks find.
 import { S, on, send, select, api } from './studio.js';
 import { problems as schemaProblems } from './schema.mjs';
-import { kindOf, thingEntry, placeFile, restore } from './draft.mjs';
+import { kindOf, thingEntry, placeFile, restore, edit, setOp } from './draft.mjs';
+import { add as addOp } from './ops.mjs';
 import { changes } from './diff.mjs';
 
 const $ = (id) => document.getElementById(id);
@@ -101,10 +102,33 @@ function drawInspect(body) {
     const f = sch.thing.fields[k] || {};
     body.append(fieldRow(f.label || k, v, f.unit, f.about));
   }
+  const te = thingEntry(t.id);
+  const own = te.json ? [...Object.keys(te.json.parts || {}).map((n) => ['parts', n]), ...Object.keys(te.json.loops || {}).map((n) => ['loops', n])] : [];
+  if (own.length) {
+    // What this one has of its own (S5.3): a dot each, Reset to kind, or make it a kind.
+    const row = el('div', 'scope');
+    const nk = el('button', 'key small', 'New kind from this');
+    nk.type = 'button';
+    nk.onclick = () => newKindFrom(t, te);
+    row.append(el('span', 'dim', `Its own: ${own.map(([, n]) => n).join(', ')}`), nk);
+    body.append(row);
+  }
   const parts = { ...(kind.parts || {}), ...(tj.parts || {}) };
   for (const [name, v] of Object.entries(parts)) {
     const p = sch.parts[name] || {};
-    body.append(el('span', 'label', (p.label || name) + (tj.parts && tj.parts[name] ? ' · this one' : ' · every ' + t.kind)));
+    const mine = !!(tj.parts && tj.parts[name] !== undefined);
+    const head = el('span', 'label', (p.label || name) + (mine ? ' · this one' : ' · every ' + t.kind));
+    if (mine) {
+      head.append(el('span', 'dot'));
+      if (te.json && kind.parts && kind.parts[name] !== undefined) {
+        const r = el('button', 'key small', 'Reset to kind');
+        r.type = 'button';
+        r.style.marginLeft = '8px';
+        r.onclick = () => edit({ op: 'group', ops: [setOp(placeFile(), [...te.path, 'parts', name], undefined)], label: `${t.id}: ${name} back to the kind's` });
+        head.append(r);
+      }
+    }
+    body.append(head);
     if (p.about) body.append(el('p', 'dim', p.about));
     const items = Array.isArray(v) && p.list ? v : [v];
     items.slice(0, 6).forEach((item) => {
@@ -129,6 +153,25 @@ function drawInspect(body) {
     body.append(el('span', 'label', 'Loops'));
     for (const [name, l] of loops) body.append(fieldRow(name, `${l.period}${l.beat ? ' beats' : ' s'}`, '', (l.pieces || []).map((p) => `${p.ch} ${p.shape}`).join(' · ')));
   }
+}
+// A new kind from a thing (S5.3): it builds on the old kind with this one's
+// own parts and loops; the thing becomes one of it.
+function newKindFrom(t, te) {
+  const kindFile = (S.draft[placeFile()].kinds || []).find((f) => (S.draft[f].kinds || []).some((k) => k.id === t.kind)) || (S.draft[placeFile()].kinds || [])[0];
+  const taken = new Set((S.draft[placeFile()].kinds || []).flatMap((f) => (S.draft[f].kinds || []).map((k) => k.id)));
+  let id = `${t.kind}_2`;
+  for (let n = 2; taken.has(id); n++) id = `${t.kind}_${n}`;
+  const k = { id, is: t.kind };
+  if (te.json.parts) k.parts = JSON.parse(JSON.stringify(te.json.parts));
+  if (te.json.loops) k.loops = JSON.parse(JSON.stringify(te.json.loops));
+  edit({ op: 'group', label: `new kind ${id} from ${t.id}`, ops: [
+    addOp(kindFile, ['kinds'], k),
+    setOp(placeFile(), [...te.path, 'kind'], id),
+    setOp(placeFile(), [...te.path, 'parts'], undefined),
+    setOp(placeFile(), [...te.path, 'loops'], undefined)] });
+  t.kind = id;
+  Looped.toast(`${t.id} is now a ${id} (builds on ${k.is})`);
+  draw();
 }
 function drawProblems(body) {
   const list = [];

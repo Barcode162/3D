@@ -181,6 +181,54 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   check(Math.abs((back[1][0] - back[0][0]) - w0) < 0.002, 'S5.2 Undo puts the tap area back');
 }
 
+// ---- S5.3 this one | every one ----
+{
+  const stools = () => page.evaluate(() => window.bar3dStudio.S.draft['places/bar.json'].things.filter((x) => x.kind === 'bar_stool' && !x.row));
+  const all0 = await stools();
+  const st = (await S()).things.find((t) => t.id === all0[0].id);
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), st.i);
+  await page.waitForTimeout(400);
+  check(/Every bar_stool/.test(await page.textContent('#scopeSeg')), `S5.3 the tools offer "Every bar_stool" (${(await page.textContent('#scopeSeg')).trim()})`);
+  await page.click('#scopeSeg [data-every="1"]');
+  await page.click('#toolKeys [data-tool="2"]');
+  await page.$eval('#axisKeys [data-axis="1"]', (b) => b.click());
+  await page.fill('#valField', '1.05');
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(300);
+  const all1 = await stools();
+  const ys = all1.map((x) => (Array.isArray(x.scale) ? x.scale[1] : x.scale ?? 1));
+  check(all1.length > 3 && ys.every((y) => Math.abs(y - 1.05) < 0.001), `S5.3 Every: all ${all1.length} bar stools 5 % taller in one change (${[...new Set(ys)].join(', ')})`);
+  await page.click('#scopeSeg [data-every="0"]');
+  await page.fill('#valField', '1.2');
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(300);
+  const all2 = await stools();
+  const ys2 = all2.map((x) => (Array.isArray(x.scale) ? x.scale[1] : x.scale ?? 1));
+  check(ys2.filter((y) => Math.abs(y - 1.2) < 0.001).length === 1 && ys2.filter((y) => Math.abs(y - 1.05) < 0.001).length === all2.length - 1, 'S5.3 This one: only that stool changes');
+  // Its own seat (Part, This one) → Inspect: New kind from this.
+  await page.click('#toolKeys [data-tool="0"]');
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("Seat 1")');
+  await page.click('#scopeSeg [data-every="0"]');
+  await page.$eval('#axisKeys [data-axis="1"]', (b) => b.click());
+  const hy = parseFloat(await page.inputValue('#valField'));
+  await page.fill('#valField', String(+(hy + 0.05).toFixed(3)));
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(300);
+  const own = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((x) => x.id === id).parts, st.id);
+  check(own && own.seats && Math.abs(own.seats[0].hip[1] - (hy + 0.05)) < 0.001, 'S5.3 This one on a part: the stool gets its own seat, 5 cm higher');
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("the thing itself")');
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="inspect"]');
+  await page.click('#monitor .key:has-text("New kind from this")');
+  await page.waitForTimeout(300);
+  const nk = await page.evaluate((id) => { const d = window.bar3dStudio.S.draft; const t = d['places/bar.json'].things.find((x) => x.id === id); const k = d['kinds/bar.json'].kinds.find((x) => x.id === t.kind); return { kind: t.kind, parts: t.parts, is: k && k.is, seats: k && k.parts && k.parts.seats }; }, st.id);
+  check(nk.kind === 'bar_stool_2' && nk.is === 'bar_stool' && !nk.parts && nk.seats, `S5.3 New kind from this: ${st.id} is a ${nk.kind}, built on ${nk.is}, with its seat`);
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+  await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
