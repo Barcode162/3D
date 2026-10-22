@@ -17,10 +17,12 @@ easy to pinpoint. So on "go":
    before any piece). Never edit the store by hand.
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
-   **One piece = one commit**, message starting with its tag (`E3.2 ...`),
-   each passing `node tools/check.mjs` before the commit. Push each commit:
-   `git push -u origin HEAD:work-go` (the container is temporary).
-3. End of the step: `node tools/check.mjs` (green), `git fetch origin main &&
+   **One piece = one commit**, message starting with its tag (`E3.2 ...`).
+   Per piece run only that piece's own test (e.g. `node tools/check.mjs
+   studio`), not the whole check (user, 2026-10-22: faster). Push each
+   commit: `git push -u origin HEAD:work-go` (the container is temporary).
+3. End of the step: the full `node tools/check.mjs` once (green; run it in
+   the background while starting the next step's code), `git fetch origin main &&
    git merge origin/main`, push `main` **once**. CI deploys in ~6 min; the
    `build xxxxxxx` label on screen shows the live commit.
    If the step changed files in `assets/world/`: once the deploy is live,
