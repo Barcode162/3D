@@ -1,6 +1,6 @@
 {
-  "version": 2,
+  "version": 3,
   "author": "Claude",
-  "at": 1792668515,
-  "note": "S4.2: the hub's old live tuning (bar stools 3× faster) is now the stools' own loop lengths"
+  "at": 1792685945,
+  "note": "S7.1 materials.json, S7.3 moods in the schema, S8.4 bar_stool loops"
 }
