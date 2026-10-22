@@ -21,7 +21,7 @@ const CHECKS = {
              ['ledger', 'node tools/ledger_test.mjs'], ['mp', `${NP} node tools/mp_test.mjs`]],
   hub:      [['hub', 'node tools/hub_test.mjs']],
   ui:       [['ui', `${NP} node tools/ui_test.mjs`]],
-  studio:   [['studio_api', 'node tools/studio_api_test.mjs'], ['studio', `${NP} node tools/studio_test.mjs`]],
+  studio:   [['studio_api', 'node tools/studio_api_test.mjs'], ['ops', 'node tools/ops_test.mjs'], ['studio', `${NP} node tools/studio_test.mjs`]],
   server:   [['php', 'for f in server/*.php hub/*.php; do php -l "$f" >/dev/null || exit 1; done'],
              ['hub', 'node tools/hub_test.mjs'], ['gate', `${NP} node tools/gate_test.mjs`]],
   mania:    [['rhythm', `${NP} node tools/rhythm_test.mjs`]],

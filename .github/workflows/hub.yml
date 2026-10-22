@@ -42,8 +42,8 @@ jobs:
       - name: "Test: the shared look (ui/, every theme)"
         run: node tools/ui_test.mjs
 
-      - name: "Test: the world store (studio/api.php)"
-        run: node tools/studio_api_test.mjs
+      - name: "Test: the world store (studio/api.php) and the Studio's edits (studio/ops.mjs)"
+        run: node tools/studio_api_test.mjs && node tools/ops_test.mjs
 
       - name: Upload the hub to IONOS
         if: env.IONOS_SFTP_HOST != ''
