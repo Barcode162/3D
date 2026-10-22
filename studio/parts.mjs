@@ -7,7 +7,7 @@
 import { S, send } from './studio.js';
 import { placeFile, thingEntry } from './draft.mjs';
 
-export const PART_NAMES = { solids: 'Shape', uses: 'Tap area', seats: 'Seat' };
+export const PART_NAMES = { boxes: 'Box', solids: 'Shape', uses: 'Tap area', seats: 'Seat' };
 const r3 = (v) => +(+v).toFixed(3);
 
 function kindJson(id) {
@@ -47,12 +47,14 @@ export function partRest(name, p) {
     return { at: [0, 1, 2].map((k) => r3((a[k] + b[k]) / 2)), turn: 0, scale: [0, 1, 2].map((k) => r3(Math.abs(b[k] - a[k]))) };
   }
   if (name === 'seats') return { at: [...(p.hip || [0, 0, 0])], turn: p.facing || 0, scale: [1, 1, 1] };
+  if (name === 'boxes') return { at: [...(p.at || [0, 0, 0])], turn: 0, scale: [...(p.size || [1, 1, 1])] };
   return { at: [...(p.at || [0, 0, 0])], turn: p.turn || 0, scale: (p.half || [0.1, 0.1, 0.1]).map((h) => r3(h * 2)) };
 }
 // The part with a new rest.
 export function partFrom(name, p, r) {
   if (name === 'uses') return { ...p, box: [r.at.map((c, k) => r3(c - r.scale[k] / 2)), r.at.map((c, k) => r3(c + r.scale[k] / 2))] };
   if (name === 'seats') { const q = { ...p, hip: r.at.map(r3) }; if (r.turn) q.facing = r.turn; else delete q.facing; return q; }
+  if (name === 'boxes') return { ...p, at: r.at.map(r3), size: r.scale.map((v) => r3(Math.max(0.01, v))) };
   const q = { ...p, at: r.at.map(r3), half: r.scale.map((s) => r3(Math.max(0.01, s / 2))) };
   if (r.turn) q.turn = r.turn; else delete q.turn;
   return q;

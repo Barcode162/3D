@@ -9,7 +9,7 @@ import { edit, preview, thingEntry, restOf, placeFile, setOp } from './draft.mjs
 import { partsOf, partSource, partRest, partFrom, showPart } from './parts.mjs';
 
 const $ = (id) => document.getElementById(id);
-const T = { tool: 0, axis: 0, local: false, snap: true, gesture: null };
+const T = { tool: 0, axis: 0, local: false, snap: true, gesture: null, face: 0 };
 const UNITS = ['m', '°', '×'];
 const SNAP = [0.05, 15, 0.05];
 const PER_PX = [0.004, 0.6, 0.004];  // fader: how much a pixel moves it
@@ -53,6 +53,8 @@ function restWith(rest0, v, by) {
   else {
     const nv = Math.max(0.05, by !== undefined ? (T.axis === 3 ? rest0.scale[0] : rest0.scale[T.axis]) + by : v);
     if (T.axis === 3) r.scale = [round(nv), round(nv), round(nv)]; else r.scale[T.axis] = round(nv);
+    // Push/Pull a box's face (S6.3): that side moves, the other stays where it was.
+    if (T.part && T.part.name === 'boxes' && T.face && T.axis < 3) r.at[T.axis] = round(rest0.at[T.axis] + T.face * (r.scale[T.axis] - rest0.scale[T.axis]) / 2);
   }
   return r;
 }
@@ -162,6 +164,11 @@ function draw() {
   $('allKey').hidden = T.tool !== 2 || !!e.part;
   if (e.part && T.axis === 3) T.axis = 0;
   $('spaceSeg').hidden = T.tool !== 0 || !!e.part;
+  // A box's faces (S6.3): which side Size moves (the other is the anchor), and Extrude.
+  const isBox = e.part === 'boxes';
+  $('faceSeg').hidden = !(isBox && T.tool === 2 && T.axis < 3);
+  [...$('faceSeg').children].forEach((b) => b.classList.toggle('on', +b.dataset.face === T.face));
+  $('extrudeKey').hidden = !isBox;
   $('partKey').classList.toggle('lit', !!e.part);
   // This one | Every <kind> (S5.3).
   const n = sameKind(e).length;
@@ -327,14 +334,36 @@ $('partKey').addEventListener('click', () => {
   const list = $('partList');
   if (!list.hidden) { list.hidden = true; return; }
   const parts = partsOf(e.t);
-  const pick = (part) => { T.part = part; T.every = !!part; list.hidden = true; if (!part) showPart(null); draw(); };
+  const pick = (part) => { T.part = part; T.partFor = e.t.id; T.every = !!part && e.t.id !== (part && partSource(e.t, part.name) || {}).owner; list.hidden = true; if (!part) showPart(null); draw(); };
   list.replaceChildren(
     ...[{ label: e.t.id, small: 'the thing itself', part: null }, ...parts.map((x) => ({ label: x.label, small: x.src.owner === e.t.id ? 'its own' : 'every ' + x.src.owner, part: { name: x.name, i: x.i } }))]
       .map((x) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = x.label; b.lastChild.textContent = x.small; b.onclick = () => pick(x.part); return b; }));
   if (!parts.length) Looped.toast(`${e.t.id} has no shapes, tap areas or seats of its own to move`);
   list.hidden = false;
 });
-on('select', () => { if (T.part) { T.part = null; showPart(null); } T.every = false; $('partList').hidden = true; draw(); });
+on('select', () => {
+  // The same thing again (the world reloaded around it): keep its part.
+  const t = S.things[S.selected];
+  if (T.part && !(t && t.id === T.partFor)) { T.part = null; showPart(null); }
+  if (!T.part) T.every = false;
+  $('partList').hidden = true;
+  draw();
+});
+$('faceSeg').addEventListener('click', (ev) => { const b = ev.target.closest('[data-face]'); if (b) { T.face = +b.dataset.face; draw(); } });
+// Extrude: a new box grows out of the chosen face (30 cm), and becomes the selection.
+$('extrudeKey').addEventListener('click', () => {
+  const e = entry();
+  if (!e || e.part !== 'boxes') return;
+  const ax = T.axis < 3 ? T.axis : 1, side = T.face || 1, depth = 0.3;
+  const p = e.json, size = [...(p.size || [1, 1, 1])], at = [...(p.at || [0, 0, 0])];
+  at[ax] = +(at[ax] + side * (size[ax] / 2 + depth / 2)).toFixed(3);
+  size[ax] = depth;
+  const list = e.src.list.slice();
+  list.splice(T.part.i + 1, 0, { ...JSON.parse(JSON.stringify(p)), at, size });
+  edit({ op: 'group', label: `${e.t.id}: a box out of its ${'XYZ'[ax]}${side > 0 ? '+' : '−'} face`, ops: [setOp(e.src.file, e.src.path, list)] });
+  T.part = { name: 'boxes', i: T.part.i + 1 };
+  draw();
+});
 $('scopeSeg').addEventListener('click', (ev) => { const b = ev.target.closest('[data-every]'); if (b) { T.every = b.dataset.every === '1'; draw(); } });
 on('changed', draw);
 on('world', draw);

@@ -119,6 +119,7 @@ $('camModes').addEventListener('click', (e) => {
 // ---- Selection (S2.3) ----
 export function select(i, fly = false) {
   S.selected = i;
+  $('views').hidden = true;  // the saved-views list closes once you pick something
   send('st.select', i, fly ? 1 : 0);
   drawCrumb();
   emit('select', i);

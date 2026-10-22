@@ -103,6 +103,15 @@ async function openLibrary() {
   const items = library();
   const draw = () => {
     grid.textContent = '';
+    // Build a box (S6.3): a plain box on the surface in view, to push, pull and extrude.
+    const bx = el('button', 'libitem');
+    bx.type = 'button';
+    bx.dataset.kind = 'box';
+    const bp = el('div', 'pic');
+    bp.innerHTML = '<svg class="ico" style="width:44px;height:44px"><use href="/ui/icons.svg#i-box"/></svg>';
+    bx.append(bp, el('span', 'nm', 'A box'), el('small', '', 'build'));
+    bx.onclick = () => { sheet.hidden = true; place('built'); };
+    grid.append(bx);
     for (const it of items) {
       const b = el('button', 'libitem');
       b.type = 'button';
@@ -134,7 +143,16 @@ on('aim', async (e) => {
   B.want = null;
   if (!kind) return;
   const id = freshId(kind);
-  edit({ op: 'group', label: `added ${id}`, ops: [addOp(placeFile(), ['things'], { id, kind, at: e.at.map((v) => +(+v).toFixed(3)) })] }, { noReload: true });
+  const at = e.at.map((v) => +(+v).toFixed(3));
+  const ops = [];
+  if (kind === 'built') {
+    // Things built from boxes are of the kind "built" (made once, in the place's first kind file).
+    const kf = (S.draft[placeFile()].kinds || [])[0];
+    if (!(S.draft[placeFile()].kinds || []).some((f) => (S.draft[f].kinds || []).some((k) => k.id === 'built')))
+      ops.push(addOp(kf, ['kinds'], { id: 'built', about: 'Built in the Studio from plain boxes: floors, steps, a stage.', still: 'built from boxes; it stands still' }));
+    ops.push(addOp(placeFile(), ['things'], { id, kind, at, parts: { boxes: [{ at: [0, 0.05, 0], size: [1, 0.1, 1], material: 'oak-floor' }] } }));
+  } else ops.push(addOp(placeFile(), ['things'], { id, kind, at }));
+  edit({ op: 'group', label: `added ${id}`, ops }, { noReload: true });
   Looped.toast(`Added ${id}`);
   await reloadWorld(id);
 });

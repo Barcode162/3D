@@ -131,7 +131,8 @@ function needsReload(op) {
   if (op.op === 'group') return op.ops.some(needsReload);
   if (op.op === 'add' || op.op === 'remove') return true;
   const p = op.path || [];
-  return op.file === placeFile() && p[0] === 'things' && ['kind', 'row', 'id'].includes(p[2]);
+  // (a box's shape is what you see: a box edit reloads too)
+  return (op.file === placeFile() && p[0] === 'things' && ['kind', 'row', 'id'].includes(p[2])) || p.includes('boxes');
 }
 // The one way the Studio changes the world.
 export function edit(op, opts = {}) {

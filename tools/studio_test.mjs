@@ -319,6 +319,44 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   check(!!(await S()).things.find((t) => t.id === 'bar_stool-3'), 'S6.2 a thing from the live world keeps its name');
 }
 
+// ---- S6.3 boxes: a small stage ----
+{
+  const idle = () => page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  const table7 = (await S()).things.find((t) => t.id === 'round_table-3') || (await S()).things.find((t) => t.kind === 'round_table');
+  await page.evaluate((i) => { window.bar3dStudio.select(i, true); }, table7.i);
+  await page.waitForTimeout(500);
+  await page.evaluate(() => window.bar3dStudio.select(-1));
+  await page.click('#addKey');
+  await page.click('#library .libitem[data-kind="box"]');
+  await page.waitForFunction(() => window.bar3dStudio.S.things.some((t) => t.kind === 'built'), null, { timeout: 90000 }).catch(() => {});
+  await idle();
+  const built = (await S()).things.find((t) => t.kind === 'built');
+  check(!!built && (await S()).selected === built.i, `S6.3 "A box" adds a box you build on, selected (${built && built.id})`);
+  const boxes = () => page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).parts.boxes, built.id);
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("Box 1")');
+  await page.click('#toolKeys [data-tool="2"]');
+  await page.$eval('#axisKeys [data-axis="1"]', (b) => b.click());
+  await page.click('#faceSeg [data-face="1"]');
+  await page.fill('#valField', '0.4');
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(300); await idle();
+  const b1 = (await boxes())[0];
+  check(Math.abs(b1.size[1] - 0.4) < 0.001 && Math.abs((b1.at[1] - b1.size[1] / 2) - 0) < 0.001, `S6.3 pull the top up 30 cm: the bottom stays on the floor (size ${b1.size[1]}, bottom ${+(b1.at[1] - b1.size[1] / 2).toFixed(3)})`);
+  await page.$eval('#axisKeys [data-axis="2"]', (b) => b.click());
+  await page.click('#faceSeg [data-face="1"]');
+  await page.click('#extrudeKey');
+  await page.waitForTimeout(300); await idle();
+  const bs = await boxes();
+  check(bs.length === 2 && Math.abs(bs[1].at[2] - (bs[0].at[2] + bs[0].size[2] / 2 + 0.15)) < 0.001 && bs[1].size[2] === 0.3, `S6.3 Extrude: a 30 cm box out of the front face (${bs.length} boxes)`);
+  check(/Box 2/.test(await page.textContent('#partText')), 'S6.3 the new box is the one selected');
+  await page.screenshot({ path: 'build/studio-boxes.png' });
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("the thing itself")');
+  await page.click('#toolKeys [data-tool="0"]');
+  await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
