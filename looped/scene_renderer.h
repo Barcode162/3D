@@ -21,6 +21,7 @@
 #include "looped/mesh.h"
 #include "looped/model.h"
 #include "looped/post.h"
+#include "looped/gi.h"
 #include "looped/gpu_upload.h"
 #include "looped/shadows.h"
 #include "looped/render_scene.h"
@@ -161,6 +162,22 @@ class SceneRenderer {
     capturePending_ = true;
   }
   bool reflectionsReady() const { return envReady_; }
+  // Bounced light (L1.5): works it out for the still models loaded now
+  // (again when the layout changed: more rooms streamed in, the Studio moved
+  // things). Off with ?bounce=0. `relightGi` after a lamp moved.
+  void buildGi();
+  void relightGi();
+  // Call once the place has loaded: bounced light is built then, and again by
+  // itself when more rooms stream in.
+  void wantGi() { giWanted_ = true; }
+  // Still things were moved (the Studio): bounced light again 1.5 s after the last move.
+  void layoutChanged();
+  void setGiEnabled(bool on) { giOn_ = on; }
+  void setBounceStrength(float s) { bounceStrength_ = s; }
+  // Fewer rays (?gilite=1): for the software GPU of the tests' pictures.
+  void setGiLite(bool lite) { giLite_ = lite; }
+  void setGiView(int view) { giView_ = view; }  // ?giview= (debug views, scene.wgsl)
+  const GiGpu& gi() const { return gi_; }
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:
@@ -190,8 +207,12 @@ class SceneRenderer {
     float envMax[4];
     float envCenter[4];
     // New lighting (L1.2): x = glow of self-lit surfaces in cd/m² per unit,
-    // y = ambient fill scale, z = 1 / pi (diffuse), w unused.
+    // y = ambient fill scale, z = 1 / pi (diffuse), w = debug view (?giview=).
     float units[4];
+    // Bounced light (L1.5): xyz = probe (0,0,0), w = 1 / spacing;
+    // gi2: probes along x, y, z, w = how much bounced light (0 = none yet).
+    float gi[4];
+    float gi2[4];
   };
   // The lights and the light grid: the floor is cut into square cells, and
   // each cell lists the (at most 8) lights that reach it, so a pixel only
@@ -236,6 +257,7 @@ class SceneRenderer {
   struct View {
     wgpu::Buffer buffer;
     wgpu::BindGroup bindGroup;
+    wgpu::TextureView env;  // the reflection cube it reads (a dummy while capturing)
   };
   struct MirrorTarget {
     wgpu::Texture texture;
@@ -332,7 +354,7 @@ class SceneRenderer {
   engine::Aabb envRoom_;
   bool capturePending_ = false, envReady_ = false;
   void createEnvironment();
-  View makeView(const wgpu::TextureView& env, const char* label);
+  View makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer = nullptr);
   void captureEnvironment(const wgpu::CommandEncoder& encoder);
   std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
@@ -349,6 +371,16 @@ class SceneRenderer {
   // each model as it (or the table) arrives.
   engine::AlbedoTable albedo_;
   void applyAlbedo(size_t file);
+  GiGpu gi_;
+  bool giOn_ = true, giWanted_ = false, giLite_ = false;
+  int giView_ = 0;
+  uint32_t giFrame_ = 0;
+  size_t giModelsAtBuild_ = 0;
+  double giDirtyMs_ = -1;
+  float bounceStrength_ = 1;
+  std::vector<std::string> modelFile_;  // per placed model
+  std::vector<bool> modelStill_;
+  void remakeViews();  // the frame bind groups again (new bounced-light textures)
   size_t filesDone_ = 0;
   size_t filesFailed_ = 0;
   bool criticalFailed_ = false;

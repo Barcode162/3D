@@ -40,6 +40,9 @@ class Gpu {
   // The GPU reads ASTC compressed textures (Apple GPUs: iPhone, Mac). Off
   // with ?astc=0 (tests the plain PNG/JPEG path).
   bool astc = false;
+  // A software GPU (SwiftShader: the tests' headless browser). Heavy GPU
+  // work (bounced light) goes lighter there; phones never are.
+  bool software = false;
   double cssWidth = 0, cssHeight = 0;
   uint32_t pendingW_ = 0, pendingH_ = 0;  // a new size waiting to settle
   double pendingSinceMs_ = 0;  // the canvas in CSS pixels (measured once per frame)

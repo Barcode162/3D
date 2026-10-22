@@ -66,6 +66,8 @@ void Gpu::onAdapter(wgpu::Adapter adapter) {
   wgpu::AdapterInfo info;
   adapter_.GetInfo(&info);
   LOG_INFO("GPU: %s %s", toString(info.vendor).c_str(), toString(info.architecture).c_str());
+  software = toString(info.architecture).find("swiftshader") != std::string::npos ||
+             toString(info.device).find("SwiftShader") != std::string::npos;
 
   wgpu::DeviceDescriptor desc;
   desc.label = "main device";

@@ -156,6 +156,16 @@ bool GiBuild::lampVisible(Vec3 from, const GiLight& l) const {
   return tMax <= 0.02f || !bvh_.occluded(from, d * (1.0f / dist), 0.02f, tMax);
 }
 
+void GiBuild::hashTable(std::vector<uint32_t>& start, std::vector<uint32_t>& items) const {
+  start.assign(kBuckets + 1, 0);
+  items.clear();
+  for (size_t b = 0; b < kBuckets; ++b) {
+    start[b] = static_cast<uint32_t>(items.size());
+    items.insert(items.end(), buckets_[b].begin(), buckets_[b].end());
+  }
+  start[kBuckets] = static_cast<uint32_t>(items.size());
+}
+
 void GiBuild::relight(uint32_t light, const GiLight& l) {
   if (light >= lights_.size()) return;
   lights_[light] = l;
@@ -196,6 +206,10 @@ bool GiBuild::step(double budgetMs) {
             surfels.push_back({p, nrm, m.albedo, m.emission});
             gridAdd(static_cast<uint32_t>(surfels.size() - 1));
           }
+        }
+        if (cursor_ >= g.triangleCount() && !settings.cpuRays) {
+          phase_ = Phase::kDone;
+          break;
         }
         if (cursor_ >= g.triangleCount()) {
           phase_ = Phase::kSurfelRays;

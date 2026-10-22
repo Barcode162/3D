@@ -33,6 +33,10 @@ struct Frame {
   // New lighting (L1.2): x = cd/m² per unit of a surface's own glow,
   // y = ambient fill scale, z = 1 / pi.
   units: vec4f,
+  // Bounced light (L1.5, looped/gi.h): xyz = probe (0,0,0), w = 1 / spacing;
+  // gi2: probes along x, y, z, w = how much of it to use (0 = none yet).
+  gi: vec4f,
+  gi2: vec4f,
 };
 
 fn classicLight() -> bool { return frame.env.w > 0.5; }
@@ -61,6 +65,12 @@ struct Object {
 @group(0) @binding(4) var<uniform> lighting: Lighting;
 @group(0) @binding(5) var envMap: texture_cube<f32>;
 @group(0) @binding(6) var envSampler: sampler;
+// Bounced light: each probe's light from every direction (spherical
+// harmonics, one texture per colour) and which lamps it sees (bits).
+@group(0) @binding(7) var giR: texture_3d<f32>;
+@group(0) @binding(8) var giG: texture_3d<f32>;
+@group(0) @binding(9) var giB: texture_3d<f32>;
+@group(0) @binding(10) var giMask: texture_3d<u32>;
 @group(1) @binding(0) var<uniform> object: Object;
 
 // Skinned meshes (the avatar): one matrix per bone, set every frame.
@@ -358,6 +368,70 @@ fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
   return textureSampleLevel(envMap, envSampler, dir, roughness * frame.env.z).rgb;  // linear light
 }
 
+// Bounced light at a surface: the light arriving from all around (lux,
+// facing `n`) from the 8 probes around it, and which lamps it can see.
+// Probes inside walls are left out, and probes behind the surface count
+// little (so light doesn't leak through a wall from the other side).
+struct GiSample {
+  irradiance: vec3f,
+  masks: array<u32, 8>,
+  weights: array<f32, 8>,
+  total: f32,
+};
+
+fn giSample(p: vec3f, n: vec3f, v: vec3f) -> GiSample {
+  var out: GiSample;
+  out.irradiance = vec3f(0.0);
+  out.total = 0.0;
+  let spacing = 1.0 / frame.gi.w;
+  // A little off the surface (toward the normal and the eye) so the surface
+  // itself doesn't shadow its probes.
+  let q = (p + n * (0.3 * spacing) + v * (0.1 * spacing) - frame.gi.xyz) * frame.gi.w;
+  let dims = vec3i(frame.gi2.xyz);
+  let base = vec3i(floor(q));
+  let f = q - vec3f(base);
+  var r = vec4f(0.0);
+  var g = vec4f(0.0);
+  var b = vec4f(0.0);
+  for (var c = 0; c < 8; c++) {
+    let o = vec3i(c & 1, (c >> 1) & 1, c >> 2);
+    let cell = clamp(base + o, vec3i(0), dims - 1);
+    let mask = textureLoad(giMask, cell, 0).r;
+    let tri = mix(1.0 - f, f, vec3f(o));
+    var w = tri.x * tri.y * tri.z;
+    let probePos = frame.gi.xyz + vec3f(cell) * spacing;
+    let toProbe = normalize(probePos - p + n * 1e-3);
+    let facing = (dot(toProbe, n) + 1.0) * 0.5;
+    w = w * (facing * facing + 0.02) * f32(mask >> 31u);
+    out.masks[c] = mask;
+    out.weights[c] = w;
+    out.total += w;
+    r += w * textureLoad(giR, cell, 0);
+    g += w * textureLoad(giG, cell, 0);
+    b += w * textureLoad(giB, cell, 0);
+  }
+  if (out.total > 1e-5) {
+    r /= out.total;
+    g /= out.total;
+    b /= out.total;
+    // Irradiance from order-1 spherical harmonics (cosine lobe: pi, 2pi/3).
+    let y = vec4f(3.14159265 * 0.282095, 2.0943951 * 0.488603 * n.y, 2.0943951 * 0.488603 * n.z,
+                  2.0943951 * 0.488603 * n.x);
+    out.irradiance = max(vec3f(dot(r, y), dot(g, y), dot(b, y)), vec3f(0.0));
+  }
+  return out;
+}
+
+// How much lamp `k` is in view from here (0..1), from the probes around it.
+fn giLampVisible(s: GiSample, k: u32) -> f32 {
+  if (s.total <= 1e-5 || k >= 31u) { return 1.0; }
+  var seen = 0.0;
+  for (var c = 0; c < 8; c++) {
+    seen += s.weights[c] * f32((s.masks[c] >> k) & 1u);
+  }
+  return seen / s.total;
+}
+
 // Lighting shared by every mesh: physically based point lights, ambient,
 // haze, tone mapping. Light units: diffuse leaves out the 1/pi, so the
 // specular term is multiplied by pi to match.
@@ -379,6 +453,14 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   // candela, true inverse square, fading only over the last part of its reach.
   let ambientScale = select(frame.units.y, 1.0, classic);
   var diffuse = frame.ambient.rgb * ambientScale * (0.6 + 0.4 * n.y) * ao;  // a little brighter on top
+  // Bounced light replaces the flat fill (light only from light sources),
+  // fading in the first time it's worked out.
+  let giWeight = select(frame.gi2.w, 0.0, classic);
+  var gi: GiSample;
+  if (giWeight > 0.0) {
+    gi = giSample(worldPos, n, v);
+    diffuse = mix(diffuse, gi.irradiance * ao, giWeight);
+  }
   var specular = vec3f(0.0);
   // This pixel's cell in the light grid.
   let g = lighting.grid;
@@ -390,7 +472,8 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let lightCount = select(cell.z, min(cell.z, u32(frame.ambient.w)), frame.ambient.w > 0.5);
   for (var k = 0u; k < lightCount; k++) {
     let packed = select(cell.y, cell.x, k < 4u);
-    let l = lighting.lights[(packed >> (8u * (k % 4u))) & 0xffu];
+    let lightIndex = (packed >> (8u * (k % 4u))) & 0xffu;
+    let l = lighting.lights[lightIndex];
     let toLight = l.position.xyz - worldPos;
     // A cell lists every light that reaches any part of it, so many of them
     // don't reach this pixel, or light it from behind: those add nothing,
@@ -406,7 +489,9 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let window = clamp(1.0 - q * q, 0.0, 1.0);
     let r2 = l.params.x * l.params.x;
     let atten = window * window / select(max(d2, r2), d2 + 0.25, classic);
-    let radiance = l.color.rgb * l.color.w * atten;
+    var radiance = l.color.rgb * l.color.w * atten;
+    // No lamp light through walls: what the probes around here can see of it.
+    if (giWeight > 0.0) { radiance = radiance * mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
     diffuse += radiance * nl;
 
     // Bulbs aren't points: a bigger glowing part makes a wider, softer
@@ -421,6 +506,14 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   }
   // New lighting: diffuse and highlights in proper units (the 1 / pi the
   // classic sums leave out); surfaces' own glow in cd/m².
+  // Debug views (?giview=): 1 = the bounced light alone, 2 = probes usable
+  // around here (green) or not (red), 3 = how much of the nearest lamp is seen.
+  if (frame.units.w > 0.5 && giWeight > 0.0) {
+    if (frame.units.w < 1.5) { return vec4f(gi.irradiance * frame.units.z, 1.0); }
+    if (frame.units.w < 2.5) { return vec4f(select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), gi.total > 1e-4), 1.0); }
+    let first = lighting.cells[cz * lighting.gridSize.x + cx].x & 0xffu;
+    return vec4f(vec3f(giLampVisible(gi, first)), 1.0);
+  }
   var color: vec3f;
   if (classic) {
     color = diffuseColor * diffuse + specular + emission;

@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "looped/frame_time.h"
+#include "looped/jobs.h"
 #include "looped/light_units.h"
 #include "looped/fetch.h"
 #include "looped/file.h"
@@ -205,6 +206,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   lightGridMin_ = scene.lightGridMin;
   lightGridMax_ = scene.lightGridMax;
   buildLighting();
+  if (!gi_.init(gpu, lightingBuffer_, sizeof(LightingUniforms))) LOG_ERROR("Bounced light: not available.");
   createEnvironment();
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms"));
   // The capture's own views: they can't read the cube they draw into.
@@ -328,11 +330,12 @@ wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const ch
   return gpu_->device.CreateBindGroup(&desc);
 }
 
-SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label) {
+SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer) {
   const wgpu::Device& device = gpu_->device;
   View v;
-  v.buffer = makeUniformBuffer(device, sizeof(FrameUniforms), label);
-  wgpu::BindGroupEntry entries[7];
+  v.buffer = buffer ? buffer : makeUniformBuffer(device, sizeof(FrameUniforms), label);
+  v.env = env;
+  wgpu::BindGroupEntry entries[11];
   entries[0].binding = 0;
   entries[0].buffer = v.buffer;
   entries[0].size = sizeof(FrameUniforms);
@@ -349,9 +352,15 @@ SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const 
   entries[5].textureView = env;
   entries[6].binding = 6;
   entries[6].sampler = envSampler_;
+  for (int c = 0; c < 3; ++c) {  // bounced light (L1.5)
+    entries[7 + c].binding = static_cast<uint32_t>(7 + c);
+    entries[7 + c].textureView = gi_.sh(c);
+  }
+  entries[10].binding = 10;
+  entries[10].textureView = gi_.mask();
   wgpu::BindGroupDescriptor desc;
   desc.layout = frameLayout_;
-  desc.entryCount = 7;
+  desc.entryCount = 11;
   desc.entries = entries;
   v.bindGroup = device.CreateBindGroup(&desc);
   return v;
@@ -448,7 +457,7 @@ bool SceneRenderer::createScenePipelines() {
   if (!module) return false;
 
   // Group 0: frame uniforms + material textures. Group 1: per-object uniforms.
-  wgpu::BindGroupLayoutEntry frameEntries[7];
+  wgpu::BindGroupLayoutEntry frameEntries[11];
   frameEntries[0].binding = 0;
   frameEntries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
   frameEntries[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -473,8 +482,14 @@ bool SceneRenderer::createScenePipelines() {
   frameEntries[6].binding = 6;
   frameEntries[6].visibility = wgpu::ShaderStage::Fragment;
   frameEntries[6].sampler.type = wgpu::SamplerBindingType::Filtering;
+  for (uint32_t i = 7; i <= 10; ++i) {  // bounced light: the probes' light (3) and which lamps they see
+    frameEntries[i].binding = i;
+    frameEntries[i].visibility = wgpu::ShaderStage::Fragment;
+    frameEntries[i].texture.sampleType = i == 10 ? wgpu::TextureSampleType::Uint : wgpu::TextureSampleType::UnfilterableFloat;
+    frameEntries[i].texture.viewDimension = wgpu::TextureViewDimension::e3D;
+  }
   wgpu::BindGroupLayoutDescriptor frameDesc;
-  frameDesc.entryCount = 7;
+  frameDesc.entryCount = 11;
   frameDesc.entries = frameEntries;
   frameLayout_ = device.CreateBindGroupLayout(&frameDesc);
 
@@ -821,6 +836,8 @@ void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& o
     ObjectUniforms u = {};
     u.model = modelMatrix(p.position, p.rotation, p.scale);
     models_.push_back({nullptr, offset, p.position, p.scale, u.model, -1, {}});
+    modelFile_.push_back(p.file);
+    modelStill_.push_back(p.still);
     setVec4(u.color, {1, 1, 1}, 1);  // models: rgb tints the colour, a scales their own glow
     std::memcpy(objectData.data() + offset, &u, sizeof(u));
     const auto it = std::find(files.begin(), files.end(), p.file);
@@ -914,6 +931,50 @@ void SceneRenderer::applyAlbedo(size_t f) {
     m->setAlbedoFix(gpu_->queue, k, albedo_.fix(fileNames_[f], m->materialNames[k]));
   }
 }
+
+void SceneRenderer::remakeViews() {
+  for (View& v : views_) v = makeView(v.env, "frame uniforms", v.buffer);
+  for (View& v : captureViews_) v = makeView(v.env, "capture frame uniforms", v.buffer);
+}
+
+namespace {
+std::vector<engine::GiLight> giLamps(const std::vector<PointLight>& lights) {
+  std::vector<engine::GiLight> out;
+  for (const PointLight& l : lights) out.push_back({l.position, l.radius});
+  return out;
+}
+}  // namespace
+
+void SceneRenderer::buildGi() {
+  auto geo = std::make_shared<engine::SceneGeometry>();
+  size_t used = 0;
+  for (size_t i = 0; i < models_.size(); ++i) {
+    const ModelDraw& m = models_[i];
+    if (!m.gpu || !m.gpu->cpu || !modelStill_[i]) continue;
+    geo->add(*m.gpu->cpu, m.world, modelFile_[i], albedo_, static_cast<uint32_t>(i));
+    ++used;
+  }
+  const size_t full = geo->triangleCount();
+  geo->simplify(0.05f);
+  engine::GiSettings settings;
+  if (giLite_ || gpu_->software) {
+    settings.surfelSpacing = 0.35f;
+    settings.surfelRays = 12;
+    settings.probeRays = 24;
+  }
+  settings.volume = engine::Aabb::empty();
+  for (const engine::Aabb& r : rooms_) {
+    settings.volume.min = engine::minComponents(settings.volume.min, r.min);
+    settings.volume.max = engine::maxComponents(settings.volume.max, r.max);
+  }
+  if (rooms_.empty() || geo->triangleCount() == 0) return;
+  LOG_INFO("Bounced light: building for %zu still models (%zu → %zu triangles).", used, full, geo->triangleCount());
+  gi_.build(std::move(geo), giLamps(lights_), settings);
+}
+
+void SceneRenderer::relightGi() { gi_.relight(giLamps(lights_)); }
+
+void SceneRenderer::layoutChanged() { giDirtyMs_ = engine::clockMs(); }
 
 void SceneRenderer::streamRooms(Vec3 eye, double nowMs) {
   if (streamStartMs_ < 0) streamStartMs_ = nowMs;
@@ -1358,7 +1419,14 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   frame_.units[0] = emissiveNits_;
   frame_.units[1] = ambientNits_;
   frame_.units[2] = 1.0f / engine::kPi;
+  frame_.units[3] = static_cast<float>(giView_);
   frame_.ambient[3] = static_cast<float>(lightsPerPixel_);
+  const bool giLive = !classic_ && giOn_ && gi_.ready();
+  setVec4(frame_.gi, gi_.origin(), 1.0f / gi_.spacing());
+  frame_.gi2[0] = static_cast<float>(gi_.dims(0));
+  frame_.gi2[1] = static_cast<float>(gi_.dims(1));
+  frame_.gi2[2] = static_cast<float>(gi_.dims(2));
+  frame_.gi2[3] = giLive ? gi_.fill() : 0.0f;
   setVec4(frame_.envMin, envRoom_.min, 0);
   setVec4(frame_.envMax, envRoom_.max, 0);
   setVec4(frame_.envCenter, envCenter_, 1);
@@ -1369,6 +1437,24 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   queue.WriteBuffer(views_[0].buffer, 0, &f, sizeof(f));
 
   wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
+  if (!classic_ && giOn_) {
+    // (Re)build when the place has loaded, more rooms came in, or the layout changed.
+    const double now = engine::clockMs();
+    if (giWanted_ && !gi_.building() && engine::pendingJobs() == 0 &&
+        (modelsLoaded_ != giModelsAtBuild_ || (giDirtyMs_ > 0 && now - giDirtyMs_ > 1500))) {
+      giModelsAtBuild_ = modelsLoaded_;
+      giDirtyMs_ = -1;
+      buildGi();
+    }
+    // (A software GPU refreshes the bounced light every 4th frame: tests stay fast.)
+    if (!gpu_->software || (++giFrame_ & 3) == 0 || gi_.building()) {
+      gi_.encode(encoder, engine::clockMs(), emissiveNits_, bounceStrength_);
+    }
+    if (gi_.changed()) {
+      remakeViews();
+      if (envReady_) capturePending_ = true;  // reflections with the bounced light
+    }
+  }
   if (capturePending_ && mirroredPipeline_ && modelMirroredPipeline_ && modelBlendMirroredPipeline_ &&
       engine::mipmapsReady(gpu_->device, engine::Gpu::kSceneFormat)) {
     capturePending_ = false;

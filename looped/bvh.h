@@ -29,6 +29,12 @@ class Bvh {
   bool intersect(Vec3 origin, Vec3 dir, float tMin, float tMax, Hit* hit) const;
   // Anything between (tMin, tMax)? (Shadows: cheaper than the nearest hit.)
   bool occluded(Vec3 origin, Vec3 dir, float tMin, float tMax) const;
+  // For the GPU (looped/shaders/gi.wgsl): the nodes as built (32 bytes each:
+  // min + left-or-first, max + count) and the triangles in leaf order as
+  // three vec4 each (a corner and its two edges).
+  const void* nodeData() const { return nodes_.data(); }
+  size_t nodeBytes() const { return nodes_.size() * sizeof(Node); }
+  void packTriangles(std::vector<float>& out) const;
   // A triangle's corners (as built).
   void corners(uint32_t tri, Vec3* a, Vec3* b, Vec3* c) const;
 

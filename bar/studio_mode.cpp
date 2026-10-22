@@ -612,6 +612,7 @@ bool studioCommand(const engine::ui::Command& c) {
       w.setRest(t, {v[0], v[1], v[2]}, engine::Quat::axisAngle({0, 1, 0}, engine::radians(v[3])));
       w.setScale(t, {v[4], v[5], v[6]});
       if (std::find(S.posed.begin(), S.posed.end(), t) == S.posed.end()) S.posed.push_back(t);
+      g_app.renderer.layoutChanged();  // bounced light follows (L1.5)
     }
   } else if (c.name == "st.attach") {  // a: thing, b: its new parent (-1: the place)
     const int t = static_cast<int>(c.a), p = static_cast<int>(c.b);
@@ -619,6 +620,7 @@ bool studioCommand(const engine::ui::Command& c) {
     if (t >= 0 && t < n && p >= -1 && p < n && p != t) {
       g_app.world.editWorld().attach(t, p);
       if (std::find(S.posed.begin(), S.posed.end(), t) == S.posed.end()) S.posed.push_back(t);
+      g_app.renderer.layoutChanged();
       const engine::world::Thing& th = g_app.world.world().thing(t);
       const float turn = 2.0f * std::atan2(th.rot.y, th.rot.w) * 180.0f / engine::kPi;  // about Y: all the files hold
       send("{\"ev\":\"attached\",\"thing\":" + std::to_string(t) + ",\"at\":[" + num(th.at.x) + "," + num(th.at.y) + "," + num(th.at.z) +

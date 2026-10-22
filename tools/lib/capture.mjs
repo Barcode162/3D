@@ -17,7 +17,14 @@ export async function openCapture() {
     async shot(spot, option = '', path = null, waitMs = +(process.env.WAIT ?? 4000)) {
       const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1 });
       const cam = SPOTS[spot] ?? spot;  // a spot name, or "x,y,z,yaw,pitch"
-      await openBar(page, site.url, `skipintro&server=off&still&cam=${cam}${option ? '&' + option : ''}`);
+      // Bounced light (L1.5) is worked out after loading; the tests' software
+      // GPU is slow, so pictures use the lighter build and wait for it.
+      const classic = /(^|&)(light=classic|bounce=0)/.test(option);
+      await openBar(page, site.url, `skipintro&server=off&still&cam=${cam}${classic ? '' : '&gilite=1'}${option ? '&' + option : ''}`);
+      if (!classic) {
+        await page.waitForFunction(() => /Bounced light: ready/.test(document.getElementById('log').textContent), null,
+                                   { timeout: +(process.env.GI_WAIT ?? 90000) }).catch(() => {});
+      }
       await page.waitForTimeout(waitMs);
       const png = await page.screenshot(path ? { path } : {});
       const perf = await page.evaluate(() => window.bar3dPerf).catch(() => null);

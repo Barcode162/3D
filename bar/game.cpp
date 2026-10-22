@@ -674,6 +674,10 @@ void handleCommands() {
       LOG_INFO("Lighting: %s.", classic ? "classic" : "new");
     }
     g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
+    g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));
+    g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
+    g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);
+    g_app.renderer.setGiView(static_cast<int>(g_app.hooks.number("giview", 0)));
     g_app.camera.fovY = engine::radians(std::clamp(static_cast<float>(engine::settings::number("fov", 70)), 50.0f, 100.0f));
     // Your saved look, at start only (later the menu sends a "look" command).
     const int look = first ? static_cast<int>(engine::settings::number("look", g_app.look)) : g_app.look;
@@ -1042,6 +1046,7 @@ void updateLoadingScreen() {
     const engine::Vec3 middle = g_app.scene.place == "bar" ? engine::Vec3{-1.0f, 1.8f, -1.0f}
                                                             : engine::Vec3{(room.min.x + room.max.x) / 2, 1.8f, (room.min.z + room.max.z) / 2};
     g_app.renderer.captureReflections(middle, room);
+    g_app.renderer.wantGi();  // bounced light (L1.5)
   }
 }
 

@@ -247,6 +247,15 @@ bool Bvh::occluded(Vec3 origin, Vec3 dir, float tMin, float tMax) const {
   return false;
 }
 
+void Bvh::packTriangles(std::vector<float>& out) const {
+  out.resize(tris_.size() * 12);
+  for (size_t i = 0; i < tris_.size(); ++i) {
+    const Tri& t = tris_[i];
+    const float v[12] = {t.a.x, t.a.y, t.a.z, 0, t.e1.x, t.e1.y, t.e1.z, 0, t.e2.x, t.e2.y, t.e2.z, 0};
+    std::copy(v, v + 12, out.begin() + static_cast<long>(i * 12));
+  }
+}
+
 void Bvh::corners(uint32_t tri, Vec3* a, Vec3* b, Vec3* c) const {
   // tris_ is in leaf order: find the slot (only tools call this; linear is fine).
   for (size_t i = 0; i < triIndex_.size(); ++i) {

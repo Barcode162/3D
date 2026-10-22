@@ -99,6 +99,32 @@ lights a whole room. The bar works it out like this:
    round is one more bounce. A closed white box ends at 5× its direct
    light, exactly as physics says (`tools/native/radiosity_test.cpp`).
 
+### Bounced light in the game (L1.5)
+- After the bar loads, the bounced light is worked out on the phone's GPU
+  (the CPU gathers the surfaces and patches in the background, then the GPU
+  casts about 4 million rays in a few dozen slices, one per frame). The
+  first time, you **watch it spread** over about a second.
+- From then on, **every frame**: one more bounce between the patches, and
+  the probes refilled. Lamps changing brightness (dimmers, flicker, the
+  music) change the bounced light at once.
+- The flat ambient fill is gone: every pixel reads the bounced light from
+  the 8 probes around it (probes inside walls and behind the surface don't
+  count, so light doesn't leak through walls).
+- **No lamp light through walls:** each probe knows which lamps it can see;
+  a pixel's lamp light is scaled by what its probes see (soft, about 50 cm
+  wide shadows; sharp shadows come in L2).
+- It's built again when more rooms stream in or the Studio moves things
+  (1.5 s after the last move).
+
+| Switch / view | Page option |
+|---|---|
+| bounced light off (the old flat fill) | `?bounce=0` |
+| bounce strength | `?bouncek=1` |
+| the bounced light alone | `?giview=1` |
+| probes usable (green) or not (red) | `?giview=2` |
+| how much of the nearest lamp is in view | `?giview=3` |
+| fewer rays (the tests' software GPU) | `?gilite=1` |
+
 Tools: `node tools/light.mjs gi` (build it, timed), `node tools/light.mjs
 map bar 1.2 build/map.png` (a top-down map of the bounced light at 1.2 m),
 `node tools/bench.mjs native` (`gi_*` numbers).

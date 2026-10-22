@@ -16,7 +16,8 @@ engine::RenderScene renderSceneOf(const BarScene& scene) {
   }
   for (const ModelPlacement& p : scene.models) {
     // The room shell: without it there's no bar to enter.
-    r.models.push_back({p.file, p.position, p.rotation, p.scale, p.room, p.file.find("hall") != std::string::npos});
+    r.models.push_back({p.file, p.position, p.rotation, p.scale, p.room, p.file.find("hall") != std::string::npos,
+                        p.prop == Prop::kNone});
   }
   r.lights = scene.lights;
   r.mirrorCount = scene.mirrors.size();

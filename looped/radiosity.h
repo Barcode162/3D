@@ -31,6 +31,7 @@ struct GiSettings {
   int probeRays = 48;           // rays per probe
   float maxRay = 30.0f;         // rays further than this see nothing
   Aabb volume;                  // where the probes go (the rooms)
+  bool cpuRays = true;          // false: stop after the patches (the GPU casts the rays, looped/gi.h)
 };
 
 class GiBuild {
@@ -69,6 +70,11 @@ class GiBuild {
   std::vector<uint32_t> probeHits;    // probeRays per probe
   std::vector<uint32_t> probeMask;    // per probe: bit k = lamp k visible; bit 31 = the probe is usable
   size_t probeCount() const { return static_cast<size_t>(nx) * ny * nz; }
+  // For the GPU (looped/gi.h): the ray tree, the patches' hash (bucket
+  // starts, kBuckets + 1 of them, and the patches in order) and its cell size.
+  const Bvh& tree() const { return bvh_; }
+  void hashTable(std::vector<uint32_t>& start, std::vector<uint32_t>& items) const;
+  float hashCell() const { return cell_; }
   // Rays cast, for the stats.
   uint64_t rays = 0;
   double buildMs = 0;

@@ -41,6 +41,7 @@ struct PlacedModel {
   float scale = 1;
   int room = -1;
   bool critical = false;
+  bool still = true;  // never moves (glasses, darts: false): bounced light is worked out on still ones
 };
 
 struct PointLight {
