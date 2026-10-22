@@ -27,6 +27,9 @@ class BarWorld {
   const engine::world::World& world() const { return world_; }
   // The Studio moves things (bar/studio_mode.cpp); nothing else changes the world this way.
   engine::world::World& editWorld() { return world_; }
+  double now() const { return now_; }  // the world's clock (seconds), for events the Studio sends
+  // The Loop Rack (S8.2): stop the clock (seconds >= 0: hold it there) or let it run (-1).
+  void holdClock(double seconds) { held_ = seconds; }
 
   // Whether thing `i` would react to a touch now (only those are tappable).
   bool reacts(int i) const { return built_ && world_.reacts(i, "tap"); }
@@ -99,6 +102,7 @@ class BarWorld {
   int dartHits_ = 0;  // the song playing (a new one: "song")
   std::vector<bool> seated_;  // last frame's (seats taken → "sit", freed → "stand")
   double lastMs_ = 0, now_ = 0;
+  double held_ = -1;  // the clock held by the Studio (-1: running)
 };
 
 }  // namespace app

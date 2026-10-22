@@ -10,6 +10,7 @@ import { control } from './fields.mjs';
 import { partSource } from './parts.mjs';
 import { changes } from './diff.mjs';
 import { drawMoods } from './look.mjs';
+import { drawLife } from './life.mjs';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
@@ -319,7 +320,7 @@ function draw() {
   grip.setAttribute('aria-label', 'Make the Monitor bigger or smaller');
   grip.onclick = () => box.classList.toggle('full');
   const tabs = el('div', 'seg field tabs');
-  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['look', 'Look'], ['changes', 'Changes'], ['problems', 'Problems'], ['history', 'History']]) {
+  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['life', 'Life'], ['look', 'Look'], ['changes', 'Changes'], ['problems', 'Problems'], ['history', 'History']]) {
     const b = el('button', id === M.tab ? 'on' : '', label);
     b.dataset.tab = id;
     b.onclick = () => { M.tab = id; if (id === 'problems') { M.engineProblems = null; send('st.check'); } draw(); };
@@ -340,6 +341,7 @@ function draw() {
   else if (M.tab === 'changes') drawChanges(body);
   else if (M.tab === 'history') drawHistory(body);
   else if (M.tab === 'look') drawLook(body);
+  else if (M.tab === 'life') drawLife(body, draw);
   else drawProblems(body);
   Looped.scan();  // the faders in Inspect
   if (sameTab) body.scrollTop = scroll;  // an edit redraws; you stay where you were

@@ -164,3 +164,16 @@ body.tooling #thingMenu { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px +
 .meterrow .bar i.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
 .meterrow .bar i.warn { background: var(--warn); }
 .meterrow .bar i.bad { background: var(--bad); }
+/* Life (S8). */
+.lifemap { width: 100%; height: auto; color: var(--text-2); background: var(--field); border-radius: 10px; box-shadow: var(--field-edge); }
+.lifemap .arrow { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.lifemap .arrow.timed { stroke-dasharray: 4 3; }
+.lifemap .rule { fill: var(--text-2); font: 9px var(--mono); text-anchor: middle; }
+.lifemap .node rect { fill: #24211E; stroke: var(--rule); }
+.lifemap .node.start rect { stroke: var(--text-3); }
+.lifemap .node.on rect { fill: #3B2A1A; stroke: var(--accent); }
+.lifemap .node text { fill: var(--text); font: 600 10px var(--text-font); text-anchor: middle; }
+.rules { display: grid; gap: 4px; }
+.rulerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); font-size: 13px; }
+#ruleEvent { width: 120px; padding: 6px 8px; }
+#monitor .tabs button { padding-left: 2px; padding-right: 2px; font-size: 10px; }

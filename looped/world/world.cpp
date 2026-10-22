@@ -462,6 +462,27 @@ void World::setRest(int i, Vec3 at, Quat rot) {
 
 void World::setScale(int i, Vec3 scale) { things_[static_cast<size_t>(i)].scale = scale; }
 
+int World::updateKind(const Kind& changed) {
+  if (!library_) return 0;
+  const Kind* found = library_->find(changed.id);
+  if (!found) return 0;
+  Kind& k = const_cast<Kind&>(*found);  // the shared kinds: every copy of the world sees it
+  k.loops = changed.loops;
+  k.states = changed.states;
+  k.on = changed.on;
+  k.start = changed.start;
+  k.pivot = changed.pivot;
+  int n = 0;
+  for (size_t i = 0; i < things_.size(); ++i) {
+    Thing& t = things_[i];
+    if (t.kind != found) continue;
+    ++n;
+    if (t.state < 0 || static_cast<size_t>(t.state) >= k.states.size()) t.state = std::max(0, k.state(k.start));
+    if (t.prevState >= static_cast<int>(k.states.size())) t.prevState = -1;
+  }
+  return n;
+}
+
 void World::attach(int i, int parent) {
   // Keep it exactly where it is now (loops included, so a parent's sway
   // doesn't make it jump): its new rest is what, on the new parent and with

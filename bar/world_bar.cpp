@@ -140,6 +140,7 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
   engine::world::Clock clock;
   const double server = engine::net::serverTime();
   clock.seconds = server > 0 ? server : in.nowMs / 1000.0;
+  if (held_ >= 0) clock.seconds = held_;  // the Studio's pause and scrub
   if (in.songSeconds >= 0) {
     const std::string file = in.songUrl.substr(in.songUrl.find_last_of('/') + 1);
     for (const Tempo& t : tempos_) {

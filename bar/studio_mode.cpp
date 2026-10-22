@@ -55,6 +55,7 @@ struct Studio {
   engine::Vec2 lensAt{-1, -1};
   int lensHit = -2;
   double recaptureMs = 0;  // reflections are taken again after lights change (S7.2)
+  double pausedAt = -1;  // the world's clock when the Loop Rack paused it
   bool holdOn = false;  // a finger being held still: which, since when, whether it wandered
   int holdId = 0;
   double holdSince = 0;
@@ -661,6 +662,33 @@ bool studioCommand(const engine::ui::Command& c) {
     for (int p = 0; p < engine::prof::kPassCount; ++p) draws += f.draws[p], tris += f.tris[p];
     send("{\"ev\":\"budget\",\"draws\":" + std::to_string(draws) + ",\"tris\":" + std::to_string(tris) + ",\"lights\":" +
          std::to_string(g_app.scene.lights.size()) + ",\"maxLights\":" + std::to_string(app::SceneRenderer::maxLights()) + "}");
+  } else if (c.name == "st.kind") {  // text: a kind as JSON, "is" already filled in (S8: loops and states live)
+    engine::world::Library lib;
+    lib.add(c.text, "studio");
+    lib.resolve();
+    if (!lib.kinds().empty()) {
+      const engine::world::Kind& k = lib.kinds().front();
+      const int n = g_app.world.editWorld().updateKind(k);
+      if (!lib.errors().empty()) LOG_ERROR("Studio: kind %s: %s", k.id.c_str(), lib.errors().c_str());
+      send("{\"ev\":\"kind\",\"id\":" + engine::bridge::quote(k.id) + ",\"things\":" + std::to_string(n) + "}");
+    }
+  } else if (c.name == "st.event") {  // a: thing; text: an event ("tap", "music"...) → its state after (S8.1's Test)
+    const int t = static_cast<int>(c.a);
+    engine::world::World& w = g_app.world.editWorld();
+    if (t >= 0 && t < static_cast<int>(w.size())) {
+      const bool reacted = w.send(t, c.text, g_app.world.now());
+      w.takeChanges();
+      send("{\"ev\":\"state\",\"thing\":" + std::to_string(t) + ",\"state\":" + engine::bridge::quote(w.stateOf(t).name) +
+           ",\"reacted\":" + (reacted ? "true" : "false") + "}");
+    }
+  } else if (c.name == "st.clock") {  // a: 0 run, 1 hold here, 2 hold at the paused moment + b seconds (S8.2: pause, scrub)
+    if (c.a <= 0) {
+      g_app.world.holdClock(-1);
+      S.pausedAt = -1;
+    } else {
+      if (S.pausedAt < 0) S.pausedAt = g_app.world.now();
+      g_app.world.holdClock(S.pausedAt + (c.a >= 2 ? c.b : 0));
+    }
   } else if (c.name == "st.snap") {  // answered inside a frame, while the page can still copy the canvas (S6.1 pictures)
     send("{\"ev\":\"snap\",\"n\":" + std::to_string(static_cast<int>(c.a)) + "}");
   } else if (c.name == "st.gizmo") {  // a: 1 = arrows on the selection; b: tool (0 move, 1 turn, 2 size)

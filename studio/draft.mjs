@@ -168,17 +168,38 @@ export function refreshLights() {
     send('st.light', t.i, 0, [...color, intensity, l.range ?? 5, l.radius ?? 0.1].map((v) => +(+v).toFixed(4)).join(','));
   }
 }
+// A kind's loops or states changed (S8): the engine swaps them in place,
+// for it and every kind built on it.
+function lifeKinds(op, out = new Set()) {
+  if (op.op === 'group') { op.ops.forEach((o) => lifeKinds(o, out)); return out; }
+  const p = op.path || [];
+  if (op.file && op.file.startsWith('kinds/') && p[0] === 'kinds' && p[1] && p[1].id && ['loops', 'states', 'on', 'start', 'pivot'].includes(p[2])) out.add(p[1].id);
+  return out;
+}
+export function pushKinds(ids) {
+  if (!ids.size) return;
+  const all = (S.draft[placeFile()].kinds || []).flatMap((f) => (S.draft[f].kinds || []).map((k) => k.id));
+  const builtOn = (id, root) => { for (let k = id, n = 0; k && n < 16; n++) { if (k === root) return true; const own = all.includes(k) && (S.draft[(S.draft[placeFile()].kinds || []).find((f) => S.draft[f].kinds.some((x) => x.id === k))].kinds.find((x) => x.id === k)); k = own && own.is; } return false; };
+  for (const id of all) {
+    if (![...ids].some((root) => builtOn(id, root))) continue;
+    const k = JSON.parse(JSON.stringify(kindOf(id)));
+    delete k.is;
+    delete k.things;  // (the things inside a kind stay as built)
+    send('st.kind', 0, 0, JSON.stringify(k));
+  }
+}
 // The one way the Studio changes the world.
 export function edit(op, opts = {}) {
   const inv = S.history.do(op);
   sync(op);
   if (touchesLight(op)) refreshLights();
+  pushKinds(lifeKinds(op));
   emitEvent('changed', op);
   if (!opts.noReload && needsReload(op)) reloadWorld();
   return inv;
 }
-export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); if (touchesLight(e.inv)) refreshLights(); emitEvent('changed', e.inv); if (needsReload(e.inv)) reloadWorld(); } return e; }
-export function redo() { const e = S.history.redo(); if (e) { sync(e.op); if (touchesLight(e.op)) refreshLights(); emitEvent('changed', e.op); if (needsReload(e.op)) reloadWorld(); } return e; }
+export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); if (touchesLight(e.inv)) refreshLights(); pushKinds(lifeKinds(e.inv)); emitEvent('changed', e.inv); if (needsReload(e.inv)) reloadWorld(); } return e; }
+export function redo() { const e = S.history.redo(); if (e) { sync(e.op); if (touchesLight(e.op)) refreshLights(); pushKinds(lifeKinds(e.op)); emitEvent('changed', e.op); if (needsReload(e.op)) reloadWorld(); } return e; }
 // Live preview while a finger drags (no history): set, show, and say how to undo it.
 export function preview(op) { const inv = apply(S.draft, op); sync(op); return inv; }
 export { get, setOp, merge };

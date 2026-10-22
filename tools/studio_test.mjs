@@ -449,6 +449,30 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
 }
 
+// ---- S8.1 states and rules: the dartboard wobbles when touched ----
+{
+  const board = (await S()).things.find((t) => t.kind === 'dartboard');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), board.i);
+  await page.waitForTimeout(500);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="life"]');
+  check(!!(await page.$('#monitor svg.lifemap')), 'S8.1 Life shows the dartboard\'s states as a diagram');
+  await page.fill('#newState', 'wobble');
+  await page.click('#newStateGo');
+  await page.waitForTimeout(300);
+  await page.click('#monitor .chip[data-state="idle"]');
+  await page.fill('#ruleEvent', 'tap');
+  await page.click('#monitor .chip[data-to="wobble"]');
+  await page.waitForTimeout(400);
+  const k = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((x) => x.id === 'dartboard'));
+  check(k.states.wobble && k.states.wobble.loop === 'wobble' && k.loops.wobble && k.states.idle.on.tap === 'wobble', `S8.1 a state "wobble" (its own loop, back after one loop), and touching it in idle leads there (${k.states.idle.on.tap})`);
+  await page.click('#monitor [data-test="tap"]');
+  await page.waitForFunction(() => /now wobble/.test(window.bar3dLife.lastTest), null, { timeout: 8000 }).catch(() => {});
+  check(/now wobble/.test(await page.evaluate(() => window.bar3dLife.lastTest)), `S8.1 Test: a touch puts it in wobble, live (${await page.evaluate(() => window.bar3dLife.lastTest)})`);
+  await page.screenshot({ path: 'build/studio-life.png' });
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
@@ -546,9 +570,9 @@ await page.click('#monitor .key[aria-label="Close the Monitor"]');
 const page2 = await browser.newPage({ viewport: { width: 393, height: 852 } });
 await page2.addInitScript((t) => { try { localStorage.setItem('hubToken', t); } catch (e) {} }, owner.token);
 await page2.goto(url + 'studio/');
-await page2.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft, null, { timeout: 120000, polling: 250 }).catch(() => {});
+await page2.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft && !document.body.classList.contains('reloading'), null, { timeout: 240000, polling: 250 }).catch(() => {});
 const again = await page2.evaluate((id) => window.bar3dStudio.S.draft && window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[0], tbl.id);
-check(Math.abs(again - xBeforeUndo) < 0.001, 'S3.4 reopening the Studio: your draft is still there');
+check(Math.abs(again - xBeforeUndo) < 0.001, `S3.4 reopening the Studio: your draft is still there (${again} vs ${xBeforeUndo})`);
 await page2.close();
 
 // ---- S3.5 publish, the bar has it, history, restore ----

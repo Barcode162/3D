@@ -118,6 +118,11 @@ class World {
   void setRest(int i, Vec3 at, Quat rot);
   // Its size on its parent (an editor resizing it).
   void setScale(int i, Vec3 scale);
+  // A kind's life changed (the Studio's Loop Rack, S8): its loops, states and
+  // rules are swapped in place for every thing of it (and every copy of this
+  // world, which shares the kinds). Things in a state that's gone start over.
+  // Returns how many things it reached (0: no such kind).
+  int updateKind(const Kind& changed);
   // Moves a thing onto another parent (-1 = the place), keeping it where it
   // is in the world unless `at`/`rot` are given.
   void attach(int i, int parent);
