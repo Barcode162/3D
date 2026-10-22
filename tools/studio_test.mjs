@@ -13,7 +13,8 @@ const PORT = 8798, url = `http://127.0.0.1:${PORT}/`;
 const root = mkdtempSync(join(tmpdir(), 'studio-site-'));
 mkdirSync(join(root, 'home/bar'), { recursive: true });
 mkdirSync(join(root, 'private'), { recursive: true });
-for (const f of readdirSync('build/site')) symlinkSync(resolve('build/site', f), join(root, 'home/bar', f));
+// (CI copies the server's PHP into build/site before the tests: this site gets its own copy.)
+for (const f of readdirSync('build/site')) if (!/\.php$|^\.htaccess$|^accounts$/.test(f)) symlinkSync(resolve('build/site', f), join(root, 'home/bar', f));
 copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
 symlinkSync(resolve('studio'), join(root, 'home/studio'));
 symlinkSync(resolve('ui'), join(root, 'home/ui'));
