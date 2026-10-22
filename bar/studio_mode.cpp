@@ -7,6 +7,8 @@
 
 namespace barapp {
 
+float rayTurnedBoxDistance(Vec3 origin, Vec3 dir, const app::Collider& c);  // game.cpp
+
 namespace {
 
 struct Studio {
@@ -17,6 +19,14 @@ struct Studio {
   float dist = 4.5f, yaw = 0.6f, pitch = -0.35f;
   // Fingers down last frame, for drags and pinches.
   std::vector<engine::Pointer> last;
+  // Taps: where each finger went down, how far it wandered; the last tap.
+  struct Down { int id; engine::Vec2 pos; double ms; float moved; };
+  std::vector<Down> downs;
+  double lastTapMs = -1e9;
+  engine::Vec2 lastTapPos;
+  // The selection and the models glowing for it.
+  int selected = -1;
+  std::vector<size_t> glowing;
 } S;
 
 void send(const std::string& json) { engine::bridge::op("[\"studio\"," + json + "]"); }
@@ -73,6 +83,114 @@ const engine::Pointer* find(const std::vector<engine::Pointer>& list, int id) {
   for (const engine::Pointer& p : list)
     if (p.id == id) return &p;
   return nullptr;
+}
+
+struct Hit {
+  int thing;
+  float dist;
+};
+
+// Every thing under a screen point (fractions), nearest first, once each:
+// models (their boxes), shapes you bump into, tap areas, seats, lights.
+std::vector<Hit> pickAll(engine::Vec2 at) {
+  const Vec3 eye = g_app.camera.position, dir = screenRay(at);
+  std::vector<Hit> hits;
+  auto add = [&](int thing, float t) {
+    if (thing < 0 || t < 0) return;
+    for (Hit& h : hits)
+      if (h.thing == thing) {
+        h.dist = std::min(h.dist, t);
+        return;
+      }
+    hits.push_back({thing, t});
+  };
+  const app::BarScene& sc = g_app.scene;
+  for (size_t m = 0; m < sc.models.size() && m < sc.modelThing.size(); ++m) {
+    engine::Aabb box;
+    if (g_app.renderer.modelBox(m, &box)) add(sc.modelThing[m], rayBoxDistance(eye, dir, box.min, box.max));
+  }
+  for (size_t k = 0; k < sc.colliders.size() && k < sc.colliderThing.size(); ++k)
+    add(sc.colliderThing[k], rayTurnedBoxDistance(eye, dir, sc.colliders[k]));
+  for (size_t k = 0; k < sc.interactables.size() && k < sc.useThing.size(); ++k)
+    add(sc.useThing[k], rayBoxDistance(eye, dir, sc.interactables[k].boundsMin, sc.interactables[k].boundsMax));
+  for (size_t k = 0; k < sc.seats.size() && k < sc.seatThing.size(); ++k)
+    add(sc.seatThing[k], rayBoxDistance(eye, dir, sc.seats[k].boundsMin, sc.seats[k].boundsMax));
+  for (size_t k = 0; k < sc.lights.size() && k < sc.lightThing.size(); ++k) {
+    const Vec3 p = sc.lights[k].position, r{0.12f, 0.12f, 0.12f};
+    add(sc.lightThing[k], rayBoxDistance(eye, dir, p - r, p + r));
+  }
+  // A room's shell (walls, floor) and boxes around the camera: only after the rest.
+  std::sort(hits.begin(), hits.end(), [](const Hit& a, const Hit& b) { return a.dist < b.dist; });
+  const engine::world::World& w = g_app.world.world();
+  std::stable_partition(hits.begin(), hits.end(), [&](const Hit& h) {
+    const engine::world::Thing& t = w.thing(h.thing);
+    // Boxes the camera is inside of (the hall around you) aren't what you tapped.
+    return h.dist > 0.01f && !(t.kind && (t.kind->id == "room" || t.kind->is == "room"));
+  });
+  return hits;
+}
+
+// The middle and size of a thing (its models' boxes, else where it is).
+void boundsOf(int thing, Vec3* mid, float* size) {
+  const app::BarScene& sc = g_app.scene;
+  engine::Aabb all{{1e9f, 1e9f, 1e9f}, {-1e9f, -1e9f, -1e9f}};
+  bool any = false;
+  for (size_t m = 0; m < sc.models.size() && m < sc.modelThing.size(); ++m) {
+    engine::Aabb box;
+    if (sc.modelThing[m] != thing || !g_app.renderer.modelBox(m, &box)) continue;
+    all.min = {std::min(all.min.x, box.min.x), std::min(all.min.y, box.min.y), std::min(all.min.z, box.min.z)};
+    all.max = {std::max(all.max.x, box.max.x), std::max(all.max.y, box.max.y), std::max(all.max.z, box.max.z)};
+    any = true;
+  }
+  if (any) {
+    *mid = (all.min + all.max) * 0.5f;
+    *size = engine::length(all.max - all.min);
+  } else {
+    const Mat4& m = g_app.world.world().thing(thing).world;
+    *mid = {m.m[12], m.m[13], m.m[14]};
+    *size = 0.5f;
+  }
+}
+
+void frameThing(int thing) {
+  if (thing < 0 || thing >= static_cast<int>(g_app.world.world().size())) return;
+  Vec3 mid;
+  float size;
+  boundsOf(thing, &mid, &size);
+  if (S.mode == 1 || S.mode == 3) setMode(0);
+  S.target = mid;
+  S.dist = engine::clampf(size * 1.6f, 0.6f, 25.0f);
+  placeCamera();
+}
+
+void select(int thing) {
+  if (thing >= static_cast<int>(g_app.world.world().size())) thing = -1;
+  for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, 0);
+  S.glowing.clear();
+  S.selected = thing;
+  if (thing < 0) return;
+  const engine::world::World& w = g_app.world.world();
+  for (size_t m = 0; m < g_app.scene.models.size() && m < g_app.scene.modelThing.size(); ++m) {
+    // The thing and everything sitting on it.
+    for (int t = g_app.scene.modelThing[m]; t >= 0; t = w.thing(t).parent)
+      if (t == thing) {
+        S.glowing.push_back(m);
+        break;
+      }
+  }
+}
+
+void tapped(engine::Vec2 at, double ms) {
+  const std::vector<Hit> hits = pickAll(at);
+  const bool twice = ms - S.lastTapMs < 350 && std::hypot(at.x - S.lastTapPos.x, at.y - S.lastTapPos.y) < 0.05f;
+  S.lastTapMs = twice ? -1e9 : ms;
+  S.lastTapPos = at;
+  std::string list = "[";
+  for (size_t k = 0; k < hits.size() && k < 8; ++k)
+    list += (k ? "," : "") + std::string("[") + std::to_string(hits[k].thing) + "," + num(hits[k].dist) + "]";
+  list += "]";
+  send("{\"ev\":\"pick\",\"hits\":" + list + ",\"twice\":" + (twice ? "true" : "false") + "}");
+  if (twice && !hits.empty()) frameThing(S.selected >= 0 ? S.selected : hits[0].thing);
 }
 
 }  // namespace
@@ -141,6 +259,26 @@ void studioInput(float) {
       }
     }
   }
+  // Taps: a finger that went down and up quickly without wandering.
+  for (const engine::Pointer& p : in.pointers)
+    for (Studio::Down& d : S.downs)
+      if (d.id == p.id) d.moved = std::max(d.moved, std::hypot(p.pos.x - d.pos.x, p.pos.y - d.pos.y));
+  for (const engine::RawPress& r : in.presses) {
+    if (r.key >= 0) continue;
+    if (r.down) {
+      S.downs.push_back({r.id, r.pos, r.ms, 0});
+      continue;
+    }
+    for (size_t k = 0; k < S.downs.size(); ++k) {
+      if (S.downs[k].id != r.id) continue;
+      const Studio::Down d = S.downs[k];
+      S.downs.erase(S.downs.begin() + static_cast<long>(k));
+      const float moved = std::max(d.moved, std::hypot(r.pos.x - d.pos.x, r.pos.y - d.pos.y));
+      if (!r.cancelled && r.ms - d.ms < 400 && moved < 0.02f && in.pointers.empty()) tapped(r.pos, r.ms);
+      break;
+    }
+  }
+  if (in.pointers.empty() && S.downs.size() > 4) S.downs.clear();
   S.last = in.pointers;
   placeCamera();
 }
@@ -164,12 +302,21 @@ bool studioCommand(const engine::ui::Command& c) {
       S.target = cam.position + cam.forward() * S.dist;
       placeCamera();
     }
+  } else if (c.name == "st.select") {  // a: thing index (-1: none); b: 1 = and fly to it
+    select(static_cast<int>(c.a));
+    if (c.b > 0) frameThing(S.selected);
+  } else if (c.name == "st.frame") {
+    frameThing(c.a >= 0 ? static_cast<int>(c.a) : S.selected);
   } else {
     LOG_INFO("Studio: unknown command %s.", c.name.c_str());
   }
   return true;
 }
 
-void studioPresent(std::vector<app::SceneRenderer::Box>&, double) {}
+void studioPresent(std::vector<app::SceneRenderer::Box>&, double nowMs) {
+  // The selection breathes (docs/STUDIO.md 4.0: the selected thing pulses).
+  const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
+  for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
+}
 
 }  // namespace barapp

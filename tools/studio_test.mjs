@@ -60,6 +60,26 @@ await page.click('#views button >> nth=0');
 await page.waitForTimeout(500);
 check((await page.$$('#views button')).length === 2, 'S2.2 "Save this view" adds it to the list');
 
+// ---- S2.3 picking ----
+// Look at the bar counter from close by, then tap the middle of the screen.
+const counter = (await S()).things.find((t) => t.id === 'bar_counter_l');
+await page.evaluate((c) => window.bar3dStudio.send('st.view', 0, 0, [c.at[0] + 1.2, 1.7, c.at[2] + 2.6, -0.4, -0.35, 0, 2.5].join(',')), counter);
+await page.waitForTimeout(400);
+const box = await page.$('#world').then((f) => f.boundingBox());
+await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.55);
+await page.waitForTimeout(600);
+const sel = await S();
+const picked = sel.selected >= 0 ? sel.things[sel.selected] : null;
+check(!!picked, `S2.3 a tap selects a thing (${picked && picked.id})`);
+const crumb = await page.textContent('#crumbPath').catch(() => '');
+check(/^Bar › /.test(crumb) && picked && crumb.endsWith(picked.id), `S2.3 the breadcrumb says where it sits (${crumb})`);
+await page.screenshot({ path: 'build/studio-pick.png' });
+const listed = await page.$$eval('#hits button', (b) => b.length).catch(() => 0);
+check(listed === 0 || listed >= 2, `S2.3 several things under the finger → a list to choose from (${listed})`);
+await page.click('#deselect');
+await page.waitForTimeout(200);
+check((await S()).selected === -1 && await page.$eval('#crumb', (c) => c.hidden), 'S2.3 ✕ deselects');
+
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

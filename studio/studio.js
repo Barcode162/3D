@@ -102,6 +102,67 @@ $('camModes').addEventListener('click', (e) => {
   send('st.cam', +b.dataset.cam);
 });
 
+// ---- Selection (S2.3) ----
+export function select(i, fly = false) {
+  S.selected = i;
+  send('st.select', i, fly ? 1 : 0);
+  drawCrumb();
+  emit('select', i);
+}
+function pathOf(i) {
+  const out = [];
+  for (let t = S.things[i]; t; t = S.things[t.parent]) out.unshift(t);
+  return out;
+}
+function drawCrumb() {
+  const c = $('crumb');
+  const t = S.things[S.selected];
+  c.hidden = !t;
+  if (!t) return;
+  const place = S.place === 'bar' ? 'Bar' : S.place;
+  const parts = pathOf(S.selected).map((x) => x.id);
+  const last = parts.pop();
+  $('crumbPath').innerHTML = '';
+  $('crumbPath').append(place + ' › ' + parts.map((p) => p + ' › ').join(''));
+  const b = document.createElement('b');
+  b.textContent = last;
+  $('crumbPath').append(b);
+}
+let hitsTimer = 0;
+on('pick', (e) => {
+  const hits = e.hits || [];
+  const box = $('hits');
+  box.hidden = true;
+  if (!hits.length) { if (!S.locked) select(-1); return; }
+  if (!S.locked && !e.twice) select(hits[0][0]);
+  if (hits.length > 1 && !e.twice) {
+    box.textContent = '';
+    const head = document.createElement('span');
+    head.className = 'label';
+    head.textContent = 'Under your finger';
+    box.appendChild(head);
+    hits.slice(0, 6).forEach(([i, d]) => {
+      const t = S.things[i];
+      if (!t) return;
+      const b = document.createElement('button');
+      b.innerHTML = `<span></span><small>${t.kind} · ${(+d).toFixed(1)} m</small>`;
+      b.firstChild.textContent = t.id;
+      if (i === S.selected) b.style.color = 'var(--accent)';
+      b.onclick = () => { select(i); box.hidden = true; };
+      box.appendChild(b);
+    });
+    box.hidden = false;
+    clearTimeout(hitsTimer);
+    hitsTimer = setTimeout(() => { box.hidden = true; }, 4000);
+  }
+});
+$('deselect').addEventListener('click', () => select(-1));
+$('lockKey').addEventListener('click', () => {
+  S.locked = !S.locked;
+  $('lockKey').classList.toggle('lit', S.locked);
+  Looped.toast(S.locked ? 'Selection locked: move around freely' : 'Selection unlocked');
+});
+
 // ---- Saved views (per place, on this device) ----
 const viewsKey = () => 'studioViews-' + S.place;
 const loadViews = () => { try { return JSON.parse(store.get(viewsKey()) || '[]'); } catch (e) { return []; } };
@@ -131,5 +192,5 @@ on('view', (e) => {
 $('viewsKey').addEventListener('click', () => { const box = $('views'); box.hidden = !box.hidden; if (!box.hidden) drawViews(); });
 function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.classList.toggle('on', +x.dataset.cam === +mode)); }
 
-window.bar3dStudio = { S, send, on };  // for tests and the console
+window.bar3dStudio = { S, send, on, select };  // for tests and the console
 start();
