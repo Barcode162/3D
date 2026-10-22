@@ -33,6 +33,33 @@ check((await page.evaluate(() => document.querySelector('#top').getBoundingClien
 await page.waitForTimeout(1500);
 await page.screenshot({ path: 'build/studio-open.png' });
 
+// ---- S2.2 cameras ----
+const view = async () => {
+  await page.evaluate(() => { window.__view = null; window.bar3dStudio.on('view', (e) => { window.__view = e.view; }); window.bar3dStudio.send('st.getview'); });
+  await page.waitForFunction(() => window.__view, null, { timeout: 5000 }).catch(() => {});
+  return page.evaluate(() => window.__view);
+};
+const v0 = await view();
+check(Array.isArray(v0) && v0.length === 7, `S2.2 the camera says where it is (${v0 && v0.slice(0, 5).map((x) => x.toFixed(2)).join(', ')})`);
+await page.mouse.move(200, 400); await page.mouse.down(); await page.mouse.move(280, 380, { steps: 8 }); await page.mouse.up();
+await page.waitForTimeout(300);
+const v1 = await view();
+check(v1 && Math.abs(v1[3] - v0[3]) > 0.3, `S2.2 dragging one finger orbits (yaw ${v0 && v0[3].toFixed(2)} → ${v1 && v1[3].toFixed(2)})`);
+await page.click('#camModes [data-cam="2"]');
+await page.waitForTimeout(300);
+const vTop = await view();
+check(vTop && vTop[5] === 2 && vTop[4] < -1.5, `S2.2 Top looks straight down (pitch ${vTop && vTop[4].toFixed(2)})`);
+await page.screenshot({ path: 'build/studio-top.png' });
+await page.click('#camModes [data-cam="0"]');
+await page.evaluate((v) => window.bar3dStudio.send('st.view', 0, 0, v.join(',')), v0);
+await page.waitForTimeout(300);
+const vBack = await view();
+check(vBack && Math.abs(vBack[0] - v0[0]) < 0.05 && Math.abs(vBack[3] - v0[3]) < 0.01, 'S2.2 a saved view comes back exactly');
+await page.click('#viewsKey');
+await page.click('#views button >> nth=0');
+await page.waitForTimeout(500);
+check((await page.$$('#views button')).length === 2, 'S2.2 "Save this view" adds it to the list');
+
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

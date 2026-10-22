@@ -102,5 +102,34 @@ $('camModes').addEventListener('click', (e) => {
   send('st.cam', +b.dataset.cam);
 });
 
+// ---- Saved views (per place, on this device) ----
+const viewsKey = () => 'studioViews-' + S.place;
+const loadViews = () => { try { return JSON.parse(store.get(viewsKey()) || '[]'); } catch (e) { return []; } };
+function drawViews() {
+  const box = $('views');
+  box.textContent = '';
+  const add = document.createElement('button');
+  add.innerHTML = '<span>Save this view</span><small>+</small>';
+  add.onclick = () => { S.wantView = true; send('st.getview'); };
+  box.appendChild(add);
+  loadViews().forEach((v, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `<span>${v.name}</span><small>${['orbit', 'fly', 'top', 'walk'][v.view[5]] || ''}</small>`;
+    b.onclick = () => { send('st.view', 0, 0, v.view.join(',')); setCamButton(v.view[5]); box.hidden = true; };
+    box.appendChild(b);
+  });
+}
+on('view', (e) => {
+  if (!S.wantView) return;
+  S.wantView = false;
+  const views = loadViews();
+  views.push({ name: 'View ' + (views.length + 1), view: e.view });
+  store.set(viewsKey(), JSON.stringify(views.slice(-12)));
+  drawViews();
+  Looped.toast('View saved');
+});
+$('viewsKey').addEventListener('click', () => { const box = $('views'); box.hidden = !box.hidden; if (!box.hidden) drawViews(); });
+function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.classList.toggle('on', +x.dataset.cam === +mode)); }
+
 window.bar3dStudio = { S, send, on };  // for tests and the console
 start();
