@@ -1474,3 +1474,13 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   room runs that place once its live world has the file).
 - Tests: never `pkill -f` a pattern that's in your own command line (it kills
   the shell); a crashed studio_test now stops its PHP server on exit.
+- The public site (2026-10-22): `homepage/` is all of joshuavelasco.com's own
+  pages (Home, Play, Engine, Vision, Sign in, the staff Portal), shared frame
+  `homepage/site/layout.php`, look `site/site.css`, pictures `site/img/` (live
+  captures from `tools/shots.mjs`). Both workflows mirror the whole folder
+  into `home/`. The Portal tab and page exist only for the bar's owner and
+  admins (same rule as the Studio); anyone else gets the site's plain 404.
+  Test: `node tools/check.mjs site`. Copy is for visitors: show what it does,
+  never how (the engine's internals stay private).
+- The header blurs (backdrop-filter), which makes it the containing block for
+  `position: fixed` children: the phone menu is `absolute` with its own height.

@@ -21,6 +21,7 @@ const CHECKS = {
              ['ledger', 'node tools/ledger_test.mjs'], ['mp', `${NP} node tools/mp_test.mjs`]],
   hub:      [['hub', 'node tools/hub_test.mjs']],
   ui:       [['ui', `${NP} node tools/ui_test.mjs`]],
+  site:     [['site_php', 'for f in $(find homepage -name "*.php"); do php -l "$f" >/dev/null || exit 1; done'], ['site', `${NP} node tools/site_test.mjs`]],
   studio:   [['studio_api', 'node tools/studio_api_test.mjs'], ['ops', 'node tools/ops_test.mjs'], ['studio', `${NP} node tools/studio_test.mjs`]],
   server:   [['php', 'for f in server/*.php hub/*.php; do php -l "$f" >/dev/null || exit 1; done'],
              ['hub', 'node tools/hub_test.mjs'], ['gate', `${NP} node tools/gate_test.mjs`]],
@@ -36,6 +37,7 @@ const CHECKS = {
 // Which systems a changed file needs (first match wins; unknown files → game).
 const RULES = [
   [/\.md$|^docs\//, []],
+  [/^homepage\/|^tools\/site_test/, ['site']],
   [/^hub\/.*\.php$|^server\//, ['server']],
   [/^hub\/|^tools\/hub/, ['hub']],
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
@@ -71,7 +73,7 @@ function changedSystems() {
       break;
     }
   }
-  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native'].includes(s))) want.add('build');
+  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site'].includes(s))) want.add('build');
   return { files, systems: ORDER.filter(s => want.has(s)) };
 }
 
