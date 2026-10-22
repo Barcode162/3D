@@ -117,6 +117,7 @@ jobs:
         run: |
           for f in server/*.php; do php -l "$f"; done
           node tools/lint_emasm.mjs
+          node tools/schema_test.mjs
           # Looped stays a real engine: it never reaches into the bar (docs/LOOPED.md B).
           if grep -rn '#include "bar/' looped; then echo "looped/ must not include bar/"; exit 1; fi
 

@@ -1,0 +1,235 @@
+{
+  "about": "Every field the world's files can hold, in plain words (docs/STUDIO.md 7.3). The Studio's Inspect panel, the hub's Dials and the checks are all drawn from this. Types: number, int, bool, text, id, choice (from 'choices'), vec3 (x y z), color (r g b, 0..1), rect (x0 z0 x1 z1 on the floor), box (two corners), quad (four corners), range (a number or [min, max]), list (of 'item'), map (named entries of 'item'), states (state names). 'live': the Studio can change it without rebuilding the scene. tools/schema_test.mjs fails if a world file uses a field missing here.",
+  "format": 1,
+  "choices": {
+    "material": ["oak-floor", "dark-wood", "varnished-wood", "door-wood", "brick", "plaster", "leather", "chrome", "brass", "black-steel", "bottle-glass", "lacquer", "glow-glass"],
+    "action": ["none", "jukebox", "mirror", "mirror-mode", "rhythm", "darts", "bartender", "drink", "bell", "guitar", "mic", "light-switch", "fireplace", "door", "tv", "books", "chess", "tip-jar", "taps", "coffee", "piano-songs", "arcade"],
+    "seatKind": ["stool", "chair", "sofa", "piano-bench", "sim"],
+    "prop": ["", "pint", "rocks"],
+    "effect": ["bell", "thunk", "clink", "pour", "shake", "click", "engine", "whoosh", "knock", "cheer", "crackle", "buzz", "bong", "wood"],
+    "channel": ["move", "move.x", "move.y", "move.z", "turn", "turn.x", "turn.y", "turn.z", "scale", "scale.xyz", "scale.x", "scale.y", "scale.z", "glow", "light", "alpha", "tint", "tint.r", "tint.g", "tint.b"],
+    "shape": ["hold", "wave", "keys", "steps", "noise", "flicker", "orbit", "beat", "spin"],
+    "ease": ["smooth", "linear", "step"],
+    "mirrorMode": ["full", "avatars", "off"],
+    "music": ["jukebox", "arcade"],
+    "sendTo": ["all", "parent", "children"]
+  },
+
+  "place": {
+    "label": "Place", "about": "A whole place: the bar, a home. Its things, where people appear, its air.",
+    "fields": {
+      "id": {"type": "id", "label": "Name", "about": "The place's name in the files and the menu."},
+      "about": {"type": "text", "label": "About"},
+      "kinds": {"type": "list", "item": {"type": "text"}, "label": "Kind files", "about": "Which kind files this place uses."},
+      "spawn": {"type": "object", "label": "Where people appear", "fields": {
+        "at": {"type": "vec3", "unit": "m", "label": "Spot", "live": true},
+        "yaw": {"type": "number", "unit": "°", "min": -180, "max": 180, "step": 5, "label": "Facing", "live": true}}},
+      "air": {"type": "object", "label": "Air", "about": "The room's ambient light and haze.", "fields": {
+        "ambient": {"type": "color", "label": "Ambient light", "live": true},
+        "fog": {"type": "color", "label": "Haze colour", "live": true},
+        "fogDensity": {"type": "number", "min": 0, "max": 0.2, "step": 0.002, "label": "Haze", "live": true}}},
+      "lightGrid": {"type": "object", "label": "Light grid", "about": "The box the baked light covers.", "fields": {
+        "min": {"type": "vec3", "unit": "m", "label": "Low corner"}, "max": {"type": "vec3", "unit": "m", "label": "High corner"}}},
+      "rooms": {"type": "list", "label": "Rooms", "about": "Boxes that stream their models in when you're near.", "item": {"type": "object", "fields": {
+        "id": {"type": "id", "label": "Name"}, "min": {"type": "vec3", "unit": "m", "label": "Low corner"}, "max": {"type": "vec3", "unit": "m", "label": "High corner"}}}},
+      "doorways": {"type": "list", "label": "Doorways", "item": {"type": "object", "fields": {
+        "rooms": {"type": "list", "item": {"type": "text"}, "label": "Rooms it joins"},
+        "corners": {"type": "quad", "unit": "m", "label": "Opening"}}}},
+      "areas": {"type": "map", "label": "Areas", "about": "Named boxes the game asks about (is someone in the arcade?).", "item": {"type": "object", "fields": {
+        "min": {"type": "vec3", "unit": "m", "label": "Low corner"}, "max": {"type": "vec3", "unit": "m", "label": "High corner"}}}},
+      "points": {"type": "map", "label": "Points", "about": "Named spots (where a door is).", "item": {"type": "vec3", "unit": "m"}},
+      "things": {"type": "list", "label": "Things", "item": {"type": "thing"}}
+    }
+  },
+
+  "thing": {
+    "label": "Thing", "about": "One thing in a place: what kind it is and where it sits.",
+    "fields": {
+      "id": {"type": "id", "label": "Name", "about": "Never changes once players have seen it (the network uses it)."},
+      "kind": {"type": "kindRef", "label": "Kind"},
+      "parent": {"type": "thingRef", "label": "Sits on", "about": "Move that one and this one follows."},
+      "at": {"type": "vec3", "unit": "m", "label": "Where", "about": "On its parent (or in the place).", "live": true},
+      "turn": {"type": "number", "unit": "°", "min": -180, "max": 180, "step": 15, "label": "Turn", "about": "Around the up axis.", "live": true},
+      "scale": {"type": "range", "unit": "×", "min": 0.05, "max": 10, "step": 0.05, "label": "Size", "live": true},
+      "phase": {"type": "number", "min": 0, "max": 1, "step": 0.05, "label": "Loop offset", "about": "Starts its loops this far in, so copies don't move in step.", "live": true},
+      "seed": {"type": "int", "min": 0, "max": 99999, "label": "Seed", "about": "Its own randomness (noise, flicker).", "live": true},
+      "state": {"type": "stateRef", "label": "Starts in"},
+      "row": {"type": "object", "label": "Row", "about": "Copies in a line.", "fields": {
+        "count": {"type": "int", "min": 1, "max": 50, "label": "How many"},
+        "step": {"type": "vec3", "unit": "m", "label": "Apart"}}},
+      "loops": {"type": "map", "label": "Its own loops", "item": {"type": "loop"}},
+      "parts": {"type": "parts", "label": "Its own parts", "about": "Overrides the kind's parts."}
+    }
+  },
+
+  "kind": {
+    "label": "Kind", "about": "What a thing is: its parts, states, loops and rules. Every thing of a kind shares them.",
+    "fields": {
+      "id": {"type": "id", "label": "Name"},
+      "about": {"type": "text", "label": "About", "about": "What it does, in plain words (shown in the hub)."},
+      "is": {"type": "kindRef", "label": "Builds on", "about": "Starts from another kind and changes some of it."},
+      "still": {"type": "text", "label": "Stands still because", "about": "Only if it has no loop: why."},
+      "pivot": {"type": "vec3", "unit": "m", "label": "Pivot", "about": "The point its loops turn and scale around (a lamp's hook).", "live": true},
+      "start": {"type": "stateRef", "label": "Starts in"},
+      "parts": {"type": "parts", "label": "Parts"},
+      "loops": {"type": "map", "label": "Loops", "item": {"type": "loop"}},
+      "states": {"type": "map", "label": "States", "item": {"type": "state"}},
+      "on": {"type": "map", "label": "Rules in every state", "item": {"type": "stateRef"}},
+      "things": {"type": "list", "label": "Things inside it", "item": {"type": "thing"}}
+    }
+  },
+
+  "loop": {
+    "label": "Loop", "about": "A short movement that repeats forever on the shared clock.",
+    "fields": {
+      "period": {"type": "number", "unit": "s", "min": 0.05, "max": 120, "step": 0.05, "label": "Length", "about": "Seconds per loop (beats when locked to the music).", "live": true},
+      "beat": {"type": "bool", "label": "Locked to the music", "live": true},
+      "restart": {"type": "bool", "label": "Starts over", "about": "Starts from the beginning when its state begins (actions).", "live": true},
+      "desync": {"type": "bool", "label": "Own timing", "about": "Each copy starts at its own point.", "live": true},
+      "blend": {"type": "number", "unit": "s", "min": 0, "max": 3, "step": 0.05, "label": "Blend in", "live": true},
+      "pieces": {"type": "list", "label": "Lanes", "item": {"type": "piece"}}
+    }
+  },
+
+  "piece": {
+    "label": "Lane", "about": "One channel of a loop: what moves, and how.",
+    "fields": {
+      "ch": {"type": "choice", "choices": "channel", "label": "What moves", "live": true},
+      "shape": {"type": "choice", "choices": "shape", "label": "Shape", "live": true},
+      "amp": {"type": "range", "min": -10, "max": 10, "step": 0.01, "label": "Amount", "about": "Metres, degrees or a fraction, by channel.", "live": true},
+      "value": {"type": "range", "min": -10, "max": 10, "step": 0.01, "label": "Value", "live": true},
+      "offset": {"type": "range", "min": -10, "max": 10, "step": 0.01, "label": "Offset", "live": true},
+      "phase": {"type": "number", "min": 0, "max": 1, "step": 0.05, "label": "Start point", "live": true},
+      "rate": {"type": "number", "unit": "×", "min": 0.05, "max": 20, "step": 0.05, "label": "Speed", "live": true},
+      "decay": {"type": "number", "min": 0, "max": 30, "step": 0.5, "label": "Fade", "about": "How fast a beat thump dies away.", "live": true},
+      "every": {"type": "int", "min": 1, "max": 32, "label": "Every", "about": "Beats between thumps.", "live": true},
+      "ease": {"type": "choice", "choices": "ease", "label": "Between keys", "live": true},
+      "keys": {"type": "keys", "label": "Keys", "about": "[time 0..1, value] points.", "live": true},
+      "values": {"type": "list", "item": {"type": "range"}, "label": "Steps", "live": true}
+    }
+  },
+
+  "state": {
+    "label": "State", "about": "What a thing is doing now, the loop it plays and its rules.",
+    "fields": {
+      "loop": {"type": "loopRef", "label": "Plays"},
+      "on": {"type": "map", "label": "Rules", "about": "When this event comes → go to that state.", "item": {"type": "stateRef"}},
+      "after": {"type": "number", "unit": "s", "min": 0, "max": 600, "step": 0.1, "label": "After seconds"},
+      "afterLoops": {"type": "int", "min": 1, "max": 100, "label": "After loops"},
+      "next": {"type": "stateRef", "label": "Then"},
+      "free": {"type": "bool", "label": "Moves freely", "about": "Physics or a player moves it (a held glass)."},
+      "enter": {"type": "list", "label": "On entering, tell", "item": {"type": "object", "fields": {
+        "to": {"type": "text", "label": "Who", "about": "all, parent, children, #id or a child's id."},
+        "send": {"type": "text", "label": "Event"}}}}
+    }
+  },
+
+  "parts": {
+    "model": {"label": "Model", "about": "The 3D model it shows.", "fields": {
+      "file": {"type": "model", "label": "File"},
+      "material": {"type": "choice", "choices": "material", "label": "Main material"}}},
+    "boxes": {"label": "Boxes", "about": "Plain shapes, drawn and solid: floors, walls, shelves.", "list": true, "fields": {
+      "at": {"type": "vec3", "unit": "m", "label": "Middle"},
+      "size": {"type": "vec3", "unit": "m", "label": "Size"},
+      "material": {"type": "choice", "choices": "material", "label": "Material"},
+      "color": {"type": "color", "label": "Colour"},
+      "solid": {"type": "bool", "label": "Solid", "about": "Off: you walk through it (a rug)."}}},
+    "solids": {"label": "Shapes you bump into", "list": true, "fields": {
+      "at": {"type": "vec3", "unit": "m", "label": "Middle"},
+      "half": {"type": "vec3", "unit": "m", "label": "Half size"},
+      "turn": {"type": "number", "unit": "°", "min": -180, "max": 180, "step": 5, "label": "Turn"},
+      "material": {"type": "choice", "choices": "material", "label": "Sound and feel"}}},
+    "blocks": {"label": "Walk blockers", "about": "Floor rectangles you can't walk into (world axes).", "type": "list", "item": {"type": "rect", "unit": "m"}},
+    "floors": {"label": "Floors", "about": "Raised floor rectangles (world axes): x0 z0 x1 z1 height.", "type": "list", "item": {"type": "list", "item": {"type": "number"}}},
+    "seats": {"label": "Seats", "list": true, "fields": {
+      "name": {"type": "text", "label": "Name"},
+      "hip": {"type": "vec3", "unit": "m", "label": "Where you sit"},
+      "facing": {"type": "number", "unit": "°", "min": -180, "max": 180, "step": 5, "label": "Facing"},
+      "low": {"type": "number", "min": 0, "max": 1, "step": 0.05, "label": "How low"},
+      "kind": {"type": "choice", "choices": "seatKind", "label": "Kind of seat"},
+      "lights": {"type": "bool", "label": "Glows when you're near"},
+      "machine": {"type": "int", "min": -1, "max": 9, "label": "Machine", "about": "Which racing rig (-1: none)."}}},
+    "uses": {"label": "Tap areas", "about": "Where a tap does something (world axes).", "list": true, "fields": {
+      "name": {"type": "text", "label": "Name tag"},
+      "prompt": {"type": "text", "label": "Prompt"},
+      "action": {"type": "choice", "choices": "action", "label": "Does"},
+      "tag": {"type": "vec3", "unit": "m", "label": "Name tag spot"},
+      "box": {"type": "box", "unit": "m", "label": "Tap box"},
+      "direct": {"type": "bool", "label": "Only when looked at directly"},
+      "lights": {"type": "bool", "label": "Glows when you're near"},
+      "mirror": {"type": "thingRef", "label": "Mirror"},
+      "value": {"type": "int", "min": 0, "max": 99, "label": "Value"}}},
+    "light": {"label": "Light", "fields": {
+      "color": {"type": "color", "label": "Colour", "live": true},
+      "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness", "live": true},
+      "range": {"type": "number", "unit": "m", "min": 0.1, "max": 30, "step": 0.1, "label": "Reach", "live": true},
+      "radius": {"type": "number", "unit": "m", "min": 0, "max": 2, "step": 0.01, "label": "Softness", "live": true},
+      "dims": {"type": "bool", "label": "Dims with the switch"}}},
+    "glowbox": {"label": "Glow", "about": "A small glowing thing (moths, sparks, smoke).", "fields": {
+      "color": {"type": "color", "label": "Colour", "live": true},
+      "glow": {"type": "number", "min": 0, "max": 10, "step": 0.1, "label": "Glow", "live": true},
+      "size": {"type": "range", "unit": "m", "min": 0.001, "max": 1, "step": 0.001, "label": "Size", "live": true},
+      "shy": {"type": "number", "min": 0, "max": 2, "step": 0.05, "label": "Shy", "about": "Darts away from you when you come close."}}},
+    "sound": {"label": "Sound", "about": "A sound it makes by itself, near it only.", "fields": {
+      "effect": {"type": "choice", "choices": "effect", "label": "Sound"},
+      "every": {"type": "range", "unit": "s", "min": 0.05, "max": 120, "step": 0.05, "label": "How often"},
+      "gain": {"type": "number", "min": 0, "max": 2, "step": 0.05, "label": "Loudness"},
+      "near": {"type": "number", "unit": "m", "min": 0.5, "max": 40, "step": 0.5, "label": "Heard from"},
+      "while": {"type": "states", "label": "Only while"}}},
+    "touchSound": {"label": "Touch sound", "about": "The sound when you tap it.", "fields": {
+      "effect": {"type": "choice", "choices": "effect", "label": "Sound"},
+      "gain": {"type": "number", "min": 0, "max": 2, "step": 0.05, "label": "Loudness"}}},
+    "speaker": {"label": "Speaker", "fields": {
+      "music": {"type": "choice", "choices": "music", "label": "Plays"},
+      "at": {"type": "vec3", "unit": "m", "label": "Where"}}},
+    "mirror": {"label": "Mirror", "fields": {
+      "center": {"type": "vec3", "unit": "m", "label": "Middle"},
+      "normal": {"type": "vec3", "label": "Faces"},
+      "right": {"type": "vec3", "label": "Right"},
+      "up": {"type": "vec3", "label": "Up"},
+      "halfWidth": {"type": "number", "unit": "m", "min": 0.1, "max": 10, "step": 0.01, "label": "Half width"},
+      "halfHeight": {"type": "number", "unit": "m", "min": 0.1, "max": 10, "step": 0.01, "label": "Half height"},
+      "mode": {"type": "choice", "choices": "mirrorMode", "label": "Shows"},
+      "buttons": {"type": "list", "item": {"type": "thingRef"}, "label": "Its buttons"}}},
+    "screen": {"label": "Screen", "about": "A flat screen's four corners.", "type": "quad", "unit": "m"},
+    "project": {"label": "Opens", "about": "The game or project this thing opens.", "fields": {
+      "id": {"type": "id", "label": "Project"},
+      "name": {"type": "text", "label": "Name"},
+      "about": {"type": "text", "label": "About"}}},
+    "dartboard": {"label": "Dartboard", "fields": {
+      "face": {"type": "vec3", "unit": "m", "label": "Board middle"},
+      "oche": {"type": "vec3", "unit": "m", "label": "Throwing line"}}},
+    "chessboard": {"label": "Chessboard", "fields": {
+      "center": {"type": "vec3", "unit": "m", "label": "Middle"},
+      "square": {"type": "number", "unit": "m", "min": 0.01, "max": 0.2, "step": 0.001, "label": "Square size"}}},
+    "chess": {"label": "Chess piece", "fields": {"piece": {"type": "int", "min": 0, "max": 31, "label": "Piece"}}},
+    "drink": {"label": "Drink spot", "fields": {"slot": {"type": "int", "min": 0, "max": 7, "label": "Spot"}}},
+    "bartender": {"label": "Bartender spot", "fields": {"stand": {"type": "vec3", "unit": "m", "label": "Stands at"}}},
+    "rig": {"label": "Racing rig", "fields": {"machine": {"type": "int", "min": 0, "max": 9, "label": "Rig number"}}},
+    "room": {"label": "Room", "about": "Which streaming room its model belongs to.", "type": "text"},
+    "prop": {"label": "Prop", "about": "What a hand holds when this is picked up.", "type": "choice", "choices": "prop"},
+    "piano": {"label": "Piano", "about": "This is the piano you can play.", "fields": {}},
+    "coin": {"label": "Credit coin", "about": "The coin that pops out when you earn.", "fields": {}}
+  },
+
+  "catalog": {
+    "label": "Catalog", "about": "Every kind you could own.",
+    "fields": {
+      "about": {"type": "text", "label": "About"},
+      "items": {"type": "list", "label": "Items", "item": {"type": "object", "fields": {
+        "kind": {"type": "kindRef", "label": "Kind"},
+        "name": {"type": "text", "label": "Name"},
+        "about": {"type": "text", "label": "About"},
+        "category": {"type": "text", "label": "Category"},
+        "price": {"type": "int", "unit": "credits", "min": 0, "max": 1000000, "label": "Price"},
+        "tradeable": {"type": "bool", "label": "Can be traded"}}}}
+    }
+  },
+
+  "songs": {
+    "label": "Songs", "about": "The built-in songs' tempo, by file.",
+    "item": {"type": "object", "fields": {
+      "bpm": {"type": "number", "unit": "bpm", "min": 30, "max": 300, "step": 0.1, "label": "Tempo"},
+      "firstBeat": {"type": "number", "unit": "s", "min": 0, "max": 30, "step": 0.01, "label": "First beat"}}}
+  }
+}
