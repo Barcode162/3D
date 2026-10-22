@@ -25,6 +25,8 @@ class BarWorld {
   bool ready() const { return built_; }
   size_t count() const { return world_.size(); }
   const engine::world::World& world() const { return world_; }
+  // The Studio moves things (bar/studio_mode.cpp); nothing else changes the world this way.
+  engine::world::World& editWorld() { return world_; }
 
   // Whether thing `i` would react to a touch now (only those are tappable).
   bool reacts(int i) const { return built_ && world_.reacts(i, "tap"); }

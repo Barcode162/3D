@@ -116,6 +116,8 @@ class World {
   // ---- Free things ----
   // Where a free thing is now (physics, input), on its parent.
   void setRest(int i, Vec3 at, Quat rot);
+  // Its size on its parent (an editor resizing it).
+  void setScale(int i, Vec3 scale);
   // Moves a thing onto another parent (-1 = the place), keeping it where it
   // is in the world unless `at`/`rot` are given.
   void attach(int i, int parent);

@@ -23,6 +23,7 @@ body.lp { -webkit-user-select: none; user-select: none; }
 #bottom .key { min-height: 44px; }
 #crumb {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+  transition: bottom .15s;
   display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 12px; border-radius: 12px; font-size: 13px; color: var(--text-2);
 }
 #crumb .path { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -64,3 +65,30 @@ body.lp { -webkit-user-select: none; user-select: none; }
 #login h1 { font-size: 44px; }
 .xray { flex-wrap: wrap; gap: 6px; }
 .xray .key { min-height: 34px; padding: 0 9px; font-size: 10px; }
+
+/* The tools (S3.2): above the bottom bar; the breadcrumb sits above them. */
+#tools {
+  position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
+  display: grid; gap: 7px; padding: 8px; border-radius: 16px;
+}
+body.tooling #crumb { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 6px); }
+body.tooling #hits { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 56px); }
+#tools .rowk { display: flex; gap: 6px; align-items: center; }
+#tools .rowk .key { flex: 1; padding: 0 6px; min-height: 38px; }
+#tools .rowk .seg { flex: 1.4; }
+#tools .rowk .seg button { min-height: 32px; }
+#tools .valrow { display: flex; gap: 8px; align-items: center; }
+#tools .axisname { width: 22px; text-align: center; font-size: 18px; color: var(--accent); }
+#valField { flex: 1; font-size: 20px; padding: 7px 10px; min-width: 0; }
+#tools .unit { width: 26px; font-size: 13px; }
+#tools .jog { height: 52px; }
+#tools .jog .cap { left: 50%; }
+#tools .jog.drag .bubble { opacity: 1; }
+.change { all: unset; display: block; padding: 10px 12px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); font-size: 14px; cursor: pointer; }
+.change:focus-visible { outline: 2px solid var(--accent); }
+#publishSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); padding: 16px; border-radius: 18px; display: grid; gap: 12px; }
+#publishSheet h2 { font-size: 28px; }
+#publishSheet .row .key { flex: 1; }
+.hist { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
+.hist small { color: var(--text-2); grid-column: 1; }
+.hist .key { grid-row: 1 / span 2; grid-column: 2; }

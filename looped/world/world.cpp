@@ -460,6 +460,8 @@ void World::setRest(int i, Vec3 at, Quat rot) {
   t.rot = rot;
 }
 
+void World::setScale(int i, Vec3 scale) { things_[static_cast<size_t>(i)].scale = scale; }
+
 void World::attach(int i, int parent) {
   // Keep it exactly where it is now (loops included, so a parent's sway
   // doesn't make it jump): its new rest is what, on the new parent and with

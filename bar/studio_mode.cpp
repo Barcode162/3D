@@ -28,7 +28,21 @@ struct Studio {
   int selected = -1;
   std::vector<size_t> glowing;
   bool readySent = false;
-  int layers = 0;  // X-ray: 1 tap areas, 2 shapes you bump into, 4 seats, 8 lights, 16 where people appear  // the world's list goes to the page after its first update
+  int layers = 0;
+  std::vector<int> posed;  // things the Studio moved: their models follow them every frame
+  // The gizmo: arrows on the selection (shown when `gizmo`), one being dragged.
+  bool gizmo = false;
+  int tool = 0;  // 0 move, 1 turn, 2 size
+  int dragAxis = -1;
+  bool sliding = false;  // the selection follows the finger over surfaces
+  bool locked = false;
+  // Several fingers tapping together (two: undo, three: redo, like drawing apps).
+  int fingers = 0;
+  bool multi = false;  // the last touch was several fingers (not a tap)
+  double fingersMs = 0;
+  float fingersMoved = 0;
+  int dragId = -1;
+  engine::Vec2 dragLast;  // X-ray: 1 tap areas, 2 shapes you bump into, 4 seats, 8 lights, 16 where people appear  // the world's list goes to the page after its first update
 } S;
 
 void send(const std::string& json) { engine::bridge::op("[\"studio\"," + json + "]"); }
@@ -211,6 +225,106 @@ void sendReady() {
   LOG_INFO("Studio: ready (%zu things).", w.size());
 }
 
+// The selection's middle, and its arrows' screen ends (fractions), for drags.
+bool screenOf(Vec3 p, engine::Vec2* out) {
+  const engine::FirstPersonCamera& cam = g_app.camera;
+  const float aspect = static_cast<float>(g_app.gpu.width) / static_cast<float>(g_app.gpu.height);
+  const Mat4 vp = cam.projection(aspect) * cam.view();
+  const float x = vp.m[0] * p.x + vp.m[4] * p.y + vp.m[8] * p.z + vp.m[12];
+  const float y = vp.m[1] * p.x + vp.m[5] * p.y + vp.m[9] * p.z + vp.m[13];
+  const float w = vp.m[3] * p.x + vp.m[7] * p.y + vp.m[11] * p.z + vp.m[15];
+  if (w <= 0.01f) return false;
+  *out = {(x / w + 1) * 0.5f, (1 - y / w) * 0.5f};
+  return true;
+}
+Vec3 axisDir(int a) { return a == 0 ? Vec3{1, 0, 0} : a == 1 ? Vec3{0, 1, 0} : Vec3{0, 0, 1}; }
+float arrowLength(Vec3 mid) { return engine::clampf(engine::length(mid - g_app.camera.position) * 0.18f, 0.15f, 2.0f); }
+
+// Which arrow a finger at `at` is on (-1: none).
+int arrowAt(engine::Vec2 at) {
+  if (!S.gizmo || S.selected < 0) return -1;
+  Vec3 mid;
+  float size;
+  boundsOf(S.selected, &mid, &size);
+  engine::Vec2 o;
+  if (!screenOf(mid, &o)) return -1;
+  const float aspect = static_cast<float>(g_app.gpu.cssWidth) / std::max(1.0, g_app.gpu.cssHeight);
+  int best = -1;
+  float bestD = 0.035f;
+  for (int a = 0; a < 3; ++a) {
+    engine::Vec2 tip;
+    if (!screenOf(mid + axisDir(a) * arrowLength(mid), &tip)) continue;
+    // Distance from the finger to the arrow's segment, in screen widths.
+    const float vx = (tip.x - o.x) * aspect, vy = tip.y - o.y, px = (at.x - o.x) * aspect, py = at.y - o.y;
+    const float len2 = vx * vx + vy * vy;
+    const float t = len2 > 1e-6f ? engine::clampf((px * vx + py * vy) / len2, 0.2f, 1.15f) : 0;
+    const float d = std::hypot(px - vx * t, py - vy * t);
+    if (d < bestD) bestD = d, best = a;
+  }
+  return best;
+}
+
+// Moves a thing's models with it (the world already moved it).
+void poseModels() {
+  const engine::world::World& w = g_app.world.world();
+  for (size_t m = 0; m < g_app.scene.models.size() && m < g_app.scene.modelThing.size(); ++m)
+    for (int t = g_app.scene.modelThing[m]; t >= 0; t = w.thing(t).parent)
+      if (std::find(S.posed.begin(), S.posed.end(), t) != S.posed.end()) {
+        g_app.renderer.setModelPose(m, w.thing(g_app.scene.modelThing[m]).world);
+        break;
+      }
+}
+
+// A point in the world → on a thing (its parent's space: what "at" means in the files).
+Vec3 toParent(int thing, Vec3 p) {
+  const engine::world::World& w = g_app.world.world();
+  const int parent = w.thing(thing).parent;
+  if (parent < 0) return p;
+  const Mat4& m = w.thing(parent).world;
+  // Affine inverse: columns 0-2 are the parent's turned (and sized) axes.
+  const Vec3 a{m.m[0], m.m[1], m.m[2]}, b{m.m[4], m.m[5], m.m[6]}, c{m.m[8], m.m[9], m.m[10]};
+  const Vec3 d = p - Vec3{m.m[12], m.m[13], m.m[14]};
+  const Vec3 bc = engine::cross(b, c), ca = engine::cross(c, a), ab = engine::cross(a, b);
+  const float det = engine::dot(a, bc);
+  if (std::fabs(det) < 1e-8f) return p;
+  return Vec3{engine::dot(d, bc), engine::dot(d, ca), engine::dot(d, ab)} / det;
+}
+bool inSubtree(int thing, int root) {
+  const engine::world::World& w = g_app.world.world();
+  for (int t = thing; t >= 0; t = w.thing(t).parent)
+    if (t == root) return true;
+  return false;
+}
+// The nearest surface along a ray that isn't `skip` (or on it): things' boxes,
+// shapes you bump into, the floor. Returns the distance (-1: nothing).
+float surfaceAlong(Vec3 eye, Vec3 dir, int skip) {
+  const app::BarScene& sc = g_app.scene;
+  float best = -1;
+  auto take = [&](float t) { if (t > 0.001f && (best < 0 || t < best)) best = t; };
+  for (size_t m = 0; m < sc.models.size() && m < sc.modelThing.size(); ++m) {
+    const int t = sc.modelThing[m];
+    if (inSubtree(t, skip)) continue;
+    const engine::world::Thing& th = g_app.world.world().thing(t);
+    if (th.kind && (th.kind->id == "room" || th.kind->is == "room")) continue;  // shells: their colliders and the floor
+    engine::Aabb box;
+    if (g_app.renderer.modelBox(m, &box)) {
+      const float d = rayBoxDistance(eye, dir, box.min, box.max);
+      if (d > 0) take(d);
+    }
+  }
+  for (size_t k = 0; k < sc.colliders.size() && k < sc.colliderThing.size(); ++k) {
+    if (inSubtree(sc.colliderThing[k], skip)) continue;
+    const float d = rayTurnedBoxDistance(eye, dir, sc.colliders[k]);
+    if (d > 0) take(d);
+  }
+  if (dir.y < -1e-4f) take((0 - eye.y) / dir.y);  // the floor (raised floors come from shapes)
+  return best;
+}
+void sendRest(const char* ev, int thing, Vec3 world) {
+  const Vec3 r = toParent(thing, world);
+  send(std::string("{\"ev\":\"") + ev + "\",\"thing\":" + std::to_string(thing) + ",\"rest\":[" + num(r.x) + "," + num(r.y) + "," + num(r.z) + "]}");
+}
+
 }  // namespace
 
 bool studioOn() { return S.on; }
@@ -229,6 +343,56 @@ void studioInput(float) {
   engine::FirstPersonCamera& cam = g_app.camera;
   const Vec3 right = engine::normalize(engine::cross(cam.forward(), {0, 1, 0}));
   const Vec3 up = engine::cross(right, cam.forward());
+  // A finger that went down on an arrow drags along it (the page moves the thing).
+  for (const engine::RawPress& r : in.presses) {
+    if (r.key >= 0) continue;
+    if (r.down && S.dragAxis < 0 && !S.sliding) {
+      const int a = arrowAt(r.pos);
+      if (a >= 0) {
+        S.dragAxis = a, S.dragId = r.id, S.dragLast = r.pos;
+      } else if (S.gizmo && S.selected >= 0 && S.tool == 0) {
+        // A finger that lands on the selection slides it over the surfaces under it.
+        const std::vector<Hit> hits = pickAll(r.pos);
+        if (!hits.empty() && inSubtree(hits[0].thing, S.selected)) S.sliding = true, S.dragId = r.id;
+      }
+    } else if (!r.down && r.id == S.dragId && (S.dragAxis >= 0 || S.sliding)) {
+      send(S.sliding ? "{\"ev\":\"slideEnd\"}" : "{\"ev\":\"dragEnd\"}");
+      S.dragAxis = -1, S.dragId = -1, S.sliding = false;
+    }
+  }
+  if (S.sliding) {
+    for (const engine::Pointer& p : in.pointers) {
+      if (p.id != S.dragId) continue;
+      const Vec3 eye = g_app.camera.position, dir = screenRay(p.pos);
+      const float t = surfaceAlong(eye, dir, S.selected);
+      if (t > 0) sendRest("slide", S.selected, eye + dir * t);
+    }
+    S.last = in.pointers;
+    S.downs.clear();
+    placeCamera();
+    return;
+  }
+  if (S.dragAxis >= 0) {
+    for (const engine::Pointer& p : in.pointers) {
+      if (p.id != S.dragId) continue;
+      Vec3 mid;
+      float size;
+      boundsOf(S.selected, &mid, &size);
+      engine::Vec2 o, tip;
+      if (screenOf(mid, &o) && screenOf(mid + axisDir(S.dragAxis), &tip)) {
+        // Finger movement along the arrow's screen direction → metres along the axis.
+        const float vx = tip.x - o.x, vy = tip.y - o.y, len2 = vx * vx + vy * vy;
+        const float d = len2 > 1e-8f ? ((p.pos.x - S.dragLast.x) * vx + (p.pos.y - S.dragLast.y) * vy) / len2 : 0;
+        if (std::fabs(d) > 1e-5f)
+          send("{\"ev\":\"drag\",\"axis\":" + std::to_string(S.dragAxis) + ",\"by\":" + num(engine::clampf(d, -2, 2)) + "}");
+      }
+      S.dragLast = p.pos;
+    }
+    S.last = in.pointers;
+    S.downs.clear();
+    placeCamera();
+    return;
+  }
   if (in.pointers.size() == 1) {
     // One finger: orbit (orbit), look around (fly, walk), slide the map (top).
     const engine::Pointer& p = in.pointers[0];
@@ -264,6 +428,19 @@ void studioInput(float) {
       }
     }
   }
+  // Several fingers at once: count them while any are down; a quick, still
+  // touch of two or three fingers is an undo or a redo.
+  if (!in.pointers.empty()) {
+    if (S.fingers == 0) S.fingersMs = engine::frameTime().nowMs, S.fingersMoved = 0;
+    S.fingers = std::max(S.fingers, static_cast<int>(in.pointers.size()));
+    for (const engine::Pointer& p : in.pointers)
+      S.fingersMoved = std::max(S.fingersMoved, std::hypot(p.pos.x - p.start.x, p.pos.y - p.start.y));
+  } else if (S.fingers > 0) {
+    if (S.fingers >= 2 && S.fingersMoved < 0.03f && engine::frameTime().nowMs - S.fingersMs < 450)
+      send(S.fingers == 2 ? "{\"ev\":\"undo\"}" : "{\"ev\":\"redo\"}");
+    S.multi = S.fingers >= 2;
+    S.fingers = 0;
+  }
   // Taps: a finger that went down and up quickly without wandering.
   for (const engine::Pointer& p : in.pointers)
     for (Studio::Down& d : S.downs)
@@ -279,7 +456,7 @@ void studioInput(float) {
       const Studio::Down d = S.downs[k];
       S.downs.erase(S.downs.begin() + static_cast<long>(k));
       const float moved = std::max(d.moved, std::hypot(r.pos.x - d.pos.x, r.pos.y - d.pos.y));
-      if (!r.cancelled && r.ms - d.ms < 400 && moved < 0.02f && in.pointers.empty()) tapped(r.pos, r.ms);
+      if (!r.cancelled && r.ms - d.ms < 400 && moved < 0.02f && in.pointers.empty() && !S.multi && S.fingers < 2) tapped(r.pos, r.ms);
       break;
     }
   }
@@ -314,6 +491,44 @@ bool studioCommand(const engine::ui::Command& c) {
     std::string list = "[";
     for (const std::string& p : g_app.world.world().check()) list += (list.size() > 1 ? "," : "") + engine::jsonQuote(p);
     send("{\"ev\":\"check\",\"problems\":" + list + "]}");
+  } else if (c.name == "st.pose") {  // a: thing; text: x,y,z,turn°,sx,sy,sz on its parent (as in the files)
+    float v[7] = {0, 0, 0, 0, 1, 1, 1};
+    const int t = static_cast<int>(c.a);
+    if (t >= 0 && t < static_cast<int>(g_app.world.world().size()) &&
+        std::sscanf(c.text.c_str(), "%f,%f,%f,%f,%f,%f,%f", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6]) == 7) {
+      engine::world::World& w = g_app.world.editWorld();
+      w.setRest(t, {v[0], v[1], v[2]}, engine::Quat::axisAngle({0, 1, 0}, engine::radians(v[3])));
+      w.setScale(t, {v[4], v[5], v[6]});
+      if (std::find(S.posed.begin(), S.posed.end(), t) == S.posed.end()) S.posed.push_back(t);
+    }
+  } else if (c.name == "st.attach") {  // a: thing, b: its new parent (-1: the place)
+    const int t = static_cast<int>(c.a), p = static_cast<int>(c.b);
+    const int n = static_cast<int>(g_app.world.world().size());
+    if (t >= 0 && t < n && p >= -1 && p < n && p != t) {
+      g_app.world.editWorld().attach(t, p);
+      if (std::find(S.posed.begin(), S.posed.end(), t) == S.posed.end()) S.posed.push_back(t);
+      const engine::world::Thing& th = g_app.world.world().thing(t);
+      const float turn = 2.0f * std::atan2(th.rot.y, th.rot.w) * 180.0f / engine::kPi;  // about Y: all the files hold
+      send("{\"ev\":\"attached\",\"thing\":" + std::to_string(t) + ",\"at\":[" + num(th.at.x) + "," + num(th.at.y) + "," + num(th.at.z) +
+           "],\"turn\":" + num(turn) + ",\"parent\":" + std::to_string(p) + "}");
+    }
+  } else if (c.name == "st.drop") {  // a: thing → where it lands if let go straight down
+    const int t = static_cast<int>(c.a);
+    if (t >= 0 && t < static_cast<int>(g_app.world.world().size())) {
+      const Mat4& m = g_app.world.world().thing(t).world;
+      const Vec3 from{m.m[12], m.m[13] + 0.02f, m.m[14]};
+      const float d = surfaceAlong(from, {0, -1, 0}, t);
+      if (d > 0) sendRest("drop", t, from + Vec3{0, -d, 0});
+    }
+  } else if (c.name == "st.gizmo") {  // a: 1 = arrows on the selection; b: tool (0 move, 1 turn, 2 size)
+    S.gizmo = c.a > 0;
+    S.tool = static_cast<int>(c.b);
+  } else if (c.name == "st.where") {  // a: thing → where it is in the world now
+    const int t = static_cast<int>(c.a);
+    if (t >= 0 && t < static_cast<int>(g_app.world.world().size())) {
+      const Mat4& m = g_app.world.world().thing(t).world;
+      send("{\"ev\":\"where\",\"thing\":" + std::to_string(t) + ",\"at\":[" + num(m.m[12]) + "," + num(m.m[13]) + "," + num(m.m[14]) + "]}");
+    }
   } else if (c.name == "st.layers") {  // a: which X-ray layers (bits, see Studio::layers)
     S.layers = static_cast<int>(c.a);
   } else if (c.name == "st.frame") {
@@ -386,7 +601,29 @@ void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
   // The selection breathes (docs/STUDIO.md 4.0: the selected thing pulses).
   const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
+  poseModels();
   xray(boxes);
+  if (S.gizmo && S.selected >= 0) {
+    Vec3 mid;
+    float size;
+    boundsOf(S.selected, &mid, &size);
+    const float len = arrowLength(mid), t = len * 0.035f;
+    const Vec3 colors[3] = {{0.94f, 0.29f, 0.2f}, {0.34f, 0.81f, 0.53f}, {0.36f, 0.61f, 1.0f}};
+    for (int a = 0; a < 3; ++a) {
+      const Vec3 d = axisDir(a);
+      app::SceneRenderer::Box shaft, tip;
+      shaft.center = mid + d * (len * 0.5f);
+      shaft.size = {a == 0 ? len : t, a == 1 ? len : t, a == 2 ? len : t};
+      shaft.color = colors[a];
+      shaft.glow = a == S.dragAxis ? 2.0f : 1.0f;
+      tip = shaft;
+      tip.center = mid + d * len;
+      tip.size = {t * 3, t * 3, t * 3};
+      if (S.tool == 2) tip.size = tip.size * 1.3f;  // size: square ends
+      boxes.push_back(shaft);
+      boxes.push_back(tip);
+    }
+  }
 }
 
 }  // namespace barapp

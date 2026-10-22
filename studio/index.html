@@ -29,6 +29,32 @@
   <div id="crumb" class="panel over" hidden><span id="crumbPath" class="path"></span>
     <button id="lockKey" class="key small" type="button" aria-label="Lock the selection"><span class="kled"></span><svg class="ico"><use href="/ui/icons.svg#i-lock"/></svg></button>
     <button id="deselect" class="key small" type="button" aria-label="Deselect"><svg class="ico"><use href="/ui/icons.svg#i-x"/></svg></button></div>
+  <div id="tools" class="panel over" hidden>
+    <div class="rowk" id="toolKeys">
+      <button class="key small lit" type="button" data-tool="0"><svg class="ico"><use href="/ui/icons.svg#i-move"/></svg>Move</button>
+      <button class="key small" type="button" data-tool="1"><svg class="ico"><use href="/ui/icons.svg#i-turn"/></svg>Turn</button>
+      <button class="key small" type="button" data-tool="2"><svg class="ico"><use href="/ui/icons.svg#i-size"/></svg>Size</button>
+      <button class="key small" type="button" id="dropKey" aria-label="Drop it onto what's below">Drop</button>
+      <button class="key small" type="button" id="putOnKey" aria-label="Put it on another thing"><span class="kled"></span>On…</button>
+    </div>
+    <div class="rowk" id="axisKeys">
+      <button class="key small lit" type="button" data-axis="0" style="--accent:var(--ax-x);--led:var(--ax-x)"><span class="kled"></span>X</button>
+      <button class="key small" type="button" data-axis="1" style="--accent:var(--ax-y);--led:var(--ax-y)"><span class="kled"></span>Y</button>
+      <button class="key small" type="button" data-axis="2" style="--accent:var(--ax-z);--led:var(--ax-z)"><span class="kled"></span>Z</button>
+      <button class="key small" type="button" data-axis="3" id="allKey" hidden><span class="kled"></span>All</button>
+      <span class="seg field" id="spaceSeg"><button type="button" class="on" data-space="world">World</button><button type="button" data-space="local">Local</button></span>
+      <button class="key small lit" type="button" id="snapKey"><span class="kled"></span><span id="snapText">5 cm</span></button>
+    </div>
+    <div class="valrow">
+      <span class="axisname num" id="axisName">X</span>
+      <input id="valField" class="field num" inputmode="decimal" enterkeyhint="done" aria-label="Value">
+      <span class="unit dim" id="unitText">m</span>
+      <button class="key small" type="button" id="flipKey" aria-label="Change the sign">±</button>
+    </div>
+    <div class="fader field jog" id="jog" role="slider" aria-label="Drag to change; slide up for finer" tabindex="0">
+      <div class="ticks"></div><div class="cap" id="jogCap"><span class="bubble" id="jogBubble"></span></div>
+    </div>
+  </div>
   <div id="hits" class="panel over" hidden></div>
   <div id="views" class="panel over pop" hidden></div>
   <footer id="bottom" class="panel over">
@@ -44,6 +70,13 @@
     <button id="redo" class="key small" type="button" aria-label="Redo" disabled><svg class="ico"><use href="/ui/icons.svg#i-redo"/></svg></button>
   </footer>
   <section id="monitor" class="panel over" hidden aria-label="Monitor"></section>
+  <section id="publishSheet" class="panel over" hidden aria-label="Publish">
+    <h2>Publish</h2>
+    <p id="pubSummary" class="dim"></p>
+    <div id="pubProblems"></div>
+    <input id="pubNote" class="field" maxlength="200" placeholder="A few words: what changed (optional)" aria-label="What changed">
+    <div class="row"><button id="pubCancel" class="key" type="button">Not yet</button><button id="pubGo" class="key go" type="button">Publish</button></div>
+  </section>
 </div>
 
 <div id="login" hidden>
