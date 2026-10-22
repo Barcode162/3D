@@ -1,14 +1,15 @@
 <?php
-// Landing page for joshuavelasco.com (IONOS webspace folder "home/").
-// Every project's own repo deploys into a subfolder here (home/bar/, ...)
-// together with a project.json: {"name": ..., "description": ..., "order": n}.
-// This page lists every subfolder that has one, so a new project appears
-// as soon as its first deploy lands. Nothing here needs editing for that.
+// The front door of joshuavelasco.com (IONOS webspace folder "home/";
+// docs/STUDIO.md S1.2): three doors (Bar, Studio, News) in the shared look
+// (/ui/), then every other project: each subfolder with a project.json
+// ({"name", "description", "order"}) is listed by itself.
+$doors = ['bar', 'studio', 'news'];
 $projects = [];
 foreach (glob(__DIR__ . '/*/project.json') as $file) {
   $info = json_decode(@file_get_contents($file), true);
   if (!is_array($info)) continue;
   $dir = basename(dirname($file));
+  if (in_array($dir, $doors, true)) continue;
   $projects[] = [
     'url' => '/' . rawurlencode($dir) . '/',
     'name' => (string)($info['name'] ?? $dir),
@@ -20,64 +21,52 @@ usort($projects, fn($a, $b) => [$a['order'], $a['name']] <=> [$b['order'], $b['n
 header('Cache-Control: no-cache');
 function h($s) { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 ?><!doctype html>
-<html lang="en">
+<html lang="en" data-look="faceplate">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d0f14">
+<meta name="theme-color" content="#0A0908">
 <title>Joshua Velasco</title>
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
 <style>
-  :root { --bg: #0d0f14; --panel: #171a22; --line: #2a2f3c; --text: #eef0f5;
-          --dim: #8b92a5; --accent: #f2b544; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { background: radial-gradient(ellipse at 50% 35%, #1c2030 0%, var(--bg) 70%);
-         color: var(--text); font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-         display: flex; align-items: center; justify-content: center; padding: 16px;
-         -webkit-tap-highlight-color: transparent; }
-  .wrap { width: min(100%, 360px); position: relative; }
-  #toggle { width: 100%; padding: 18px 22px; border-radius: 16px; border: 1px solid var(--line);
-            background: var(--panel); color: var(--text); font: inherit; font-size: 19px; font-weight: 600;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-  #toggle:active { transform: scale(0.98); }
-  #toggle .arrow { color: var(--accent); transition: transform .2s; }
-  #toggle[aria-expanded="true"] .arrow { transform: rotate(180deg); }
-  #menu { list-style: none; margin: 10px 0 0; padding: 6px; border-radius: 16px;
-          border: 1px solid var(--line); background: var(--panel);
-          position: absolute; left: 0; right: 0; max-height: 60vh; overflow-y: auto; }
-  #menu[hidden] { display: none; }
-  #menu a { display: block; padding: 14px 16px; border-radius: 11px; color: var(--text); text-decoration: none; }
-  #menu a:active, #menu a:hover { background: #222736; }
-  #menu .name { font-weight: 600; }
-  #menu .desc { color: var(--dim); font-size: 14px; margin-top: 2px; }
-  #menu .empty { padding: 14px 16px; color: var(--dim); }
+  main { max-width: 520px; margin: 0 auto; min-height: 100vh; display: grid; align-content: center; gap: 22px;
+         padding-block: calc(env(safe-area-inset-top, 0px) + 36px) calc(env(safe-area-inset-bottom, 0px) + 36px); }
+  h1 { font-size: clamp(46px, 13vw, 76px); line-height: .95; }
+  .doors { display: grid; gap: 10px; }
+  .doors .key { justify-content: flex-start; text-align: left; text-transform: none; letter-spacing: 0; font-stretch: 100%;
+                min-height: 74px; padding: 12px 14px; gap: 14px; width: 100%; }
+  .sq { width: 42px; height: 42px; border-radius: 8px; flex: none; background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 55%), var(--c);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 16px color-mix(in srgb, var(--c) 45%, transparent); }
+  :root[data-look="backbar"] .sq, :root[data-look="jukebox"] .sq { border-radius: 50%; }
+  .t { flex: 1; display: grid; }
+  .t b { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); font-size: 21px; color: var(--text); }
+  .t span { color: var(--text-2); font-size: 14px; font-weight: 500; }
+  .doors .key svg { width: 20px; height: 20px; color: var(--text-2); }
+  .more { display: grid; gap: 8px; }
+  .more a { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; text-decoration: none; }
+  .more small { color: var(--text-2); }
 </style>
 </head>
-<body>
-<div class="wrap">
-  <button id="toggle" aria-expanded="false" aria-controls="menu">
-    <span>Projects</span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-  </button>
-  <ul id="menu" hidden>
-<?php if (!$projects): ?>
-    <li class="empty">No projects yet.</li>
-<?php endif; foreach ($projects as $p): ?>
-    <li><a href="<?= h($p['url']) ?>">
-      <div class="name"><?= h($p['name']) ?></div>
-<?php if ($p['description'] !== ''): ?>
-      <div class="desc"><?= h($p['description']) ?></div>
-<?php endif; ?>
-    </a></li>
+<body class="lp">
+<main class="gutter">
+  <span class="steps big" data-period="3" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <h1>Joshua Velasco</h1>
+  <p class="dim">A bar you can walk into, the studio it's built in, and what changed this week.</p>
+  <nav class="doors" aria-label="Doors">
+    <a class="key" href="/bar/"><span class="sq" style="--c:var(--c1)"></span><span class="t"><b>Bar</b><span>Come in, sit down, play</span></span><svg class="ico"><use href="/ui/icons.svg#i-arrow"/></svg></a>
+    <a class="key" href="/studio/"><span class="sq" style="--c:var(--c2)"></span><span class="t"><b>Studio</b><span>Build and change the world</span></span><svg class="ico"><use href="/ui/icons.svg#i-arrow"/></svg></a>
+    <a class="key" href="/news/"><span class="sq" style="--c:var(--c3)"></span><span class="t"><b>News</b><span>What changed, with pictures</span></span><svg class="ico"><use href="/ui/icons.svg#i-arrow"/></svg></a>
+  </nav>
+<?php if ($projects): ?>
+  <section class="more" aria-label="More projects">
+    <span class="label">More</span>
+<?php foreach ($projects as $p): ?>
+    <a class="field" href="<?= h($p['url']) ?>"><span><?= h($p['name']) ?></span><small><?= h($p['description']) ?></small></a>
 <?php endforeach; ?>
-  </ul>
-</div>
-<script>
-  var toggle = document.getElementById('toggle'), menu = document.getElementById('menu');
-  function setOpen(open) { menu.hidden = !open; toggle.setAttribute('aria-expanded', open); }
-  toggle.addEventListener('click', function (e) { e.stopPropagation(); setOpen(menu.hidden); });
-  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) setOpen(false); });
-  // Coming back with the Back button shouldn't leave the menu open.
-  window.addEventListener('pageshow', function () { setOpen(false); });
-</script>
+  </section>
+<?php endif; ?>
+</main>
+<script src="/ui/looped.js"></script>
 </body>
 </html>

@@ -80,6 +80,32 @@ for (const width of [375, 430]) {
   check(errors.length === 0, `${width}px: no errors` + (errors.length ? ': ' + errors.join(' | ') : ''));
   await page.close();
 }
+// The front door (homepage/index.php, S1.2) on PHP's own server, with /ui/ next to it.
+{
+  const { mkdtempSync, symlinkSync, copyFileSync, rmSync } = await import('node:fs');
+  const { spawn } = await import('node:child_process');
+  const { tmpdir } = await import('node:os');
+  const { join, resolve } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'front-'));
+  copyFileSync('homepage/index.php', join(dir, 'index.php'));
+  symlinkSync(resolve('ui'), join(dir, 'ui'));
+  const php = spawn('php', ['-S', '127.0.0.1:8796', '-t', dir], { stdio: 'ignore' });
+  await new Promise((r) => setTimeout(r, 800));
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
+  await page.goto('http://127.0.0.1:8796/');
+  await page.waitForTimeout(800);
+  const doors = await page.$$eval('.doors a', (a) => a.map((x) => x.getAttribute('href')));
+  check(doors.join(' ') === '/bar/ /studio/ /news/', `the front door has three doors (${doors.join(' ')})`);
+  check(errors.length === 0, 'the front door: no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= 390), 'the front door fits the phone');
+  await page.screenshot({ path: 'build/front-door.png' });
+  await page.close();
+  php.kill();
+  rmSync(dir, { recursive: true, force: true });
+}
 check(accents.size === 4, `each theme has its own accent (${[...accents].join(' ')})`);
 await browser.close();
 close();
