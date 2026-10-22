@@ -118,6 +118,7 @@ for (const [name, path] of [['home', '/'], ['play', '/play/'], ['engine', '/engi
   check(await s.page.isVisible('a.tile[href="/hub/"]'), 'portal: the owner sees the hub');
   check(s.errors.length === 0, 'portal: no errors' + (s.errors.length ? ': ' + s.errors.join(' | ') : ''));
   check(await s.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'portal: fits the phone');
+  if (!(await s.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))) console.log('  too wide:', await s.page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth, [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 8).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))]));
   await s.page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo({ top: y, behavior: 'instant' }); await new Promise((r) => setTimeout(r, 60)); } window.scrollTo({ top: 0, behavior: 'instant' }); });
   await s.page.waitForTimeout(1100);
   await s.page.screenshot({ path: 'build/site-portal.png', fullPage: true });
