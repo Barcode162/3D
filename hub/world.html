@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>World · Bar3D hub</title>
 <!-- The hub's World page (docs/ENGINE.md E8): every kind of thing in the bar,
-     what it does in plain words (its states and rules), how many there are,
-     and live tuning: a loop's speed and on/off, saved by hub.php (tune) and
-     read by the bar when it loads (hub.php?tuning). -->
+     what it does in plain words (its states and rules), how many there are.
+     Its numbers are changed in the Dials (dials.html, S4.1): the old live
+     tuning became real loop lengths in the world (S4.2). -->
 <style>
   :root {
     --bg: #0b0716; --bg2: #140c26; --ink: #f6f0ff; --dim: #b4a7d4; --faint: rgba(255,255,255,.08);
@@ -39,6 +39,7 @@
   .tune input[type=range] { flex: 1; min-width: 140px; accent-color: var(--pink); }
   .tune .v { width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
   .tune label { display: flex; align-items: center; gap: 6px; }
+  .dials { display: inline-block; margin-top: 8px; }
   .note { color: var(--dim); font-size: 13px; }
   .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 16px); transform: translateX(-50%);
     background: #2a1f33; border: 1px solid var(--edge); padding: 8px 14px; border-radius: 12px; opacity: 0; transition: opacity .2s; }
@@ -49,7 +50,7 @@
 <main>
   <a class="chip" href="index.html">← Hub</a>
   <h1>The world</h1>
-  <p class="sub">Every kind of thing in the bar: what it does, and how lively it is. Changes apply the next time the bar loads.</p>
+  <p class="sub">Every kind of thing in the bar: what it does, and how lively it is. To change one, open it in the Dials.</p>
   <div class="bar" id="filters"></div>
   <div id="list"><p class="note">Loading…</p></div>
 </main>
@@ -59,7 +60,7 @@
 const API = 'hub.php', WORLD = '../bar/assets/world/';
 const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } } };
 const token = store.get('hubToken') || store.get('bar3dToken') || '';
-let tuning = { kinds: {} }, filter = 'alive';
+let filter = 'alive';
 
 function el(tag, attrs, kids) {
   const e = document.createElement(tag);
@@ -100,36 +101,19 @@ function stateWords(name, st) {
   return el('li', {}, [el('b', { text: name }), bits.length ? ': ' + bits.join(' · ') : '']);
 }
 
-function save(kind, speed, off) {
-  clearTimeout(save[kind]);
-  save[kind] = setTimeout(() => {
-    api({ a: 'tune', kind, speed, off }).then((r) => { tuning = r.tuning; toast(`${kind}: saved`); })
-      .catch((e) => toast(e.message));
-  }, 350);
-}
-
 function render(kinds, counts) {
   const list = document.getElementById('list');
   list.textContent = '';
   const shown = kinds.filter((k) => (filter === 'all' || (filter === 'alive' ? !k.still : !!k.still)) && counts[k.id]);
   shown.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0) || a.id.localeCompare(b.id));
   for (const k of shown) {
-    const t = (tuning.kinds || {})[k.id] || { speed: 1, off: false };
-    const value = el('span', { class: 'v', text: t.speed.toFixed(2) + '×' });
-    const range = el('input', { type: 'range', min: '0.25', max: '3', step: '0.05', value: String(t.speed), 'aria-label': `${k.id} speed` });
-    const off = el('input', { type: 'checkbox' });
-    off.checked = !!t.off;
-    range.oninput = () => { value.textContent = (+range.value).toFixed(2) + '×'; save(k.id, +range.value, off.checked); };
-    off.onchange = () => save(k.id, +range.value, off.checked);
     list.appendChild(el('div', { class: 'kind' }, [
       el('h2', {}, [k.id, el('small', { text: `${counts[k.id]} in the bar` })]),
       k.about ? el('p', { class: 'about', text: k.about }) : null,
       k.parts && k.parts.project ? el('div', { class: 'opens', text: '▶ Opens ' + k.parts.project.name }) : null,
       k.still ? el('div', { class: 'still', text: 'Stands still: ' + k.still }) : null,
       Object.keys(k.states || {}).length ? el('ul', { class: 'states' }, Object.entries(k.states).map(([n, st]) => stateWords(n, st))) : null,
-      !k.still && Object.keys(k.loops || {}).length ? el('div', { class: 'tune' }, [
-        el('span', { text: 'Speed' }), range, value, el('label', {}, [off, 'Off']),
-      ]) : null,
+      el('a', { class: 'chip dials', href: 'dials.html#kind=' + encodeURIComponent(k.id), text: 'Dials →' }),
     ]));
   }
   if (!shown.length) list.appendChild(el('p', { class: 'note', text: 'Nothing here.' }));
@@ -138,10 +122,7 @@ function render(kinds, counts) {
 Promise.all([
   fetch(WORLD + 'kinds/bar.json', { cache: 'no-store' }).then((r) => r.json()),
   fetch(WORLD + 'places/bar.json', { cache: 'no-store' }).then((r) => r.json()),
-  token ? api({ a: 'tuning' }).then((r) => r.tuning).catch(() => null) : Promise.resolve(null),
-]).then(([kindsFile, place, t]) => {
-  if (t) tuning = t;
-  if (!token) document.querySelector('.sub').append(el('br'), el('a', { href: 'index.html', text: 'Sign in on the hub to tune things.' }));
+]).then(([kindsFile, place]) => {
   const byId = {};
   for (const k of kindsFile.kinds) byId[k.id] = k;
   const kinds = kindsFile.kinds.map((k) => resolve(byId, k.id));

@@ -271,7 +271,7 @@ try {
   await wait(900);
   await page.screenshot({ path: 'build/hub3-engine.png' });
 
-  // The World page (E8.1): every kind in plain words; the owner tunes a loop (E8.2).
+  // The World page (E8.1): every kind in plain words, each with a link to its Dials.
   await page.goto(base + '/hub/world.html');
   await page.waitForSelector('.kind h2', { timeout: 5000 });
   const kindNames = await page.$$eval('.kind h2', (h) => h.map((x) => x.firstChild.textContent));
@@ -279,15 +279,8 @@ try {
   await page.click('#filters button:has-text("Everything")');
   check((await page.$$('.kind')).length > kindNames.length, 'Everything shows the still ones too');
   await page.click('#filters button:has-text("Alive")');
-  await page.$eval('.kind:has(h2:text-is("fire_flames")) input[type=range]', (r) => { r.value = '2'; r.dispatchEvent(new Event('input')); });
-  await wait(1200);
-  const tuned = await fetch(base + '/hub/hub.php?tuning').then((r) => r.json());
-  check(tuned.kinds && tuned.kinds.fire_flames && tuned.kinds.fire_flames.speed === 2 && !tuned.kinds.fire_flames.off,
-        'moving a speed slider saves it; anyone reads it (hub.php?tuning)');
+  check((await page.getAttribute('.kind:has(h2:text-is("fire_flames")) a.dials', 'href')) === 'dials.html#kind=fire_flames', 'each kind links to its Dials (S4.2: no more speed sliders)');
   await page.screenshot({ path: 'build/hub-world.png', fullPage: false });
-  check((await post('/hub/hub.php', { a: 'tune', token: other.token, kind: 'fire_flames', speed: 3 })).status === 403, 'only the owner tunes');
-  const untuned = await post('/hub/hub.php', { a: 'tune', token: ownerToken, kind: 'fire_flames', speed: 1, off: false });
-  check(untuned.ok === 1 && !untuned.tuning.kinds.fire_flames, 'speed 1 and on is the same as untuned (the entry goes)');
 
   // Passwords: change, recovery code, reset.
   check((await post('/bar/account.php', { a: 'password', token: owner.token, old: 'wrong', new: 'newpass1' })).status === 401,

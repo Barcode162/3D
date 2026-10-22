@@ -401,6 +401,17 @@
     {
       "id": "bar_stool",
       "is": "stool",
+      "loops": {
+        "drift": {"period": 3.65, "pieces": [{"ch": "turn.y", "shape": "noise", "amp": 3, "rate": 0.6}]},
+        "sat": {
+          "period": 3,
+          "blend": 0.4,
+          "pieces": [
+            {"ch": "scale.y", "shape": "hold", "value": -0.012},
+            {"ch": "turn.y", "shape": "noise", "amp": 0.4, "rate": 0.3}
+          ]
+        }
+      },
       "parts": {
         "model": {"file": "bar_stool.glb", "material": "leather"},
         "seats": [{"name": "Bar stool", "hip": [0, 0.9, 0], "facing": 0, "low": 0, "kind": "stool", "lights": true}],

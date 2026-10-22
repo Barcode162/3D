@@ -75,9 +75,6 @@ class BarWorld {
   const BarScene* scene_ = nullptr;
   engine::world::World world_;
   std::vector<Tempo> tempos_;
-  struct Tune { std::string kind; float speed; bool off; };
-  std::vector<Tune> tuning_;  // from the hub (its World page), kept for rebuilds
-  void applyTuning();
   std::vector<Drawn> drawn_;
   struct Voice {  // a thing that makes its own sound now and then
     int thing = -1, effect = 0;
