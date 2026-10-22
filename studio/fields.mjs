@@ -95,7 +95,7 @@ export function control(schema, f, label, v, onSet, extra = {}) {
   if ((t === 'vec3' || t === 'rect') && Array.isArray(v) && v.every((x) => typeof x === 'number')) return vecControl(f, label, v, onSet);
   if (t === 'color' && Array.isArray(v)) return colorControl(label, v, onSet);
   if (t === 'bool') return boolControl(label, v, onSet);
-  if (t === 'choice' && schema.choices[f.choices]) return chipsControl(label, schema.choices[f.choices], v, onSet);
+  if (t === 'choice' && schema.choices[f.choices]) return chipsControl(label, [...schema.choices[f.choices], ...(((extra.extra || {})[f.choices]) || [])], v, onSet);
   if (t === 'stateRef' && extra.states && extra.states.length) return chipsControl(label, extra.states, v, onSet);
   if (t === 'text') return textControl(label, v, onSet);
   return null;

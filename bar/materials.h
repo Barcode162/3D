@@ -1,6 +1,8 @@
 #pragma once
 // The bar's materials: every kind of stuff in the room, defined once with
 // its look, feel and sound (see looped/material.h).
+#include <string_view>
+
 #include "looped/material.h"
 
 namespace app {
@@ -40,5 +42,10 @@ enum MaterialId : int {
 };
 
 const engine::Material& material(MaterialId id);
+// The table from assets/world/materials.json over the built-in ones (S7.1):
+// read before a scene is built; a material made in the Studio gets an id
+// after kMaterialCount.
+void loadMaterials();
+bool materialFromId(std::string_view id, MaterialId* out);
 
 }  // namespace app

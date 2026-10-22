@@ -13,7 +13,7 @@ const schema = read('assets/world/schema.json');
 const files = [
   ...readdirSync('assets/world/places').map((f) => ['place', `assets/world/places/${f}`]),
   ...readdirSync('assets/world/kinds').map((f) => ['kinds', `assets/world/kinds/${f}`]),
-  ['catalog', 'assets/world/catalog.json'], ['songs', 'assets/world/songs.json'],
+  ['catalog', 'assets/world/catalog.json'], ['songs', 'assets/world/songs.json'], ['materials', 'assets/world/materials.json'],
 ];
 for (const [what, f] of files) {
   const p = problems(schema, what, read(f));
@@ -28,6 +28,7 @@ const list = (src, name) => {
 };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 check(same(list(names, 'kMaterials'), schema.choices.material), 'materials match bar/scene_names.cpp');
+check(same(read('assets/world/materials.json').materials.slice(0, schema.choices.material.length).map((m) => m.id), schema.choices.material), 'materials.json starts with the 13 built-in materials, in order');
 check(same(list(names, 'kActions'), schema.choices.action), 'actions match bar/scene_names.cpp');
 check(same(list(names, 'kSeatKinds'), schema.choices.seatKind), 'seat kinds match bar/scene_names.cpp');
 check(same(list(names, 'kProps'), schema.choices.prop), 'props match bar/scene_names.cpp');

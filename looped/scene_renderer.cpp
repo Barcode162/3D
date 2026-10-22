@@ -640,6 +640,17 @@ void SceneRenderer::setLightScale(size_t light, float scale) {
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
 }
 
+void SceneRenderer::setLight(size_t light, engine::Vec3 color, float intensity, float range, float radius) {
+  if (light >= lightIntensity_.size()) return;
+  lightIntensity_[light] = intensity;
+  GpuLight& g = gpuLights_[light];
+  g.color[0] = color.x, g.color[1] = color.y, g.color[2] = color.z, g.color[3] = intensity;
+  g.position[3] = range;
+  g.params[0] = radius;
+  lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
+  lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
+}
+
 void SceneRenderer::flushLights() {
   if (lightsDirtyFrom_ >= lightsDirtyTo_) return;
   gpu_->queue.WriteBuffer(lightingBuffer_, offsetof(LightingUniforms, lights) + lightsDirtyFrom_ * sizeof(GpuLight),

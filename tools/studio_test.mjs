@@ -332,6 +332,7 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.waitForFunction(() => window.bar3dStudio.S.things.some((t) => t.kind === 'built'), null, { timeout: 90000 }).catch(() => {});
   await idle();
   const built = (await S()).things.find((t) => t.kind === 'built');
+  if (!built) console.log('ENGINE', (await page.frame({ url: /\/bar\/\?studio=1/ }).evaluate(() => document.getElementById('log').textContent).catch((e) => String(e))).slice(-1500));
   check(!!built && (await S()).selected === built.i, `S6.3 "A box" adds a box you build on, selected (${built && built.id})`);
   const boxes = () => page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).parts.boxes, built.id);
   await page.click('#partKey');
@@ -381,6 +382,50 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await idle();
   const sb = await S();
   check(sb.place === 'bar' && sb.things.length > 150, `S6.4 back to the bar (${sb.place}, ${sb.things.length} things)`);
+}
+
+// ---- S7.1 materials: make "blue velvet", give it to the stage box ----
+{
+  const idle = () => page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  const built = (await S()).things.find((t) => t.kind === 'built' && t.id.startsWith('built'));
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), built.i);
+  await page.waitForTimeout(500);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="look"]');
+  await page.click('#monitor .chip[data-mat="leather"]');
+  await page.fill('#newMatName', 'Blue velvet');
+  await page.click('#newMatGo');
+  await page.waitForTimeout(300); await idle();
+  await page.$eval('#monitor .ctl input[type=color]', (i) => { i.value = '#1a2a8c'; i.dispatchEvent(new Event('change')); });
+  await page.waitForTimeout(300); await idle();
+  const mat = await page.evaluate(() => window.bar3dStudio.S.draft['materials.json'].materials.find((m) => m.id === 'blue-velvet'));
+  check(mat && Math.abs(mat.color[2] - 0.549) < 0.01 && mat.roughness === 0.5, `S7.1 New material "blue-velvet", made from leather, now blue (${mat && mat.color})`);
+  await page.click('#monitor .tabs [data-tab="inspect"]');
+  await page.click('#monitor .ctl.chips .chip:has-text("blue-velvet") >> nth=0');
+  await page.waitForTimeout(300); await idle();
+  const boxMat = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).parts.boxes[0].material, built.id);
+  check(boxMat === 'blue-velvet', `S7.1 the stage's box is blue velvet (${boxMat})`);
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+  await page.screenshot({ path: 'build/studio-velvet.png' });
+}
+
+// ---- S7.2 lights: the neon over the arcade door turns red, live ----
+{
+  const sign = (await S()).things.find((t) => t.id === 'light-sign');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), sign.i);
+  await page.waitForTimeout(500);
+  const caps0 = ((await engineLog()).match(/Reflections: the room captured/g) || []).length;
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="inspect"]');
+  await page.$eval('#monitor .ctl:has(.name:text-is("Colour")) input[type=color]', (i) => { i.value = '#ff1a1a'; i.dispatchEvent(new Event('change')); });
+  await page.waitForTimeout(300);
+  const col = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'light-sign').parts.light.color);
+  check(col && col[0] === 1 && col[1] < 0.15 && col[2] < 0.15, `S7.2 the arcade neon's colour is red in the draft (${col})`);
+  await page.waitForFunction((n) => (document.querySelector('iframe').contentDocument.getElementById('log').textContent.match(/Reflections: the room captured/g) || []).length > n, caps0, { timeout: 15000 }).catch(() => {});
+  const caps1 = ((await engineLog()).match(/Reflections: the room captured/g) || []).length;
+  check(caps1 > caps0, `S7.2 the reflections are taken again after the light changed (${caps0} → ${caps1})`);
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+  await page.screenshot({ path: 'build/studio-red-neon.png' });
 }
 
 // ---- S3.2 Move / Turn / Size ----

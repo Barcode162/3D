@@ -52,6 +52,7 @@ struct Studio {
   int lensId = 0;
   engine::Vec2 lensAt{-1, -1};
   int lensHit = -2;
+  double recaptureMs = 0;  // reflections are taken again after lights change (S7.2)
   bool holdOn = false;  // a finger being held still: which, since when, whether it wandered
   int holdId = 0;
   double holdSince = 0;
@@ -637,6 +638,21 @@ bool studioCommand(const engine::ui::Command& c) {
     const float d = surfaceAlong(from, {0, -1, 0}, -1);
     const Vec3 p = d > 0 ? from + Vec3{0, -d, 0} : eye + dir * t;
     send("{\"ev\":\"aim\",\"at\":[" + num(p.x) + "," + num(p.y) + "," + num(p.z) + "]}");
+  } else if (c.name == "st.light") {  // a: thing; text: r,g,b,intensity,range,radius (S7.2: live, reflections follow)
+    float v[6] = {1, 1, 1, 1, 5, 0.1f};
+    const int t = static_cast<int>(c.a);
+    if (std::sscanf(c.text.c_str(), "%f,%f,%f,%f,%f,%f", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]) == 6) {
+      app::BarScene& sc = g_app.scene;
+      for (size_t k = 0; k < sc.lights.size() && k < sc.lightThing.size(); ++k) {
+        if (sc.lightThing[k] != t) continue;
+        sc.lights[k].color = {v[0], v[1], v[2]};
+        sc.lights[k].intensity = v[3];
+        sc.lights[k].range = v[4];
+        sc.lights[k].radius = v[5];
+        g_app.renderer.setLight(k, {v[0], v[1], v[2]}, v[3], v[4], v[5]);
+      }
+      S.recaptureMs = engine::frameTime().nowMs + 900;
+    }
   } else if (c.name == "st.snap") {  // answered inside a frame, while the page can still copy the canvas (S6.1 pictures)
     send("{\"ev\":\"snap\",\"n\":" + std::to_string(static_cast<int>(c.a)) + "}");
   } else if (c.name == "st.gizmo") {  // a: 1 = arrows on the selection; b: tool (0 move, 1 turn, 2 size)
@@ -731,6 +747,10 @@ void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
   const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
   poseModels();
+  if (S.recaptureMs > 0 && engine::frameTime().nowMs > S.recaptureMs) {
+    S.recaptureMs = 0;
+    g_app.reflectionsAsked = false;  // game.cpp captures them again next frame
+  }
   xray(boxes);
   if (S.part.on && S.part.thing >= 0 && S.part.thing < static_cast<int>(g_app.world.world().size())) {
     // The selected part: its box's edges, breathing in the accent colour.

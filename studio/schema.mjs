@@ -2,7 +2,7 @@
 // says which fields it uses that the schema doesn't describe, and which
 // choices it uses that aren't in the lists. Shared by the Studio, the hub's
 // Dials and tools/schema_test.mjs (an ES module: browser and node).
-//   problems(schema, 'place' | 'kinds' | 'catalog' | 'songs', json) → ["where: what", ...]
+//   problems(schema, 'place' | 'kinds' | 'catalog' | 'songs' | 'materials', json, extra?) → ["where: what", ...]
 //   fieldAt(schema, owner, key)  → the field's description (for panels)
 
 // The description of a thing that holds fields: 'place', 'thing', 'kind', 'loop', ...
@@ -35,7 +35,7 @@ function checkValue(schema, field, v, where, out) {
   if (t === 'keys') { if (!(Array.isArray(v) && v.every((k) => Array.isArray(k) && k.length >= 2))) out.push(`${where}: should be [[time, value], ...]`); return; }
   if (t === 'states') { if (!(Array.isArray(v) && v.every((x) => typeof x === 'string'))) out.push(`${where}: should be state names`); return; }
   if (t === 'choice') {
-    const list = schema.choices[field.choices] || [];
+    const list = [...(schema.choices[field.choices] || []), ...((extraChoices || {})[field.choices] || [])];
     if (!list.includes(v)) out.push(`${where}: "${v}" isn't one of the ${field.choices} choices`);
     return;
   }
@@ -65,7 +65,10 @@ function checkParts(schema, parts, where, out) {
   }
 }
 
-export function problems(schema, what, json) {
+// extra: more choices the world itself adds ({material: ['blue-velvet']}, from materials.json).
+let extraChoices = null;
+export function problems(schema, what, json, extra = null) {
+  extraChoices = extra;
   const out = [];
   if (what === 'place') checkFields(schema, schema.place.fields, json, 'place', out);
   else if (what === 'kinds') {
@@ -75,6 +78,7 @@ export function problems(schema, what, json) {
       v.forEach((kind, i) => checkFields(schema, schema.kind.fields, kind, `kind ${kind.id || i}`, out));
     }
   } else if (what === 'catalog') checkFields(schema, schema.catalog.fields, json, 'catalog', out);
+  else if (what === 'materials') checkFields(schema, schema.materials.fields, json, 'materials', out);
   else if (what === 'songs') {
     for (const [k, v] of Object.entries(json)) if (k !== 'about') checkValue(schema, schema.songs.item, v, `songs.${k}`, out);
   }

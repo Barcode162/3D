@@ -18,6 +18,7 @@ export async function loadWorld() {
   if (!files[pf]) files[pf] = await (await fetch(base + pf)).json();
   for (const k of files[pf].kinds || []) if (!files[k]) files[k] = await (await fetch(base + k)).json();
   if (!files['catalog.json']) { try { files['catalog.json'] = await (await fetch(base + 'catalog.json')).json(); } catch (e) {} }
+  if (!files['materials.json']) { try { files['materials.json'] = await (await fetch(base + 'materials.json')).json(); } catch (e) {} }
   // Your draft from last time (the server's, else this phone's copy), on top
   // of the world; nothing sees the draft until it's whole.
   const draft = clone(files);
@@ -142,20 +143,36 @@ function sync(op) {
 function needsReload(op) {
   if (op.op === 'group') return op.ops.some(needsReload);
   if (op.op === 'add' || op.op === 'remove' || op.op === 'file') return true;
+  if (op.file === 'materials.json') return true;  // boxes show the new paint after a reload
   const p = op.path || [];
   // (a box's shape is what you see: a box edit reloads too)
   return (op.file === placeFile() && p[0] === 'things' && ['kind', 'row', 'id'].includes(p[2])) || p.includes('boxes');
+}
+// A change to a light shows at once (S7.2): every lit thing gets its light again.
+function touchesLight(op) {
+  if (op.op === 'group') return op.ops.some(touchesLight);
+  return (op.path || []).includes('light');
+}
+export function refreshLights() {
+  for (const t of S.things) {
+    const own = thingEntry(t.id).json;
+    const k = kindOf(t.kind);
+    const l = (own && own.parts && own.parts.light) || (k && k.parts && k.parts.light);
+    if (!l || !Array.isArray(l.color)) continue;
+    send('st.light', t.i, 0, [...l.color, l.intensity ?? 1, l.range ?? 5, l.radius ?? 0.1].map((v) => +(+v).toFixed(4)).join(','));
+  }
 }
 // The one way the Studio changes the world.
 export function edit(op, opts = {}) {
   const inv = S.history.do(op);
   sync(op);
+  if (touchesLight(op)) refreshLights();
   emitEvent('changed', op);
   if (!opts.noReload && needsReload(op)) reloadWorld();
   return inv;
 }
-export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); emitEvent('changed', e.inv); if (needsReload(e.inv)) reloadWorld(); } return e; }
-export function redo() { const e = S.history.redo(); if (e) { sync(e.op); emitEvent('changed', e.op); if (needsReload(e.op)) reloadWorld(); } return e; }
+export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); if (touchesLight(e.inv)) refreshLights(); emitEvent('changed', e.inv); if (needsReload(e.inv)) reloadWorld(); } return e; }
+export function redo() { const e = S.history.redo(); if (e) { sync(e.op); if (touchesLight(e.op)) refreshLights(); emitEvent('changed', e.op); if (needsReload(e.op)) reloadWorld(); } return e; }
 // Live preview while a finger drags (no history): set, show, and say how to undo it.
 export function preview(op) { const inv = apply(S.draft, op); sync(op); return inv; }
 export { get, setOp, merge };

@@ -1,5 +1,12 @@
 #include "bar/materials.h"
 
+#include <string>
+#include <vector>
+
+#include "bar/world_files.h"
+#include "looped/json.h"
+#include "looped/log.h"
+
 namespace app {
 namespace {
 
@@ -44,8 +51,79 @@ const Material kMaterials[kMaterialCount] = {
     make("glow glass",    {1.00f, 1.00f, 1.00f},       0.10f, 0,    kNoTexture,     1.0f, 2500,  0.4f, 0.35f, 3200,  0.30f, 0.02f),
 };
 
+// The ids the files use, in MaterialId's order.
+constexpr const char* kIds[kMaterialCount] = {"oak-floor", "dark-wood", "varnished-wood", "door-wood", "brick",
+                                             "plaster",   "leather",   "chrome",         "brass",     "black-steel",
+                                             "bottle-glass", "lacquer", "glow-glass"};
+
+// The table in use: the built-in ones, changed and added to by
+// assets/world/materials.json (S7.1: materials are data the Studio edits).
+std::vector<Material> g_table = [] { std::vector<Material> t; t.reserve(256); t.assign(kMaterials, kMaterials + kMaterialCount); return t; }();
+std::vector<std::string> g_ids(kIds, kIds + kMaterialCount);
+std::vector<std::string> g_names;  // keeps Material::name's text alive
+
+engine::Vec3 vec3(const engine::Json& j, engine::Vec3 d) {
+  return j.isArray() && j.size() == 3 ? engine::Vec3{static_cast<float>(j[0].number(d.x)), static_cast<float>(j[1].number(d.y)),
+                                                     static_cast<float>(j[2].number(d.z))}
+                                      : d;
+}
+
 }  // namespace
 
-const Material& material(MaterialId id) { return kMaterials[id]; }
+const Material& material(MaterialId id) {
+  return id >= 0 && static_cast<size_t>(id) < g_table.size() ? g_table[static_cast<size_t>(id)] : g_table[kPlaster];
+}
+
+bool materialFromId(std::string_view name, MaterialId* out) {
+  for (size_t i = 0; i < g_ids.size(); ++i)
+    if (g_ids[i] == name) {
+      *out = static_cast<MaterialId>(i);
+      return true;
+    }
+  return false;
+}
+
+void loadMaterials() {
+  // Room for every material up front: scenes keep pointers into the table.
+  g_table.reserve(256);
+  g_table.assign(kMaterials, kMaterials + kMaterialCount);
+  g_ids.assign(kIds, kIds + kMaterialCount);
+  const std::string text = worldFile("materials.json");
+  if (text.empty()) return;
+  std::string error;
+  const engine::Json root = engine::Json::parse(text, &error, {64, 1 << 16});
+  if (!error.empty()) {
+    LOG_ERROR("Materials: materials.json couldn't be read (%s).", error.c_str());
+    return;
+  }
+  g_names.clear();
+  g_names.reserve(256);
+  for (const engine::Json& m : root["materials"].items()) {
+    const std::string id = m["id"].string();
+    if (id.empty() || g_table.size() >= 255) continue;
+    MaterialId at;
+    Material base = materialFromId(id, &at) ? g_table[static_cast<size_t>(at)] : g_table[kPlaster];
+    base.color = vec3(m["color"], base.color);
+    base.roughness = static_cast<float>(m["roughness"].number(base.roughness));
+    base.metallic = static_cast<float>(m["metallic"].number(base.metallic));
+    base.emissive = static_cast<float>(m["glow"].number(base.emissive));
+    base.density = static_cast<float>(m["density"].number(base.density));
+    base.friction = static_cast<float>(m["friction"].number(base.friction));
+    base.restitution = static_cast<float>(m["bounce"].number(base.restitution));
+    base.impactPitch = static_cast<float>(m["pitch"].number(base.impactPitch));
+    base.impactDecay = static_cast<float>(m["decay"].number(base.impactDecay));
+    base.absorption = static_cast<float>(m["absorb"].number(base.absorption));
+    if (m["name"].isString()) {
+      g_names.push_back(m["name"].string());
+      base.name = g_names.back().c_str();
+    }
+    if (materialFromId(id, &at)) {
+      g_table[static_cast<size_t>(at)] = base;
+    } else {
+      g_table.push_back(base);
+      g_ids.push_back(id);
+    }
+  }
+}
 
 }  // namespace app

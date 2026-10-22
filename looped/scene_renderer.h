@@ -49,6 +49,9 @@ class SceneRenderer {
   void setBoxes(const std::vector<Box>& boxes);
   // Turns one of the scene's lights up or down (1 = as built, 0 = off).
   void setLightScale(size_t light, float scale);
+  // A light's colour, brightness, reach and softness, changed live (the Studio, S7.2).
+  // Its place in the light grid stays as built until the scene is rebuilt.
+  void setLight(size_t light, engine::Vec3 color, float intensity, float range, float radius);
   // Which avatar look you (and each other player, see setOthers) wear.
   void setSelfAvatar(size_t look) { selfLook_ = look < avatarMeshes_.size() ? look : 0; }
   // A look made at runtime (the avatar customizer): returns its look index.

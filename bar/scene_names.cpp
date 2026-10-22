@@ -1,5 +1,7 @@
 #include "bar/scene_names.h"
 
+#include "bar/materials.h"
+
 #include <iterator>
 
 namespace app {
@@ -41,7 +43,7 @@ static_assert(std::size(kEffects) == static_cast<size_t>(engine::synth::Effect::
 }  // namespace
 
 const char* materialName(MaterialId m) { return nameOf(kMaterials, m); }
-bool materialFromName(std::string_view n, MaterialId* out) { return fromName(kMaterials, n, out); }
+bool materialFromName(std::string_view n, MaterialId* out) { return materialFromId(n, out); }
 const char* actionName(Action a) { return nameOf(kActions, a); }
 bool actionFromName(std::string_view n, Action* out) { return fromName(kActions, n, out); }
 const char* seatKindName(SeatKind k) { return nameOf(kSeatKinds, k); }

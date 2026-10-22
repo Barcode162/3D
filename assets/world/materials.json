@@ -1,0 +1,18 @@
+{
+  "about": "Every material in the world (S7.1): its look (colour, roughness, metal, glow) and its feel and sound (kg/m\u00b3, friction, bounce, ring pitch in Hz, how long it rings, how much echo it soaks up). The first 13 are built into the engine (bar/materials.cpp) and can be changed here; new ones are added by the Studio. Plain boxes are painted with them; models keep their own textures.",
+  "materials": [
+    {"id": "oak-floor", "name": "oak floor", "color": [0.16, 0.09, 0.05], "roughness": 0.55, "metallic": 0, "density": 700, "friction": 0.5, "bounce": 0.3, "pitch": 180, "decay": 0.08, "absorb": 0.1},
+    {"id": "dark-wood", "name": "dark wood", "color": [0.2, 0.1, 0.05], "roughness": 0.6, "metallic": 0, "density": 650, "friction": 0.5, "bounce": 0.3, "pitch": 220, "decay": 0.07, "absorb": 0.1},
+    {"id": "varnished-wood", "name": "varnished wood", "color": [0.38, 0.18, 0.08], "roughness": 0.18, "metallic": 0, "density": 700, "friction": 0.4, "bounce": 0.35, "pitch": 260, "decay": 0.09, "absorb": 0.05},
+    {"id": "door-wood", "name": "door wood", "color": [0.12, 0.06, 0.03], "roughness": 0.45, "metallic": 0, "density": 600, "friction": 0.5, "bounce": 0.3, "pitch": 150, "decay": 0.1, "absorb": 0.1},
+    {"id": "brick", "name": "brick", "color": [0.5, 0.5, 0.5], "roughness": 0.9, "metallic": 0, "density": 1900, "friction": 0.7, "bounce": 0.1, "pitch": 450, "decay": 0.03, "absorb": 0.03},
+    {"id": "plaster", "name": "plaster", "color": [0.07, 0.055, 0.05], "roughness": 0.95, "metallic": 0, "density": 1100, "friction": 0.6, "bounce": 0.1, "pitch": 350, "decay": 0.03, "absorb": 0.05},
+    {"id": "leather", "name": "leather", "color": [0.45, 0.06, 0.05], "roughness": 0.5, "metallic": 0, "density": 900, "friction": 0.8, "bounce": 0.2, "pitch": 120, "decay": 0.03, "absorb": 0.4},
+    {"id": "chrome", "name": "chrome", "color": [0.75, 0.76, 0.78], "roughness": 0.12, "metallic": 1, "density": 7800, "friction": 0.3, "bounce": 0.45, "pitch": 2500, "decay": 0.6, "absorb": 0.02},
+    {"id": "brass", "name": "brass", "color": [0.91, 0.7, 0.38], "roughness": 0.28, "metallic": 1, "density": 8500, "friction": 0.35, "bounce": 0.4, "pitch": 1800, "decay": 1.0, "absorb": 0.02},
+    {"id": "black-steel", "name": "black steel", "color": [0.05, 0.05, 0.05], "roughness": 0.45, "metallic": 0, "density": 7800, "friction": 0.4, "bounce": 0.35, "pitch": 900, "decay": 0.4, "absorb": 0.02},
+    {"id": "bottle-glass", "name": "bottle glass", "color": [0.5, 0.5, 0.5], "roughness": 0.05, "metallic": 0, "density": 2500, "friction": 0.4, "bounce": 0.35, "pitch": 3000, "decay": 0.4, "absorb": 0.02},
+    {"id": "lacquer", "name": "lacquer", "color": [0.32, 0.06, 0.08], "roughness": 0.15, "metallic": 0, "density": 700, "friction": 0.4, "bounce": 0.35, "pitch": 300, "decay": 0.12, "absorb": 0.05},
+    {"id": "glow-glass", "name": "glow glass", "color": [1.0, 1.0, 1.0], "roughness": 0.1, "metallic": 0, "density": 2500, "friction": 0.4, "bounce": 0.35, "pitch": 3200, "decay": 0.3, "absorb": 0.02}
+  ]
+}

@@ -67,7 +67,7 @@ function check_bundle($b) {
   $format = $b['format'] ?? 1;
   if (!is_int($format) || $format < 1 || $format > FORMAT_MAX) fail('This world needs a newer studio.');
   foreach ($b['files'] as $name => $content) {
-    if (!is_string($name) || !preg_match('#^((places|kinds)/[a-z0-9_-]{1,40}\.json|catalog\.json|songs\.json|schema\.json)$#', $name)) fail("Unknown file \"$name\".");
+    if (!is_string($name) || !preg_match('#^((places|kinds)/[a-z0-9_-]{1,40}\.json|catalog\.json|songs\.json|schema\.json|materials\.json)$#', $name)) fail("Unknown file \"$name\".");
     if (!is_array($content)) fail("$name isn't a world file.");
   }
   if (!isset($b['files']['places/bar.json'])) fail('The world needs the bar (places/bar.json).');

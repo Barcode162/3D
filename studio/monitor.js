@@ -107,7 +107,7 @@ function drawInspect(body) {
     for (const [k, v] of Object.entries(shown)) {
       if (k === 'id' || k === 'kind' || k === 'parts' || k === 'loops' || k === 'parent') continue;
       const f = sch.thing.fields[k] || {};
-      const c = control(sch, f, f.label || k, v, (nv) => edit({ op: 'group', ops: [setOp(placeFile(), [...te.path, k], nv)], label: `${t.id}: ${f.label || k}` }), { states });
+      const c = control(sch, f, f.label || k, v, (nv) => edit({ op: 'group', ops: [setOp(placeFile(), [...te.path, k], nv)], label: `${t.id}: ${f.label || k}` }), { states, extra: extraChoices() });
       body.append(c || fieldRow(f.label || k, v, f.unit, f.about));
     }
   } else {
@@ -149,7 +149,7 @@ function drawInspect(body) {
         for (const [k, x] of Object.entries(item)) {
           const f = p.fields[k] || {};
           const path = src ? [...src.path, ...(p.list ? [i] : []), k] : null;
-          const c = path && control(sch, f, f.label || k, x, (nv) => edit({ op: 'group', ops: [setOp(src.file, path, nv)], label: `${src.owner}: ${p.label || name} · ${f.label || k}` }), { states });
+          const c = path && control(sch, f, f.label || k, x, (nv) => edit({ op: 'group', ops: [setOp(src.file, path, nv)], label: `${src.owner}: ${p.label || name} · ${f.label || k}` }), { states, extra: extraChoices() });
           if (c && mine) c.classList.add('own');
           body.append(c || fieldRow(f.label || k, x, f.unit));
         }
@@ -214,11 +214,58 @@ function newKindFrom(t, te) {
   Looped.toast(`${t.id} is now a ${id} (builds on ${k.is})`);
   draw();
 }
+// Choices the world adds itself: materials made in the Studio (S7.1).
+export function extraChoices() {
+  const m = (S.draft && S.draft['materials.json'] && S.draft['materials.json'].materials) || [];
+  return { material: m.map((x) => x.id).filter((id) => !S.schema.choices.material.includes(id)) };
+}
+// ---- Look (S7.1): the materials. Each one's colour, roughness, metal and
+// glow (and feel and sound); New material makes one from the selected. ----
+function drawLook(body) {
+  const file = S.draft['materials.json'];
+  if (!file) { body.append(el('p', 'dim', 'No materials file in this world yet.')); return; }
+  const sch = S.schema.materials.fields.materials.item.fields;
+  const list = file.materials || [];
+  if (M.mat === undefined || !list[M.mat]) M.mat = 0;
+  const chips = el('div', 'chiprow');
+  list.forEach((m, i) => {
+    const b = el('button', 'chip' + (i === M.mat ? ' on' : ''), m.name || m.id);
+    b.type = 'button';
+    b.dataset.mat = m.id;
+    b.style.boxShadow = `inset 3px 0 0 rgb(${(m.color || [0.5, 0.5, 0.5]).map((c) => Math.round(Math.min(1, c * 1.6) * 255)).join(',')})`;
+    b.onclick = () => { M.mat = i; draw(); };
+    chips.append(b);
+  });
+  body.append(el('span', 'label', 'Materials'), chips);
+  const m = list[M.mat];
+  const row = el('div', 'scope');
+  const name = el('input', 'field'); name.id = 'newMatName'; name.placeholder = 'blue velvet'; name.setAttribute('aria-label', 'A new material\'s name');
+  const add = el('button', 'key small', 'New material'); add.type = 'button'; add.id = 'newMatGo';
+  add.onclick = () => {
+    const id = name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!id) { Looped.toast('Give it a name first'); return; }
+    if (list.some((x) => x.id === id)) { Looped.toast(`${id} is taken`); return; }
+    const copy = { ...JSON.parse(JSON.stringify(m)), id, name: name.value.trim() };
+    edit({ op: 'group', label: `new material ${id}`, ops: [addOp('materials.json', ['materials'], copy)] });
+    M.mat = file.materials.length - 1;  // the new one (the edit already added it)
+    draw();
+  };
+  row.append(name, add);
+  body.append(row, el('span', 'label', `${m.name || m.id}${M.mat < S.schema.choices.material.length ? ' · built in' : ''}`));
+  for (const k of ['color', 'roughness', 'metallic', 'glow', 'density', 'friction', 'bounce', 'pitch', 'decay', 'absorb']) {
+    const f = sch[k];
+    const v = m[k] !== undefined ? m[k] : k === 'glow' ? 0 : undefined;
+    if (v === undefined) continue;
+    const c = control(S.schema, f, f.label || k, v, (nv) => edit({ op: 'group', ops: [setOp('materials.json', ['materials', { id: m.id }, k], nv)], label: `material ${m.id}: ${f.label || k}` }));
+    if (c) body.append(c);
+  }
+  body.append(el('p', 'dim', 'Plain boxes show it at once; models keep their own textures.'));
+}
 function drawProblems(body) {
   const list = [];
   for (const [path, json] of Object.entries(S.draft || {})) {
-    const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : '';
-    if (what) for (const p of schemaProblems(S.schema, what, json)) list.push(`${path}: ${p}`);
+    const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : path === 'materials.json' ? 'materials' : '';
+    if (what) for (const p of schemaProblems(S.schema, what, json, extraChoices())) list.push(`${path}: ${p}`);
   }
   for (const p of M.engineProblems || []) list.push(p);
   if (M.engineProblems === null) body.append(el('p', 'dim', 'Asking the engine…'));
@@ -270,7 +317,7 @@ function draw() {
   grip.setAttribute('aria-label', 'Make the Monitor bigger or smaller');
   grip.onclick = () => box.classList.toggle('full');
   const tabs = el('div', 'seg field tabs');
-  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['changes', 'Changes'], ['problems', 'Problems'], ['history', 'History']]) {
+  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['look', 'Look'], ['changes', 'Changes'], ['problems', 'Problems'], ['history', 'History']]) {
     const b = el('button', id === M.tab ? 'on' : '', label);
     b.dataset.tab = id;
     b.onclick = () => { M.tab = id; if (id === 'problems') { M.engineProblems = null; send('st.check'); } draw(); };
@@ -290,6 +337,7 @@ function draw() {
   else if (M.tab === 'inspect') drawInspect(body);
   else if (M.tab === 'changes') drawChanges(body);
   else if (M.tab === 'history') drawHistory(body);
+  else if (M.tab === 'look') drawLook(body);
   else drawProblems(body);
   Looped.scan();  // the faders in Inspect
   if (sameTab) body.scrollTop = scroll;  // an edit redraws; you stay where you were
@@ -311,8 +359,8 @@ window.bar3dMonitor = M;
 function draftProblems() {
   const list = [];
   for (const [path, json] of Object.entries(S.draft || {})) {
-    const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : '';
-    if (what) for (const p of schemaProblems(S.schema, what, json)) list.push(`${path}: ${p}`);
+    const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : path === 'materials.json' ? 'materials' : '';
+    if (what) for (const p of schemaProblems(S.schema, what, json, extraChoices())) list.push(`${path}: ${p}`);
   }
   return list;
 }
