@@ -26,6 +26,9 @@ class Gpu {
   wgpu::Queue queue;
   wgpu::TextureFormat surfaceFormat = wgpu::TextureFormat::Undefined;
   static constexpr wgpu::TextureFormat kDepthFormat = wgpu::TextureFormat::Depth24Plus;
+  // The scene draws linear light here (L1.1); looped/post.h turns it into
+  // display colours.
+  static constexpr wgpu::TextureFormat kSceneFormat = wgpu::TextureFormat::RGBA16Float;
   // Depth buffer matching the screen size; recreated on resize.
   wgpu::TextureView depthView;
   uint32_t width = 0;

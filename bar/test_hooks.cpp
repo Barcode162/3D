@@ -76,6 +76,11 @@ TestHooks TestHooks::parse() {
   return h;
 }
 
+float TestHooks::number(const char* name, float def) const {
+  std::string v;
+  return param(query, name, v) && !v.empty() ? static_cast<float>(std::atof(v.c_str())) : def;
+}
+
 bool TestHooks::feature(const char* name) const {
   std::string v;
   return !(param(query, name, v) && v == "0");

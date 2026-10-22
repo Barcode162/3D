@@ -66,11 +66,23 @@ class SceneRenderer {
   // reflection that leaves out small things farther away (avatars and
   // everything near the glass stay). Auto quality at Low uses simple too.
   void setMirrorDetail(int detail) { mirrorDetail_ = detail; }
-  // Glow and mood after the scene (looped/post.h). Off = the scene draws
-  // straight to the screen (Low quality, or ?post=0).
+  // The glow after the scene (looped/post.h). Off at Low quality, or ?post=0
+  // (the eyes and the mood stay).
   void setPostEffects(bool on) { postOn_ = on; }
+  // The lighting before L1 (docs/manual/light.md): Settings → Graphics →
+  // Lighting, or ?light=classic.
+  void setClassicLighting(bool classic) {
+    if (classic != classic_) post_.resetEyes();
+    classic_ = classic;
+  }
+  bool classicLighting() const { return classic_; }
+  // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
+  void setEyes(bool on) { eyes_ = on; }
+  // After a teleport or travel: the eyes jump to the new place instead of easing.
+  void resetEyes() { post_.resetEyes(); }
   bool postEffects() const { return postOn_; }
   void setMood(const Mood& mood) { post_.setMood(mood); }
+  const Mood& mood() const { return post_.mood(); }
   int mirrorDetail() const { return mirrorDetail_; }
 
   // Extra glow on some scene objects and placed models (0 = normal), e.g.
@@ -268,6 +280,7 @@ class SceneRenderer {
   engine::Gpu* gpu_ = nullptr;
   PostEffects post_;
   bool postOn_ = true;
+  bool classic_ = false, eyes_ = true;
   size_t mirrorCount_ = 0;
   int mirrorDetail_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view

@@ -48,6 +48,8 @@ struct TestHooks {
   int lightClassic = -1;
   // ?<name>=0 for any feature switch (docs/manual/): false = turned off.
   bool feature(const char* name) const;
+  // ?<name>=<number> for tuning by hand (e.g. ?eyekeep=0.5): `def` when absent.
+  float number(const char* name, float def) const;
   std::string query;
 
   static TestHooks parse();

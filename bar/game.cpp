@@ -666,6 +666,14 @@ void handleCommands() {
     g_app.mirrorSetting = g_app.hooks.mirrorQ >= 0 ? g_app.hooks.mirrorQ
                                                    : static_cast<int>(engine::settings::number("mirrorQ", 0));
     applyMirrorDetail();
+    // Lighting (L1): new, or the lighting before it (docs/manual/light.md).
+    const bool classic = g_app.hooks.lightClassic >= 0 ? g_app.hooks.lightClassic == 1
+                                                       : engine::settings::number("lighting", 0) != 0;
+    if (first || classic != g_app.renderer.classicLighting()) {
+      g_app.renderer.setClassicLighting(classic);
+      LOG_INFO("Lighting: %s.", classic ? "classic" : "new");
+    }
+    g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
     g_app.camera.fovY = engine::radians(std::clamp(static_cast<float>(engine::settings::number("fov", 70)), 50.0f, 100.0f));
     // Your saved look, at start only (later the menu sends a "look" command).
     const int look = first ? static_cast<int>(engine::settings::number("look", g_app.look)) : g_app.look;
@@ -1239,6 +1247,22 @@ void phaseRender(FrameIn& f) {
   }
 }
 
+// Tuning the look by hand from the page's address (docs/manual/light.md):
+// ?exposure= ?eyekeep= ?eyeref= ?eyemin= ?eyemax= ?glow= ?glowth= override the
+// place's mood, so numbers can be tried on the phone without a build.
+void tuneMoodFromPage() {
+  engine::Mood m = g_app.renderer.mood();
+  const app::TestHooks& h = g_app.hooks;
+  m.exposureComp = h.number("exposure", m.exposureComp);
+  m.eyeKeep = h.number("eyekeep", m.eyeKeep);
+  m.eyeReference = h.number("eyeref", m.eyeReference);
+  m.eyeDarkest = h.number("eyemin", m.eyeDarkest);
+  m.eyeBrightest = h.number("eyemax", m.eyeBrightest);
+  m.glow = h.number("glow", m.glow);
+  m.glowThreshold = h.number("glowth", m.glowThreshold);
+  g_app.renderer.setMood(m);
+}
+
 // Picture quality (looped/quality.h): on Auto, the last frame's times decide
 // whether to draw fewer (or again more) pixels.
 void applyQuality(const char* why) {
@@ -1404,6 +1428,7 @@ void startScene() {
     return;
   }
   engine::profiler().stage("renderer");
+  tuneMoodFromPage();
   g_app.camera.position = g_app.scene.spawnPosition;
   g_app.camera.yaw = g_app.scene.spawnYaw;
   applyTestCamera();

@@ -25,6 +25,7 @@ struct Frame {
   clipPlane: vec4f,  // unused: mirrors cut with an oblique near plane instead (no discard, keeps Apple GPUs fast)
   // Reflections (E4.4): x = 1 while capturing the cube (store light, not
   // display colour), y = 1 once the cube is ready, z = its last mip level.
+  // w = 1: classic lighting (before L1), the picture leaves here tone mapped.
   env: vec4f,
   envMin: vec4f,     // the room's box: reflections are matched to it
   envMax: vec4f,
@@ -345,8 +346,7 @@ fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
   let far = max((hi - p) / rr, (lo - p) / rr);
   let dist = min(min(far.x, far.y), far.z);
   let dir = p + r * dist - frame.envCenter.xyz;
-  let e = textureSampleLevel(envMap, envSampler, dir, roughness * frame.env.z).rgb;
-  return e * e * 8.0;  // stored as sqrt(light / 8)
+  return textureSampleLevel(envMap, envSampler, dir, roughness * frame.env.z).rgb;  // linear light
 }
 
 // Lighting shared by every mesh: physically based point lights, ambient,
@@ -417,10 +417,8 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);
   color = mix(color, frame.fog.rgb, haze);
-  // Capturing the reflection cube: store the light itself, squeezed into
-  // 0..1 (sqrt of light / 8: bright neon survives in 8 bits).
-  if (frame.env.x > 0.5) { return vec4f(sqrt(clamp(color * 0.125, vec3f(0.0), vec3f(1.0))), 1.0); }
-
-  // The surface is a plain (non-sRGB) format, so apply gamma here.
+  // The reflection cube and the new lighting keep the light itself (looped/post.h
+  // does the eyes and the curve); classic lighting leaves here tone mapped.
+  if (frame.env.x > 0.5 || frame.env.w < 0.5) { return vec4f(color, 1.0); }
   return vec4f(pow(tonemap(color), vec3f(1.0 / 2.2)), 1.0);
 }

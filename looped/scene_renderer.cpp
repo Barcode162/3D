@@ -122,7 +122,7 @@ void setVec4(float out[4], Vec3 v, float w) {
 }  // namespace
 
 bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars) {
-  if (!shadows_.init(gpu.device, gpu.surfaceFormat, engine::Gpu::kDepthFormat)) LOG_ERROR("Floor shadows: no shader.");
+  if (!shadows_.init(gpu.device, engine::Gpu::kSceneFormat, engine::Gpu::kDepthFormat)) LOG_ERROR("Floor shadows: no shader.");
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrorCount;
@@ -318,7 +318,7 @@ void SceneRenderer::createEnvironment() {
   wgpu::TextureDescriptor t;
   t.label = "reflection cube";
   t.size = {kEnvSize, kEnvSize, 6};
-  t.format = gpu_->surfaceFormat;
+  t.format = engine::Gpu::kSceneFormat;  // linear light
   t.mipLevelCount = kEnvLevels;
   t.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::RenderAttachment;
   envTexture_ = device.CreateTexture(&t);
@@ -465,7 +465,7 @@ bool SceneRenderer::createScenePipelines() {
   wgpu::PipelineLayout skinnedLayout = device.CreatePipelineLayout(&layoutDesc);
 
   wgpu::ColorTargetState colorTarget;
-  colorTarget.format = gpu_->surfaceFormat;
+  colorTarget.format = engine::Gpu::kSceneFormat;
   wgpu::FragmentState fragment;
   fragment.module = module;
   fragment.entryPoint = "fs_main";
@@ -550,7 +550,7 @@ bool SceneRenderer::createGlassPipeline() {
   wgpu::ShaderModule module = loadShader(device, "/shaders/mirror.wgsl");
   if (!module) return false;
   wgpu::ColorTargetState colorTarget;
-  colorTarget.format = gpu_->surfaceFormat;
+  colorTarget.format = engine::Gpu::kSceneFormat;
   wgpu::FragmentState fragment;
   fragment.module = module;
   fragment.entryPoint = "fs_main";
@@ -714,7 +714,7 @@ void SceneRenderer::resizeMirrorTargets() {
     wgpu::TextureDescriptor desc;
     desc.label = "mirror reflection";
     desc.size = {mirrorW_, mirrorH_, 1};
-    desc.format = gpu_->surfaceFormat;
+    desc.format = engine::Gpu::kSceneFormat;
     desc.usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding;
     m.texture = gpu_->device.CreateTexture(&desc);
     m.view = m.texture.CreateView();
@@ -1292,6 +1292,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   frame_.env[0] = 0;
   frame_.env[1] = envReady_ ? 1.0f : 0.0f;
   frame_.env[2] = static_cast<float>(kEnvLevels - 1);
+  frame_.env[3] = classic_ ? 1.0f : 0.0f;
   setVec4(frame_.envMin, envRoom_.min, 0);
   setVec4(frame_.envMax, envRoom_.max, 0);
   setVec4(frame_.envCenter, envCenter_, 1);
@@ -1303,23 +1304,28 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
 
   wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
   if (capturePending_ && mirroredPipeline_ && modelMirroredPipeline_ && modelBlendMirroredPipeline_ &&
-      engine::mipmapsReady(gpu_->device, gpu_->surfaceFormat)) {
+      engine::mipmapsReady(gpu_->device, engine::Gpu::kSceneFormat)) {
     capturePending_ = false;
     captureEnvironment(encoder);
   }
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
-  // With glow and mood on, the scene draws offscreen first (looped/post.h).
-  const bool post = postOn_ && post_.ready();
+  // The scene draws offscreen as linear light; eyes, glow and mood follow
+  // (looped/post.h). Its depth is kept for the name pictures on top.
+  if (!post_.ready()) {  // the first frames, while the post pipelines compile: nothing to show yet
+    wgpu::CommandBuffer commands = encoder.Finish();
+    queue.Submit(1, &commands);
+    return;
+  }
   wgpu::RenderPassColorAttachment color;
-  color.view = post ? post_.sceneTarget() : target;
+  color.view = post_.sceneTarget();
   color.loadOp = wgpu::LoadOp::Clear;
   color.storeOp = wgpu::StoreOp::Store;
   color.clearValue = kClearColor;
   wgpu::RenderPassDepthStencilAttachment depth;
   depth.view = gpu_->depthView;
   depth.depthLoadOp = wgpu::LoadOp::Clear;
-  depth.depthStoreOp = wgpu::StoreOp::Discard;
+  depth.depthStoreOp = wgpu::StoreOp::Store;
   depth.depthClearValue = 1.0f;
   wgpu::RenderPassDescriptor passDesc;
   passDesc.colorAttachmentCount = 1;
@@ -1363,10 +1369,12 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   for (const engine::Vec4& d : shadowDiscs_) shadows_.add({d.x, d.y, d.z}, d.w, 0.55f);
   shadows_.upload(queue);
   shadows_.draw(pass);  // soft shadows under the avatars
-  pictures.draw(pass);  // profile pictures over heads
-  if (!post) text.draw(pass);  // after the scene: text is see-through and on top
   pass.End();
-  if (post) post_.apply(encoder, target, [&](const wgpu::RenderPassEncoder& p) { text.draw(p); });  // text doesn't glow
+  // Name pictures and text go on top after the glow (they shouldn't glow).
+  post_.apply(encoder, target, [&](const wgpu::RenderPassEncoder& p) {
+    pictures.draw(p);
+    text.draw(p);
+  }, postOn_, classic_, eyes_);
   wgpu::CommandBuffer commands = encoder.Finish();
   queue.Submit(1, &commands);
 }
