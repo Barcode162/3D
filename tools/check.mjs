@@ -38,7 +38,8 @@ const RULES = [
   [/\.md$|^docs\//, []],
   [/^hub\/.*\.php$|^server\//, ['server']],
   [/^hub\/|^tools\/hub/, ['hub']],
-  [/^ui\/|^tools\/ui_test/, ['ui']],
+  [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
+  [/^tools\/ui_test/, ['ui']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],
   [/^bar\/projects\/mania\//, ['build', 'game', 'mania']],

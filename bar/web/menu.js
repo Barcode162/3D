@@ -72,7 +72,21 @@ window.bar3dUi = (function () {
   var info = {}, root = null, toastEl = null, toastTimer = 0, current = '';
   // 3D-rendered icons (tools/assets/icons.py), in the emote list's order.
   var EMOTE_ICONS = ['wave', 'dance', 'clap', 'cheer', 'bow', 'point', 'shrug', 'laugh', 'salute', 'thumbsup', 'facepalm'];
-  function icon(name) { return el('img', { class: 'crIcon', src: 'icons/' + name + '.png', alt: '', draggable: 'false' }); }
+  // The menu's keys use the look kit's line icons (ui/icons.svg, S4.3); the
+  // emotes keep their 3D pictures.
+  var LINE_ICONS = { menu_emotes: 'i-hand', menu_avatar: 'i-mirror', menu_profile: 'i-people', menu_voice: 'i-sound',
+    menu_settings: 'i-gear', menu_piano: 'i-note', menu_bartender: 'i-bar', menu_help: 'i-note-claude',
+    menu_standup: 'i-arrow', menu_home: 'i-home' };
+  function icon(name) {
+    if (LINE_ICONS[name]) {
+      var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), use = document.createElementNS(NS, 'use');
+      svg.setAttribute('class', 'crIcon'); svg.setAttribute('aria-hidden', 'true');
+      use.setAttribute('href', 'ui/icons.svg#' + LINE_ICONS[name]);
+      svg.appendChild(use);
+      return svg;
+    }
+    return el('img', { class: 'crIcon', src: 'icons/' + name + '.png', alt: '', draggable: 'false' });
+  }
   var LOOK_COLORS = ['#232326', '#ececE6', '#0d0d0d', '#bf1a1a', '#141a38', '#ff40a6', '#2e6138', '#5a5e6b'];
 
   function cmd(name, a, b, text, text2) { if (window.bar3dBridge) bar3dBridge.command(name, a, b, text, text2); }
@@ -661,7 +675,7 @@ window.bar3dUi = (function () {
       return;
     }
     show('Make a drink', [el('div', { class: 'mList' }, drinks.map(function (n, i) {
-      return el('button', { onclick: function () { cmd('make', i); close(); } }, [el('span', { text: n }), el('img', { class: 'crIcon', src: 'icons/menu_bartender.png', alt: '', style: 'width:28px;height:28px;margin:0' })]);
+      return el('button', { onclick: function () { cmd('make', i); close(); } }, [el('span', { text: n }), (function () { var i = icon('menu_bartender'); i.style.cssText = 'width:24px;height:24px;margin:0'; return i; })()]);
     })), el('button', { class: 'mBtn ghost', text: 'End my shift', onclick: function () { cmd('endShift'); close(); } })]);
     current = 'bartender';
   }

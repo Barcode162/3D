@@ -57,7 +57,7 @@ jobs:
           fi
           echo "Live build: $live. Changed since then:"
           git diff --name-only "$live" HEAD | tee /tmp/changed
-          game=$(grep -v -E '^(hub/|news/|ui/|homepage/|studio/|tools/studio_api_test\.mjs$|tools/ui_test\.mjs$|docs/|\.claude/|[^/]+\.md$|tools/hub(_test)?\.mjs$|\.github/workflows/(hub|classic)\.yml$)' /tmp/changed | head -1)
+          game=$(grep -v -E '^(hub/|news/|homepage/|studio/|tools/studio_api_test\.mjs$|tools/ui_test\.mjs$|docs/|\.claude/|[^/]+\.md$|tools/hub(_test)?\.mjs$|\.github/workflows/(hub|classic)\.yml$)' /tmp/changed | head -1)
           if [ -n "$game" ]; then echo "game=true" >> "$GITHUB_OUTPUT"; echo "→ the game changed ($game ...): build, test, deploy";
           else echo "game=false" >> "$GITHUB_OUTPUT"; echo "→ nothing in the game changed: left alone"; fi
 

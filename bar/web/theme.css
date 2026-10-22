@@ -1,169 +1,127 @@
-/* The game's menus and cards in a Clash Royale-like style (the user's
-   wish): a chunky rounded font with dark outlines, blue panels with bevels,
-   bright buttons that press in, 3D-rendered icons and badges
-   (tools/assets/icons.py, badges.py). Overrides the plain styles that
+/* The game's menus, cards and HUD in the Faceplate look (docs/STUDIO.md
+   §4.F, S4.3): smoked panels, glossy keys that press in, Archivo type, the
+   orange accent, line icons (ui/icons.svg). The tokens come from
+   ui/themes.css and the fonts from ui/looped.css, both shipped in the bar's
+   site as ui/ (CMakeLists.txt). Overrides the plain styles that
    bar/web/menu.js and bar/web/account.js add (hence the "body" in front). */
-@font-face {
-  font-family: "Lilita One";
-  src: url("fonts/LilitaOne-Regular.ttf") format("truetype");
-  font-display: swap;
-}
 :root {
-  --cr-font: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
-  --cr-ink: #10172e;
-  --cr-panel-top: #4f8ff0;
-  --cr-panel-bottom: #2d5fc4;
-  --cr-panel-deep: #1d3f8f;
-  --cr-gold: #ffd43b;
-  --cr-gold-deep: #e08a00;
-  --cr-blue: #45b2ff;
-  --cr-blue-deep: #1a6fd0;
-  --cr-green: #6ee05a;
-  --cr-green-deep: #2f9a2a;
-  --cr-red: #ff5a52;
-  --cr-red-deep: #b5221d;
+  --fp-ink: #0A0908;
+  --fp-chip: #0D0C0B;
 }
 
-/* Outlined game text. */
-body .mPanel h2, body .acctPanel h2, body .acctCard .nm, body .mTile, body .mBtn, body .acctBtn,
-body .acctSlotTitle, body #menuToast, body .mPanel h3, body .avTab, body .avChip {
-  font-family: var(--cr-font);
-  font-weight: 400;
-  letter-spacing: 0.3px;
-  color: #fff;
-  -webkit-text-stroke: 1.2px var(--cr-ink);
-  paint-order: stroke fill;
-  text-shadow: 0 2px 0 var(--cr-ink);
+/* Text: Archivo, wide and heavy for titles. */
+body .mPanel, body .acctPanel, body #menuToast, body .acctCard { font-family: var(--text-font); }
+body .mPanel h2, body .acctPanel h2, body .acctCard .nm {
+  font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); letter-spacing: var(--display-ls);
+  color: var(--text);
+}
+body .mPanel h3, body .acctSlotTitle {
+  font-family: var(--text-font); font-stretch: 75%; font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-2);
 }
 
-/* Panels: a blue slab with a light top edge and a dark bottom edge. */
+/* Panels: a smoked faceplate with a hairline edge. */
 body .mPanel, body .acctPanel {
-  background: linear-gradient(180deg, var(--cr-panel-top) 0%, var(--cr-panel-bottom) 100%);
-  border: 3px solid var(--cr-ink);
-  border-radius: 22px;
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), inset 0 -5px 0 rgba(0, 0, 0, 0.22), 0 8px 0 rgba(0, 0, 0, 0.35);
-  color: #fff;
+  background: var(--panel); border: 0; border-radius: 18px; box-shadow: var(--panel-edge); color: var(--text);
 }
 body .mPanel h2, body .acctPanel h2 { font-size: 26px; }
-body .mPanel h3 { color: #d8e8ff; font-size: 15px; text-transform: none; }
-body .mSmall, body .acctSmall, body .acctPanel label { color: #e3eeff; font-weight: 600; }
+body .mSmall, body .acctSmall, body .acctPanel label { color: var(--text-2); }
 body .mX {
-  font-family: var(--cr-font); width: 36px; height: 36px; border-radius: 10px; padding: 0;
-  background: linear-gradient(180deg, var(--cr-red), var(--cr-red-deep)); border: 2px solid var(--cr-ink);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 3px 0 var(--cr-ink); color: #fff; font-size: 20px;
+  width: 36px; height: 36px; border-radius: 9px; padding: 0; border: 0; color: var(--text); font-size: 18px;
+  background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
 
-/* Buttons: bright, glossy, press in when tapped. */
+/* Keys: glossy plastic that travels down when pressed; Go keys glow orange. */
+body .mBtn, body .acctBtn, body .mTile, body .mList button, body .mChoice button, body .avTab, body .avChip, body .mX {
+  transition: transform .06s, box-shadow .06s;
+}
 body .mBtn, body .acctBtn {
-  border: 2px solid var(--cr-ink);
-  border-radius: 14px;
-  font-size: 18px;
-  padding: 12px;
-  background: linear-gradient(180deg, #ffe066 0%, var(--cr-gold) 45%, #f5b400 100%);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55), inset 0 -4px 0 var(--cr-gold-deep), 0 4px 0 var(--cr-ink);
-  transform: translateY(0);
-  transition: transform 0.06s, box-shadow 0.06s;
+  border: 0; border-radius: 10px; padding: 13px; font: 800 14px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--go-text); background: var(--key-gloss), var(--go-bg); box-shadow: var(--key-shadow), var(--go-glow);
 }
-body .mBtn.ghost, body .acctBtn.ghost {
-  background: linear-gradient(180deg, #7cc9ff 0%, var(--cr-blue) 50%, #2f93ea 100%);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5), inset 0 -4px 0 var(--cr-blue-deep), 0 4px 0 var(--cr-ink);
-  color: #fff;
-}
-body .mBtn:active, body .acctBtn:active, body .mTile:active, body .acctSlot.mine:active {
-  transform: translateY(3px);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), 0 1px 0 var(--cr-ink);
+body .mBtn.ghost, body .acctBtn.ghost { color: var(--key-text); background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); }
+body .mBtn:active, body .acctBtn:active, body .mTile:active, body .mList button:active, body .mChoice button:active, body .mX:active,
+body .acctSlot.mine:active {
+  transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down);
 }
 
-/* Menu tiles: chunky cards with a 3D icon. */
-body .mGrid { gap: 10px; }
+/* Menu tiles: keys with a line icon and a lamp that lights when on. */
+body .mGrid { gap: 8px; }
 body .mTile {
-  border: 2px solid var(--cr-ink);
-  border-radius: 16px;
-  padding: 8px 4px 10px;
-  font-size: 14px;
-  background: linear-gradient(180deg, #6aa8ff 0%, #3a74db 100%);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), inset 0 -4px 0 var(--cr-panel-deep), 0 4px 0 var(--cr-ink);
-  transition: transform 0.06s, box-shadow 0.06s;
+  position: relative; border: 0; border-radius: 12px; padding: 14px 4px 10px; color: var(--text);
+  font: 700 11px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
-body .mTile.on {
-  background: linear-gradient(180deg, #ffe066 0%, #f5b400 100%);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.55), inset 0 -4px 0 var(--cr-gold-deep), 0 4px 0 var(--cr-ink);
-}
+body .mTile::after { content: ""; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--off); }
+body .mTile.on::after { background: var(--led); box-shadow: 0 0 8px var(--led); }
 body .mTile .big { font-size: 0; }
-body .mTile .crIcon { width: 64px; height: 64px; display: block; margin: 0 auto 2px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35)); }
+body .mTile .crIcon { width: 46px; height: 46px; display: block; margin: 0 auto 6px; }
+body .mTile svg.crIcon, body .mList svg.crIcon { fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+body .mTile.on svg.crIcon { stroke: var(--accent); }
+body .mTile img.crIcon { width: 52px; height: 52px; }
 body .mList button {
-  font-family: var(--cr-font); font-size: 16px; color: #fff; -webkit-text-stroke: 1px var(--cr-ink); paint-order: stroke fill;
-  border: 2px solid var(--cr-ink); border-radius: 12px;
-  background: linear-gradient(180deg, #6aa8ff, #3a74db);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 var(--cr-ink);
+  border: 0; border-radius: 10px; color: var(--text); font: 600 15px var(--text-font);
+  background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
-body .mList button.on { background: linear-gradient(180deg, #ffe066, #f5b400); }
-body .mChoice button { border: 2px solid var(--cr-ink); background: #1d3f8f; color: #fff; box-shadow: 0 2px 0 var(--cr-ink); }
-body .mChoice button.on { background: linear-gradient(180deg, #ffe066, #f5b400); color: var(--cr-ink); }
-body .mToggle { border: 2px solid var(--cr-ink); background: #1d3f8f; }
-body .mToggle.on { background: var(--cr-green); }
-body .mToggle::after { box-shadow: 0 2px 0 var(--cr-ink); }
+body .mList button.on { box-shadow: var(--key-shadow), inset 0 0 0 1.5px var(--accent); color: var(--accent); }
+body .mChoice { padding: 3px; gap: 3px; border-radius: 10px; background: var(--field); box-shadow: var(--field-edge); }
+body .mChoice button { border: 0; border-radius: 7px; background: none; color: var(--text-2); box-shadow: none; font: 700 12px var(--text-font); font-stretch: 75%; letter-spacing: .08em; text-transform: uppercase; }
+body .mChoice button.on { background: var(--key-gloss), var(--key-bg); color: var(--accent); box-shadow: var(--key-shadow); }
+body .avTab, body .avChip { border: 0; color: var(--text); background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); font-family: var(--text-font); font-weight: 650; }
+body .avTab.on, body .avChip.on { color: var(--go-text); background: var(--key-gloss), var(--go-bg); }
+body .avSwatch, body .avDot { border: 2px solid var(--fp-ink); box-shadow: inset 0 2px 0 #fff4, 0 2px 0 var(--fp-ink); }
+body .avSwatch.on { outline: 2px solid var(--accent); }
+
+/* Switches and meters: recessed, with the accent lit. */
+body .mToggle { border: 0; background: var(--field); box-shadow: var(--field-edge); }
+body .mToggle::after { background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); }
+body .mToggle.on { background: var(--field); box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent); }
+body .mToggle.on::after { background: var(--key-gloss), var(--go-bg); }
+body .mMeter { background: var(--field); box-shadow: var(--field-edge); }
+body .mMeter .lvl { background: linear-gradient(90deg, var(--c3), var(--c2), var(--c1)); }
+body .mMeter .gate { background: var(--text); }
+body .mRow input[type=range] { accent-color: var(--accent); }
+body .mRow .val { color: var(--text-2); font-family: var(--mono); font-size: 12px; }
 body #menuToast {
-  background: linear-gradient(180deg, var(--cr-panel-top), var(--cr-panel-bottom));
-  border: 3px solid var(--cr-ink); border-radius: 14px; font-size: 16px;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 4px 0 rgba(0, 0, 0, 0.35);
+  background: var(--over); color: var(--text); border: 0; border-radius: 12px; font-size: 15px; box-shadow: var(--panel-edge);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 body .acctPanel input, body .acctPanel textarea, body .acctPanel select {
-  background: #fff; color: var(--cr-ink); border: 2px solid var(--cr-ink); border-radius: 12px;
-  box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.12); font-weight: 600;
+  background: var(--field); color: var(--text); border: 0; border-radius: 8px; box-shadow: var(--field-edge); font: 16px var(--text-font);
 }
 
 /* The player card. */
-body .acctCard {
-  border: 3px solid var(--cr-ink);
-  border-radius: 24px;
-  background: linear-gradient(180deg, var(--cr-panel-top) 0%, var(--cr-panel-bottom) 70%, var(--cr-panel-deep) 100%);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 8px 0 rgba(0, 0, 0, 0.35);
-}
-body .acctCardTop { height: 92px; border-bottom: 3px solid var(--cr-ink); }
-body .acctCard .acctPic { border: 4px solid var(--cr-ink); box-shadow: 0 0 0 4px var(--cr-gold), 0 5px 0 4px var(--cr-ink); }
+body .acctCard { border: 0; border-radius: 20px; background: var(--panel); box-shadow: var(--panel-edge); color: var(--text); }
+body .acctCardTop { height: 92px; border-bottom: 1px solid var(--rule); }
+body .acctCard .acctPic { border: 3px solid var(--fp-ink); box-shadow: 0 0 0 2px var(--accent), 0 6px 16px rgba(0,0,0,.6); }
 body .acctCard .nm { font-size: 28px; }
-body .acctCard .un { color: #d8e8ff; font-weight: 700; }
-body .acctCard .bio { color: #fff; font-weight: 600; }
-body .acctCard .facts { color: #fff; font-weight: 600; }
-body .acctCard .facts div { background: rgba(16, 23, 46, 0.25); border-radius: 10px; padding: 6px 10px; }
-body .acctCard .facts .k { font-family: var(--cr-font); color: var(--cr-gold); -webkit-text-stroke: 0.8px var(--cr-ink); paint-order: stroke fill; margin-right: 6px; }
+body .acctCard .un { color: var(--text-2); font-weight: 600; font-family: var(--mono); font-size: 13px; }
+body .acctCard .bio, body .acctCard .facts { color: var(--text); }
+body .acctCard .facts div { background: var(--field); box-shadow: var(--field-edge); border-radius: 8px; padding: 6px 10px; }
+body .acctCard .facts .k { color: var(--accent); font-weight: 700; margin-right: 6px; }
 
-/* Badge slots: dark sockets; a badge sits in one as a 3D shield. */
-body .acctSlotTitle { font-size: 15px; letter-spacing: 1px; color: var(--cr-gold); margin-bottom: 8px; }
+/* Badge slots: recessed sockets; a badge sits in a lit frame. */
 body .acctSlotRow { gap: 7px; }
-body .acctSlot {
-  border: 2px solid var(--cr-ink);
-  border-radius: 14px;
-  background: radial-gradient(circle at 50% 40%, #2b4f9e 0%, #16306e 75%);
-  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.45), 0 2px 0 rgba(255, 255, 255, 0.25);
-  position: relative;
-  transition: transform 0.06s;
-}
-body .acctSlot.on {
-  background: radial-gradient(circle at 50% 35%, #3a64c4 0%, #16306e 80%);
-  border-color: var(--cr-ink);
-  box-shadow: inset 0 0 0 2px var(--cr-gold), inset 0 4px 6px rgba(0, 0, 0, 0.35), 0 3px 0 var(--cr-ink);
-}
-body .acctSlot img { width: 92%; height: 92%; object-fit: contain; filter: saturate(1.35) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
-body .acctSlot .ic { font-family: var(--cr-font); color: #6f8fd6; font-size: 22px; }
+body .acctSlot { position: relative; border: 0; border-radius: 12px; background: var(--field); box-shadow: var(--field-edge); transition: transform .06s; }
+body .acctSlot.on { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent), 0 0 14px rgba(242,140,44,.25); }
+body .acctSlot img { width: 90%; height: 90%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+body .acctSlot .ic { color: var(--text-3); font-size: 20px; }
 body .acctSlot .lb { display: none; }
-body .acctSlotHint { color: #e3eeff; font-weight: 600; }
+body .acctSlotHint { color: var(--text-2); }
 body .acctBadgeChoice { display: flex; align-items: center; gap: 12px; }
 body .acctBadgeChoice img { width: 44px; height: 44px; }
 
-/* The HUD buttons (top right). */
+/* The HUD keys (top right). */
 body #hudMenu, body #hudMic, body #acctMe {
-  font-family: var(--cr-font); color: #fff; -webkit-text-stroke: 1px var(--cr-ink); paint-order: stroke fill;
-  border: 2px solid var(--cr-ink); border-radius: 10px;
-  background: linear-gradient(180deg, #6aa8ff, #3a74db);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 var(--cr-ink);
+  border: 0; border-radius: 9px; color: var(--text); font: 700 12px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
-body #hudMic.live { background: linear-gradient(180deg, #8af07a, #2f9a2a); }
-body #hudMic.muted { background: linear-gradient(180deg, #ff8a84, #b5221d); }
+body #hudMenu:active, body #hudMic:active, body #acctMe:active { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down); }
+body #hudMic.live { color: var(--go-text); background: var(--key-gloss), var(--go-bg); box-shadow: var(--key-shadow), var(--go-glow); }
+body #hudMic.muted { color: var(--bad); }
 
 /* Credits: the coin and the amount (bar/web/menu.js coin()). */
 body .mCredits { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
-body .mCoin { width: 22px; height: 22px; filter: drop-shadow(0 0 6px rgba(255, 90, 180, .55)); animation: mCoinSpin 6s ease-in-out infinite; }
+body .mCoin { width: 22px; height: 22px; filter: drop-shadow(0 0 6px rgba(242,140,44,.5)); animation: mCoinSpin 6s ease-in-out infinite; }
 @keyframes mCoinSpin { 0%, 70%, 100% { transform: rotateY(0); } 85% { transform: rotateY(360deg); } }
-body .mCredits b { font-size: 1.1em; color: #ffd27a; }
+body .mCredits b { font-size: 1.1em; color: var(--c3); font-family: var(--mono); }

@@ -71,6 +71,8 @@ function(site_copy from to)
 endfunction()
 # The bar's page (bar/web) is the site's root.
 site_copy(${CMAKE_SOURCE_DIR}/bar/web "")
+# The look kit (ui/: Faceplate fonts, icons, controls) for the bar's menus (S4.3).
+site_copy(${CMAKE_SOURCE_DIR}/ui "ui/")
 # The bar's projects (bar/projects/<name>/project.json, docs/LOOPED.md → The
 # plug): a web project's files go where its "site" says (the same addresses
 # as before the move); native ones are C++ built into the game above.
