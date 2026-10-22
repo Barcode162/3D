@@ -6,6 +6,32 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## L1.5 Bounced light in the game: the GPU casts the build rays (looped/gi.h, shaders/gi.wgsl), one more bounce every frame, every pixel reads its 8 probes; the flat fill replaced; no lamp light through walls; debug views; shader check tool
+
+`e390b36` · 2026-10-22 20:09 · 20 files, +1269 −13 · tests: changed · headless frame 169.82 ms, 288 draws
+
+Phone check: After entering, look around for a few seconds: walls and corners near lamps glow softly with bounced light; the arcade's purple spills onto the floor; nothing glows through walls. ?giview=1 shows the bounced light alone.
+
+![L1.5 door.jpg](L1.5/door.jpg)
+
+![L1.5 door-switch.jpg](L1.5/door-switch.jpg)
+
+![L1.5 mirror.jpg](L1.5/mirror.jpg)
+
+![L1.5 mirror-switch.jpg](L1.5/mirror-switch.jpg)
+
+![L1.5 bartop.jpg](L1.5/bartop.jpg)
+
+![L1.5 bartop-switch.jpg](L1.5/bartop-switch.jpg)
+
+![L1.5 backbar.jpg](L1.5/backbar.jpg)
+
+![L1.5 backbar-switch.jpg](L1.5/backbar-switch.jpg)
+
+![L1.5 piano.jpg](L1.5/piano.jpg)
+
+![L1.5 piano-switch.jpg](L1.5/piano-switch.jpg)
+
 ## L1.4 Bounced light, the core: still surfaces gathered and simplified, a ray tree, patches, probes, lamp links, bounces (CPU reference, physics test: a white box ends at 5x its direct light); tools/light.mjs, gi benchmark
 
 `1f6b899` · 2026-10-22 18:51 · 11 files, +1050 −20 · tests: changed
