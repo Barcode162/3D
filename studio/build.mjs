@@ -248,8 +248,11 @@ function thingMenu() {
     const row = el('div', 'rowform'); row.append(name, go); box.append(row);
   });
   item('Delete', 'Undo brings it back', del);
+  for (const x of MENU_EXTRAS) item(x.label, x.small, () => x.run(box, c.t));
   box.hidden = false;
 }
+// More items other modules add to the ⋯ menu (notes for Claude, S10.1).
+export const MENU_EXTRAS = [];
 $('moreKey').addEventListener('click', thingMenu);
 on('select', () => { $('thingMenu').hidden = true; });
 

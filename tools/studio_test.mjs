@@ -294,6 +294,7 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   const row = (await S()).things.filter((t) => /^bar_stool-row-1-\d$/.test(t.id));
   const xs = row.map((t) => +(t.at[0] - stool.at[0]).toFixed(2)).sort((a, b) => a - b);
   check(row.length === 3 && JSON.stringify(xs) === '[0.7,1.4,2.1]', `S6.2 Row: 3 more bar stools, 70 cm apart (${xs.join(', ')} m along X)`);
+  if (row.length !== 3) { await page.screenshot({ path: 'build/studio-row-fail.png' }); console.log('ROWDBG', await page.evaluate(() => [document.body.className, JSON.stringify(window.bar3dStudio.S.reloading || null), (window.bar3dStudio.S.draft['places/bar.json'].things.filter((t) => /row/.test(t.id)).map((t) => t.id)).join(',')])); }
   await page.screenshot({ path: 'build/studio-row.png' });
   const c7 = (await S()).things.find((t) => t.id === 'candle-7');
   await page.evaluate((i) => window.bar3dStudio.select(i, false), c7.i);
@@ -540,6 +541,21 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
 }
 
+// ---- S10.1 a note for Claude on the fireplace: it lands in the hub ----
+{
+  const fire = (await S()).things.find((t) => t.id === 'fire_flames');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), fire.i);
+  await page.waitForTimeout(500);
+  await page.click('#moreKey');
+  await page.click('#thingMenu button[data-act="Note for Claude"]');
+  await page.fill('#noteText', 'Make the fire a bit warmer, please');
+  await page.click('#noteGo');
+  await page.waitForFunction(() => window.bar3dNotes.last, null, { timeout: 15000 }).catch(() => {});
+  const board = await (await fetch(url + 'hub/hub.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ a: 'board', token: owner.token }) })).json();
+  const card = (board.cards || []).find((c) => /^Studio: /.test(c.title) && /warmer/.test(c.title));
+  check(!!card && card.notes.includes(`Thing: ${fire.id}`) && /Camera: -?\d/.test(card.notes) && /Picture: \/hub\/hub\.php\?shot=/.test(card.notes), `S10.1 the note is a card in the hub with the thing, the camera and a picture (${card && card.title})`);
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
@@ -688,6 +704,112 @@ const lamp = v2.files && v2.files['kinds/bar.json'].kinds.find((k) => k.id === '
 check(lamp && lamp.loops.sway.period === 7, `S4.1 version 2 has the lamps' new swing length (${lamp && lamp.loops.sway.period} s)`);
 check((await page.getAttribute('[data-kind="pendant_lamp"] a.key', 'href') || '').startsWith('/studio/#thing='), 'S4.1 "Open in the Studio" links to the thing');
 await page.screenshot({ path: 'build/hub-dials.png' });
+
+// ---- S9.1 live for everyone: a bar that's open gets the new version within seconds ----
+{
+  const live = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  await live.goto(url + 'bar/?skipintro&server=off');
+  await live.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  const v0 = await live.evaluate(() => window.bar3dLive && window.bar3dLive.version());
+  // Publish a change from the Dials (the pendant lamps' sway: 7 s → 8 s).
+  const len = page.locator('[data-kind="pendant_lamp"] .dial input').first();
+  await len.fill('8');
+  await len.press('Enter');
+  await page.waitForFunction(() => /saved/.test(document.getElementById('savedText').textContent), null, { timeout: 8000 }).catch(() => {});
+  await page.click('#publish');
+  await page.click('#go');
+  await page.waitForFunction(() => /Live · v3/.test(document.getElementById('savedText').textContent), null, { timeout: 8000 }).catch(() => {});
+  await live.waitForFunction(() => /World: v3 \(live/.test(document.getElementById('log') ? document.getElementById('log').textContent : ''), null, { timeout: 90000, polling: 500 }).catch(() => {});
+  const logText = await live.evaluate(() => (document.getElementById('log') || {}).textContent || '');
+  check(v0 === 2 && /World: v3 \(live/.test(logText), `S9.1 the open bar picked up version 3 by itself (was v${v0})`);
+  await live.close();
+  // S9.3: Undo publish puts version 2 back (as version 4).
+  await page.waitForSelector('#undoPub:not([hidden])', { timeout: 5000 }).catch(() => {});
+  await page.click('#undoPub');
+  await page.click('#undoPub');
+  await page.waitForTimeout(1500);
+  const v4 = await (await fetch(url + 'studio/api.php?live')).json();
+  const b4 = await (await fetch(url + 'studio/api.php?bundle=' + v4.version)).json();
+  const lamp4 = b4.files['kinds/bar.json'].kinds.find((k) => k.id === 'pendant_lamp').loops.sway.period;
+  check(v4.version === 4 && lamp4 === 7, `S9.3 Undo publish: version 2 is live again as v${v4.version} (sway ${lamp4} s)`);
+}
+
+// ---- S9.2 try a draft with a friend: the link opens the bar with it ----
+{
+  await page.goto(url + 'studio/');
+  await page.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft && !document.body.classList.contains('reloading'), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  const tb = (await S()).things.find((t) => t.id === 'round_table-2');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), tb.i);
+  await page.waitForTimeout(400);
+  const x0 = parseFloat(await page.inputValue('#valField'));
+  await page.fill('#valField', String(+(x0 + 0.5).toFixed(3)));
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(400);
+  await page.click('#publish');
+  await page.click('#shareKey');
+  await page.waitForSelector('#shareBox:not([hidden])', { timeout: 10000 }).catch(() => {});
+  const link = await page.inputValue('#shareLink').catch(() => '');
+  check(/\/bar\/\?draft=[a-z0-9]{8}&room=draft-/.test(link), `S9.2 "Try it with a friend first" gives a link (${link})`);
+  const friend = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  await friend.goto(link.replace(/^https?:\/\/[^/]+\//, url) + '&skipintro&server=off');
+  await friend.waitForFunction(() => /World: \d+ things/.test(document.getElementById('log').textContent), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  check(/World: v0 \(live, by Josh's draft\)/.test(await friend.evaluate(() => document.getElementById('log').textContent)), 'S9.2 the friend\'s bar opens with Josh\'s draft');
+  await friend.close();
+  await page.click('#pubCancel');
+}
+
+// ---- S10.2-S10.4 Claude in the loop: as an author, deep links, proposals ----
+{
+  const post = async (path, body, headers = {}) => (await fetch(url + path, { method: 'POST', headers: { 'Content-Type': 'text/plain', ...headers }, body: JSON.stringify(body) })).json();
+  const key = (await post('hub/hub.php', { a: 'key', token: owner.token })).key;
+  const live = await (await fetch(url + 'studio/api.php?live')).json();
+  const files = (await (await fetch(url + 'studio/api.php?bundle=' + live.version)).json()).files;
+  const moved = JSON.parse(JSON.stringify(files));
+  const tbl3 = moved['places/bar.json'].things.find((t) => t.id === 'round_table-3');
+  tbl3.at = [tbl3.at[0] + 0.4, tbl3.at[1], tbl3.at[2]];
+  const pub = await post('studio/api.php', { a: 'publish', base: live.version, note: 'nudged a table', bundle: { format: 1, files: moved } }, { 'X-Hub-Key': key });
+  await page.goto(url + 'studio/');
+  await page.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft && !document.body.classList.contains('reloading'), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="history"]');
+  await page.waitForSelector(`#monitor [data-what="${pub.live && pub.live.version}"]`, { timeout: 10000 }).catch(() => {});
+  // (The Monitor can redraw History right after it opens: click again if the list didn't come.)
+  for (let k = 0; k < 3; k++) {
+    await page.$eval(`#monitor [data-what="${pub.live && pub.live.version}"]`, (b) => b.click()).catch((e) => console.log('HISTCLICK', e.message));
+    if (await page.waitForFunction(() => /moved/.test((document.querySelector('#monitor .histwhat') || {}).textContent || ''), null, { timeout: 6000 }).then(() => true).catch(() => false)) break;
+  }
+  const hist = await page.textContent('#monitor .body');
+  if (!/round_table-3 moved/.test(hist)) console.log('HISTDBG', JSON.stringify(pub).slice(0, 200), hist.slice(0, 400), await page.evaluate(() => JSON.stringify({ open: [...((window.bar3dMonitor || {}).whatOpen || [])], list: (window.bar3dMonitor || {}).whatList, dis: [...document.querySelectorAll('#monitor [data-what]')].map((b) => b.disabled) }).slice(0, 600)));
+  check(/Claude: nudged a table/.test(hist) && /round_table-3 moved/.test(hist), 'S10.2 Claude\'s version reads in History as "Claude: …", with what it changed');
+  // S10.3: Inspect links to the kind's dials.
+  const tb3 = (await S()).things.find((t) => t.id === 'round_table-3');
+  await page.evaluate((i) => window.bar3dStudio.select(i, false), tb3.i);
+  await page.click('#monitor .tabs [data-tab="inspect"]');
+  check((await page.getAttribute('#toDials', 'href')) === '/hub/dials.html#kind=round_table', 'S10.3 Inspect → "Dials for every round_table"');
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+  // S10.4: a proposal from Claude: preview it, then apply it.
+  const prop = JSON.parse(JSON.stringify(moved));
+  const tbl3b = prop['places/bar.json'].things.find((t) => t.id === 'round_table-3');
+  tbl3b.at = [tbl3b.at[0], tbl3b.at[1], tbl3b.at[2] + 1];
+  const pr = await post('studio/api.php', { a: 'propose', note: 'move that table back a metre', bundle: { format: 1, files: prop } }, { 'X-Hub-Key': key });
+  await page.reload();
+  await page.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft && !document.body.classList.contains('reloading'), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  await page.waitForSelector('#propKey:not([hidden])', { timeout: 10000 }).catch(() => {});
+  check(pr.ok === 1 && /Proposals 1/.test(await page.textContent('#propKey').catch(() => '')), 'S10.4 a proposal from Claude waits in the Studio');
+  await page.click('#propKey');
+  await page.click(`#propSheet [data-act="preview"]`);
+  await page.waitForSelector('#previewBar:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  const z = await (async () => { const t = (await S()).things.find((x) => x.id === 'round_table-3'); return t && t.at[2]; })();
+  check(Math.abs(z - tbl3b.at[2]) < 0.01, `S10.4 Preview shows it in the world (the table at z ${z})`);
+  await page.screenshot({ path: 'build/studio-proposal.png' });
+  await page.click('#previewBar .key.go');
+  await page.waitForTimeout(500);
+  await page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  const dz = await page.evaluate(() => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === 'round_table-3').at[2]);
+  const left = await post('studio/api.php', { a: 'proposals', token: owner.token });
+  check(Math.abs(dz - tbl3b.at[2]) < 0.001 && left.proposals.length === 0, `S10.4 Apply puts it in your draft (one undo) and it leaves the list (z ${dz})`);
+}
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

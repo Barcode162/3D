@@ -542,7 +542,9 @@ function postView(p, i) {
   };
   card.appendChild(el('div', { class: 'body' }, [
     el('div', { class: 'meta' }, [p.build ? el('span', { class: 'pill mono', text: p.build }) : null, el('span', { text: ago(p.at) }), sw]),
-    el('h3', { text: p.title }), el('p', { text: p.text })]));
+    el('h3', { text: p.title }), el('p', { text: p.text }),
+    // See it for yourself (S10.3): the Studio, or the bar it describes.
+    el('div', { class: 'working', style: 'margin-top:10px' }, [el('a', { class: 'work', href: '/studio/', text: 'See it in the Studio' }), el('a', { class: 'work', href: '/bar/', text: 'Open the bar' })])]));
   return card;
 }
 

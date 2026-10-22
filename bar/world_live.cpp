@@ -63,6 +63,21 @@ void fetchLiveWorld() {
     useBundle(text);
     return finish();
   }
+  // A shared draft (S9.2: /bar/?draft=<code>): someone's draft to try before it's published.
+  char* share = static_cast<char*>(EM_ASM_PTR({
+    var m = /[?&]draft=([a-z0-9]{8})(?:&|$)/.exec(location['search']);
+    return stringToNewUTF8(m ? m[1] : "");
+  }));
+  const std::string code = share ? share : "";
+  free(share);
+  if (!code.empty()) {
+    engine::fetchOptional(std::string(kStore) + "?share=" + code, [](bool ok, std::vector<uint8_t> b) {
+      if (ok) useBundle(std::string(b.begin(), b.end()));
+      else LOG_ERROR("World: that shared draft isn't there any more; using the world built in.");
+      finish();
+    });
+    return;
+  }
   engine::fetchOptional(std::string(kStore) + "?live", [](bool ok, std::vector<uint8_t> bytes) {
     const engine::Json live = ok ? engine::Json::parse(std::string(bytes.begin(), bytes.end())) : engine::Json();
     const int v = static_cast<int>(live["version"].number(0));

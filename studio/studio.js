@@ -252,13 +252,14 @@ on('view', (e) => {
   if (!S.wantReloadView) return;
   S.wantReloadView = false;
   S.reloading = { ...S.reloadPending, view: e.view, place: S.place };
-  window.bar3dStudioBundle = JSON.stringify({ format: 1, version: 0, author: 'your draft', files: S.draft });
+  // (A proposal being previewed shows instead of your draft, S10.4.)
+  window.bar3dStudioBundle = JSON.stringify({ format: 1, version: 0, author: S.previewFiles ? 'a proposal' : 'your draft', files: S.previewFiles || S.draft });
   startEngine();
 });
 
 window.bar3dStudio = { S, send, on, select, reloadWorld };  // for tests and the console
 // The Monitor (monitor.js) imports this module, so it's loaded after it.
-Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs'), import('./build.mjs'), import('./rack.mjs'), import('./sound.mjs')]).then(start, (e) => { console.error(e); start(); });
+Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs'), import('./build.mjs'), import('./rack.mjs'), import('./sound.mjs'), import('./notes.mjs'), import('./proposals.mjs')]).then(start, (e) => { console.error(e); start(); });
 
 // ---- The magnifier (S5.1): hold a finger still; the lens shows what's
 // under the point above it, bigger, with its name; let go to select it. ----

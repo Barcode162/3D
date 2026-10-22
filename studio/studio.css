@@ -184,3 +184,11 @@ body.tooling #thingMenu { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px +
 .lane2 { display: grid; gap: 6px; padding: 8px; border-radius: 10px; background: rgba(255,255,255,.02); box-shadow: inset 0 0 0 1px var(--rule); }
 .lane2 b { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; flex: 1; }
 .keyspad { width: 100%; height: 90px; background: var(--field); border-radius: 8px; box-shadow: var(--field-edge); touch-action: none; }
+.histwhat { display: grid; gap: 2px; padding: 4px 12px 8px; font-size: 13px; }
+.hist { grid-template-columns: 1fr auto auto; }
+/* Proposals (S10.4). */
+#propSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: 70vh; overflow: auto; padding: 14px; border-radius: 18px; display: grid; gap: 8px; z-index: 12; }
+#propSheet h2 { margin: 0; font-size: 26px; }
+#previewBar { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 14px; font-size: 13px; z-index: 11; box-shadow: var(--panel-edge), inset 0 0 0 1.5px var(--accent); }
+#previewBar span { flex: 1; }
+#propKey.lit { color: var(--accent); }

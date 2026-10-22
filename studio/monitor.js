@@ -100,6 +100,11 @@ function drawInspect(body) {
   const sch = S.schema;
   body.append(el('h3', '', t.id));
   if (kind.about) body.append(el('p', 'dim', kind.about));
+  // To the hub's dials for this kind (S10.3).
+  const dl = el('a', 'key small', `Dials for every ${t.kind}`);
+  dl.href = '/hub/dials.html#kind=' + encodeURIComponent(t.kind);
+  dl.id = 'toDials';
+  body.append(dl);
   body.append(el('span', 'label', 'This one'));
   body.append(fieldRow('Kind', t.kind));
   const states = Object.keys(kind.states || {});
@@ -295,8 +300,43 @@ async function drawHistory(body) {
   for (const v of r.versions) {
     const row = el('div', 'hist');
     const when = new Date(v.at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    row.append(el('span', '', `v${v.version} · ${v.note || 'no note'}`), el('small', '', `${v.author} · ${when}`));
-    if (v.version === r.live.version) row.append(el('span', 'chip on', 'Live'));
+    row.append(el('span', '', `v${v.version} · ${v.role === 'claude' ? 'Claude: ' : ''}${v.note || 'no note'}`), el('small', '', `${v.author} · ${when}`));
+    // What it changed, before → after (S10.2: Claude's versions read the same as yours).
+    if (v.version > 1) {
+      const what = el('button', 'key small', 'What changed');
+      what.dataset.what = v.version;
+      const show = (list) => {
+        const box = el('div', 'histwhat');
+        (list.length ? list : [{ text: 'Nothing in the world files changed.' }]).slice(0, 30).forEach((c) => box.append(el('div', 'dim', c.text)));
+        row.after(box);
+      };
+      const open = async () => {
+        what.disabled = true;
+        (M.whatOpen = M.whatOpen || new Set()).add(v.version);  // stays open when the Monitor redraws
+        M.whatList = M.whatList || {};
+        if (!M.whatList[v.version]) {
+          const get = async (n) => (await (await fetch('api.php?bundle=' + n)).json()).files || {};
+          const [a, b] = await Promise.all([get(v.version - 1), get(v.version)]);
+          M.whatList[v.version] = changes(a, b);
+        }
+        // Shown in whichever History is on screen now (it may have redrawn meanwhile).
+        const now = document.querySelector(`#monitor [data-what="${v.version}"]`);
+        if (now && now !== what) { now.click(); return; }
+        if (row.isConnected && !(row.nextSibling && row.nextSibling.classList && row.nextSibling.classList.contains('histwhat'))) show(M.whatList[v.version]);
+      };
+      what.onclick = open;
+      row.append(what);
+      if (M.whatOpen && M.whatOpen.has(v.version)) open();
+    }
+    if (v.version === r.live.version) {
+      row.append(el('span', 'chip on', 'Live'));
+      if (v.version > 1) {
+        const u = el('button', 'key small', 'Undo this publish');
+        u.dataset.undo = v.version - 1;
+        u.onclick = async () => { if (u.dataset.sure !== '1') { u.dataset.sure = '1'; u.textContent = 'Sure?'; return; } u.disabled = true; try { await undoPublish(v.version - 1); } catch (e) { Looped.toast(e.message); u.disabled = false; } };
+        row.append(u);
+      }
+    }
     else {
       const b = el('button', 'key small', 'Restore');
       b.onclick = async () => {
@@ -397,6 +437,37 @@ document.getElementById('pubGo').addEventListener('click', async () => {
     document.getElementById('publishSheet').hidden = true;
     document.getElementById('pubNote').value = '';
     Looped.toast(`Published: version ${live.version} is live`);
+    // One tap back (S9.3), until you change something again.
+    if (live.version > 1) { const u = document.getElementById('undoPub'); u.hidden = false; u.dataset.v = live.version - 1; }
   } catch (e) { Looped.toast(e.message); }
   go.disabled = false;
+});
+// Undo publish (S9.3): the version before goes live again (as a new version: nothing is lost).
+async function undoPublish(v) {
+  const live = await restore(v);
+  Looped.toast(`Undone: version ${v} is live again (as v${live.version})`);
+  setTimeout(() => location.reload(), 900);
+}
+document.getElementById('undoPub').addEventListener('click', async (e) => {
+  const b = e.currentTarget;
+  if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sure? Undo'; return; }
+  b.disabled = true;
+  try { await undoPublish(+b.dataset.v); } catch (err) { Looped.toast(err.message); b.disabled = false; }
+});
+on('changed', (op) => { if (op) document.getElementById('undoPub').hidden = true; });
+// Try it with a friend (S9.2): a link to the bar with your draft, in a room of its own.
+document.getElementById('shareKey').addEventListener('click', async () => {
+  const { saveNow } = await import('./draft.mjs');
+  await saveNow();
+  const r = await api({ a: 'share' });
+  if (!r.ok) { Looped.toast(r.error || 'Couldn\'t share it'); return; }
+  const link = `${location.origin}/bar/?draft=${r.code}&room=draft-${r.code}`;
+  document.getElementById('shareBox').hidden = false;
+  document.getElementById('shareLink').value = link;
+  if (navigator.share) navigator.share({ title: 'My draft of the bar', url: link }).catch(() => {});
+});
+document.getElementById('shareCopy').addEventListener('click', () => {
+  const f = document.getElementById('shareLink');
+  f.select();
+  (navigator.clipboard ? navigator.clipboard.writeText(f.value) : Promise.reject()).then(() => Looped.toast('Link copied'), () => { document.execCommand('copy'); Looped.toast('Link copied'); });
 });

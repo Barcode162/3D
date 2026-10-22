@@ -24,6 +24,7 @@
   <header id="top" class="panel over">
     <button id="placeKey" class="key small" type="button" aria-label="Place"><span id="placeName">Bar</span><svg class="ico"><use href="/ui/icons.svg#i-down"/></svg></button>
     <span id="saved" class="saved"><span class="steps" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="savedText">Loading the world…</span></span>
+    <button id="undoPub" class="key small" type="button" hidden>Undo publish</button>
     <button id="publish" class="key go small" type="button" disabled>Publish</button>
   </header>
   <div id="crumb" class="panel over" hidden><span id="crumbPath" class="path"></span>
@@ -86,6 +87,8 @@
     <div id="pubProblems"></div>
     <input id="pubNote" class="field" maxlength="200" placeholder="A few words: what changed (optional)" aria-label="What changed">
     <div class="row"><button id="pubCancel" class="key" type="button">Not yet</button><button id="pubGo" class="key go" type="button">Publish</button></div>
+    <div class="row"><button id="shareKey" class="key small" type="button">Try it with a friend first</button></div>
+    <div id="shareBox" class="row" hidden><input id="shareLink" class="field" readonly aria-label="The link to your draft"><button id="shareCopy" class="key small" type="button">Copy</button></div>
   </section>
 </div>
 

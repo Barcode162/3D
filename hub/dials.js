@@ -88,6 +88,16 @@ $('publish').onclick = () => {
   $('sheet').hidden = false;
 };
 $('cancel').onclick = () => { $('sheet').hidden = true; };
+// Undo publish (S9.3): the version before goes live again, as a new version.
+$('undoPub').onclick = async () => {
+  const b = $('undoPub');
+  if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sure? Undo'; return; }
+  const r = await api({ a: 'restore', v: +b.dataset.v });
+  if (!r.ok) { Looped.toast(r.error || 'That didn\'t work'); return; }
+  await api({ a: 'discard' });
+  Looped.toast(`Undone: version ${b.dataset.v} is live again`);
+  setTimeout(() => location.reload(), 900);
+};
 $('go').onclick = async () => {
   $('go').disabled = true;
   try {
@@ -106,7 +116,8 @@ $('go').onclick = async () => {
     D.live = r.live; D.base = clone(D.draft); D.draftBase = r.live.version; D.history = new History(D.draft);
     $('sheet').hidden = true; $('note').value = '';
     setSaved('live');
-    Looped.toast(`Published: version ${r.live.version}. The bar has it on its next start.`);
+    Looped.toast(`Published: version ${r.live.version}. The bar picks it up within seconds.`);
+    if (r.live.version > 1) { $('undoPub').hidden = false; $('undoPub').dataset.v = r.live.version - 1; }
     draw();
   } catch (e) { Looped.toast(e.message); }
   $('go').disabled = false;

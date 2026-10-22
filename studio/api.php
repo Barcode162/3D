@@ -7,6 +7,10 @@
 // Public (no login):
 //   GET ?live                 {"ok":1,"version":n,"at","author","note"} (version 0: none yet → built-in world)
 //   GET ?bundle=n | ?bundle=live   the bundle itself (a version never changes: cached for a year)
+//   GET ?share=<code>         a shared draft (S9.2: try it with a friend before publishing), as a bundle
+//   POST {a:"share"}          your draft as it is now → {code} (a snapshot; share again after more changes)
+//   POST {a:"propose", bundle, note}   a world for the owner to review (S10.4: Claude's proposals) → {id}
+//   POST {a:"proposals"}  → [{id, by, role, at, note, base}];  {a:"proposal", id} → its files;  {a:"drop", id}
 // Editors (the owner and the admins, by bar login token; Claude by the hub's key, X-Hub-Key):
 //   POST {"a":"me"}                         who you are
 //   POST {"a":"draft"}                      your draft (or null) and the live version
@@ -30,7 +34,7 @@ const NOTE_MAX = 200;
 $accounts = getenv('HUB_ACCOUNTS') ?: dirname(__DIR__) . '/bar/accounts';
 $hubData = getenv('HUB_DATA') ?: dirname(__DIR__, 2) . '/private/hub';
 $data = getenv('STUDIO_DATA') ?: dirname(__DIR__, 2) . '/private/studio';
-foreach (["$data", "$data/versions", "$data/drafts"] as $d) if (!is_dir($d)) @mkdir($d, 0755, true);
+foreach (["$data", "$data/versions", "$data/drafts", "$data/shares", "$data/proposals"] as $d) if (!is_dir($d)) @mkdir($d, 0755, true);
 
 function reply($body, $code = 200) {
   header('Content-Type: application/json');
@@ -118,6 +122,13 @@ function publish_bundle($bundle, $me, $note) {
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($method === 'GET' && isset($_GET['live'])) { $m = live_meta(); reply(['ok' => 1] + $m); }
+if ($method === 'GET' && isset($_GET['share'])) {
+  $code = (string)$_GET['share'];
+  if (!preg_match('/^[a-z0-9]{8}$/', $code)) fail('No such draft.', 404);
+  $sh = read_json("$data/shares/$code.json");
+  if (!$sh) fail('No such draft (it may have been replaced).', 404);
+  reply(['ok' => 1, 'version' => 0, 'format' => $sh['format'] ?? 1, 'author' => ($sh['by'] ?? 'someone') . "'s draft", 'files' => $sh['files']]);
+}
 if ($method === 'GET' && isset($_GET['bundle'])) {
   $v = $_GET['bundle'] === 'live' ? (int)live_meta()['version'] : (int)$_GET['bundle'];
   $path = "$data/versions/$v.json";
@@ -156,6 +167,38 @@ if ($a === 'publish') {
   reply(['ok' => 1, 'live' => $meta]);
 }
 if ($a === 'history') reply(['ok' => 1, 'versions' => array_reverse(index_list()), 'live' => live_meta()]);
+if ($a === 'share') {
+  // Your draft, frozen as it is now, for a link: the same code each time (it's replaced).
+  $d = read_json($draftPath);
+  if (!$d || !isset($d['files'])) fail('Make a change first: there is no draft to share.');
+  $codeFile = "$data/shares/by-" . $me['id'] . '.txt';
+  $code = @file_get_contents($codeFile);
+  if (!is_string($code) || !preg_match('/^[a-z0-9]{8}$/', $code)) { $code = substr(strtr(base64_encode(random_bytes(9)), '+/=', 'abc'), 0, 8); $code = strtolower(preg_replace('/[^a-z0-9]/i', 'x', $code)); file_put_contents($codeFile, $code); }
+  write_json("$data/shares/$code.json", ['by' => $me['name'], 'at' => time(), 'format' => $d['format'] ?? 1, 'files' => $d['files']]);
+  reply(['ok' => 1, 'code' => $code]);
+}
+if ($a === 'propose') {
+  $b = check_bundle($in['bundle'] ?? null);
+  $id = bin2hex(random_bytes(5));
+  write_json("$data/proposals/$id.json", ['id' => $id, 'by' => $me['name'], 'role' => $me['role'], 'at' => time(),
+    'note' => clean($in['note'] ?? '', NOTE_MAX), 'base' => (int)live_meta()['version'], 'format' => $b['format'], 'files' => $b['files']]);
+  reply(['ok' => 1, 'id' => $id]);
+}
+if ($a === 'proposals') {
+  $out = [];
+  foreach (glob("$data/proposals/*.json") ?: [] as $f) {
+    $p = read_json($f);
+    if ($p) $out[] = ['id' => $p['id'], 'by' => $p['by'], 'role' => $p['role'] ?? '', 'at' => $p['at'], 'note' => $p['note'], 'base' => $p['base']];
+  }
+  usort($out, fn($x, $y) => $y['at'] <=> $x['at']);
+  reply(['ok' => 1, 'proposals' => $out]);
+}
+if ($a === 'proposal' || $a === 'drop') {
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  if (!preg_match('/^[0-9a-f]{10}$/', $id) || !is_file("$data/proposals/$id.json")) fail('No such proposal.', 404);
+  if ($a === 'drop') { @unlink("$data/proposals/$id.json"); reply(['ok' => 1]); }
+  reply(['ok' => 1, 'proposal' => read_json("$data/proposals/$id.json")]);
+}
 if ($a === 'restore') {
   $v = (int)($in['v'] ?? 0);
   $old = read_json("$data/versions/$v.json");

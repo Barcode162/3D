@@ -4,6 +4,8 @@
 //   node tools/studio.mjs pull            the live world → assets/world/ (formatted); says what changed
 //   node tools/studio.mjs push --note ".." the repo's world → a new live version by "Claude"
 //                                          (refused if the live world moved since the last pull)
+//   node tools/studio.mjs propose --note ".."  the repo's world as a proposal the owner reviews in the Studio
+//                                          (Preview, Apply, Discard: S10.4) instead of publishing it
 //   node tools/studio.mjs log             the versions: number, who, when, note
 //   node tools/studio.mjs status          live version vs the one the repo has
 // The version the repo matches is kept in studio/live-version.json (commit it).
@@ -67,9 +69,13 @@ if (cmd === 'status') {
   if (!r.ok) { console.log(`Refused: ${r.error}` + (r.status === 409 ? '\nPull first (node tools/studio.mjs pull), merge, test, push again.' : '')); process.exit(1); }
   writeFileSync(MARK, JSON.stringify({ version: r.live.version, author: r.live.author, at: r.live.at, note: r.live.note }, null, 2) + '\n');
   console.log(`Published v${r.live.version} ("${note}"). Commit ${MARK}.`);
+} else if (cmd === 'propose') {
+  const r = await post({ a: 'propose', note: flag('note') || 'A proposal from Claude', bundle: { format: 1, files: repoFiles() } });
+  if (!r.ok) { console.log(`Refused: ${r.error}`); process.exit(1); }
+  console.log(`Proposed (${r.id}): it waits in the Studio's Proposals for the owner.`);
 } else if (cmd === 'log') {
   const r = await post({ a: 'history' });
   for (const v of r.versions || []) console.log(`v${v.version}  ${new Date(v.at * 1000).toISOString().slice(0, 16)}  ${v.author}  ${v.note || ''}`);
 } else {
-  console.log('Usage: node tools/studio.mjs pull | push --note ".." | log | status');
+  console.log('Usage: node tools/studio.mjs pull | push --note ".." | propose --note ".." | log | status');
 }
