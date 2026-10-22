@@ -186,7 +186,9 @@ BarScene buildBarScene(const std::string& placeName) {
       const Json& mo = mood.has(t.id) ? mood[t.id] : mood[t.kind->id];
       scene.lights.push_back({pos, readVec3(mo.has("color") ? mo["color"] : l["color"], {1, 1, 1}),
                               static_cast<float>(mo.has("intensity") ? mo["intensity"].number(1) : l["intensity"].number(1)),
-                              static_cast<float>(l["range"].number(4)), static_cast<float>(l["radius"].number(0.1))});
+                              static_cast<float>(l["range"].number(4)), static_cast<float>(l["radius"].number(0.1)),
+                              static_cast<float>(mo.has("lumens") ? mo["lumens"].number(0) : l["lumens"].number(0)),
+                              static_cast<float>(mo.has("kelvin") ? mo["kelvin"].number(0) : l["kelvin"].number(0))});
       scene.lightThing.push_back(i);
     }
     if (const Json& m = world->part(i, "mirror"); m.isObject()) {

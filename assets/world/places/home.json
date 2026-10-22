@@ -22,25 +22,35 @@
       "id": "lamp-light",
       "kind": "light-bulb",
       "at": [0, 2.15, 0],
-      "parts": {"light": {"color": [1, 0.68, 0.38], "intensity": 1.8, "range": 5.5, "radius": 0.08, "dims": true}}
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1.8,
+          "range": 5.5,
+          "radius": 0.08,
+          "dims": true,
+          "lumens": 324,
+          "kelvin": 2400
+        }
+      }
     },
     {
       "id": "corner-light",
       "kind": "light-bulb",
       "at": [2.2, 2.6, 2.2],
-      "parts": {"light": {"color": [1, 0.8, 0.6], "intensity": 0.9, "range": 4.5, "radius": 0.3}}
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.9, "range": 4.5, "radius": 0.3, "lumens": 162, "kelvin": 3000}}
     },
     {
       "id": "jukebox-glow",
       "kind": "light-jukebox",
       "at": [0, 1.2, -1.9],
-      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3}}
+      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3, "lumens": 162}}
     },
     {
       "id": "neon",
       "kind": "light-neon",
       "at": [-2.8, 2.3, -2.8],
-      "parts": {"light": {"color": [1, 0.2, 0.6], "intensity": 0.8, "range": 3.5, "radius": 0.3}}
+      "parts": {"light": {"color": [1, 0.2, 0.6], "intensity": 0.8, "range": 3.5, "radius": 0.3, "lumens": 144}}
     }
   ]
 }

@@ -19,6 +19,7 @@ struct Post {
   grade2: vec4f,  // x = contrast (1 = none), y = lift (raises the darks), z = 1 = classic lighting, w = seconds since last frame
   eye: vec4f,     // x = exposure compensation (EV), y = darkest adaptation (log2 luminance), z = brightest, w = 1 = reset (no easing)
   eye2: vec4f,    // x = seconds to adapt to brighter, y = to darker, z = fixed exposure (EV), w = how much darkness stays (0..1)
+  white: vec4f,   // rgb = white balance (new lighting)
 };
 
 @group(0) @binding(0) var<uniform> post: Post;
@@ -59,7 +60,7 @@ fn exposure() -> f32 {
 fn sceneLight(uv: vec2f) -> vec3f {
   let c = textureSampleLevel(texA, samp, uv, 0.0).rgb;
   if (classic()) { return lin(c); }
-  return max(c, vec3f(0.0)) * exposure();
+  return max(c, vec3f(0.0)) * post.white.rgb * exposure();
 }
 
 // ---- Metering (new lighting only) ----

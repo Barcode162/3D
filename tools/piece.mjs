@@ -7,7 +7,8 @@
 // records the piece's numbers (files, lines, tests, headless frame time,
 // brightness) in the gallery's pieces.jsonl.
 // Options:
-//   --test a,b        check.mjs systems or test names to run first (a failure stops the piece)
+//   --test a,b        check.mjs systems to run first (a failure stops the piece); default
+//                     "changed": the systems the uncommitted files need; "none" for none
 //   --check "..."     the phone check: where to stand, what to see (kept for the reply)
 //   --compare "x=0"   also pictures with this page option vs without (the feature's switch)
 //   --spots a,b       only these spots (default: all of tools/lib/spots.mjs)
@@ -91,7 +92,7 @@ const branch = sh('git rev-parse --abbrev-ref HEAD');
 if (branch !== 'work-go' && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to work-go)`);
 if (!has('no-build')) build();
 
-const tests = (opt('test') ?? '').split(',').filter(Boolean);
+const tests = (opt('test') ?? 'changed').split(',').filter((t) => t && t !== 'none');
 if (tests.length) {
   step(`tests: ${tests.join(', ')}`);
   if (!run(`node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }

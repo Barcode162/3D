@@ -45,6 +45,7 @@ class PostEffects {
     float grade2[4];
     float eye[4];
     float eye2[4];
+    float white[4];  // rgb: white balance (multiplies the light)
   };
   static constexpr int kLevels = 3;  // 1/4, 1/8, 1/16
   void resize();

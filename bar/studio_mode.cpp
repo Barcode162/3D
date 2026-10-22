@@ -653,7 +653,7 @@ bool studioCommand(const engine::ui::Command& c) {
         sc.lights[k].intensity = v[3];
         sc.lights[k].range = v[4];
         sc.lights[k].radius = v[5];
-        g_app.renderer.setLight(k, {v[0], v[1], v[2]}, v[3], v[4], v[5]);
+        g_app.renderer.setLight(k, sc.lights[k]);
       }
       S.recaptureMs = engine::frameTime().nowMs + 900;
     }

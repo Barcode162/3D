@@ -46,9 +46,14 @@ struct PlacedModel {
 struct PointLight {
   Vec3 position;
   Vec3 color;
-  float intensity;
-  float range;
+  float intensity;      // classic lighting's brightness (and lumens when none are given)
+  float range;          // classic lighting's reach (new lighting works it out)
   float radius = 0.1f;  // size of the glowing part: bigger = softer, wider shine
+  // Real units (L1.2, looped/light_units.h): lumens (0 = from `intensity`)
+  // and colour temperature in Kelvin (0 = `color` alone; else `color`
+  // filters the glow of that temperature, white = none).
+  float lumens = 0;
+  float kelvin = 0;
 };
 
 // A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole

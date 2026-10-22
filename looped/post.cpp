@@ -4,6 +4,7 @@
 
 #include "looped/file.h"
 #include "looped/frame_time.h"
+#include "looped/light_units.h"
 #include "looped/log.h"
 #include "looped/pipeline_cache.h"
 #include "looped/profiler.h"
@@ -244,6 +245,17 @@ void PostEffects::apply(const wgpu::CommandEncoder& encoder, const wgpu::Texture
     u.eye2[1] = m.adaptDark;
     u.eye2[2] = -m.exposureComp;  // fixed exposure (eyes off): middle grey at light 1
     u.eye2[3] = m.eyeKeep;
+    {  // White balance: 1 / the light's colour, part of the way, at luminance 1.
+      const Vec3 k = light::kelvinColor(m.whiteKelvin);
+      Vec3 w{1.0f / std::max(k.x, 1e-3f), 1.0f / std::max(k.y, 1e-3f), 1.0f / std::max(k.z, 1e-3f)};
+      w = light::unitLuminance(w);
+      const float a = classic ? 0.0f : std::clamp(m.whiteAmount, 0.0f, 1.0f);
+      u.white[0] = std::pow(w.x, a);
+      u.white[1] = std::pow(w.y, a);
+      u.white[2] = std::pow(w.z, a);
+      const float l = light::luminance({u.white[0], u.white[1], u.white[2]});
+      for (int c = 0; c < 3; ++c) u.white[c] /= l;
+    }
     queue.WriteBuffer(uniforms_[step], 0, &u, sizeof(u));
   };
   write(0, width_, height_);

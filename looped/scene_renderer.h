@@ -50,9 +50,18 @@ class SceneRenderer {
   // Turns one of the scene's lights up or down (1 = as built, 0 = off).
   void setLightScale(size_t light, float scale);
   static constexpr uint32_t maxLights() { return kMaxLights; }
-  // A light's colour, brightness, reach and softness, changed live (the Studio, S7.2).
-  // Its place in the light grid stays as built until the scene is rebuilt.
-  void setLight(size_t light, engine::Vec3 color, float intensity, float range, float radius);
+  // A light changed live (the Studio, S7.2). Its place in the light grid
+  // stays as built until the lighting is rebuilt (switching New / Classic).
+  void setLight(size_t light, const PointLight& p);
+  // At most this many lights add up per pixel (fewer = cheaper; quality).
+  void setLightsPerPixel(int n) { lightsPerPixel_ = n; }
+  // New lighting: how bright self-lit surfaces are (cd/m² per unit of their
+  // glow) and how strong the room's ambient fill is (until bounced light
+  // replaces it, L1.6). Tuning: ?emissive= ?ambient=.
+  void setLightUnits(float emissiveNits, float ambientNits) {
+    emissiveNits_ = emissiveNits;
+    ambientNits_ = ambientNits;
+  }
   // Which avatar look you (and each other player, see setOthers) wear.
   void setSelfAvatar(size_t look) { selfLook_ = look < avatarMeshes_.size() ? look : 0; }
   // A look made at runtime (the avatar customizer): returns its look index.
@@ -71,10 +80,7 @@ class SceneRenderer {
   void setPostEffects(bool on) { postOn_ = on; }
   // The lighting before L1 (docs/manual/light.md): Settings → Graphics →
   // Lighting, or ?light=classic.
-  void setClassicLighting(bool classic) {
-    if (classic != classic_) post_.resetEyes();
-    classic_ = classic;
-  }
+  void setClassicLighting(bool classic);
   bool classicLighting() const { return classic_; }
   // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
   void setEyes(bool on) { eyes_ = on; }
@@ -158,7 +164,7 @@ class SceneRenderer {
 
  private:
   static constexpr uint32_t kMaxLights = 32;       // matches looped/shaders/scene.wgsl
-  static constexpr uint32_t kLightsPerCell = 6;    // brightest first; 8 fit (2 x 4 bytes)
+  static constexpr uint32_t kLightsPerCell = 8;    // brightest first (2 x 4 bytes)
   static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
   static constexpr uint32_t kMaxGridCells = 256;
   static constexpr uint32_t kMaxBones = 32;
@@ -182,6 +188,9 @@ class SceneRenderer {
     float envMin[4];
     float envMax[4];
     float envCenter[4];
+    // New lighting (L1.2): x = glow of self-lit surfaces in cd/m² per unit,
+    // y = ambient fill scale, z = 1 / pi (diffuse), w unused.
+    float units[4];
   };
   // The lights and the light grid: the floor is cut into square cells, and
   // each cell lists the (at most 8) lights that reach it, so a pixel only
@@ -344,8 +353,14 @@ class SceneRenderer {
   wgpu::Sampler sampler_;
   std::vector<View> views_;  // [0] = main, [1 + i] = mirror i
   wgpu::Buffer lightingBuffer_;
-  void buildLighting(const RenderScene& scene);
-  std::vector<float> lightIntensity_;  // as built, per light
+  void buildLighting();  // the light list and grid for the current lighting (New / Classic)
+  GpuLight gpuLightOf(const PointLight& p, float scale) const;
+  std::vector<PointLight> lights_;     // as built (the Studio changes them)
+  std::vector<float> lightScale_;      // per light: its loop's 1 = as built, 0 = off
+  Vec3 lightGridMin_, lightGridMax_;
+  int lightsPerPixel_ = 0;
+  float emissiveNits_ = 8, ambientNits_ = 14;
+  std::vector<float> lightIntensity_;  // per light: the GPU's brightness at scale 1
   std::vector<GpuLight> gpuLights_;    // what the GPU has (setLightScale changes it, flushLights sends it)
   size_t lightsDirtyFrom_ = SIZE_MAX, lightsDirtyTo_ = 0;
   void flushLights();

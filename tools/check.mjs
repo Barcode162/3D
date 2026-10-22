@@ -5,6 +5,7 @@
 //   node tools/check.mjs            checks for what changed since origin/main
 //   node tools/check.mjs all        every check
 //   node tools/check.mjs game room  only these systems
+//   node tools/check.mjs changed    only for what isn't committed yet (tools/piece.mjs)
 // Systems: build, native, game, room, hub, server, plus the game's own tests
 // (mania, chess, arcade, meridian, race, menu, avatar, voice).
 import { execSync, spawnSync } from 'node:child_process';
@@ -58,8 +59,8 @@ const RULES = [
 ];
 const ORDER = Object.keys(CHECKS);
 
-function changedSystems() {
-  const files = execSync('git diff --name-only origin/main...HEAD; git diff --name-only HEAD; git ls-files -o --exclude-standard',
+function changedSystems(uncommittedOnly = false) {
+  const files = execSync((uncommittedOnly ? '' : 'git diff --name-only origin/main...HEAD; ') + 'git diff --name-only HEAD; git ls-files -o --exclude-standard',
     { encoding: 'utf8' }).split('\n').filter(Boolean);
   const want = new Set();
   for (const f of files) {
@@ -80,6 +81,11 @@ function changedSystems() {
 const args = process.argv.slice(2);
 let systems;
 if (args[0] === 'all') systems = ORDER;
+else if (args[0] === 'changed') {  // only what isn't committed yet (tools/piece.mjs)
+  const c = changedSystems(true);
+  systems = c.systems.filter((s) => s !== 'build');  // piece.mjs has just built
+  console.log(`${c.files.length} uncommitted file(s) → ${systems.join(', ') || 'nothing to test'}`);
+}
 else if (args.length) systems = args;
 else {
   const c = changedSystems();

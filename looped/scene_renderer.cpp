@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "looped/frame_time.h"
+#include "looped/light_units.h"
 #include "looped/file.h"
 #include "looped/log.h"
 #include "looped/pipeline_cache.h"
@@ -190,7 +191,11 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   // The model downloads are on their way; make the avatar textures meanwhile.
   createMaterials(scene, colorMaps_, bumpMaps_, sampler_);
   engine::profiler().stage("textures");
-  buildLighting(scene);
+  lights_ = scene.lights;
+  lightScale_.assign(lights_.size(), 1.0f);
+  lightGridMin_ = scene.lightGridMin;
+  lightGridMax_ = scene.lightGridMax;
+  buildLighting();
   createEnvironment();
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms"));
   // The capture's own views: they can't read the cube they draw into.
@@ -216,25 +221,52 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   return true;
 }
 
+// One light as the GPU sees it, for the current lighting. New (L1.2): its
+// colour at luminance 1 times its candela, its reach worked out from how
+// bright it is. Classic: as before L1.
+SceneRenderer::GpuLight SceneRenderer::gpuLightOf(const PointLight& p, float scale) const {
+  GpuLight g = {};
+  Vec3 color = p.color;
+  if (p.kelvin > 0) color = engine::mulComponents(engine::light::kelvinColor(p.kelvin), p.color);
+  if (classic_) {
+    if (p.kelvin > 0) color = color * (1.0f / std::max({color.x, color.y, color.z, 1e-4f}));
+    setVec4(g.position, p.position, p.range);
+    setVec4(g.color, color, p.intensity * scale);
+  } else {
+    const float cd = engine::light::candela(p.lumens > 0 ? p.lumens : engine::light::lumensFromClassic(p.intensity));
+    setVec4(g.position, p.position, engine::light::reach(cd));
+    setVec4(g.color, engine::light::unitLuminance(color), cd * scale);
+  }
+  g.params[0] = p.radius;
+  return g;
+}
+
+void SceneRenderer::setClassicLighting(bool classic) {
+  if (classic == classic_ && !gpuLights_.empty()) return;
+  classic_ = classic;
+  post_.resetEyes();
+  if (gpu_ && !lights_.empty()) buildLighting();
+  if (envReady_) capturePending_ = true;  // reflections in the new light
+}
+
 // Fills the light list and the light grid (see LightingUniforms). A light
-// reaches a cell if its range touches the cell's square; when more than 8
+// reaches a cell if its reach touches the cell's square; when more than 8
 // do, the 8 brightest there win (logged, so the layout can be tuned).
-void SceneRenderer::buildLighting(const RenderScene& scene) {
+void SceneRenderer::buildLighting() {
   auto l = std::make_unique<LightingUniforms>();
   std::memset(l.get(), 0, sizeof(LightingUniforms));
-  const size_t count = std::min<size_t>(scene.lights.size(), kMaxLights);
-  if (scene.lights.size() > kMaxLights) LOG_ERROR("Too many lights; only %u used", kMaxLights);
+  const size_t count = std::min<size_t>(lights_.size(), kMaxLights);
+  if (lights_.size() > kMaxLights) LOG_ERROR("Too many lights; only %u used", kMaxLights);
   l->lightCount[0] = static_cast<uint32_t>(count);
+  lightIntensity_.clear();
   for (size_t i = 0; i < count; ++i) {
-    const PointLight& p = scene.lights[i];
-    setVec4(l->lights[i].position, p.position, p.range);
-    setVec4(l->lights[i].color, p.color, p.intensity);
-    l->lights[i].params[0] = p.radius;
-    lightIntensity_.push_back(p.intensity);
+    l->lights[i] = gpuLightOf(lights_[i], 1.0f);
+    lightIntensity_.push_back(l->lights[i].color[3]);
+    l->lights[i].color[3] *= lightScale_[i];
   }
   // Cells cover the walkable area (blockers included) with at most 16 x 16.
-  float x0 = scene.lightGridMin.x, z0 = scene.lightGridMin.z;
-  const float spanX = scene.lightGridMax.x - x0, spanZ = scene.lightGridMax.z - z0;
+  float x0 = lightGridMin_.x, z0 = lightGridMin_.z;
+  const float spanX = lightGridMax_.x - x0, spanZ = lightGridMax_.z - z0;
   const float cell = std::max({spanX, spanZ, 1.0f}) / 16.0f;
   const auto nx = static_cast<uint32_t>(std::ceil(spanX / cell)), nz = static_cast<uint32_t>(std::ceil(spanZ / cell));
   l->grid[0] = x0;
@@ -248,12 +280,13 @@ void SceneRenderer::buildLighting(const RenderScene& scene) {
       const float minX = x0 + cx * cell, minZ = z0 + cz * cell;
       std::vector<std::pair<float, uint32_t>> reach;  // (strength here, light)
       for (size_t i = 0; i < count; ++i) {
-        const PointLight& p = scene.lights[i];
-        const float dx = p.position.x - std::clamp(p.position.x, minX, minX + cell);
-        const float dz = p.position.z - std::clamp(p.position.z, minZ, minZ + cell);
+        const GpuLight& g = l->lights[i];
+        const float px = g.position[0], pz = g.position[2], range = g.position[3];
+        const float dx = px - std::clamp(px, minX, minX + cell);
+        const float dz = pz - std::clamp(pz, minZ, minZ + cell);
         const float d2 = dx * dx + dz * dz;
-        if (d2 >= p.range * p.range) continue;
-        reach.push_back({p.intensity / (d2 + 1.0f), static_cast<uint32_t>(i)});
+        if (d2 >= range * range) continue;
+        reach.push_back({lightIntensity_[i] / (d2 + 1.0f), static_cast<uint32_t>(i)});
       }
       std::sort(reach.begin(), reach.end(), [](auto a, auto b) { return a.first > b.first; });
       if (reach.size() > kLightsPerCell) ++crowded;
@@ -263,11 +296,13 @@ void SceneRenderer::buildLighting(const RenderScene& scene) {
       c[2] = static_cast<uint32_t>(n);
     }
   }
-  lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
+  if (!lightingBuffer_) lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
   gpu_->queue.WriteBuffer(lightingBuffer_, 0, l.get(), sizeof(LightingUniforms));
   gpuLights_.assign(l->lights, l->lights + kMaxLights);
-  LOG_INFO("Lights: %zu in a %ux%u grid of %.2f m cells%s.", count, nx, nz, cell,
-           crowded ? " (some cells have more than 6; the faintest are left out)" : "");
+  lightsDirtyFrom_ = SIZE_MAX;
+  lightsDirtyTo_ = 0;
+  LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells%s.", classic_ ? "classic" : "real units", count, nx, nz,
+           cell, crowded ? " (some cells have more than 8; the faintest are left out)" : "");
   if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
 }
 
@@ -631,6 +666,7 @@ void SceneRenderer::setGlow(size_t firstObject, size_t objectCount, size_t first
 
 void SceneRenderer::setLightScale(size_t light, float scale) {
   if (light >= lightIntensity_.size()) return;
+  lightScale_[light] = scale;
   // Many lights change every frame (loops): kept here and written in one go
   // at the next render (flushLights).
   const float intensity = lightIntensity_[light] * scale;
@@ -640,13 +676,20 @@ void SceneRenderer::setLightScale(size_t light, float scale) {
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
 }
 
-void SceneRenderer::setLight(size_t light, engine::Vec3 color, float intensity, float range, float radius) {
+void SceneRenderer::setLight(size_t light, const PointLight& p) {
   if (light >= lightIntensity_.size()) return;
-  lightIntensity_[light] = intensity;
-  GpuLight& g = gpuLights_[light];
-  g.color[0] = color.x, g.color[1] = color.y, g.color[2] = color.z, g.color[3] = intensity;
-  g.position[3] = range;
-  g.params[0] = radius;
+  lights_[light].color = p.color;
+  lights_[light].intensity = p.intensity;
+  lights_[light].range = p.range;
+  lights_[light].radius = p.radius;
+  lights_[light].lumens = p.lumens;
+  lights_[light].kelvin = p.kelvin;
+  GpuLight g = gpuLightOf(lights_[light], 1.0f);
+  lightIntensity_[light] = g.color[3];
+  g.color[3] *= lightScale_[light];
+  // Its reach stays as the grid has it (a bigger one would need the grid rebuilt).
+  g.position[3] = std::min(g.position[3], gpuLights_[light].position[3]);
+  gpuLights_[light] = g;
   lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
 }
@@ -1293,6 +1336,10 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   frame_.env[1] = envReady_ ? 1.0f : 0.0f;
   frame_.env[2] = static_cast<float>(kEnvLevels - 1);
   frame_.env[3] = classic_ ? 1.0f : 0.0f;
+  frame_.units[0] = emissiveNits_;
+  frame_.units[1] = ambientNits_;
+  frame_.units[2] = 1.0f / engine::kPi;
+  frame_.ambient[3] = static_cast<float>(lightsPerPixel_);
   setVec4(frame_.envMin, envRoom_.min, 0);
   setVec4(frame_.envMax, envRoom_.max, 0);
   setVec4(frame_.envCenter, envCenter_, 1);

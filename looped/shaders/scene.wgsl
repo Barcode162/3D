@@ -30,7 +30,12 @@ struct Frame {
   envMin: vec4f,     // the room's box: reflections are matched to it
   envMax: vec4f,
   envCenter: vec4f,  // where the cube was captured from
+  // New lighting (L1.2): x = cd/m² per unit of a surface's own glow,
+  // y = ambient fill scale, z = 1 / pi.
+  units: vec4f,
 };
+
+fn classicLight() -> bool { return frame.env.w > 0.5; }
 
 // All the lights, and a grid over the floor: each cell lists the (at most
 // 8) lights that reach it, so a pixel only adds up the lights near it.
@@ -331,6 +336,7 @@ fn environmentBrdf(f0: vec3f, roughness: f32, nv: f32) -> vec3f {
 // the warm, lamp-lit upper half is brighter than the dark floor. Stands in
 // for real reflections until the engine has environment maps.
 fn roomGlow(r: vec3f) -> vec3f {
+  if (!classicLight()) { return frame.ambient.rgb * frame.units.y * frame.units.z * (1.0 + 2.5 * clamp(r.y, -0.3, 1.0)); }
   return frame.ambient.rgb * (2.0 + 5.0 * clamp(r.y, -0.3, 1.0));
 }
 
@@ -365,7 +371,11 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let diffuseColor = base * (1.0 - metallic);
   let f0 = mix(vec3f(0.04), base, metallic);
 
-  var diffuse = frame.ambient.rgb * (0.6 + 0.4 * n.y) * ao;  // a little brighter on top
+  let classic = classicLight();
+  // Classic: lights in "intensity" with a soft window; new (L1.2): lux from
+  // candela, true inverse square, fading only over the last part of its reach.
+  let ambientScale = select(frame.units.y, 1.0, classic);
+  var diffuse = frame.ambient.rgb * ambientScale * (0.6 + 0.4 * n.y) * ao;  // a little brighter on top
   var specular = vec3f(0.0);
   // This pixel's cell in the light grid.
   let g = lighting.grid;
@@ -391,7 +401,8 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     // Inverse-square falloff that fades smoothly to zero at the light's range.
     let q = d2 / (l.position.w * l.position.w);
     let window = clamp(1.0 - q * q, 0.0, 1.0);
-    let atten = window * window / (d2 + 0.25);
+    let r2 = l.params.x * l.params.x;
+    let atten = window * window / select(max(d2, r2), d2 + 0.25, classic);
     let radiance = l.color.rgb * l.color.w * atten;
     diffuse += radiance * nl;
 
@@ -405,14 +416,20 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let spec = d * visibilitySmith(nv, nl, roughness) * fresnel(f0, vh);
     specular += radiance * spec * (nl * kPi);
   }
+  // New lighting: diffuse and highlights in proper units (the 1 / pi the
+  // classic sums leave out); surfaces' own glow in cd/m².
+  var color: vec3f;
+  if (classic) {
+    color = diffuseColor * diffuse + specular + emission;
+  } else {
+    color = (diffuseColor * diffuse + specular) * frame.units.z + emission * frame.units.x;
+  }
   let r = reflect(-v, n);
   if (frame.env.x < 0.5) {  // (no reflections of reflections while capturing)
-    specular += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao;
+    color += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao;
   } else {
-    specular += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
+    color += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
   }
-
-  var color = diffuseColor * diffuse + specular + emission;
 
   let dist = length(frame.cameraPos.xyz - worldPos);
   let haze = 1.0 - exp(-dist * frame.fog.w);

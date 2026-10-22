@@ -17,7 +17,7 @@ struct Mood {
   float lift = 0;               // raises the darkest parts a little (0..0.1)
   float vignette = 0.2f;        // darker corners (0 = none)
   // Eyes (new lighting, L1.1): how the exposure follows the scene.
-  float exposureComp = -0.7f;   // EV: + brighter, - darker than "middle grey"
+  float exposureComp = -1.0f;   // EV: + brighter, - darker than "middle grey"
   float eyeDarkest = -9;        // log2 of the dimmest average light eyes adapt to (darker stays dark)
   float eyeBrightest = 6;       // log2 of the brightest
   float adaptBright = 0.6f;     // seconds to settle when it gets brighter
@@ -27,6 +27,11 @@ struct Mood {
   // from `eyeReference` (log2 light) stays visible after adapting.
   float eyeKeep = 0.6f;
   float eyeReference = -1.5f;
+  // White balance: eyes partly correct the colour of the light, so warm
+  // bulbs look warm but not orange. Light of `whiteKelvin` would look
+  // `whiteAmount` (0..1) of the way to white.
+  float whiteKelvin = 2700;
+  float whiteAmount = 0.55f;
 };
 
 }  // namespace engine

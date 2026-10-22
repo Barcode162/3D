@@ -1260,7 +1260,10 @@ void tuneMoodFromPage() {
   m.eyeBrightest = h.number("eyemax", m.eyeBrightest);
   m.glow = h.number("glow", m.glow);
   m.glowThreshold = h.number("glowth", m.glowThreshold);
+  m.whiteKelvin = h.number("whitek", m.whiteKelvin);
+  m.whiteAmount = h.number("white", m.whiteAmount);
   g_app.renderer.setMood(m);
+  g_app.renderer.setLightUnits(h.number("emissive", 8), h.number("ambient", 14));
 }
 
 // Picture quality (looped/quality.h): on Auto, the last frame's times decide
@@ -1271,6 +1274,9 @@ void applyQuality(const char* why) {
   // Glow and mood cost about one more full-screen pass: off at Low.
   const bool post = g_app.hooks.post >= 0 ? g_app.hooks.post == 1
                                           : g_app.quality.tier() < engine::QualityController::kTiers - 1;
+  // Lights per pixel: all 8 a cell lists at High, 6 at Medium, 4 at Low.
+  static const int kLightsPerPixel[] = {0, 6, 4};
+  g_app.renderer.setLightsPerPixel(kLightsPerPixel[g_app.quality.tier()]);
   if (post != g_app.renderer.postEffects()) {
     g_app.renderer.setPostEffects(post);
     LOG_INFO("Glow and mood: %s.", post ? "on" : "off");

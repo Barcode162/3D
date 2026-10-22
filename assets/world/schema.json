@@ -163,8 +163,10 @@
       "value": {"type": "int", "min": 0, "max": 99, "label": "Value"}}},
     "light": {"label": "Light", "fields": {
       "color": {"type": "color", "label": "Colour", "live": true},
-      "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness", "live": true},
-      "range": {"type": "number", "unit": "m", "min": 0.1, "max": 30, "step": 0.1, "label": "Reach", "live": true},
+      "kelvin": {"type": "number", "unit": "K", "min": 0, "max": 12000, "step": 50, "label": "Colour temperature", "live": true, "about": "How warm the light is: 1800 a candle, 2700 a warm bulb, 6500 daylight (0 = the colour alone). The colour then filters it (white = none)."},
+      "lumens": {"type": "number", "unit": "lm", "min": 0, "max": 20000, "step": 10, "label": "Lumens", "live": true, "about": "How much light, as on a bulb's box: a candle 12, a 40 W bulb 400, a 100 W bulb 1600 (0 = from Brightness)."},
+      "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness (classic)", "live": true},
+      "range": {"type": "number", "unit": "m", "min": 0.1, "max": 30, "step": 0.1, "label": "Reach (classic)", "live": true},
       "radius": {"type": "number", "unit": "m", "min": 0, "max": 2, "step": 0.01, "label": "Softness", "live": true},
       "dims": {"type": "bool", "label": "Dims with the switch"}}},
     "glowbox": {"label": "Glow", "about": "A small glowing thing (moths, sparks, smoke).", "fields": {

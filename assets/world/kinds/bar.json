@@ -494,7 +494,7 @@
           "period": 14,
           "pieces": [
             {"ch": "turn.z", "shape": "wave", "amp": 1.6, "every": 2},
-            {"ch": "turn.x", "shape": "wave", "amp": 1.0, "every": 3, "phase": 0.3},
+            {"ch": "turn.x", "shape": "wave", "amp": 1, "every": 3, "phase": 0.3},
             {"ch": "glow", "shape": "noise", "amp": 0.08, "rate": 2}
           ]
         },
@@ -508,7 +508,7 @@
               "shape": "keys",
               "keys": [
                 [0, 0],
-                [0.125, 8.0],
+                [0.125, 8],
                 [0.25, -6.857],
                 [0.375, 5.714],
                 [0.5, -4.571],
@@ -523,7 +523,7 @@
               "shape": "keys",
               "keys": [
                 [0, 0],
-                [0.125, -3.0],
+                [0.125, -3],
                 [0.25, 2.571],
                 [0.375, -2.143],
                 [0.5, 1.714],
@@ -922,7 +922,7 @@
     {
       "id": "moth",
       "about": "A moth circling a lamp; it darts away if you come close.",
-      "parts": {"glowbox": {"size": 0.014, "color": [1.0, 0.86, 0.62], "glow": 0.9, "shy": 0.7}},
+      "parts": {"glowbox": {"size": 0.014, "color": [1, 0.86, 0.62], "glow": 0.9, "shy": 0.7}},
       "loops": {
         "fly": {
           "period": 6.5,
@@ -938,7 +938,7 @@
     {
       "id": "ember",
       "about": "A spark rising from the fire while it burns.",
-      "parts": {"glowbox": {"size": 0.01, "color": [1.0, 0.55, 0.18], "glow": 2.4}},
+      "parts": {"glowbox": {"size": 0.01, "color": [1, 0.55, 0.18], "glow": 2.4}},
       "loops": {
         "rise": {
           "period": 2.6,
@@ -1012,7 +1012,7 @@
       "id": "light-fire",
       "is": "light",
       "about": "The fireplace's glow: it flickers like a real fire, and goes out with it.",
-      "parts": {"light": {"color": [1, 0.45, 0.15], "intensity": 1.8, "range": 5, "radius": 0.4}},
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.8, "range": 5, "radius": 0.4, "lumens": 324, "kelvin": 1700}},
       "loops": {
         "flicker": {"period": 0.5, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.4}]},
         "dark": {
@@ -1028,7 +1028,7 @@
       "id": "light-jukebox",
       "is": "light",
       "about": "The jukebox's glow: it breathes while it waits and thumps on every beat of a song.",
-      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3}},
+      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3, "lumens": 162}},
       "loops": {
         "wait": {"period": 3, "pieces": [{"ch": "light", "shape": "wave", "amp": 0.2}]},
         "thump": {"period": 1, "beat": true, "pieces": [{"ch": "light", "shape": "beat", "amp": 0.7, "offset": -0.25}]}
@@ -1049,7 +1049,7 @@
       "is": "light",
       "about": "The pink light by the ARCADE sign: it buzzes now and then, like old neon.",
       "parts": {
-        "light": {"color": [1, 0.2, 0.65], "intensity": 0.7, "range": 2.5, "radius": 0.2},
+        "light": {"color": [1, 0.2, 0.65], "intensity": 0.7, "range": 2.5, "radius": 0.2, "lumens": 126},
         "sound": {"effect": "buzz", "every": [4, 11], "gain": 0.18, "near": 4}
       },
       "loops": {"buzz": {"period": 1.2, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.6}]}},
