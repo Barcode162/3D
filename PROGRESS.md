@@ -183,7 +183,7 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
 - AI dock: a built-in workspace on the user's own site where they talk to the AI
   and it works on the project there (code, GitHub, deploys, tools inside the
   program), so they never need to leave the site for GitHub.
-- Bar script: a small safe script language (like VRChat's Udon) so Studio
+- (Planned as T1 in docs/PLAN.md) Bar script: a small safe script language (like VRChat's Udon) so Studio
   objects carry their own behaviour, not only the fixed action list in C++.
 
 ### Asset workflow (for new or changed models)

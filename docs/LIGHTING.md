@@ -1,5 +1,9 @@
 # Looped lighting: baked light, probes, reflections (D1b-D1c, planned 2026-10-21)
 
+> **Replaced (2026-10-22) by L1 in `docs/PLAN.md` / `NEXT.md`:** the Studio
+> edits lights live, so bounced light is worked out by the engine at runtime
+> instead of baked once in Blender. Kept for the facts and the probe notes.
+
 Done already: glow and mood (D1a, `looped/post.*`). Next, in shippable steps.
 Facts checked: Blender isn't in the container until `bash tools/assets/get_blender.sh`
 (4.5 LTS, ~350 MB); CI never runs Blender (models are built in a session and

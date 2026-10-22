@@ -2,9 +2,11 @@
 
 The user says "go"; Claude does the whole step below, piece by piece (one
 commit each, tagged), deploys once, then rewrites this file for the step after.
-How: `CLAUDE.md`. The engine: `docs/ENGINE.md` (E1-E9, built). **The plan
-now: `docs/STUDIO.md`** (the Studio, the hub as the Dials, the new look;
-steps S1-S10).
+How: `CLAUDE.md`. The engine: `docs/ENGINE.md` (E1-E9, built). The Studio:
+`docs/STUDIO.md` (S1-S10, built). **The plan now: `docs/PLAN.md`** (the
+Alive plan, replanned 2026-10-22: tracks L M T R A W, wow and foundation
+take turns, every visual piece has an off switch and before/after pictures,
+every piece writes its page in `docs/manual/`).
 
 ## Where we are (2026-10-22)
 - The engine plan E1-E9 is built and live (`22e9b28`).
@@ -14,7 +16,21 @@ steps S1-S10).
   picked the **Faceplate** theme (the others stay switchable).
 - Another Claude session built the website (homepage/: Home, Play, Engine, Vision, Sign in, the staff Portal); it owns homepage/.
 
-## The next step: P2, the Studio phone check (the user)
+## The next step: L1, new light (docs/PLAN.md §4.1)
+Today: point lights with GGX highlights, a flat ambient colour, one captured
+reflection cube, blob shadows under avatars only, tone mapping inside the
+scene shader (LDR), bloom and grade in post. L1 makes it a different bar.
+Each piece: an off flag, `tools/shots.mjs` before/after from the same spots
+(bar top, fire, back corner, stage), its manual page `docs/manual/light.md`.
+Budget for the whole step on the phone: +4 ms at High, +1.5 ms at Low.
+- [ ] **L1.1** HDR and eyes that adjust: the scene draws into rgba16float, tone mapping moves to post (a softer filmic curve), auto exposure from a tiny average of the picture (eyes adapt over ~1 s), bloom from real brightness. Settings → Graphics gets **Lighting: New / Classic** so the user can flip old and new on the phone (also `?light=classic`). *Check:* walk from the fire to the dark back corner: the picture brightens slowly as your eyes adjust; bulbs glow without white blobs.
+- [ ] **L1.2** Real shadows from lamps: the strongest lights (a Studio "casts shadows" switch, 4 at most) get shadow cubes in one atlas, soft edges that sharpen near contact; still things are drawn into them once, redrawn only when something near the light moves. `?lampshadows=0`. *Check:* the stools and bottles throw shadows on the bar top; a glass you pick up casts one that moves.
+- [ ] **L1.3** Bounced light the engine works out: a grid of light probes in each room; each one captures a small cube of the room (the E4.4 capture) and keeps it as 9 numbers per colour; two bounces; spread over frames so you **watch the room fill with light** for a few seconds after loading; re-done after a Studio light edit or a publish. Replaces the flat ambient. Probes stuck in walls move out or switch off. `?bounce=0`. *Check:* the ceiling glows warm above the lamps, corners go darker, the red neon tints the wall next to it.
+- [ ] **L1.4** Contact shade: half-resolution ambient occlusion from the depth buffer, blurred, only where things meet (cheap at Low: off). `?ao=0`. *Check:* bottles sit on the shelf instead of floating; dark creases where the bar meets the floor.
+- [ ] **L1.5** Light in the air: soft haze around bulbs and a beam from the stage lights (worked out per light along each view ray, no fog volume), haze strength in the Studio's Air. `?haze=0`. *Check:* a soft halo around every bulb; the stage spot shows a faint beam.
+- [ ] **L1.6** In the Studio: per light "casts shadows" and "haze"; Air gets bounce strength and exposure; the moods (Evening, Party, Closing) retuned for the new light; the budget meter counts shadow lights. *Check:* in the Studio, turn on shadows for the piano lamp and watch them appear; switch Evening → Party.
+
+## Waiting on the user: P2, the Studio phone check
 The whole Studio is live; the user tries it on the phone, piece by piece
 (the list in the chat). Every "broke <piece>" is fixed first, one commit each.
 - [ ] **P2.1** Fix every "broke S…" the user reports.

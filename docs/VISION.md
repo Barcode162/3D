@@ -14,6 +14,12 @@ This file explains why it exists and where it's heading.
 - Everything is tested on the user's **iPhone 15 Pro Max (iOS 26, Safari)**,
   their only device.
 
+## The Alive plan (2026-10-22)
+The user's planning talk (timeline at the centre, the bar as a live movie,
+Claude building live in the Studio, Launch as a check, new lighting,
+textures, recipes, avatars, world axes, a real manual) is written up as
+tracks and steps in `docs/PLAN.md`.
+
 ## Look and feel (user, 2026-10-22)
 Enhanced real life, but animated: "super EXTRA lively". Real shapes,
 light and physics, pushed livelier than reality: a busy world that keeps
