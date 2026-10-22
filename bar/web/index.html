@@ -16,6 +16,7 @@
 <link rel="preload" href="app.wasm?v=__BUILD__" as="fetch" crossorigin>
 <link rel="stylesheet" href="theme.css?v=__BUILD__">
 <link rel="preload" href="loading.jpg" as="image">
+<script>if (/[?&]studio=1/.test(location.search)) document.documentElement.classList.add('studio');</script>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0710; overflow: hidden;
                overscroll-behavior: none; -webkit-user-select: none; user-select: none;
@@ -26,6 +27,8 @@
          padding: 6px 10px; font: 12px/1.3 ui-monospace, Menlo, monospace; color: #f5d9a8;
          pointer-events: none; text-shadow: 0 1px 2px #000; z-index: 6; }
   body.racing #hud { display: none; }  /* the race draws its own buttons */
+  /* Inside the Studio (?studio=1, docs/STUDIO.md S2): only the world. */
+  html.studio #loading, html.studio #hud, html.studio #stickBase, html.studio #stickKnob, html.studio #hudMenu, html.studio #hudMic { display: none !important; }
   body.still #hud { visibility: hidden; }  /* ?still test shots: no changing fps text */
   #hud button { pointer-events: auto; font: inherit; color: inherit; background: #0008;
                 border: 1px solid #f5d9a855; border-radius: 6px; padding: 4px 8px; }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-look="faceplate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0A0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Studio">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Studio</title>
+<!-- The Studio (docs/STUDIO.md): the bar's own engine in studio mode
+     (/bar/?studio=1, bar/studio_mode.cpp) in a full-screen frame, with the
+     Studio's controls around it (studio.js). Owner and admins only. -->
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body class="lp">
+<div id="app" hidden>
+  <iframe id="world" title="The world" allow="autoplay"></iframe>
+  <header id="top" class="panel over">
+    <button id="placeKey" class="key small" type="button" aria-label="Place"><span id="placeName">Bar</span><svg class="ico"><use href="/ui/icons.svg#i-down"/></svg></button>
+    <span id="saved" class="saved"><span class="steps" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="savedText">Loading the world…</span></span>
+    <button id="publish" class="key go small" type="button" disabled>Publish</button>
+  </header>
+  <div id="crumb" class="panel over" hidden><span id="crumbPath" class="path"></span>
+    <button id="lockKey" class="key small" type="button" aria-label="Lock the selection"><span class="kled"></span><svg class="ico"><use href="/ui/icons.svg#i-lock"/></svg></button>
+    <button id="deselect" class="key small" type="button" aria-label="Deselect"><svg class="ico"><use href="/ui/icons.svg#i-x"/></svg></button></div>
+  <div id="hits" class="panel over" hidden></div>
+  <footer id="bottom" class="panel over">
+    <button id="monitorKey" class="key small" type="button" aria-label="Open the Monitor"><svg class="ico"><use href="/ui/icons.svg#i-layers"/></svg></button>
+    <span class="seg field" id="camModes" role="group" aria-label="Camera">
+      <button type="button" data-cam="0" class="on" aria-label="Orbit"><svg class="ico"><use href="/ui/icons.svg#i-orbit"/></svg></button>
+      <button type="button" data-cam="1" aria-label="Fly"><svg class="ico"><use href="/ui/icons.svg#i-fly"/></svg></button>
+      <button type="button" data-cam="2" aria-label="Top"><svg class="ico"><use href="/ui/icons.svg#i-top"/></svg></button>
+      <button type="button" data-cam="3" aria-label="Walk"><svg class="ico"><use href="/ui/icons.svg#i-walk"/></svg></button>
+    </span>
+    <button id="undo" class="key small" type="button" aria-label="Undo" disabled><svg class="ico"><use href="/ui/icons.svg#i-undo"/></svg></button>
+    <button id="redo" class="key small" type="button" aria-label="Redo" disabled><svg class="ico"><use href="/ui/icons.svg#i-redo"/></svg></button>
+  </footer>
+  <section id="monitor" class="panel over" hidden aria-label="Monitor"></section>
+</div>
+
+<div id="login" hidden>
+  <form id="loginForm" class="panel">
+    <span class="steps big" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <h1>Studio</h1>
+    <p class="dim">Build and change the world. For the bar's owner and admins.</p>
+    <input id="user" class="field" autocomplete="username" placeholder="Username" aria-label="Username">
+    <input id="pass" class="field" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <button class="key go" type="submit">Log in</button>
+    <p id="loginError" class="dim" role="alert"></p>
+  </form>
+</div>
+<script src="/ui/looped.js"></script>
+<script type="module" src="studio.js"></script>
+</body>
+</html>

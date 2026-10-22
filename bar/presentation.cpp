@@ -3,6 +3,7 @@
 // yours and the other players' (seated, on a machine, walking). Moved out of
 // game.cpp so the frame's phases stay short.
 #include "bar/presentation.h"
+#include "bar/studio_mode.h"
 
 #include <algorithm>
 #include <cmath>
@@ -155,6 +156,7 @@ void presentAvatars(double nowMs) {
     }
     g_app.fireOn = g_app.world.stateOf("fire_flames") != "out";
   }
+  if (studioOn()) studioPresent(g_app.boxes, nowMs);
   g_app.renderer.setBoxes(g_app.boxes);
   g_app.renderer.streamRooms(cam.position, nowMs);  // nearby rooms' models
 }

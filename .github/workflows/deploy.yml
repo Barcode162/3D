@@ -275,6 +275,9 @@ jobs:
       - name: "Test: the live world from the Studio's store (a fake store)"
         run: node tools/live_world_test.mjs
 
+      - name: "Test: the Studio (studio/ around the bar in studio mode)"
+        run: node tools/studio_test.mjs
+
       - name: "Test: the private bar's door (gate.php, invites, admins)"
         run: node tools/gate_test.mjs
 

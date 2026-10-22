@@ -21,6 +21,7 @@ namespace app {
 
 struct TestHooks {
   bool noReflect = false;
+  bool studio = false;  // ?studio=1: the Studio's view of the world (bar/studio_mode.*)
   std::string place = "bar";
   bool still = false, perf = false, autoplay = false, shift = false, darts = false;
   bool garage = false;

@@ -16,6 +16,7 @@
 #include "bar/avatar.h"
 #include "bar/bar_scene.h"
 #include "bar/world_live.h"
+#include "bar/studio_mode.h"
 #include "bar/bartender.h"
 #include "bar/darts.h"
 #include "bar/jukebox.h"
@@ -133,7 +134,7 @@ void applyQuality(const char* why);  // (below, with the frame)
 // that switches it, so leaving a game can't forget to give the controls back.
 void syncCapture() {
   g_app.input.setCapture(g_app.race.open() || g_app.rhythm.isOpen() || g_app.chess.isOpen() ||
-                         g_app.piano.keyboardOpen());
+                         g_app.piano.keyboardOpen() || studioOn());
 }
 void applyMirrorDetail();
 
@@ -583,6 +584,7 @@ void handleCommands() {
   std::vector<engine::ui::Command> commands;
   engine::ui::takeCommands(commands);
   for (const engine::ui::Command& c : commands) {
+    if (studioCommand(c)) continue;  // the Studio's (bar/studio_mode.cpp)
     // Checked first: an emote in range, drinks only on shift, standing up only when seated.
     if (!app::commandAllowed(c.name, c.a, g_app.seat >= 0, g_app.bartender.onShift())) {
       LOG_INFO("Menu: ignored \"%s\" (not now).", c.name.c_str());
@@ -1065,12 +1067,17 @@ struct FrameIn {
 void phaseInput(FrameIn& f) {
   PROFILE(engine::Phase::kInput);
   handleCommands();
+  if (studioOn()) {  // the Studio's camera and picking instead of you
+    studioInput(f.dt);
+    return;
+  }
   updateCamera(f.dt);
   g_app.input.flushStick();
 }
 
 void phaseInteraction(FrameIn& f) {
   PROFILE(engine::Phase::kInteraction);
+  if (studioOn()) return;
   updateInteraction(f.nowMs, f.dt);
   syncCapture();  // (also after anything that ended a game on its own)
 }
@@ -1219,6 +1226,7 @@ void phaseRender(FrameIn& f) {
     const app::Seat& s = g_app.scene.seats[static_cast<size_t>(g_app.seat)];
     self = app::seatedTransform(s.hip, s.yaw);
   }
+  if (studioOn()) self = Mat4::translation({0, -500, 0});  // the Studio has no body
   engine::profiler().add(Phase::kScene, engine::clockMs() - sceneStart);
   PROFILE(Phase::kRender);
   g_app.renderer.render(target, viewProj, cam.position, self, g_app.avatarBones, g_app.firstPersonBones,
@@ -1416,6 +1424,7 @@ void startScene() {
                                                               sfx(Effect::kShake), sfx(Effect::kClick)};
   g_app.bartender.init(g_app.scene.barTopFront, barSounds);
   g_app.sceneReady = true;  // multiplayer starts when you enter (app_enter)
+  if (g_app.hooks.studio) studioStart();
   g_app.shownPosition.assign(g_app.physics.bodyCount(), engine::Vec3{1e9f, 0, 0});
   g_app.shownRotation.assign(g_app.physics.bodyCount(), engine::Quat{});
   g_app.fpsWindowStartMs = engine::clockMs();

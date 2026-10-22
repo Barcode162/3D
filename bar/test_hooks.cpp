@@ -37,6 +37,7 @@ TestHooks TestHooks::parse() {
   std::string v;
   h.still = param(query, "still", v);
   h.noReflect = param(query, "reflect", v) && v == "0";
+  h.studio = param(query, "studio", v) && v == "1";
   // A place's name: small letters, digits and dashes only (it names a file).
   if (param(query, "place", v) && !v.empty() && v.size() <= 32 &&
       v.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789-") == std::string::npos)

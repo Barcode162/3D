@@ -68,7 +68,7 @@ window.bar3dNet = (function () {
       cloudParam = null;
     }
   }
-  var disabled = netParam === 'off' || cloudParam === 'off' || (local && !cloudParam);
+  var disabled = netParam === 'off' || cloudParam === 'off' || param('studio') === '1' || (local && !cloudParam);
   // The accounts server: next to the game on IONOS, else joshuavelasco.com.
   var server = /github\.io$/.test(location.hostname) ? DEFAULT_SERVER : local ? '' : 'relay.php';
   var room = (param('room') || 'main').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || 'main';
