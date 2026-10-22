@@ -143,3 +143,6 @@ body.reloading #world { opacity: .55; transition: opacity .2s; }
 #bottom { gap: 5px; }
 #bottom .key { min-width: 0; flex: 0 1 44px; padding: 0 6px; }
 #bottom .seg { min-width: 0; flex: 1 1 auto; }
+#bottom { gap: 5px; }
+#bottom .key { min-width: 0; flex: 0 1 44px; padding: 0 6px; }
+#bottom .seg { min-width: 0; flex: 1 1 auto; }
