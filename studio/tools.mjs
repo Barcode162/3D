@@ -6,6 +6,7 @@
 // by default (5 cm, 15°, 5 %). One gesture = one undo.
 import { S, on, send } from './studio.js';
 import { edit, preview, thingEntry, restOf, placeFile, setOp } from './draft.mjs';
+import { partsOf, partSource, partRest, partFrom, showPart } from './parts.mjs';
 
 const $ = (id) => document.getElementById(id);
 const T = { tool: 0, axis: 0, local: false, snap: true, gesture: null };
@@ -16,11 +17,20 @@ const NAMES = ['X', 'Y', 'Z', 'All'];
 
 function entry() {
   const t = S.things[S.selected];
-  return t ? { t, ...thingEntry(t.id) } : null;
+  if (!t) return null;
+  if (T.part) {
+    // Part mode (S5.2): the chosen part, read fresh from the draft.
+    const src = partSource(t, T.part.name);
+    const p = src && Array.isArray(src.list) ? src.list[T.part.i] : null;
+    if (p) return { t, part: T.part.name, json: p, src, path: [...src.path, T.part.i] };
+    T.part = null;
+  }
+  return { t, ...thingEntry(t.id) };
 }
+const restOfE = (e) => (e.part ? partRest(e.part, e.json) : restOf(e.json));
 // The axis a move goes along: world X/Y/Z, or turned with the thing (local).
 function moveDir(rest, axis) {
-  if (!T.local || axis === 1) return axis === 0 ? [1, 0, 0] : axis === 1 ? [0, 1, 0] : [0, 0, 1];
+  if (!T.local || T.part || axis === 1) return axis === 0 ? [1, 0, 0] : axis === 1 ? [0, 1, 0] : [0, 0, 1];
   const a = rest.turn * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
   return axis === 0 ? [c, 0, -s] : [s, 0, c];
 }
@@ -37,7 +47,7 @@ function restWith(rest0, v, by) {
   const r = { at: [...rest0.at], turn: rest0.turn, scale: [...rest0.scale] };
   if (T.tool === 0) {
     const d = moveDir(rest0, T.axis);
-    const amount = by !== undefined ? by : v - (T.local && T.axis !== 1 ? 0 : rest0.at[T.axis]);
+    const amount = by !== undefined ? by : v - (T.local && !T.part && T.axis !== 1 ? 0 : rest0.at[T.axis]);
     for (let k = 0; k < 3; k++) r.at[k] = round(rest0.at[k] + d[k] * amount);
   } else if (T.tool === 1) r.turn = round(((by !== undefined ? rest0.turn + by : v) + 540) % 360 - 180);
   else {
@@ -48,6 +58,7 @@ function restWith(rest0, v, by) {
 }
 // The ops that put a rest into the files (only the fields that changed).
 function opsFor(e, r0, r) {
+  if (e.part) return JSON.stringify(r) === JSON.stringify(r0) ? [] : [setOp(e.src.file, e.path, partFrom(e.part, e.json, r))];
   const ops = [];
   if (JSON.stringify(r.at) !== JSON.stringify(r0.at)) ops.push(setOp(placeFile(), [...e.path, 'at'], r.at));
   if (r.turn !== r0.turn) ops.push(setOp(placeFile(), [...e.path, 'turn'], r.turn || undefined));
@@ -60,16 +71,16 @@ function opsFor(e, r0, r) {
 function commit(r) {
   const e = entry();
   if (!e || !e.json) return;
-  const r0 = restOf(e.json);
+  const r0 = restOfE(e);
   const ops = opsFor(e, r0, r);
-  if (ops.length) edit({ op: 'group', ops, label: ['Move', 'Turn', 'Size'][T.tool] + ' ' + e.t.id });
+  if (ops.length) edit({ op: 'group', ops, label: ['Move', 'Turn', 'Size'][T.tool] + ' ' + (e.part ? `${e.src.owner}'s ${e.part.replace(/s$/, '')} ${T.part.i + 1}` : e.t.id) });
 }
 
 // ---- A gesture (the fader or an arrow): live, then one undo step ----
 function begin() {
   const e = entry();
   if (!e || !e.json) { if (e && e.why) Looped.toast(e.why); return false; }
-  T.gesture = { e, rest0: restOf(e.json), total: 0, along: 0, undo: null };
+  T.gesture = { e, rest0: restOfE(e), total: 0, along: 0, undo: null };
   return true;
 }
 function move(by) {
@@ -116,18 +127,25 @@ function draw() {
     k.classList.toggle('lit', a === T.axis);
     k.disabled = T.tool === 1 && a !== 1;
   });
-  $('allKey').hidden = T.tool !== 2;
-  $('spaceSeg').hidden = T.tool !== 0;
+  $('allKey').hidden = T.tool !== 2 || !!e.part;
+  if (e.part && T.axis === 3) T.axis = 0;
+  $('spaceSeg').hidden = T.tool !== 0 || !!e.part;
+  $('partKey').classList.toggle('lit', !!e.part);
+  $('partText').textContent = e.part ? (partsOf(e.t).find((x) => x.name === e.part && x.i === T.part.i) || { label: 'Part' }).label : 'Part';
+  $('dropKey').disabled = $('putOnKey').disabled = !!e.part;
+  [...$('toolKeys').querySelectorAll('[data-tool="1"]')].forEach((k) => { k.disabled = e.part === 'uses'; });
+  if (e.part === 'uses' && T.tool === 1) T.tool = 0;
+  if (e.part && e.json) showPart(e.t, e.part, restOfE(e));
   [...$('spaceSeg').children].forEach((b) => b.classList.toggle('on', (b.dataset.space === 'local') === T.local));
   $('snapKey').classList.toggle('lit', T.snap);
-  $('snapText').textContent = T.snap ? ['5 cm', '15°', '5 %'][T.tool] : 'Free';
+  $('snapText').textContent = T.snap ? ['5 cm', '15°', e.part ? '5 cm' : '5 %'][T.tool] : 'Free';
   $('axisName').textContent = NAMES[T.axis];
   $('axisName').style.color = T.axis < 3 ? `var(--ax-${'xyz'[T.axis]})` : 'var(--accent)';
-  $('unitText').textContent = UNITS[T.tool];
+  $('unitText').textContent = e.part && T.tool === 2 ? 'm' : UNITS[T.tool];
   const field = $('valField');
   if (!e.json) { field.value = ''; field.placeholder = 'Can\'t edit this one yet'; field.disabled = true; return; }
   field.disabled = false;
-  if (document.activeElement !== field) field.value = round(value(restOf(e.json)));
+  if (document.activeElement !== field) field.value = round(value(restOfE(e)));
 }
 
 // ---- Wiring ----
@@ -151,7 +169,7 @@ function typed() {
   if (!e || !e.json) return;
   const v = parseFloat($('valField').value.replace(',', '.').replace('−', '-'));
   if (!Number.isFinite(v)) { draw(); return; }
-  const r0 = restOf(e.json);
+  const r0 = restOfE(e);
   commit(T.tool === 0 && T.local && T.axis !== 1 ? restWith(r0, 0, v) : restWith(r0, v));
   draw();
 }
@@ -229,7 +247,7 @@ $('dropKey').addEventListener('click', () => {
 on('drop', (ev) => {
   const e = entry();
   if (!e || !e.json || ev.thing !== e.t.i) return;
-  const r0 = restOf(e.json);
+  const r0 = restOfE(e);
   commit({ ...r0, at: ev.rest.map((v) => +(+v).toFixed(3)) });
   Looped.toast('Dropped');
 });
@@ -255,7 +273,7 @@ on('attached', (ev) => {
   const e = T.putOnFor;
   T.putOnFor = null;
   if (!e || ev.thing !== e.t.i) return;
-  const r0 = restOf(e.json);
+  const r0 = restOfE(e);
   const r = { ...r0, at: ev.at.map((v) => +(+v).toFixed(3)), turn: +(+ev.turn).toFixed(1) };
   const ops = opsFor(e, r0, r);
   const parentId = ev.parent >= 0 && S.things[ev.parent] ? S.things[ev.parent].id : undefined;
@@ -264,7 +282,21 @@ on('attached', (ev) => {
   S.things[ev.thing].parent = ev.parent;
   Looped.toast(parentId ? `${e.t.id} now sits on ${parentId}` : `${e.t.id} stands on its own`);
 });
-on('select', draw);
+// Part mode (S5.2): the Part key lists the thing's parts; pick one to edit it.
+$('partKey').addEventListener('click', () => {
+  const e = entry();
+  if (!e) return;
+  const list = $('partList');
+  if (!list.hidden) { list.hidden = true; return; }
+  const parts = partsOf(e.t);
+  const pick = (part) => { T.part = part; list.hidden = true; if (!part) showPart(null); draw(); };
+  list.replaceChildren(
+    ...[{ label: e.t.id, small: 'the thing itself', part: null }, ...parts.map((x) => ({ label: x.label, small: x.src.owner === e.t.id ? 'its own' : 'every ' + x.src.owner, part: { name: x.name, i: x.i } }))]
+      .map((x) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = x.label; b.lastChild.textContent = x.small; b.onclick = () => pick(x.part); return b; }));
+  if (!parts.length) Looped.toast(`${e.t.id} has no shapes, tap areas or seats of its own to move`);
+  list.hidden = false;
+});
+on('select', () => { if (T.part) { T.part = null; showPart(null); } $('partList').hidden = true; draw(); });
 on('changed', draw);
 on('world', draw);
 window.bar3dTools = T;

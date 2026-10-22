@@ -35,6 +35,7 @@ check(owner.ok === 1, 'the owner has an account');
 const page = await browser.newPage({ viewport: { width: 393, height: 852 }, hasTouch: true });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
+page.on('console', (m) => { if (m.type() === 'error') console.log('CONSOLE', m.text().slice(0, 300)); });
 await page.addInitScript((t) => { try { localStorage.setItem('hubToken', t); } catch (e) {} }, owner.token);
 await page.goto(url + 'studio/');
 const S = () => page.evaluate(() => { const s = window.bar3dStudio && window.bar3dStudio.S; return s && { things: s.things, selected: s.selected, place: s.place }; });
@@ -152,6 +153,32 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   const sel5 = await S();
   const got = sel5.selected >= 0 ? sel5.things[sel5.selected].id : '(none)';
   check(named === 'nothing here' ? sel5.selected < 0 : got === named, `S5.1 letting go selects what the lens showed (${named} → ${got})`);
+}
+
+// ---- S5.2 part mode: the jukebox's tap area, 40 cm wider ----
+{
+  const jb5 = (await S()).things.find((t) => t.id === 'jukebox');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), jb5.i);
+  await page.waitForTimeout(500);
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("Tap area 1")');
+  await page.click('#toolKeys [data-tool="2"]');
+  await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
+  const w0 = parseFloat(await page.inputValue('#valField'));
+  await page.fill('#valField', String(+(w0 + 0.4).toFixed(3)));
+  await page.press('#valField', 'Enter');
+  await page.waitForTimeout(400);
+  const box = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'jukebox').parts.uses[0].box);
+  check(Math.abs((box[1][0] - box[0][0]) - (w0 + 0.4)) < 0.002 && Math.abs(box[0][0] + box[1][0]) < 0.002,
+        `S5.2 Part → Tap area 1 → Size X: the jukebox's tap area is 40 cm wider, still centred (${w0} → ${box[1][0] - box[0][0]} m)`);
+  check(/Tap area 1/.test(await page.textContent('#partText')), 'S5.2 the Part key names the part');
+  await page.screenshot({ path: 'build/studio-part.png' });
+  await page.click('#undo');
+  await page.click('#partKey');
+  await page.click('#partList button:has-text("the thing itself")');
+  await page.click('#toolKeys [data-tool="0"]');
+  const back = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'jukebox').parts.uses[0].box);
+  check(Math.abs((back[1][0] - back[0][0]) - w0) < 0.002, 'S5.2 Undo puts the tap area back');
 }
 
 // ---- S3.2 Move / Turn / Size ----

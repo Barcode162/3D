@@ -36,6 +36,7 @@
       <button class="key small" type="button" data-tool="2"><svg class="ico"><use href="/ui/icons.svg#i-size"/></svg>Size</button>
       <button class="key small" type="button" id="dropKey" aria-label="Drop it onto what's below">Drop</button>
       <button class="key small" type="button" id="putOnKey" aria-label="Put it on another thing"><span class="kled"></span>On…</button>
+      <button class="key small" type="button" id="partKey" aria-label="Edit one of its parts"><span class="kled"></span><span id="partText">Part</span></button>
     </div>
     <div class="rowk" id="axisKeys">
       <button class="key small lit" type="button" data-axis="0" style="--accent:var(--ax-x);--led:var(--ax-x)"><span class="kled"></span>X</button>
@@ -56,6 +57,7 @@
     </div>
   </div>
   <div id="hits" class="panel over" hidden></div>
+  <div id="partList" class="panel over pop" hidden></div>
   <div id="views" class="panel over pop" hidden></div>
   <footer id="bottom" class="panel over">
     <button id="monitorKey" class="key small" type="button" aria-label="Open the Monitor"><svg class="ico"><use href="/ui/icons.svg#i-layers"/></svg></button>

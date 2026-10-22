@@ -182,6 +182,7 @@ void boundsOf(int thing, Vec3* mid, float* size) {
   }
 }
 
+bool inSubtree(int thing, int root);
 void frameThing(int thing) {
   if (thing < 0 || thing >= static_cast<int>(g_app.world.world().size())) return;
   Vec3 mid;
@@ -190,6 +191,36 @@ void frameThing(int thing) {
   if (S.mode == 1 || S.mode == 3) setMode(0);
   S.target = mid;
   S.dist = engine::clampf(size * 1.6f, 0.6f, 25.0f);
+  // Look from a side with nothing solid between the camera and the thing (a
+  // jukebox against a wall is framed from the room, not from inside the wall).
+  const app::BarScene& sc = g_app.scene;
+  // First choice: in front of it (things face their own +Z), then around it.
+  const Mat4& tw = g_app.world.world().thing(thing).world;
+  const float fx = tw.m[8], fz = tw.m[10];
+  const float yaw0 = fx * fx + fz * fz > 1e-6f ? std::atan2(-fx, fz) : S.yaw;
+  S.pitch = engine::clampf(S.pitch, engine::radians(-40.0f), engine::radians(-12.0f));
+  // The room the thing is in: the camera stays inside it (walls aren't shapes).
+  const engine::Aabb* room = nullptr;
+  for (const engine::Aabb& r : sc.rooms)
+    if (mid.x > r.min.x && mid.x < r.max.x && mid.z > r.min.z && mid.z < r.max.z && mid.y > r.min.y - 0.5f && mid.y < r.max.y) {
+      room = &r;
+      break;
+    }
+  for (int k = 0; k < 8; ++k) {
+    S.yaw = yaw0 + engine::radians(45.0f) * static_cast<float>((k + 1) / 2) * (k % 2 ? 1.0f : -1.0f);
+    placeCamera();
+    const Vec3 eye = g_app.camera.position, dir = engine::normalize(eye - mid);
+    const float far = engine::length(eye - mid);
+    bool blocked = room && !(eye.x > room->min.x + 0.2f && eye.x < room->max.x - 0.2f && eye.z > room->min.z + 0.2f &&
+                             eye.z < room->max.z - 0.2f && eye.y < room->max.y - 0.1f);
+    for (size_t c = 0; c < sc.colliders.size() && c < sc.colliderThing.size() && !blocked; ++c) {
+      if (inSubtree(sc.colliderThing[c], thing)) continue;
+      const float t = rayTurnedBoxDistance(mid, dir, sc.colliders[c]);
+      blocked = t > 0.05f && t < far;
+    }
+    if (!blocked) return;
+  }
+  S.yaw = yaw0;
   placeCamera();
 }
 

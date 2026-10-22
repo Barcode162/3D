@@ -29,7 +29,7 @@ body.lp { -webkit-user-select: none; user-select: none; }
 #crumb .path { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #crumb b { color: var(--accent); font-weight: 650; }
 #crumb .key { min-height: 34px; min-width: 38px; padding: 0 8px; }
-#hits, .pop {
+#hits, .pop, #partList {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 124px);
   display: grid; gap: 4px; padding: 8px; border-radius: 14px; max-height: 40vh; overflow: auto;
 }
@@ -101,3 +101,30 @@ body.tooling #hits { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(
   background: linear-gradient(var(--accent), var(--accent)) center / 2px 100% no-repeat, linear-gradient(var(--accent), var(--accent)) center / 100% 2px no-repeat; }
 #lens .name { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); white-space: nowrap; padding: 3px 9px; border-radius: 7px;
   background: var(--over); font-family: var(--mono); font-size: 12px; color: var(--text); box-shadow: var(--panel-edge); }
+/* Part mode (S5.2). */
+#partText { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.tooling #partList { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 8px); }
+/* Six keys in a row on a phone: they share the width, labels shrink. */
+#tools { grid-template-columns: minmax(0, 1fr); }
+#tools .rowk, #tools .valrow { min-width: 0; }
+#tools .rowk .key { flex: 1 1 0; min-width: 0; padding: 0 3px; gap: 4px; font-size: 10px; letter-spacing: .04em; overflow: hidden; white-space: nowrap; }
+#tools .rowk .key .ico { width: 15px; height: 15px; flex: none; }
+#tools .rowk .seg { flex: 1.6 1 0; min-width: 0; }
+#tools .rowk .seg button { padding: 0 4px; font-size: 10px; }
+/* Inspect's controls (S5.4, fields.mjs). */
+.ctl { display: grid; grid-template-columns: 1fr 96px 24px; gap: 4px 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
+.ctl .name { font-size: 13px; min-width: 0; }
+.ctl .field { font-size: 14px; padding: 6px 8px; text-align: right; width: 100%; }
+.ctl .unit { font-size: 12px; color: var(--text-2); }
+.ctl .fader { grid-column: 1 / -1; height: 42px; }
+.ctl.vec { grid-template-columns: 1fr repeat(3, 64px); }
+.ctl.flag { grid-template-columns: 1fr auto; }
+.ctl.text { grid-template-columns: 1fr 1.4fr; }
+.ctl.text .field { text-align: left; }
+.ctl.chips { grid-template-columns: 1fr; }
+.ctl .chiprow { display: flex; flex-wrap: wrap; gap: 5px; }
+.ctl .swatch { width: 44px; height: 30px; border: 0; padding: 0; background: none; }
+.ctl.own { box-shadow: var(--field-edge), inset 3px 0 0 var(--accent); }
+.scope { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scope .key { min-height: 32px; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); margin-left: 6px; vertical-align: middle; }

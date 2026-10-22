@@ -25,7 +25,7 @@ export const S = {
 };
 export function on(ev, f) { (S.listeners[ev] = S.listeners[ev] || []).push(f); }
 export function emitEvent(ev, d) { emit(ev, d); }
-function emit(ev, d) { (S.listeners[ev] || []).forEach((f) => { try { f(d); } catch (e) { console.error(e); } }); }
+function emit(ev, d) { (S.listeners[ev] || []).forEach((f) => { try { f(d); } catch (e) { console.error(e && e.stack ? e.stack : e); } }); }
 
 export function send(name, a = 0, b = 0, text = '', text2 = '') {
   if (S.engine && S.engine.bar3dBridge) S.engine.bar3dBridge.command(name, a, b, text, text2);
