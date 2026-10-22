@@ -127,7 +127,44 @@ What the pasted plan didn't have and this engine makes possible:
 
 ---
 
-## 4. The new look: the faceplate
+## 4. The new look: themes
+
+### 4.0 Themes (user, 2026-10-22)
+The user liked the faceplate and asked for **themes**: the look is a theme
+system, not one fixed style. They asked for more depth (a 3D feel), a
+deeper dark, gloss, glass "sometimes", and **more visual feedback lights**
+(the step light was the favourite). Blender may render UI parts where CSS
+can't get the shine right.
+
+- **How:** `ui/themes/<name>.css` sets the tokens: colours *and* material
+  recipes (panel fill and trim, key fill, gloss, press depth, glass blur, the
+  shape of the step light and the LEDs, the key click sound, the display
+  font). Every control in `ui/controls.css` is drawn only from those tokens,
+  so one markup wears every theme. The player picks a theme in Settings (the
+  bar, the Studio, the hub share the choice; saved per account and device).
+- **Candidates** (preview page, 2026-10-22): **Faceplate** (the drum machine,
+  deeper, glossy plastic keys, keycap lights), **Back Bar** (the bar's own
+  lacquered wood and brass, Edison bulbs, amber glass), **Obsidian** (deepest
+  black, frosted glass panels, piano-black keys, ice light inside glass
+  prisms), **Jukebox** (chrome rims, candy jelly keys, bubble tubes, black
+  cherry). **Waiting on the user's pick** for which ships first (S1.1); the
+  others follow as extra themes.
+- **The feedback kit** (every theme, its own style): the step light (alive,
+  at the real loop speed), an LED in every switch-like key (on/off), the save
+  lamps (edit · saving · saved · live), level meters (a loop's movement
+  live), state lamps (which state a thing is in), a dial with a ring of
+  lights, a fader whose value pops up while held, a flip switch, numbers that
+  roll with what changed popping beside them, and a breathing ring on what's
+  selected (in lists and around the thing in the world).
+- **Blender parts** (`tools/assets/ui_*.py`, rendered to images with
+  licence-free materials): knob strips (a frame per angle), Edison bulbs
+  on/off, chrome and brass bezels (nine-slice), bubble tubes, when the CSS
+  version doesn't look rich enough on the phone.
+
+Sections 4.1-4.6 below describe the **Faceplate** theme in detail (the first
+one designed); each other theme gets the same sections when it's built.
+
+## 4.F The Faceplate theme
 
 ### 4.1 The idea
 Your engine is built on **loops** (your FL Studio idea), the hub is **the
@@ -533,9 +570,11 @@ new look everywhere at S4, then precision, building, light, life, live, and
 the bridge to Claude.
 
 ### S1 One world, and the new look begins
-- **S1.1** The look: `ui/` (faceplate/smoke tokens, keys, dials, faders,
-  the step light, the LED, Archivo + Martian Mono + licences + credits, ~40
-  icons) and the style page joshuavelasco.com/ui. *Check:* open /ui: every
+- **S1.1** The look: `ui/` as a theme system (`ui/themes/`), the theme the
+  user picks first (section 4.0), the feedback kit (step light, key LEDs,
+  save lamps, meters, state lamps, ring dial, fader, switch, rolling
+  numbers, selection ring), the fonts with licences + credits, ~40 icons,
+  and the style page joshuavelasco.com/ui with a theme switcher. *Check:* open /ui: every
   control on the smoke panel; switch your phone to light mode, it turns to
   the faceplate.
 - **S1.2** The front door in the new look: joshuavelasco.com with three doors,

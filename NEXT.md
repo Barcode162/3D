@@ -13,7 +13,7 @@ steps S1-S10).
 - Then the Studio plan, step by step.
 
 ## The next step: S1, one world and the new look begins (docs/STUDIO.md §8)
-- [ ] **S1.1** The look, the faceplate: `ui/` (faceplate/smoke tokens, keys, dials, faders, the step light, the LED, Archivo + Martian Mono + OFL + credits, ~40 line icons) and the style page joshuavelasco.com/ui. *Check:* /ui shows every control on the smoke panel; phone in light mode → the faceplate.
+- [ ] **S1.1** The look as a theme system (`ui/themes/`, docs/STUDIO.md §4.0): the theme the user picks first (Faceplate, Back Bar, Obsidian or Jukebox; **ask if they haven't picked**), the feedback kit, fonts + OFL + credits, ~40 line icons, the style page joshuavelasco.com/ui with a theme switcher. *Check:* /ui shows every control in the chosen theme; the switcher changes it.
 - [ ] **S1.2** The front door in the new look: joshuavelasco.com with three doors, Bar · Studio · News. *Check:* the home page.
 - [ ] **S1.3** The schema `assets/world/schema.json` (every part and field in words, units, ranges, controls; the choice lists move out of `bar/scene_names.cpp`) + the completeness test. *Check:* the bar unchanged, still all alive.
 - [ ] **S1.4** The world store `studio/api.php` (live, bundle, draft, publish, history, restore; owner/admins + Claude key) + `tools/studio_api_test.mjs`; v1 = today's repo world. *Check:* /studio/api.php?live says version 1.
