@@ -1,4 +1,6 @@
-# joshuavelasco.com root (the IONOS "home/" folder). Each project lives in
-# its own subfolder; index.php lists the ones with a project.json.
+# joshuavelasco.com root (the IONOS "home/" folder): the site's pages
+# (index.php, play/, engine/, vision/, signin/, portal/, shared files in
+# site/), plus each project in its own subfolder.
 DirectoryIndex index.php index.html
 Options -Indexes
+ErrorDocument 404 /site/404.php
