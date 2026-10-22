@@ -10,14 +10,13 @@ steps S1-S10).
 - The engine plan E1-E9 is built and live (`22e9b28`).
 - The user is phone-checking it (the list in the chat). Any "broke <piece>"
   is fixed first, before the step below (CLAUDE.md → Pinpointing breakage).
-- The Studio plan, step by step: S1-S4 done (2026-10-22), S5 next. The user
+- The Studio plan, step by step: S1-S6 done (2026-10-22), S7 next. Checks: per piece only its own test, the full check once per step (user). The user
   picked the **Faceplate** theme (the others stay switchable).
 
-## The next step: S5, precision (docs/STUDIO.md §5.3-5.4, §8)
-- [ ] **S5.1** The magnifier: hold a finger still on the world, a lens shows what's above your finger, bigger, with its name; let go to select it. (🔒 lock is from S2.3.) *Check:* long-press a candle on a table: the lens shows it; let go, it's selected; lock; orbit; still selected.
-- [ ] **S5.2** Part mode: Thing | Part; a selected thing lists its parts (shapes you bump into, tap areas, seats, light, sound); a part glows as a box and Move / Size edit it (shown at once; the bar has it after Publish). *Check:* select the jukebox's tap area, make it wider, publish, it's easier to tap in the bar.
-- [ ] **S5.3** This one | Every <kind> (N): edits go to the thing or to its kind; dots on fields that differ from the kind; Reset to kind; New kind from this. *Check:* make every bar stool 5 cm taller in one change; make one of them different.
-- [ ] **S5.4** Inspect becomes editable: every field from the schema with the right control (numbers with a fader, choices as chips, switches, colours). *Check:* change a seat's facing in Inspect.
+## The next step: S7, light and look (docs/STUDIO.md §5.6, §8)
+- [ ] **S7.1** Materials as data (`assets/world/materials.json`: the 13 built-in ones move there, the engine reads them) + a material editor in the Studio (colour, roughness, metal, glow). *Check:* make a "blue velvet" material, give it to the sofa.
+- [ ] **S7.2** Lights: colour, brightness, reach, softness, dims, live in the Studio; their loops; reflections recaptured after. *Check:* make the neon by the arcade red.
+- [ ] **S7.3** Moods (named light sets: Evening, Party, Closing) and the budget meter (draws, triangles, lights against the phone's limits). *Check:* switch Evening → Party in the Studio; the meter stays green.
 
 ## Waiting on the user: P1, the engine phone check
 - [ ] **P1.1** Fix every "broke" the user reports (one commit each, tagged with the piece it fixes).
@@ -31,7 +30,8 @@ E7.1-E7.4 (boxes, the test home, travel, catalog), E8.1-E8.2 (the hub's World
 page, tuning), E9.1-E9.2 (projects as a part, old keys gone).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) S4.1-S4.4: the hub as Needs you · Dials · Board · News, tuning baked into the world, the bar's menus, news and loading screen in Faceplate → 8797ac4..HEAD
+- (this push) S5.1-S5.4, S6.1-S6.4: precision (magnifier, part mode, this one / every one, Inspect edits everything) and building (Library with pictures and prices, duplicate / row / rename / delete, boxes with push-pull and extrude, places) → f3a2dc4..HEAD
+- `f3a2dc4` S4.1-S4.4: the hub as Needs you · Dials · Board · News, tuning baked into the world, the bar's menus, news and loading screen in Faceplate → 8797ac4..f3a2dc4 (with the room's grace fix and S5.1)
 - `8797ac4` S2.1-S2.5, S3.1-S3.5: the Studio opens (login, cameras, picking, the Monitor, X-ray) and edits (Move/Turn/Size, slide, Drop, Put on, undo, the draft, Publish, History, Restore) → 5a04c79..8797ac4
 - `5a04c79` S1.1-S1.6: the theme system (/ui), the front door, the schema, the world store, the bar and the room load the live world, studio.mjs → 988d71f..5a04c79 (world v1 published after)
 - `22e9b28` E8.1, E8.2, E9.1, E9.2: the hub's World page and live tuning, projects as a part, old keys gone → fa64f17..22e9b28 (66526ef was the same game; 22e9b28 only fixed a test)

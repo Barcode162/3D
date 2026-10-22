@@ -1455,3 +1455,22 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   their 3D pictures.
 - CI copies the server's PHP into `build/site` before the tests: a test that
   links the site's files must skip `*.php` (else its copy writes through).
+
+## The Studio, steps S5-S6 (2026-10-22)
+- **Finger ids can be negative** (the mouse): "no finger" is a flag, never -1.
+- **The magnifier copies the WebGPU canvas only inside the engine's frame**
+  (a page event the engine sends while drawing: `lens`, `snap`); outside it
+  the canvas reads back empty. The Library's pictures use `st.snap` the same way.
+- **Adding things reloads the Studio's frame from the draft**: the bar in the
+  frame reads `window.parent.bar3dStudioBundle` (bar/world_live.cpp) instead
+  of the store; the page keeps the camera and the selection across it.
+  Moves and sizes stay live (st.pose); adds, removes, kinds, rows, ids, boxes
+  and new places reload.
+- **Parts are edited where they're written**: the thing's own parts, else
+  the kind that defines them (every one of that kind). "This one" on a kind's
+  part copies the list onto the thing.
+- **Places**: a new place is one file (`places/<id>.json`); the bar's Menu →
+  Places lists the live world's places; their rooms are `place-<id>` (the
+  room runs that place once its live world has the file).
+- Tests: never `pkill -f` a pattern that's in your own command line (it kills
+  the shell); a crashed studio_test now stops its PHP server on exit.
