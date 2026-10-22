@@ -15,6 +15,7 @@
 
 #include "bar/avatar.h"
 #include "bar/bar_scene.h"
+#include "bar/world_live.h"
 #include "bar/bartender.h"
 #include "bar/darts.h"
 #include "bar/jukebox.h"
@@ -1345,6 +1346,8 @@ void updateArcadeMusic(float dt) {
   }
 }
 
+void startScene();
+
 void onGpuReady(bool ok) {
   // The activity rules: who else uses a seat or machine, and what leaving one does.
   g_app.act.usedBy = [](Activity kind, int param) {
@@ -1367,6 +1370,11 @@ void onGpuReady(bool ok) {
   engine::profiler().stage("gpu");
   g_app.hooks = app::TestHooks::parse();
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
+  // The world the Studio published (asked for in main()), then the rest.
+  app::whenLiveWorld(startScene, 5000);
+}
+
+void startScene() {
   g_app.scene = app::buildBarScene(g_app.hooks.place);  // the bar, or another place (E7)
   g_app.world.load(g_app.scene);
   app::buildPhysics(g_app.scene, g_app.physics, g_app.bodyOfModel);

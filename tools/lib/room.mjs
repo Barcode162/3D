@@ -17,7 +17,7 @@ export async function startRoom(port = 8791, vars = {}) {
     return { ws, http: ws.replace(/^ws/, 'http'), stop: async () => {} };
   }
   const stateDir = mkdtempSync(join(tmpdir(), 'bar3d-room-'));
-  const args = ['wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1', '--persist-to', stateDir, '--var', 'DEV:1'];
+  const args = ['wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1', '--persist-to', stateDir, '--var', 'DEV:1', '--var', 'WORLD_URL:'];
   for (const [k, v] of Object.entries(vars)) args.push('--var', `${k}:${v}`);
   const server = spawn('npx', args, { cwd: new URL('../../cloud/', import.meta.url).pathname, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   // Never leave a server behind if the test crashes.

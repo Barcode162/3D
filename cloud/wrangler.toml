@@ -13,6 +13,9 @@ workers_dev = true
 # Accounts still live on the IONOS side for now; the room asks it who a
 # login token belongs to.
 ACCOUNT_URL = "https://joshuavelasco.com/bar/account.php"
+# The world store (docs/STUDIO.md 7.6): the room runs the live world the
+# Studio published (empty: the world built in). Tests set it to "".
+WORLD_URL = "https://joshuavelasco.com/studio/api.php"
 # Exact origins of pages allowed to connect (localhost is always allowed).
 ALLOWED_ORIGINS = "https://barcode162.github.io,https://joshuavelasco.com"
 # Protocol version the room speaks (it also accepts PROTO - 1).

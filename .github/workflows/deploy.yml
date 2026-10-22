@@ -272,6 +272,9 @@ jobs:
       - name: "Test: browser smoke (Release build)"
         run: FAIL_MODEL=candle node tools/smoke.mjs  # + a blocked download must still let you in
 
+      - name: "Test: the live world from the Studio's store (a fake store)"
+        run: node tools/live_world_test.mjs
+
       - name: "Test: the private bar's door (gate.php, invites, admins)"
         run: node tools/gate_test.mjs
 

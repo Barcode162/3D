@@ -129,6 +129,8 @@ export class Room {
       'places/home.json': JSON.stringify(homePlace), 'kinds/home.json': JSON.stringify(homeKinds),
     };
     this.place = '';
+    this.worldVersion = 0;       // the Studio's live world in use (0: built in)
+    this.worldCheckedMs = 0;
     this.usePlace();
     this.lastSimMs = 0;
     this.lastSeq = 0;
@@ -159,9 +161,9 @@ export class Room {
   }
 
   // Which place this room is (from its name), and its world made for it.
-  usePlace() {
+  usePlace(force = false) {
     const place = /^home/.test(this.name) ? 'home' : 'bar';
-    if (place === this.place) return;
+    if (place === this.place && !force) return;
     this.place = place;
     this.sim = new Sim(simWasm, { ...this.simFiles, place });
     this.glasses = new Glasses(this.sim);
@@ -194,6 +196,7 @@ export class Room {
     const usage = await s.get('usage');
     if (usage && usage.day === this.usage.day) Object.assign(this.usage, usage);
     this.alarmAt = (await s.getAlarm()) || 0;
+    await this.useLiveWorld();
     // Glasses where they last came to rest; ones in a hand stay in it.
     this.glasses.restore(this.kv);
     for (const [key, slot] of this.claims) {
@@ -205,6 +208,31 @@ export class Room {
     this.race = race.restore(rc ? rc.values : null);
     this.setDeadline('race', race.deadline(this.race));
     this.reschedule();
+  }
+
+  // The world the Studio published (docs/STUDIO.md 7.6): the same files the
+  // phones load, so the room runs the same things and rules. Checked when the
+  // room starts and, at most every 30 s, when someone joins. Any problem: keep
+  // what we have (the world built in at first).
+  async useLiveWorld() {
+    const url = this.env.WORLD_URL;
+    if (!url || Date.now() - this.worldCheckedMs < 30000) return;
+    this.worldCheckedMs = Date.now();
+    try {
+      const live = await (await fetch(url + '?live', { signal: AbortSignal.timeout(4000) })).json();
+      const v = live && live.version | 0;
+      if (v < 1 || v === this.worldVersion) return;
+      const b = await (await fetch(url + '?bundle=' + v, { signal: AbortSignal.timeout(8000), cf: { cacheTtl: 31536000 } })).json();
+      if (!b || !b.files || (b.format || 1) > 1) return;
+      const files = { ...this.simFiles };
+      for (const [path, content] of Object.entries(b.files)) files[path] = JSON.stringify(content);
+      this.simFiles = files;
+      this.worldVersion = v;
+      this.usePlace(true);
+      console.log(`room: world v${v} (live, by ${b.author})`);
+    } catch (e) {
+      console.log('room: the live world could not be loaded: ' + e);
+    }
   }
 
   // Sequence numbers for world writes, claims and events: always rising, even
@@ -219,6 +247,7 @@ export class Room {
     const url = new URL(request.url);
     this.name = request.headers.get('X-Room') || this.name;
     this.usePlace();
+    if (request.headers.get('Upgrade') === 'websocket') await this.useLiveWorld();
     if (url.pathname === '/stats') return Response.json(this.stats());
     if (this.dev && url.pathname.endsWith('/debug')) {
       const keys = await this.ctx.storage.list();
