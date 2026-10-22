@@ -50,12 +50,13 @@ function onEngine(e) {
       // Back from a reload (S6): the same view and selection.
       const r = S.reloading;
       S.reloading = null;
-      document.body.classList.remove('reloading');
+      if (!S.reloadQueued) document.body.classList.remove('reloading');
       if (r.place === S.place) send('st.view', 0, 0, r.view.join(','));  // another place starts from its own view
       const t = r.selectId && S.byId.get(r.selectId);
       select(t ? t.i : -1, false);
       emit('reloaded', S);
       if (r.resolve) r.resolve();
+      if (S.reloadQueued) { const q = S.reloadQueued; S.reloadQueued = null; reloadWorld(q.selectId).then(q.resolve); }
       return;
     }
     setSaved(S.live.version ? `Live v${S.live.version}` : 'Built-in world');
@@ -233,7 +234,15 @@ function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.class
 // The frame's bar reads window.bar3dStudioBundle (bar/world_live.cpp).
 export function reloadWorld(selectId) {
   return new Promise((resolve) => {
-    S.reloadPending = { selectId: selectId === undefined ? (S.things[S.selected] || {}).id : selectId, resolve };
+    const want = { selectId: selectId === undefined ? (S.things[S.selected] || {}).id : selectId, resolve };
+    // One at a time: a reload asked for while another is loading runs right
+    // after it (with the draft as it is then).
+    if (S.reloading || S.wantReloadView) {
+      const before = S.reloadQueued;
+      S.reloadQueued = { selectId: want.selectId, resolve: () => { if (before) before.resolve(); resolve(); } };
+      return;
+    }
+    S.reloadPending = want;
     S.wantReloadView = true;
     document.body.classList.add('reloading');
     send('st.getview');
