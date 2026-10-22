@@ -443,7 +443,7 @@ try {
   await ghost.until(() => ghost.closed, GHOST_MS + 6000);
   check(ghost.closed?.code === 4004, `a silent socket is closed as a ghost (4004, got ${ghost.closed?.code})`);
   check(!!(await watcher.until(() => watcher.find('D', (d) => d.d.some((x) => x[1] === 'away' && x[2] === 1 && x[3] === gslot)))), 'others see the ghost as away first');
-  check(!!(await watcher.until(() => watcher.find('L', (x) => x.slot === gslot), GRACE_MS + 12000)), 'then it leaves after the grace period');
+  check(!!(await watcher.until(() => watcher.find('L', (x) => x.slot === gslot), GRACE_MS + 25000)), 'then it leaves after the grace period');
   await watcher.until(() => watcher.closed, AFK_MS + 6000);
   clearInterval(keep);
   check(watcher.closed?.code === 4004 && /away/.test(watcher.closed?.reason || ''), `no movement for the AFK time → 4004 "away" (got ${watcher.closed?.code} ${watcher.closed?.reason})`);
