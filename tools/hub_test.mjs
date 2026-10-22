@@ -11,7 +11,7 @@
 // build/hub3-home.png, build/hub3-explore.png, build/hub3-spot.png, build/hub3-engine.png, build/news.png.
 //   NODE_PATH=$(npm root -g) node tools/hub_test.mjs
 import { spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, rmSync, readFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, copyFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -37,6 +37,7 @@ for (const d of ['kinds', 'places']) {  // the World page reads the bar's files
 }
 mkdirSync(join(root, 'home/news'));
 copyFileSync('news/index.php', join(root, 'home/news/index.php'));
+cpSync('ui', join(root, 'home/ui'), { recursive: true });  // the look kit (news, the hub)
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore' });
 
 const post = async (path, body, headers = {}) => {

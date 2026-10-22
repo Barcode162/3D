@@ -52,51 +52,40 @@ if (isset($_GET['json'])) {
 $posts = published($data);
 $e = fn($s) => htmlspecialchars($s, ENT_QUOTES);
 ?><!doctype html>
-<html lang="en">
+<html lang="en" data-look="faceplate">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0716">
+<meta name="theme-color" content="#0A0908">
 <title>News</title>
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<script src="/ui/looped.js" defer></script>
 <style>
-  :root { --bg: #0b0716; --ink: #f6f0ff; --dim: #b4a7d4; --edge: rgba(255,255,255,.14); --glass: rgba(255,255,255,.06);
-    --pink: #ff5ab4; --gold: #ffb35a; --cyan: #5ad1ff; --violet: #b38bff; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif; }
-  .sky { position: fixed; inset: -25%; z-index: 0; filter: blur(70px); opacity: .5; pointer-events: none; }
-  .sky i { position: absolute; width: 50vmax; height: 50vmax; border-radius: 50%; mix-blend-mode: screen; animation: drift 24s ease-in-out infinite alternate; }
-  .sky i:nth-child(1) { background: var(--pink); left: -5%; top: 5%; }
-  .sky i:nth-child(2) { background: var(--violet); right: -5%; top: -5%; animation-delay: -9s; }
-  .sky i:nth-child(3) { background: var(--cyan); left: 20%; bottom: -10%; animation-delay: -15s; opacity: .6; }
-  @keyframes drift { to { transform: translate(7vmax, -5vmax) scale(1.18) rotate(30deg); } }
-  main { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 28px) 16px 48px; }
-  h1 { margin: 0; font-size: 46px; font-weight: 850; line-height: 1; }
-  h1 span { display: inline-block; background: linear-gradient(180deg, #fff, var(--pink) 65%, var(--violet)); -webkit-background-clip: text;
-    background-clip: text; color: transparent; animation: wave 2.6s ease-in-out infinite; animation-delay: calc(var(--i) * .11s); }
-  @keyframes wave { 25% { transform: translateY(-7px) rotate(-3deg); } 50% { transform: none; } 75% { transform: translateY(2px) rotate(2deg); } }
-  .sub { color: var(--dim); margin: 8px 0 18px; }
-  article { margin-top: 18px; border-radius: 22px; overflow: hidden; background: var(--glass); border: 1px solid var(--edge);
-    box-shadow: 0 20px 50px rgba(0,0,0,.35); animation: rise .6s cubic-bezier(.2,.9,.3,1.15) backwards; animation-delay: calc(var(--i) * 80ms); }
-  @keyframes rise { from { opacity: 0; transform: translateY(20px) scale(.97); } }
+  /* The Faceplate look (docs/STUDIO.md §4.F, S4.4). */
+  main { max-width: 640px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 28px) 16px 48px; }
+  .top { display: flex; align-items: center; gap: 12px; }
+  h1 { margin: 0; font-size: 48px; line-height: 1; }
+  .sub { color: var(--text-2); margin: 8px 0 18px; }
+  article { margin-top: 18px; border-radius: 18px; overflow: hidden; background: var(--panel); box-shadow: var(--panel-edge);
+    animation: rise .5s cubic-bezier(.2,.9,.3,1.1) backwards; animation-delay: calc(var(--i) * 70ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
   .shots { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: #000; }
   .shots::-webkit-scrollbar { display: none; }
   .shots img { flex: none; width: 100%; aspect-ratio: 430 / 600; object-fit: cover; scroll-snap-align: center; display: block; }
   .body { padding: 14px 16px 18px; }
-  .meta { color: var(--dim); font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--edge); background: rgba(0,0,0,.3); font-family: ui-monospace, Menlo, monospace; }
-  h2 { margin: 8px 0 6px; font-size: 22px; line-height: 1.2; background: linear-gradient(90deg, #fff, var(--cyan)); -webkit-background-clip: text;
-    background-clip: text; color: transparent; }
-  p { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #e6dcff; }
-  .empty { text-align: center; color: var(--dim); padding: 40px 10px; border: 1px dashed var(--edge); border-radius: 20px; }
-  a { color: var(--cyan); }
+  .meta { color: var(--text-2); font-size: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-stretch: 75%; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
+  .pill { padding: 3px 8px; border-radius: 6px; background: var(--field); box-shadow: var(--field-edge); font-family: var(--mono); letter-spacing: 0; text-transform: none; color: var(--accent); }
+  h2 { margin: 10px 0 6px; font-size: 24px; line-height: 1.15; }
+  p { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+  .empty { text-align: center; color: var(--text-2); padding: 40px 10px; border-radius: 18px; background: var(--field); box-shadow: var(--field-edge); }
+  a { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
-<body>
-<div class="sky"><i></i><i></i><i></i></div>
+<body class="lp">
 <main>
-  <h1 aria-label="News"><?php foreach (str_split('News') as $i => $c) echo "<span style=\"--i:$i\">$c</span>"; ?></h1>
+  <div class="top"><span class="steps big" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span><h1>News</h1></div>
   <p class="sub">What's new in Joshua's worlds. <a href="/">joshuavelasco.com</a></p>
 <?php if (!$posts): ?>
   <div class="empty">No news yet. Check back soon.</div>
