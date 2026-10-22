@@ -37,6 +37,14 @@ easy to pinpoint. So on "go":
    --title ... --text ...` at the end. Nothing else on the hub during a go.
 7. Don't sit watching CI. If a run goes red, fix it, then tell the user.
 
+## Automation first (user, 2026-10-22)
+Anything done twice becomes a tool; Claude runs the tools, not the steps by
+hand, and improves a tool whenever it's missing or clumsy
+(`docs/AUTOMATION.md`). Each piece: `node tools/piece.mjs <TAG> "<title>"
+--test <systems> --check "<phone check>"` (build, tests, before/after
+pictures into the `gallery` branch, commit, push). Each step's end: `node
+tools/step.mjs finish <STEP> "<what>" --bench`. Before/after is the norm.
+
 ## Pinpointing breakage
 - Every piece is its own commit with its own phone check, so "broke E3.2"
   names the exact commit. `git log --grep '^E3.2'` finds it.

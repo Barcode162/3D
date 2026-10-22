@@ -35,6 +35,7 @@ TestHooks TestHooks::parse() {
   const std::string query = engine::ui::pageQuery();
   TestHooks h;
   std::string v;
+  h.query = query;
   h.still = param(query, "still", v);
   h.noReflect = param(query, "reflect", v) && v == "0";
   h.studio = param(query, "studio", v) && v == "1";
@@ -60,6 +61,7 @@ TestHooks TestHooks::parse() {
   if (param(query, "mirrorq", v) && !v.empty()) h.mirrorQ = std::atoi(v.c_str());
   if (param(query, "coin", v)) h.coin = true;
   if (param(query, "post", v) && !v.empty()) h.post = std::atoi(v.c_str()) ? 1 : 0;
+  if (param(query, "light", v)) h.lightClassic = v == "classic" ? 1 : 0;
   if (param(query, "quality", v)) {
     const char* names[] = {"auto", "high", "medium", "low"};
     for (int i = 0; i < 4; ++i) if (v == names[i]) h.quality = i;
@@ -72,6 +74,11 @@ TestHooks TestHooks::parse() {
     h.hasCam = std::sscanf(v.c_str(), "%f,%f,%f,%f,%f", &h.cam[0], &h.cam[1], &h.cam[2], &h.cam[3], &h.cam[4]) == 5;
   }
   return h;
+}
+
+bool TestHooks::feature(const char* name) const {
+  std::string v;
+  return !(param(query, name, v) && v == "0");
 }
 
 }  // namespace app

@@ -15,6 +15,9 @@
 //   ?telemetry=1          the race's telemetry overlay
 //   ?coin                 the credit coin pops out once (screenshots)
 //   ?post=0|1             glow and mood after the scene off / on (looped/post.h)
+//   ?light=classic        the old lighting (docs/manual/light.md); New is the default
+//   ?<feature>=0          one feature of the Alive plan off, e.g. ?bounce=0
+//                         (every feature's switch: docs/manual/)
 // (?skipintro, ?server=, ?cloud=, ?room=, ?name=, ?testerror are read by
 // the page's JavaScript.) The game applies them once it's ready.
 namespace app {
@@ -39,6 +42,13 @@ struct TestHooks {
   int rhythmSong = -1, rhythmDifficulty = 1;
   bool hasCam = false;
   float cam[5] = {};  // x, y, z, yaw, pitch (degrees)
+
+  // ?light=classic: the lighting before L1 (Settings → Graphics → Lighting
+  // also switches it; this forces it). -1 = the setting, 0 = new, 1 = classic.
+  int lightClassic = -1;
+  // ?<name>=0 for any feature switch (docs/manual/): false = turned off.
+  bool feature(const char* name) const;
+  std::string query;
 
   static TestHooks parse();
 };
