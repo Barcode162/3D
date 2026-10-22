@@ -27,6 +27,7 @@ struct Studio {
   // The selection and the models glowing for it.
   int selected = -1;
   std::vector<size_t> glowing;
+  bool readySent = false;  // the world's list goes to the page after its first update
 } S;
 
 void send(const std::string& json) { engine::bridge::op("[\"studio\"," + json + "]"); }
@@ -193,16 +194,7 @@ void tapped(engine::Vec2 at, double ms) {
   if (twice && !hits.empty()) frameThing(S.selected >= 0 ? S.selected : hits[0].thing);
 }
 
-}  // namespace
-
-bool studioOn() { return S.on; }
-
-void studioStart() {
-  S.on = true;
-  g_app.input.setCapture(true);  // touches are the Studio's (no walking, no tapping things)
-  S.target = g_app.scene.spawnPosition;
-  S.target.y = 1;
-  placeCamera();
+void sendReady() {
   // The world, for the page's lists: index, id, kind, parent, where.
   const engine::world::World& w = g_app.world.world();
   std::string things = "[";
@@ -216,6 +208,18 @@ void studioStart() {
   things += "]";
   send("{\"ev\":\"ready\",\"place\":" + engine::jsonQuote(g_app.scene.place) + ",\"things\":" + things + "}");
   LOG_INFO("Studio: ready (%zu things).", w.size());
+}
+
+}  // namespace
+
+bool studioOn() { return S.on; }
+
+void studioStart() {
+  S.on = true;
+  g_app.input.setCapture(true);  // touches are the Studio's (no walking, no tapping things)
+  S.target = g_app.scene.spawnPosition;
+  S.target.y = 1;
+  placeCamera();
 }
 
 void studioInput(float) {
@@ -305,6 +309,10 @@ bool studioCommand(const engine::ui::Command& c) {
   } else if (c.name == "st.select") {  // a: thing index (-1: none); b: 1 = and fly to it
     select(static_cast<int>(c.a));
     if (c.b > 0) frameThing(S.selected);
+  } else if (c.name == "st.check") {  // the world's own checks (every thing alive, rules that point somewhere)
+    std::string list = "[";
+    for (const std::string& p : g_app.world.world().check()) list += (list.size() > 1 ? "," : "") + engine::jsonQuote(p);
+    send("{\"ev\":\"check\",\"problems\":" + list + "]}");
   } else if (c.name == "st.frame") {
     frameThing(c.a >= 0 ? static_cast<int>(c.a) : S.selected);
   } else {
@@ -314,6 +322,10 @@ bool studioCommand(const engine::ui::Command& c) {
 }
 
 void studioPresent(std::vector<app::SceneRenderer::Box>&, double nowMs) {
+  if (!S.readySent) {
+    S.readySent = true;
+    sendReady();
+  }
   // The selection breathes (docs/STUDIO.md 4.0: the selected thing pulses).
   const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);

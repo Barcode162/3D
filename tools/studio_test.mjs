@@ -80,6 +80,26 @@ await page.click('#deselect');
 await page.waitForTimeout(200);
 check((await S()).selected === -1 && await page.$eval('#crumb', (c) => c.hidden), 'S2.3 ✕ deselects');
 
+// ---- S2.4 the Monitor ----
+await page.click('#monitorKey');
+await page.waitForSelector('#monitor .tabs', { timeout: 10000 });
+await page.click('#monitor .tabs [data-tab="world"]');
+await page.fill('#monitor input.field', 'pendant_lamp');
+const rows = await page.$$eval('#tree button', (b) => b.map((x) => x.querySelector('.id').textContent));
+check(rows.length >= 4 && rows.every((r) => r.startsWith('pendant_lamp')), `S2.4 World: search finds the lamps (${rows.length})`);
+const before = await view();
+await page.click('#tree button >> nth=0');
+await page.waitForTimeout(400);
+const after = await view();
+check((await S()).things[(await S()).selected].id === rows[0] && Math.hypot(after[0] - before[0], after[2] - before[2]) > 0.5, 'S2.4 tapping one selects it and flies to it');
+await page.click('#monitor .tabs [data-tab="inspect"]');
+const inspect = await page.textContent('#monitor .body');
+check(/pendant_lamp/.test(inspect) && /States/.test(inspect) && /swinging/.test(inspect) && /Light|Model/.test(inspect), 'S2.4 Inspect shows it in words (parts, states, loops)');
+await page.screenshot({ path: 'build/studio-inspect.png' });
+await page.click('#monitor .tabs [data-tab="problems"]');
+await page.waitForFunction(() => /All clear|problem/.test(document.querySelector('#monitor .body').textContent) && !/Asking/.test(document.querySelector('#monitor .body').textContent), null, { timeout: 10000 }).catch(() => {});
+check(/All clear/.test(await page.textContent('#monitor .body')), 'S2.4 Problems: all clear for the bar as it is');
+
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
 close();

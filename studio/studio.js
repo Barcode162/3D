@@ -193,4 +193,5 @@ $('viewsKey').addEventListener('click', () => { const box = $('views'); box.hidd
 function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.classList.toggle('on', +x.dataset.cam === +mode)); }
 
 window.bar3dStudio = { S, send, on, select };  // for tests and the console
-start();
+// The Monitor (monitor.js) imports this module, so it's loaded after it.
+import('./monitor.js').then(start, (e) => { console.error(e); start(); });
