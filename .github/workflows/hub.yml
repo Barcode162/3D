@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -39,6 +39,9 @@ jobs:
       - name: "Test: the project hub (hub/ + account.php on PHP's server)"
         run: mkdir -p build && node tools/hub_test.mjs
 
+      - name: "Test: the shared look (ui/, every theme)"
+        run: node tools/ui_test.mjs
+
       - name: Upload the hub to IONOS
         if: env.IONOS_SFTP_HOST != ''
         env:
@@ -53,6 +56,8 @@ jobs:
           mkdir -p -f $IONOS_HOME/hub
           mkdir -p -f private/hub
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/hub $IONOS_HOME/hub
+          mkdir -p -f $IONOS_HOME/ui
+          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/ui $IONOS_HOME/ui
           mkdir -p -f $IONOS_HOME/news
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/news $IONOS_HOME/news
           bye

@@ -1,0 +1,112 @@
+/* Looped themes (docs/STUDIO.md §4.0). A theme is tokens only: colours and
+   material recipes (panels, keys, gloss, press depth, lights, the display
+   font). Every control in looped.css is drawn from these, so one page wears
+   any theme. Pick one with <html data-look="..."> (looped.js does it from
+   the player's choice). Faceplate is the default (the user's pick, 2026-10-22).
+   A new theme: one more block here with every token, and a line in
+   looped.js LOOKS. */
+
+:root, :root[data-look="faceplate"] {
+  /* ---- Faceplate: the drum machine, deep smoke, glossy plastic keys ---- */
+  color-scheme: dark;
+  --bg: #0A0908;
+  --bg-glow: radial-gradient(ellipse 90% 50% at 50% -8%, rgba(242,140,44,.13), transparent 70%);
+  --text: #EEE8DC; --text-2: #A59E92; --text-3: #6B655D; --rule: #2C2926;
+  --panel: linear-gradient(180deg, #1C1A18, #131210);
+  --panel-bw: 0px; --panel-r: 16px; --panel-blur: none;
+  --panel-edge: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px #2C2926, 0 14px 34px rgba(0,0,0,.55);
+  --over: rgba(22,20,18,.86); /* panels on top of the 3D view */
+  --field: #0D0C0B; --field-edge: inset 0 2px 4px rgba(0,0,0,.7), inset 0 0 0 1px #24211E; --field-r: 8px;
+  --key-bg: linear-gradient(180deg, #3B3733 0%, #2A2724 55%, #22201D 100%);
+  --key-bw: 0px; --key-r: 8px; --key-text: #EEE8DC; --key-travel: 3px;
+  --key-shadow: inset 0 1px 0 rgba(255,255,255,.17), 0 3px 0 #0A0908, 0 5px 10px rgba(0,0,0,.6);
+  --key-shadow-down: inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 #0A0908, 0 1px 3px rgba(0,0,0,.6);
+  --key-gloss: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,0) 52%);
+  --go-bg: linear-gradient(180deg, #FFAE5C 0%, #F28C2C 50%, #D46B10 100%);
+  --go-text: #1C0E06; --go-glow: 0 0 20px rgba(242,140,44,.45);
+  --accent: #F28C2C;
+  --c1: #EF4B33; --c2: #F28C2C; --c3: #F2C744; --c4: #EDE7D9; --off: #2A2724;
+  --led: #FF4A3D; --ok: #56CF86; --warn: #F2C744; --bad: #FF6A64;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --display-w: 800; --display-s: 125%; --display-ls: -.02em;
+  --knob: radial-gradient(circle at 50% 35%, rgba(255,255,255,.18), transparent 55%), repeating-conic-gradient(#2E2B28 0 6deg, #1C1A18 6deg 12deg);
+  --step-shape: key;
+}
+
+:root[data-look="backbar"] {
+  /* ---- Back Bar: lacquered wood, brass trim, Edison bulbs, amber glass ---- */
+  --bg: #0A0605;
+  --bg-glow: radial-gradient(ellipse 80% 45% at 50% -5%, rgba(255,170,80,.20), transparent 70%), radial-gradient(ellipse 70% 40% at 50% 110%, rgba(140,30,20,.25), transparent 70%);
+  --text: #F6E8D0; --text-2: #C8AC88; --text-3: #826A52; --rule: rgba(214,170,98,.22);
+  --panel: repeating-linear-gradient(91deg, rgba(255,220,180,.018) 0 2px, transparent 2px 9px) padding-box, linear-gradient(180deg, #2C1610, #170B08) padding-box, linear-gradient(180deg, #F0D191, #A57A35 40%, #6E4A1C 60%, #D3AE66) border-box;
+  --panel-bw: 2px; --panel-r: 14px; --panel-blur: none;
+  --panel-edge: inset 0 0 0 1px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,230,190,.10), 0 18px 40px rgba(0,0,0,.65);
+  --over: rgba(30,15,10,.88);
+  --field: #100705; --field-edge: inset 0 2px 5px rgba(0,0,0,.8), inset 0 0 0 1px rgba(214,170,98,.25); --field-r: 8px;
+  --key-bg: linear-gradient(180deg, #4A2219 0%, #2B120D 55%, #1E0B08 100%) padding-box, linear-gradient(180deg, #F6DCA0, #B98A3E 45%, #7A5422 58%, #D9B46A) border-box;
+  --key-bw: 2px; --key-r: 12px; --key-text: #F6E8D0; --key-travel: 2px;
+  --key-shadow: inset 0 1px 0 rgba(255,225,180,.20), 0 3px 0 #070302, 0 7px 14px rgba(0,0,0,.65);
+  --key-shadow-down: inset 0 1px 0 rgba(255,225,180,.10), 0 1px 0 #070302, 0 2px 4px rgba(0,0,0,.6);
+  --key-gloss: linear-gradient(180deg, rgba(255,235,205,.20), rgba(255,235,205,0) 55%);
+  --go-bg: radial-gradient(ellipse 80% 90% at 50% 25%, #FFF0C8 0%, #FFB347 42%, #C3640F 100%) padding-box, linear-gradient(180deg, #F6DCA0, #B98A3E 45%, #7A5422 58%, #D9B46A) border-box;
+  --go-text: #2A1404; --go-glow: 0 0 26px rgba(255,179,71,.55);
+  --accent: #FFB347;
+  --c1: #FF8A4C; --c2: #FFB347; --c3: #FFD580; --c4: #FFF2DA; --off: #2B1A12;
+  --led: #FFB347;
+  --display: "Limelight", "Didot", Georgia, serif;
+  --display-w: 400; --display-s: 100%; --display-ls: .01em;
+  --knob: radial-gradient(circle at 40% 30%, rgba(255,250,230,.75), transparent 35%), conic-gradient(from 20deg, #F6DCA0, #9C7230, #E9C77E, #6E4A1C, #F6DCA0, #A57A35, #F6DCA0);
+  --step-shape: bulb;
+}
+
+:root[data-look="obsidian"] {
+  /* ---- Obsidian: deepest black, frosted glass, piano-black keys, ice light ---- */
+  --bg: #020203;
+  --bg-glow: radial-gradient(ellipse 60% 40% at 15% 0%, rgba(110,200,255,.13), transparent 70%), radial-gradient(ellipse 50% 35% at 95% 30%, rgba(92,242,214,.07), transparent 70%);
+  --text: #F2F6FA; --text-2: #9AA6B2; --text-3: #586270; --rule: rgba(255,255,255,.08);
+  --panel: linear-gradient(160deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.02) 42%, rgba(255,255,255,.04) 100%);
+  --panel-bw: 0px; --panel-r: 20px; --panel-blur: blur(26px) saturate(150%);
+  --panel-edge: inset 0 1px 0 rgba(255,255,255,.20), inset 0 0 0 1px rgba(255,255,255,.07), 0 24px 60px rgba(0,0,0,.75);
+  --over: rgba(8,9,12,.72);
+  --field: rgba(0,0,0,.5); --field-edge: inset 0 1px 3px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.07); --field-r: 10px;
+  --key-bg: linear-gradient(180deg, #1E2027 0%, #0C0D10 50%, #050506 100%);
+  --key-bw: 0px; --key-r: 12px; --key-text: #E9EEF4; --key-travel: 2px;
+  --key-shadow: inset 0 1px 0 rgba(255,255,255,.24), inset 0 0 0 1px rgba(255,255,255,.06), 0 2px 0 #000, 0 10px 22px rgba(0,0,0,.85);
+  --key-shadow-down: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.05), 0 0 0 #000, 0 2px 6px rgba(0,0,0,.8);
+  --key-gloss: linear-gradient(180deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.05) 47%, rgba(255,255,255,0) 50%);
+  --go-bg: linear-gradient(180deg, rgba(200,245,255,.98) 0%, rgba(120,215,250,.92) 50%, rgba(50,160,215,.95) 100%);
+  --go-text: #021019; --go-glow: 0 0 26px rgba(139,233,255,.55);
+  --accent: #8BE9FF;
+  --c1: #8BE9FF; --c2: #5CF2D6; --c3: #F4FBFF; --c4: #FFE29A; --off: rgba(255,255,255,.07);
+  --led: #8BE9FF;
+  --display: "Unbounded", "Archivo", Arial, sans-serif;
+  --display-w: 600; --display-s: 100%; --display-ls: -.015em;
+  --knob: radial-gradient(circle at 50% 18%, rgba(255,255,255,.35), rgba(255,255,255,0) 40%), radial-gradient(circle at 50% 60%, #15171C, #030304 70%);
+  --step-shape: prism;
+}
+
+:root[data-look="jukebox"] {
+  /* ---- Jukebox: black cherry, chrome bezels, candy jelly keys, bubble tubes ---- */
+  --bg: #0B0306;
+  --bg-glow: radial-gradient(ellipse 80% 45% at 50% -5%, rgba(255,46,77,.22), transparent 70%), radial-gradient(ellipse 60% 40% at 100% 60%, rgba(255,154,46,.12), transparent 70%);
+  --text: #FFF3EF; --text-2: #E2A6B0; --text-3: #8A5560; --rule: rgba(255,180,200,.14);
+  --panel: linear-gradient(180deg, #2B0A15, #15040A) padding-box, linear-gradient(180deg, #FFFFFF 0%, #B8BEC6 28%, #4E5560 50%, #DDE2E8 72%, #858C96 100%) border-box;
+  --panel-bw: 3px; --panel-r: 24px; --panel-blur: none;
+  --panel-edge: inset 0 2px 0 rgba(255,255,255,.08), 0 18px 44px rgba(0,0,0,.7);
+  --over: rgba(30,6,14,.88);
+  --field: #120308; --field-edge: inset 0 2px 5px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,180,200,.14); --field-r: 14px;
+  --key-bg: linear-gradient(180deg, #5A1A2C 0%, #34101B 55%, #250A13 100%) padding-box, linear-gradient(180deg, #FFFFFF 0%, #B8BEC6 30%, #555C66 52%, #E2E6EB 75%, #8C939C 100%) border-box;
+  --key-bw: 2px; --key-r: 999px; --key-text: #FFF3EF; --key-travel: 2px;
+  --key-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 3px 0 #050102, 0 8px 16px rgba(0,0,0,.65);
+  --key-shadow-down: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 0 #050102, 0 2px 5px rgba(0,0,0,.6);
+  --key-gloss: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,.32), rgba(255,255,255,0) 70%);
+  --go-bg: radial-gradient(ellipse 80% 90% at 50% 20%, #FFB3BE 0%, #FF2E4D 45%, #A0001C 100%) padding-box, linear-gradient(180deg, #FFFFFF 0%, #B8BEC6 30%, #555C66 52%, #E2E6EB 75%, #8C939C 100%) border-box;
+  --go-text: #FFFFFF; --go-glow: 0 0 26px rgba(255,46,77,.55);
+  --accent: #FF3B5C;
+  --c1: #FF3B5C; --c2: #FF9A2E; --c3: #FFD93B; --c4: #3BE38A; --off: #2A0B14;
+  --led: #FF3B5C;
+  --display: "Righteous", "Archivo", Arial, sans-serif;
+  --display-w: 400; --display-s: 100%; --display-ls: .01em;
+  --knob: radial-gradient(circle at 40% 28%, #FFFFFF, transparent 30%), conic-gradient(from 0deg, #E8ECF0, #6B727C, #F4F6F8, #4E5560, #E8ECF0, #8C939C, #E8ECF0);
+  --step-shape: tube;
+}

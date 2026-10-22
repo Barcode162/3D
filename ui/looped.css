@@ -1,0 +1,159 @@
+/* Looped UI (docs/STUDIO.md §4): the shared look for the bar's menus, the
+   Studio, the hub, news and the front door. Colours and materials come from
+   themes.css; this file only says how each control is built from them.
+   Link both:  <link rel="stylesheet" href="/ui/themes.css">
+               <link rel="stylesheet" href="/ui/looped.css">
+   and script /ui/looped.js (themes, step lights, the feedback kit). */
+
+@font-face { font-family: "Archivo"; src: url("fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+@font-face { font-family: "Martian Mono"; src: url("fonts/MartianMono.woff2") format("woff2"); font-weight: 100 800; font-stretch: 75% 112.5%; font-display: swap; }
+@font-face { font-family: "Limelight"; src: url("fonts/Limelight.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Unbounded"; src: url("fonts/Unbounded.woff2") format("woff2"); font-weight: 400 800; font-display: swap; }
+@font-face { font-family: "Righteous"; src: url("fonts/Righteous.woff2") format("woff2"); font-display: swap; }
+
+:root {
+  --ax-x: #EF4B33; --ax-y: #56CF86; --ax-z: #5B9BFF;
+  --text-font: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ---- Page ---- */
+.lp, .lp * { box-sizing: border-box; }
+body.lp {
+  margin: 0; background-color: var(--bg); background-image: var(--bg-glow); background-repeat: no-repeat;
+  color: var(--text); font-family: var(--text-font); font-size: 16px; line-height: 1.5;
+  -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+}
+.lp h1, .lp h2, .lp h3, .lp .display {
+  font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s);
+  letter-spacing: var(--display-ls); margin: 0; line-height: 1.04; text-wrap: balance;
+}
+.lp p { margin: 0; }
+.lp .label { font-family: var(--text-font); font-stretch: 75%; font-weight: 650; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+.lp .mono, .lp .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.lp .dim { color: var(--text-2); }
+.lp a { color: var(--text); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+.lp .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---- Panels and wells ---- */
+.lp .panel {
+  background: var(--panel); border: var(--panel-bw) solid transparent; border-radius: var(--panel-r);
+  box-shadow: var(--panel-edge); -webkit-backdrop-filter: var(--panel-blur); backdrop-filter: var(--panel-blur);
+}
+/* A panel floating over the 3D view: readable on any light behind it. */
+.lp .panel.over { background: var(--over); -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%); }
+.lp .field { background: var(--field); box-shadow: var(--field-edge); border-radius: var(--field-r); }
+
+/* ---- Keys ---- */
+.lp .key {
+  position: relative; isolation: isolate;
+  font-family: var(--text-font); font-stretch: 75%; font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--key-text); min-height: 44px; min-width: 44px; padding: 0 14px; margin: 0;
+  border: var(--key-bw) solid transparent; border-radius: var(--key-r); background: var(--key-bg); box-shadow: var(--key-shadow);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; text-decoration: none;
+  transition: transform .07s, box-shadow .07s, color .15s; user-select: none; -webkit-user-select: none;
+}
+.lp .key::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--key-gloss); pointer-events: none; z-index: -1; }
+.lp .key:active, .lp .key.down { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down); }
+.lp .key:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.lp .key:disabled, .lp .key[aria-disabled="true"] { opacity: .45; cursor: default; transform: none; }
+.lp .key.go { background: var(--go-bg); color: var(--go-text); box-shadow: var(--key-shadow), var(--go-glow); }
+.lp .key.go:active, .lp .key.go.down { box-shadow: var(--key-shadow-down), var(--go-glow); }
+.lp .key.lit { color: var(--accent); }
+.lp .key.small { min-height: 34px; padding: 0 10px; font-size: 11px; }
+.lp .key.tile { flex-direction: column; min-height: 78px; font-size: 10px; gap: 7px; padding: 8px 4px; }
+.lp .key svg { width: 20px; height: 20px; flex: none; }
+.lp .key.tile svg { width: 24px; height: 24px; }
+:root[data-look="jukebox"] .lp .key.tile { border-radius: 22px; }
+.lp .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }
+:root[data-look="obsidian"] .lp .ico, :root[data-look="jukebox"] .lp .ico { stroke-linecap: round; stroke-linejoin: round; }
+
+/* The LED inside a key that switches something: on when the key is on. */
+.lp .kled { width: 7px; height: 7px; border-radius: 50%; background: var(--off); box-shadow: inset 0 1px 1px rgba(0,0,0,.6); flex: none; transition: background .12s, box-shadow .12s; }
+.lp .lit > .kled, .lp .kled.on { background: var(--led); box-shadow: 0 0 6px var(--led), 0 0 14px var(--led); }
+.lp .kled.ok.on { background: var(--ok); box-shadow: 0 0 6px var(--ok), 0 0 14px var(--ok); }
+.lp .kled.warn.on { background: var(--warn); box-shadow: 0 0 6px var(--warn), 0 0 14px var(--warn); }
+.lp .kled.blink.on { animation: lp-blink .5s steps(2) infinite; }
+@keyframes lp-blink { 50% { opacity: .25; } }
+.lp .led { width: 8px; height: 8px; border-radius: 50%; background: var(--led); box-shadow: 0 0 8px var(--led); display: inline-block; flex: none; }
+
+/* ---- Chips, segmented, tabs ---- */
+.lp .chip { font-size: 11px; font-stretch: 75%; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; background: var(--field); box-shadow: var(--field-edge); display: inline-flex; gap: 7px; align-items: center; color: var(--text-2); }
+.lp .chip.on { color: var(--text); box-shadow: var(--field-edge), inset 0 0 0 1px var(--accent); }
+:root[data-look="jukebox"] .lp .chip { border-radius: 999px; }
+.lp .seg { display: inline-flex; padding: 3px; gap: 2px; }
+.lp .seg > button { flex: 1; min-height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); font: 700 10px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding: 0 8px; }
+:root[data-look="jukebox"] .lp .seg > button { border-radius: 999px; }
+.lp .seg > button.on, .lp .seg > button[aria-pressed="true"] { background: var(--key-bg); color: var(--accent); box-shadow: var(--key-shadow); }
+
+/* ---- Fields ---- */
+.lp input.field, .lp textarea.field, .lp select.field {
+  font: 16px var(--text-font); color: var(--text); border: 0; padding: 10px 12px; width: 100%; outline: none;
+}
+.lp input.field:focus, .lp textarea.field:focus { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent); }
+.lp input.field.num { font-family: var(--mono); }
+
+/* ---- The step light: a different lamp per theme ---- */
+.lp .steps { display: inline-flex; gap: 5px; align-items: center; vertical-align: middle; }
+.lp .steps > i { --c: var(--c1); display: block; flex: none; transition: background .08s, box-shadow .08s; position: relative; overflow: hidden; }
+.lp .steps > i:nth-child(2) { --c: var(--c2); } .lp .steps > i:nth-child(3) { --c: var(--c3); } .lp .steps > i:nth-child(4) { --c: var(--c4); }
+.lp .steps > i { width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 55%), var(--off); box-shadow: inset 0 0 0 1px rgba(0,0,0,.5); }
+.lp .steps > i.on { background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,0) 55%), var(--c); box-shadow: 0 0 10px var(--c), 0 0 22px color-mix(in srgb, var(--c) 50%, transparent); }
+.lp .steps.big > i { width: 34px; height: 34px; border-radius: 7px; }
+:root[data-look="backbar"] .lp .steps > i { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,240,220,.28), #2B1A12 48%, #120806); box-shadow: inset 0 0 0 1px rgba(214,170,98,.25); }
+:root[data-look="backbar"] .lp .steps > i.on { background: radial-gradient(circle at 50% 46%, #FFFDF2 0 18%, var(--c) 45%, color-mix(in srgb, var(--c) 55%, #3A1A08) 100%); box-shadow: 0 0 12px var(--c), 0 0 30px color-mix(in srgb, var(--c) 60%, transparent); }
+:root[data-look="backbar"] .lp .steps.big > i { width: 38px; height: 38px; }
+:root[data-look="obsidian"] .lp .steps > i { width: 7px; height: 20px; border-radius: 4px; background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.03)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
+:root[data-look="obsidian"] .lp .steps > i.on { background: linear-gradient(180deg, #FFFFFF 0%, var(--c) 60%, color-mix(in srgb, var(--c) 70%, #000) 100%); box-shadow: 0 0 10px var(--c), 0 0 26px color-mix(in srgb, var(--c) 55%, transparent); }
+:root[data-look="obsidian"] .lp .steps.big > i { width: 17px; height: 50px; border-radius: 9px; }
+:root[data-look="jukebox"] .lp .steps > i { width: 10px; height: 24px; border-radius: 6px; background: linear-gradient(90deg, rgba(255,255,255,.18), rgba(255,255,255,0) 40%), var(--off); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+:root[data-look="jukebox"] .lp .steps > i.on { background: linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%), linear-gradient(0deg, var(--c), color-mix(in srgb, var(--c) 55%, #fff)); box-shadow: 0 0 12px var(--c), 0 0 26px color-mix(in srgb, var(--c) 50%, transparent); }
+:root[data-look="jukebox"] .lp .steps > i.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -40%; height: 140%; background: radial-gradient(circle at 35% 50%, rgba(255,255,255,.9) 0 1.5px, transparent 2.5px) 0 0 / 100% 9px, radial-gradient(circle at 70% 50%, rgba(255,255,255,.7) 0 1px, transparent 2px) 0 4px / 100% 11px; animation: lp-bubble .9s linear infinite; }
+:root[data-look="jukebox"] .lp .steps.big > i { width: 22px; height: 58px; border-radius: 11px; }
+@keyframes lp-bubble { from { transform: translateY(0); } to { transform: translateY(-40%); } }
+
+/* ---- The feedback kit ---- */
+/* Level meter: <div class="vu field" data-vu></div> (looped.js fills 16 bars; set el.level = 0..1) */
+.lp .vu { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; height: 22px; padding: 4px; }
+.lp .vu > b { border-radius: 2px; background: var(--off); }
+.lp .vu > b.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.lp .vu > b.on.hot { background: var(--c1); box-shadow: 0 0 6px var(--c1); }
+/* Save lamps: <div class="lamps field" data-lamps> (Looped.lamps(el, 'edit'|'saving'|'saved'|'live')) */
+.lp .lamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.lp .lamps > div { display: grid; justify-items: center; gap: 6px; padding: 8px 2px; }
+.lp .lamps .kled { width: 12px; height: 12px; }
+/* Knob with a ring of lights: <div class="knob" data-knob data-min data-max data-value> */
+.lp .knob { position: relative; width: 104px; height: 104px; flex: none; touch-action: none; cursor: ns-resize; }
+.lp .knob > .dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--off); left: 49px; top: 49px; }
+.lp .knob > .dot.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.lp .knob > .cap { position: absolute; inset: 18px; border-radius: 50%; background: var(--knob); box-shadow: 0 4px 0 rgba(0,0,0,.55), 0 8px 16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.25); }
+.lp .knob > .cap::after { content: ""; position: absolute; left: calc(50% - 1.5px); top: 7px; width: 3px; height: 16px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+/* Fader: <div class="fader field" data-fader data-min data-max data-value data-unit> */
+.lp .fader { position: relative; height: 56px; touch-action: none; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
+.lp .fader > .ticks { position: absolute; inset: 9px 16px; background: repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 12px); }
+.lp .fader > .fill { position: absolute; left: 16px; top: 26px; height: 4px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.lp .fader > .cap { position: absolute; top: 7px; bottom: 7px; width: 32px; margin-left: -16px; border-radius: 7px; background: var(--key-bg); border: var(--key-bw) solid transparent; box-shadow: var(--key-shadow); }
+:root[data-look="jukebox"] .lp .fader > .cap { border-radius: 999px; }
+.lp .fader > .cap::after { content: ""; position: absolute; left: calc(50% - 1px); top: 7px; bottom: 7px; width: 2px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.lp .fader .bubble { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); padding: 2px 7px; border-radius: 6px; font-family: var(--mono); font-size: 12px; background: var(--accent); color: var(--go-text); opacity: 0; transition: opacity .12s; pointer-events: none; white-space: nowrap; }
+.lp .fader.drag .bubble { opacity: 1; }
+/* Flip switch: <button class="switch" role="switch" aria-checked="false"><i></i></button> */
+.lp .switch { width: 64px; height: 36px; border-radius: 18px; position: relative; cursor: pointer; flex: none; background: var(--field); box-shadow: var(--field-edge); border: 0; padding: 0; }
+.lp .switch > i { position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%; background: var(--key-bg); border: var(--key-bw) solid transparent; box-shadow: var(--key-shadow); transition: left .16s cubic-bezier(.3,1.4,.5,1); }
+.lp .switch[aria-checked="true"] { box-shadow: var(--field-edge), inset 0 0 0 2px var(--accent), 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent); }
+.lp .switch[aria-checked="true"] > i { left: 31px; }
+/* Rolling number: <span data-roll="1240"> (Looped.roll(el, value)) + <span class="pop"> */
+.lp .pop { color: var(--accent); font-family: var(--mono); font-size: 14px; opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .2s; display: inline-block; }
+.lp .pop.show { opacity: 1; transform: none; }
+/* Selected: breathes. */
+.lp .sel { animation: lp-sel 1.6s ease-in-out infinite; }
+@keyframes lp-sel { 0%, 100% { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent), 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); } 50% { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); } }
+
+/* Toast */
+.lp .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translate(-50%, 20px); opacity: 0; transition: opacity .2s, transform .2s; padding: 10px 16px; z-index: 50; pointer-events: none; font-size: 15px; max-width: calc(100% - 32px); }
+.lp .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp .key, .lp .switch > i, .lp .fader > .cap { transition: none; }
+  .lp .sel, .lp .kled.blink.on, :root[data-look="jukebox"] .lp .steps > i.on::after { animation: none; }
+}

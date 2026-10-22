@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en" data-look="faceplate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0908">
+<title>Looped UI</title>
+<!-- The style page (docs/STUDIO.md S1.1): every control of the shared look,
+     in every theme. Screenshot-tested by tools/ui_test.mjs. -->
+<link rel="stylesheet" href="themes.css">
+<link rel="stylesheet" href="looped.css">
+<style>
+  main { max-width: 1060px; margin: 0 auto; display: grid; gap: 40px; padding-block: 0 60px; }
+  .looks { position: sticky; top: 0; z-index: 9; padding-top: calc(env(safe-area-inset-top, 0px) + 10px); padding-bottom: 10px; background: color-mix(in srgb, var(--bg) 85%, transparent); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom: 1px solid var(--rule); }
+  .looks .in { max-width: 1060px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .looks .key { min-height: 52px; font-size: 10px; flex-direction: column; gap: 4px; }
+  .looks .key[aria-pressed="true"] { color: var(--accent); }
+  .hero { display: grid; gap: 12px; padding-top: 16px; }
+  .hero h1 { font-size: clamp(42px, 10vw, 88px); }
+  section { display: grid; gap: 14px; }
+  section > h2 { font-size: 26px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+  .cell { padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .cell h3 { font-family: var(--text-font); font-weight: 700; font-stretch: 100%; letter-spacing: 0; font-size: 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .big { font-family: var(--mono); font-size: 30px; }
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+  .icons div { display: grid; justify-items: center; gap: 4px; padding: 10px 2px; font-size: 9px; color: var(--text-2); font-family: var(--mono); }
+  .icons svg { width: 24px; height: 24px; color: var(--text); }
+  .type > * { display: block; }
+</style>
+</head>
+<body class="lp">
+<nav class="looks gutter" aria-label="Theme">
+  <div class="in" id="looks"></div>
+</nav>
+<main class="gutter">
+  <header class="hero">
+    <span class="steps big" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="label" id="lookAbout">The shared look</span>
+    <h1 id="lookName">Faceplate</h1>
+    <p class="dim">Every control the bar, the Studio, the hub and the site are built from. Pick a theme above: everything changes with it.</p>
+  </header>
+
+  <section>
+    <h2>Keys</h2>
+    <div class="grid">
+      <div class="cell panel">
+        <h3>Press</h3>
+        <div class="row"><button class="key go" type="button">Publish</button><button class="key" type="button">Discard</button><button class="key" type="button" disabled>Disabled</button></div>
+        <div class="row"><button class="key small" type="button">Small</button><button class="key" type="button" aria-label="Undo"><svg class="ico"><use href="icons.svg#i-undo"/></svg></button><button class="key" type="button" aria-label="Redo"><svg class="ico"><use href="icons.svg#i-redo"/></svg></button></div>
+      </div>
+      <div class="cell panel">
+        <h3>Switch something (the LED says if it's on)</h3>
+        <div class="row" id="toggles">
+          <button class="key lit" type="button"><span class="kled"></span>Snap</button>
+          <button class="key" type="button"><span class="kled"></span>Lock</button>
+          <button class="key" type="button"><span class="kled"></span>X-ray</button>
+          <button class="key" type="button" id="clicks"><span class="kled"></span>Clicks</button>
+        </div>
+        <div class="seg field" role="group" aria-label="Mode"><button type="button" class="on">Thing</button><button type="button">Part</button><button type="button">Face</button></div>
+      </div>
+      <div class="cell panel">
+        <h3>Tiles</h3>
+        <div class="tiles">
+          <button class="key tile" type="button"><svg class="ico"><use href="icons.svg#i-note"/></svg>Jukebox</button>
+          <button class="key tile" type="button"><svg class="ico"><use href="icons.svg#i-target"/></svg>Darts</button>
+          <button class="key tile" type="button"><svg class="ico"><use href="icons.svg#i-gear"/></svg>Settings</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Lights that mean something</h2>
+    <div class="grid">
+      <div class="cell panel">
+        <h3>Alive <span class="steps" data-period="1" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h3>
+        <p class="dim">The step light: at the thing's real loop speed.</p>
+        <div class="row"><span class="chip">Lamp sway <span class="steps" data-period="14"><i></i><i></i><i></i><i></i></span></span><span class="chip">Jukebox <span class="steps" data-period="0.5"><i></i><i></i><i></i><i></i></span></span></div>
+      </div>
+      <div class="cell panel">
+        <h3>Saved?</h3>
+        <div class="lamps field" id="lamps">
+          <div><span class="kled"></span><span class="label">Edit</span></div>
+          <div><span class="kled"></span><span class="label">Saving</span></div>
+          <div><span class="kled"></span><span class="label">Saved</span></div>
+          <div><span class="kled"></span><span class="label">Live</span></div>
+        </div>
+        <div class="row"><button class="key" type="button" id="change">Make a change</button><button class="key go" type="button" id="publish">Publish</button></div>
+      </div>
+      <div class="cell panel">
+        <h3>How strong</h3>
+        <span class="label">Pendant lamp · sway</span><div class="vu field" data-vu id="vu1"></div>
+        <span class="label">Candle · flicker</span><div class="vu field" data-vu id="vu2"></div>
+      </div>
+      <div class="cell panel">
+        <h3>Which state</h3>
+        <div class="row" id="pips"><span class="chip on" data-st="lit"><span class="kled on"></span>Lit</span><span class="chip" data-st="swinging"><span class="kled"></span>Swinging</span></div>
+        <div class="row"><button class="key" type="button" id="tap"><svg class="ico"><use href="icons.svg#i-hand"/></svg>Tap the lamp</button></div>
+      </div>
+      <div class="cell panel">
+        <h3>How much</h3>
+        <div class="row" style="gap:18px"><div data-knob data-min="0" data-max="6" data-value="1.6" data-dec="1" data-unit="°" data-out="kout" aria-label="Swing angle"></div><span class="big" id="kout"></span></div>
+        <div class="fader field" data-fader data-min="0" data-max="100" data-value="70" data-dec="0" data-unit="%" aria-label="Brightness"></div>
+        <div class="row" style="justify-content:space-between"><span class="label">Lights dim</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Lights dim"><i></i></button></div>
+      </div>
+      <div class="cell panel">
+        <h3>Got something</h3>
+        <div class="row" style="align-items:baseline"><span class="big" id="credits" data-roll="1240">1,240</span><span class="label">credits</span><span class="pop"></span></div>
+        <button class="key" type="button" id="earn">Earn 25</button>
+      </div>
+      <div class="cell panel">
+        <h3>Selected</h3>
+        <div style="display:grid;gap:6px" id="sel">
+          <div class="field sel row" style="justify-content:space-between;padding:10px 12px" tabindex="0"><span class="mono">pint_glass-4</span><span class="steps" data-period="4"><i></i><i></i><i></i><i></i></span></div>
+          <div class="field row" style="justify-content:space-between;padding:10px 12px" tabindex="0"><span class="mono">candle-2</span><span class="steps" data-period="1"><i></i><i></i><i></i><i></i></span></div>
+        </div>
+      </div>
+      <div class="cell panel">
+        <h3>Typing</h3>
+        <input class="field" placeholder="Search things" aria-label="Search">
+        <input class="field num" inputmode="decimal" value="0.250" aria-label="A number">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Type</h2>
+    <div class="cell panel type">
+      <span class="display" style="font-size:40px">Rooftop</span>
+      <span>Every bar stool (8) sinks a little while someone sits on it.</span>
+      <span class="label">Sway period · Material · Reach</span>
+      <span class="mono" style="font-size:26px">14.00 s  −0.250 m</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Icons</h2>
+    <div class="cell panel icons" id="icons"></div>
+  </section>
+  <p class="dim">Fonts: Archivo, Martian Mono, Limelight, Unbounded, Righteous (SIL Open Font License; ui/CREDITS.md).</p>
+</main>
+<script src="looped.js"></script>
+<script>
+(function () {
+  'use strict';
+  var looks = document.getElementById('looks');
+  Object.keys(Looped.LOOKS).forEach(function (id) {
+    var b = document.createElement('button');
+    b.className = 'key'; b.type = 'button'; b.dataset.look = id; b.textContent = Looped.LOOKS[id].name;
+    b.addEventListener('click', function () { Looped.setLook(id); });
+    looks.appendChild(b);
+  });
+  function show() {
+    var id = Looped.look();
+    document.getElementById('lookName').textContent = Looped.LOOKS[id].name;
+    document.getElementById('lookAbout').textContent = Looped.LOOKS[id].about;
+    [].forEach.call(looks.children, function (b) { b.setAttribute('aria-pressed', String(b.dataset.look === id)); });
+  }
+  document.addEventListener('looped:look', show); show();
+
+  [].forEach.call(document.querySelectorAll('#toggles .key'), function (k) {
+    k.addEventListener('click', function () { k.classList.toggle('lit'); if (k.id === 'clicks') Looped.clicks(k.classList.contains('lit')); });
+  });
+  if (Looped.clicks()) document.getElementById('clicks').classList.add('lit');
+  var seg = document.querySelector('.seg');
+  seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; [].forEach.call(seg.children, function (x) { x.classList.toggle('on', x === b); }); });
+
+  var lamps = document.getElementById('lamps'), lt = [];
+  Looped.lamps(lamps, 'saved');
+  document.getElementById('change').addEventListener('click', function () { lt.forEach(clearTimeout); Looped.lamps(lamps, 'edit'); lt = [setTimeout(function () { Looped.lamps(lamps, 'saving'); }, 900), setTimeout(function () { Looped.lamps(lamps, 'saved'); }, 1700)]; });
+  document.getElementById('publish').addEventListener('click', function () { lt.forEach(clearTimeout); Looped.lamps(lamps, 'saving'); lt = [setTimeout(function () { Looped.lamps(lamps, 'live'); Looped.toast('Published: version 13'); }, 1100)]; });
+
+  var state = 'lit', until = 0, vu1 = document.getElementById('vu1'), vu2 = document.getElementById('vu2');
+  function setState(s) { state = s; [].forEach.call(document.querySelectorAll('#pips .chip'), function (c) { var on = c.dataset.st === s; c.classList.toggle('on', on); c.querySelector('.kled').classList.toggle('on', on); }); }
+  document.getElementById('tap').addEventListener('click', function () { until = performance.now() + 4000; setState('swinging'); });
+  (function meters(now) {
+    var t = now / 1000;
+    vu1.level = state === 'swinging' ? Math.abs(Math.sin(t * Math.PI)) * (0.6 + 0.4 * Math.max(0, (until - now) / 4000)) : 0.15 + 0.55 * Math.abs(Math.sin(t * Math.PI / 7));
+    vu2.level = 0.35 + 0.45 * Math.abs(Math.sin(t * 23.1) * Math.sin(t * 7.7)) + 0.15 * Math.random();
+    if (state === 'swinging' && now > until) setState('lit');
+    requestAnimationFrame(meters);
+  })(0);
+
+  var credits = 1240;
+  document.getElementById('earn').addEventListener('click', function () { credits += 25; Looped.roll(document.getElementById('credits'), credits); });
+  document.getElementById('sel').addEventListener('click', function (e) { var r = e.target.closest('.field'); if (!r) return; [].forEach.call(this.children, function (x) { x.classList.toggle('sel', x === r); }); });
+
+  fetch('icons.svg').then(function (r) { return r.text(); }).then(function (t) {
+    var ids = t.match(/id="i-[a-z-]+"/g) || [], box = document.getElementById('icons');
+    ids.forEach(function (m) {
+      var id = m.slice(4, -1), d = document.createElement('div');
+      d.innerHTML = '<svg class="ico"><use href="icons.svg#' + id + '"/></svg>' + id.slice(2);
+      box.appendChild(d);
+    });
+  });
+})();
+</script>
+</body>
+</html>
