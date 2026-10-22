@@ -16,8 +16,8 @@ This file explains why it exists and where it's heading.
 
 ## Look and feel (user, 2026-10-22)
 Enhanced real life, but animated: "super EXTRA lovely". Real shapes,
-light and physics, pushed warmer and livelier than reality, and a world that
-keeps moving so there is always something to do and keep up with. A bar
+light and physics, pushed warmer and livelier than reality: a world that
+feels alive and keeps moving on its own (candles, people, weather, music). A bar
 script language (Parked) is the planned way to fill it with living things.
 
 ## North star (updated by the user, 2026-10-15)
