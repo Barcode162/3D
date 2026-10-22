@@ -565,6 +565,8 @@ every schema choice is one the engine knows.
 
 ## 8. The steps (one "go" each; one commit per piece; a phone check per piece)
 
+**Progress (2026-10-22): S1-S10 built and deployed** (build log: NEXT.md). One change from the plan: S7.1's check paints a box, not the sofa (models keep their own textures; materials paint plain boxes).
+
 Order: the foundations and the look first, the first real Studio by S3, the
 new look everywhere at S4, then precision, building, light, life, live, and
 the bridge to Claude.

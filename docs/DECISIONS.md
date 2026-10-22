@@ -1484,3 +1484,25 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   never how (the engine's internals stay private).
 - The header blurs (backdrop-filter), which makes it the containing block for
   `position: fixed` children: the phone menu is `absolute` with its own height.
+
+## The Studio, steps S7-S10 (2026-10-22)
+- **Materials are data** (`assets/world/materials.json`, read before every
+  scene build): the first 13 are the engine's built-in ones in MaterialId
+  order (schema_test checks it); new ones get ids after kMaterialCount. The
+  table reserves 256 so pointers into it stay good. Only plain boxes are
+  painted with them; models keep their own textures.
+- **Live in the Studio without a reload**: lights (st.light, then the
+  reflections are taken again), moods (the same, by kind or thing), loops and
+  states (World::updateKind swaps them in the shared kinds; things in a
+  removed state start over). Sounds and boxes still reload (made at load).
+- **The bar follows the store** (bar/web/live.js): every 15 s it asks
+  `?live`; a newer version → a note, then the page reloads (not in the Studio,
+  not while racing or in a project). Hot-swapping a place in a running game
+  waits for a later step.
+- **Shared drafts** (`?a=share` → an 8-letter code; `/bar/?draft=<code>&room=draft-<code>`):
+  a snapshot of your draft, replaced each time you share again.
+- **Proposals** (`studio/api.php` propose / proposals / proposal / drop,
+  `node tools/studio.mjs propose`): Claude can suggest instead of publish;
+  Apply merges by thing / kind id on top of your draft, one undo.
+- Tests: never run two browser suites at once on this machine (CPU starves
+  the reloads and the multiplayer test); the step's full check runs alone.

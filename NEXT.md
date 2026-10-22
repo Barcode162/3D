@@ -6,17 +6,21 @@ How: `CLAUDE.md`. The engine: `docs/ENGINE.md` (E1-E9, built). **The plan
 now: `docs/STUDIO.md`** (the Studio, the hub as the Dials, the new look;
 steps S1-S10).
 
-## Where we are (2026-10-21)
+## Where we are (2026-10-22)
 - The engine plan E1-E9 is built and live (`22e9b28`).
 - The user is phone-checking it (the list in the chat). Any "broke <piece>"
   is fixed first, before the step below (CLAUDE.md → Pinpointing breakage).
-- The Studio plan, step by step: S1-S6 done (2026-10-22), S7 next. Checks: per piece only its own test, the full check once per step (user). The user
+- **The Studio plan S1-S10 is built** (2026-10-22). Checks: per piece only its own test, the full check once per step (user). The user
   picked the **Faceplate** theme (the others stay switchable).
+- Another Claude session built the website (homepage/: Home, Play, Engine, Vision, Sign in, the staff Portal); it owns homepage/.
 
-## The next step: S7, light and look (docs/STUDIO.md §5.6, §8)
-- [ ] **S7.1** Materials as data (`assets/world/materials.json`: the 13 built-in ones move there, the engine reads them) + a material editor in the Studio (colour, roughness, metal, glow). *Check:* make a "blue velvet" material, give it to the sofa.
-- [ ] **S7.2** Lights: colour, brightness, reach, softness, dims, live in the Studio; their loops; reflections recaptured after. *Check:* make the neon by the arcade red.
-- [ ] **S7.3** Moods (named light sets: Evening, Party, Closing) and the budget meter (draws, triangles, lights against the phone's limits). *Check:* switch Evening → Party in the Studio; the meter stays green.
+## The next step: P2, the Studio phone check (the user)
+The whole Studio is live; the user tries it on the phone, piece by piece
+(the list in the chat). Every "broke <piece>" is fixed first, one commit each.
+- [ ] **P2.1** Fix every "broke S…" the user reports.
+- [ ] **P2.2** A `?perf=1` report from the Studio on the phone (a busy view, the Monitor open): if it drops under 50 fps, find what costs it.
+- [ ] **P2.3** The multiplayer test's late joiner (Erin finds the fire out, E3.6b) fails in this container but passes on CI: make it pass both, or say why not.
+- Ideas for after (not planned yet): AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once (docs/STUDIO.md §9).
 
 ## Waiting on the user: P1, the engine phone check
 - [ ] **P1.1** Fix every "broke" the user reports (one commit each, tagged with the piece it fixes).
@@ -30,7 +34,9 @@ E7.1-E7.4 (boxes, the test home, travel, catalog), E8.1-E8.2 (the hub's World
 page, tuning), E9.1-E9.2 (projects as a part, old keys gone).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) S5.1-S5.4, S6.1-S6.4: precision (magnifier, part mode, this one / every one, Inspect edits everything) and building (Library with pictures and prices, duplicate / row / rename / delete, boxes with push-pull and extrude, places) → f3a2dc4..HEAD
+- (this push) S9.1-S9.3, S10.1-S10.4: live for everyone (a publish reaches an open bar within seconds, try your draft with a friend, undo a publish) and Claude in the loop (notes from the Studio, Claude's versions in History with what changed, deep links, proposals) → c00af5e..HEAD
+- `c00af5e` S7.1-S7.3, S8.1-S8.4: light and look (materials as data, live lights, moods and the budget meter) and life (states and rules, the Loop Rack, drawn keys and presets, sounds) → 2c8b4da..c00af5e
+- `2c8b4da` S5.1-S5.4, S6.1-S6.4: precision (magnifier, part mode, this one / every one, Inspect edits everything) and building (Library with pictures and prices, duplicate / row / rename / delete, boxes with push-pull and extrude, places) → f3a2dc4..2c8b4da
 - `f3a2dc4` S4.1-S4.4: the hub as Needs you · Dials · Board · News, tuning baked into the world, the bar's menus, news and loading screen in Faceplate → 8797ac4..f3a2dc4 (with the room's grace fix and S5.1)
 - `8797ac4` S2.1-S2.5, S3.1-S3.5: the Studio opens (login, cameras, picking, the Monitor, X-ray) and edits (Move/Turn/Size, slide, Drop, Put on, undo, the draft, Publish, History, Restore) → 5a04c79..8797ac4
 - `5a04c79` S1.1-S1.6: the theme system (/ui), the front door, the schema, the world store, the bar and the room load the live world, studio.mjs → 988d71f..5a04c79 (world v1 published after)
