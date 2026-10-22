@@ -890,6 +890,10 @@ export class Room {
     if (now - this.lastGhostCheck < 5000) return;
     this.lastGhostCheck = now;
     this.checkGhosts(now);
+    // A grace that ran out leaves here too: the alarm can come late on a busy machine.
+    for (const p of [...this.players.values()]) {
+      if (p.graceUntil > 0 && now >= p.graceUntil) this.leave(p.slot, 'connection lost').catch(() => {});
+    }
   }
 
   checkGhosts(now) {
