@@ -1408,3 +1408,19 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   hides the exit status.
 - A rig's race starts only after the bar's warm-up (a few seconds after load);
   tests leave it after `body.racing` is set.
+
+## The Studio, step S1 (2026-10-22)
+- **Themes are tokens** (`ui/themes.css`): colours plus material recipes
+  (panel fill/trim, key fill, gloss, press depth, glass blur, knob). Shapes
+  that differ per theme (the step light: keycaps, bulbs, prisms, tubes) are
+  `:root[data-look=…]` rules in `ui/looped.css`. The user picked Faceplate.
+- **The schema's choice lists** stay in C++ too (`bar/scene_names.cpp`,
+  `looped/world/loop.cpp`); `tools/schema_test.mjs` keeps them equal instead of
+  the C++ reading the schema (no risk to the running game).
+- **The live world**: the game asks `../studio/api.php` while the GPU starts
+  and waits at most 5 s; the room asks `WORLD_URL` when it starts and on joins
+  (30 s apart). Tests set `WORLD_URL` empty. Version 0 = the world built in.
+- **Two copies of the world** (the store, the repo): Claude pulls at the start
+  of every go and pushes after the deploy is live (`tools/studio.mjs`);
+  `studio/live-version.json` records which version the repo matches.
+- Front door, `/ui`, `/studio` deploy with the fast hub workflow (no game build).
