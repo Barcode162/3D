@@ -76,7 +76,7 @@ window.bar3dUi = (function () {
   // emotes keep their 3D pictures.
   var LINE_ICONS = { menu_emotes: 'i-hand', menu_avatar: 'i-mirror', menu_profile: 'i-people', menu_voice: 'i-sound',
     menu_settings: 'i-gear', menu_piano: 'i-note', menu_bartender: 'i-bar', menu_help: 'i-note-claude',
-    menu_standup: 'i-arrow', menu_home: 'i-home' };
+    menu_standup: 'i-arrow', menu_home: 'i-home', menu_places: 'i-place' };
   function icon(name) {
     if (LINE_ICONS[name]) {
       var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), use = document.createElementNS(NS, 'use');
@@ -251,10 +251,47 @@ window.bar3dUi = (function () {
       else { url.searchParams.set('place', 'home'); url.searchParams.set('room', 'home'); }
       location.href = url.toString();
     }]);
+    tiles.push(['menu_places', 'Places', placesPanel]);
     show('Menu', [walletLine(), el('div', { class: 'mGrid' }, tiles.map(function (t) {
       return el('button', { class: 'mTile', onclick: t[2] }, [icon(t[0]), t[1]]);
     }))]);
     current = 'main';
+  }
+
+  // Places (S6.4): the bar, the test home and every place made in the Studio
+  // (the live world's places/*.json). Each has its own room.
+  function placesPanel() {
+    var list = el('div', { class: 'mList' }, [el('div', { class: 'mSmall', text: 'Looking for places…' })]);
+    show('Places', [list]);
+    current = 'places';
+    var here = new URL(location.href).searchParams.get('place') || 'bar';
+    var go = function (id) {
+      var url = new URL(location.href);
+      if (id === 'bar') { url.searchParams.delete('place'); url.searchParams.delete('room'); }
+      else { url.searchParams.set('place', id); url.searchParams.set('room', id === 'home' ? 'home' : 'place-' + id); }
+      location.href = url.toString();
+    };
+    var draw = function (ids) {
+      list.textContent = '';
+      ids.forEach(function (id) {
+        var b = el('button', { class: id === here ? 'on' : '', onclick: function () { if (id !== here) go(id); } },
+          [el('span', { text: id === 'bar' ? 'The bar' : id === 'home' ? 'The test home' : id }), el('span', { text: id === here ? 'here' : '' })]);
+        b.dataset.place = id;
+        list.appendChild(b);
+      });
+    };
+    draw(['bar', 'home']);
+    fetch('../studio/api.php?live', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (live) {
+      if (!live || !(live.version > 0)) return;
+      return fetch('../studio/api.php?bundle=' + live.version).then(function (r) { return r.json(); }).then(function (b) {
+        var ids = ['bar', 'home'];
+        Object.keys((b && b.files) || {}).forEach(function (p) {
+          var m = /^places\/([a-z0-9-]+)\.json$/.exec(p);
+          if (m && ids.indexOf(m[1]) < 0) ids.push(m[1]);
+        });
+        if (current === 'places') draw(ids);
+      });
+    }).catch(function () {});
   }
 
   // Your credits (cloud/ledger.js): shown when you're logged in.

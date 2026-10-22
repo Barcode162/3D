@@ -71,6 +71,18 @@ export function setSaveState(state, why) {
 on('changed', (op) => { if (op) saveSoon(); });
 
 // A kind with what it builds on ("is") filled in.
+// Another place's files, read in when you go there (S6.4).
+export async function ensurePlace(id) {
+  const base = '/bar/assets/world/', pf = `places/${id}.json`;
+  if (!S.draft[pf]) {
+    const j = await (await fetch(base + pf)).json();
+    S.draft[pf] = j; S.base[pf] = JSON.parse(JSON.stringify(j));
+  }
+  for (const k of S.draft[pf].kinds || []) if (!S.draft[k]) {
+    const j = await (await fetch(base + k)).json();
+    S.draft[k] = j; S.base[k] = JSON.parse(JSON.stringify(j));
+  }
+}
 export function kindOf(id, depth = 0) {
   if (!S.draft) return undefined;
   let k;
@@ -129,7 +141,7 @@ function sync(op) {
 // away, a new kind, a row, its own parts): the world reloads from the draft.
 function needsReload(op) {
   if (op.op === 'group') return op.ops.some(needsReload);
-  if (op.op === 'add' || op.op === 'remove') return true;
+  if (op.op === 'add' || op.op === 'remove' || op.op === 'file') return true;
   const p = op.path || [];
   // (a box's shape is what you see: a box edit reloads too)
   return (op.file === placeFile() && p[0] === 'things' && ['kind', 'row', 'id'].includes(p[2])) || p.includes('boxes');

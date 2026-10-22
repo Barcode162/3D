@@ -22,6 +22,7 @@ symlinkSync(resolve('hub'), join(root, 'home/hub'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
   env: { ...process.env, STUDIO_DATA: join(root, 'private/studio'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
 const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
+process.on('exit', () => { try { php.kill(); } catch (e) {} });  // a crashed run leaves no server behind
 await new Promise((r) => setTimeout(r, 800));
 const year = new Date().getFullYear();
 const owner = await (await fetch(url + 'bar/account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' },
@@ -357,6 +358,31 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
 }
 
+// ---- S6.4 places: a new place, where people appear, back to the bar ----
+{
+  const idle = () => page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  await page.click('#placeKey');
+  await page.click('#placeMenu button[data-act="New place"]');
+  await page.fill('#placeName2', 'Rooftop');
+  await page.click('#placeGo');
+  await page.waitForFunction(() => window.bar3dStudio.S.place === 'rooftop', null, { timeout: 90000 }).catch(() => {});
+  await idle();
+  const sr = await S();
+  check(sr.place === 'rooftop' && sr.things.some((t) => t.id === 'floor') && sr.things.some((t) => t.id === 'light-1'), `S6.4 New place "rooftop": the Studio is there, with a floor and a light (${sr.place}, ${sr.things.length} things)`);
+  await page.screenshot({ path: 'build/studio-rooftop.png' });
+  await page.click('#placeKey');
+  await page.click('#placeMenu button[data-act="spawn"]');
+  await page.waitForTimeout(800);
+  const spawn = await page.evaluate(() => window.bar3dStudio.S.draft['places/rooftop.json'].spawn);
+  check(spawn && Math.abs(spawn.at[1] - 1.65) < 0.2, `S6.4 People appear here: the spawn is set (${spawn && spawn.at.join(', ')})`);
+  await page.click('#placeKey');
+  await page.click('#placeMenu button[data-place="bar"]');
+  await page.waitForFunction(() => window.bar3dStudio.S.place === 'bar', null, { timeout: 90000 }).catch(() => {});
+  await idle();
+  const sb = await S();
+  check(sb.place === 'bar' && sb.things.length > 150, `S6.4 back to the bar (${sb.place}, ${sb.things.length} things)`);
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
@@ -469,6 +495,16 @@ const bar = await browser.newPage({ viewport: { width: 393, height: 852 } });
 await bar.goto(url + 'bar/?skipintro&net=off');
 await bar.waitForFunction(() => /World: \d+ things/.test(document.getElementById('log').textContent), null, { timeout: 120000, polling: 250 }).catch(() => {});
 check(/World: v1 \(live, by Josh\)/.test(await bar.evaluate(() => document.getElementById('log').textContent)), 'S3.5 the bar opens with version 1');
+// S6.4: the bar's menu lists the new place; it opens.
+await bar.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null, { timeout: 120000, polling: 250 }).catch(() => {});
+await bar.click('#hudMenu').catch(() => {});
+await bar.click('.mTile:has-text("Places")').catch(() => {});
+await bar.waitForSelector('.mList button[data-place="rooftop"]', { timeout: 15000 }).catch(() => {});
+check(!!(await bar.$('.mList button[data-place="rooftop"]')), 'S6.4 the bar\'s menu → Places lists rooftop');
+await bar.goto(url + 'bar/?skipintro&net=off&place=rooftop');
+await bar.waitForFunction(() => /World: \d+ things/.test(document.getElementById('log').textContent), null, { timeout: 120000, polling: 250 }).catch(() => {});
+const roofLog = await bar.evaluate(() => document.getElementById('log').textContent);
+check(/World: \d+ things/.test(roofLog) && !/no place/.test(roofLog), `S6.4 the bar opens the rooftop (${(roofLog.match(/World: \d+ things[^\n]*/) || [''])[0]})`);
 await bar.close();
 await page.click('#monitorKey');
 await page.click('#monitor .tabs [data-tab="history"]');

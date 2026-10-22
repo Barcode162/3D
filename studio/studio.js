@@ -51,7 +51,7 @@ function onEngine(e) {
       const r = S.reloading;
       S.reloading = null;
       document.body.classList.remove('reloading');
-      send('st.view', 0, 0, r.view.join(','));
+      if (r.place === S.place) send('st.view', 0, 0, r.view.join(','));  // another place starts from its own view
       const t = r.selectId && S.byId.get(r.selectId);
       select(t ? t.i : -1, false);
       emit('reloaded', S);
@@ -65,7 +65,7 @@ function onEngine(e) {
 }
 function startEngine() {
   const frame = $('world');
-  frame.src = '/bar/?studio=1&skipintro&net=off' + (local ? '&server=off' : '');
+  frame.src = '/bar/?studio=1&skipintro&net=off' + (local ? '&server=off' : '') + (S.wantPlace && S.wantPlace !== 'bar' ? '&place=' + S.wantPlace : '');
   // Hook the sink as soon as the frame's page exists (before the engine starts).
   const hook = setInterval(() => {
     const w = frame.contentWindow;
@@ -242,7 +242,7 @@ export function reloadWorld(selectId) {
 on('view', (e) => {
   if (!S.wantReloadView) return;
   S.wantReloadView = false;
-  S.reloading = { ...S.reloadPending, view: e.view };
+  S.reloading = { ...S.reloadPending, view: e.view, place: S.place };
   window.bar3dStudioBundle = JSON.stringify({ format: 1, version: 0, author: 'your draft', files: S.draft });
   startEngine();
 });

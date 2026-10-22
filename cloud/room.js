@@ -162,7 +162,9 @@ export class Room {
 
   // Which place this room is (from its name), and its world made for it.
   usePlace(force = false) {
-    const place = /^home/.test(this.name) ? 'home' : 'bar';
+    // Rooms named place-<id> run a place made in the Studio, once the live world has it (S6.4).
+    const m = /^place-([a-z0-9-]{1,32})$/.exec(this.name || '');
+    const place = m && this.simFiles[`places/${m[1]}.json`] ? m[1] : /^home/.test(this.name) ? 'home' : 'bar';
     if (place === this.place && !force) return;
     this.place = place;
     this.sim = new Sim(simWasm, { ...this.simFiles, place });

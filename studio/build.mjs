@@ -252,3 +252,102 @@ function thingMenu() {
 }
 $('moreKey').addEventListener('click', thingMenu);
 on('select', () => { $('thingMenu').hidden = true; });
+
+// ---- Places (S6.4): the place key at the top: go to another place, make a
+// new one (a floor and a light to start from), copy this one, and set where
+// people appear. Each place is a file (places/<id>.json); the bar's menu lists
+// them once published. ----
+import { ensurePlace } from './draft.mjs';
+import { file as fileOp, set as setOp3 } from './ops.mjs';
+function placesInDraft() {
+  const ids = new Set(['bar', 'home']);
+  for (const f of Object.keys(S.draft || {})) { const m = /^places\/([a-z0-9-]+)\.json$/.exec(f); if (m) ids.add(m[1]); }
+  return [...ids];
+}
+async function goPlace(id) {
+  await ensurePlace(id);
+  S.wantPlace = id;
+  $('placeMenu').hidden = true;
+  await reloadWorld(null);
+}
+function newPlace(id, from) {
+  id = String(id || '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+  if (!id) return;
+  if (placesInDraft().includes(id)) { Looped.toast(`There's already a place called ${id}`); return; }
+  let place;
+  if (from) {
+    place = JSON.parse(JSON.stringify(S.draft[placeFile()]));
+    place.id = id;
+    place.about = `A copy of ${S.place}.`;
+  } else {
+    place = {
+      id, about: 'Made in the Studio.', kinds: ['kinds/bar.json'],
+      air: { ambient: [0.16, 0.13, 0.11], fog: [0.02, 0.015, 0.015], fogDensity: 0.006 },
+      spawn: { at: [0, 1.65, 4], yaw: 0 },
+      lightGrid: { min: [-8, 0, -8], max: [8, 0, 8] },
+      rooms: [{ id, min: [-8, -0.2, -8], max: [8, 6, 8] }],
+      doorways: [], areas: { arcade: { min: [0, 0, 0], max: [0, 0, 0] } }, points: { 'arcade-door': [0, 0, 0] },
+      things: [
+        { id: 'floor', kind: 'built', at: [0, 0, 0], parts: { boxes: [{ at: [0, -0.05, 0], size: [12, 0.1, 12], material: 'oak-floor' }] } },
+        { id: 'light-1', kind: 'light-bulb', at: [0, 3.2, 0], parts: { light: { color: [1, 0.78, 0.55], intensity: 3, range: 10, radius: 0.1 } } },
+      ],
+    };
+  }
+  const ops = [fileOp(`places/${id}.json`, place)];
+  const kf = 'kinds/bar.json';
+  if (!from && !(S.draft[kf].kinds || []).some((k) => k.id === 'built'))
+    ops.push(addOp(kf, ['kinds'], { id: 'built', about: 'Built in the Studio from plain boxes: floors, steps, a stage.', still: 'built from boxes; it stands still' }));
+  edit({ op: 'group', label: from ? `new place ${id}, a copy of ${S.place}` : `new place ${id}`, ops }, { noReload: true });
+  Looped.toast(`New place: ${id}`);
+  goPlace(id);
+}
+// People appear where the middle of your view lands, facing the way you look.
+function spawnHere() {
+  B.wantSpawn = true;
+  send('st.aim', 0.5, 0.5);
+  $('placeMenu').hidden = true;
+}
+on('aim', (e) => {
+  if (!B.wantSpawn) return;
+  B.wantSpawn = false;
+  B.wantView = true;
+  B.viewDone = (view) => {
+    const yaw = view ? Math.round(((view[3] * 180 / Math.PI) + 540) % 360 - 180) : 0;
+    const at = [+e.at[0].toFixed(2), +(e.at[1] + 1.65).toFixed(2), +e.at[2].toFixed(2)];
+    edit({ op: 'group', label: `${S.place}: people appear at ${at.join(', ')}`, ops: [setOp3(placeFile(), ['spawn'], { at, yaw })] });
+    Looped.toast('People will appear here (Publish to use it)');
+  };
+  send('st.getview');
+});
+function placeMenu() {
+  const box = $('placeMenu');
+  if (!box.hidden) { box.hidden = true; return; }
+  box.textContent = '';
+  for (const id of placesInDraft()) {
+    const b = el('button'); b.type = 'button'; b.dataset.place = id;
+    b.append(el('span', '', id === 'bar' ? 'Bar' : id === 'home' ? 'Test home' : id), el('small', '', id === S.place ? 'here' : 'go'));
+    b.onclick = () => { if (id !== S.place) goPlace(id); else box.hidden = true; };
+    box.append(b);
+  }
+  const form = (label, go, from) => {
+    const b = el('button'); b.type = 'button'; b.dataset.act = label;
+    b.append(el('span', '', label), el('small', '', '+'));
+    b.onclick = () => {
+      box.textContent = '';
+      const name = el('input', 'field'); name.id = 'placeName2'; name.placeholder = 'rooftop'; name.setAttribute('aria-label', 'Its name');
+      const ok = el('button', 'key go small', 'Make it'); ok.type = 'button'; ok.id = 'placeGo';
+      ok.onclick = () => { box.hidden = true; newPlace(name.value, from); };
+      const row = el('div', 'rowform'); row.append(name, ok); box.append(row);
+      name.focus();
+    };
+    box.append(b);
+  };
+  form('New place', null, false);
+  form('Copy this place', null, true);
+  const sp = el('button'); sp.type = 'button'; sp.dataset.act = 'spawn';
+  sp.append(el('span', '', 'People appear here'), el('small', '', 'the middle of your view'));
+  sp.onclick = spawnHere;
+  box.append(sp);
+  box.hidden = false;
+}
+$('placeKey').addEventListener('click', placeMenu);

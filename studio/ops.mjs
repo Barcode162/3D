@@ -35,7 +35,14 @@ export function add(file, path, item, index) { return { op: 'add', file, path, i
 export function remove(file, path, id) { return { op: 'remove', file, path, id }; }
 export function group(ops, label = '') { return { op: 'group', ops, label }; }
 
+// A whole file: made, replaced or (value undefined) taken away (S6.4: a new place).
+export function file(name, value) { return { op: 'file', file: name, value }; }
 export function apply(files, op) {
+  if (op.op === 'file') {
+    const before = files[op.file];
+    if (op.value === undefined) delete files[op.file]; else files[op.file] = clone(op.value);
+    return file(op.file, before === undefined ? undefined : clone(before));
+  }
   if (op.op === 'group') {
     const undo = [];
     for (const o of op.ops) undo.unshift(apply(files, o));
