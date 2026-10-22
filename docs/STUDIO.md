@@ -40,10 +40,11 @@ This file is the plan. `NEXT.md` holds the next step's pieces;
   control (a new part, a new loop shape), Claude adds it to the engine, and it
   shows up in the Studio and in the hub by itself, because both read the same
   description of the world (the schema, section 7.3).
-- **New look for everything:** warm near-black ink, chalk-white text, one
-  ember-orange light for "live / selected / do it", and a ring that turns
-  (the *loop ring*) as the sign that something is alive. Section 4. A preview
-  page shows it before anything gets built.
+- **New look for everything: the faceplate.** Everything looks like the
+  hardware loops are made on (a drum machine): flat printed panels, small
+  capital labels, keys you press, dials and faders, and four step colours
+  (red, orange, yellow, cream) that light up in order wherever something is
+  alive. Section 4. A preview page shows it before anything gets built.
 
 ---
 
@@ -111,10 +112,11 @@ What the pasted plan didn't have and this engine makes possible:
   (move/turn), every one for what it is (shape, loop, sound), with a switch.
 - **D6 Owner (and admins you choose) only.** Logins are the accounts you
   already have. Guests and players never see the Studio.
-- **D7 The look is one system** (`ui/`): shared colours, fonts, icons and
-  controls for the bar's menus, the Studio, the hub, news and the front door.
-  Studio and bar always dark (they sit on a 3D view); hub, news and the front
-  door follow your phone's light/dark setting.
+- **D7 The look is one system** (`ui/`), the faceplate: shared colours,
+  fonts, icons and controls for the bar's menus, the Studio, the hub, news
+  and the front door. Studio and bar always on the dark smoke panel (they sit
+  on a 3D view); hub, news and the front door follow your phone's light/dark
+  setting.
 - **D8 Install it like an app.** The Studio (and the bar) get a home-screen
   icon ("Add to Home Screen"): full screen, no Safari bars stealing space or
   gestures.
@@ -125,85 +127,109 @@ What the pasted plan didn't have and this engine makes possible:
 
 ---
 
-## 4. The new look
+## 4. The new look: the faceplate
 
 ### 4.1 The idea
-The world is where the colour is. The interface is quiet: warm ink, chalk
-text, thin lines. One light in it, **ember** (the orange of the fire and
-the candles in your bar), used only for what's live, selected, or the main
-action. Life is shown, not decorated: the **loop ring**, a thin circle with
-a gap that turns, appears wherever something is alive (and it turns at that
-thing's real loop speed in the Studio and the hub). It's also the logo, the
-loading sign and the "saved" sign.
+Your engine is built on **loops** (your FL Studio idea), the hub is **the
+dials**, and the new place is a **studio**. So the whole system looks like
+the hardware loops are made on: a drum machine's faceplate. Flat printed
+panels, small silkscreen labels in capitals, real-looking keys and dials,
+and **four step colours** (red, orange, yellow, cream) that light up in
+order like a step sequencer. The world (the 3D view) is where the rest of
+the colour is.
+
+- **The step light** is the sign that something is alive: four small
+  squares lighting one after another, at that thing's real loop speed (a
+  slow lamp sway steps slowly, the jukebox steps on the beat). It's also
+  the logo (four keys, one lit), the loading sign and the "saved" sign.
+- **The four step colours mean "loop"** everywhere: the lanes of the Loop
+  Rack, a thing's states (state 1 red, 2 orange…), the steps of a plan. They
+  are never decoration.
+- **Orange is "do it"** (the main button, the selection in the Studio).
+  **A red LED dot is "live"** (published, someone in the room, recording).
 
 What goes away: the bar's blue bevelled panels, gold glossy buttons and
 outlined Lilita font (the Clash Royale style); the hub's purple neon glass
 and pink gradients; the emoji tab icons; the 3D-rendered menu icons (badges
-stay 3D: they're collectibles, not buttons).
+stay 3D: they're collectibles, not buttons). Also not chosen: a plain
+near-black app with one bright accent (it's what most AI-made apps look like
+right now).
 
 ### 4.2 Colours (tokens in `ui/tokens.css`)
-Dark (bar, Studio; hub/news/front door at night):
+Two panels, one per mode. Studio and bar are always the smoke panel (they
+sit on a 3D view); hub, news and the front door follow the phone's
+light/dark setting.
 
-| Token | Value | Use |
-|---|---|---|
-| `--ink-0` | `#0E0D0C` | page background |
-| `--ink-1` | `#171513` | surfaces (sheets, panels) |
-| `--ink-2` | `#211E1B` | raised rows, cards |
-| `--ink-3` | `#2C2824` | controls (buttons, fields) |
-| `--line` | `#36312C` | hairlines (1 px) |
-| `--chalk` | `#F3EEE7` | text |
-| `--chalk-2` | `#B8AFA3` | secondary text |
-| `--chalk-3` | `#7D756B` | hints, disabled |
-| `--ember` | `#FF6A3D` | live, selected, main action |
-| `--ember-ink` | `#1C0E08` | text on ember |
-| `--ember-soft` | `rgba(255,106,61,.16)` | selected backgrounds, glows |
+| Token | Faceplate (light) | Smoke (dark) | Use |
+|---|---|---|---|
+| `--plate` | `#E6E2DA` | `#1A1918` | the panel (page background) |
+| `--plate-2` | `#D9D4CB` | `#242220` | recessed areas, fields, rows |
+| `--plate-3` | `#CBC5BA` | `#2E2B28` | keys at rest |
+| `--rule` | `#BDB6AA` | `#3A3632` | printed lines (1 px) |
+| `--print` | `#1C1B19` | `#ECE6DA` | text (silkscreen ink) |
+| `--print-2` | `#5C5850` | `#A39C90` | labels, secondary text |
+| `--print-3` | `#8C867C` | `#6E685F` | hints, disabled |
+| `--step-1` | `#D9402A` | `#EF4B33` | red: step 1, problems' red is separate |
+| `--step-2` | `#E57A1F` | `#F28C2C` | orange: step 2, **the main action, selection** |
+| `--step-3` | `#D9A91E` | `#F2C744` | yellow: step 3 |
+| `--step-4` | `#FBF8F2` | `#EDE7D9` | cream: step 4 (keeps a printed edge in light mode) |
+| `--led` | `#FF3B2F` | `#FF4A3D` | the live dot (with a soft glow) |
 
-Light (paper; hub/news/front door by day): `--ink-0 #F6F2EC`, surfaces
-`#FFFFFF`, raised `#FBF8F4`, controls `#EFE9E1`, lines `#E2DAD0`, text
-`#1A1714` / `#5F574E` / `#9A9086`, ember `#E04E22` (darker, for contrast on
-paper).
-
-Meaning colours (both modes): ok `#4FCB80`, warning `#F2B33D`, problem
-`#FF5A5F`, info `#76B4FF`. **Axes**: X `#FF5A5F`, Y `#4FCB80`, Z `#5B9BFF`,
-always with their letter next to them (colour-blind safe).
+Meaning colours (separate from the steps): ok `#3FAE6B` / `#56CF86`,
+warning = step yellow, problem `#C8322F` / `#FF6A64`, info `#3C7BD6` /
+`#7AB0FF`. **Axes** in the Studio: X `#EF4B33`, Y `#56CF86`, Z `#5B9BFF`,
+always with their letter beside them (colour-blind safe).
 
 ### 4.3 Type
-- **Display: Bricolage Grotesque** (free, SIL Open Font License; one variable
-  file, self-hosted in `ui/fonts/` with its licence and a credits entry). For
-  titles, place names, big numbers (credits, values on the dial strip).
-- **Text: the phone's own font** (SF Pro on iPhone): sharp at small sizes,
-  nothing to download.
-- **Numbers and ids: the phone's mono font** (SF Mono via `ui-monospace`),
-  tabular, for every value on a dial.
-- Sizes (iOS scale): 34 · 28 · 22 · 17 (body) · 15 · 13 · 11.
+- **Archivo** (free, SIL Open Font License, one variable file with a *width*
+  axis; self-hosted in `ui/fonts/` with its licence and a credits entry). Wide
+  for titles and place names, normal for text, **condensed capitals with a
+  little spacing for labels** (the silkscreen look: `SPEED`, `PERIOD`,
+  `MATERIAL`).
+- **Martian Mono** (free, OFL; also self-hosted) for every number and id:
+  the read-outs on the dial strip, the hub's dials, prices, build codes.
+  Tabular, so columns of numbers line up.
+- Body text can fall back to the phone's font (SF Pro) where Archivo hasn't
+  loaded yet; nothing waits for fonts.
+- Sizes (iOS scale): 34 · 28 · 22 · 17 (body) · 15 · 13 · 11 (labels).
 
 ### 4.4 Shapes, depth, motion, sound
-- Corners: 6 (chips), 12 (buttons, fields), 20 (sheets), round pills for
-  toggles. Spacing on a 4-point grid. Tap targets at least 44 × 44.
-- Depth by tone and hairline, no drop shadows, no gradients. Over the 3D view
-  only, sheets are ink at 85 % with a 20 px blur, so text stays readable.
-- Motion: 120–220 ms; sheets move on a spring, like iOS. Things that are alive
-  move; buttons don't wobble.
-- Sound: soft ticks from the engine's synth for snaps, steps and publish
-  (Safari can't vibrate on iPhone).
+- Panels are flat and printed: no gradients, no glass, no glow (except the
+  LED). Over the 3D view only, a panel is the smoke colour at 88 % with a
+  20 px blur, so text stays readable.
+- **Keys** (buttons) are square-ish (8 px corners), with a 2 px darker lower
+  edge that disappears when pressed (they go down 2 px): the one bit of
+  depth, because a key you press should feel like a key. Lit keys glow in
+  their step colour.
+- **Dials and faders** look like hardware: a round dial with a pointer line
+  for angles and loops, a long fader for amounts, a numeric read-out above
+  each.
+- Corners: 4 (chips), 8 (keys, fields), 16 (sheets). Spacing on a 4-point
+  grid. Tap targets at least 44 × 44.
+- Motion: 100–200 ms, mechanical (a key goes down and up, a sheet slides
+  like a drawer). The only things that move by themselves are alive (step
+  lights, LEDs).
+- Sound: soft clicks from the engine's synth for key presses, snaps and
+  publish (Safari can't vibrate on iPhone). Off in Settings.
 
 ### 4.5 Icons
-One set, drawn for this project (no third-party set): 24-point grid, 1.75 px
-round strokes, about 40 to start (move, turn, size, push, extrude, duplicate,
-delete, undo, redo, layers, light, sound, loop, rule, publish, history,
-camera modes, lock, search, place, kind, part, face…). One SVG sprite,
-`ui/icons.svg`, used by every page.
+One set, drawn for this project (no third-party set): 24-point grid, 2 px
+square-ended strokes (printed, not rounded), about 40 to start (move, turn,
+size, push, extrude, duplicate, delete, undo, redo, layers, light, sound,
+loop, rule, publish, history, camera modes, lock, search, place, kind, part,
+face…). One SVG sprite, `ui/icons.svg`, used by every page.
 
 ### 4.6 Per place
-- **Bar** (menus, HUD, cards over the 3D view): ink sheets, ember for the main
-  button, Bricolage for titles, line icons. The in-world name tags keep the
-  engine's pixel font for now (Later: the display font drawn by the engine).
-- **Studio:** ink and graphite only around the view (so the world's colours
-  read true), ember for selection, axis colours on the gizmo.
-- **Hub:** the "spec sheet". Dense rows, mono numbers, hairlines, light or
-  dark with the phone. Less decoration than anywhere else.
-- **News and the front door:** editorial. Big Bricolage titles, screenshots,
-  lots of space.
+- **Bar** (menus, HUD, cards over the 3D view): smoke panels, orange keys
+  for the main action, Archivo titles, line icons; the credits read-out in
+  Martian Mono. The in-world name tags keep the engine's pixel font for now
+  (Later: Archivo drawn by the engine).
+- **Studio:** smoke panels, orange selection, axis colours on the gizmo, the
+  dial strip as a hardware fader with a read-out.
+- **Hub:** the faceplate itself. Rows of dials, mono read-outs, printed
+  rules, step lights on everything alive. Less decoration than anywhere else.
+- **News and the front door:** the faceplate as a poster: big wide Archivo,
+  screenshots in printed frames, lots of space.
 
 ---
 
@@ -218,7 +244,7 @@ camera modes, lock, search, place, kind, part, face…). One SVG sprite,
 │            YOUR BAR, FULL SCREEN         │
 │                    ↑Y                    │
 │            ┌────────────┐                │
-│            │  selected  │──→X            │  ← ember outline + axis arrows
+│            │  selected  │──→X            │  ← orange outline + axis arrows
 │            └────────────┘                │
 │                  ↙Z                      │
 │  ╭ Bar › counter › pint_glass-4  🔒 ✕ ╮  │  ← breadcrumb chip
@@ -244,7 +270,7 @@ bottom bar shows the camera mode and "Add".
 | ▶ Play | play the place as a player (walk, tap, sit), then back to editing at the same spot |
 
 ### 5.3 Picking exactly what you mean
-1. **Tap** a thing: ember outline, breadcrumb shows where it sits.
+1. **Tap** a thing: orange outline, breadcrumb shows where it sits.
 2. Things overlap (a glass on the counter in front of the back bar)? A
    small list pops up with everything under your finger, nearest first.
 3. **Long press**: a magnifier lens appears above your finger; slide to the
@@ -335,7 +361,7 @@ Your FL Studio idea, for things.
 - Opening and closing the Monitor never resets your view or selection.
 - Every change can be undone, one gesture at a time (a whole drag is one
   undo), and the draft can always go back to the live version.
-- Anything slow shows a loop ring with words ("Publishing…"); nothing
+- Anything slow shows the step light with words ("Publishing…"); nothing
   freezes.
 
 ---
@@ -363,9 +389,10 @@ say "make *this number* bigger" and where Claude points you to "this dial".
 ## 7. How it works underneath (for Claude)
 
 ### 7.1 Folders
-- `ui/`: the look. `tokens.css` (light/dark), `base.css` (type, page),
-  `controls.css` (buttons, chips, segmented, fields, list rows, sheets, the
-  dial strip, the loop ring), `icons.svg`, `fonts/` (+ OFL + credits), and
+- `ui/`: the look. `tokens.css` (faceplate/smoke), `base.css` (type, page),
+  `controls.css` (keys, chips, segmented, fields, list rows, sheets, dials,
+  faders, the dial strip, the step light, the LED), `icons.svg`, `fonts/`
+  (Archivo, Martian Mono, OFL + credits), and
   `index.html`, a living style page showing every control (screenshot-tested).
   Copied into each site at build/deploy (`/ui/` on IONOS, `bar/ui/` in the bar
   build) so every page links the same files.
@@ -429,7 +456,7 @@ every schema choice is one the engine knows.
   world → render + overlays).
 - Picking reuses the touch ray (`touchAt`: model boxes, solids, boxes) and
   returns *every* hit along the ray (for the candidate list).
-- Overlays: selection outline (a second pass of the selected model in ember,
+- Overlays: selection outline (a second pass of the selected model in step orange,
   scaled along normals), gizmo arrows/rings (axis colours, drawn last, no
   depth test), X-ray layers (wire boxes, seat markers, light spheres).
 - Applying an op: fields marked `live` in the schema change the running world
@@ -506,10 +533,11 @@ new look everywhere at S4, then precision, building, light, life, live, and
 the bridge to Claude.
 
 ### S1 One world, and the new look begins
-- **S1.1** The look: `ui/` (tokens light/dark, controls, the loop ring,
-  Bricolage Grotesque + licence + credits, ~40 icons) and the style page
-  joshuavelasco.com/ui. *Check:* open /ui: every control in ink/ember, switch
-  your phone to light mode, it turns to paper.
+- **S1.1** The look: `ui/` (faceplate/smoke tokens, keys, dials, faders,
+  the step light, the LED, Archivo + Martian Mono + licences + credits, ~40
+  icons) and the style page joshuavelasco.com/ui. *Check:* open /ui: every
+  control on the smoke panel; switch your phone to light mode, it turns to
+  the faceplate.
 - **S1.2** The front door in the new look: joshuavelasco.com with three doors,
   Bar · Studio · News. *Check:* the home page, three doors.
 - **S1.3** The schema: `assets/world/schema.json` for every part and field in
@@ -534,7 +562,7 @@ the bridge to Claude.
   Add to Home Screen, open from the icon: your bar, full screen, nobody in it.
 - **S2.2** Cameras: orbit, pan/zoom, double-tap to frame, Fly, Top, Walk,
   saved views. *Check:* fly over the counter, switch to Top, back.
-- **S2.3** Picking: tap → ember outline + breadcrumb; the overlap list.
+- **S2.3** Picking: tap → orange outline + breadcrumb; the overlap list.
   *Check:* tap a glass on the counter → "Bar › … › pint_glass-4".
 - **S2.4** The Monitor: World list (by parent, search, filters), Inspect
   (read-only for now), Problems (checks + budget). *Check:* search "lamp",
