@@ -1424,3 +1424,20 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   of every go and pushes after the deploy is live (`tools/studio.mjs`);
   `studio/live-version.json` records which version the repo matches.
 - Front door, `/ui`, `/studio` deploy with the fast hub workflow (no game build).
+
+## The Studio, steps S2-S3 (2026-10-22)
+- **The Studio frames the bar** (`/bar/?studio=1&skipintro&net=off` in an
+  iframe): the same engine build, no second binary. The editor's C++ is
+  `bar/studio_mode.cpp` (cameras, picking, glow, X-ray, arrows, slide,
+  drop, attach, pose); every panel is page JS in `studio/`.
+- **Edits are ops in JS, not C++** (`studio/ops.mjs`): the draft is the
+  world's files; the engine only gets what it can show at once (`st.pose`,
+  `st.attach`). The game never runs ops, so its download stays small.
+- **Thing indexes** are the engine's order of `ready.things`; files speak ids.
+- **Commands land one frame late**: a pose sent now shows in the world's
+  positions on the next frame. Tests ask `st.where` twice (the second answer
+  is after the change), never a fixed wait.
+- **Each tool keeps its own axis** (Turn is always about Y): leaving Turn
+  gives Move back the axis it had.
+- Publishing over a newer world merges by thing/kind id: what you changed is
+  yours, the rest comes from the newer version (`draft.mjs` merge).

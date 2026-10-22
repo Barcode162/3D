@@ -2,49 +2,27 @@
 // world. World: every thing by what it sits on, searchable. Inspect: the
 // selected thing in words, from the schema (assets/world/schema.json).
 // Problems: what the schema and the engine's own checks find.
-import { S, on, send, select } from './studio.js';
+import { S, on, send, select, api } from './studio.js';
 import { problems as schemaProblems } from './schema.mjs';
+import { kindOf, thingEntry, placeFile, restore } from './draft.mjs';
+import { changes } from './diff.mjs';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
-const M = { tab: 'world', query: '', files: null, schema: null, kinds: new Map(), placeJson: null, engineProblems: null };
+const M = { tab: 'world', query: '', engineProblems: null };
 
-// ---- The world's files (the version the engine runs) ----
-async function loadFiles() {
-  const files = {};
-  const base = '/bar/assets/world/';
-  M.schema = await (await fetch(base + 'schema.json')).json();
-  if (S.live && S.live.version > 0) {
-    const b = await (await fetch('api.php?bundle=' + S.live.version)).json();
-    Object.assign(files, b.files);
-  }
-  const placePath = `places/${S.place}.json`;
-  if (!files[placePath]) files[placePath] = await (await fetch(base + placePath)).json();
-  for (const k of files[placePath].kinds || []) if (!files[k]) files[k] = await (await fetch(base + k)).json();
-  M.files = files;
-  M.placeJson = files[placePath];
-  M.kinds = new Map();
-  for (const k of files[placePath].kinds || []) for (const kind of (files[k].kinds || [])) M.kinds.set(kind.id, kind);
-}
-// A kind with what it builds on ("is") filled in.
-function kindOf(id, depth = 0) {
-  const k = M.kinds.get(id);
-  if (!k || !k.is || depth > 16) return k;
-  const b = kindOf(k.is, depth + 1) || {};
-  return { ...b, ...k, parts: { ...(b.parts || {}), ...(k.parts || {}) }, loops: { ...(b.loops || {}), ...(k.loops || {}) }, states: { ...(b.states || {}), ...(k.states || {}) } };
-}
+// ---- The world's files: the draft (draft.mjs) ----
 function thingJson(id) {
-  const direct = (M.placeJson.things || []).find((t) => t.id === id);
-  if (direct) return direct;
+  const e = thingEntry(id);
+  if (e.json) return e.json;
   const slash = id.lastIndexOf('/');  // a thing inside a kind: "<parent>/<child>"
   if (slash > 0) {
     const parent = S.byId.get(id.slice(0, slash));
     const kind = parent && kindOf(parent.kind);
     return kind && (kind.things || []).find((t) => t.id === id.slice(slash + 1));
   }
-  // a row's copy ("stool-3" from "stool" × n)
-  const m = /^(.*)-(\d+)$/.exec(id);
-  return m && (M.placeJson.things || []).find((t) => t.id === m[1] && t.row);
+  const m = /^(.*)-(\d+)$/.exec(id);  // a row's copy ("stool-3" from "stool" × n)
+  return m && (S.draft[placeFile()].things || []).find((t) => t.id === m[1] && t.row);
 }
 
 // ---- Drawing ----
@@ -113,7 +91,7 @@ function drawInspect(body) {
   if (!t) { body.append(el('p', 'dim', 'Select something: tap it in the world, or pick it in World.')); return; }
   const tj = thingJson(t.id) || {};
   const kind = kindOf(t.kind) || {};
-  const sch = M.schema;
+  const sch = S.schema;
   body.append(el('h3', '', t.id));
   if (kind.about) body.append(el('p', 'dim', kind.about));
   body.append(el('span', 'label', 'This one'));
@@ -154,9 +132,9 @@ function drawInspect(body) {
 }
 function drawProblems(body) {
   const list = [];
-  for (const [path, json] of Object.entries(M.files || {})) {
+  for (const [path, json] of Object.entries(S.draft || {})) {
     const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : '';
-    if (what) for (const p of schemaProblems(M.schema, what, json)) list.push(`${path}: ${p}`);
+    if (what) for (const p of schemaProblems(S.schema, what, json)) list.push(`${path}: ${p}`);
   }
   for (const p of M.engineProblems || []) list.push(p);
   if (M.engineProblems === null) body.append(el('p', 'dim', 'Asking the engine…'));
@@ -164,6 +142,40 @@ function drawProblems(body) {
   for (const p of list.slice(0, 100)) body.append(el('div', 'problem', p));
 }
 
+function drawChanges(body) {
+  const list = changes(S.base, S.draft);
+  if (!list.length) { body.append(el('p', 'dim', 'No changes yet: this is the live world.')); return; }
+  body.append(el('span', 'label', `${list.length} change${list.length === 1 ? '' : 's'} in your draft`));
+  for (const c of list) {
+    const b = el('button', 'change');
+    b.textContent = c.text;
+    const t = c.thing && S.byId.get(c.thing);
+    if (t) b.onclick = () => select(t.i, true);
+    body.append(b);
+  }
+}
+async function drawHistory(body) {
+  const r = await api({ a: 'history' }).catch(() => ({}));
+  if (!r.ok) { body.append(el('p', 'dim', 'History needs the server (it isn\'t here).')); return; }
+  if (!r.versions.length) { body.append(el('p', 'dim', 'Nothing published yet: the world is the one built into the bar.')); return; }
+  for (const v of r.versions) {
+    const row = el('div', 'hist');
+    const when = new Date(v.at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    row.append(el('span', '', `v${v.version} · ${v.note || 'no note'}`), el('small', '', `${v.author} · ${when}`));
+    if (v.version === r.live.version) row.append(el('span', 'chip on', 'Live'));
+    else {
+      const b = el('button', 'key small', 'Restore');
+      b.onclick = async () => {
+        if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sure?'; return; }
+        b.disabled = true;
+        try { const live = await restore(v.version); Looped.toast(`Version ${v.version} is live again (as v${live.version})`); setTimeout(() => location.reload(), 900); }
+        catch (e) { Looped.toast(e.message); b.disabled = false; }
+      };
+      row.append(b);
+    }
+    body.append(row);
+  }
+}
 function draw() {
   const box = $('monitor');
   if (box.hidden) return;
@@ -172,7 +184,7 @@ function draw() {
   grip.setAttribute('aria-label', 'Make the Monitor bigger or smaller');
   grip.onclick = () => box.classList.toggle('full');
   const tabs = el('div', 'seg field tabs');
-  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['problems', 'Problems']]) {
+  for (const [id, label] of [['world', 'World'], ['inspect', 'Inspect'], ['changes', 'Changes'], ['problems', 'Problems'], ['history', 'History']]) {
     const b = el('button', id === M.tab ? 'on' : '', label);
     b.dataset.tab = id;
     b.onclick = () => { M.tab = id; if (id === 'problems') { M.engineProblems = null; send('st.check'); } draw(); };
@@ -187,13 +199,16 @@ function draw() {
   head.append(tabs, close);
   const body = el('div', 'body');
   box.append(grip, head, body);
-  if (!M.files) { body.append(el('p', 'dim', 'Reading the world…')); return; }
+  if (!S.draft) { body.append(el('p', 'dim', 'Reading the world…')); return; }
   if (M.tab === 'world') drawWorld(body);
   else if (M.tab === 'inspect') drawInspect(body);
+  else if (M.tab === 'changes') drawChanges(body);
+  else if (M.tab === 'history') drawHistory(body);
   else drawProblems(body);
 }
 
-on('ready', async () => { try { await loadFiles(); } catch (e) { console.error(e); } draw(); });
+on('world', draw);
+on('changed', () => { if (M.tab !== 'world') draw(); });
 on('select', () => { if (M.tab !== 'world') draw(); else { const sel = document.querySelector('#tree .sel'); if (sel) sel.classList.remove('sel'); } });
 on('check', (e) => { M.engineProblems = e.problems || []; if (M.tab === 'problems') draw(); });
 $('monitorKey').addEventListener('click', () => {
@@ -203,3 +218,45 @@ $('monitorKey').addEventListener('click', () => {
   draw();
 });
 window.bar3dMonitor = M;
+
+// ---- Publish (S3.5): only with changes and no problems ----
+function draftProblems() {
+  const list = [];
+  for (const [path, json] of Object.entries(S.draft || {})) {
+    const what = path.startsWith('places/') ? 'place' : path.startsWith('kinds/') ? 'kinds' : path === 'catalog.json' ? 'catalog' : '';
+    if (what) for (const p of schemaProblems(S.schema, what, json)) list.push(`${path}: ${p}`);
+  }
+  return list;
+}
+function updatePublishKey() {
+  const n = S.draft ? changes(S.base, S.draft).length : 0;
+  const k = document.getElementById('publish');
+  k.disabled = n === 0;
+  k.textContent = n ? `Publish ${n}` : 'Publish';
+}
+on('changed', updatePublishKey);
+on('world', updatePublishKey);
+document.getElementById('publish').addEventListener('click', () => {
+  const sheet = document.getElementById('publishSheet');
+  const list = changes(S.base, S.draft);
+  const probs = draftProblems();
+  document.getElementById('pubSummary').textContent = `${list.length} change${list.length === 1 ? '' : 's'} become version ${(S.live.version || 0) + 1}, live in the bar the next time it opens.`;
+  const pp = document.getElementById('pubProblems');
+  pp.textContent = '';
+  probs.slice(0, 6).forEach((p) => pp.append(el('div', 'problem', p)));
+  document.getElementById('pubGo').disabled = probs.length > 0;
+  sheet.hidden = false;
+});
+document.getElementById('pubCancel').addEventListener('click', () => { document.getElementById('publishSheet').hidden = true; });
+document.getElementById('pubGo').addEventListener('click', async () => {
+  const go = document.getElementById('pubGo');
+  go.disabled = true;
+  try {
+    const { publish } = await import('./draft.mjs');
+    const live = await publish(document.getElementById('pubNote').value.trim());
+    document.getElementById('publishSheet').hidden = true;
+    document.getElementById('pubNote').value = '';
+    Looped.toast(`Published: version ${live.version} is live`);
+  } catch (e) { Looped.toast(e.message); }
+  go.disabled = false;
+});

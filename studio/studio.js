@@ -24,6 +24,7 @@ export const S = {
   listeners: {},
 };
 export function on(ev, f) { (S.listeners[ev] = S.listeners[ev] || []).push(f); }
+export function emitEvent(ev, d) { emit(ev, d); }
 function emit(ev, d) { (S.listeners[ev] || []).forEach((f) => { try { f(d); } catch (e) { console.error(e); } }); }
 
 export function send(name, a = 0, b = 0, text = '', text2 = '') {
@@ -131,6 +132,7 @@ function drawCrumb() {
 }
 let hitsTimer = 0;
 on('pick', (e) => {
+  if (window.bar3dTools && window.bar3dTools.putOn) return;  // tools.mjs: this tap picks a new parent
   const hits = e.hits || [];
   const box = $('hits');
   box.hidden = true;
@@ -164,6 +166,20 @@ $('lockKey').addEventListener('click', () => {
   Looped.toast(S.locked ? 'Selection locked: move around freely' : 'Selection unlocked');
 });
 
+// ---- Undo / redo (S3.4): the keys, and two- or three-finger taps on the world ----
+async function undoRedo(which) {
+  const d = await import('./draft.mjs');
+  const e = which === 'undo' ? d.undo() : d.redo();
+  if (e) Looped.toast((which === 'undo' ? 'Undid: ' : 'Redid: ') + (e.op.label || 'a change'));
+  else Looped.toast(which === 'undo' ? 'Nothing to undo' : 'Nothing to redo');
+}
+$('undo').addEventListener('click', () => undoRedo('undo'));
+$('redo').addEventListener('click', () => undoRedo('redo'));
+on('undo', () => undoRedo('undo'));
+on('redo', () => undoRedo('redo'));
+on('changed', () => { $('undo').disabled = !S.history.canUndo; $('redo').disabled = !S.history.canRedo; });
+on('world', () => { $('undo').disabled = true; $('redo').disabled = true; });
+
 // ---- Saved views (per place, on this device) ----
 const viewsKey = () => 'studioViews-' + S.place;
 const loadViews = () => { try { return JSON.parse(store.get(viewsKey()) || '[]'); } catch (e) { return []; } };
@@ -195,4 +211,4 @@ function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.class
 
 window.bar3dStudio = { S, send, on, select };  // for tests and the console
 // The Monitor (monitor.js) imports this module, so it's loaded after it.
-import('./monitor.js').then(start, (e) => { console.error(e); start(); });
+Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs')]).then(start, (e) => { console.error(e); start(); });

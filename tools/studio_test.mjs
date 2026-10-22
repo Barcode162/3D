@@ -1,21 +1,40 @@
 // The Studio (docs/STUDIO.md S2, S3...): the page at /studio/ with the bar's
-// engine in studio mode in its frame, served like the real site (/bar/,
-// /studio/, /ui/; no PHP: ?nologin on localhost). Each step adds its checks.
+// engine in studio mode in its frame, laid out like the IONOS webspace on
+// PHP's built-in server (<root>/home/bar = the built site + account.php,
+// <root>/home/studio, <root>/home/ui, <root>/private) with a real owner login.
 // Screenshots: build/studio-*.png.   Usage: NODE_PATH=$(npm root -g) node tools/studio_test.mjs
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, copyFileSync, rmSync, readdirSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { launchBrowser } from './lib/browser.mjs';
-import { serveSites } from './lib/sites.mjs';
 
-const { url, close } = serveSites({ '/bar/': 'build/site', '/studio/': 'studio', '/ui/': 'ui' });
+const PORT = 8798, url = `http://127.0.0.1:${PORT}/`;
+const root = mkdtempSync(join(tmpdir(), 'studio-site-'));
+mkdirSync(join(root, 'home/bar'), { recursive: true });
+mkdirSync(join(root, 'private'), { recursive: true });
+for (const f of readdirSync('build/site')) symlinkSync(resolve('build/site', f), join(root, 'home/bar', f));
+copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
+symlinkSync(resolve('studio'), join(root, 'home/studio'));
+symlinkSync(resolve('ui'), join(root, 'home/ui'));
+const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
+  env: { ...process.env, STUDIO_DATA: join(root, 'private/studio'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
+const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
+await new Promise((r) => setTimeout(r, 800));
+const year = new Date().getFullYear();
+const owner = await (await fetch(url + 'bar/account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+  body: JSON.stringify({ a: 'signup', user: 'josh', pass: 'secret1', name: 'Josh', birth: `${year - 30}-03-04` }) })).json();
 const browser = await launchBrowser();
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
 mkdirSync('build', { recursive: true });
+check(owner.ok === 1, 'the owner has an account');
 
 const page = await browser.newPage({ viewport: { width: 393, height: 852 }, hasTouch: true });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
-await page.goto(url + 'studio/?nologin');
+await page.addInitScript((t) => { try { localStorage.setItem('hubToken', t); } catch (e) {} }, owner.token);
+await page.goto(url + 'studio/');
 const S = () => page.evaluate(() => { const s = window.bar3dStudio && window.bar3dStudio.S; return s && { things: s.things, selected: s.selected, place: s.place }; });
 await page.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.things.length > 100, null, { timeout: 120000, polling: 250 }).catch(() => {});
 const s1 = await S();
@@ -112,6 +131,125 @@ await page.waitForTimeout(800);
 await page.screenshot({ path: 'build/studio-xray.png' });
 const xrayLog = await engineLog();
 check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws without errors');
+
+// ---- S3.2 Move / Turn / Size ----
+// Where a thing is now: asked twice, so the frame that applied the last
+// change has finished (the second answer comes a frame after the first).
+const where = async (i) => {
+  let at = null;
+  for (let k = 0; k < 2; k++) {
+    await page.evaluate((i) => { window.__where = null; window.__whereFor = i; if (!window.__whereOn) { window.__whereOn = 1; window.bar3dStudio.on('where', (e) => { if (e.thing === window.__whereFor) window.__where = e.at; }); } window.bar3dStudio.send('st.where', i); }, i);
+    await page.waitForFunction(() => window.__where, null, { timeout: 5000 }).catch(() => {});
+    at = await page.evaluate(() => window.__where);
+  }
+  return at;
+};
+await page.waitForFunction(() => window.bar3dStudio.S.draft, null, { timeout: 20000 }).catch(() => {});
+const tbl = (await S()).things.find((t) => t.id === 'round_table-1');
+await page.evaluate((i) => window.bar3dStudio.select(i, true), tbl.i);
+await page.waitForTimeout(500);
+check(await page.$eval('#tools', (t) => !t.hidden), 'S3.2 the tools show under a selected thing');
+const w0 = await where(tbl.i);
+const x0 = parseFloat(await page.inputValue('#valField'));
+await page.fill('#valField', String(+(x0 + 0.25).toFixed(3)));
+await page.press('#valField', 'Enter');
+await page.waitForTimeout(500);
+const w1 = await where(tbl.i);
+check(w0 && w1 && Math.abs(w1[0] - w0[0] - 0.25) < 0.01 && Math.abs(w1[2] - w0[2]) < 0.01, `S3.2 typing X + 0.25 moves it exactly 0.25 m (${w0 && w0[0]} → ${w1 && w1[0]})`);
+const draftAt = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at, tbl.id);
+check(Math.abs(draftAt[0] - (x0 + 0.25)) < 0.001, 'S3.2 the draft has the new place');
+// The fader: drag right, snapped to 5 cm steps.
+const jb2 = await page.$('#jog').then((j) => j.boundingBox());
+await page.mouse.move(jb2.x + jb2.width / 2, jb2.y + jb2.height / 2);
+await page.mouse.down();
+await page.mouse.move(jb2.x + jb2.width / 2 + 60, jb2.y + jb2.height / 2, { steps: 6 });
+await page.mouse.up();
+await page.waitForTimeout(400);
+const x2 = parseFloat(await page.inputValue('#valField'));
+check(x2 > x0 + 0.25 && Math.abs((x2 - x0) / 0.05 - Math.round((x2 - x0) / 0.05)) < 0.02, `S3.2 the fader moves it in 5 cm steps (${x0} → ${x2})`);
+await page.click('#toolKeys [data-tool="1"]');
+await page.fill('#valField', '30');
+await page.press('#valField', 'Enter');
+await page.waitForTimeout(300);
+const turned = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).turn, tbl.id);
+check(turned === 30, `S3.2 Turn sets its turn (${turned}°)`);
+await page.click('#toolKeys [data-tool="0"]');
+await page.screenshot({ path: 'build/studio-tools.png' });
+
+// ---- S3.3 slide, drop, put on ----
+await page.evaluate((i) => window.bar3dStudio.select(i, true), tbl.i);
+await page.waitForTimeout(600);
+const fb = await page.$('#world').then((f) => f.boundingBox());
+const before3 = await where(tbl.i);
+// The table is in the middle of the view after flying to it: drag it.
+await page.mouse.move(fb.x + fb.width / 2, fb.y + fb.height * 0.5);
+await page.mouse.down();
+await page.mouse.move(fb.x + fb.width / 2 + 50, fb.y + fb.height * 0.5 + 30, { steps: 10 });
+await page.mouse.up();
+await page.waitForTimeout(500);
+const after3 = await where(tbl.i);
+check(before3 && after3 && Math.hypot(after3[0] - before3[0], after3[2] - before3[2]) > 0.05 && Math.abs(after3[1] - before3[1]) < 0.3,
+      `S3.3 dragging the thing slides it over the floor (${before3 && before3.map((v) => v.toFixed(2))} → ${after3 && after3.map((v) => v.toFixed(2))})`);
+await page.click('#dropKey');
+await page.waitForFunction((id) => Math.abs(window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[1]) < 0.05, tbl.id, { timeout: 8000 }).catch(() => {});
+const dropped = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[1], tbl.id);
+check(Math.abs(dropped) < 0.05, `S3.3 Drop puts it on the floor (y ${dropped})`);
+const glass = (await S()).things.find((t) => t.kind === 'pint_glass' && t.parent < 0);
+await page.evaluate((i) => window.bar3dStudio.select(i, true), glass.i);
+await page.waitForTimeout(400);
+await page.click('#putOnKey');
+await page.evaluate((t) => window.bar3dStudio.S.engine.bar3dStudioSink({ ev: 'pick', hits: [[t, 1]] }), tbl.i);
+await page.waitForFunction(([g, t]) => (window.bar3dStudio.S.draft['places/bar.json'].things.find((x) => x.id === g) || {}).parent === t, [glass.id, tbl.id], { timeout: 8000 }).catch(() => {});
+const gj = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id), glass.id);
+check(gj.parent === tbl.id, `S3.3 Put on… makes it sit on the table (${gj.parent})`);
+const g0 = await where(glass.i);
+await page.evaluate((i) => window.bar3dStudio.select(i, false), tbl.i);
+await page.$eval('#axisKeys [data-axis="0"]', (b) => b.click());
+await page.fill('#valField', String(+(parseFloat(await page.inputValue('#valField')) + 0.5).toFixed(3)));
+await page.press('#valField', 'Enter');
+await page.waitForTimeout(500);
+const g1 = await where(glass.i);
+check(g0 && g1 && Math.abs(g1[0] - g0[0] - 0.5) < 0.02, `S3.3 move the table: the glass goes with it (${g0 && g0[0].toFixed(2)} → ${g1 && g1[0].toFixed(2)})`);
+
+// ---- S3.4 undo, saving, changes ----
+const xBeforeUndo = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[0], tbl.id);
+await page.click('#undo');
+await page.waitForTimeout(300);
+const xAfterUndo = await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[0], tbl.id);
+check(Math.abs(xBeforeUndo - xAfterUndo - 0.5) < 0.001, `S3.4 Undo takes the last move back (${xBeforeUndo} → ${xAfterUndo})`);
+await page.click('#redo');
+await page.waitForTimeout(2000);
+check(/saved/.test(await page.textContent('#savedText')), `S3.4 the draft saves itself (${await page.textContent('#savedText')})`);
+await page.click('#monitorKey');
+await page.click('#monitor .tabs [data-tab="changes"]');
+const changeText = await page.textContent('#monitor .body');
+check(new RegExp(tbl.id + ' moved').test(changeText) && new RegExp(glass.id + '.*now sits on ' + tbl.id).test(changeText), 'S3.4 Changes says it in words');
+await page.click('#monitor .key[aria-label="Close the Monitor"]');
+// Open the Studio again: the draft is still there.
+const page2 = await browser.newPage({ viewport: { width: 393, height: 852 } });
+await page2.addInitScript((t) => { try { localStorage.setItem('hubToken', t); } catch (e) {} }, owner.token);
+await page2.goto(url + 'studio/');
+await page2.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft, null, { timeout: 120000, polling: 250 }).catch(() => {});
+const again = await page2.evaluate((id) => window.bar3dStudio.S.draft && window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id).at[0], tbl.id);
+check(Math.abs(again - xBeforeUndo) < 0.001, 'S3.4 reopening the Studio: your draft is still there');
+await page2.close();
+
+// ---- S3.5 publish, the bar has it, history, restore ----
+await page.click('#publish');
+await page.fill('#pubNote', 'Moved a table');
+await page.click('#pubGo');
+await page.waitForFunction(() => window.bar3dStudio.S.live && window.bar3dStudio.S.live.version === 1, null, { timeout: 15000 }).catch(() => {});
+check((await page.evaluate(() => window.bar3dStudio.S.live.version)) === 1, 'S3.5 Publish makes version 1');
+const bar = await browser.newPage({ viewport: { width: 393, height: 852 } });
+await bar.goto(url + 'bar/?skipintro&net=off');
+await bar.waitForFunction(() => /World: \d+ things/.test(document.getElementById('log').textContent), null, { timeout: 120000, polling: 250 }).catch(() => {});
+check(/World: v1 \(live, by Josh\)/.test(await bar.evaluate(() => document.getElementById('log').textContent)), 'S3.5 the bar opens with version 1');
+await bar.close();
+await page.click('#monitorKey');
+await page.click('#monitor .tabs [data-tab="history"]');
+await page.waitForSelector('.hist', { timeout: 5000 }).catch(() => {});
+check(/v1 · Moved a table/.test(await page.textContent('#monitor .body')), 'S3.5 History lists it');
+await page.screenshot({ path: 'build/studio-history.png' });
 
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
