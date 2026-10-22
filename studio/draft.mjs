@@ -241,3 +241,12 @@ export async function restore(v) {
   emitEvent('restored', r.live);
   return r.live;
 }
+// Start over: throw your draft away (the server's copy and this phone's) and
+// open the live world again, as everyone sees it.
+export async function discardDraft() {
+  clearTimeout(saveTimer);
+  const r = await api({ a: 'discard' });
+  if (!r.ok) throw new Error(r.error || 'That didn\'t work.');
+  try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith('studioDraft-')) localStorage.removeItem(k); } } catch (e) {}
+  location.reload();
+}

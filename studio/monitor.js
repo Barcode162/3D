@@ -4,7 +4,7 @@
 // Problems: what the schema and the engine's own checks find.
 import { S, on, send, select, api } from './studio.js';
 import { problems as schemaProblems } from './schema.mjs';
-import { kindOf, thingEntry, placeFile, restore, edit, setOp } from './draft.mjs';
+import { kindOf, thingEntry, placeFile, restore, edit, setOp, discardDraft } from './draft.mjs';
 import { add as addOp } from './ops.mjs';
 import { control } from './fields.mjs';
 import { partSource } from './parts.mjs';
@@ -281,10 +281,22 @@ function drawProblems(body) {
   for (const p of list.slice(0, 100)) body.append(el('div', 'problem', p));
 }
 
+// Start over (throws the whole draft away, back to the live world), asks once.
+function startOverKey() {
+  const b = el('button', 'key small', 'Start over: back to the live bar');
+  b.type = 'button'; b.dataset.startOver = '1';
+  b.onclick = async () => {
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sure? Your changes go away'; return; }
+    b.disabled = true;
+    try { await discardDraft(); } catch (e) { Looped.toast(e.message); b.disabled = false; }
+  };
+  return b;
+}
 function drawChanges(body) {
   const list = changes(S.base, S.draft);
   if (!list.length) { body.append(el('p', 'dim', 'No changes yet: this is the live world.')); return; }
   body.append(el('span', 'label', `${list.length} change${list.length === 1 ? '' : 's'} in your draft`));
+  body.append(startOverKey());
   for (const c of list) {
     const b = el('button', 'change');
     b.textContent = c.text;
@@ -428,6 +440,7 @@ document.getElementById('publish').addEventListener('click', () => {
   sheet.hidden = false;
 });
 document.getElementById('pubCancel').addEventListener('click', () => { document.getElementById('publishSheet').hidden = true; });
+{ const r = el('div', 'row'); r.append(startOverKey()); document.getElementById('shareKey').parentElement.after(r); }
 document.getElementById('pubGo').addEventListener('click', async () => {
   const go = document.getElementById('pubGo');
   go.disabled = true;

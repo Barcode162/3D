@@ -809,6 +809,17 @@ await page.screenshot({ path: 'build/hub-dials.png' });
   const dz = await page.evaluate(() => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === 'round_table-3').at[2]);
   const left = await post('studio/api.php', { a: 'proposals', token: owner.token });
   check(Math.abs(dz - tbl3b.at[2]) < 0.001 && left.proposals.length === 0, `S10.4 Apply puts it in your draft (one undo) and it leaves the list (z ${dz})`);
+  // P2.1 Start over: the draft goes away, the live world comes back.
+  await page.waitForTimeout(1500);
+  await page.click('#monitorKey').catch(() => {});
+  await page.click('#monitor .tabs [data-tab="changes"]');
+  await page.waitForSelector('#monitor [data-start-over]', { timeout: 10000 }).catch(() => {});
+  await page.$eval('#monitor [data-start-over]', (b) => b.click()).catch(() => {});
+  await Promise.all([page.waitForNavigation({ timeout: 30000 }).catch(() => {}), page.$eval('#monitor [data-start-over]', (b) => b.click()).catch(() => {})]);
+  await page.waitForFunction(() => window.bar3dStudio && window.bar3dStudio.S.draft && !document.body.classList.contains('reloading'), null, { timeout: 180000, polling: 250 }).catch(() => {});
+  const fresh = await page.evaluate(() => { const s = window.bar3dStudio.S; return JSON.stringify(s.draft['places/bar.json']) === JSON.stringify(s.base['places/bar.json']); });
+  const srv = await post('studio/api.php', { a: 'draft', token: owner.token });
+  check(fresh && !srv.draft, 'P2.1 Start over throws the draft away and opens the live world');
 }
 check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close();
