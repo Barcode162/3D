@@ -17,7 +17,9 @@ This file explains why it exists and where it's heading.
 ## Look and feel (user, 2026-10-22)
 Enhanced real life, but animated: "super EXTRA lively". Real shapes,
 light and physics, pushed livelier than reality: a busy world that keeps
-moving on its own, so you're drawn to do things to keep up with it. A bar
+moving on its own, so you're drawn to do things to keep up with it.
+Keeping up is optional and fun: lots going on, you join what you like, no
+penalty for sitting back (user, 2026-10-22). A bar
 script language (Parked) is the planned way to fill it with living things.
 
 ## North star (updated by the user, 2026-10-15)
