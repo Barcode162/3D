@@ -627,6 +627,18 @@ bool studioCommand(const engine::ui::Command& c) {
       const float d = surfaceAlong(from, {0, -1, 0}, t);
       if (d > 0) sendRest("drop", t, from + Vec3{0, -d, 0});
     }
+  } else if (c.name == "st.aim") {  // a, b: a screen point (fractions) → the surface there, from above (S6.1)
+    const engine::Vec2 at{c.a > 0 ? static_cast<float>(c.a) : 0.5f, c.b > 0 ? static_cast<float>(c.b) : 0.5f};
+    const Vec3 eye = g_app.camera.position, dir = screenRay(at);
+    float t = surfaceAlong(eye, dir, -1);
+    if (t < 0) t = 3;
+    // Land on the top of what the ray met (a counter's top, not its front).
+    const Vec3 into = eye + dir * (t + 0.03f), from = into + Vec3{0, 0.6f, 0};
+    const float d = surfaceAlong(from, {0, -1, 0}, -1);
+    const Vec3 p = d > 0 ? from + Vec3{0, -d, 0} : eye + dir * t;
+    send("{\"ev\":\"aim\",\"at\":[" + num(p.x) + "," + num(p.y) + "," + num(p.z) + "]}");
+  } else if (c.name == "st.snap") {  // answered inside a frame, while the page can still copy the canvas (S6.1 pictures)
+    send("{\"ev\":\"snap\",\"n\":" + std::to_string(static_cast<int>(c.a)) + "}");
   } else if (c.name == "st.gizmo") {  // a: 1 = arrows on the selection; b: tool (0 move, 1 turn, 2 size)
     S.gizmo = c.a > 0;
     S.tool = static_cast<int>(c.b);

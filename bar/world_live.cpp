@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 #include <emscripten/eventloop.h>
 
+#include <cstdlib>
 #include <vector>
 
 #include "bar/world_files.h"
@@ -49,6 +50,19 @@ void useBundle(const std::string& text) {
 void fetchLiveWorld() {
   if (started) return;
   started = true;
+  // In the Studio's frame: the Studio hands over its draft, so what you add
+  // shows when the frame reloads (S6.1).
+  char* draft = static_cast<char*>(EM_ASM_PTR({
+    var b = "";
+    try { var p = window.parent; if (p && p !== window && p['bar3dStudioBundle']) b = String(p['bar3dStudioBundle']); } catch (e) {}
+    return stringToNewUTF8(b);
+  }));
+  const std::string text = draft ? draft : "";
+  free(draft);
+  if (!text.empty()) {
+    useBundle(text);
+    return finish();
+  }
   engine::fetchOptional(std::string(kStore) + "?live", [](bool ok, std::vector<uint8_t> bytes) {
     const engine::Json live = ok ? engine::Json::parse(std::string(bytes.begin(), bytes.end())) : engine::Json();
     const int v = static_cast<int>(live["version"].number(0));

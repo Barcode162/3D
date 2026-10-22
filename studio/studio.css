@@ -130,3 +130,16 @@ body.tooling #partList { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + 
 .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); margin-left: 6px; vertical-align: middle; }
 .ctl.vec { grid-template-columns: minmax(0, 1fr) repeat(3, 72px); gap: 4px 5px; }
 .ctl.vec .field { font-size: 12px; padding: 6px 5px; }
+/* The Library (S6.1). */
+#library { position: absolute; left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto; border-radius: 20px 20px 0 0; padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 14px); display: grid; gap: 8px; }
+#library h2 { margin: 0; font-size: 28px; }
+.libgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.libitem { all: unset; display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); cursor: pointer; text-align: center; }
+.libitem:active { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down); }
+.libitem .pic { aspect-ratio: 1; border-radius: 7px; background: var(--field) center / cover no-repeat; box-shadow: var(--field-edge); display: grid; place-items: center; font: 800 26px var(--display); color: var(--text-3); }
+.libitem .nm { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.libitem small { font-size: 11px; color: var(--accent); font-family: var(--mono); }
+body.reloading #world { opacity: .55; transition: opacity .2s; }
+#bottom { gap: 5px; }
+#bottom .key { min-width: 0; flex: 0 1 44px; padding: 0 6px; }
+#bottom .seg { min-width: 0; flex: 1 1 auto; }

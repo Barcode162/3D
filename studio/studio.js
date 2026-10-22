@@ -46,6 +46,18 @@ function onEngine(e) {
     S.things = e.things.map((t, i) => ({ i, id: t[0], kind: t[1], parent: t[2], at: [t[3], t[4], t[5]] }));
     S.byId = new Map(S.things.map((t) => [t.id, t]));
     $('placeName').textContent = S.place === 'bar' ? 'Bar' : S.place;
+    if (S.reloading) {
+      // Back from a reload (S6): the same view and selection.
+      const r = S.reloading;
+      S.reloading = null;
+      document.body.classList.remove('reloading');
+      send('st.view', 0, 0, r.view.join(','));
+      const t = r.selectId && S.byId.get(r.selectId);
+      select(t ? t.i : -1, false);
+      emit('reloaded', S);
+      if (r.resolve) r.resolve();
+      return;
+    }
     setSaved(S.live.version ? `Live v${S.live.version}` : 'Built-in world');
     emit('ready', S);
   }
@@ -216,9 +228,27 @@ on('view', (e) => {
 $('viewsKey').addEventListener('click', () => { const box = $('views'); box.hidden = !box.hidden; if (!box.hidden) drawViews(); });
 function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.classList.toggle('on', +x.dataset.cam === +mode)); }
 
-window.bar3dStudio = { S, send, on, select };  // for tests and the console
+// ---- Reloading the world from the draft (S6): what you added appears ----
+// The frame's bar reads window.bar3dStudioBundle (bar/world_live.cpp).
+export function reloadWorld(selectId) {
+  return new Promise((resolve) => {
+    S.reloadPending = { selectId: selectId === undefined ? (S.things[S.selected] || {}).id : selectId, resolve };
+    S.wantReloadView = true;
+    document.body.classList.add('reloading');
+    send('st.getview');
+  });
+}
+on('view', (e) => {
+  if (!S.wantReloadView) return;
+  S.wantReloadView = false;
+  S.reloading = { ...S.reloadPending, view: e.view };
+  window.bar3dStudioBundle = JSON.stringify({ format: 1, version: 0, author: 'your draft', files: S.draft });
+  startEngine();
+});
+
+window.bar3dStudio = { S, send, on, select, reloadWorld };  // for tests and the console
 // The Monitor (monitor.js) imports this module, so it's loaded after it.
-Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs')]).then(start, (e) => { console.error(e); start(); });
+Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs'), import('./build.mjs')]).then(start, (e) => { console.error(e); start(); });
 
 // ---- The magnifier (S5.1): hold a finger still; the lens shows what's
 // under the point above it, bigger, with its name; let go to select it. ----

@@ -3,7 +3,7 @@
 // version, else the ones built into the bar), keeps a copy to edit, and
 // tells the engine about every change it can show at once (positions, sizes,
 // what sits on what). Emits 'world' once loaded and 'changed' after edits.
-import { S, on, send, emitEvent, api, setSaved } from './studio.js';
+import { S, on, send, emitEvent, api, setSaved, reloadWorld } from './studio.js';
 import { History, apply, get, set as setOp, merge } from './ops.mjs';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -33,6 +33,11 @@ export async function loadWorld() {
   S.draft = draft;
   S.history = new History(S.draft);
   emitEvent('world');
+  // A draft with things the engine doesn't have (added, removed, a new kind): show it.
+  const ids = new Set((S.draft[placeFile()].things || []).map((t) => t.id));
+  const baseIds = new Set((S.base[placeFile()].things || []).map((t) => t.id));
+  const kindsChanged = (S.draft[placeFile()].things || []).some((t) => { const b = (S.base[placeFile()].things || []).find((x) => x.id === t.id); return b && (b.kind !== t.kind || JSON.stringify(b.row) !== JSON.stringify(t.row) || JSON.stringify(b.parts) !== JSON.stringify(t.parts)); });
+  if (kindsChanged || ids.size !== baseIds.size || [...ids].some((id) => !baseIds.has(id))) { await reloadWorld(); return; }
   // Show what the draft already changed.
   for (const t of S.things) { const e = thingEntry(t.id); if (e.json && JSON.stringify(e.json) !== JSON.stringify(((S.base[placeFile()].things) || []).find((x) => x.id === t.id))) sync({ op: 'set', file: placeFile(), path: ['things', { id: t.id }, 'at'] }); }
 }
@@ -120,20 +125,29 @@ function sync(op) {
   }
 }
 
+// Changes the engine can't show by moving things (a thing added or taken
+// away, a new kind, a row, its own parts): the world reloads from the draft.
+function needsReload(op) {
+  if (op.op === 'group') return op.ops.some(needsReload);
+  if (op.op === 'add' || op.op === 'remove') return true;
+  const p = op.path || [];
+  return op.file === placeFile() && p[0] === 'things' && ['kind', 'row', 'id'].includes(p[2]);
+}
 // The one way the Studio changes the world.
-export function edit(op) {
+export function edit(op, opts = {}) {
   const inv = S.history.do(op);
   sync(op);
   emitEvent('changed', op);
+  if (!opts.noReload && needsReload(op)) reloadWorld();
   return inv;
 }
-export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); emitEvent('changed', e.inv); } return e; }
-export function redo() { const e = S.history.redo(); if (e) { sync(e.op); emitEvent('changed', e.op); } return e; }
+export function undo() { const e = S.history.undo(); if (e) { sync(e.inv); emitEvent('changed', e.inv); if (needsReload(e.inv)) reloadWorld(); } return e; }
+export function redo() { const e = S.history.redo(); if (e) { sync(e.op); emitEvent('changed', e.op); if (needsReload(e.op)) reloadWorld(); } return e; }
 // Live preview while a finger drags (no history): set, show, and say how to undo it.
 export function preview(op) { const inv = apply(S.draft, op); sync(op); return inv; }
 export { get, setOp, merge };
 
-on('ready', () => { loadWorld().catch((e) => console.error('Studio: could not read the world', e)); });
+on('ready', () => { if (!S.draft) loadWorld().catch((e) => console.error('Studio: could not read the world', e)); });
 
 // ---- Publishing (S3.5) ----
 export async function publish(note) {

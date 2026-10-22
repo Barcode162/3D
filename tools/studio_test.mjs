@@ -227,6 +227,7 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.click('#monitor .tabs [data-tab="inspect"]');
   await page.click('#monitor .key:has-text("New kind from this")');
   await page.waitForTimeout(300);
+  await page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 60000 }).catch(() => {});
   const nk = await page.evaluate((id) => { const d = window.bar3dStudio.S.draft; const t = d['places/bar.json'].things.find((x) => x.id === id); const k = d['kinds/bar.json'].kinds.find((x) => x.id === t.kind); return { kind: t.kind, parts: t.parts, is: k && k.is, seats: k && k.parts && k.parts.seats }; }, st.id);
   check(nk.kind === 'bar_stool_2' && nk.is === 'bar_stool' && !nk.parts && nk.seats, `S5.3 New kind from this: ${st.id} is a ${nk.kind}, built on ${nk.is}, with its seat`);
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
@@ -250,6 +251,31 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   check(await period.count() === 1, 'S5.4 its loops\' lengths are editable too');
   await page.screenshot({ path: 'build/studio-inspect.png' });
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
+// ---- S6.1 the Library: add a candle to a table ----
+{
+  const table6 = (await S()).things.find((t) => t.id === 'round_table-2');
+  await page.evaluate((i) => { window.bar3dStudio.select(i, true); }, table6.i);
+  await page.waitForTimeout(600);
+  await page.evaluate(() => window.bar3dStudio.select(-1));
+  const n0 = (await S()).things.length;
+  await page.click('#addKey');
+  await page.waitForSelector('#library .libitem[data-kind="candle"]', { timeout: 10000 });
+  await page.waitForTimeout(300);
+  await page.waitForFunction(() => !window.bar3dBuild.busy, null, { timeout: 90000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  check(await page.$eval('#library .libitem[data-kind="candle"]', (b) => /Table candle/.test(b.textContent) && /5 credits/.test(b.textContent)), 'S6.1 the Library lists the table candle with its price');
+  check(await page.$eval('#library .libitem[data-kind="candle"] .pic', (p) => /url\(/.test(p.style.backgroundImage)), 'S6.1 it has a picture the engine took');
+  await page.screenshot({ path: 'build/studio-library.png' });
+  await page.click('#library .libitem[data-kind="candle"]');
+  await page.waitForFunction((n) => window.bar3dStudio.S.things.length > n && !document.body.classList.contains('reloading'), n0, { timeout: 90000 }).catch(() => {});
+  const s6 = await S();
+  const added = s6.selected >= 0 ? s6.things[s6.selected] : null;
+  const json = added && await page.evaluate((id) => window.bar3dStudio.S.draft['places/bar.json'].things.find((t) => t.id === id), added.id);
+  check(added && added.kind === 'candle' && json, `S6.1 a new candle is in the world and the draft, selected (${added && added.id})`);
+  check(json && json.at[1] > 0.5, `S6.1 it landed on the table's top (y ${json && json.at[1]})`);
+  await page.screenshot({ path: 'build/studio-added.png' });
 }
 
 // ---- S3.2 Move / Turn / Size ----
