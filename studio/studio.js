@@ -219,3 +219,39 @@ function setCamButton(mode) { [...$('camModes').children].forEach((x) => x.class
 window.bar3dStudio = { S, send, on, select };  // for tests and the console
 // The Monitor (monitor.js) imports this module, so it's loaded after it.
 Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs')]).then(start, (e) => { console.error(e); start(); });
+
+// ---- The magnifier (S5.1): hold a finger still; the lens shows what's
+// under the point above it, bigger, with its name; let go to select it. ----
+const lens = (() => {
+  const box = document.createElement('div');
+  box.id = 'lens';
+  box.hidden = true;
+  box.innerHTML = '<canvas width="168" height="168"></canvas><i class="cross"></i><span class="name"></span>';
+  $('app').appendChild(box);
+  return box;
+})();
+const ZOOM = 2.5;
+on('lens', (e) => {
+  const W = $('world').clientWidth, H = $('world').clientHeight;
+  const x = e.at[0] * W, y = e.at[1] * H;
+  lens.hidden = false;
+  lens.style.transform = `translate(${x - 84}px, ${y - 84}px)`;
+  const t = S.things[e.hit];
+  lens.querySelector('.name').textContent = t ? t.id : 'nothing here';
+  // The picture: the engine's canvas, zoomed around the point (where the
+  // browser lets a page copy a WebGPU canvas; else just the cross and name).
+  const c = lens.querySelector('canvas'), g = c.getContext('2d');
+  try {
+    const src = S.engine.document.getElementById('canvas');
+    const k = src.width / W, side = 168 / ZOOM * k;
+    g.clearRect(0, 0, 168, 168);
+    g.drawImage(src, x * k - side / 2, y * k - side / 2, side, side, 0, 0, 168, 168);
+    const px = g.getImageData(84, 84, 1, 1).data;
+    lens.classList.toggle('pic', px[3] > 0);
+  } catch (err) { lens.classList.remove('pic'); }
+  Looped.click(false);
+});
+on('lensEnd', (e) => {
+  lens.hidden = true;
+  if (e.thing !== null && e.thing !== undefined && e.thing >= 0) select(e.thing, false);
+});

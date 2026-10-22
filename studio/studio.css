@@ -92,3 +92,12 @@ body.tooling #hits { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(
 .hist { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
 .hist small { color: var(--text-2); grid-column: 1; }
 .hist .key { grid-row: 1 / span 2; grid-column: 2; }
+/* The magnifier (S5.1). */
+#lens { position: absolute; left: 0; top: 0; width: 168px; height: 168px; border-radius: 50%; pointer-events: none; z-index: 9;
+  box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px rgba(0,0,0,.6), 0 10px 30px rgba(0,0,0,.6); background: rgba(10,9,8,.35); }
+#lens canvas { width: 100%; height: 100%; border-radius: 50%; opacity: 0; }
+#lens.pic canvas { opacity: 1; }
+#lens .cross { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  background: linear-gradient(var(--accent), var(--accent)) center / 2px 100% no-repeat, linear-gradient(var(--accent), var(--accent)) center / 100% 2px no-repeat; }
+#lens .name { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); white-space: nowrap; padding: 3px 9px; border-radius: 7px;
+  background: var(--over); font-family: var(--mono); font-size: 12px; color: var(--text); box-shadow: var(--panel-edge); }

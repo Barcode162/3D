@@ -42,6 +42,20 @@ struct Studio {
   double fingersMs = 0;
   float fingersMoved = 0;
   int dragId = -1;
+  // The magnifier (S5.1): a finger held still turns into a lens; the point it
+  // picks sits above the finger (so the finger doesn't hide it).
+  // Part mode (S5.2): one of the selected thing's parts as a box: in the
+  // thing's own turned space (0: shapes, seats) or on world axes from where
+  // the thing is (1: tap areas).
+  struct Part { bool on = false; int thing = -1, space = 0; Vec3 center, half; float turn = 0; } part;
+  bool lensOn = false;  // (finger ids can be negative: the mouse)
+  int lensId = 0;
+  engine::Vec2 lensAt{-1, -1};
+  int lensHit = -2;
+  bool holdOn = false;  // a finger being held still: which, since when, whether it wandered
+  int holdId = 0;
+  double holdSince = 0;
+  bool holdMoved = false;
   engine::Vec2 dragLast;  // X-ray: 1 tap areas, 2 shapes you bump into, 4 seats, 8 lights, 16 where people appear  // the world's list goes to the page after its first update
 } S;
 
@@ -184,6 +198,7 @@ void select(int thing) {
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, 0);
   S.glowing.clear();
   S.selected = thing;
+  if (S.part.thing != thing) S.part.on = false, S.part.thing = -1;
   if (thing < 0) return;
   const engine::world::World& w = g_app.world.world();
   for (size_t m = 0; m < g_app.scene.models.size() && m < g_app.scene.modelThing.size(); ++m) {
@@ -240,12 +255,37 @@ bool screenOf(Vec3 p, engine::Vec2* out) {
 Vec3 axisDir(int a) { return a == 0 ? Vec3{1, 0, 0} : a == 1 ? Vec3{0, 1, 0} : Vec3{0, 0, 1}; }
 float arrowLength(Vec3 mid) { return engine::clampf(engine::length(mid - g_app.camera.position) * 0.18f, 0.15f, 2.0f); }
 
+// The selected part in the world: its middle and turn.
+void partInWorld(Vec3* mid, engine::Quat* rot) {
+  const Mat4& m = g_app.world.world().thing(S.part.thing).world;
+  const Vec3 c = S.part.center;
+  if (S.part.space == 1) {
+    *mid = Vec3{m.m[12], m.m[13], m.m[14]} + c;
+    *rot = {};
+    return;
+  }
+  *mid = {m.m[0] * c.x + m.m[4] * c.y + m.m[8] * c.z + m.m[12], m.m[1] * c.x + m.m[5] * c.y + m.m[9] * c.z + m.m[13],
+          m.m[2] * c.x + m.m[6] * c.y + m.m[10] * c.z + m.m[14]};
+  const float yaw = std::atan2(-m.m[2], m.m[0]);
+  *rot = engine::Quat::axisAngle({0, 1, 0}, yaw + engine::radians(S.part.turn));
+}
+// Where the arrows sit: on the part in part mode, else on the thing.
+Vec3 gizmoMid() {
+  Vec3 mid;
+  if (S.part.on && S.part.thing >= 0) {
+    engine::Quat r;
+    partInWorld(&mid, &r);
+    return mid;
+  }
+  float size;
+  boundsOf(S.selected, &mid, &size);
+  return mid;
+}
+
 // Which arrow a finger at `at` is on (-1: none).
 int arrowAt(engine::Vec2 at) {
   if (!S.gizmo || S.selected < 0) return -1;
-  Vec3 mid;
-  float size;
-  boundsOf(S.selected, &mid, &size);
+  const Vec3 mid = gizmoMid();
   engine::Vec2 o;
   if (!screenOf(mid, &o)) return -1;
   const float aspect = static_cast<float>(g_app.gpu.cssWidth) / std::max(1.0, g_app.gpu.cssHeight);
@@ -350,7 +390,7 @@ void studioInput(float) {
       const int a = arrowAt(r.pos);
       if (a >= 0) {
         S.dragAxis = a, S.dragId = r.id, S.dragLast = r.pos;
-      } else if (S.gizmo && S.selected >= 0 && S.tool == 0) {
+      } else if (S.gizmo && S.selected >= 0 && S.tool == 0 && !S.part.on) {
         // A finger that lands on the selection slides it over the surfaces under it.
         const std::vector<Hit> hits = pickAll(r.pos);
         if (!hits.empty() && inSubtree(hits[0].thing, S.selected)) S.sliding = true, S.dragId = r.id;
@@ -359,6 +399,44 @@ void studioInput(float) {
       send(S.sliding ? "{\"ev\":\"slideEnd\"}" : "{\"ev\":\"dragEnd\"}");
       S.dragAxis = -1, S.dragId = -1, S.sliding = false;
     }
+  }
+  // A finger held still for half a second becomes the magnifier; letting go
+  // picks what's under the lens (S5.1).
+  constexpr float kLensUp = 0.1f;  // the lens point: this far above the finger (screen heights)
+  if (!S.lensOn && S.dragAxis < 0 && !S.sliding && in.pointers.size() == 1) {
+    const engine::Pointer& p = in.pointers[0];
+    const double now = engine::frameTime().nowMs;
+    if (!S.holdOn || p.id != S.holdId) S.holdOn = true, S.holdId = p.id, S.holdSince = now, S.holdMoved = false;
+    if (std::hypot(p.pos.x - p.start.x, p.pos.y - p.start.y) > 0.02f) S.holdMoved = true;
+    if (!S.holdMoved && now - S.holdSince > 450) {
+      S.lensOn = true, S.lensId = p.id;
+    }
+  } else if (in.pointers.empty()) {
+    S.holdOn = false;
+  }
+  if (S.lensOn) {
+    const engine::Pointer* p = find(in.pointers, S.lensId);
+    if (p && in.pointers.size() == 1) {
+      const engine::Vec2 at{p->pos.x, std::max(0.0f, p->pos.y - kLensUp)};
+      if (std::hypot(at.x - S.lensAt.x, at.y - S.lensAt.y) > 0.001f) {
+        S.lensAt = at;
+        const std::vector<Hit> hits = pickAll(at);
+        const int hit = hits.empty() ? -1 : hits[0].thing;
+        S.lensHit = hit;
+        send("{\"ev\":\"lens\",\"at\":[" + num(at.x) + "," + num(at.y) + "],\"finger\":[" + num(p->pos.x) + "," + num(p->pos.y) +
+             "],\"hit\":" + std::to_string(hit) + "}");
+      }
+    } else {
+      // Let go (or a second finger: no pick): the lens closes.
+      std::string pick = "null";
+      if (!p && in.pointers.empty() && S.lensHit >= 0) pick = std::to_string(S.lensHit);
+      send("{\"ev\":\"lensEnd\",\"thing\":" + pick + "}");
+      S.lensOn = false, S.holdOn = false, S.lensAt = {-1, -1}, S.lensHit = -2;
+      S.downs.clear();
+    }
+    S.last = in.pointers;
+    placeCamera();
+    return;
   }
   if (S.sliding) {
     for (const engine::Pointer& p : in.pointers) {
@@ -375,9 +453,7 @@ void studioInput(float) {
   if (S.dragAxis >= 0) {
     for (const engine::Pointer& p : in.pointers) {
       if (p.id != S.dragId) continue;
-      Vec3 mid;
-      float size;
-      boundsOf(S.selected, &mid, &size);
+      const Vec3 mid = gizmoMid();
       engine::Vec2 o, tip;
       if (screenOf(mid, &o) && screenOf(mid + axisDir(S.dragAxis), &tip)) {
         // Finger movement along the arrow's screen direction → metres along the axis.
@@ -529,6 +605,16 @@ bool studioCommand(const engine::ui::Command& c) {
       const Mat4& m = g_app.world.world().thing(t).world;
       send("{\"ev\":\"where\",\"thing\":" + std::to_string(t) + ",\"at\":[" + num(m.m[12]) + "," + num(m.m[13]) + "," + num(m.m[14]) + "]}");
     }
+  } else if (c.name == "st.part") {  // a: thing (-1: off); text: space,cx,cy,cz,hx,hy,hz,turn° (S5.2)
+    float v[8] = {0, 0, 0, 0, 0.1f, 0.1f, 0.1f, 0};
+    const int t = static_cast<int>(c.a);
+    S.part.on = t >= 0 && t < static_cast<int>(g_app.world.world().size()) &&
+                std::sscanf(c.text.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &v[6], &v[7]) == 8;
+    S.part.thing = S.part.on ? t : -1;
+    S.part.space = static_cast<int>(v[0]);
+    S.part.center = {v[1], v[2], v[3]};
+    S.part.half = {std::max(v[4], 0.01f), std::max(v[5], 0.01f), std::max(v[6], 0.01f)};
+    S.part.turn = v[7];
   } else if (c.name == "st.layers") {  // a: which X-ray layers (bits, see Studio::layers)
     S.layers = static_cast<int>(c.a);
   } else if (c.name == "st.frame") {
@@ -603,10 +689,31 @@ void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
   poseModels();
   xray(boxes);
-  if (S.gizmo && S.selected >= 0) {
+  if (S.part.on && S.part.thing >= 0 && S.part.thing < static_cast<int>(g_app.world.world().size())) {
+    // The selected part: its box's edges, breathing in the accent colour.
     Vec3 mid;
-    float size;
-    boundsOf(S.selected, &mid, &size);
+    engine::Quat rot;
+    partInWorld(&mid, &rot);
+    const Vec3 h = S.part.half;
+    const float t = 0.014f;
+    for (int axis = 0; axis < 3; ++axis)
+      for (int k = 0; k < 4; ++k) {
+        const float s1 = (k & 1) ? 1.0f : -1.0f, s2 = (k & 2) ? 1.0f : -1.0f;
+        Vec3 off, size;
+        if (axis == 0) off = {0, s1 * h.y, s2 * h.z}, size = {h.x * 2 + t, t, t};
+        if (axis == 1) off = {s1 * h.x, 0, s2 * h.z}, size = {t, h.y * 2 + t, t};
+        if (axis == 2) off = {s1 * h.x, s2 * h.y, 0}, size = {t, t, h.z * 2 + t};
+        app::SceneRenderer::Box b;
+        b.center = mid + rot.rotate(off);
+        b.rotation = rot;
+        b.size = size;
+        b.color = {0.95f, 0.55f, 0.17f};
+        b.glow = glow * 1.6f;
+        if (boxes.size() < app::SceneRenderer::kMaxBoxes) boxes.push_back(b);
+      }
+  }
+  if (S.gizmo && S.selected >= 0) {
+    const Vec3 mid = gizmoMid();
     const float len = arrowLength(mid), t = len * 0.035f;
     const Vec3 colors[3] = {{0.94f, 0.29f, 0.2f}, {0.34f, 0.81f, 0.53f}, {0.36f, 0.61f, 1.0f}};
     for (int a = 0; a < 3; ++a) {

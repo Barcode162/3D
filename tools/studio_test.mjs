@@ -134,6 +134,26 @@ await page.screenshot({ path: 'build/studio-xray.png' });
 const xrayLog = await engineLog();
 check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws without errors');
 
+// ---- S5.1 the magnifier: hold still, the lens names what's above the finger; let go selects it ----
+{
+  await page.evaluate(() => window.bar3dStudio.select(-1));
+  const fb5 = await page.$('#world').then((f) => f.boundingBox());
+  await page.mouse.move(fb5.x + fb5.width / 2, fb5.y + fb5.height * 0.62);
+  await page.mouse.down();
+  await page.waitForSelector('#lens:not([hidden])', { timeout: 6000 }).catch(() => {});
+  const lensName = await page.textContent('#lens .name').catch(() => '');
+  check(await page.$eval('#lens', (l) => !l.hidden).catch(() => false) && lensName.length > 0, `S5.1 holding a finger still opens the lens (${lensName})`);
+  await page.mouse.move(fb5.x + fb5.width / 2 + 6, fb5.y + fb5.height * 0.62, { steps: 3 });
+  await page.waitForTimeout(300);
+  const named = await page.textContent('#lens .name');
+  await page.screenshot({ path: 'build/studio-lens.png' });
+  await page.mouse.up();
+  await page.waitForFunction(() => document.getElementById('lens').hidden, null, { timeout: 5000 }).catch(() => {});
+  const sel5 = await S();
+  const got = sel5.selected >= 0 ? sel5.things[sel5.selected].id : '(none)';
+  check(named === 'nothing here' ? sel5.selected < 0 : got === named, `S5.1 letting go selects what the lens showed (${named} → ${got})`);
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
