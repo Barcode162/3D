@@ -473,6 +473,73 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
 }
 
+// ---- S8.2 the Loop Rack: the pendant lamps sway twice as wide; pause ----
+{
+  const lamp = (await S()).things.find((t) => t.kind === 'pendant_lamp');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), lamp.i);
+  await page.waitForTimeout(500);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="life"]');
+  await page.click('#monitor .chip[data-state="lit"]');
+  const amps0 = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'pendant_lamp').loops.sway.pieces.map((p) => p.amp));
+  for (let i = 0; i < 2; i++) {
+    const inp = page.locator('#monitor .lane2').nth(i).locator('.ctl.num:has(.name:text-is("Amount")) input');
+    await inp.fill(String(amps0[i] * 2));
+    await inp.press('Enter');
+    await page.waitForTimeout(300);
+  }
+  const amps1 = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'pendant_lamp').loops.sway.pieces.map((p) => p.amp));
+  check(Math.abs(amps1[0] - amps0[0] * 2) < 0.01 && Math.abs(amps1[1] - amps0[1] * 2) < 0.01, `S8.2 the sway lanes twice as wide (${amps0.slice(0, 2)} → ${amps1.slice(0, 2)})`);
+  await page.click('#rackPause');
+  check(await page.evaluate(() => window.bar3dRack.paused), 'S8.2 Pause holds the loops');
+  await page.screenshot({ path: 'build/studio-rack.png' });
+  await page.click('#rackPause');
+  // S8.3: draw the swing with a finger; a preset on the dartboard's wobble.
+  await page.click('#monitor .chip[data-state="swinging"]');
+  const pad = await page.$('#monitor .keyspad');
+  await pad.scrollIntoViewIfNeeded();
+  const pb = await pad.boundingBox();
+  await page.mouse.move(pb.x + 2, pb.y + pb.height / 2);
+  await page.mouse.down();
+  for (let k = 1; k <= 20; k++) await page.mouse.move(pb.x + 2 + (pb.width - 4) * k / 20, pb.y + pb.height / 2 - Math.sin(k / 20 * Math.PI * 2) * pb.height * 0.4);
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  const keys = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'pendant_lamp').loops.swing.pieces[0].keys);
+  check(keys.length === 9 && keys[2][1] > 0 && keys[6][1] < 0, `S8.3 drawing the curve makes 9 keys (up, then down: ${keys.map((k) => k[1]).join(' ')})`);
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+  const board = (await S()).things.find((t) => t.kind === 'dartboard');
+  await page.evaluate((i) => window.bar3dStudio.select(i, false), board.i);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="life"]');
+  await page.click('#monitor .chip[data-state="wobble"]');
+  await page.click('#monitor .chip[data-preset="thump"]');
+  await page.waitForTimeout(300);
+  const wob = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((k) => k.id === 'dartboard').loops.wobble);
+  check(wob.beat === true && wob.pieces[0].shape === 'beat', 'S8.3 the "thump" preset puts a beat on the dartboard\'s wobble');
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
+// ---- S8.4 sounds: the arcade machine hums when you're near it ----
+{
+  const cab = (await S()).things.find((t) => t.kind === 'arcade_cabinet');
+  await page.evaluate((i) => window.bar3dStudio.select(i, true), cab.i);
+  await page.waitForTimeout(500);
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="life"]');
+  const had = await page.evaluate(() => { const k = window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((x) => x.id === 'arcade_cabinet'); return !!(k.parts && k.parts.sound); });
+  if (!had) await page.click('#monitor [data-add-sound="sound"]');
+  await page.waitForTimeout(300);
+  await page.waitForFunction(() => !document.body.classList.contains('reloading'), null, { timeout: 90000 }).catch(() => {});
+  if (!(await page.$('#monitor [data-hear="sound"]'))) { await page.click('#monitorKey').catch(() => {}); await page.click('#monitor .tabs [data-tab="life"]').catch(() => {}); }
+  const snd = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((x) => x.id === 'arcade_cabinet').parts.sound);
+  check(snd && snd.effect && snd.near > 0, `S8.4 the arcade machine has a sound of its own (${snd && snd.effect}, heard from ${snd && snd.near} m)`);
+  await page.click('#monitor [data-hear="sound"]');
+  await page.waitForFunction(() => window.bar3dSound.heard, null, { timeout: 8000 }).catch(() => {});
+  check(!!(await page.evaluate(() => window.bar3dSound.heard)), `S8.4 ▶ plays it at the machine (${await page.evaluate(() => window.bar3dSound.heard)})`);
+  await page.screenshot({ path: 'build/studio-sound.png' });
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).

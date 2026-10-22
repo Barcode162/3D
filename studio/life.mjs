@@ -143,6 +143,10 @@ export function drawLife(body, redraw) {
     test.append(b);
   }
   body.append(el('span', 'label', 'Test'), test, el('p', 'dim lifetest', LIFE.lastTest));
+  // The Loop Rack for this state's loop (S8.2).
+  if (LIFE.rack) LIFE.rack(body, t, k, LIFE.state, redraw);
+  // Its sounds (S8.4).
+  if (LIFE.sound) LIFE.sound(body, t, k, redraw);
 }
 on('state', (e) => {
   const t = S.things[e.thing];

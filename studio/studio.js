@@ -258,7 +258,7 @@ on('view', (e) => {
 
 window.bar3dStudio = { S, send, on, select, reloadWorld };  // for tests and the console
 // The Monitor (monitor.js) imports this module, so it's loaded after it.
-Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs'), import('./build.mjs')]).then(start, (e) => { console.error(e); start(); });
+Promise.all([import('./draft.mjs'), import('./monitor.js'), import('./tools.mjs'), import('./build.mjs'), import('./rack.mjs'), import('./sound.mjs')]).then(start, (e) => { console.error(e); start(); });
 
 // ---- The magnifier (S5.1): hold a finger still; the lens shows what's
 // under the point above it, bigger, with its name; let go to select it. ----

@@ -1,5 +1,6 @@
 #include "bar/studio_mode.h"
 
+#include "bar/scene_names.h"
 #include "looped/profiler.h"
 
 #include <algorithm>
@@ -688,6 +689,16 @@ bool studioCommand(const engine::ui::Command& c) {
     } else {
       if (S.pausedAt < 0) S.pausedAt = g_app.world.now();
       g_app.world.holdClock(S.pausedAt + (c.a >= 2 ? c.b : 0));
+    }
+  } else if (c.name == "st.sound") {  // a: thing; text: effect,gain → plays it there (S8.4's ▶)
+    const std::string text = c.text;
+    const size_t comma = text.find(',');
+    engine::synth::Effect e;
+    const int t = static_cast<int>(c.a);
+    if (t >= 0 && t < static_cast<int>(g_app.world.world().size()) && app::effectFromName(text.substr(0, comma), &e)) {
+      const float gain = comma == std::string::npos ? 0.6f : std::strtof(text.c_str() + comma + 1, nullptr);
+      playSfx(e, g_app.world.where(t), gain > 0 ? gain : 0.6f);
+      send("{\"ev\":\"heard\",\"thing\":" + std::to_string(t) + ",\"effect\":" + engine::bridge::quote(text.substr(0, comma)) + "}");
     }
   } else if (c.name == "st.snap") {  // answered inside a frame, while the page can still copy the canvas (S6.1 pictures)
     send("{\"ev\":\"snap\",\"n\":" + std::to_string(static_cast<int>(c.a)) + "}");
