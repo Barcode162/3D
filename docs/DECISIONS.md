@@ -1441,3 +1441,17 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   gives Move back the axis it had.
 - Publishing over a newer world merges by thing/kind id: what you changed is
   yours, the rest comes from the newer version (`draft.mjs` merge).
+
+## The Studio, step S4 (2026-10-22)
+- **Dials and the Studio share one draft** (studio/api.php: draft, save,
+  publish); Dials imports `/studio/ops.mjs` and `diff.mjs` (merge lives in
+  ops.mjs now). Links: `/studio/#thing=<id>`, `/hub/dials.html#kind=<id>`.
+- **Tuning is gone**: speeds became real loop lengths (bar_stool got its own
+  loops); the game no longer asks `hub.php?tuning` (the endpoint stays, unused).
+- **The look kit ships twice**: `/ui/` (hub workflow) and inside the bar's
+  site as `bar/ui/` (CMake `site_copy`), so the game never depends on another
+  folder of the site. A `ui/` change now builds and tests the game too.
+- The bar's menu keys use line icons (`ui/icons.svg`); emotes and badges keep
+  their 3D pictures.
+- CI copies the server's PHP into `build/site` before the tests: a test that
+  links the site's files must skip `*.php` (else its copy writes through).
