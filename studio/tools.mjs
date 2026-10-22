@@ -57,8 +57,40 @@ function restWith(rest0, v, by) {
   return r;
 }
 // The ops that put a rest into the files (only the fields that changed).
+// The things a change reaches: this one, or (Every) each thing of its kind in the place.
+function sameKind(e) {
+  return (S.draft[placeFile()].things || []).filter((x) => x.kind === e.t.kind && !x.row);
+}
 function opsFor(e, r0, r) {
-  if (e.part) return JSON.stringify(r) === JSON.stringify(r0) ? [] : [setOp(e.src.file, e.path, partFrom(e.part, e.json, r))];
+  if (e.part) {
+    if (JSON.stringify(r) === JSON.stringify(r0)) return [];
+    const item = partFrom(e.part, e.json, r);
+    if (!T.every && e.src.owner !== e.t.id) {
+      // This one only: the thing gets its own copy of the kind's list, with the change.
+      const te = thingEntry(e.t.id);
+      if (!te.json) return [];
+      const list = e.src.list.map((x, i) => (i === T.part.i ? item : x));
+      return [setOp(placeFile(), [...te.path, 'parts', e.part], JSON.parse(JSON.stringify(list)))];
+    }
+    return [setOp(e.src.file, e.path, item)];
+  }
+  if (T.every) {
+    // Every one of its kind: the same move, turn or resize on each.
+    const ops = [];
+    const d = r.at.map((v, k) => v - r0.at[k]), dt = (r.turn || 0) - (r0.turn || 0);
+    const k3 = r.scale.map((v, k) => (r0.scale[k] ? v / r0.scale[k] : 1));
+    for (const x of sameKind(e)) {
+      const xr0 = restOf(x);
+      const xr = { at: xr0.at.map((v, k) => +(v + d[k]).toFixed(3)), turn: +(((xr0.turn + dt + 540) % 360) - 180).toFixed(1), scale: xr0.scale.map((v, k) => +(v * k3[k]).toFixed(3)) };
+      if (xr.turn === -180) xr.turn = 180;
+      ops.push(...thingOps(['things', { id: x.id }], xr0, xr));
+    }
+    return ops;
+  }
+  return thingOps(e.path, r0, r);
+}
+function thingOps(path, r0, r) {
+  const e = { path };
   const ops = [];
   if (JSON.stringify(r.at) !== JSON.stringify(r0.at)) ops.push(setOp(placeFile(), [...e.path, 'at'], r.at));
   if (r.turn !== r0.turn) ops.push(setOp(placeFile(), [...e.path, 'turn'], r.turn || undefined));
@@ -73,7 +105,7 @@ function commit(r) {
   if (!e || !e.json) return;
   const r0 = restOfE(e);
   const ops = opsFor(e, r0, r);
-  if (ops.length) edit({ op: 'group', ops, label: ['Move', 'Turn', 'Size'][T.tool] + ' ' + (e.part ? `${e.src.owner}'s ${e.part.replace(/s$/, '')} ${T.part.i + 1}` : e.t.id) });
+  if (ops.length) edit({ op: 'group', ops, label: ['Move', 'Turn', 'Size'][T.tool] + ' ' + (e.part ? `${T.every ? e.src.owner : e.t.id}'s ${e.part.replace(/s$/, '')} ${T.part.i + 1}` : T.every ? 'every ' + e.t.kind : e.t.id) });
 }
 
 // ---- A gesture (the fader or an arrow): live, then one undo step ----
@@ -131,6 +163,12 @@ function draw() {
   if (e.part && T.axis === 3) T.axis = 0;
   $('spaceSeg').hidden = T.tool !== 0 || !!e.part;
   $('partKey').classList.toggle('lit', !!e.part);
+  // This one | Every <kind> (S5.3).
+  const n = sameKind(e).length;
+  $('scopeRow').hidden = n < 2 && !(e.part && e.src.owner !== e.t.id);
+  $('kindName').textContent = e.part && e.src.owner !== e.t.kind && e.src.owner !== e.t.id ? e.src.owner : e.t.kind;
+  $('kindCount').textContent = n > 1 ? ` (${n})` : '';
+  [...$('scopeSeg').children].forEach((b) => b.classList.toggle('on', (b.dataset.every === '1') === T.every));
   $('partText').textContent = e.part ? (partsOf(e.t).find((x) => x.name === e.part && x.i === T.part.i) || { label: 'Part' }).label : 'Part';
   $('dropKey').disabled = $('putOnKey').disabled = !!e.part;
   [...$('toolKeys').querySelectorAll('[data-tool="1"]')].forEach((k) => { k.disabled = e.part === 'uses'; });
@@ -289,14 +327,15 @@ $('partKey').addEventListener('click', () => {
   const list = $('partList');
   if (!list.hidden) { list.hidden = true; return; }
   const parts = partsOf(e.t);
-  const pick = (part) => { T.part = part; list.hidden = true; if (!part) showPart(null); draw(); };
+  const pick = (part) => { T.part = part; T.every = !!part; list.hidden = true; if (!part) showPart(null); draw(); };
   list.replaceChildren(
     ...[{ label: e.t.id, small: 'the thing itself', part: null }, ...parts.map((x) => ({ label: x.label, small: x.src.owner === e.t.id ? 'its own' : 'every ' + x.src.owner, part: { name: x.name, i: x.i } }))]
       .map((x) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = x.label; b.lastChild.textContent = x.small; b.onclick = () => pick(x.part); return b; }));
   if (!parts.length) Looped.toast(`${e.t.id} has no shapes, tap areas or seats of its own to move`);
   list.hidden = false;
 });
-on('select', () => { if (T.part) { T.part = null; showPart(null); } $('partList').hidden = true; draw(); });
+on('select', () => { if (T.part) { T.part = null; showPart(null); } T.every = false; $('partList').hidden = true; draw(); });
+$('scopeSeg').addEventListener('click', (ev) => { const b = ev.target.closest('[data-every]'); if (b) { T.every = b.dataset.every === '1'; draw(); } });
 on('changed', draw);
 on('world', draw);
 window.bar3dTools = T;
