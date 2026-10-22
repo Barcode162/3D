@@ -1,6 +1,7 @@
 #include "looped/scene_geometry.h"
 
 #include <cmath>
+#include <unordered_map>
 
 #include "looped/json.h"
 
@@ -82,6 +83,61 @@ void SceneGeometry::add(const ModelData& model, const Mat4& world, const std::st
       triModel.push_back(modelId);
     }
   }
+}
+
+size_t SceneGeometry::simplify(float cell) {
+  // Each corner snaps to its cell; corners in one cell (and of the same
+  // material, so colours don't bleed) become one, at their average.
+  struct Key {
+    int64_t k;
+    bool operator==(const Key& o) const { return k == o.k; }
+  };
+  struct KeyHash {
+    size_t operator()(const Key& k) const { return static_cast<size_t>(k.k * 0x9E3779B97F4A7C15ull >> 17); }
+  };
+  std::unordered_map<Key, uint32_t, KeyHash> slot;
+  slot.reserve(positions.size());
+  std::vector<Vec3> sum;
+  std::vector<float> count;
+  std::vector<uint32_t> remap(positions.size(), ~0u);
+  const float inv = 1.0f / cell;
+  const size_t before = triangleCount();
+  for (size_t t = 0; t < before; ++t) {
+    for (int c = 0; c < 3; ++c) {
+      const uint32_t v = indices[3 * t + c];
+      if (remap[v] != ~0u) continue;
+      const Vec3 p = positions[v];
+      const int64_t x = static_cast<int64_t>(std::floor(p.x * inv)) & 0xfffff;
+      const int64_t y = static_cast<int64_t>(std::floor(p.y * inv)) & 0xfff;
+      const int64_t z = static_cast<int64_t>(std::floor(p.z * inv)) & 0xfffff;
+      const Key key{(x << 44) ^ (y << 32) ^ (z << 12) ^ (triMaterial[t] & 0xfff)};
+      auto it = slot.find(key);
+      if (it == slot.end()) {
+        it = slot.emplace(key, static_cast<uint32_t>(sum.size())).first;
+        sum.push_back({});
+        count.push_back(0);
+      }
+      remap[v] = it->second;
+      sum[it->second] = sum[it->second] + p;
+      count[it->second] += 1;
+    }
+  }
+  std::vector<Vec3> np(sum.size());
+  for (size_t i = 0; i < sum.size(); ++i) np[i] = sum[i] * (1.0f / count[i]);
+  std::vector<uint32_t> ni, nm, nmod;
+  ni.reserve(indices.size());
+  for (size_t t = 0; t < before; ++t) {
+    const uint32_t a = remap[indices[3 * t]], b = remap[indices[3 * t + 1]], c = remap[indices[3 * t + 2]];
+    if (a == b || b == c || a == c) continue;
+    ni.push_back(a), ni.push_back(b), ni.push_back(c);
+    nm.push_back(triMaterial[t]);
+    nmod.push_back(triModel[t]);
+  }
+  positions = std::move(np);
+  indices = std::move(ni);
+  triMaterial = std::move(nm);
+  triModel = std::move(nmod);
+  return before - triangleCount();
 }
 
 Vec3 SceneGeometry::normal(uint32_t tri) const {

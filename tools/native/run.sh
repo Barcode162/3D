@@ -17,6 +17,7 @@ declare -A TESTS=(
   [json_test]="tools/native/json_test.cpp looped/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [light_units_test]="tools/native/light_units_test.cpp"
+  [radiosity_test]="tools/native/radiosity_test.cpp looped/radiosity.cpp looped/bvh.cpp looped/scene_geometry.cpp looped/gltf.cpp looped/json.cpp"
   [quality_test]="tools/native/quality_test.cpp"
   [entity_test]="tools/native/entity_test.cpp bar/entities.cpp $SCENE"
   [proto_test]="tools/native/proto_test.cpp looped/netproto.cpp looped/json.cpp"

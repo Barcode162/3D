@@ -149,12 +149,16 @@ bool Bvh::intersect(Vec3 origin, Vec3 dir, float tMin, float tMax, Hit* hit) con
   const float o[3] = {origin.x, origin.y, origin.z};
   const float inv[3] = {1.0f / (dir.x != 0 ? dir.x : 1e-12f), 1.0f / (dir.y != 0 ? dir.y : 1e-12f),
                         1.0f / (dir.z != 0 ? dir.z : 1e-12f)};
+  const float inf = std::numeric_limits<float>::infinity();
+  // Nodes to visit with the distance where the ray enters them: a deferred
+  // node is skipped once something nearer has been hit.
   uint32_t stack[64];
+  float stackT[64];
   int sp = 0;
-  uint32_t node = 0;
   bool found = false;
   float best = tMax;
-  if (boxEnter(nodes_[0].min, nodes_[0].max, o, inv, best) == std::numeric_limits<float>::infinity()) return false;
+  if (boxEnter(nodes_[0].min, nodes_[0].max, o, inv, best) == inf) return false;
+  uint32_t node = 0;
   while (true) {
     const Node& n = nodes_[node];
     if (n.count) {
@@ -180,27 +184,29 @@ bool Bvh::intersect(Vec3 origin, Vec3 dir, float tMin, float tMax, Hit* hit) con
         hit->v = v;
         hit->back = det < 0;
       }
-      if (sp == 0) break;
-      node = stack[--sp];
-      continue;
-    }
-    const uint32_t l = n.leftOrFirst, r = l + 1;
-    float tl = boxEnter(nodes_[l].min, nodes_[l].max, o, inv, best);
-    float tr = boxEnter(nodes_[r].min, nodes_[r].max, o, inv, best);
-    const float inf = std::numeric_limits<float>::infinity();
-    if (tl == inf && tr == inf) {
-      if (sp == 0) break;
-      node = stack[--sp];
-    } else if (tl == inf) {
-      node = r;
-    } else if (tr == inf) {
-      node = l;
     } else {
-      node = tl <= tr ? l : r;
-      if (sp < 64) stack[sp++] = tl <= tr ? r : l;
+      const uint32_t l = n.leftOrFirst, r = l + 1;
+      const float tl = boxEnter(nodes_[l].min, nodes_[l].max, o, inv, best);
+      const float tr = boxEnter(nodes_[r].min, nodes_[r].max, o, inv, best);
+      if (tl != inf || tr != inf) {
+        if (tl == inf) { node = r; continue; }
+        if (tr == inf) { node = l; continue; }
+        const bool leftFirst = tl <= tr;
+        if (sp < 64) {
+          stack[sp] = leftFirst ? r : l;
+          stackT[sp++] = leftFirst ? tr : tl;
+        }
+        node = leftFirst ? l : r;
+        continue;
+      }
     }
+    // Next deferred node that is still nearer than the best hit.
+    do {
+      if (sp == 0) return found;
+      --sp;
+    } while (stackT[sp] >= best);
+    node = stack[sp];
   }
-  return found;
 }
 
 bool Bvh::occluded(Vec3 origin, Vec3 dir, float tMin, float tMax) const {

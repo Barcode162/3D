@@ -53,6 +53,10 @@ struct SceneGeometry {
   // Adds a model placed with `world`. See-through parts are skipped.
   void add(const ModelData& model, const Mat4& world, const std::string& file, const AlbedoTable& table,
            uint32_t modelId);
+  // Merges corners closer than `cell` metres (vertex clustering) and drops
+  // the triangles that collapse: a lighter copy for bounced light, where
+  // detail under a patch's size doesn't matter. Returns triangles dropped.
+  size_t simplify(float cell);
   // A triangle's unit normal (from its winding) and area.
   Vec3 normal(uint32_t tri) const;
   float area(uint32_t tri) const;

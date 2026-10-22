@@ -78,6 +78,31 @@ their core.
 - `node tools/albedo_test.mjs` (in the checks) makes sure every model is measured.
 - After changing or adding a model: run the audit again.
 
+### Bounced light: how it works (L1.4, the core)
+Light hits a surface, part of it bounces off (as much as the surface's
+albedo says), lights the next surface, and so on: that is why one bulb
+lights a whole room. The bar works it out like this:
+1. **The place's still surfaces** (every model that doesn't move; glasses
+   and darts are left out) are gathered and simplified (corners within 5 cm
+   merged: 642 k → 99 k triangles; detail smaller than a patch doesn't
+   change bounced light).
+2. **Patches:** every surface gets a point every 25 cm (about 58 000 in the
+   bar), with its colour, how much light it reflects and how much it glows.
+3. **What each patch sees:** 32 rays from each patch find the patches they
+   meet (a "ray tree", `looped/bvh.h`, makes that fast).
+4. **Which lamps each patch sees:** a shadow ray to every lamp.
+5. **Probes:** points every 50 cm in the air (about 10 000 usable in the
+   bar; ones inside walls or outside the building are switched off); 48 rays
+   each find what they see, and which lamps they see.
+6. **Bouncing:** each round, every patch's light = its own glow + what it
+   reflects of the lamps + what it reflects of the patches it sees. Each
+   round is one more bounce. A closed white box ends at 5× its direct
+   light, exactly as physics says (`tools/native/radiosity_test.cpp`).
+
+Tools: `node tools/light.mjs gi` (build it, timed), `node tools/light.mjs
+map bar 1.2 build/map.png` (a top-down map of the bounced light at 1.2 m),
+`node tools/bench.mjs native` (`gi_*` numbers).
+
 ## L2 Shadows and shaped light
 
 _Not built yet._
