@@ -104,5 +104,8 @@ The order can change at any "start"; new ideas go to Parked first.
   so light is worked out **by the engine at runtime** (it re-does it after an
   edit), not baked once in Blender (that older plan in `docs/LIGHTING.md`
   is replaced by L1).
+- **Light only from light sources** (user, 2026-10-22): no fake ambient
+  fill anywhere. Everything visible is lit by a real source (bulb, flame,
+  neon, screen, sky) or its bounce; darkness is real, eyes adjust to it.
 - Each step lists its budget on the phone (ms per frame, MB), checked with
   `?perf=1`. Low quality always stays smooth.
