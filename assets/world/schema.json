@@ -18,6 +18,8 @@
   "place": {
     "label": "Place", "about": "A whole place: the bar, a home. Its things, where people appear, its air.",
     "fields": {
+      "moods": {"type": "map", "label": "Moods", "about": "Named sets of lights (S7.3): by kind or by thing, their colour and brightness.", "item": {"type": "object", "fields": {"lights": {"type": "map", "label": "Lights", "item": {"type": "object", "fields": {"color": {"type": "color", "label": "Colour", "live": true}, "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness", "live": true}}}}}}},
+      "mood": {"type": "text", "label": "Mood now", "about": "Which of the moods the place uses."},
       "id": {"type": "id", "label": "Name", "about": "The place's name in the files and the menu."},
       "about": {"type": "text", "label": "About"},
       "kinds": {"type": "list", "item": {"type": "text"}, "label": "Kind files", "about": "Which kind files this place uses."},

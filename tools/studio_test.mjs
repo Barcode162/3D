@@ -428,6 +428,27 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.screenshot({ path: 'build/studio-red-neon.png' });
 }
 
+// ---- S7.3 moods and the meter: Evening → Party, the meter stays green ----
+{
+  await page.click('#monitorKey');
+  await page.click('#monitor .tabs [data-tab="look"]');
+  await page.click('#monitor .chip[data-mood="Evening"]');
+  await page.waitForTimeout(300);
+  await page.click('#monitor .chip[data-mood="Party"]');
+  await page.waitForTimeout(300);
+  const place = await page.evaluate(() => window.bar3dStudio.S.draft['places/bar.json']);
+  const ev = place.moods && place.moods.Evening && place.moods.Evening.lights['light-sign'];
+  const pa = place.moods && place.moods.Party && place.moods.Party.lights['light-sign'];
+  check(place.mood === 'Party' && ev && pa && JSON.stringify(ev.color) !== JSON.stringify(pa.color), `S7.3 Evening → Party: the place's mood is Party, its lights differ (${ev && ev.color} → ${pa && pa.color})`);
+  await page.waitForSelector('#monitor .meter[data-state]', { timeout: 10000 }).catch(() => {});
+  const state = await page.getAttribute('#monitor .meter', 'data-state').catch(() => null);
+  const rows = await page.$$eval('#monitor .meterrow small', (s) => s.map((x) => x.textContent)).catch(() => []);
+  if (state !== 'green') console.log('BUDGET', JSON.stringify(await page.evaluate(() => window.bar3dLook && window.bar3dLook.budget)), await page.textContent('#monitor .body').then((t) => t.slice(-300)));
+  check(state === 'green', `S7.3 the meter stays green (${state}: ${rows.join(' · ')})`);
+  await page.screenshot({ path: 'build/studio-moods.png' });
+  await page.click('#monitor .key[aria-label="Close the Monitor"]');
+}
+
 // ---- S3.2 Move / Turn / Size ----
 // Where a thing is now: asked twice, so the frame that applied the last
 // change has finished (the second answer comes a frame after the first).
@@ -533,6 +554,7 @@ await page2.close();
 // ---- S3.5 publish, the bar has it, history, restore ----
 await page.click('#publish');
 await page.fill('#pubNote', 'Moved a table');
+if (await page.$eval('#pubGo', (b) => b.disabled)) console.log('PUBLISH BLOCKED:', await page.textContent('#publishSheet'));
 await page.click('#pubGo');
 await page.waitForFunction(() => window.bar3dStudio.S.live && window.bar3dStudio.S.live.version === 1, null, { timeout: 15000 }).catch(() => {});
 check((await page.evaluate(() => window.bar3dStudio.S.live.version)) === 1, 'S3.5 Publish makes version 1');

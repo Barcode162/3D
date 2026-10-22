@@ -151,7 +151,8 @@ function needsReload(op) {
 // A change to a light shows at once (S7.2): every lit thing gets its light again.
 function touchesLight(op) {
   if (op.op === 'group') return op.ops.some(touchesLight);
-  return (op.path || []).includes('light');
+  const p = op.path || [];
+  return p.includes('light') || p[0] === 'mood' || p[0] === 'moods';
 }
 export function refreshLights() {
   for (const t of S.things) {
@@ -159,7 +160,12 @@ export function refreshLights() {
     const k = kindOf(t.kind);
     const l = (own && own.parts && own.parts.light) || (k && k.parts && k.parts.light);
     if (!l || !Array.isArray(l.color)) continue;
-    send('st.light', t.i, 0, [...l.color, l.intensity ?? 1, l.range ?? 5, l.radius ?? 0.1].map((v) => +(+v).toFixed(4)).join(','));
+    // The place's mood (S7.3) over it, by thing or by kind.
+    const place = S.draft[placeFile()] || {};
+    const mood = (((place.moods || {})[place.mood] || {}).lights) || {};
+    const mo = mood[t.id] || mood[t.kind] || {};
+    const color = mo.color || l.color, intensity = mo.intensity ?? l.intensity ?? 1;
+    send('st.light', t.i, 0, [...color, intensity, l.range ?? 5, l.radius ?? 0.1].map((v) => +(+v).toFixed(4)).join(','));
   }
 }
 // The one way the Studio changes the world.

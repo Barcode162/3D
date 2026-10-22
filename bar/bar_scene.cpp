@@ -181,7 +181,12 @@ BarScene buildBarScene(const std::string& placeName) {
     if (const Json& l = world->part(i, "light"); l.has("color")) {
       if (l["dims"].boolean(false)) scene.roomLights.push_back(static_cast<int>(scene.lights.size()));
       if (t.kind->id == "light-fire") scene.fireLight = static_cast<int>(scene.lights.size());
-      scene.lights.push_back({pos, readVec3(l["color"], {1, 1, 1}), static_cast<float>(l["intensity"].number(1)),
+      // The place's mood (S7.3): a named set of light colours and brightness,
+      // by thing id or by kind; the rest of the light as its part says.
+      const Json& mood = placeJson["moods"][placeJson["mood"].string()]["lights"];
+      const Json& mo = mood.has(t.id) ? mood[t.id] : mood[t.kind->id];
+      scene.lights.push_back({pos, readVec3(mo.has("color") ? mo["color"] : l["color"], {1, 1, 1}),
+                              static_cast<float>(mo.has("intensity") ? mo["intensity"].number(1) : l["intensity"].number(1)),
                               static_cast<float>(l["range"].number(4)), static_cast<float>(l["radius"].number(0.1))});
       scene.lightThing.push_back(i);
     }

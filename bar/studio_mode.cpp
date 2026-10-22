@@ -1,5 +1,7 @@
 #include "bar/studio_mode.h"
 
+#include "looped/profiler.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -653,6 +655,12 @@ bool studioCommand(const engine::ui::Command& c) {
       }
       S.recaptureMs = engine::frameTime().nowMs + 900;
     }
+  } else if (c.name == "st.budget") {  // what the phone has to draw now (S7.3's meter)
+    uint32_t draws = 0, tris = 0;
+    const auto& f = engine::profiler().frame(0);
+    for (int p = 0; p < engine::prof::kPassCount; ++p) draws += f.draws[p], tris += f.tris[p];
+    send("{\"ev\":\"budget\",\"draws\":" + std::to_string(draws) + ",\"tris\":" + std::to_string(tris) + ",\"lights\":" +
+         std::to_string(g_app.scene.lights.size()) + ",\"maxLights\":" + std::to_string(app::SceneRenderer::maxLights()) + "}");
   } else if (c.name == "st.snap") {  // answered inside a frame, while the page can still copy the canvas (S6.1 pictures)
     send("{\"ev\":\"snap\",\"n\":" + std::to_string(static_cast<int>(c.a)) + "}");
   } else if (c.name == "st.gizmo") {  // a: 1 = arrows on the selection; b: tool (0 move, 1 turn, 2 size)

@@ -155,3 +155,12 @@ body.tooling #thingMenu { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px +
 #placeMenu { top: calc(env(safe-area-inset-top, 0px) + 64px); bottom: auto; }
 #placeMenu .rowform { display: flex; gap: 6px; }
 #placeMenu .rowform .field { flex: 1; padding: 7px; }
+/* The budget meter (S7.3). */
+.meter { display: grid; gap: 6px; }
+.meterrow { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
+.meterrow small { font-family: var(--mono); color: var(--text-2); font-size: 11px; }
+.meterrow .bar { height: 10px; border-radius: 5px; background: var(--field); box-shadow: var(--field-edge); overflow: hidden; }
+.meterrow .bar i { display: block; height: 100%; border-radius: 5px; }
+.meterrow .bar i.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.meterrow .bar i.warn { background: var(--warn); }
+.meterrow .bar i.bad { background: var(--bad); }

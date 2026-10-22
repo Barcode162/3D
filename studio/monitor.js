@@ -9,6 +9,7 @@ import { add as addOp } from './ops.mjs';
 import { control } from './fields.mjs';
 import { partSource } from './parts.mjs';
 import { changes } from './diff.mjs';
+import { drawMoods } from './look.mjs';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
@@ -260,6 +261,7 @@ function drawLook(body) {
     if (c) body.append(c);
   }
   body.append(el('p', 'dim', 'Plain boxes show it at once; models keep their own textures.'));
+  drawMoods(body);
 }
 function drawProblems(body) {
   const list = [];
