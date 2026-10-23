@@ -970,7 +970,8 @@ void SceneRenderer::applyAlbedo(size_t f) {
   const std::shared_ptr<engine::GpuModel>& m = models_[fileUsers_[f][0]].gpu;
   if (!m) return;
   for (size_t k = 0; k < m->materialNames.size(); ++k) {
-    m->setAlbedoFix(gpu_->queue, k, albedo_.fix(fileNames_[f], m->materialNames[k]));
+    m->setRealFix(gpu_->queue, k, albedo_.fix(fileNames_[f], m->materialNames[k]),
+                  roughFix_ ? albedo_.leastRough(fileNames_[f], m->materialNames[k]) : 0.0f);
   }
 }
 

@@ -11,7 +11,8 @@
     0.0059,
     0.0075
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 1.0
   },
   "Arcade ceiling": {
    "albedo": [
@@ -67,7 +68,8 @@
     0.04,
     0.25
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Neon cyan": {
    "albedo": [
@@ -147,7 +149,8 @@
     0.24,
     1.24
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Button yellow": {
    "albedo": [
@@ -160,7 +163,8 @@
     1.7,
     0.2
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Cabinet T-molding": {
    "albedo": [
@@ -173,7 +177,8 @@
     3.4,
     4.0
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Cabinet black": {
    "albedo": [
@@ -182,7 +187,8 @@
     0.025
    ],
    "fix": 1.228,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Cabinet chrome": {
    "albedo": [
@@ -224,7 +230,8 @@
     0.0301,
     0.0988
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.55
   },
   "Coin door": {
    "albedo": [
@@ -253,7 +260,8 @@
     0.02,
     0.12
    ],
-   "metal": 0.1
+   "metal": 0.1,
+   "rough": 0.5
   },
   "Joystick ball": {
    "albedo": [
@@ -261,7 +269,8 @@
     0.05,
     0.05
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Kick plate": {
    "albedo": [
@@ -280,7 +289,8 @@
     0.0019
    ],
    "fix": 5.368,
-   "metal": 0.003
+   "metal": 0.003,
+   "rough": 0.45
   },
   "Backlit onyx": {
    "albedo": [
@@ -334,7 +344,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Cap": {
    "albedo": [
@@ -342,7 +353,8 @@
     0.04,
     0.04
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Cap foil": {
    "albedo": [
@@ -350,7 +362,8 @@
     0.65,
     0.3
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Chrome": {
    "albedo": [
@@ -374,7 +387,8 @@
     0.05,
     0.04
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Garnish": {
    "albedo": [
@@ -382,7 +396,8 @@
     0.3804,
     0.121
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Glassware": {
    "albedo": [
@@ -438,7 +453,8 @@
     0.0012
    ],
    "fix": 5.631,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Lamp bulb": {
    "albedo": [
@@ -476,7 +492,8 @@
     0.139
    ],
    "fix": 1.125,
-   "metal": 0.001
+   "metal": 0.001,
+   "rough": 0.28
   },
   "Pages": {
    "albedo": [
@@ -485,7 +502,8 @@
     0.68
    ],
    "fix": 0.935,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.85
   },
   "Photos": {
    "albedo": [
@@ -493,7 +511,8 @@
     0.0385,
     0.0605
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Prop dark wood": {
    "albedo": [
@@ -511,7 +530,8 @@
     0.0013
    ],
    "fix": 5.873,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Register keys": {
    "albedo": [
@@ -519,7 +539,8 @@
     0.88,
     0.8
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   },
   "Shelf glass": {
    "albedo": [
@@ -552,7 +573,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.38
   },
   "Terracotta": {
    "albedo": [
@@ -569,7 +591,8 @@
     0.78
    ],
    "fix": 0.963,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.3
   }
  },
  "bar_counter_l.glb": {
@@ -625,7 +648,8 @@
     0.0007
    ],
    "fix": 12.017,
-   "metal": 0.006
+   "metal": 0.006,
+   "rough": 0.55
   },
   "Bar mat rubber": {
    "albedo": [
@@ -633,7 +657,8 @@
     0.03,
     0.03
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.85
   },
   "Bar top mahogany": {
    "albedo": [
@@ -642,7 +667,8 @@
     0.0008
    ],
    "fix": 6.79,
-   "metal": 0.004
+   "metal": 0.004,
+   "rough": 0.28
   },
   "Basin": {
    "albedo": [
@@ -650,7 +676,8 @@
     0.26,
     0.27
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.35
   },
   "Bills": {
    "albedo": [
@@ -691,7 +718,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Candle wax": {
    "albedo": [
@@ -707,7 +735,8 @@
     0.04,
     0.04
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Cap foil": {
    "albedo": [
@@ -715,7 +744,8 @@
     0.65,
     0.3
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Chrome": {
    "albedo": [
@@ -731,7 +761,8 @@
     0.55,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.38
   },
   "Cork": {
    "albedo": [
@@ -748,7 +779,8 @@
     0.0019
    ],
    "fix": 3.795,
-   "metal": 0.005
+   "metal": 0.005,
+   "rough": 0.4
   },
   "Dark steel": {
    "albedo": [
@@ -756,7 +788,8 @@
     0.12,
     0.13
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Drinks": {
    "albedo": [
@@ -798,7 +831,8 @@
     0.3804,
     0.121
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Glass rack": {
    "albedo": [
@@ -909,7 +943,8 @@
     0.0013
    ],
    "fix": 5.873,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Sink water": {
    "albedo": [
@@ -926,7 +961,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.38
   },
   "Straw 0": {
    "albedo": [
@@ -935,7 +971,8 @@
     0.1
    ],
    "fix": 1.111,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Straw 1": {
    "albedo": [
@@ -943,7 +980,8 @@
     0.3,
     0.9
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Straw 2": {
    "albedo": [
@@ -952,7 +990,8 @@
     0.95
    ],
    "fix": 0.842,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Straw 3": {
    "albedo": [
@@ -961,7 +1000,8 @@
     0.1
    ],
    "fix": 3.0,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 0": {
    "albedo": [
@@ -969,7 +1009,8 @@
     0.08,
     0.05
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 1": {
    "albedo": [
@@ -977,7 +1018,8 @@
     0.1,
     0.35
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 2": {
    "albedo": [
@@ -985,7 +1027,8 @@
     0.65,
     0.2
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 3": {
    "albedo": [
@@ -993,7 +1036,8 @@
     0.3,
     0.12
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 4": {
    "albedo": [
@@ -1001,7 +1045,8 @@
     0.08,
     0.06
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 5": {
    "albedo": [
@@ -1009,7 +1054,8 @@
     0.85,
     0.8
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 6": {
    "albedo": [
@@ -1017,7 +1063,8 @@
     0.3,
     0.12
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tap handle 7": {
    "albedo": [
@@ -1025,7 +1072,8 @@
     0.05,
     0.25
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Washer LED": {
    "albedo": [
@@ -1047,7 +1095,8 @@
     0.78
    ],
    "fix": 0.963,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.3
   }
  },
  "bar_stool.glb": {
@@ -1065,7 +1114,8 @@
     0.9,
     0.92
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.12
   },
   "Leather piping": {
    "albedo": [
@@ -1073,7 +1123,8 @@
     0.025,
     0.02
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.55
   },
   "Oxblood leather": {
    "albedo": [
@@ -1082,7 +1133,8 @@
     0.0073
    ],
    "fix": 1.593,
-   "metal": 0.006
+   "metal": 0.006,
+   "rough": 0.55
   }
  },
  "big_mirror.glb": {
@@ -1092,7 +1144,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Frame steel": {
    "albedo": [
@@ -1100,7 +1153,8 @@
     0.025,
     0.028
    ],
-   "metal": 0.7
+   "metal": 0.7,
+   "rough": 0.45
   },
   "Mirror backing": {
    "albedo": [
@@ -1214,7 +1268,8 @@
     0.0026
    ],
    "fix": 3.019,
-   "metal": 0.006
+   "metal": 0.006,
+   "rough": 0.45
   }
  },
  "chess_bishop_b.glb": {
@@ -1224,7 +1279,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1259,7 +1315,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   },
   "Shadow": {
    "albedo": [
@@ -1277,7 +1334,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1304,7 +1362,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   }
  },
  "chess_knight_b.glb": {
@@ -1314,7 +1373,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1341,7 +1401,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   }
  },
  "chess_pawn_b.glb": {
@@ -1351,7 +1412,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1378,7 +1440,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   }
  },
  "chess_queen_b.glb": {
@@ -1388,7 +1451,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1415,7 +1479,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   }
  },
  "chess_rook_b.glb": {
@@ -1425,7 +1490,8 @@
     0.03,
     0.028
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   },
   "Felt": {
    "albedo": [
@@ -1484,7 +1550,8 @@
     0.78
    ],
    "fix": 0.832,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   },
   "Shadow": {
    "albedo": [
@@ -1526,7 +1593,8 @@
     0.76,
     0.78
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Amber lamp": {
    "albedo": [
@@ -1560,7 +1628,8 @@
     0.379,
     0.3125
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Black rubber": {
    "albedo": [
@@ -1568,7 +1637,8 @@
     0.03,
     0.03
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.85
   },
   "Caution tape": {
    "albedo": [
@@ -1581,7 +1651,8 @@
     0.0862,
     0.0009
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.7
   },
   "Cone orange": {
    "albedo": [
@@ -1589,7 +1660,8 @@
     0.28,
     0.02
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Construction sign": {
    "albedo": [
@@ -1610,7 +1682,8 @@
     0.0882,
     0.0691
    ],
-   "metal": 0.013
+   "metal": 0.013,
+   "rough": 0.95
   },
   "Drywall sheet": {
    "albedo": [
@@ -1634,7 +1707,8 @@
     0.9,
     0.88
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Paint 1": {
    "albedo": [
@@ -1642,7 +1716,8 @@
     0.3,
     0.2
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Paint 2": {
    "albedo": [
@@ -1650,7 +1725,8 @@
     0.1,
     0.08
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Painted steel": {
    "albedo": [
@@ -1658,7 +1734,8 @@
     0.12,
     0.12
    ],
-   "metal": 0.6
+   "metal": 0.6,
+   "rough": 0.6
   },
   "Plastic sheet": {
    "albedo": [
@@ -1667,6 +1744,7 @@
     0.95
    ],
    "metal": 0.0,
+   "rough": 0.45,
    "seeThrough": true
   },
   "Reflective white": {
@@ -1676,7 +1754,8 @@
     0.95
    ],
    "fix": 0.947,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Tool yellow": {
    "albedo": [
@@ -1684,7 +1763,8 @@
     0.7,
     0.05
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Toolbox red": {
    "albedo": [
@@ -1692,7 +1772,8 @@
     0.05,
     0.03
    ],
-   "metal": 0.4
+   "metal": 0.4,
+   "rough": 0.5
   },
   "Work light": {
    "albedo": [
@@ -1715,7 +1796,8 @@
     0.74,
     0.3
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.3
   },
   "Gold emblem": {
    "albedo": [
@@ -1723,7 +1805,8 @@
     0.82,
     0.42
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.3
   },
   "Gold face": {
    "albedo": [
@@ -1744,7 +1827,8 @@
     0.66,
     1.86
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.35
   }
  },
  "dartboard.glb": {
@@ -1763,7 +1847,8 @@
     0.0031
    ],
    "fix": 3.572,
-   "metal": 0.005
+   "metal": 0.005,
+   "rough": 0.45
   },
   "Dartboard face": {
    "albedo": [
@@ -1779,7 +1864,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   }
  },
  "darts_zone.glb": {
@@ -1789,7 +1875,8 @@
     0.05,
     0.05
    ],
-   "metal": 0.2
+   "metal": 0.2,
+   "rough": 0.5
   },
   "Dart tip": {
    "albedo": [
@@ -1797,7 +1884,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.3
   },
   "Flight 0": {
    "albedo": [
@@ -1851,7 +1939,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Spot lens": {
    "albedo": [
@@ -1890,7 +1979,8 @@
     0.02
    ],
    "fix": 1.25,
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Tungsten": {
    "albedo": [
@@ -1898,7 +1988,8 @@
     0.45,
     0.48
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   }
  },
  "decor_walls.glb": {
@@ -1909,7 +2000,8 @@
     0.0049
    ],
    "fix": 2.397,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Black plastic": {
    "albedo": [
@@ -1942,7 +2034,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Candle wax": {
    "albedo": [
@@ -1958,7 +2051,8 @@
     0.04,
     0.04
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Cap foil": {
    "albedo": [
@@ -1966,7 +2060,8 @@
     0.65,
     0.3
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Coat 0": {
    "albedo": [
@@ -1975,7 +2070,8 @@
     0.0058
    ],
    "fix": 1.962,
-   "metal": 0.013
+   "metal": 0.013,
+   "rough": 1.0
   },
   "Coat 2": {
    "albedo": [
@@ -1984,7 +2080,8 @@
     0.0027
    ],
    "fix": 2.171,
-   "metal": 0.013
+   "metal": 0.013,
+   "rough": 1.0
   },
   "Cord": {
    "albedo": [
@@ -1992,7 +2089,8 @@
     0.02,
     0.02
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.9
   },
   "Cork": {
    "albedo": [
@@ -2102,7 +2200,8 @@
     0.03,
     0.02
    ],
-   "metal": 0.2
+   "metal": 0.2,
+   "rough": 0.5
   },
   "Flame": {
    "albedo": [
@@ -2132,7 +2231,8 @@
     0.04,
     0.045
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Grill cloth.001": {
    "albedo": [
@@ -2140,7 +2240,8 @@
     0.04,
     0.045
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Grill cloth.002": {
    "albedo": [
@@ -2148,7 +2249,8 @@
     0.04,
     0.045
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Grill cloth.003": {
    "albedo": [
@@ -2156,7 +2258,8 @@
     0.04,
     0.045
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Groove shine": {
    "albedo": [
@@ -2337,7 +2440,8 @@
     0.0385,
     0.0605
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Prop dark wood": {
    "albedo": [
@@ -2355,7 +2459,8 @@
     0.0013
    ],
    "fix": 5.873,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Record label 0": {
    "albedo": [
@@ -2408,7 +2513,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.38
   },
   "TV picture": {
    "albedo": [
@@ -2462,7 +2568,8 @@
     0.012
    ],
    "fix": 2.957,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Wall clock": {
    "albedo": [
@@ -2470,7 +2577,8 @@
     0.4334,
     0.2978
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.75
   },
   "White ceramic": {
    "albedo": [
@@ -2479,7 +2587,8 @@
     0.78
    ],
    "fix": 0.963,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.3
   }
  },
  "fire_flames.glb": {
@@ -2505,7 +2614,8 @@
     0.11,
     0.07
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.9
   },
   "Black steel": {
    "albedo": [
@@ -2521,7 +2631,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Brick": {
    "albedo": [
@@ -2530,7 +2641,8 @@
     0.0406
    ],
    "fix": 2.33,
-   "metal": 0.004
+   "metal": 0.004,
+   "rough": 0.9
   },
   "Ceiling": {
    "albedo": [
@@ -2556,7 +2668,8 @@
     0.0316
    ],
    "fix": 4.434,
-   "metal": 0.004
+   "metal": 0.004,
+   "rough": 0.9
   },
   "Dark brick": {
    "albedo": [
@@ -2565,7 +2678,8 @@
     0.0283
    ],
    "fix": 2.094,
-   "metal": 0.003
+   "metal": 0.003,
+   "rough": 0.9
   },
   "Door wood": {
    "albedo": [
@@ -2574,7 +2688,8 @@
     0.0006
    ],
    "fix": 12.66,
-   "metal": 0.006
+   "metal": 0.006,
+   "rough": 0.45
   },
   "Drywall": {
    "albedo": [
@@ -2612,7 +2727,8 @@
     0.0178
    ],
    "fix": 3.107,
-   "metal": 0.009
+   "metal": 0.009,
+   "rough": 0.85
   },
   "Night street": {
    "albedo": [
@@ -2633,7 +2749,8 @@
     0.0402,
     0.0148
    ],
-   "metal": 0.003
+   "metal": 0.003,
+   "rough": 0.42
   },
   "Pillow fabric": {
    "albedo": [
@@ -2641,7 +2758,8 @@
     0.1613,
     0.0501
    ],
-   "metal": 0.015
+   "metal": 0.015,
+   "rough": 0.95
   },
   "Pine studs": {
    "albedo": [
@@ -2658,7 +2776,8 @@
     0.0025
    ],
    "fix": 8.0,
-   "metal": 0.004
+   "metal": 0.004,
+   "rough": 0.85
   },
   "Seat velvet": {
    "albedo": [
@@ -2666,7 +2785,8 @@
     0.0015,
     0.003
    ],
-   "metal": 0.011
+   "metal": 0.011,
+   "rough": 0.95
   },
   "Soffit wood": {
    "albedo": [
@@ -2675,7 +2795,8 @@
     0.0011
    ],
    "fix": 7.393,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.55
   },
   "Sprinkler pipe": {
    "albedo": [
@@ -2683,7 +2804,8 @@
     0.04,
     0.03
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Stage boards": {
    "albedo": [
@@ -2714,7 +2836,8 @@
     0.0026
    ],
    "fix": 3.402,
-   "metal": 0.005
+   "metal": 0.005,
+   "rough": 0.5
   }
  },
  "jukebox.glb": {
@@ -2724,7 +2847,8 @@
     0.92,
     0.94
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.12
   },
   "Dome glass": {
    "albedo": [
@@ -2785,7 +2909,8 @@
     0.09,
     0.02
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Ivory buttons": {
    "albedo": [
@@ -2794,7 +2919,8 @@
     0.68
    ],
    "fix": 0.935,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   },
   "Jukebox shadow": {
    "albedo": [
@@ -2811,7 +2937,8 @@
     0.0023
    ],
    "fix": 2.256,
-   "metal": 0.001
+   "metal": 0.001,
+   "rough": 0.38
   },
   "Record label": {
    "albedo": [
@@ -2827,7 +2954,8 @@
     0.6274,
     0.5465
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.7
   },
   "Vinyl": {
    "albedo": [
@@ -2836,7 +2964,8 @@
     0.012
    ],
    "fix": 2.957,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   }
  },
  "lounge.glb": {
@@ -2870,7 +2999,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Candle wax": {
    "albedo": [
@@ -2886,7 +3016,8 @@
     0.04,
     0.04
    ],
-   "metal": 0.3
+   "metal": 0.3,
+   "rough": 0.5
   },
   "Cast iron": {
    "albedo": [
@@ -2902,7 +3033,8 @@
     0.1168,
     0.0317
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Chesterfield leather": {
    "albedo": [
@@ -2911,7 +3043,8 @@
     0.0005
    ],
    "fix": 8.557,
-   "metal": 0.005
+   "metal": 0.005,
+   "rough": 0.55
   },
   "Clock face": {
    "albedo": [
@@ -2919,7 +3052,8 @@
     0.2802,
     0.1737
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Drinks": {
    "albedo": [
@@ -2949,7 +3083,8 @@
     0.0027
    ],
    "fix": 7.072,
-   "metal": 0.004
+   "metal": 0.004,
+   "rough": 0.9
   },
   "Flame": {
    "albedo": [
@@ -3035,7 +3170,8 @@
     0.0021
    ],
    "fix": 4.642,
-   "metal": 0.002
+   "metal": 0.002,
+   "rough": 0.45
   },
   "Pages": {
    "albedo": [
@@ -3044,7 +3180,8 @@
     0.68
    ],
    "fix": 0.935,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.85
   },
   "Photos": {
    "albedo": [
@@ -3052,7 +3189,8 @@
     0.0385,
     0.0605
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.6
   },
   "Prop dark wood": {
    "albedo": [
@@ -3070,7 +3208,8 @@
     0.0035
    ],
    "fix": 1.379,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 1.0
   },
   "Shade fabric": {
    "albedo": [
@@ -3083,7 +3222,8 @@
     0.56,
     0.32
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Shelf wood": {
    "albedo": [
@@ -3092,7 +3232,8 @@
     0.0008
    ],
    "fix": 10.246,
-   "metal": 0.009
+   "metal": 0.009,
+   "rough": 0.45
   },
   "Soil": {
    "albedo": [
@@ -3109,7 +3250,8 @@
     0.0276
    ],
    "fix": 5.783,
-   "metal": 0.001
+   "metal": 0.001,
+   "rough": 0.28
   },
   "Terracotta": {
    "albedo": [
@@ -3125,7 +3267,8 @@
     0.2,
     0.3
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.25
   },
   "Wingback velvet": {
    "albedo": [
@@ -3134,7 +3277,8 @@
     0.0034
    ],
    "fix": 5.171,
-   "metal": 0.011
+   "metal": 0.011,
+   "rough": 0.95
   }
  },
  "mirror_button.glb": {
@@ -3144,7 +3288,8 @@
     0.85,
     0.6
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Button ring": {
    "albedo": [
@@ -3152,7 +3297,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   }
  },
  "pendant_lamp.glb": {
@@ -3162,7 +3308,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Cloth cord": {
    "albedo": [
@@ -3170,7 +3317,8 @@
     0.03,
     0.025
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.95
   },
   "Edison bulb": {
    "albedo": [
@@ -3212,7 +3360,8 @@
     0.035,
     0.03
    ],
-   "metal": 0.8
+   "metal": 0.8,
+   "rough": 0.45
   }
  },
  "piano.glb": {
@@ -3223,7 +3372,8 @@
     0.0019
    ],
    "fix": 3.918,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Bench leather": {
    "albedo": [
@@ -3232,7 +3382,8 @@
     0.0011
    ],
    "fix": 14.174,
-   "metal": 0.017
+   "metal": 0.017,
+   "rough": 0.55
   },
   "Black keys": {
    "albedo": [
@@ -3241,7 +3392,8 @@
     0.017
    ],
    "fix": 1.651,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   },
   "Bridge maple": {
    "albedo": [
@@ -3250,7 +3402,8 @@
     0.0014
    ],
    "fix": 18.954,
-   "metal": 0.007
+   "metal": 0.007,
+   "rough": 0.45
   },
   "Copper string": {
    "albedo": [
@@ -3258,7 +3411,8 @@
     0.55,
     0.35
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.38
   },
   "Damper felt": {
    "albedo": [
@@ -3266,7 +3420,8 @@
     0.03,
     0.03
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 1.0
   },
   "Gold plate": {
    "albedo": [
@@ -3283,7 +3438,8 @@
     0.75
    ],
    "fix": 0.845,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 1.0
   },
   "Piano brass": {
    "albedo": [
@@ -3291,7 +3447,8 @@
     0.72,
     0.4
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Piano lacquer": {
    "albedo": [
@@ -3300,7 +3457,8 @@
     0.014
    ],
    "fix": 2.47,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.16
   },
   "Piano name": {
    "albedo": [
@@ -3308,7 +3466,8 @@
     0.0166,
     0.0046
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Red felt": {
    "albedo": [
@@ -3316,7 +3475,8 @@
     0.05,
     0.06
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 1.0
   },
   "Satin black": {
    "albedo": [
@@ -3325,7 +3485,8 @@
     0.022
    ],
    "fix": 1.241,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Sheet music": {
    "albedo": [
@@ -3333,7 +3494,8 @@
     0.5004,
     0.3537
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.85
   },
   "Soundboard spruce": {
    "albedo": [
@@ -3342,7 +3504,8 @@
     0.0022
    ],
    "fix": 10.691,
-   "metal": 0.006
+   "metal": 0.006,
+   "rough": 0.5
   },
   "Steel string": {
    "albedo": [
@@ -3350,7 +3513,8 @@
     0.8,
     0.82
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Tuning pin": {
    "albedo": [
@@ -3367,7 +3531,8 @@
     0.84
    ],
    "fix": 0.889,
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.38
   }
  },
  "pint_glass.glb": {
@@ -3398,7 +3563,8 @@
     0.0225
    ],
    "fix": 3.126,
-   "metal": 0.013
+   "metal": 0.013,
+   "rough": 0.95
   },
   "Black plastic": {
    "albedo": [
@@ -3415,7 +3581,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Cabinet art": {
    "albedo": [
@@ -3428,7 +3595,8 @@
     0.0174,
     0.0658
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.55
   },
   "Cabinet black": {
    "albedo": [
@@ -3437,7 +3605,8 @@
     0.025
    ],
    "fix": 1.228,
-   "metal": 0.2
+   "metal": 0.2,
+   "rough": 0.5
   },
   "Cabinet chrome": {
    "albedo": [
@@ -3497,7 +3666,8 @@
     1.62,
     1.8
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Key 1": {
    "albedo": [
@@ -3510,7 +3680,8 @@
     0.63,
     1.35
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Key 2": {
    "albedo": [
@@ -3523,7 +3694,8 @@
     0.63,
     1.35
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "Key 3": {
    "albedo": [
@@ -3536,7 +3708,8 @@
     1.62,
     1.8
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.4
   },
   "LED cyan": {
    "albedo": [
@@ -3634,7 +3807,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Cast iron": {
    "albedo": [
@@ -3651,7 +3825,8 @@
     0.0027
    ],
    "fix": 1.207,
-   "metal": 0.005
+   "metal": 0.005,
+   "rough": 0.32
   }
  },
  "sim_rig.glb": {
@@ -3661,7 +3836,8 @@
     0.03,
     0.03
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Button 0": {
    "albedo": [
@@ -3674,7 +3850,8 @@
     0.15,
     0.15
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Button 1": {
    "albedo": [
@@ -3687,7 +3864,8 @@
     0.6,
     1.5
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Button 2": {
    "albedo": [
@@ -3700,7 +3878,8 @@
     1.2,
     0.3
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Button 3": {
    "albedo": [
@@ -3713,7 +3892,8 @@
     1.125,
     0.075
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.45
   },
   "Carbon": {
    "albedo": [
@@ -3721,7 +3901,8 @@
     0.05,
     0.06
    ],
-   "metal": 0.6
+   "metal": 0.6,
+   "rough": 0.4
   },
   "Monitor bezel": {
    "albedo": [
@@ -3730,7 +3911,8 @@
     0.015
    ],
    "fix": 1.333,
-   "metal": 0.1
+   "metal": 0.1,
+   "rough": 0.5
   },
   "Pedal steel": {
    "albedo": [
@@ -3738,7 +3920,8 @@
     0.75,
     0.78
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Profile aluminum": {
    "albedo": [
@@ -3746,7 +3929,8 @@
     0.71,
     0.73
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.45
   },
   "Profile slot": {
    "albedo": [
@@ -3763,7 +3947,8 @@
     0.02
    ],
    "fix": 1.25,
-   "metal": 0.2
+   "metal": 0.2,
+   "rough": 0.5
   },
   "Screen left": {
    "albedo": [
@@ -3811,7 +3996,8 @@
     0.0012
    ],
    "fix": 11.306,
-   "metal": 0.017
+   "metal": 0.017,
+   "rough": 0.95
   },
   "Wheel display": {
    "albedo": [
@@ -3842,7 +4028,8 @@
     0.8,
     0.65
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Amp grille": {
    "albedo": [
@@ -3864,7 +4051,8 @@
     0.6,
     0.2
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Amp tolex": {
    "albedo": [
@@ -3890,7 +4078,8 @@
     0.75,
     0.6
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.3
   },
   "Guitar top": {
    "albedo": [
@@ -3920,7 +4109,8 @@
     0.022
    ],
    "fix": 1.241,
-   "metal": 0.4
+   "metal": 0.4,
+   "rough": 0.5
   },
   "Stage chrome": {
    "albedo": [
@@ -3938,7 +4128,8 @@
     0.025,
     0.025
    ],
-   "metal": 0.7
+   "metal": 0.7,
+   "rough": 0.45
   },
   "Brass": {
    "albedo": [
@@ -3946,7 +4137,8 @@
     0.7,
     0.38
    ],
-   "metal": 1.0
+   "metal": 1.0,
+   "rough": 0.4
   },
   "Leather piping": {
    "albedo": [
@@ -3954,7 +4146,8 @@
     0.045,
     0.02
    ],
-   "metal": 0.0
+   "metal": 0.0,
+   "rough": 0.55
   },
   "Tan leather": {
    "albedo": [
@@ -3962,7 +4155,8 @@
     0.0284,
     0.0042
    ],
-   "metal": 0.013
+   "metal": 0.013,
+   "rough": 0.55
   }
  }
 }

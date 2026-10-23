@@ -675,6 +675,7 @@ void handleCommands() {
     }
     g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
     g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));
+    g_app.renderer.setRoughFix(g_app.hooks.feature("roughfix"));
     g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
     g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);
     g_app.renderer.setGiView(static_cast<int>(g_app.hooks.number("giview", 0)));

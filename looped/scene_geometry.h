@@ -33,11 +33,14 @@ class AlbedoTable {
   GeoMaterial lookup(const std::string& file, const ModelMaterial& m) const;
   // The fix for one material (1 = none): multiplies its base colour in the new lighting.
   float fix(const std::string& file, const std::string& material) const;
+  // The least roughness a material may have (M0, assets/models/rough_rules.json; 0 = as made).
+  float leastRough(const std::string& file, const std::string& material) const;
 
  private:
   struct Entry {
     GeoMaterial m;
     float fix = 1;
+    float rough = 0;
   };
   std::map<std::string, std::map<std::string, Entry>> models_;
 };

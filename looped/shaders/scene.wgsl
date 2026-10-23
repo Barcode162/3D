@@ -223,6 +223,7 @@ struct ModelMaterial {
   baseColor: vec4f,
   params: vec4f,    // x = metallic, y = roughness, z = normal scale, w = occlusion strength
   emissive: vec4f,  // rgb; w = the real-brightness fix (new lighting only)
+  surface: vec4f,   // y = the least roughness (M0, new lighting only; 0 = as made)
 };
 // Group 2 is shared with the bones above, so these start at binding 1.
 @group(2) @binding(1) var<uniform> modelMaterial: ModelMaterial;
@@ -294,7 +295,10 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   if (seeThrough) {
     emission = emission * alpha;
   }
-  let lit = shade(in.worldPos, n, base, mr.g * m.params.y, mr.b * m.params.x, emission, ao);
+  var roughness = mr.g * m.params.y;
+  // Real roughness (M0): many models were made glossier than real things.
+  if (!classicLight()) { roughness = max(roughness, m.surface.y); }
+  let lit = shade(in.worldPos, n, base, roughness, mr.b * m.params.x, emission, ao);
   return vec4f(lit.rgb, alpha);
 }
 

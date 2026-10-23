@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Real material brightness (L1.4, docs/manual/light.md): measures how much
+"""Real material brightness (L1.4, docs/manual/light.md) and roughness (M0):
+measures how much
 light every material of every model reflects (its albedo: the average of its
 base colour texture in linear light, times its colour factor) and how much
 it glows, and writes assets/models/albedo.json. The engine's bounced light
@@ -28,6 +29,7 @@ from PIL import Image
 MODELS = Path('assets/models')
 OUT = MODELS / 'albedo.json'
 RULES = json.loads((MODELS / 'albedo_rules.json').read_text())['rules']
+ROUGH_RULES = json.loads((MODELS / 'rough_rules.json').read_text())['rules']
 
 
 def rule_for(name):
@@ -36,6 +38,16 @@ def rule_for(name):
         if word in low:
             return word, lo, hi
     return '', 0.0, 1.0
+
+
+def rough_for(name, metal):
+    """The least roughness a material may have (assets/models/rough_rules.json)."""
+    low = name.lower()
+    for word, least, _why in ROUGH_RULES:
+        if word in low:
+            # Metals no rule names: polished, but not mirrors.
+            return (0.3 if metal >= 0.5 else least) if word == '' else least
+    return 0.0
 
 
 def srgb_to_linear(c):
@@ -134,6 +146,13 @@ def audit():
                 emissive = [round(em[k] * et[k] * strength, 4) for k in range(3)]
             name = m.get('name', f'material{i}')
             entry = {'albedo': albedo, 'metal': round(metal, 3)}
+            # Roughness (M0): as made (factor x the texture's average) and the
+            # least a real one has; the new lighting draws it no smoother.
+            rough = pbr.get('roughnessFactor', 1.0) * mean_channel(
+                gltf, binary, pbr.get('metallicRoughnessTexture', {}).get('index'), 1, cache)
+            least = rough_for(name, metal)
+            if least > rough + 0.02:
+                entry['rough'] = round(least, 2)
             if any(emissive):
                 entry['emissive'] = emissive
             if m.get('alphaMode') == 'BLEND':
@@ -150,7 +169,8 @@ def audit():
                     flag = f"{y:.3f} → {target:.3f} ({word or 'any'} {lo}-{hi})"
             report.append(f"{'fix' if flag else '   '} {path.name:24} {name[:28]:28} albedo {y:.3f}"
                           f"{' metal' if metal >= 0.5 else ''}{' glows' if any(emissive) else ''}"
-                          f"{' ' + flag if flag else ''}")
+                          f"{' ' + flag if flag else ''}"
+                          f"{f' rough {rough:.2f} → {least:.2f}' if 'rough' in entry else ''}")
         result[path.name] = mats
     return result, report
 

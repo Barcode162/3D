@@ -37,6 +37,7 @@ bool AlbedoTable::parse(const std::string& text, std::string* error) {
       e.m.emission = vec3Of(v["emissive"], {});
       e.m.metal = static_cast<float>(v["metal"].number(0));
       e.m.seeThrough = v["seeThrough"].boolean(false);
+      e.rough = static_cast<float>(v["rough"].number(0));
       slot[name] = e;
     }
   }
@@ -57,6 +58,13 @@ float AlbedoTable::fix(const std::string& file, const std::string& material) con
   if (f == models_.end()) return 1;
   const auto e = f->second.find(material);
   return e == f->second.end() ? 1 : e->second.fix;
+}
+
+float AlbedoTable::leastRough(const std::string& file, const std::string& material) const {
+  const auto f = models_.find(file);
+  if (f == models_.end()) return 0;
+  const auto e = f->second.find(material);
+  return e == f->second.end() ? 0 : e->second.rough;
 }
 
 void SceneGeometry::add(const ModelData& model, const Mat4& world, const std::string& file, const AlbedoTable& table,

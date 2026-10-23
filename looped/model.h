@@ -38,6 +38,7 @@ class GpuModel {
     float baseColor[4];
     float params[4];    // metallic, roughness, normal scale, occlusion strength
     float emissive[4];  // rgb; w = the real-brightness fix (L1.4, new lighting only; 1 = none)
+    float surface[4];   // y = the least roughness (M0, new lighting only; 0 = as made)
   };
 
   // The bind group layout models are drawn with (group 2 of the model
@@ -65,7 +66,9 @@ class GpuModel {
   std::vector<std::string> materialNames;
   std::vector<MaterialUniforms> materialValues;
   std::vector<wgpu::Buffer> materialBuffers;
-  void setAlbedoFix(const wgpu::Queue& queue, size_t material, float fix);
+  // The real-material fixes (new lighting only): brightness (1 = none) and
+  // the least roughness (0 = as made).
+  void setRealFix(const wgpu::Queue& queue, size_t material, float fix, float leastRough);
   // The model's geometry and materials on the CPU (textures left out), for
   // the bounced light (looped/radiosity.h) to trace rays through.
   std::shared_ptr<const ModelData> cpu;

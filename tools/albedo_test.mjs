@@ -32,5 +32,16 @@ for (const [f, mats] of Object.entries(table)) {
 }
 check(bad.length === 0, `albedos and fixes are sane${bad.length ? ': ' + bad.slice(0, 5).join(', ') : ''}`);
 console.log(`     ${Object.keys(table).length} models, ${fixes} materials moved into real ranges`);
+// Real roughness (M0): the rules read, every least roughness is 0..1, and cloth is matte.
+const roughRules = JSON.parse(readFileSync('assets/models/rough_rules.json', 'utf8')).rules;
+check(Array.isArray(roughRules) && roughRules.every((r) => r.length === 3 && r[1] >= 0 && r[1] <= 1), 'the roughness rules read (name, least, why)');
+const roughBad = [];
+for (const [f, mats] of Object.entries(table)) {
+  for (const [m, e] of Object.entries(mats)) {
+    if (e.rough !== undefined && !(e.rough > 0 && e.rough <= 1)) roughBad.push(`${f}: ${m} ${e.rough}`);
+    if (/coat|felt|rug|carpet/i.test(m) && e.rough !== undefined && e.rough < 0.9) roughBad.push(`${f}: ${m} is cloth but not matte`);
+  }
+}
+check(roughBad.length === 0, `roughness is real (cloth matte)${roughBad.length ? ': ' + roughBad.slice(0, 5).join(', ') : ''}`);
 if (failed) { console.log('ALBEDO TEST FAILED'); process.exit(1); }
 console.log('ALBEDO TEST PASSED');

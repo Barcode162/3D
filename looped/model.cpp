@@ -460,9 +460,12 @@ void GpuModel::load(const wgpu::Device& device, const wgpu::BindGroupLayout& lay
   }, std::move(progress));
 }
 
-void GpuModel::setAlbedoFix(const wgpu::Queue& queue, size_t material, float fix) {
-  if (material >= materialValues.size() || materialValues[material].emissive[3] == fix) return;
-  materialValues[material].emissive[3] = fix;
+void GpuModel::setRealFix(const wgpu::Queue& queue, size_t material, float fix, float leastRough) {
+  if (material >= materialValues.size()) return;
+  MaterialUniforms& u = materialValues[material];
+  if (u.emissive[3] == fix && u.surface[1] == leastRough) return;
+  u.emissive[3] = fix;
+  u.surface[1] = leastRough;
   queue.WriteBuffer(materialBuffers[material], 0, &materialValues[material], sizeof(MaterialUniforms));
 }
 

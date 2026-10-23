@@ -178,6 +178,8 @@ class SceneRenderer {
   void setBounceStrength(float s) { bounceStrength_ = s; }
   // Fewer rays (?gilite=1): for the software GPU of the tests' pictures.
   void setGiLite(bool lite) { giLite_ = lite; }
+  // Real roughness (M0, ?roughfix=0 turns it off): set before models load.
+  void setRoughFix(bool on) { roughFix_ = on; }
   void setGiView(int view) { giView_ = view; }  // ?giview= (debug views, scene.wgsl)
   const GiGpu& gi() const { return gi_; }
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
@@ -375,6 +377,7 @@ class SceneRenderer {
   // each model as it (or the table) arrives.
   engine::AlbedoTable albedo_;
   void applyAlbedo(size_t file);
+  bool roughFix_ = true;
   GiGpu gi_;
   bool giOn_ = true, giWanted_ = false, giLite_ = false;
   int giView_ = 0;
