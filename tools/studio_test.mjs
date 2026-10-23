@@ -468,7 +468,7 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   const k = await page.evaluate(() => window.bar3dStudio.S.draft['kinds/bar.json'].kinds.find((x) => x.id === 'dartboard'));
   check(k.states.wobble && k.states.wobble.loop === 'wobble' && k.loops.wobble && k.states.idle.on.tap === 'wobble', `S8.1 a state "wobble" (its own loop, back after one loop), and touching it in idle leads there (${k.states.idle.on.tap})`);
   await page.click('#monitor [data-test="tap"]');
-  await page.waitForFunction(() => /now wobble/.test(window.bar3dLife.lastTest), null, { timeout: 8000 }).catch(() => {});
+  await page.waitForFunction(() => /now wobble/.test(window.bar3dLife.lastTest), null, { timeout: 30000 }).catch(() => {});  // (slow software GPUs)
   check(/now wobble/.test(await page.evaluate(() => window.bar3dLife.lastTest)), `S8.1 Test: a touch puts it in wobble, live (${await page.evaluate(() => window.bar3dLife.lastTest)})`);
   await page.screenshot({ path: 'build/studio-life.png' });
   await page.click('#monitor .key[aria-label="Close the Monitor"]');

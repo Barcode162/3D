@@ -36,9 +36,10 @@ export function presets() {
   const base = lightsByKind();
   const map = (f) => Object.fromEntries(Object.entries(base).map(([k, l], i) => [k, f(l, i)]));
   return {
-    Evening: { lights: map((l) => ({ color: l.color, intensity: l.intensity })) },
-    Party: { lights: map((l, i) => ({ color: hueShift(l.color, 120 * (i % 3) + 60), intensity: +(l.intensity * 1.3).toFixed(2) })) },
-    Closing: { lights: map((l) => ({ color: [l.color[0], +(l.color[1] * 0.8).toFixed(3), +(l.color[2] * 0.6).toFixed(3)], intensity: +(l.intensity * 0.35).toFixed(2) })) },
+    // Real units (L1.2): lumens follow the brightness; Closing also warms the bulbs.
+    Evening: { lights: map((l) => ({ color: l.color, intensity: l.intensity, ...(l.lumens ? { lumens: l.lumens } : {}) })) },
+    Party: { lights: map((l, i) => ({ color: hueShift(l.color, 120 * (i % 3) + 60), intensity: +(l.intensity * 1.3).toFixed(2), ...(l.lumens ? { lumens: Math.round(l.lumens * 1.3) } : {}) })) },
+    Closing: { lights: map((l) => ({ color: [l.color[0], +(l.color[1] * 0.8).toFixed(3), +(l.color[2] * 0.6).toFixed(3)], intensity: +(l.intensity * 0.35).toFixed(2), ...(l.lumens ? { lumens: Math.round(l.lumens * 0.35) } : {}), ...(l.kelvin ? { kelvin: Math.max(1800, l.kelvin - 400) } : {}) })) },
   };
 }
 export function useMood(name) {

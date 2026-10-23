@@ -1465,8 +1465,8 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
       giDirtyMs_ = -1;
       buildGi();
     }
-    // (A software GPU refreshes the bounced light every 4th frame: tests stay fast.)
-    if (!gpu_->software || (++giFrame_ & 3) == 0 || gi_.building()) {
+    // (A software GPU refreshes the bounced light every 8th frame: tests stay fast.)
+    if (!gpu_->software || (++giFrame_ & 7) == 0 || gi_.building()) {
       gi_.encode(encoder, engine::clockMs(), emissiveNits_, bounceStrength_);
     }
     if (gi_.changed()) {

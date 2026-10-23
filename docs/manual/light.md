@@ -143,6 +143,13 @@ don't also glow into the bounced light (their light would count twice).
 In the Studio: Light → Shape (ball, tube, panel), Length, Width, Lies along,
 Middle.
 
+### In the Studio (L1.7)
+- **Inspect → Light:** Lumens, Colour temperature (Kelvin), Shape, Length,
+  Width, Lies along change the lamp at once (its bounced light follows the
+  next frame).
+- **Look → moods:** Evening, Party and Closing carry lumens too: Party is
+  30% brighter, Closing a third of the light and 400 K warmer.
+
 Tools: `node tools/light.mjs gi` (build it, timed), `node tools/light.mjs
 map bar 1.2 build/map.png` (a top-down map of the bounced light at 1.2 m),
 `node tools/bench.mjs native` (`gi_*` numbers).
