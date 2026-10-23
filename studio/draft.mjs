@@ -165,7 +165,13 @@ export function refreshLights() {
     const mood = (((place.moods || {})[place.mood] || {}).lights) || {};
     const mo = mood[t.id] || mood[t.kind] || {};
     const color = mo.color || l.color, intensity = mo.intensity ?? l.intensity ?? 1;
-    send('st.light', t.i, 0, [...color, intensity, l.range ?? 5, l.radius ?? 0.1].map((v) => +(+v).toFixed(4)).join(','));
+    // Real units (L1.2): lumens and Kelvin; shape and size (L1.6).
+    const lumens = mo.lumens ?? l.lumens ?? 0, kelvin = mo.kelvin ?? l.kelvin ?? 0;
+    const shape = { tube: 1, panel: 2 }[l.shape] ?? 0;
+    const v = (a, d) => (Array.isArray(a) && a.length === 3 ? a : d);
+    const nums = [...color, intensity, l.range ?? 5, l.radius ?? 0.1, lumens, kelvin, shape, l.length ?? 1, l.width ?? 1,
+                  ...v(l.axis, [1, 0, 0]), ...v(l.axis2, [0, 0, 1]), ...v(l.center, [0, 0, 0])];
+    send('st.light', t.i, 0, nums.map((x) => +(+x).toFixed(4)).join(','));
   }
 }
 // A kind's loops or states changed (S8): the engine swaps them in place,

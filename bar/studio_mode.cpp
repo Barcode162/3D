@@ -644,10 +644,24 @@ bool studioCommand(const engine::ui::Command& c) {
     const float d = surfaceAlong(from, {0, -1, 0}, -1);
     const Vec3 p = d > 0 ? from + Vec3{0, -d, 0} : eye + dir * t;
     send("{\"ev\":\"aim\",\"at\":[" + num(p.x) + "," + num(p.y) + "," + num(p.z) + "]}");
-  } else if (c.name == "st.light") {  // a: thing; text: r,g,b,intensity,range,radius (S7.2: live, reflections follow)
-    float v[6] = {1, 1, 1, 1, 5, 0.1f};
+  } else if (c.name == "st.light") {
+    // a: thing; text: r,g,b,intensity,range,radius (S7.2: live, reflections
+    // follow), then lumens,kelvin (L1.2), shape,length,width,axis xyz,axis2
+    // xyz,center xyz (L1.6; the thing's own space).
+    float v[23] = {1, 1, 1, 1, 5, 0.1f, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0};
     const int t = static_cast<int>(c.a);
-    if (std::sscanf(c.text.c_str(), "%f,%f,%f,%f,%f,%f", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]) == 6) {
+    int n = 0;
+    {
+      const char* s = c.text.c_str();
+      while (n < 23 && *s) {
+        char* end = nullptr;
+        v[n] = std::strtof(s, &end);
+        if (end == s) break;
+        ++n;
+        s = *end == ',' ? end + 1 : end;
+      }
+    }
+    if (n >= 6) {
       app::BarScene& sc = g_app.scene;
       for (size_t k = 0; k < sc.lights.size() && k < sc.lightThing.size(); ++k) {
         if (sc.lightThing[k] != t) continue;
@@ -655,6 +669,13 @@ bool studioCommand(const engine::ui::Command& c) {
         sc.lights[k].intensity = v[3];
         sc.lights[k].range = v[4];
         sc.lights[k].radius = v[5];
+        if (n >= 8) sc.lights[k].lumens = v[6], sc.lights[k].kelvin = v[7];
+        if (n >= 20) {  // (where the lamp is stays as built: its shape and size change)
+          const engine::world::Thing& th = g_app.world.world().thing(t);
+          sc.lights[k].shape = static_cast<int>(v[8]);
+          sc.lights[k].axis = sc.lights[k].shape ? th.rot.rotate(engine::Vec3{v[11], v[12], v[13]}) * (v[9] * 0.5f) : engine::Vec3{};
+          sc.lights[k].axis2 = sc.lights[k].shape == 2 ? th.rot.rotate(engine::Vec3{v[14], v[15], v[16]}) * (v[10] * 0.5f) : engine::Vec3{};
+        }
         g_app.renderer.setLight(k, sc.lights[k]);
       }
       S.recaptureMs = engine::frameTime().nowMs + 900;
