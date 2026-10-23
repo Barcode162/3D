@@ -228,7 +228,7 @@ void PostEffects::apply(const wgpu::CommandEncoder& encoder, const wgpu::Texture
     // New lighting: the glow starts above white (after the exposure).
     u.params[0] = classic ? m.glowThreshold : m.glowThreshold * 2.0f;
     u.params[1] = classic ? m.glowKnee : m.glowKnee * 2.0f;
-    u.params[2] = classic ? m.glow : m.glow * 0.125f;  // light is brighter here than display colours
+    u.params[2] = classic ? m.glow : m.glow * 0.08f;  // light is brighter here than display colours (softer since L1.9)
     u.params[3] = m.vignette;
     u.grade[0] = m.tint.x;
     u.grade[1] = m.tint.y;

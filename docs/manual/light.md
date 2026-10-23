@@ -168,9 +168,14 @@ lux); Medium 8; Low 5 (they fade out a little sooner). The log says
 ### Softer highlights (L1.9)
 Two things made bright parts look white instead of lit: the curve (AgX)
 turns any colour white as it gets bright, and it ran out of room early.
-Now the curve has 1.5 EV more room around middle grey (`?hiroom=0` as
-before) and bright light keeps half its colour (`?hicolour=0` as before,
+Now the curve has 2 EV more room around middle grey (`?hiroom=0` as
+before) and bright light keeps 65% of its colour (`?hicolour=0` as before,
 1 = all): a lamp-lit wall stays amber.
+
+### Calmer light (L1.10)
+Seen on the phone: too bright, too much glow. The eyes aim a third of a
+stop darker (exposure -1.3, `?exposure=-1` as before) and the glow is two
+thirds as strong (`?glow=` sets it; the bar's mood has 0.7).
 
 ## L2 Shadows and shaped light
 

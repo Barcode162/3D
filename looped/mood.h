@@ -17,7 +17,7 @@ struct Mood {
   float lift = 0;               // raises the darkest parts a little (0..0.1)
   float vignette = 0.2f;        // darker corners (0 = none)
   // Eyes (new lighting, L1.1): how the exposure follows the scene.
-  float exposureComp = -1.0f;   // EV: + brighter, - darker than "middle grey"
+  float exposureComp = -1.3f;   // EV: + brighter, - darker than "middle grey"
   float eyeDarkest = -9;        // log2 of the dimmest average light eyes adapt to (darker stays dark)
   float eyeBrightest = 6;       // log2 of the brightest
   float adaptBright = 0.6f;     // seconds to settle when it gets brighter
@@ -35,8 +35,8 @@ struct Mood {
   // The curve's highlights (new lighting): EV of extra room before bright
   // light turns white, and how much bright light keeps its colour (0..1;
   // 0 = pure AgX, where a lamp-lit wall goes white as it gets bright).
-  float highlightRoom = 1.5f;
-  float highlightColour = 0.5f;
+  float highlightRoom = 2.0f;
+  float highlightColour = 0.65f;
 };
 
 }  // namespace engine
