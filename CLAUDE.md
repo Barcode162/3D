@@ -18,12 +18,11 @@ easy to pinpoint. So on "go":
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
    **One piece = one commit**, message starting with its tag (`E3.2 ...`).
-   Per piece run only that piece's own test (e.g. `node tools/check.mjs
-   studio`), not the whole check (user, 2026-10-22: faster). Push each
-   commit: `git push -u origin HEAD:work-go` (the container is temporary).
-3. End of the step: the full `node tools/check.mjs` once (green; run it in
-   the background while starting the next step's code), `git fetch origin main &&
-   git merge origin/main`, push `main` **once**. CI deploys in ~6 min; the
+   Per piece only the **quick** check (`node tools/check.mjs quick`: build,
+   C++ tests, shaders; the piece runner's default) plus the pictures. Push
+   each commit: `git push -u origin HEAD:work-go` (the container is temporary).
+3. End of the step: `git fetch origin main && git merge origin/main`, push
+   `main` **once**. CI runs every test at deploy. CI deploys in ~6 min; the
    `build xxxxxxx` label on screen shows the live commit.
    If the step changed files in `assets/world/`: once the deploy is live,
    `node tools/studio.mjs push --note "<pieces>"` (publishes them as a new
@@ -37,11 +36,24 @@ easy to pinpoint. So on "go":
    --title ... --text ...` at the end. Nothing else on the hub during a go.
 7. Don't sit watching CI. If a run goes red, fix it, then tell the user.
 
+## Speed over tests (user, 2026-10-23)
+This cloud machine has no graphics card, so any test that runs the game in a
+browser (studio, smoke, touch, travel, mp, ...) is slow: 20-30 min each, an
+hour+ per piece with the new lighting. The user won't wait on them. So:
+- Never run the browser tests here, never wait on them, never block a piece
+  or a step on them. The quick check + the pictures are the gate.
+- CI runs the whole set at every deploy. A red CI run: fix it after,
+  without stopping the current step (and only the part that's really broken).
+- The phone check is the real visual test. A slower, safer run only when
+  the user asks or for a "broke <piece>" that needs it.
+- Tracking never gets skipped: one piece = one commit, the Build log, the
+  gallery, NEXT.md ticks. That's what lets us fix things later.
+
 ## Automation first (user, 2026-10-22)
 Anything done twice becomes a tool; Claude runs the tools, not the steps by
 hand, and improves a tool whenever it's missing or clumsy
 (`docs/AUTOMATION.md`). Each piece: `node tools/piece.mjs <TAG> "<title>"
---test <systems> --check "<phone check>"` (build, tests, before/after
+--check "<phone check>"` (build, quick check, before/after
 pictures into the `gallery` branch, commit, push). Each step's end: `node
 tools/step.mjs finish <STEP> "<what>" --bench`. Before/after is the norm.
 

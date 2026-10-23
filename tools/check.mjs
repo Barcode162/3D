@@ -5,7 +5,8 @@
 //   node tools/check.mjs            checks for what changed since origin/main
 //   node tools/check.mjs all        every check
 //   node tools/check.mjs game room  only these systems
-//   node tools/check.mjs changed    only for what isn't committed yet (tools/piece.mjs)
+//   node tools/check.mjs changed    only for what isn't committed yet
+//   node tools/check.mjs quick      build, C++ tests, shaders: no browser (each piece)
 // Systems: build, native, game, room, hub, server, plus the game's own tests
 // (mania, chess, arcade, meridian, race, menu, avatar, voice).
 import { execSync, spawnSync } from 'node:child_process';
@@ -14,6 +15,12 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 const EMSDK = 'source /opt/emsdk/emsdk_env.sh >/dev/null 2>&1;';
 const NP = 'NODE_PATH=$(npm root -g):$PWD/node_modules';
 const CHECKS = {
+  // The quick set: no game running in a browser, so a few minutes even on the
+  // cloud machine (no graphics card). Each piece runs this; the slow browser
+  // tests run on CI at deploy (user, 2026-10-23).
+  quick:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
+             ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
+             ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`]],
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
   native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
@@ -81,7 +88,7 @@ function changedSystems(uncommittedOnly = false) {
 
 const args = process.argv.slice(2);
 let systems;
-if (args[0] === 'all') systems = ORDER;
+if (args[0] === 'all') systems = ORDER.filter(s => s !== 'quick');
 else if (args[0] === 'changed') {  // only what isn't committed yet (tools/piece.mjs)
   const c = changedSystems(true);
   systems = c.systems.filter((s) => s !== 'build');  // piece.mjs has just built
