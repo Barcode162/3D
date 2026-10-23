@@ -1279,8 +1279,9 @@ void applyQuality(const char* why) {
   // Glow and mood cost about one more full-screen pass: off at Low.
   const bool post = g_app.hooks.post >= 0 ? g_app.hooks.post == 1
                                           : g_app.quality.tier() < engine::QualityController::kTiers - 1;
-  // Lights per pixel: all 8 a cell lists at High, 6 at Medium, 4 at Low.
-  static const int kLightsPerPixel[] = {0, 6, 4};
+  // Lights per pixel: 12 at High, 8 at Medium, 5 at Low (lamps reach less
+  // far at lower quality, so nothing is cut off in squares).
+  static const int kLightsPerPixel[] = {12, 8, 5};
   g_app.renderer.setLightsPerPixel(kLightsPerPixel[g_app.quality.tier()]);
   if (post != g_app.renderer.postEffects()) {
     g_app.renderer.setPostEffects(post);

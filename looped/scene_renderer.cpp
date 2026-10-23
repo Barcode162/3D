@@ -266,9 +266,18 @@ void SceneRenderer::setClassicLighting(bool classic) {
   if (envReady_) capturePending_ = true;  // reflections in the new light
 }
 
+void SceneRenderer::setLightsPerPixel(int n) {
+  if (n == lightsPerPixel_) return;
+  lightsPerPixel_ = n;
+  if (gpu_ && !lights_.empty()) buildLighting();
+}
+
 // Fills the light list and the light grid (see LightingUniforms). A light
-// reaches a cell if its reach touches the cell's square; when more than 8
-// do, the 8 brightest there win (logged, so the layout can be tuned).
+// reaches a cell if its reach touches the cell's square. A cell that had to
+// leave a light out would show as a square of different light (seen on the
+// phone), so the new lighting raises the faintest light a lamp still reaches
+// to (0.1 lux at first, the edge of its reach) until every cell fits. Classic:
+// the brightest win.
 void SceneRenderer::buildLighting() {
   auto l = std::make_unique<LightingUniforms>();
   std::memset(l.get(), 0, sizeof(LightingUniforms));
@@ -281,6 +290,7 @@ void SceneRenderer::buildLighting() {
     lightIntensity_.push_back(l->lights[i].color[3]);
     l->lights[i].color[3] *= lightScale_[i];
   }
+  const uint32_t cap = lightsPerPixel_ > 0 ? std::min<uint32_t>(lightsPerPixel_, kLightsPerCell) : kLightsPerCell;
   // Cells cover the walkable area (blockers included) with at most 16 x 16.
   float x0 = lightGridMin_.x, z0 = lightGridMin_.z;
   const float spanX = lightGridMax_.x - x0, spanZ = lightGridMax_.z - z0;
@@ -291,26 +301,47 @@ void SceneRenderer::buildLighting() {
   l->grid[2] = 1.0f / cell;
   l->gridSize[0] = nx;
   l->gridSize[1] = nz;
+  // How many lights reach each cell (each light's reach is position[3]).
+  auto reaching = [&](uint32_t cx, uint32_t cz, std::vector<std::pair<float, uint32_t>>& reach) {
+    reach.clear();
+    const float minX = x0 + cx * cell, minZ = z0 + cz * cell;
+    for (size_t i = 0; i < count; ++i) {
+      const GpuLight& g = l->lights[i];
+      const float px = g.position[0], pz = g.position[2], range = g.position[3];
+      const float dx = px - std::clamp(px, minX, minX + cell);
+      const float dz = pz - std::clamp(pz, minZ, minZ + cell);
+      const float d2 = dx * dx + dz * dz;
+      if (d2 >= range * range) continue;
+      reach.push_back({lightIntensity_[i] / (d2 + 1.0f), static_cast<uint32_t>(i)});
+    }
+  };
+  std::vector<std::pair<float, uint32_t>> reach;
+  float minLux = engine::light::kMinLux;
+  if (!classic_) {
+    for (int round = 0; round < 24; ++round) {
+      for (size_t i = 0; i < count; ++i) {
+        const PointLight& p = lights_[i];
+        l->lights[i].position[3] = engine::light::reach(lightIntensity_[i], minLux) + engine::length(p.axis) + engine::length(p.axis2);
+      }
+      size_t most = 0;
+      for (uint32_t cz = 0; cz < nz; ++cz)
+        for (uint32_t cx = 0; cx < nx; ++cx) {
+          reaching(cx, cz, reach);
+          most = std::max(most, reach.size());
+        }
+      if (most <= cap) break;
+      minLux *= 1.25f;
+    }
+  }
   int crowded = 0;
   for (uint32_t cz = 0; cz < nz; ++cz) {
     for (uint32_t cx = 0; cx < nx; ++cx) {
-      const float minX = x0 + cx * cell, minZ = z0 + cz * cell;
-      std::vector<std::pair<float, uint32_t>> reach;  // (strength here, light)
-      for (size_t i = 0; i < count; ++i) {
-        const GpuLight& g = l->lights[i];
-        const float px = g.position[0], pz = g.position[2], range = g.position[3];
-        const float dx = px - std::clamp(px, minX, minX + cell);
-        const float dz = pz - std::clamp(pz, minZ, minZ + cell);
-        const float d2 = dx * dx + dz * dz;
-        if (d2 >= range * range) continue;
-        reach.push_back({lightIntensity_[i] / (d2 + 1.0f), static_cast<uint32_t>(i)});
-      }
+      reaching(cx, cz, reach);  // (strength here, light)
       std::sort(reach.begin(), reach.end(), [](auto a, auto b) { return a.first > b.first; });
-      if (reach.size() > kLightsPerCell) ++crowded;
-      const size_t n = std::min<size_t>(reach.size(), kLightsPerCell);
+      if (reach.size() > cap) ++crowded;
+      const size_t n = std::min<size_t>(reach.size(), cap);
       uint32_t* c = l->cells[cz * nx + cx];
-      for (size_t k = 0; k < n; ++k) c[k / 4] |= reach[k].second << (8 * (k % 4));
-      c[2] = static_cast<uint32_t>(n);
+      for (size_t k = 0; k < kLightsPerCell; ++k) c[k / 4] |= (k < n ? reach[k].second : 0xffu) << (8 * (k % 4));
     }
   }
   if (!lightingBuffer_) lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
@@ -318,8 +349,9 @@ void SceneRenderer::buildLighting() {
   gpuLights_.assign(l->lights, l->lights + kMaxLights);
   lightsDirtyFrom_ = SIZE_MAX;
   lightsDirtyTo_ = 0;
-  LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells%s.", classic_ ? "classic" : "real units", count, nx, nz,
-           cell, crowded ? " (some cells have more than 8; the faintest are left out)" : "");
+  LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells, at most %u each; lamps reach down to %.2f lux%s.",
+           classic_ ? "classic" : "real units", count, nx, nz, cell, cap, classic_ ? 0.0f : minLux,
+           crowded ? " (some cells are too full; the faintest are left out)" : "");
   if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
 }
 

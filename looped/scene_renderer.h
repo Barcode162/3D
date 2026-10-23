@@ -56,7 +56,9 @@ class SceneRenderer {
   // stays as built until the lighting is rebuilt (switching New / Classic).
   void setLight(size_t light, const PointLight& p);
   // At most this many lights add up per pixel (fewer = cheaper; quality).
-  void setLightsPerPixel(int n) { lightsPerPixel_ = n; }
+  // At most n lights per pixel (0 = all a cell holds). The new lighting
+  // shortens every lamp's reach until no cell needs more, so no cell drops one.
+  void setLightsPerPixel(int n);
   // New lighting: how bright self-lit surfaces are (cd/m² per unit of their
   // glow) and how strong the room's ambient fill is (until bounced light
   // replaces it, L1.6). Tuning: ?emissive= ?ambient=.
@@ -182,7 +184,7 @@ class SceneRenderer {
 
  private:
   static constexpr uint32_t kMaxLights = 32;       // matches looped/shaders/scene.wgsl
-  static constexpr uint32_t kLightsPerCell = 8;    // brightest first (2 x 4 bytes)
+  static constexpr uint32_t kLightsPerCell = 16;   // brightest first (4 x 4 bytes, 0xff ends the list)
   static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
   static constexpr uint32_t kMaxGridCells = 256;
   static constexpr uint32_t kMaxBones = 32;
@@ -224,7 +226,7 @@ class SceneRenderer {
     float grid[4];  // x0, z0, 1 / cell size, cells along x
     uint32_t gridSize[4];  // cells along x, cells along z
     GpuLight lights[kMaxLights];
-    uint32_t cells[kMaxGridCells][4];  // x, y = 8 light indices (bytes), z = count
+    uint32_t cells[kMaxGridCells][4];  // 16 light indices (bytes), 0xff after the last
   };
   struct ObjectUniforms {
     engine::Mat4 model;

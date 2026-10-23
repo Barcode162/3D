@@ -44,13 +44,13 @@ struct Frame {
 fn classicLight() -> bool { return frame.env.w > 0.5; }
 
 // All the lights, and a grid over the floor: each cell lists the (at most
-// 8) lights that reach it, so a pixel only adds up the lights near it.
+// 16) lights that reach it, so a pixel only adds up the lights near it.
 struct Lighting {
   lightCount: vec4u,  // x = number of lights
   grid: vec4f,        // x, y = where cell (0, 0) starts (world x, z), z = 1 / cell size
   gridSize: vec4u,    // x, y = cells along x and z
   lights: array<Light, kMaxLights>,
-  cells: array<vec4u, kMaxGridCells>,  // x, y = 8 light indices (one per byte), z = count
+  cells: array<vec4u, kMaxGridCells>,  // 16 light indices (one per byte), 0xff after the last
 };
 
 struct Object {
@@ -554,10 +554,10 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   let cell = lighting.cells[cz * lighting.gridSize.x + cx];
   // Each cell's lights are listed brightest first, so a view can take only
   // the strongest few (the mirror: its reflection doesn't need them all).
-  let lightCount = select(cell.z, min(cell.z, u32(frame.ambient.w)), frame.ambient.w > 0.5);
+  let lightCount = select(16u, min(16u, u32(frame.ambient.w)), frame.ambient.w > 0.5);
   for (var k = 0u; k < lightCount; k++) {
-    let packed = select(cell.y, cell.x, k < 4u);
-    let lightIndex = (packed >> (8u * (k % 4u))) & 0xffu;
+    let lightIndex = (cell[k / 4u] >> (8u * (k % 4u))) & 0xffu;
+    if (lightIndex == 0xffu) { break; }
     let l = lighting.lights[lightIndex];
     if (!classic && l.axis.w > 0.5) {  // a tube or a panel (L1.6)
       let al = areaLight(l, worldPos, n, v, a, roughness, nv, f0);
