@@ -59,7 +59,8 @@ E7.1-E7.4 (boxes, the test home, travel, catalog), E8.1-E8.2 (the hub's World
 page, tuning), E9.1-E9.2 (projects as a part, old keys gone).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72
+- (this push) Phone feedback: L1.8 no squares of light, M0 real roughness (matte coats, floor not a mirror), L1.9 softer highlights (bright light keeps its colour), L1.10 calmer light (darker, less glow); tools: place_check, stage_hunks → 5622548..HEAD
+- `336e1d9` L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72
 - `7322b92` L1.1-L1.6: eyes (HDR, adapting, AgX), real units (lumens, Kelvin), real material brightness, bounced light (core + in the game), lights with size; tools: piece runner, gallery, benchmarks, light tool → 69fb05c^..5d99353
 - `96fbf26` S9.1-S9.3, S10.1-S10.4: live for everyone (a publish reaches an open bar within seconds, try your draft with a friend, undo a publish) and Claude in the loop (notes from the Studio, Claude's versions in History with what changed, deep links, proposals) → c00af5e..HEAD
 - `c00af5e` S7.1-S7.3, S8.1-S8.4: light and look (materials as data, live lights, moods and the budget meter) and life (states and rules, the Loop Rack, drawn keys and presets, sounds) → 2c8b4da..c00af5e
