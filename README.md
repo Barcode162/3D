@@ -6,6 +6,32 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## L1.6 Lights with size: tubes and panels (streak and rectangle highlights, soft area light), lamps fitted to the glowing objects beside them (light tool fit + migration), lamp-backed glow not counted twice in the bounced light
+
+`5d99353` · 2026-10-23 01:12 · 17 files, +504 −23 · tests: changed · headless frame 97.23 ms, 288 draws
+
+Phone check: Look at the jukebox: its light comes from its whole front and reflects as a soft rectangle on the floor; in the arcade the neon frames light like big soft squares.
+
+![L1.6 door.jpg](L1.6/door.jpg)
+
+![L1.6 door-switch.jpg](L1.6/door-switch.jpg)
+
+![L1.6 mirror.jpg](L1.6/mirror.jpg)
+
+![L1.6 mirror-switch.jpg](L1.6/mirror-switch.jpg)
+
+![L1.6 bartop.jpg](L1.6/bartop.jpg)
+
+![L1.6 bartop-switch.jpg](L1.6/bartop-switch.jpg)
+
+![L1.6 backbar.jpg](L1.6/backbar.jpg)
+
+![L1.6 backbar-switch.jpg](L1.6/backbar-switch.jpg)
+
+![L1.6 piano.jpg](L1.6/piano.jpg)
+
+![L1.6 piano-switch.jpg](L1.6/piano-switch.jpg)
+
 ## L1.5 Bounced light in the game: the GPU casts the build rays (looped/gi.h, shaders/gi.wgsl), one more bounce every frame, every pixel reads its 8 probes; the flat fill replaced; no lamp light through walls; debug views; shader check tool
 
 `e390b36` · 2026-10-22 20:09 · 20 files, +1269 −13 · tests: changed · headless frame 169.82 ms, 288 draws
