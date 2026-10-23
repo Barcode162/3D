@@ -8,7 +8,9 @@
 // brightness) in the gallery's pieces.jsonl.
 // Options:
 //   --test a,b        check.mjs systems to run first (a failure stops the piece); default
-//                     "changed": the systems the uncommitted files need; "none" for none
+//                     "quick" (build, C++ tests, shaders: minutes, no browser); "changed"
+//                     for every system the files touch (slow here: no graphics card);
+//                     "none" for none. The slow browser tests run on CI at deploy.
 //   --check "..."     the phone check: where to stand, what to see (kept for the reply)
 //   --compare "x=0"   also pictures with this page option vs without (the feature's switch)
 //   --spots a,b       only these spots (default: all of tools/lib/spots.mjs)
@@ -92,7 +94,7 @@ const branch = sh('git rev-parse --abbrev-ref HEAD');
 if (branch !== 'work-go' && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to work-go)`);
 if (!has('no-build')) build();
 
-const tests = (opt('test') ?? 'changed').split(',').filter((t) => t && t !== 'none');
+const tests = (opt('test') ?? 'quick').split(',').filter((t) => t && t !== 'none');
 if (tests.length) {
   step(`tests: ${tests.join(', ')}`);
   if (!run(`FAST=1 node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }

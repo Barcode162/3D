@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // The end of a step, done the same way every time (docs/AUTOMATION.md):
 //   node tools/step.mjs status [STEP]          the step's pieces so far (from the gallery)
-//   node tools/step.mjs finish <STEP> "<what>" [--skip-check] [--bench] [--no-main]
-// finish: the full check (node tools/check.mjs all), merges origin/main,
+//   node tools/step.mjs finish <STEP> "<what>" [--skip-check] [--full-check] [--bench] [--no-main]
+// finish: the quick check (--full-check: every test, an hour+ here with no
+// graphics card; CI runs them all at deploy anyway), merges origin/main,
 // pushes work-go and main once (CI deploys), writes the Build log line in
 // NEXT.md (the previous "(this push)" gets its real sha), runs the benchmark
 // (--bench), posts to the hub (if HUB_KEY is set) and prints the reply for
@@ -38,8 +39,9 @@ if (cmd !== 'finish' || !stepName) { console.log('usage: node tools/step.mjs fin
 const pieces = piecesOf(null);
 if (!pieces.length) { console.log('No pieces since the last finished step.'); process.exit(1); }
 if (!has('skip-check')) {
-  console.log('▶ full check');
-  if (!run('node tools/check.mjs all')) { console.log('✗ the full check failed: fix, then finish again'); process.exit(1); }
+  const full = has('full-check');
+  console.log(full ? '▶ full check' : '▶ quick check (the browser tests run on CI)');
+  if (!run(`node tools/check.mjs ${full ? 'all' : 'quick'}`)) { console.log('✗ the full check failed: fix, then finish again'); process.exit(1); }
 }
 console.log('▶ merge origin/main');
 run('git fetch -q origin main');
