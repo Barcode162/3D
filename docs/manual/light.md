@@ -125,6 +125,24 @@ lights a whole room. The bar works it out like this:
 | how much of the nearest lamp is in view | `?giview=3` |
 | fewer rays (the tests' software GPU) | `?gilite=1` |
 
+### Lights with size (L1.6)
+Real lamps aren't points. A lamp can be:
+- a **ball** (a bulb): its glass's radius (Softness) makes highlights rounder and softer;
+- a **tube** (neon): it lights like a line of light and reflects as a **streak**;
+- a **panel** (the jukebox's front, a lit sign, a screen): light from an area,
+  brightest straight in front, reflected as a soft rectangle.
+
+`node tools/light.mjs fit bar tools/migrations/l1_6_light_fit.json` finds the
+glowing object beside every lamp (grouping glowing triangles that touch) and
+measures it; `node tools/world_migrate.mjs l1_6_light_shapes` writes the
+confident ones into the world: the bar's pendant bulbs are 16 cm balls, two
+neons are tubes (1.1 m and 1.7 m), the jukebox's front a 1.3 × 0.8 m panel,
+the arcade's four neon frames 2.3 m squares. Glowing surfaces that have a lamp
+don't also glow into the bounced light (their light would count twice).
+
+In the Studio: Light → Shape (ball, tube, panel), Length, Width, Lies along,
+Middle.
+
 Tools: `node tools/light.mjs gi` (build it, timed), `node tools/light.mjs
 map bar 1.2 build/map.png` (a top-down map of the bounced light at 1.2 m),
 `node tools/bench.mjs native` (`gi_*` numbers).

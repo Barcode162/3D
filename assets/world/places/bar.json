@@ -335,7 +335,20 @@
       "id": "light-bulb-7",
       "kind": "light-bulb",
       "at": [-3.95, 2, -6.8],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.9, "range": 3.5, "radius": 0.8, "lumens": 162, "kelvin": 1900}}
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 0.9,
+          "range": 3.5,
+          "radius": 0.8,
+          "lumens": 162,
+          "kelvin": 1900,
+          "shape": "tube",
+          "center": [-0.561, 0.005, -0.323],
+          "axis": [1, 0, 0],
+          "length": 1.06
+        }
+      }
     },
     {
       "id": "light-groove-1",
@@ -350,7 +363,15 @@
       "kind": "light-groove",
       "at": [2.8, 3.2, 2.2],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 1.6, "range": 6.5, "radius": 0.8, "dims": true, "lumens": 288, "kelvin": 2400}
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1.6,
+          "range": 6.5,
+          "radius": 0.04,
+          "dims": true,
+          "lumens": 288,
+          "kelvin": 2400
+        }
       }
     },
     {
@@ -372,19 +393,19 @@
       "id": "light-bulb-8",
       "kind": "light-bulb",
       "at": [-6.3, 1.5, 2.75],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.1, "range": 4, "radius": 0.2, "lumens": 198, "kelvin": 2400}}
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.1, "range": 4, "radius": 0.04, "lumens": 198, "kelvin": 2400}}
     },
     {
       "id": "light-bulb-9",
       "kind": "light-bulb",
       "at": [-6.4, 3.4, 4.6],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 3.2, "range": 5.5, "radius": 0.15, "lumens": 576, "kelvin": 2400}}
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 3.2, "range": 5.5, "radius": 0.07, "lumens": 576, "kelvin": 2400}}
     },
     {
       "id": "light-neon-2",
       "kind": "light-neon",
       "at": [-7.8, 3.2, 6.4],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.15, "lumens": 288, "kelvin": 3000}}
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.04, "lumens": 288, "kelvin": 3000}}
     },
     {
       "id": "light-bulb-10",
@@ -396,7 +417,19 @@
       "id": "light-neon-3",
       "kind": "light-neon",
       "at": [8.3, 1.3, -2],
-      "parts": {"light": {"color": [0.5, 0.6, 1], "intensity": 0.9, "range": 3.5, "radius": 0.5, "lumens": 162}}
+      "parts": {
+        "light": {
+          "color": [0.5, 0.6, 1],
+          "intensity": 0.9,
+          "range": 3.5,
+          "radius": 0.5,
+          "lumens": 162,
+          "shape": "tube",
+          "center": [0.356, -0.22, 0.981],
+          "axis": [0.016, 0.072, 0.997],
+          "length": 1.73
+        }
+      }
     },
     {
       "id": "light-neon-4",
@@ -408,7 +441,7 @@
       "id": "light-neon-5",
       "kind": "light-neon",
       "at": [7.07574, 3, -5.47574],
-      "parts": {"light": {"color": [1, 0.3, 0.7], "intensity": 0.8, "range": 3, "radius": 0.4, "lumens": 144}}
+      "parts": {"light": {"color": [1, 0.3, 0.7], "intensity": 0.8, "range": 3, "radius": 0.09, "lumens": 144}}
     },
     {"id": "light-jukebox", "kind": "light-jukebox", "at": [-3.8, 1.2, 5.85]},
     {
@@ -421,34 +454,90 @@
       "id": "light-neon-6",
       "kind": "light-neon",
       "at": [-10.8, 1.8, -3.1],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.1, "lumens": 288, "kelvin": 3800}}
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.12, "lumens": 288, "kelvin": 3800}}
     },
     {
       "id": "light-neon-wave-1",
       "kind": "light-neon-wave",
       "at": [2, 3, -13.9],
-      "parts": {"light": {"color": [1, 0.2, 0.7], "intensity": 1.4, "range": 5.5, "radius": 0.3, "lumens": 252}}
+      "parts": {
+        "light": {
+          "color": [1, 0.2, 0.7],
+          "intensity": 1.4,
+          "range": 5.5,
+          "radius": 0.3,
+          "lumens": 252,
+          "shape": "panel",
+          "center": [-0.294, 0.38, -0.487],
+          "axis": [0.691, 0, 0.723],
+          "length": 2.29,
+          "axis2": [-0.723, 0, 0.691],
+          "width": 2.29
+        }
+      }
     },
     {
       "id": "light-neon-wave-2",
       "kind": "light-neon-wave",
       "at": [6.8, 3, -13.9],
       "phase": 0.5,
-      "parts": {"light": {"color": [0.2, 0.8, 1], "intensity": 1.4, "range": 5.5, "radius": 0.3, "lumens": 252}}
+      "parts": {
+        "light": {
+          "color": [0.2, 0.8, 1],
+          "intensity": 1.4,
+          "range": 5.5,
+          "radius": 0.3,
+          "lumens": 252,
+          "shape": "panel",
+          "center": [0.239, 0.38, -0.487],
+          "axis": [0.691, 0, 0.723],
+          "length": 2.29,
+          "axis2": [-0.723, 0, 0.691],
+          "width": 2.29
+        }
+      }
     },
     {
       "id": "light-neon-wave-3",
       "kind": "light-neon-wave",
       "at": [2, 3, -9.5],
       "phase": 0.25,
-      "parts": {"light": {"color": [0.25, 0.85, 1], "intensity": 1.2, "range": 5, "radius": 0.3, "lumens": 216}}
+      "parts": {
+        "light": {
+          "color": [0.25, 0.85, 1],
+          "intensity": 1.2,
+          "range": 5,
+          "radius": 0.3,
+          "lumens": 216,
+          "shape": "panel",
+          "center": [-0.299, 0.38, 0.446],
+          "axis": [0.683, 0, 0.73],
+          "length": 2.29,
+          "axis2": [-0.73, 0, 0.683],
+          "width": 2.29
+        }
+      }
     },
     {
       "id": "light-neon-wave-4",
       "kind": "light-neon-wave",
       "at": [6.8, 3, -9.5],
       "phase": 0.75,
-      "parts": {"light": {"color": [0.8, 0.3, 1], "intensity": 1.2, "range": 5, "radius": 0.3, "lumens": 216}}
+      "parts": {
+        "light": {
+          "color": [0.8, 0.3, 1],
+          "intensity": 1.2,
+          "range": 5,
+          "radius": 0.3,
+          "lumens": 216,
+          "shape": "panel",
+          "center": [0.234, 0.38, 0.446],
+          "axis": [0.683, 0, 0.73],
+          "length": 2.29,
+          "axis2": [-0.73, 0, 0.683],
+          "width": 2.29
+        }
+      }
     },
     {
       "id": "light-neon-7",

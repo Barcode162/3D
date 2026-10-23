@@ -13,6 +13,8 @@ struct Light {
   position: vec4f,   // xyz = position, w = range in meters
   color: vec4f,      // rgb = color, w = intensity
   params: vec4f,     // x = radius of the glowing part
+  axis: vec4f,       // xyz = half a tube's length / a panel's first side; w = shape (0 ball, 1 tube, 2 panel)
+  axis2: vec4f,      // xyz = half a panel's second side
 };
 
 struct Frame {
@@ -432,6 +434,89 @@ fn giLampVisible(s: GiSample, k: u32) -> f32 {
   return seen / s.total;
 }
 
+// Lights with size (L1.6): the light a tube or a panel gives a surface.
+// Diffuse: the lamp as a few points along it (a tube: 3; a panel: 4, each
+// side lit, brighter head-on). Highlights: the point on the lamp closest to
+// the reflection (a "representative point"), widened by the lamp's size,
+// so a neon tube reflects as a streak and a panel as a soft rectangle.
+struct AreaLight {
+  diffuse: vec3f,   // lux (times nl), before visibility
+  specular: vec3f,  // as the point lights' specular sum
+};
+
+fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv: f32, f0: vec3f) -> AreaLight {
+  var out: AreaLight;
+  out.diffuse = vec3f(0.0);
+  out.specular = vec3f(0.0);
+  let shape = l.axis.w;
+  let c = l.position.xyz;
+  let ha = l.axis.xyz;
+  let hb = l.axis2.xyz;
+  let reach2 = l.position.w * l.position.w;
+  let r2 = max(l.params.x * l.params.x, 1e-4);
+  let panel = shape > 1.5;
+  let pn = normalize(cross(ha, hb) + vec3f(0.0, 1e-6, 0.0));
+  // Diffuse from points along the lamp.
+  let count = select(3, 4, panel);
+  for (var i = 0; i < count; i++) {
+    var q = c;
+    if (panel) {
+      q = c + ha * select(-0.5, 0.5, (i & 1) == 1) + hb * select(-0.5, 0.5, (i & 2) == 2);
+    } else {
+      q = c + ha * (f32(i - 1) * 0.6667);
+    }
+    let d = q - p;
+    let d2 = dot(d, d);
+    if (d2 >= reach2) { continue; }
+    let dir = d * inverseSqrt(max(d2, 1e-8));
+    let nl = dot(n, dir);
+    if (nl <= 0.0) { continue; }
+    let qq = d2 / reach2;
+    let w = clamp(1.0 - qq * qq, 0.0, 1.0);
+    let emit = select(1.0, abs(dot(pn, dir)), panel);  // a panel is brightest head-on
+    out.diffuse += l.color.rgb * (l.color.w / f32(count)) * emit * nl * w * w / max(d2, r2);
+  }
+  // The highlight: the lamp's point nearest the reflected ray.
+  let r = reflect(-v, n);
+  var s: vec3f;
+  if (panel) {
+    let denom = dot(r, pn);
+    var hit = c;
+    if (abs(denom) > 1e-4) {
+      let t = dot(c - p, pn) / denom;
+      if (t > 0.0) { hit = p + r * t; }
+    }
+    let la = length(ha);
+    let lb = length(hb);
+    let u = clamp(dot(hit - c, ha / max(la, 1e-6)), -la, la);
+    let w2 = clamp(dot(hit - c, hb / max(lb, 1e-6)), -lb, lb);
+    s = c + ha / max(la, 1e-6) * u + hb / max(lb, 1e-6) * w2 - p;
+  } else {
+    let p0 = c - ha - p;
+    let ld = 2.0 * ha;
+    let rl = dot(r, ld);
+    let t = clamp((dot(r, p0) * rl - dot(p0, ld)) / max(dot(ld, ld) - rl * rl, 1e-6), 0.0, 1.0);
+    s = p0 + ld * t;
+  }
+  let dist = max(length(s), 1e-4);
+  let dir = s / dist;
+  let nl = dot(n, dir);
+  if (nl > 0.0 && dist * dist < reach2) {
+    // Wider, softer highlight for a bigger lamp, the same energy.
+    let size = length(ha) + length(hb);
+    let aSphere = clamp(a + l.params.x / (2.0 * dist), 0.0, 1.0);
+    let aSize = clamp(a + size / (2.0 * dist), 0.0, 1.0);
+    let h = normalize(dir + v);
+    let d = distributionGgx(max(dot(n, h), 0.0), aSphere) * (a * a) / (aSphere * aSphere) * (a / aSize);
+    let spec = d * visibilitySmith(nv, nl, roughness) * fresnel(f0, max(dot(v, h), 0.0));
+    let emit = select(1.0, abs(dot(pn, dir)), panel);
+    let qq = dist * dist / reach2;
+    let w = clamp(1.0 - qq * qq, 0.0, 1.0);
+    out.specular = l.color.rgb * l.color.w * emit * w * w / max(dist * dist, r2) * spec * (nl * kPi);
+  }
+  return out;
+}
+
 // Lighting shared by every mesh: physically based point lights, ambient,
 // haze, tone mapping. Light units: diffuse leaves out the 1/pi, so the
 // specular term is multiplied by pi to match.
@@ -474,6 +559,14 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let packed = select(cell.y, cell.x, k < 4u);
     let lightIndex = (packed >> (8u * (k % 4u))) & 0xffu;
     let l = lighting.lights[lightIndex];
+    if (!classic && l.axis.w > 0.5) {  // a tube or a panel (L1.6)
+      let al = areaLight(l, worldPos, n, v, a, roughness, nv, f0);
+      var seen = 1.0;
+      if (giWeight > 0.0) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
+      diffuse += al.diffuse * seen;
+      specular += al.specular * seen;
+      continue;
+    }
     let toLight = l.position.xyz - worldPos;
     // A cell lists every light that reaches any part of it, so many of them
     // don't reach this pixel, or light it from behind: those add nothing,

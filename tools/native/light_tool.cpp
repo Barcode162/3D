@@ -9,6 +9,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
+#include <map>
+#include <tuple>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -74,7 +77,7 @@ void load(const std::string& place, Loaded& L) {
     L.geo.add(it->second, placement(p.position, p.rotation, p.scale), p.file, L.table, static_cast<uint32_t>(i));
     ++L.models;
   }
-  if (const char* c = std::getenv("SIMPLIFY")) {
+  if (const char* c = std::getenv("SIMPLIFY"); c && std::atof(c) > 0) {
     const size_t before = L.geo.triangleCount();
     L.geo.simplify(static_cast<float>(std::atof(c)));
     std::printf("simplified (%.3f m): %zu → %zu triangles\n", std::atof(c), before, L.geo.triangleCount());
@@ -258,6 +261,132 @@ int map(Loaded& L, float y, const std::string& out) {
   return 0;
 }
 
+// Fits each lamp to the glowing surface beside it (L1.6): the glowing
+// triangles within 1.2 m, weighted by area and glow; their spread along
+// three axes (principal components) says what the lamp is: a ball (a bulb),
+// a tube (neon: one long axis) or a panel (a screen, a lit sign: two long
+// axes). Prints one JSON line per lamp for tools/migrations/l1_6_light_shapes.mjs.
+int fit(Loaded& L, const std::string& out) {
+  std::ofstream f(out);
+  f << "{\n";
+  bool first = true;
+  const auto& things = L.scene.lightThing;
+  // Glowing triangles grouped into objects: triangles whose middles are
+  // within 6 cm (through shared grid cells) belong together.
+  std::vector<uint32_t> glowing, parent(L.geo.triangleCount());
+  std::vector<Vec3> centroid(L.geo.triangleCount());
+  for (uint32_t t = 0; t < L.geo.triangleCount(); ++t) {
+    parent[t] = t;
+    if (light::luminance(L.geo.materials[L.geo.triMaterial[t]].emission) < 0.05f) continue;
+    glowing.push_back(t);
+    centroid[t] = (L.geo.corner(t, 0) + L.geo.corner(t, 1) + L.geo.corner(t, 2)) * (1.0f / 3.0f);
+  }
+  std::function<uint32_t(uint32_t)> find = [&](uint32_t x) { return parent[x] == x ? x : parent[x] = find(parent[x]); };
+  {
+    const float cell = 0.06f;
+    std::map<std::tuple<int, int, int>, std::vector<uint32_t>> grid;
+    for (uint32_t t : glowing) {
+      // Every corner's cell: touching triangles share a cell.
+      for (int k = 0; k < 3; ++k) {
+        const Vec3 p = L.geo.corner(t, k);
+        grid[{static_cast<int>(std::floor(p.x / cell)), static_cast<int>(std::floor(p.y / cell)),
+              static_cast<int>(std::floor(p.z / cell))}].push_back(t);
+      }
+    }
+    for (auto& [key, list] : grid)
+      for (size_t i = 1; i < list.size(); ++i) parent[find(list[i])] = find(list[0]);
+  }
+  for (size_t li = 0; li < L.scene.lights.size(); ++li) {
+    const Vec3 lp = L.scene.lights[li].position;
+    // The glowing object nearest the lamp: its triangles (clusters made below).
+    std::vector<std::pair<Vec3, float>> pts;
+    double w = 0;
+    Vec3 mean;
+    int best = -1;
+    float bestD = 0.8f;
+    for (uint32_t t : glowing) {
+      const float d = length(centroid[t] - lp);
+      if (d < bestD) bestD = d, best = static_cast<int>(find(t));
+    }
+    if (best >= 0) {
+      for (uint32_t t : glowing) {
+        if (static_cast<int>(find(t)) != best) continue;
+        const float a = L.geo.area(t) * light::luminance(L.geo.materials[L.geo.triMaterial[t]].emission);
+        for (int k = 0; k < 3; ++k) pts.push_back({L.geo.corner(t, k), a / 3});
+      }
+    }
+    for (auto& [p, a] : pts) mean = mean + p * a, w += a;
+    std::string shape = "ball";
+    Vec3 axis{1, 0, 0}, axis2{0, 0, 1};
+    float len = 0, len2 = 0;
+    if (w > 1e-6 && pts.size() >= 9) {
+      mean = mean * static_cast<float>(1.0 / w);
+      // Covariance, then its axes by power iteration (and deflation).
+      double c[3][3] = {};
+      for (auto& [p, a] : pts) {
+        const double d[3] = {p.x - mean.x, p.y - mean.y, p.z - mean.z};
+        for (int i = 0; i < 3; ++i)
+          for (int j = 0; j < 3; ++j) c[i][j] += a * d[i] * d[j];
+      }
+      for (auto& row : c)
+        for (double& v : row) v /= w;
+      auto power = [&](const double m[3][3], Vec3 start) {
+        Vec3 v = start;
+        for (int it = 0; it < 60; ++it) {
+          Vec3 n{static_cast<float>(m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z),
+                 static_cast<float>(m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z),
+                 static_cast<float>(m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z)};
+          const float l = length(n);
+          if (l < 1e-12f) return v;
+          v = n * (1.0f / l);
+        }
+        return v;
+      };
+      const Vec3 e1 = power(c, {0.6f, 0.3f, 0.7f});
+      double c2[3][3];
+      const double l1 = c[0][0] * e1.x * e1.x + c[1][1] * e1.y * e1.y + c[2][2] * e1.z * e1.z +
+                        2 * (c[0][1] * e1.x * e1.y + c[0][2] * e1.x * e1.z + c[1][2] * e1.y * e1.z);
+      const double ev[3] = {e1.x, e1.y, e1.z};
+      for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j) c2[i][j] = c[i][j] - l1 * ev[i] * ev[j];
+      Vec3 e2 = power(c2, {0.2f, 0.9f, 0.3f});
+      e2 = normalize(e2 - e1 * dot(e2, e1));
+      // Extents along each axis: the spread that holds most of the glow.
+      float lo1 = 1e9f, hi1 = -1e9f, lo2 = 1e9f, hi2 = -1e9f;
+      for (auto& [p, a] : pts) {
+        const float u = dot(p - mean, e1), v = dot(p - mean, e2);
+        lo1 = std::min(lo1, u), hi1 = std::max(hi1, u), lo2 = std::min(lo2, v), hi2 = std::max(hi2, v);
+      }
+      len = hi1 - lo1;
+      len2 = hi2 - lo2;
+      axis = e1;
+      axis2 = e2;
+      if (len > 0.35f && len > 3.0f * len2) shape = "tube";
+      else if (len > 0.25f && len2 > 0.15f) shape = "panel";
+    }
+    const int thing = li < things.size() ? things[li] : -1;
+    const std::string id = thing >= 0 ? L.scene.world->thing(thing).id : "light" + std::to_string(li);
+    if (!first) f << ",\n";
+    first = false;
+    char buf[512];
+    if (shape == "ball") {
+      std::snprintf(buf, sizeof buf, "  \"%s\": {\"shape\": \"ball\", \"size\": %.3f, \"corners\": %zu}", id.c_str(),
+                    std::max(len, len2), pts.size());
+    } else {
+      std::snprintf(buf, sizeof buf,
+                    "  \"%s\": {\"shape\": \"%s\", \"center\": [%.3f, %.3f, %.3f], \"axis\": [%.3f, %.3f, %.3f], "
+                    "\"length\": %.2f, \"axis2\": [%.3f, %.3f, %.3f], \"width\": %.2f, \"corners\": %zu}",
+                    id.c_str(), shape.c_str(), mean.x - lp.x, mean.y - lp.y, mean.z - lp.z, axis.x, axis.y, axis.z, len,
+                    axis2.x, axis2.y, axis2.z, len2, pts.size());
+    }
+    f << buf;
+    std::printf("%-22s %-5s %5.2f x %4.2f m  (%zu glowing corners)\n", id.c_str(), shape.c_str(), len, len2, pts.size());
+  }
+  f << "\n}\n";
+  std::printf("wrote %s\n", out.c_str());
+  return 0;
+}
+
 }  // namespace
 
 #ifndef LIGHT_TOOL_NO_MAIN
@@ -269,6 +398,7 @@ int main(int argc, char** argv) {
   if (cmd == "stats") return stats(L);
   if (cmd == "gi") return gi(L, true);
   if (cmd == "rays") return raybench(L);
+  if (cmd == "fit") return fit(L, argc > 3 ? argv[3] : "build/light_fit.json");
   if (cmd == "map") return map(L, argc > 3 ? static_cast<float>(std::atof(argv[3])) : 1.2f, argc > 4 ? argv[4] : "build/gi_map.png");
   std::printf("usage: light_tool stats|gi|map|fit [place] ...\n");
   return 2;

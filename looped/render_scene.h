@@ -55,6 +55,11 @@ struct PointLight {
   // filters the glow of that temperature, white = none).
   float lumens = 0;
   float kelvin = 0;
+  // Lights with size (L1.6): a ball (a bulb: `radius`), a tube (neon: `axis`
+  // is half its length, world space) or a panel (a screen, a lit sign: `axis`
+  // and `axis2` are half its sides; it shines from both faces).
+  int shape = 0;  // 0 ball, 1 tube, 2 panel
+  Vec3 axis, axis2;
 };
 
 // A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole

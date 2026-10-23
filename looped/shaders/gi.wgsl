@@ -29,6 +29,8 @@ struct Light {
   position: vec4f,  // xyz, reach
   color: vec4f,     // rgb (luminance 1), candela (with its loop)
   params: vec4f,    // x = radius of the glowing part
+  axis: vec4f,      // xyz = half a tube's length / a panel's first side; w = shape (0 ball, 1 tube, 2 panel)
+  axis2: vec4f,     // xyz = half a panel's second side
 };
 const kMaxLights = 32u;
 const kMaxGridCells = 256u;

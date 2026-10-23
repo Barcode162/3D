@@ -1012,7 +1012,7 @@
       "id": "light-fire",
       "is": "light",
       "about": "The fireplace's glow: it flickers like a real fire, and goes out with it.",
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.8, "range": 5, "radius": 0.4, "lumens": 324, "kelvin": 1700}},
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.8, "range": 5, "radius": 0.03, "lumens": 324, "kelvin": 1700}},
       "loops": {
         "flicker": {"period": 0.5, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.4}]},
         "dark": {
@@ -1028,7 +1028,21 @@
       "id": "light-jukebox",
       "is": "light",
       "about": "The jukebox's glow: it breathes while it waits and thumps on every beat of a song.",
-      "parts": {"light": {"color": [1, 0.45, 0.25], "intensity": 0.9, "range": 3, "radius": 0.3, "lumens": 162}},
+      "parts": {
+        "light": {
+          "color": [1, 0.45, 0.25],
+          "intensity": 0.9,
+          "range": 3,
+          "radius": 0.3,
+          "lumens": 162,
+          "shape": "panel",
+          "center": [0, -0.325, 0.429],
+          "axis": [0, 1, -0.001],
+          "length": 1.29,
+          "axis2": [1, 0, 0],
+          "width": 0.82
+        }
+      },
       "loops": {
         "wait": {"period": 3, "pieces": [{"ch": "light", "shape": "wave", "amp": 0.2}]},
         "thump": {"period": 1, "beat": true, "pieces": [{"ch": "light", "shape": "beat", "amp": 0.7, "offset": -0.25}]}

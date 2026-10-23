@@ -32,6 +32,9 @@ struct GiSettings {
   float maxRay = 30.0f;         // rays further than this see nothing
   Aabb volume;                  // where the probes go (the rooms)
   bool cpuRays = true;          // false: stop after the patches (the GPU casts the rays, looped/gi.h)
+  // Around lamps: glowing surfaces here don't glow into the bounced light
+  // (their light is the lamp's).
+  std::vector<Aabb> lampBoxes;
 };
 
 class GiBuild {

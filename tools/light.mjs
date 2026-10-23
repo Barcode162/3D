@@ -4,7 +4,8 @@
 //   node tools/light.mjs gi [place]             builds the bounced light on the CPU, timed by phase
 //   node tools/light.mjs map [place] [y] [out]  a top-down map of the bounced light (PNG)
 //   node tools/light.mjs rays [place]           raw ray speed
-// SIMPLIFY=0.05 merges corners 5 cm apart first (what the game does).
+// SIMPLIFY=0.05 merges corners 5 cm apart first (what the game does; the
+// default, except for fit, which needs every detail). SIMPLIFY=0: none.
 import { execSync, spawnSync } from 'node:child_process';
 import { statSync, existsSync, mkdirSync } from 'node:fs';
 
@@ -22,4 +23,4 @@ if (stale) {
   console.log('done');
 }
 const args = process.argv.slice(2);
-process.exit(spawnSync(out, args.length ? args : ['stats'], { stdio: 'inherit', env: { SIMPLIFY: '0.05', ...process.env } }).status ?? 1);
+process.exit(spawnSync(out, args.length ? args : ['stats'], { stdio: 'inherit', env: { SIMPLIFY: args[0] === 'fit' ? '0' : '0.05', ...process.env } }).status ?? 1);

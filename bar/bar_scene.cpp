@@ -184,11 +184,20 @@ BarScene buildBarScene(const std::string& placeName) {
       // by thing id or by kind; the rest of the light as its part says.
       const Json& mood = placeJson["moods"][placeJson["mood"].string()]["lights"];
       const Json& mo = mood.has(t.id) ? mood[t.id] : mood[t.kind->id];
-      scene.lights.push_back({pos, readVec3(mo.has("color") ? mo["color"] : l["color"], {1, 1, 1}),
+      PointLight light{pos, readVec3(mo.has("color") ? mo["color"] : l["color"], {1, 1, 1}),
                               static_cast<float>(mo.has("intensity") ? mo["intensity"].number(1) : l["intensity"].number(1)),
                               static_cast<float>(l["range"].number(4)), static_cast<float>(l["radius"].number(0.1)),
                               static_cast<float>(mo.has("lumens") ? mo["lumens"].number(0) : l["lumens"].number(0)),
-                              static_cast<float>(mo.has("kelvin") ? mo["kelvin"].number(0) : l["kelvin"].number(0))});
+                              static_cast<float>(mo.has("kelvin") ? mo["kelvin"].number(0) : l["kelvin"].number(0))};
+      // Lights with size (L1.6): tube or panel, in the thing's own space.
+      const std::string shape = l["shape"].string();
+      light.shape = shape == "tube" ? 1 : shape == "panel" ? 2 : 0;
+      if (light.shape) {
+        light.position = pos + rot.rotate(readVec3(l["center"], {}));
+        light.axis = rot.rotate(readVec3(l["axis"], {1, 0, 0})) * static_cast<float>(l["length"].number(1) * 0.5);
+        if (light.shape == 2) light.axis2 = rot.rotate(readVec3(l["axis2"], {0, 0, 1})) * static_cast<float>(l["width"].number(1) * 0.5);
+      }
+      scene.lights.push_back(light);
       scene.lightThing.push_back(i);
     }
     if (const Json& m = world->part(i, "mirror"); m.isObject()) {

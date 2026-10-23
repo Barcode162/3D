@@ -39,7 +39,7 @@ function capture() {
     NOTES.wantView = true; NOTES.wantSnap = true;
     send('st.getview');
     send('st.snap', 99);
-    setTimeout(() => { if (n < 2) { NOTES.wantView = NOTES.wantSnap = false; resolve(out); } }, 3000);
+    setTimeout(() => { if (n < 2) { NOTES.wantView = NOTES.wantSnap = false; resolve(out); } }, 8000);  // (a slow GPU can take seconds per frame)
   });
 }
 on('view', (e) => { if (NOTES.onView) NOTES.onView(e); });

@@ -191,6 +191,8 @@ class SceneRenderer {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
     float params[4];    // x = radius of the glowing part
+    float axis[4];      // xyz = half a tube's length / a panel's first side; w = shape (0 ball, 1 tube, 2 panel)
+    float axis2[4];     // xyz = half a panel's second side
   };
   // Mirrors the WGSL structs in looped/shaders/scene.wgsl byte for byte.
   struct FrameUniforms {

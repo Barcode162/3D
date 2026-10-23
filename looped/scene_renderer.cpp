@@ -244,9 +244,15 @@ SceneRenderer::GpuLight SceneRenderer::gpuLightOf(const PointLight& p, float sca
     setVec4(g.position, p.position, p.range);
     setVec4(g.color, color, p.intensity * scale);
   } else {
-    const float cd = engine::light::candela(p.lumens > 0 ? p.lumens : engine::light::lumensFromClassic(p.intensity));
-    setVec4(g.position, p.position, engine::light::reach(cd));
+    const float lm = p.lumens > 0 ? p.lumens : engine::light::lumensFromClassic(p.intensity);
+    // A panel shines from both faces like a flat lamp (its brightest, head-on,
+    // is lumens / 2 pi); balls and tubes every way (lumens / 4 pi).
+    const float cd = p.shape == 2 ? lm / (2.0f * engine::kPi) : engine::light::candela(lm);
+    const float size = engine::length(p.axis) + engine::length(p.axis2);
+    setVec4(g.position, p.position, engine::light::reach(cd) + size);
     setVec4(g.color, engine::light::unitLuminance(color), cd * scale);
+    setVec4(g.axis, p.axis, static_cast<float>(p.shape));
+    setVec4(g.axis2, p.axis2, 0);
   }
   g.params[0] = p.radius;
   return g;
@@ -708,6 +714,10 @@ void SceneRenderer::setLight(size_t light, const PointLight& p) {
   lights_[light].radius = p.radius;
   lights_[light].lumens = p.lumens;
   lights_[light].kelvin = p.kelvin;
+  lights_[light].position = p.position;
+  lights_[light].shape = p.shape;
+  lights_[light].axis = p.axis;
+  lights_[light].axis2 = p.axis2;
   GpuLight g = gpuLightOf(lights_[light], 1.0f);
   lightIntensity_[light] = g.color[3];
   g.color[3] *= lightScale_[light];
@@ -957,6 +967,15 @@ void SceneRenderer::buildGi() {
   const size_t full = geo->triangleCount();
   geo->simplify(0.05f);
   engine::GiSettings settings;
+  // Glowing things that already have a lamp (a bulb's glass, the jukebox's
+  // front, neon with a light) don't glow into the bounced light too: their
+  // light is the lamp's (it would count twice).
+  for (const PointLight& l : lights_) {
+    const Vec3 e{std::fabs(l.axis.x) + std::fabs(l.axis2.x), std::fabs(l.axis.y) + std::fabs(l.axis2.y),
+                 std::fabs(l.axis.z) + std::fabs(l.axis2.z)};
+    const Vec3 r = e + Vec3{1, 1, 1} * (l.radius + 0.12f);
+    settings.lampBoxes.push_back({l.position - r, l.position + r});
+  }
   if (giLite_ || gpu_->software) {
     settings.surfelSpacing = 0.35f;
     settings.surfelRays = 12;

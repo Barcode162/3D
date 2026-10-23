@@ -3,6 +3,7 @@
   "format": 1,
   "choices": {
     "material": ["oak-floor", "dark-wood", "varnished-wood", "door-wood", "brick", "plaster", "leather", "chrome", "brass", "black-steel", "bottle-glass", "lacquer", "glow-glass"],
+    "lightShape": ["ball", "tube", "panel"],
     "action": ["none", "jukebox", "mirror", "mirror-mode", "rhythm", "darts", "bartender", "drink", "bell", "guitar", "mic", "light-switch", "fireplace", "door", "tv", "books", "chess", "tip-jar", "taps", "coffee", "piano-songs", "arcade"],
     "seatKind": ["stool", "chair", "sofa", "piano-bench", "sim"],
     "prop": ["", "pint", "rocks"],
@@ -168,6 +169,12 @@
       "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness (classic)", "live": true},
       "range": {"type": "number", "unit": "m", "min": 0.1, "max": 30, "step": 0.1, "label": "Reach (classic)", "live": true},
       "radius": {"type": "number", "unit": "m", "min": 0, "max": 2, "step": 0.01, "label": "Softness", "live": true},
+      "shape": {"type": "choice", "choices": "lightShape", "label": "Shape", "live": true, "about": "A ball (a bulb), a tube (neon) or a panel (a screen, a lit sign), L1.6."},
+      "length": {"type": "number", "unit": "m", "min": 0, "max": 10, "step": 0.01, "label": "Length", "live": true, "about": "A tube's length, a panel's first side."},
+      "width": {"type": "number", "unit": "m", "min": 0, "max": 10, "step": 0.01, "label": "Width", "live": true, "about": "A panel's second side."},
+      "axis": {"type": "vec3", "label": "Lies along", "live": true, "about": "The direction of a tube or a panel's first side (on the thing)."},
+      "axis2": {"type": "vec3", "label": "Second side along", "live": true},
+      "center": {"type": "vec3", "unit": "m", "label": "Middle", "live": true, "about": "Where the tube or panel's middle is, from the thing."},
       "dims": {"type": "bool", "label": "Dims with the switch"}}},
     "glowbox": {"label": "Glow", "about": "A small glowing thing (moths, sparks, smoke).", "fields": {
       "color": {"type": "color", "label": "Colour", "live": true},

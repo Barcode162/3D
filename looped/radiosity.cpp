@@ -203,7 +203,16 @@ bool GiBuild::step(double budgetMs) {
             const float r1 = std::sqrt(rand01(t * 7919u + static_cast<uint32_t>(k) * 2u));
             const float r2 = rand01(t * 7919u + static_cast<uint32_t>(k) * 2u + 1u);
             const Vec3 p = a * (1 - r1) + b * (r1 * (1 - r2)) + c * (r1 * r2);
-            surfels.push_back({p, nrm, m.albedo, m.emission});
+            Vec3 glow = m.emission;
+            if (glow.x + glow.y + glow.z > 0) {
+              for (const Aabb& box : settings.lampBoxes) {
+                if (box.contains(p)) {
+                  glow = {};
+                  break;
+                }
+              }
+            }
+            surfels.push_back({p, nrm, m.albedo, glow});
             gridAdd(static_cast<uint32_t>(surfels.size() - 1));
           }
         }
