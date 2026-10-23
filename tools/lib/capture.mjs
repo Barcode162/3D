@@ -26,7 +26,17 @@ export async function openCapture() {
                                    { timeout: +(process.env.GI_WAIT ?? 90000) }).catch(() => {});
       }
       await page.waitForTimeout(waitMs);
-      const png = await page.screenshot(path ? { path } : {});
+      // A busy machine can stall a screenshot: two tries, a minute each.
+      let png;
+      for (let attempt = 0; ; attempt++) {
+        try {
+          png = await page.screenshot({ ...(path ? { path } : {}), timeout: 60000 });
+          break;
+        } catch (e) {
+          if (attempt >= 1) throw e;
+          await page.waitForTimeout(2000);
+        }
+      }
       const perf = await page.evaluate(() => window.bar3dPerf).catch(() => null);
       const errors = await logErrors(page);
       await page.close();
