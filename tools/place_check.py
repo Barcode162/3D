@@ -147,6 +147,7 @@ class Scene:
         self.owner = np.concatenate([np.full(len(p[2]), i) for i, p in enumerate(self.pieces)])
         self.lo = self.tris.min(axis=1)
         self.hi = self.tris.max(axis=1)
+        self.pieceBottom = [float(p[2][:, :, 1].min()) for p in self.pieces]
         # A grid over the floor (25 cm cells): which triangles touch each cell.
         self.cell = 0.25
         self.x0, self.z0 = self.lo[:, 0].min(), self.lo[:, 2].min()
@@ -250,6 +251,15 @@ def touch_gap(S, i, tris, reach):
     best = np.inf
     for k in range(0, len(cand), 4096):
         best = min(best, float(point_tri_dist(pts, S.tris[cand[k:k + 4096]]).min()))
+    # And the other way round: corners of what's near against this piece (a
+    # table top resting on a column touches it in the middle, between corners).
+    if best > 0.01:
+        other = np.unique(S.tris[cand].reshape(-1, 3), axis=0)
+        other = other[np.all(other >= lo, axis=1) & np.all(other <= hi, axis=1)]
+        if len(other) > 256:
+            other = other[np.linspace(0, len(other) - 1, 256).astype(int)]
+        if len(other):
+            best = min(best, float(point_tri_dist(other, tris).min()))
     return best if best <= reach else None
 
 
@@ -277,13 +287,25 @@ def check(min_gap):
         if max(hi - lo) > 3:
             continue
         own = set(ids)
+        # Hung from the ceiling (a pendant) or hung on a wall (a dartboard):
+        # what it hangs from holds it, not what's under it.
+        c = (lo + hi) / 2
+        if S.ray([c[0], hi[1] - 0.01, c[2]], [0, 1, 0], -1, 0.05)[0] is not None and \
+                S.ray([c[0], hi[1] - 0.01, c[2]], [0, 1, 0], -1, 0.05)[1] not in own:
+            continue
+        if any(S.ray(c, d, -1, (hi - lo).max())[1] not in own | {None} and
+               (S.ray(c, d, -1, (hi - lo).max())[0] or 9) <= abs(np.dot(hi - lo, np.abs(d))) / 2 + 0.03
+               for d in ([1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1])):
+            continue
+        # What's under it: everything but itself and the things standing on it.
+        resting = {k for k, (t2, _, _) in enumerate(S.pieces) if t2 != thing and S.pieceBottom[k] >= lo[1] + 0.02}
         under = []
         for fx in (0.3, 0.5, 0.7):
             for fz in (0.3, 0.5, 0.7):
-                o = np.array([lo[0] + (hi[0] - lo[0]) * fx, hi[1] + 0.01, lo[2] + (hi[2] - lo[2]) * fz])
-                # Down through the thing itself to the first other surface.
+                o = np.array([lo[0] + (hi[0] - lo[0]) * fx, lo[1] + 0.05, lo[2] + (hi[2] - lo[2]) * fz])
+                # Down from just above its bottom to the first other surface.
                 cand = S.near(o - [0, 3, 0], o)
-                cand = cand[[S.owner[k] not in own for k in cand]] if len(cand) else cand
+                cand = cand[[S.owner[k] not in own and S.owner[k] not in resting for k in cand]] if len(cand) else cand
                 t = ray_hit(S, o, cand)
                 if t is not None:
                     under.append(o[1] - t)

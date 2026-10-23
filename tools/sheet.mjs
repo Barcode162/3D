@@ -2,11 +2,14 @@
 // picture, for tuning by eye (docs/AUTOMATION.md):
 //   node tools/sheet.mjs bartop "light=classic" "" "eyekeep=0.3" "eyekeep=0.6"
 //   SPOTS=bartop,piano node tools/sheet.mjs - "a" "b"    (rows = spots)
+//   SPOTS='1,1.6,5,180,0;2,1.6,5,90,0' node tools/sheet.mjs - ""  (cameras)
 // Saves OUT (default build/sheet.jpg). SCALE (default 0.5) shrinks each shot.
 import { openCapture } from './lib/capture.mjs';
 
 const [spotArg, ...options] = process.argv.slice(2);
-const spots = spotArg === '-' ? (process.env.SPOTS ?? 'bartop').split(',') : [spotArg ?? 'bartop'];
+// SPOTS: names split by commas, or by ";" when they are cameras ("x,y,z,yaw,pitch;...").
+const spotList = process.env.SPOTS ?? 'bartop';
+const spots = spotArg === '-' ? spotList.split(spotList.includes(';') ? ';' : ',') : [spotArg ?? 'bartop'];
 const opts = options.length ? options : [''];
 const out = process.env.OUT ?? 'build/sheet.jpg';
 const scale = +(process.env.SCALE ?? 0.5);
