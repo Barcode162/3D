@@ -2,6 +2,12 @@
  "about": "Real albedo ranges (share of light a surface reflects, luminance of the linear colour) by material name, first match wins (case-insensitive, part of the name). tools/albedo_audit.py moves a material that's outside its range to the nearest edge, keeping its colour (a 'fix' in assets/models/albedo.json, used by the new lighting only). Sources: measured albedo tables (e.g. the Physically Based database, physicallybased.info).",
  "rules": [
   [
+   "coat",
+   0.05,
+   0.5,
+   "coats: wool and cotton (black wool about 0.05, never near-black)"
+  ],
+  [
    "shadow",
    0,
    1,

@@ -340,6 +340,14 @@ fn fresnel(f0: vec3f, vh: f32) -> vec3f {
   return f0 + (vec3f(1.0) - f0) * pow(1.0 - vh, 5.0);
 }
 
+// The same for a rough surface (new lighting, M0.2): its grazing shine is
+// spread over many tiny facets that mostly face away, so it rises only to
+// 1 - roughness (Fdez-Aguera 2019): a coat never gets a plastic rim.
+fn fresnelRough(f0: vec3f, vh: f32, roughness: f32) -> vec3f {
+  if (classicLight()) { return fresnel(f0, vh); }
+  return f0 + (max(vec3f(1.0 - roughness), f0) - f0) * pow(1.0 - vh, 5.0);
+}
+
 // How much of the surroundings a surface reflects, averaged over its
 // roughness (Karis' mobile approximation of the split-sum lookup table).
 fn environmentBrdf(f0: vec3f, roughness: f32, nv: f32) -> vec3f {
@@ -512,7 +520,7 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
     let aSize = clamp(a + size / (2.0 * dist), 0.0, 1.0);
     let h = normalize(dir + v);
     let d = distributionGgx(max(dot(n, h), 0.0), aSphere) * (a * a) / (aSphere * aSphere) * (a / aSize);
-    let spec = d * visibilitySmith(nv, nl, roughness) * fresnel(f0, max(dot(v, h), 0.0));
+    let spec = d * visibilitySmith(nv, nl, roughness) * fresnelRough(f0, max(dot(v, h), 0.0), roughness);
     let emit = select(1.0, abs(dot(pn, dir)), panel);
     let qq = dist * dist / reach2;
     let w = clamp(1.0 - qq * qq, 0.0, 1.0);
@@ -535,9 +543,12 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   // Metals have no diffuse color; their base color tints the reflection.
   // Non-metals reflect about 4% head-on, untinted.
   let diffuseColor = base * (1.0 - metallic);
-  let f0 = mix(vec3f(0.04), base, metallic);
-
   let classic = classicLight();
+  // Cloth (new lighting, M0.2: roughness near 1, not metal): fibres scatter
+  // light into the cloth instead of mirroring it, so a quarter of the 4%.
+  let cloth = select(smoothstep(0.85, 1.0, roughness) * (1.0 - metallic), 0.0, classic);
+  let f0 = mix(vec3f(0.04 * (1.0 - 0.75 * cloth)), base, metallic);
+
   // Classic: lights in "intensity" with a soft window; new (L1.2): lux from
   // candela, true inverse square, fading only over the last part of its reach.
   let ambientScale = select(frame.units.y, 1.0, classic);
@@ -598,7 +609,7 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let nh = max(dot(n, h), 0.0);
     let vh = max(dot(v, h), 0.0);
     let d = distributionGgx(nh, aLight) * (a * a) / (aLight * aLight);
-    let spec = d * visibilitySmith(nv, nl, roughness) * fresnel(f0, vh);
+    let spec = d * visibilitySmith(nv, nl, roughness) * fresnelRough(f0, vh, roughness);
     specular += radiance * spec * (nl * kPi);
   }
   // New lighting: diffuse and highlights in proper units (the 1 / pi the
@@ -619,9 +630,9 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   }
   let r = reflect(-v, n);
   if (frame.env.x < 0.5) {  // (no reflections of reflections while capturing)
-    color += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao;
+    color += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth);
   } else {
-    color += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao;
+    color += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth);
   }
 
   let dist = length(frame.cameraPos.xyz - worldPos);
