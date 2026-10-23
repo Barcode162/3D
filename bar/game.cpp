@@ -1268,6 +1268,8 @@ void tuneMoodFromPage() {
   m.glowThreshold = h.number("glowth", m.glowThreshold);
   m.whiteKelvin = h.number("whitek", m.whiteKelvin);
   m.whiteAmount = h.number("white", m.whiteAmount);
+  m.highlightRoom = h.number("hiroom", m.highlightRoom);
+  m.highlightColour = h.number("hicolour", m.highlightColour);
   g_app.renderer.setMood(m);
   g_app.renderer.setLightUnits(h.number("emissive", 8), h.number("ambient", 14));
 }

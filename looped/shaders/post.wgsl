@@ -13,13 +13,13 @@
 //   gentle darkening toward the corners (vignette).
 
 struct Post {
-  texel: vec4f,   // xy = 1 / source size (the texture sampled), w = the eyes' reference light (log2)
+  texel: vec4f,   // xy = 1 / source size (the texture sampled), z = how much highlights keep their colour, w = the eyes' reference light (log2)
   params: vec4f,  // x = glow threshold (linear), y = soft knee, z = glow strength, w = vignette
   grade: vec4f,   // rgb = tint (1 = none), a = saturation (1 = none)
   grade2: vec4f,  // x = contrast (1 = none), y = lift (raises the darks), z = 1 = classic lighting, w = seconds since last frame
   eye: vec4f,     // x = exposure compensation (EV), y = darkest adaptation (log2 luminance), z = brightest, w = 1 = reset (no easing)
   eye2: vec4f,    // x = seconds to adapt to brighter, y = to darker, z = fixed exposure (EV), w = how much darkness stays (0..1)
-  white: vec4f,   // rgb = white balance (new lighting)
+  white: vec4f,   // rgb = white balance (new lighting), w = EV of extra room in the highlights
 };
 
 @group(0) @binding(0) var<uniform> post: Post;
@@ -182,15 +182,17 @@ fn agxContrast(x: vec3f) -> vec3f {
   return 15.5 * x4 * x2 - 40.14 * x4 * x + 31.96 * x4 - 6.868 * x2 * x + 0.4298 * x2 + 0.1191 * x - 0.00232;
 }
 
-fn agx(c: vec3f) -> vec3f {
+fn agx(c: vec3f, room: f32) -> vec3f {
   let inset = mat3x3f(vec3f(0.842479062253094, 0.0423282422610123, 0.0423756549057051),
                       vec3f(0.0784335999999992, 0.878468636469772, 0.0784336),
                       vec3f(0.0792237451477643, 0.0791661274605434, 0.879142973793104));
   let outset = mat3x3f(vec3f(1.19687900512017, -0.0528968517574562, -0.0529716355144438),
                        vec3f(-0.0980208811401368, 1.15190312990417, -0.0980434501171241),
                        vec3f(-0.0990297440797205, -0.0989611768448433, 1.15107367264116));
-  let minEv = -12.47393;
-  let maxEv = 4.026069;
+  // `room` widens the range around middle grey (0.18 stays where it was).
+  let range = 16.5 + room;
+  let minEv = log2(0.18) - 0.6060606 * range;
+  let maxEv = minEv + range;
   var x = inset * max(c, vec3f(1e-10));
   x = clamp((log2(x) - minEv) / (maxEv - minEv), vec3f(0.0), vec3f(1.0));
   x = agxContrast(x);
@@ -212,7 +214,17 @@ fn fs_composite(in: VsOut) -> @location(0) vec4f {
     lit = lit / (1.0 + max(lit - vec3f(0.85), vec3f(0.0)));
     c = pow(lit, vec3f(1.0 / 2.2));
   } else {
-    c = agx(sceneLight(in.uv) + glow * post.params.z);
+    let lit = sceneLight(in.uv) + glow * post.params.z;
+    c = agx(lit, post.white.w);
+    // Bright light keeps its colour (a lamp-lit wall stays amber instead of
+    // going white): the curve on the brightness alone, times the colour.
+    if (post.texel.z > 0.0) {
+      let y = max(luminance(lit), 1e-6);
+      let ty = pow(luminance(pow(agx(vec3f(y), post.white.w), vec3f(2.2))), 1.0 / 2.2);
+      var hue = pow(pow(ty, 2.2) * lit / y, vec3f(1.0 / 2.2));
+      hue = hue / max(1.0, max(hue.r, max(hue.g, hue.b)));
+      c = mix(c, hue, post.texel.z);
+    }
   }
   // Mood.
   c = c * post.grade.rgb;

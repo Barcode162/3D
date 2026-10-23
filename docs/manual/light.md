@@ -154,6 +154,24 @@ Tools: `node tools/light.mjs gi` (build it, timed), `node tools/light.mjs
 map bar 1.2 build/map.png` (a top-down map of the bounced light at 1.2 m),
 `node tools/bench.mjs native` (`gi_*` numbers).
 
+### No squares of light (L1.8)
+The bar is cut into squares (1.5 m) and each pixel only adds up the lamps
+its square lists. Before, a square could list only 8, and with real units
+every lamp reached 16 m, so every square dropped some lamps, each a
+different set: edges of light in squares. Now a square holds 16, and every
+lamp's light fades out smoothly at the same faint level (it starts at 0.1
+lux and rises, all lamps together, until no square is over its limit), so
+no square drops a lamp. High: 12 per pixel (lamps reach down to about 0.75
+lux); Medium 8; Low 5 (they fade out a little sooner). The log says
+`lamps reach down to 0.75 lux` and no "too full".
+
+### Softer highlights (L1.9)
+Two things made bright parts look white instead of lit: the curve (AgX)
+turns any colour white as it gets bright, and it ran out of room early.
+Now the curve has 1.5 EV more room around middle grey (`?hiroom=0` as
+before) and bright light keeps half its colour (`?hicolour=0` as before,
+1 = all): a lamp-lit wall stays amber.
+
 ## L2 Shadows and shaped light
 
 _Not built yet._

@@ -32,6 +32,11 @@ struct Mood {
   // `whiteAmount` (0..1) of the way to white.
   float whiteKelvin = 2700;
   float whiteAmount = 0.55f;
+  // The curve's highlights (new lighting): EV of extra room before bright
+  // light turns white, and how much bright light keeps its colour (0..1;
+  // 0 = pure AgX, where a lamp-lit wall goes white as it gets bright).
+  float highlightRoom = 1.5f;
+  float highlightColour = 0.5f;
 };
 
 }  // namespace engine

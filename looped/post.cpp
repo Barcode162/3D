@@ -223,6 +223,7 @@ void PostEffects::apply(const wgpu::CommandEncoder& encoder, const wgpu::Texture
     Uniforms u = {};
     u.texel[0] = 1.0f / static_cast<float>(srcW);
     u.texel[1] = 1.0f / static_cast<float>(srcH);
+    u.texel[2] = m.highlightColour;
     u.texel[3] = m.eyeReference;
     // New lighting: the glow starts above white (after the exposure).
     u.params[0] = classic ? m.glowThreshold : m.glowThreshold * 2.0f;
@@ -245,6 +246,7 @@ void PostEffects::apply(const wgpu::CommandEncoder& encoder, const wgpu::Texture
     u.eye2[1] = m.adaptDark;
     u.eye2[2] = -m.exposureComp;  // fixed exposure (eyes off): middle grey at light 1
     u.eye2[3] = m.eyeKeep;
+    u.white[3] = m.highlightRoom;
     {  // White balance: 1 / the light's colour, part of the way, at luminance 1.
       const Vec3 k = light::kelvinColor(m.whiteKelvin);
       Vec3 w{1.0f / std::max(k.x, 1e-3f), 1.0f / std::max(k.y, 1e-3f), 1.0f / std::max(k.z, 1e-3f)};
