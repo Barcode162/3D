@@ -36,7 +36,7 @@ Budget for the whole step on the phone: +4 ms at High, +1.5 ms at Low.
 - [x] **L1.4** Real material brightness: every material checked against measured values (white plaster ~0.8, dark oak ~0.15, brick ~0.3), a table in `docs/manual/light.md`, a test that flags anything brighter or darker than real; fixes. *Check:* walls and ceiling read lighter, wood stays rich.
 - [x] **L1.5** Radiosity, part 1 (no visible change yet): still surfaces split into patches (~20 cm), and "who sees whom" between patches worked out once per layout (a tool for the shipped world, a background worker in the Studio after a layout edit), saved with the world.
 - [x] **L1.6** Radiosity, part 2 (the big one): lights hit patches, patches light each other, many bounces each frame until it settles; **you watch the light spread through the room** after loading; a lamp edit in the Studio re-spreads it in a moment; glowing surfaces (neon, jukebox, screens, fire) count as light sources. `?bounce=0`. *Check:* switch off every light but one lamp: the whole room is softly lit, brightest near it, light creeps round corners.
-- [ ] **L1.7** Moving things: a probe grid filled from the patches lights avatars, glasses and stools, so they match the room. *Check:* walk from a lamp into shadow: your avatar dims with the room.
+- [x] **L1.7** Moving things: a probe grid filled from the patches lights avatars, glasses and stools, so they match the room. *Check:* walk from a lamp into shadow: your avatar dims with the room.
 - [ ] **L1.8** In the Studio: per light lumens, colour temperature, size and shape; Air gets bounce strength and exposure range; the moods (Evening, Party, Closing) retuned in real units; the budget meter counts patches. *Check:* in the Studio, turn the piano lamp to 2000 K and watch the room around it go amber.
 
 ## Waiting on the user: P2, the Studio phone check
@@ -59,7 +59,8 @@ E7.1-E7.4 (boxes, the test home, travel, catalog), E8.1-E8.2 (the hub's World
 page, tuning), E9.1-E9.2 (projects as a part, old keys gone).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) L1.1-L1.6: eyes (HDR, adapting, AgX), real units (lumens, Kelvin), real material brightness, bounced light (core + in the game), lights with size; tools: piece runner, gallery, benchmarks, light tool → 69fb05c^..5d99353
+- (this push) L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72
+- `7322b92` L1.1-L1.6: eyes (HDR, adapting, AgX), real units (lumens, Kelvin), real material brightness, bounced light (core + in the game), lights with size; tools: piece runner, gallery, benchmarks, light tool → 69fb05c^..5d99353
 - `96fbf26` S9.1-S9.3, S10.1-S10.4: live for everyone (a publish reaches an open bar within seconds, try your draft with a friend, undo a publish) and Claude in the loop (notes from the Studio, Claude's versions in History with what changed, deep links, proposals) → c00af5e..HEAD
 - `c00af5e` S7.1-S7.3, S8.1-S8.4: light and look (materials as data, live lights, moods and the budget meter) and life (states and rules, the Loop Rack, drawn keys and presets, sounds) → 2c8b4da..c00af5e
 - `2c8b4da` S5.1-S5.4, S6.1-S6.4: precision (magnifier, part mode, this one / every one, Inspect edits everything) and building (Library with pictures and prices, duplicate / row / rename / delete, boxes with push-pull and extrude, places) → f3a2dc4..2c8b4da
