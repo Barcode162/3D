@@ -41,6 +41,10 @@ page.on('pageerror', (e) => errors.push(String(e)));
 page.on('response', (r) => { if (r.status() >= 400 && !(r.status() === 401 && /\.php/.test(r.url()))) errors.push(r.status() + ' ' + r.url()); });
 const ed = (fn, arg) => page.evaluate(fn, arg);
 mkdirSync('build', { recursive: true });  // the pictures: build/dev-overview.png, build/dev-plan.png
+// The pictures are for looking at, not checks: a slow one (GitHub's machines draw
+// in software) prints a note instead of failing the deploy (as in tools/site_test.mjs).
+const shot = (opts) => page.screenshot({ animations: 'disabled', timeout: 20000, ...opts })
+  .catch((e) => console.log(`note ${opts.path}: no picture (${String(e.message).split('\n')[0]})`));
 
 // R4.1: the door and the tabs
 await page.goto(ws.url + 'dev/');
@@ -72,7 +76,7 @@ await page.waitForFunction(() => /Your call: KI-99/.test(document.querySelector(
 check(await ed(() => /Pick a colour for the test/.test(document.querySelector('#view [data-id="needs"]').textContent)), 'Needs you lists the questions only you can settle (J5.6)');
 await page.waitForFunction(() => /Errors this week/.test(document.querySelector('#view [data-id="status"]').textContent) && /A test incident/.test(document.querySelector('#view [data-id="status"]').textContent));
 check(await ed(() => /Errors this week\s*Latest: A test incident \(closed\)\s*2/.test(document.querySelector('#view [data-id="status"]').textContent)), 'Overview counts this week\'s errors from the incidents (J5.6)');
-await page.screenshot({ path: 'build/dev-overview.png', fullPage: true });
+await shot({ path: 'build/dev-overview.png', fullPage: true });
 const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
 check(ci.ok === 1 && ci.ci && ci.ci.game === null && ci.ci.site === null, 'the store answers the owner (no deploy reports yet)');
 check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status === 403, 'the store keeps a player out');
@@ -95,7 +99,7 @@ check(await ed(() => /As of build fed4321, 2 min ago/.test(document.querySelecto
 await page.click('#view [data-id="plan-now"] .dev-row-btn');
 await page.waitForSelector('#view [data-id="plan-now"] [data-spec]');
 check(await ed(() => /The test spec's words/.test(document.querySelector('#view [data-id="plan-now"] [data-spec]').textContent)), 'tapping the job in Now opens its spec (J5.6)');
-await page.screenshot({ path: 'build/dev-plan.png' });
+await shot({ path: 'build/dev-plan.png' });
 await page.click('#view [data-id="note-kind"] button:nth-child(2)');
 await page.fill('#view [data-id="note"]', 'A rooftop terrace');
 await page.click('#view [data-id="note-send"]');
