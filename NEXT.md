@@ -78,7 +78,8 @@ E7.1-E7.4 (boxes, the test home, travel, catalog), E8.1-E8.2 (the hub's World
 page, tuning), E9.1-E9.2 (projects as a part, old keys gone).
 
 ## Build log (newest first: build code → what → commits; "undo" reverts one row)
-- (this push) R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/UI_PLAN.md), engine work paused → a28d85c^..b394ba3
+- (this push) R2.1, R2.2, R2.3, R2.4: Six candidate themes to pick from: real screens, light and dark, compare and mix → 0bdee82^..8b9d289
+- `aa0d3ae` R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/UI_PLAN.md), engine work paused → a28d85c^..b394ba3
 - `fde3f14` M0.2 truly matte (no plastic rim on rough things, cloth keeps little shine, coats not black, floor 0.75) → M0.2 commit
 - `8722f75` Phone feedback: L1.8 no squares of light, M0 real roughness (matte coats, floor not a mirror), L1.9 softer highlights (bright light keeps its colour), L1.10 calmer light (darker, less glow); tools: place_check, stage_hunks → 5622548..HEAD
 - `336e1d9` L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72
