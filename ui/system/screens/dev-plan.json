@@ -1,0 +1,119 @@
+{
+  "format": 1,
+  "id": "dev-plan",
+  "name": "Dev · Plan",
+  "about": "PLAN.md on the phone, and a note box Claude reads at the start of every go.",
+  "root": {
+    "type": "stack",
+    "gap": 14,
+    "pad": 16,
+    "children": [
+      {
+        "type": "stack",
+        "gap": 2,
+        "children": [
+          {
+            "type": "label",
+            "text": "Dev"
+          },
+          {
+            "type": "title",
+            "text": "Plan",
+            "size": "l"
+          }
+        ]
+      },
+      {
+        "type": "panel",
+        "id": "plan-now",
+        "gap": 10,
+        "children": [
+          {
+            "type": "label",
+            "text": "Now"
+          },
+          {
+            "type": "title",
+            "text": "R4 · Dev, the control room",
+            "size": "s"
+          },
+          {
+            "type": "panel",
+            "pad": 0,
+            "gap": 0,
+            "children": [
+              {
+                "type": "listrow",
+                "text": "R4.1 Dev opens at /dev",
+                "icon": "check",
+                "value": "Done",
+                "tone": "ok"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "panel",
+        "gap": 10,
+        "children": [
+          {
+            "type": "title",
+            "text": "Tell Claude",
+            "size": "s"
+          },
+          {
+            "type": "seg",
+            "id": "note-kind",
+            "options": [
+              "A note",
+              "Park an idea"
+            ],
+            "on": 0
+          },
+          {
+            "type": "field",
+            "id": "note",
+            "placeholder": "An idea, a change, an answer…"
+          },
+          {
+            "type": "key",
+            "id": "note-send",
+            "text": "Send",
+            "style": "go",
+            "icon": "arrow"
+          },
+          {
+            "type": "text",
+            "id": "notes",
+            "text": "Claude reads these at the start of the next go.",
+            "tone": "dim"
+          }
+        ]
+      },
+      {
+        "type": "stack",
+        "id": "chapters",
+        "gap": 12,
+        "children": [
+          {
+            "type": "panel",
+            "gap": 8,
+            "children": [
+              {
+                "type": "title",
+                "text": "The world",
+                "size": "s"
+              },
+              {
+                "type": "text",
+                "text": "What players see and do.",
+                "tone": "dim"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

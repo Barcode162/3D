@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" data-look="ember" data-look-pin>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0906">
+<meta name="robots" content="noindex, nofollow">
+<title>Dev · J Production</title>
+<!-- Dev (PLAN.md R4): the control room for everything but the main page and
+     the games. Owner and admins only (the bar's login). Each tab is a screen
+     file (ui/system/screens/dev-*.json, editable in the UI Editor); dev.js
+     fills its slots (parts with an "id") with live data. -->
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<link rel="stylesheet" href="/ui/screen.css">
+<link rel="stylesheet" href="dev.css">
+</head>
+<body class="lp">
+<main id="view" class="dev-view" aria-live="polite"></main>
+<form id="login" class="dev-login panel" hidden>
+  <span class="label">J Production · Dev</span>
+  <h1 class="display">Dev</h1>
+  <p class="dim" id="loginWhy">Log in with your bar account (owner or admin).</p>
+  <input class="field" id="user" autocomplete="username" placeholder="Username" aria-label="Username" autocapitalize="none" spellcheck="false">
+  <input class="field" id="pass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+  <button class="key go" type="submit">Log in</button>
+  <p class="dim" id="loginMsg" role="status"></p>
+</form>
+<nav id="tabs" class="dev-tabs" hidden></nav>
+<script src="/ui/looped.js"></script>
+<script src="/ui/screen.js"></script>
+<script src="dev.js"></script>
+</body>
+</html>

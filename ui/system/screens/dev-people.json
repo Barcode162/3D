@@ -1,0 +1,66 @@
+{
+  "format": 1,
+  "id": "dev-people",
+  "name": "Dev · People",
+  "about": "Everyone with an account: invite or remove players, choose admins.",
+  "root": {
+    "type": "stack",
+    "gap": 14,
+    "pad": 16,
+    "children": [
+      {
+        "type": "stack",
+        "gap": 2,
+        "children": [
+          {
+            "type": "label",
+            "text": "Dev"
+          },
+          {
+            "type": "title",
+            "text": "People",
+            "size": "l"
+          }
+        ]
+      },
+      {
+        "type": "panel",
+        "gap": 10,
+        "children": [
+          {
+            "type": "title",
+            "text": "Invite someone",
+            "size": "s"
+          },
+          {
+            "type": "field",
+            "id": "invite-user",
+            "placeholder": "Their username"
+          },
+          {
+            "type": "key",
+            "id": "invite",
+            "text": "Invite",
+            "style": "go",
+            "icon": "plus"
+          }
+        ]
+      },
+      {
+        "type": "panel",
+        "id": "people",
+        "pad": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "listrow",
+            "text": "Josh",
+            "icon": "people",
+            "detail": "@josh · joined Oct 2026",
+            "value": "Owner"
+          }
+        ]
+      }
+    ]
+  }
+}

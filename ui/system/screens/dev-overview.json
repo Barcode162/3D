@@ -2,155 +2,112 @@
   "format": 1,
   "id": "dev-overview",
   "name": "Dev · Overview",
-  "about": "The first tab of Dev (R4): is the world up, what needs you, how the rework is going.",
+  "about": "Dev's first tab: is everything up, what needs you, the step in Now. Slots (id) are filled live; the rows here are examples.",
   "root": {
     "type": "stack",
-    "gap": 0,
+    "gap": 14,
+    "pad": 16,
     "children": [
       {
         "type": "stack",
-        "gap": 14,
-        "pad": 16,
+        "gap": 2,
         "children": [
           {
-            "type": "stack",
-            "gap": 2,
-            "children": [
-              {
-                "type": "label",
-                "text": "Dev · Saturday"
-              },
-              {
-                "type": "title",
-                "text": "Overview",
-                "size": "l"
-              }
-            ]
-          },
-          {
-            "type": "panel",
-            "pad": 0,
-            "gap": 0,
-            "children": [
-              {
-                "type": "listrow",
-                "text": "The bar",
-                "icon": "bar",
-                "detail": "3 people in · build a5ca338",
-                "value": "Up",
-                "tone": "ok"
-              },
-              {
-                "type": "listrow",
-                "text": "Room server",
-                "icon": "people",
-                "detail": "2 rooms",
-                "value": "Up",
-                "tone": "ok"
-              },
-              {
-                "type": "listrow",
-                "text": "Tests",
-                "icon": "check",
-                "detail": "last run 12 min ago",
-                "value": "14 of 14",
-                "tone": "ok"
-              }
-            ]
+            "type": "label",
+            "text": "Dev",
+            "id": "today"
           },
           {
             "type": "title",
-            "text": "Needs you",
-            "size": "s"
-          },
-          {
-            "type": "panel",
-            "pad": 0,
-            "gap": 0,
-            "children": [
-              {
-                "type": "listrow",
-                "text": "Pick a house theme",
-                "icon": "layers",
-                "detail": "R2 · 6 candidates",
-                "chevron": true
-              },
-              {
-                "type": "listrow",
-                "text": "A news draft",
-                "icon": "news",
-                "detail": "R1 built",
-                "value": "Draft",
-                "tone": "warn",
-                "chevron": true
-              }
-            ]
-          },
-          {
-            "type": "title",
-            "text": "The rework",
-            "size": "s"
-          },
-          {
-            "type": "panel",
-            "gap": 10,
-            "children": [
-              {
-                "type": "row",
-                "justify": "between",
-                "children": [
-                  {
-                    "type": "text",
-                    "text": "R2 · the house theme"
-                  },
-                  {
-                    "type": "chip",
-                    "text": "2 of 5",
-                    "on": true
-                  }
-                ]
-              },
-              {
-                "type": "meter",
-                "level": 0.4
-              }
-            ]
-          },
-          {
-            "type": "row",
-            "children": [
-              {
-                "type": "key",
-                "text": "Open the Studio",
-                "style": "go",
-                "icon": "studio"
-              },
-              {
-                "type": "key",
-                "text": "Report",
-                "icon": "target"
-              }
-            ]
+            "text": "Overview",
+            "size": "l"
           }
         ]
       },
       {
-        "type": "tabbar",
-        "options": [
-          "Overview",
-          "Plan",
-          "Publish",
-          "People",
-          "Toolbelt"
-        ],
-        "icons": [
-          "home",
-          "layers",
-          "publish",
-          "people",
-          "gear"
-        ],
-        "on": 0
+        "type": "panel",
+        "id": "status",
+        "pad": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "listrow",
+            "text": "The bar",
+            "icon": "bar",
+            "detail": "build a5ca338 · 3 people in",
+            "value": "Up",
+            "tone": "ok"
+          },
+          {
+            "type": "listrow",
+            "text": "Room server",
+            "icon": "people",
+            "detail": "11,239 messages today",
+            "value": "Up",
+            "tone": "ok"
+          },
+          {
+            "type": "listrow",
+            "text": "Last deploy",
+            "icon": "check",
+            "detail": "tests: smoke failed (EN4)",
+            "value": "Red",
+            "tone": "bad"
+          }
+        ]
+      },
+      {
+        "type": "title",
+        "text": "Needs you",
+        "size": "s"
+      },
+      {
+        "type": "panel",
+        "id": "needs",
+        "pad": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "listrow",
+            "text": "A news post to publish",
+            "icon": "news",
+            "detail": "R3: The World Plan",
+            "value": "Draft",
+            "tone": "warn",
+            "chevron": true
+          }
+        ]
+      },
+      {
+        "type": "title",
+        "text": "Now",
+        "size": "s"
+      },
+      {
+        "type": "panel",
+        "id": "now",
+        "gap": 10,
+        "children": [
+          {
+            "type": "row",
+            "justify": "between",
+            "children": [
+              {
+                "type": "text",
+                "text": "R4 · Dev, the control room"
+              },
+              {
+                "type": "chip",
+                "text": "1 of 7",
+                "on": true
+              }
+            ]
+          },
+          {
+            "type": "meter",
+            "level": 0.14
+          }
+        ]
       }
     ]
   }

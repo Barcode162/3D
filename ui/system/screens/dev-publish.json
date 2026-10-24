@@ -1,0 +1,75 @@
+{
+  "format": 1,
+  "id": "dev-publish",
+  "name": "Dev · Publish",
+  "about": "News posts (publish in one tap) and the site's words for the front door.",
+  "root": {
+    "type": "stack",
+    "gap": 14,
+    "pad": 16,
+    "children": [
+      {
+        "type": "stack",
+        "gap": 2,
+        "children": [
+          {
+            "type": "label",
+            "text": "Dev"
+          },
+          {
+            "type": "title",
+            "text": "Publish",
+            "size": "l"
+          }
+        ]
+      },
+      {
+        "type": "seg",
+        "id": "pub-tab",
+        "options": [
+          "News",
+          "The site"
+        ],
+        "on": 0
+      },
+      {
+        "type": "stack",
+        "id": "posts",
+        "gap": 12,
+        "children": [
+          {
+            "type": "panel",
+            "gap": 8,
+            "children": [
+              {
+                "type": "row",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "title",
+                    "text": "R3: The World Plan",
+                    "size": "s"
+                  },
+                  {
+                    "type": "chip",
+                    "text": "Draft"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "One doc for the whole project…",
+                "tone": "dim"
+              },
+              {
+                "type": "key",
+                "text": "Publish",
+                "style": "go"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

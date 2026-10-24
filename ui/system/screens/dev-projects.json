@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "id": "dev-projects",
+  "name": "Dev · Projects",
+  "about": "Each project and its tools (toolbelt/tools.json). The project cards are filled live; this one is an example.",
+  "root": {
+    "type": "stack",
+    "gap": 14,
+    "pad": 16,
+    "children": [
+      {
+        "type": "stack",
+        "gap": 2,
+        "children": [
+          {
+            "type": "label",
+            "text": "Dev"
+          },
+          {
+            "type": "title",
+            "text": "Projects",
+            "size": "l"
+          }
+        ]
+      },
+      {
+        "type": "stack",
+        "id": "projects",
+        "gap": 14,
+        "children": [
+          {
+            "type": "panel",
+            "children": [
+              {
+                "type": "row",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "title",
+                    "text": "Bar3D",
+                    "size": "m"
+                  },
+                  {
+                    "type": "chip",
+                    "text": "Live",
+                    "on": true,
+                    "led": true
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "The hangout bar: the game, its world and its tools.",
+                "tone": "dim"
+              },
+              {
+                "type": "panel",
+                "pad": 0,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "listrow",
+                    "text": "Studio",
+                    "icon": "studio",
+                    "detail": "Build, move and light anything in the world.",
+                    "chevron": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

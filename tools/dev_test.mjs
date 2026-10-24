@@ -1,0 +1,48 @@
+// Dev (dev/, PLAN.md R4) at phone width on a throwaway webspace (PHP's server:
+// ui/, dev/, the bar's account.php): a stranger gets the login, a player is
+// told Dev is for admins, the owner gets the five tabs, every tab draws its
+// screen file. Later pieces add their checks below. No game: seconds.
+// Usage: NODE_PATH=$(npm root -g) node tools/dev_test.mjs
+import { launchBrowser } from './lib/browser.mjs';
+import { webspace } from './lib/webspace.mjs';
+
+let failed = 0;
+const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
+const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt' }, files: { 'bar/account.php': 'server/account.php' } });
+const browser = await launchBrowser();
+process.on('uncaughtException', (e) => { console.log('FAIL ' + e.message); ws.close(); process.exit(1); });
+const year = new Date().getFullYear();
+const owner = await ws.post('bar/account.php', { a: 'signup', user: 'josh', pass: 'secret1', name: 'Josh', birth: `${year - 30}-03-04` });
+const player = await ws.post('bar/account.php', { a: 'signup', user: 'mia', pass: 'secret2', name: 'Mia', birth: `${year - 25}-03-04` });
+check(owner.ok && player.ok, 'two accounts (the first is the owner)');
+
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push(String(e)));
+page.on('response', (r) => { if (r.status() >= 400 && !(r.status() === 401 && /\.php/.test(r.url()))) errors.push(r.status() + ' ' + r.url()); });
+const ed = (fn, arg) => page.evaluate(fn, arg);
+
+// R4.1: the door and the tabs
+await page.goto(ws.url + 'dev/');
+await page.waitForSelector('#login:not([hidden])');
+check(true, 'a stranger gets the login');
+await page.fill('#user', 'mia'); await page.fill('#pass', 'secret2'); await page.click('#login button[type=submit]');
+await page.waitForFunction(() => /for the owner and admins/.test(document.getElementById('loginWhy').textContent));
+check(await ed(() => document.getElementById('tabs').hidden), 'a player is told Dev is for the owner and admins');
+await ed(() => localStorage.removeItem('hubToken'));
+await page.fill('#user', 'josh'); await page.fill('#pass', 'secret1'); await page.click('#login button[type=submit]');
+await page.waitForSelector('#tabs:not([hidden]) button');
+check(await ed(() => document.querySelectorAll('#tabs button').length === 5 && document.documentElement.dataset.look === 'ember'), 'the owner gets five tabs, in Ember');
+for (const tab of ['overview', 'projects', 'plan', 'publish', 'people']) {
+  await page.click(`#tabs [data-tab="${tab}"]`);
+  await page.waitForFunction((t) => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === t && document.querySelector('#view h2'), tab);
+  check(await ed(() => document.querySelectorAll('#view [data-id]').length > 0 && document.documentElement.scrollWidth <= 390), `${tab}: its screen file draws, slots marked, nothing wider than the phone`);
+}
+await page.reload();
+await page.waitForSelector('#tabs:not([hidden]) button');
+check(await ed(() => location.hash === '#people' && document.querySelector('#tabs [aria-current="page"]').dataset.tab === 'people'), 'a reload stays logged in, on the same tab');
+
+check(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
+await browser.close(); ws.close();
+console.log(failed ? `DEV TEST: ${failed} FAILED` : 'DEV TEST PASSED');
+process.exit(failed ? 1 : 0);

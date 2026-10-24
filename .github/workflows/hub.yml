@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'PLAN.md', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -45,6 +45,9 @@ jobs:
       - name: "Test: the Toolbelt's list (toolbelt/tools.json)"
         run: node tools/toolbelt_test.mjs
 
+      - name: "Test: Dev (dev/, the control room)"
+        run: node tools/dev_test.mjs
+
       - name: "Test: the UI Editor (toolbelt/ui-editor/) and its store (api.php)"
         run: node tools/ui_api_test.mjs && node tools/ui_editor_test.mjs
 
@@ -75,6 +78,9 @@ jobs:
           mkdir -p -f $IONOS_HOME/studio
           mkdir -p -f private/studio
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/studio $IONOS_HOME/studio
+          mkdir -p -f $IONOS_HOME/dev
+          mkdir -p -f private/dev
+          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/dev $IONOS_HOME/dev
           mkdir -p -f $IONOS_HOME/toolbelt
           mkdir -p -f private/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/toolbelt $IONOS_HOME/toolbelt

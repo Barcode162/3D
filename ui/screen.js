@@ -5,6 +5,8 @@
 //   Looped.loadParts()                 → Promise of the part list
 //   Looped.screen(screen, el, opts)    draws screen.root into el (replacing what's there)
 //     opts.mark: true                  each drawn part gets data-path="0.2.1" (its place in the tree), for the editor
+//   Looped.part(part)                  one part drawn on its own (for live rows a page adds)
+// A part's "id" becomes data-id: a slot the page fills with live data.
 // A part: {"type":"key","text":"Publish","style":"go"}; containers have "children": [...].
 // Unknown types draw as a dashed box saying so, never an error.
 (function () {
@@ -114,11 +116,15 @@
     if (!make) { e = h('div', 'ls-unknown', 'Unknown part: ' + (part && part.type)); }
     else e = make(part);
     if (opts.mark) e.setAttribute('data-path', path);
+    // A part with an "id" is a slot a page fills with live data (Dev: data-id="status").
+    if (part && typeof part.id === 'string' && part.id) e.setAttribute('data-id', part.id);
     if (part && part.children && defs[part.type] && defs[part.type].children) {
       part.children.forEach(function (c, i) { e.appendChild(draw(c, path === '' ? String(i) : path + '.' + i, opts)); });
     }
     return e;
   }
+  // One part on its own (a page drawing live rows into a slot): Looped.part({type:'listrow', text:'..'}).
+  L.part = function (part) { return draw(part, '', {}); };
   L.screen = function (screen, el, opts) {
     opts = opts || {};
     el.textContent = '';
