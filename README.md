@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J3.4 The life of a job (docs/playbook/job.md: the branch, each piece with only its own checks, ship once, verify live before saying so, the world store, the reply) and how Claude replies (reply.md: understood, done, one question with a recommendation, something went wrong; plain words; never claim what wasn't checked)
+
+`b30db37` · 2026-10-24 12:03 · 3 files, +112 −1 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J3.3 Intake (docs/playbook/intake.md): every kind of message the user sends (12 kinds) and where it goes; the user's words recorded exactly; the six verdicts, the capability check and the permission check before any work; a wish becomes a job with a spec (docs/plan/jobs/TEMPLATE.md); park; a new rule only with its request; unclear messages
 
 `21de803` · 2026-10-24 12:02 · 3 files, +122 −1 · tests: changed
