@@ -3,20 +3,30 @@
 // (tabs, footer, who is signed in) is site/layout.php; the look is
 // site/site.css. The other pages: play/, engine/, vision/, signin/, portal/.
 require __DIR__ . '/site/layout.php';
-site_head('home', 'Home', 'A living 3D bar you walk into from your browser, built on our own engine from the first line of code. The doors are open: come in and play.');
+site_head('home', 'Home', 'J Production builds its own engine, its own language and the worlds that run on them. First stop: a living 3D bar you walk into from your browser.');
 $projects = site_projects();
+// What Dev → Publish sets (PLAN.md R5.2/R5.3): the top words, and the one highlight pushed to the front page.
+$devData = getenv('DEV_DATA') ?: dirname(__DIR__) . '/private/dev';
+$siteWords = site_json("$devData/site.json") ?? [];
+$headline = trim((string)($siteWords['headline'] ?? '')) ?: 'We build worlds. From nothing.';
+$lede = trim((string)($siteWords['lede'] ?? '')) ?: 'J Production makes its own engine, its own language and the worlds that run on them. The first one is a bar you walk into from your phone.';
+$highlight = null;
+foreach (site_json("$devData/highlights.json") ?? [] as $h) if (!empty($h['pushed'])) $highlight = $h;
+if ($highlight) $highlight['img'] = ($highlight['pic'] ?? '') !== '' ? $highlight['pic'] : (is_file("$devData/highlights/{$highlight['id']}.jpg") ? "/dev/api.php?hi={$highlight['id']}" : '/site/img/wide.jpg');
+// The headline's last sentence glows, like before ("We built a world. <em>From nothing.</em>").
+$parts = preg_split('/(?<=[.!?])\s+(?=\S)/', $headline, 2);
 ?>
 <section class="hero">
   <div class="hero-media"><picture><source media="(max-width: 700px)" srcset="/site/img/hero-tall.jpg"><img src="/site/img/hero.jpg" alt="Inside the bar: string lights, neon signs, the back bar glowing behind the counter" fetchpriority="high"></picture></div>
   <div class="hero-in wrap">
-    <a class="pill reveal" href="/bar/"><b>Open</b><span data-live-text>Doors open · live now</span></a>
-    <h1 class="h-xl reveal" style="--d:.05s">We built a world. <em>From nothing.</em></h1>
-    <p class="lede reveal" style="--d:.12s">A living 3D bar you walk into straight from your browser. Our own engine, our own tools, zero downloads. Pull up a stool. Everyone's welcome.</p>
+    <span class="eyebrow plain reveal">J Production</span>
+    <h1 class="h-xl reveal" style="--d:.05s"><?php if (count($parts) === 2): ?><?= site_h($parts[0]) ?> <em><?= site_h($parts[1]) ?></em><?php else: ?><?= site_h($headline) ?><?php endif; ?></h1>
+    <p class="lede reveal" style="--d:.12s"><?= site_h($lede) ?></p>
     <div class="hero-cta reveal" style="--d:.18s">
       <a class="btn btn-go btn-lg" href="/bar/">Enter the bar <span class="arr">→</span></a>
-      <a class="btn btn-ghost btn-lg" href="#inside">See what's inside</a>
+      <a class="btn btn-ghost btn-lg" href="#bar3d">See the bar</a>
     </div>
-    <div class="hero-meta reveal" style="--d:.24s"><span>Runs on your iPhone</span><span>Nothing to install</span><span>Real people, live</span><span>Free</span></div>
+    <a class="pill reveal" style="--d:.24s" href="/bar/"><b>Open</b><span data-live-text>Doors open · live now</span></a>
   </div>
 </section>
 
@@ -28,10 +38,18 @@ $projects = site_projects();
   </div>
 </div>
 
-<section class="section" id="inside">
+<?php if ($highlight): ?>
+<section class="section tight highlight-sec">
+  <div class="wrap">
+    <a class="shot highlight reveal" href="<?= site_h($highlight['link'] ?: '/news/') ?>"><img src="<?= site_h($highlight['img']) ?>" alt="" loading="eager"><span class="tag">New</span><span class="cap"><b><?= site_h($highlight['title']) ?></b><?php if (($highlight['text'] ?? '') !== ''): ?><span><?= site_h($highlight['text']) ?></span><?php endif; ?></span></a>
+  </div>
+</section>
+<?php endif; ?>
+
+<section class="section" id="bar3d">
   <div class="wrap">
     <div class="section-head reveal">
-      <span class="eyebrow">What this is</span>
+      <span class="eyebrow">Bar3D · our first world</span>
       <h2 class="h-lg">Not a video. Not a download. <span class="hl">A place.</span></h2>
       <p class="lede">Tap a link and you're standing inside. Other people are in there too. The lights are on, the jukebox is playing, and somebody's losing at darts.</p>
     </div>
@@ -59,38 +77,6 @@ $projects = site_projects();
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap split flip">
-    <div class="copy reveal">
-      <span class="eyebrow">The engine</span>
-      <h2 class="h-lg">Looped. <span class="hl">Ours.</span></h2>
-      <p class="lede">Everyone else rents an engine. We wrote ours, from the first line, and tuned it until a phone could carry a whole bar. You'll see everything it does. How it does it stays in the vault.</p>
-      <p><a class="arrow-link" href="/engine/">What it can do <span>→</span></a></p>
-    </div>
-    <div class="vault reveal" style="--d:.1s" aria-label="A redacted look at the engine's code">
-      <div class="vault-top"><i></i><i></i><i></i><span>looped / classified</span></div>
-      <div class="ln"><span class="n">1</span><span><span class="k">namespace</span> engine {</span></div>
-      <div class="ln"><span class="n">2</span><span class="c">// the part everyone asks about</span></div>
-      <div class="ln"><span class="n">3</span><span>&nbsp;&nbsp;<span class="k">void</span> <span class="redact" style="width:9ch"></span>(<span class="redact" style="width:13ch"></span>) {</span></div>
-      <div class="ln"><span class="n">4</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="redact" style="width:22ch"></span></span></div>
-      <div class="ln"><span class="n">5</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="redact" style="width:16ch"></span> <span class="s">"nice try"</span>;</span></div>
-      <div class="ln"><span class="n">6</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="redact" style="width:26ch"></span></span></div>
-      <div class="ln"><span class="n">7</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="redact" style="width:11ch"></span></span></div>
-      <div class="ln"><span class="n">8</span><span>&nbsp;&nbsp;}</span></div>
-      <div class="ln"><span class="n">9</span><span>}</span></div>
-      <span class="stamp">Classified</span>
-    </div>
-  </div>
-  <div class="wrap" style="margin-top:clamp(48px,7vw,90px)">
-    <div class="stats reveal">
-      <div class="stat"><b>0</b><span>borrowed game engines. Not Unity, not Unreal, not anything.</span></div>
-      <div class="stat"><b data-count="129942">129,942</b><span>triangles in the race track alone, streamed into a phone.</span></div>
-      <div class="stat"><b><span data-count="6">6</span><small>min</small></b><span>from a new idea to live, for everyone.</span></div>
-      <div class="stat"><b>1</b><span>phone it all answers to. If it isn't smooth there, it isn't done.</span></div>
-    </div>
-  </div>
-</section>
-
 <section class="section" id="games">
   <div class="wrap">
     <div class="section-head reveal">
@@ -107,12 +93,17 @@ $projects = site_projects();
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="made-here">
   <div class="wrap">
-    <span class="eyebrow reveal">Where this is going</span>
-    <p class="manifesto reveal" style="margin:22px 0 30px">Most games fake the world. <span class="soft">We're building one that</span> simulates it.</p>
-    <p class="lede reveal">Light, sound, touch, heat, weather. Each one a real system, and every system makes the others stronger. The bar is just the first room.</p>
-    <p class="reveal" style="margin-top:26px"><a class="arrow-link" href="/vision/">Read the vision <span>→</span></a></p>
+    <div class="section-head reveal">
+      <span class="eyebrow">Made here</span>
+      <h2 class="h-lg">Our own engine. <span class="hl">Our own language.</span></h2>
+      <p class="lede">Everything above runs on tools we build ourselves. They're works in progress, used by our admins and devs, and every world we make grows them.</p>
+    </div>
+    <div class="grid g2">
+      <a class="card glow reveal" href="/engine/"><span class="idx mono">In progress</span><span class="ic"><?= site_icon('cube') ?></span><h3>Looped, the engine</h3><p>Written from the first line, tuned until a phone can carry a whole bar: light, sound, touch and people, live.</p></a>
+      <a class="card glow reveal" style="--d:.08s" href="/vision/"><span class="idx mono">Planned</span><span class="ic"><?= site_icon('cursor') ?></span><h3>The script language</h3><p>A small, safe language for things that live in our worlds: a candle that flickers, a jukebox that knows the mood.</p></a>
+    </div>
   </div>
 </section>
 
