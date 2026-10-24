@@ -57,7 +57,14 @@
     "c4": "#F5EBDD",
     "off": "#2A2018",
     "led": "#F2A541",
-    "step-shape": "bulb"
+    "step-shape": "bulb",
+    "bg-size": "auto",
+    "bg-motion": "none",
+    "title-fill": "none",
+    "title-ink": "currentColor",
+    "title-glow": "transparent",
+    "title-motion": "none",
+    "title-speed": "6s"
   },
   "other": {
     "scheme": "light",

@@ -21,13 +21,23 @@
 .lp, .lp * { box-sizing: border-box; }
 body.lp {
   margin: 0; background-color: var(--bg); background-image: var(--bg-glow); background-repeat: no-repeat;
+  background-size: var(--bg-size, auto); animation: var(--bg-motion, none) 28s ease-in-out infinite alternate;
   color: var(--text); font-family: var(--text-font); font-size: 16px; line-height: 1.5;
   -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
 }
 .lp h1, .lp h2, .lp h3, .lp .display {
   font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s);
   letter-spacing: var(--display-ls); margin: 0; line-height: 1.04; text-wrap: balance;
+  /* Moving titles (the Motion tokens): a paint clipped to the letters, moved by one of the lp- animations. */
+  background-image: var(--title-fill, none); background-size: 260% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: var(--title-ink, currentColor);
+  animation: var(--title-motion, none) var(--title-speed, 6s) ease-in-out infinite;
 }
+@keyframes lp-drift { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+@keyframes lp-shimmer { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@keyframes lp-glow { 0%, 100% { filter: drop-shadow(0 0 6px var(--title-glow)); } 50% { filter: drop-shadow(0 0 18px var(--title-glow)); } }
+@keyframes lp-shimmer-glow { 0% { background-position: 100% 0; filter: drop-shadow(0 0 6px var(--title-glow)); } 50% { filter: drop-shadow(0 0 16px var(--title-glow)); } 100% { background-position: 0% 0; filter: drop-shadow(0 0 6px var(--title-glow)); } }
+@keyframes lp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 .lp p { margin: 0; }
 .lp .label { font-family: var(--text-font); font-stretch: 75%; font-weight: 650; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
 .lp .mono, .lp .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -155,6 +165,7 @@ body.lp {
 .lp .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (prefers-reduced-motion: reduce) {
+  body.lp, .lp h1, .lp h2, .lp h3, .lp .display { animation: none; }
   .lp .key, .lp .switch > i, .lp .fader > .cap { transition: none; }
   .lp .sel, .lp .kled.blink.on, :root[data-look="jukebox"] .lp .steps > i.on::after { animation: none; }
 }

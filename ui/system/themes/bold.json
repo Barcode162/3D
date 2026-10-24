@@ -57,7 +57,14 @@
     "c4": "#00A651",
     "off": "#E6E6E6",
     "led": "#FF2D2D",
-    "step-shape": "key"
+    "step-shape": "key",
+    "bg-size": "auto",
+    "bg-motion": "none",
+    "title-fill": "none",
+    "title-ink": "currentColor",
+    "title-glow": "transparent",
+    "title-motion": "none",
+    "title-speed": "6s"
   },
   "other": {
     "scheme": "dark",

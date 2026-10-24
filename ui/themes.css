@@ -56,6 +56,13 @@
   --off: #2A2724;
   --led: #FF4A3D;
   --step-shape: key;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 
 :root[data-look="backbar"] {
@@ -109,6 +116,13 @@
   --off: #2B1A12;
   --led: #FFB347;
   --step-shape: bulb;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 
 :root[data-look="obsidian"] {
@@ -162,6 +176,13 @@
   --off: rgba(255,255,255,.07);
   --led: #8BE9FF;
   --step-shape: prism;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 
 :root[data-look="jukebox"] {
@@ -215,6 +236,13 @@
   --off: #2A0B14;
   --led: #FF3B5C;
   --step-shape: tube;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 
 :root[data-look="clean"] {
@@ -268,6 +296,13 @@
   --off: #E5E5EA;
   --led: #34C759;
   --step-shape: key;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="clean"][data-scheme="dark"] {
   color-scheme: dark;
@@ -381,6 +416,13 @@
   --off: #2A2018;
   --led: #F2A541;
   --step-shape: bulb;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="warm"][data-scheme="light"] {
   color-scheme: light;
@@ -494,6 +536,13 @@
   --off: #E6E6E6;
   --led: #FF2D2D;
   --step-shape: key;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="bold"][data-scheme="dark"] {
   color-scheme: dark;
@@ -593,6 +642,13 @@
   --off: rgba(255,255,255,.08);
   --led: #22D3EE;
   --step-shape: prism;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="glass"][data-scheme="light"] {
   color-scheme: light;
@@ -702,6 +758,13 @@
   --off: #16132B;
   --led: #45D4FF;
   --step-shape: tube;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="neon"][data-scheme="light"] {
   color-scheme: light;
@@ -807,6 +870,13 @@
   --off: #E7E3F5;
   --led: #7C6CF2;
   --step-shape: key;
+  --bg-size: auto;
+  --bg-motion: none;
+  --title-fill: none;
+  --title-ink: currentColor;
+  --title-glow: transparent;
+  --title-motion: none;
+  --title-speed: 6s;
 }
 :root[data-look="soft"][data-scheme="dark"] {
   color-scheme: dark;

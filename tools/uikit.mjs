@@ -37,7 +37,7 @@ export function loadScreens() {
 // What a value of each kind looks like (the editor shows a matching control).
 const KIND = {
   color: (v) => /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\([^)]*\)$/.test(v) || v === 'transparent',
-  length: (v) => /^-?[\d.]+(px|em|rem|%)?$/.test(v),
+  length: (v) => /^-?[\d.]+(px|em|rem|%|s|ms)?$/.test(v),
   number: (v) => /^-?[\d.]+$/.test(v),
   font: (v) => v.length > 0 && !/[;{}]/.test(v),
   paint: (v) => v.length > 0 && !/[;{}]/.test(v),   // gradients, shadows, filters: any CSS value

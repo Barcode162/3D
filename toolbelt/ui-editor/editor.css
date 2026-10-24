@@ -31,7 +31,7 @@ body.ed { margin: 0; background: var(--e-bg); color: var(--e-text); font: 13px/1
 .ed-stage { grid-area: stage; display: grid; grid-template-rows: auto 1fr; min-height: 0; background: var(--e-bg); }
 .ed-stagebar { display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px)); flex-wrap: wrap; }
 .ed-viewport { overflow: auto; min-height: 0; padding: 10px; background: repeating-conic-gradient(#16181B 0 25%, #131518 0 50%) 0 0 / 20px 20px; -webkit-overflow-scrolling: touch; }
-.ed-frame { margin: 0 auto; background-color: var(--bg); background-image: var(--bg-glow); background-repeat: no-repeat; color: var(--text); font-family: var(--text-font); font-size: 16px; line-height: 1.5; border-radius: 14px; box-shadow: 0 0 0 1px var(--e-line), 0 20px 40px rgba(0,0,0,.5); min-height: 100%; overflow: hidden; }
+.ed-frame { margin: 0 auto; background-color: var(--bg); background-image: var(--bg-glow); background-repeat: no-repeat; background-size: var(--bg-size, auto); animation: var(--bg-motion, none) 28s ease-in-out infinite alternate; color: var(--text); font-family: var(--text-font); font-size: 16px; line-height: 1.5; border-radius: 14px; box-shadow: 0 0 0 1px var(--e-line), 0 20px 40px rgba(0,0,0,.5); min-height: 100%; overflow: hidden; }
 .ed-frame.ed-phone { width: 390px; max-width: 100%; }
 .ed-frame.ed-computer { width: 100%; }
 .ed-frame.ed-game { width: 100%; background: radial-gradient(ellipse 70% 60% at 30% 40%, rgba(255,170,80,.35), transparent 60%), radial-gradient(ellipse 50% 40% at 80% 70%, rgba(255,60,120,.2), transparent 60%), linear-gradient(180deg, #2a1d14, #0d0907); }

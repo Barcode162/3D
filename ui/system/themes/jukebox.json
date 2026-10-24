@@ -57,6 +57,13 @@
     "key-ls": ".1em",
     "key-stretch": "75%",
     "knob": "radial-gradient(circle at 40% 28%, #FFFFFF, transparent 30%), conic-gradient(from 0deg, #E8ECF0, #6B727C, #F4F6F8, #4E5560, #E8ECF0, #8C939C, #E8ECF0)",
-    "step-shape": "tube"
+    "step-shape": "tube",
+    "bg-size": "auto",
+    "bg-motion": "none",
+    "title-fill": "none",
+    "title-ink": "currentColor",
+    "title-glow": "transparent",
+    "title-motion": "none",
+    "title-speed": "6s"
   }
 }

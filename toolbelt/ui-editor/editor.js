@@ -369,7 +369,7 @@
       box.appendChild(fs);
     } else if (t.kind === 'choice') {
       box = h('select', 'ed-in'); box.setAttribute('aria-label', t.id);
-      t.choices.forEach(function (c) { var o = h('option', null, c); o.value = c; box.appendChild(o); }); box.value = v;
+      t.choices.forEach(function (c) { var o = h('option', null, c.replace(/^lp-/, '').replace(/-/g, ' + ')); o.value = c; box.appendChild(o); }); box.value = v;
       box.addEventListener('change', function () { setToken(t.id, box.value); });
     } else { box = text; if (t.kind === 'paint') row.classList.add('ed-tall'); }
     row.appendChild(box);

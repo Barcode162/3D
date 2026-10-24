@@ -57,6 +57,13 @@
     "key-ls": ".1em",
     "key-stretch": "75%",
     "knob": "radial-gradient(circle at 50% 35%, rgba(255,255,255,.18), transparent 55%), repeating-conic-gradient(#2E2B28 0 6deg, #1C1A18 6deg 12deg)",
-    "step-shape": "key"
+    "step-shape": "key",
+    "bg-size": "auto",
+    "bg-motion": "none",
+    "title-fill": "none",
+    "title-ink": "currentColor",
+    "title-glow": "transparent",
+    "title-motion": "none",
+    "title-speed": "6s"
   }
 }

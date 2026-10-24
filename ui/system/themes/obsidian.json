@@ -57,6 +57,13 @@
     "key-ls": ".1em",
     "key-stretch": "75%",
     "knob": "radial-gradient(circle at 50% 18%, rgba(255,255,255,.35), rgba(255,255,255,0) 40%), radial-gradient(circle at 50% 60%, #15171C, #030304 70%)",
-    "step-shape": "prism"
+    "step-shape": "prism",
+    "bg-size": "auto",
+    "bg-motion": "none",
+    "title-fill": "none",
+    "title-ink": "currentColor",
+    "title-glow": "transparent",
+    "title-motion": "none",
+    "title-speed": "6s"
   }
 }

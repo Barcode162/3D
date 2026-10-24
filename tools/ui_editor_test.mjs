@@ -54,7 +54,7 @@ check(await ed(() => document.documentElement.dataset.look === 'jukebox' && getC
 // R1.5: theme editing
 await page.selectOption('#themePick', 'faceplate');
 await page.click('[data-mode="theme"]');
-check(await ed(() => document.querySelectorAll('#tree [data-group]').length === 7), 'Theme lists This theme + 6 token groups');
+check(await ed(() => document.querySelectorAll('#tree [data-group]').length === 8), 'Theme lists This theme + 7 token groups');
 await page.click('#tree [data-group="shape"]');
 const before = await ed(() => getComputedStyle(document.querySelector('#frame .key')).borderTopLeftRadius);
 await page.$eval('#insp [data-token="key-r"] input[type=range]', (r) => { r.value = '20'; r.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -115,6 +115,12 @@ await page.selectOption('#insp select[aria-label="Take Shape from another theme"
 check(await ed(() => { const t = UIEditor.state.themes.soft; return t.tokens['key-r'] === '4px' && t.tokens['panel-bw'] === '2px' && getComputedStyle(document.getElementById('frame')).getPropertyValue('--key-r').trim() === '4px'; }), 'Take Shape from Bold squares Soft\'s corners');
 await page.click('#undo');
 check(await ed(() => UIEditor.state.themes.soft.tokens['key-r'] === '999px'), 'one undo takes the whole group back');
+// R2.5: motion: a title can move
+await page.selectOption('#themePick', 'faceplate');
+await page.click('#tree [data-group="motion"]');
+await page.selectOption('#insp [data-token="title-motion"] select', 'lp-float');
+check(await ed(() => getComputedStyle(document.querySelector('#frame h1, #frame h2')).animationName === 'lp-float'), 'Motion → title-motion float makes the preview\'s title move');
+await page.click('#undo');
 await page.click('[data-mode="screen"]');
 
 // R1.7: the draft on the phone, login, publish, history
