@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R2.2 Light and dark in one theme: a theme file can carry its other half (only the tokens that differ), the page follows the phone's setting (or ?scheme= / Looped.setScheme), the editor's Dark / Light switch shows and edits either half (Light on a dark-only theme starts a plain light half); new type tokens (word font, key case, size, weight, spacing, width) so a theme can drop the capitals; the engine reads both halves
+
+`3386773` · 2026-10-24 04:24 · 15 files, +244 −20 · tests: quick, toolbelt
+
+Phone check: in the UI Editor tap Light above the preview: the screen turns light; tap Dark: back. The bar and Studio look the same as before.
+
+![R2.2 page-toolbelt-ui-editor-index-screen-dev-overview.jpg](R2.2/page-toolbelt-ui-editor-index-screen-dev-overview.jpg)
+
 ## R2.1 Real screens to judge a theme on: the front door (a bar picture behind the words), Dev's Overview (status rows, what needs you, a tab bar) and the bar's jukebox menu; new parts: backdrop, list row, tab bar; pictures in ui/system/img/
 
 `0bdee82` · 2026-10-24 04:19 · 10 files, +922 −45 · tests: quick, toolbelt
