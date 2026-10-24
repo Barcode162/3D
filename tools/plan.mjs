@@ -12,6 +12,7 @@
 //                                                the road item becomes Now (the old Now must be all ticked)
 //   node tools/plan.mjs edit <TAG> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
 //   node tools/plan.mjs pieces [--about "<what the step is>"] --piece "<TAG.1>|<what>|<check>" ...   replace Now's pieces (only before any is ticked)
+//   node tools/plan.mjs drop <PIECE> ["<parked line>" --park <chapter>]   take an open piece out of Now (the user said not now)
 //   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
@@ -158,6 +159,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const about = flags('about')[0];
       if (about) head = head.replace(/^(\*\*[^*]+\*\* \([a-z ]+\)\.) .*$/m, `$1 ${about}`);
       save(text.slice(0, now.from) + head + '\n' + pieces.join('\n') + '\n\n' + text.slice(now.to)); console.log(`Now has ${pieces.length} pieces`);
+    } else if (cmd === 'drop') {
+      // A piece the user no longer wants in this step: out of Now (into Parked with --park <chapter> "<line>").
+      const tag = pos[0], now = part(text, 3);
+      const re = new RegExp(`^- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* .*\\n`, 'm');
+      if (!re.test(now.body)) throw new Error(`${tag} is not an open piece in Now`);
+      let t = text.slice(0, now.from) + now.body.replace(re, '') + text.slice(now.to);
+      const pk = flags('park');
+      if (pk.length) t = addLine(t, 5, pk[0], `- ${pos[1]}`);
+      save(t); console.log(`${tag} dropped from Now${pk.length ? ', parked under ' + chapterName(pk[0]) : ''}`);
     } else if (cmd === 'next') {
       const p = part(text, 4);
       if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');

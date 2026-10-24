@@ -55,8 +55,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **R5.2** Highlights in Publish: make one (a picture, a short title, one or two friendly lines, where it leads), see it as the front page will, Push to the front page or take it down; Claude's news posts written in plain friendly words *Check:* Dev → Publish → Highlights: make one with a picture, Push: it's on the front page
 - [x] **R5.3** The front page rearranged: J Production's intro, the pushed highlight, Enter the bar; scroll: Bar3D's pictures and what there is to do *Check:* open joshuavelasco.com: intro, your highlight, Enter the bar; scroll for the bar
 - [x] **R5.4** Projects: a page per project (Bar3D first; Looped and the script language as works in progress that admins and devs use); Play, Engine and Vision fold in and their old addresses lead there *Check:* tap Projects: Bar3D, Looped, the script language; /engine opens Looped's page
-- [ ] **R5.5** The street front: a new place, the bar seen from the street at night (the front wall, the lit door, windows with people moving behind them, a street lamp) *Check:* in the Studio's place menu, open The street
-- [ ] **R5.6** The clip: the camera drifts toward the lit door, an ~8 s seamless loop rendered from the engine (a small video, a still for slow connections), behind the front page's intro *Check:* open joshuavelasco.com: the clip plays behind the intro and loops with no jump
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
@@ -115,7 +113,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **EN4** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
 
 ### The tools
-- [ ] **R6** Ember on everything: the Studio, the bar's menus, the loading screen; the old themes retired from use. · N5
+- [ ] **R6** Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the arcade's two web games' menus; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
 - [ ] **P2** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
 - [ ] **TL1** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
@@ -139,9 +137,11 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - A new name for the world and its currency (Bar3D is a working name).
 - Mini music studio (a DAW in the bar).
 - Avatar from a face scan (the user's own character builder).
+- The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)
 
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
+- The front page's looping clip: the camera drifting to the bar's lit door, ~8 s, rendered from the engine, behind the intro (was R5.6)
 
 ### The engine
 - World-simulation engines: sound made from the physics, heat, smell as a field, day and night.

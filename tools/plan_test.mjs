@@ -25,6 +25,7 @@ try {
   check(plan('add', 'kitchen', 'W96', 'No such chapter', '--serves', 'N1').status === 1, 'an unknown chapter is refused');
   check(plan('park', 'site', 'A parked test idea').status === 0 && /### The site\n(- .*\n)*- A parked test idea\n/.test(text().split('## 6. Parked')[1]), 'park adds a line under its chapter in Parked');
   check(plan('start', 'W99', '--piece', 'W99.1|One|look').status === 1, 'start is refused while Now has open pieces');
+  check(plan('drop', 'X1.9').status === 1, 'drop refuses a piece that is not in Now');
   check(plan('tick', 'X1.1').status === 0 && /- \[x\] \*\*X1\.1\*\*/.test(text()), 'tick ticks a piece in Now');
   check(plan('start', 'W99', '--piece', 'W99.1|The first piece|stand by the bar', '--piece', 'W99.2|The second').status === 0, 'start moves a road item into Now');
   const t = text();
