@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J3.6 Ways of working (docs/playbook/ways.md: normal job, urgent fix, experiments that are never pushed, content from the user, talk and status, phone reports, long jobs, two sessions, audits) and changing the structure (change.md: only by a decision the user approves; where every new procedure, check, tool, page, project, word, issue and decision goes)
+
+`0d920f1` · 2026-10-24 12:04 · 3 files, +95 −1 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J3.5 When something goes wrong: incident.md (what counts as an error, the zero-error loop: stop, contain, record, root cause in the way we work, fix the system, prove it, count it; the unexpected), failures.md (a check fails, a red deploy, live broken, conflicts, the machine, resume, drift, security), revert.md (broke, undo)
 
 `df46b1f` · 2026-10-24 12:03 · 4 files, +162 −1 · tests: changed
