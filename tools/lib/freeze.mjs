@@ -1,6 +1,6 @@
 // The freeze's lock (J7.1, after incident 2026-10-24-freeze-unlocked): while
 // the user's "Freeze" rule stands (docs/charter/rules.json), a commit may only
-// change the files docs/plan/restructure.md §7 allows. The user's own changes
+// change the files docs/archive/restructure.md §7 allows. The user's own changes
 // pulled from the stores ("World: …", "UI: …") and merges pass; an urgent fix
 // for something live passes with FREEZE_OK="<why>" (docs/playbook/ways.md).
 // Run by tools/githooks/commit-msg: node tools/lib/freeze.mjs <message file>
@@ -23,7 +23,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const bad = outside(execSync('git diff --cached --name-only', { encoding: 'utf8' }).split('\n'), message);
   if (bad.length && process.env.FREEZE_OK) { console.log(`(outside the freeze, allowed as: ${process.env.FREEZE_OK}) ${bad.join(', ')}`); process.exit(0); }
   if (bad.length) {
-    console.log(`✗ commit refused: the freeze holds (docs/plan/restructure.md §7) and this changes ${bad.slice(0, 8).join(', ')}${bad.length > 8 ? ` and ${bad.length - 8} more` : ''}. Take them out (git restore --staged <file>), or, for an urgent fix of something live, FREEZE_OK="<why>".`);
+    console.log(`✗ commit refused: the freeze holds (docs/archive/restructure.md §7) and this changes ${bad.slice(0, 8).join(', ')}${bad.length > 8 ? ` and ${bad.length - 8} more` : ''}. Take them out (git restore --staged <file>), or, for an urgent fix of something live, FREEZE_OK="<why>".`);
     process.exit(1);
   }
 }

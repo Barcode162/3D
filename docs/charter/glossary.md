@@ -124,7 +124,7 @@ the code or data uses another name for the same thing, it's given in
 - **request**: what the user asked for, kept word for word in the Records.
 - **restructure**: jobs J1–J8 (from 2026-10-24) that give the project its
   five books, honest checks, enforced procedures and clean data flows;
-  spec: `docs/plan/restructure.md`.
+  spec: `docs/archive/restructure.md`.
 - **room server**: the multiplayer server (on Cloudflare) every player in
   the bar connects to.
 - **rule (a thing's)**: a "when → then" line in a kind: what changes a

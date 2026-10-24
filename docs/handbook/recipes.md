@@ -5,7 +5,7 @@ files and commands. Part of the Handbook: it says **how a change is made**.
 **Whether and when** it is made is the Playbook's: every recipe runs inside a
 job (`docs/playbook/job.md`: the request recorded, the verdict, one piece =
 one commit through `node tools/project.mjs piece`, the ship). During the
-restructure, features are frozen (`docs/plan/restructure.md` §7): recipes
+restructure, features are frozen (`docs/archive/restructure.md` §7): recipes
 1-11 and 14-17 wait for the unfreeze unless they fix something broken.
 
 Words the user might use are in *italics*. Every piece ends with its own

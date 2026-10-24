@@ -30,7 +30,7 @@
 //   node tools/plan.mjs render [--check]         write PLAN.md and the blocks from the data (--check: only compare)
 //   node tools/plan.mjs relink                   every doc path in the plan that moved (J6.6, tools/lib/docmoves.mjs) → its new place
 //   node tools/plan.mjs specs                    every job's spec as JSON {id: text} (docs/plan/jobs/<ID>.md, and
-//                                                J1–J8's sections of docs/plan/restructure.md; a spec under a job's old
+//                                                J1–J8's sections of docs/archive/restructure.md; a spec under a job's old
 //                                                tag counts for it too); plan.yml sends it to Dev
 // Chapters: world, site, engine, tools, backbone. Verdict kinds: now, after
 // (with --after), cost, experiment, impossible, rule.
@@ -285,13 +285,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       plan.chapters.find((c) => c.id === chapterId(pos[0])).now = pos[1]; save(data); console.log(`${CHAPTERS[chapterId(pos[0])]}: Now line set`);
     } else if (cmd === 'relink') {
       const { fixDocRefs } = await import('./lib/docmoves.mjs');
-      const before = JSON.stringify(plan);
+      const before = JSON.stringify(plan) + JSON.stringify(rules);
       const walk = (v) => (typeof v === 'string' ? fixDocRefs(v) : Array.isArray(v) ? v.map(walk) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)])) : v);
       Object.assign(plan, walk(plan));
-      if (JSON.stringify(plan) === before) console.log('nothing to relink'); else { save(data); console.log('the plan\'s doc paths point to where the docs are now'); }
+      Object.assign(rules, walk(rules));  // a doc path inside a rule (only the path changes, never the user's words; J8.2)
+      if (JSON.stringify(plan) + JSON.stringify(rules) === before) console.log('nothing to relink'); else { save(data); console.log('the plan\'s doc paths point to where the docs are now'); }
     } else if (cmd === 'specs') {
       const specs = {}, dir = 'docs/plan/jobs';
-      const restructure = read('docs/plan/restructure.md');
+      const restructure = read('docs/archive/restructure.md');
       for (const m of restructure.matchAll(/^### (J\d+) · [^\n]*\n[\s\S]*?(?=^#{2,3} |(?![\s\S]))/gm)) specs[m[1]] = m[0].trim();
       for (const f of readdirSync(dir).filter((x) => /^[A-Z]+\d+(\.\d+)?\.md$/.test(x))) specs[f.slice(0, -3)] = read(`${dir}/${f}`).trim();
       // A spec written under a job's old tag (docs/plan/jobs/W20.md) is its renumbered job's too (J7.1: "Formerly").

@@ -53,6 +53,7 @@ export const RULES = [
   [/^docs\/playbook\/|^tools\/lib\/commands\.mjs$/, ['workshop']],                                    // the Playbook names only what exists
   [/^docs\/handbook\/ui\/|^tools\/lib\/labels\.mjs$/, ['workshop', 'labels']],                                // the pages and their controls
   [/^docs\/handbook\/|^tools\/handbook\.mjs$|^tools\/lib\/handbook_data\.mjs$/, ['workshop']],                                         // the Handbook's generated pages and links
+  [/^tools\/lib\/docmoves\.mjs$/, ['workshop', 'plan']],  // where moved docs went: the Handbook's links and the plan's relink
   [/^tools\/githooks\/|^tools\/lib\/(guard|freeze)\.mjs$|^\.claude\/|^tools\/setup\.sh$/, ['workshop']],          // the locks
   [/\.md$|^docs\//, []],
   [/^homepage\/|^tools\/site_test/, ['site', 'labels']],

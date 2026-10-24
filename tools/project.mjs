@@ -40,7 +40,7 @@ async function status(brief) {
   } else out.push('Now: nothing (start the next job)');
   if (!brief) out.push(`Up next: ${plan.upNext}`);
   const freeze = rules.rules.find((r) => /^\*\*Freeze:/.test(r.text));
-  if (freeze) out.push('Freeze: on (no features, world, engine or language changes; docs/plan/restructure.md §7)');
+  if (freeze) out.push('Freeze: on (no features, world, engine or language changes; docs/archive/restructure.md §7)');
   // Live.
   const [version, ci, notes, posts] = await Promise.all([get('https://joshuavelasco.com/bar/version.txt'), dev('ci'), dev('notes'),
     process.env.HUB_KEY ? get('https://joshuavelasco.com/hub/hub.php', { method: 'POST', headers: { 'Content-Type': 'text/plain', 'X-Hub-Key': process.env.HUB_KEY }, body: '{"a":"posts"}' }).then((r) => { try { return JSON.parse(r.text); } catch { return null; } }) : null]);

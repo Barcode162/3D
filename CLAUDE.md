@@ -32,8 +32,8 @@ what to look at on the phone.
    sessions, known issues, decisions.
 
 `docs/archive/` is history, never instructions. **The restructure (J1–J8) is
-in progress:** its spec `docs/plan/restructure.md` sits just under the Charter
-until J8; features are frozen (spec §7).
+done** (its spec is history: `docs/archive/restructure.md`); until J8.3 lifts
+the freeze, features stay frozen (its §7 list, kept by a lock).
 
 ## Every session
 

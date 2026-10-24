@@ -1,5 +1,11 @@
 # The restructure (J1–J8): the governing spec
 
+> **History (archived in J8.2, 2026-10-24).** The restructure is done: its
+> rules live in the Charter (`docs/charter/`), its procedures in the Playbook
+> (`docs/playbook/`), how things work in the Handbook (`docs/handbook/`).
+> Until J8.3 lifts the freeze, its §7 list is the one the freeze's lock
+> (`tools/lib/freeze.mjs`) follows. Not instructions otherwise.
+
 **Status:** in progress since 2026-10-24 (approved by the user: "go").
 **Baseline:** `main` at `bbe782f` (the last build before the restructure;
 build `87bd110` was the last game deploy).

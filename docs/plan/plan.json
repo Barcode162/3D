@@ -55,7 +55,7 @@
     "id": "J8.2",
     "text": "Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived",
     "check": "Dev → Plan: J8.2 ticked; Overview shows no drift",
-    "done": false
+    "done": true
    },
    {
     "id": "J8.3",

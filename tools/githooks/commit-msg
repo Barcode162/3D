@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Lock (J7.1; tools/setup.sh turns it on with core.hooksPath): while the
-# freeze holds, a commit changes only the files docs/plan/restructure.md §7
+# freeze holds, a commit changes only the files docs/archive/restructure.md §7
 # allows (tools/lib/freeze.mjs). Skipped where the lock isn't (the gallery
 # branch's worktree).
 set -u

@@ -1,15 +1,14 @@
-# Bar3D
+# J Production: Bar3D and Looped
 
-A 3D hangout bar built from scratch in C++, compiled to WebAssembly and
-rendered with WebGPU. It runs in Safari on iPhone.
+A 3D hangout bar you walk into from the browser, built on **Looped**, J
+Production's own engine (C++ → WebAssembly → WebGPU, from scratch). It runs in
+Safari on the iPhone.
 
 **Live:** https://joshuavelasco.com/bar/
 
-See `PLAN.md` for the plan (the one doc) and `CLAUDE.md` for build instructions.
-
-## Resuming in a new Claude chat
-Start a new Claude Code session on this repo and say:
-
-> Read CLAUDE.md and PLAN.md, then continue with the next step.
-
-Everything needed (plan, decisions, setup, history) lives in this repo.
+## Where to start
+Every session, human or AI, starts at `CLAUDE.md`. It names the five books:
+the Charter (`docs/charter/`, the rules), the Playbook (`docs/playbook/`, the
+only instructions), the Handbook (`docs/handbook/`, how everything works),
+the Plan (`PLAN.md`, written from `docs/plan/plan.json`) and the Records
+(`docs/records/`). Everything needed lives in this repo.

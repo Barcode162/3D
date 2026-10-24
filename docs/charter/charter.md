@@ -33,7 +33,7 @@ and says what to look at on the phone.
 **How work happens:** the user says anything, in any words ("go" means:
 continue the plan). Claude says what it understood and whether it's
 possible, does the work through the Playbook (`docs/playbook/`, written in
-J3; until then `docs/plan/restructure.md`), and replies with the build code
+J3; until then `docs/archive/restructure.md`), and replies with the build code
 and where to look.
 
 ## 2. The North star and the user's rules (word for word)
@@ -63,7 +63,7 @@ only with `node tools/plan.mjs rule`, on the user's word); this copy and
 - (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
 - (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
 - (2026-10-24) **Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed.
-- (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/plan/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
+- (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/archive/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
 - (2026-10-24) **News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish.
 - (2026-10-24) **The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page.
 - (2026-10-24) **joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use.
@@ -96,8 +96,8 @@ fixed. Newest first, by the rule's bold name. **Confirmed by the user on
 | Never assume the user knows anything | Replies use plain words, no file names or commands unless asked. Every term used with the user is in the glossary. When a request could mean two things, Claude picks the likelier one, says so in one line, and continues (asking only when the choice is the user's to make). |
 | Zero errors per session | An error is anything that didn't go as expected because of us: a red check we caused, a failed deploy, something broken on the live site, a tool or procedure step that didn't work as written, a wrong statement to the user, lost work, a permission crossed. Each one gets an incident record (`docs/records/incidents/`) with its root cause and the change that stops it recurring; each session's record counts its errors. |
 | Nothing outside the guidelines | Every request gets a verdict before any work (doable now · after something else · at a cost, the user decides · needs an experiment · not possible, with the closest thing that is · against a rule). Section 5 is the permission list; whatever it doesn't list, Claude asks about first. |
-| Freeze | Until J8 unfreezes: no new features, no world, engine or language changes. Only the restructure's own files change (`docs/plan/restructure.md` §7). Something live that breaks still gets an urgent fix. |
-| The restructure (J1–J8) governs until it's done | `docs/plan/restructure.md` is followed piece by piece; older instructions that disagree are fixed by the job that owns them. Replaces the rule "This plan: one doc, eight fixed parts". |
+| Freeze | Until J8 unfreezes: no new features, no world, engine or language changes. Only the restructure's own files change (`docs/archive/restructure.md` §7). Something live that breaks still gets an urgent fix. |
+| The restructure (J1–J8) governs until it's done | Done (J8, 2026-10-24): its spec is history in `docs/archive/restructure.md`; the five books it made are how the project works. Replaced the rule "This plan: one doc, eight fixed parts". |
 | News highlights are for people, not engineers | Claude never writes technical words in news or highlights, and never pushes a highlight or publishes news: that switch is the user's, in Dev → Publish. |
 | The website keeps what works | Site changes keep the existing boxes, layout and animations unless the user asks otherwise. |
 | joshuavelasco.com is J Production's company site | The front page introduces the company first; Bar3D is one project among others. |
@@ -165,7 +165,7 @@ music.
 - Read anything: the repo, the live site, the stores (with Claude's key),
   the GitHub runs and their logs.
 - Change code, data, docs, tests and tools within the job's scope (and,
-  during the freeze, only the files `docs/plan/restructure.md` §7 allows).
+  during the freeze, only the files `docs/archive/restructure.md` §7 allows).
 - Build, run the checks, take pictures.
 - Commit and push to the job's branch (`job/J<n>`); push `main` once per
   job when it's finished (and for an urgent fix), through the procedure.

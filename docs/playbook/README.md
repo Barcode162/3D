@@ -8,7 +8,8 @@ here; every procedure has the same shape: **When** · **Before you start** ·
 Order of authority: Charter (`docs/charter/`) > Playbook > Handbook > Plan >
 Records > Archive. The Playbook never contradicts the Charter; if it seems to,
 the Charter wins and this book is fixed in the same session (an incident).
-Until J8, `docs/plan/restructure.md` sits just under the Charter.
+The restructure's spec (J1–J8) is history now (`docs/archive/restructure.md`);
+while the freeze holds, its §7 lists the files that may change.
 
 Every command runs through the front door, `node tools/project.mjs <command>`
 (`help` lists them); `tools/playbook_test.mjs` checks that every command this

@@ -29,7 +29,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
 - (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
 - (2026-10-24) **Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed.
-- (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/plan/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
+- (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/archive/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
 - (2026-10-24) **News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish.
 - (2026-10-24) **The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page.
 - (2026-10-24) **joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use.
@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J8 · Proof, then unfreeze** (the tools). Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
 - [x] **J8.1** Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass *Check:* Dev → Plan: J8.1 ticked; the drills' record lists every request and its result
-- [ ] **J8.2** Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived *Check:* Dev → Plan: J8.2 ticked; Overview shows no drift
+- [x] **J8.2** Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived *Check:* Dev → Plan: J8.2 ticked; Overview shows no drift
 - [ ] **J8.3** Unfreeze (your Freeze rule taken out, on your word of 2026-10-24 #7) and the first real job (J66) runs through the new system end to end *Check:* Dev → Plan: no Freeze line in your rules; J66 in Now
 
 ## 5. The road

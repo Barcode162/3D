@@ -3,7 +3,7 @@
 **When:** "go", or a wish that intake turned into a job.
 
 **Before you start:** the job has a spec (`docs/plan/jobs/J<n>.md`; for
-J1–J8, `docs/plan/restructure.md`) and is in Now (`node tools/plan.mjs now`).
+J1–J8, `docs/archive/restructure.md`) and is in Now (`node tools/plan.mjs now`).
 If Now's job is finished, start the next one: `node tools/plan.mjs start
 J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 
@@ -26,7 +26,7 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 
 ## A piece
 
-1. Make the change, inside the job's scope and the freeze (`docs/plan/restructure.md` §7).
+1. Make the change, inside the job's scope and the freeze (`docs/archive/restructure.md` §7).
 2. Run **only the checks covering what changed** and save it, with one
    command:
    ```
