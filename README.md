@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.3 Dev's Overview, live: the bar's build (its config), the room server (its health: players, messages today), the last deploy (CI now writes its result to Dev's store, even when a test fails), news waiting to be published, the step in Now (how many pieces done, what's next, what comes after); Dev's store (dev/api.php: the plan, the deploy result, notes, the site's words; owner and admins); PLAN.md read in the browser; Projects drops its duplicate Open row
+
+`340ed5a` · 2026-10-24 06:18 · 9 files, +283 −4 · tests: quick, dev
+
+Phone check: Dev → Overview: The bar Up with its build code, Room server Up with people in the bar, Last deploy (after the next game deploy: Green or Red, tap opens the run), Now: R4 with 3 of 7
+
+![R4.3 page-dev-index-demo-overview.jpg](R4.3/page-dev-index-demo-overview.jpg)
+
 ## R4.2 Projects in Dev: every project with its own tools from toolbelt/tools.json (Bar3D: open the bar, the Studio, Dials, World notes, perf reports, the gallery, classic, world sync; Looped: UI Editor, Screens, Compare, Style page, engine flags, benchmarks, the light tool, the UI kit; the script language: planned; the workshop: Claude's tools); a new project is one line; ?demo on this computer for pictures
 
 `85fa081` · 2026-10-24 06:09 · 8 files, +101 −29 · tests: quick, dev, toolbelt
