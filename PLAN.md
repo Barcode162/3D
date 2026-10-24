@@ -166,7 +166,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J5.1, J5.2, J5.3, J5.4, J5.5, J5.6: J5: data flows and Dev: the data map, the plan on Dev within a minute, one deployer per folder, the retired board out, one list of projects, Dev shows the truth → 7258356^..5cc1f57
+- (this push) J5.7: J5.7: the fix for J5's red site deploy → c4b3fca^..c4b3fca
+- `0a1886f` J5.1, J5.2, J5.3, J5.4, J5.5, J5.6: J5: data flows and Dev: the data map, the plan on Dev within a minute, one deployer per folder, the retired board out, one list of projects, Dev shows the truth → 7258356^..5cc1f57
 - `c215278` J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765
 - `d00bd4c` J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86
 - `8793265` J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
