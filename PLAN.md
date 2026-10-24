@@ -55,14 +55,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J8 · Proof, then unfreeze** (the tools). Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
-- [x] **J8.1** Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass *Check:* Dev → Plan: J8.1 ticked; the drills' record lists every request and its result
-- [x] **J8.2** Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived *Check:* Dev → Plan: J8.2 ticked; Overview shows no drift
-- [x] **J8.3** Unfreeze (your Freeze rule taken out, on your word of 2026-10-24 #7) and the first real job (J66) runs through the new system end to end *Check:* Dev → Plan: no Freeze line in your rules; J66 in Now
+**J66 · Deploys never wait for, or get stopped by, the tests** (the tools). Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
+- [ ] **J66.1** The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's *Check:* The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
+- [ ] **J66.2** The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s) *Check:* GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J66 → J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
+**Up next, in order:** J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -195,8 +194,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
 - [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
   *Formerly* RC2 · *Verdict:* Doable now — Claude already writes to the Studio's store with its key; the open Studio shows each edit as it lands
-- [ ] **J66** Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
-  *Verdict:* Doable now — Our own workflows and tests (the freeze allows them)
 - [ ] **J67** The sign-up and profile browser test rewritten for the room server (tools/account_test.mjs, KI-27). · N4
   *Verdict:* Doable now — Our own test; sign-up and profiles have no browser test on GitHub today
 - [ ] **J68** The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29). · N2
@@ -263,6 +260,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
 - `450fb52` J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
 - `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
 - `31cb32d` J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
