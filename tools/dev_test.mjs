@@ -8,7 +8,13 @@ import { webspace } from './lib/webspace.mjs';
 
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
-const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt' }, files: { 'bar/account.php': 'server/account.php' } });
+import { mkdirSync, writeFileSync, copyFileSync } from 'node:fs';
+import { join } from 'node:path';
+const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub' }, files: { 'bar/account.php': 'server/account.php' } });
+// What CI and the deploy put there: the game's config, the plan, no deploy report yet.
+writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
+mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
+copyFileSync('PLAN.md', join(ws.root, 'private/dev/plan.md'));
 const browser = await launchBrowser();
 process.on('uncaughtException', (e) => { console.log('FAIL ' + e.message); ws.close(); process.exit(1); });
 const year = new Date().getFullYear();
@@ -38,6 +44,20 @@ for (const tab of ['overview', 'projects', 'plan', 'publish', 'people']) {
   await page.waitForFunction((t) => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === t && document.querySelector('#view h2'), tab);
   check(await ed(() => document.querySelectorAll('#view [data-id]').length > 0 && document.documentElement.scrollWidth <= 390), `${tab}: its screen file draws, slots marked, nothing wider than the phone`);
 }
+// R4.3: Overview
+await page.click('#tabs [data-tab="overview"]');
+await page.waitForFunction(() => /build abc1234/.test(document.querySelector('#view [data-id="status"]')?.textContent || ''));
+check(true, 'Overview shows the live build from the game\'s config');
+await page.waitForFunction(() => /No report yet/.test(document.querySelector('#view [data-id="status"]').textContent));
+check(true, 'no deploy report yet is said plainly');
+await page.waitForFunction(() => /R4 · Dev/.test(document.querySelector('#view [data-id="now"]').textContent));
+check(await ed(() => / of 7/.test(document.querySelector('#view [data-id="now"]').textContent)), 'Now shows R4 and how many of its pieces are done');
+await page.waitForFunction(() => /Nothing waiting|to publish/.test(document.querySelector('#view [data-id="needs"]').textContent));
+check(true, 'Needs you answers (news drafts)');
+const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
+check(ci.ok === 1 && ci.ci === null, 'the store answers the owner');
+check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status === 403, 'the store keeps a player out');
+
 // R4.2: Projects
 await page.click('#tabs [data-tab="projects"]');
 await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');

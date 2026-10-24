@@ -36,7 +36,6 @@
         var list = D.part({ type: 'panel', pad: 0, gap: 0 });
         var tools = data.tools.filter(function (t) { return t.project === p.id; });
         tools.forEach(function (t) { list.appendChild(toolRow(t)); });
-        if (p.href) list.insertBefore(link(D.part({ type: 'listrow', text: 'Open ' + p.name, detail: 'The live ' + p.name.toLowerCase(), icon: 'play', chevron: true }), p.href), list.firstChild);
         if (list.children.length) card.appendChild(list);
         else card.appendChild(D.part({ type: 'text', text: 'No tools yet.', tone: 'dim' }));
         slot.appendChild(card);

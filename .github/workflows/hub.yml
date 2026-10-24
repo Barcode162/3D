@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Test: PHP syntax"
-        run: for f in hub/*.php news/*.php $(find homepage -name "*.php") studio/*.php toolbelt/ui-editor/*.php server/account.php; do php -l "$f"; done
+        run: for f in hub/*.php news/*.php $(find homepage -name "*.php") studio/*.php toolbelt/ui-editor/*.php dev/*.php server/account.php; do php -l "$f"; done
 
       - name: Install Playwright
         run: |
@@ -81,6 +81,7 @@ jobs:
           mkdir -p -f $IONOS_HOME/dev
           mkdir -p -f private/dev
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/dev $IONOS_HOME/dev
+          put $GITHUB_WORKSPACE/PLAN.md -o private/dev/plan.md
           mkdir -p -f $IONOS_HOME/toolbelt
           mkdir -p -f private/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/toolbelt $IONOS_HOME/toolbelt
