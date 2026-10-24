@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J2.4 The tests' own lighting (request 2026-10-24 #6): ?light=test is classic light with a flat light from above instead of every lamp per pixel (scene.wgsl shade() returns early), and no reflections, glow and mood or full mirrors; GitHub's tests use it (TEST_LIGHT=test); the phone and the pictures keep the real light; docs/manual/light.md, KI-5 and KI-28 updated
+
+`959ba86` · 2026-10-24 12:13 · 11 files, +51 −13 · tests: quick
+
+Phone check: Nothing changes on your phone: the bar keeps its real light
+
 ## J3.7 One voice: CLAUDE.md rewritten as the short entry (who the user is, the five books in order, the three Playbook steps of every session, the Charter's Never list copied by plan.mjs charter and checked); REFERENCE.md's old how-to-work sections archived; DECISIONS, AUTOMATION, STUDIO and ENGINE marked as not instructions; NEXT.md deleted; pieces and finishes only on job branches; finishes run the checks for what the job changed
 
 `275c7f7` · 2026-10-24 12:06 · 16 files, +246 −238 · tests: changed
