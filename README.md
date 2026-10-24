@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.4 Every page and control: 21 pages in docs/handbook/ui/ (Dev's tab bar and each tab and section, the UI Editor, the Dials, World notes, the site's frame and pages, the news page, the Studio, the bar's menus), each control by its exact label and what it does; tools/ui_labels_test.mjs crawls the pages a test can open (tools/lib/labels.mjs, on a copy of the webspace) and fails on any control missing from its page or listed but gone (on the site's deploy); the piece tool refuses a change to the Studio or the menus without their page (or --docs-unchanged with the reason); the command list is written from the front door (generated/commands.md, since J6.2); the Playbook says it
+
+`960957d` · 2026-10-24 16:48 · 32 files, +527 −15 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J6.3 The data reference written from the files (docs/handbook/generated/): every field of the world's files with its type, unit, range and whether the Studio changes it live (data-world.md, from the schema); every theme token and screen part, and the screens and themes there are (data-ui.md); the projects, the tools and the game's config fields (data-lists.md); the room protocol's messages read from its codec (data-protocol.md); and the world inventory (inventory.md): every thing in every place, what it sits on, the model that holds it, room-sized models and things with no model flagged, kinds no place uses; the piece tool rewrites these pages in every commit so they follow their files
 
 `f3d86ac` · 2026-10-24 16:39 · 12 files, +928 −8 · tests: changed
