@@ -8,12 +8,18 @@ Alive plan, replanned 2026-10-22: tracks L M T R A W, wow and foundation
 take turns, every visual piece has an off switch and before/after pictures,
 every piece writes its page in `docs/manual/`).
 
-## PAUSED (user, 2026-10-24): everything below waits for the rework
-The user paused all engine work (L1.8, P1, P2 and every later step) until the
-rework is done: one world site, the Dev area, a UI Editor in the engine's
-Toolbelt, one house theme, a remade plan system. The plan is being agreed in
-`docs/UI_PLAN.md` (steps R1-R6). **On "go": nothing from below.** Until the
-user agrees the plan, answer the open questions there; after, R1 goes here.
+## The next step: R1, the Toolbelt and the UI Editor (docs/UI_PLAN.md)
+The rework (user, 2026-10-24): one world site, a Dev area, a UI Editor in
+the engine's Toolbelt, one house theme, one plan doc. **All engine work is
+paused** (L1.8, P1, P2 and every later step below) until R6 is done.
+R1 builds the tool first. The bar's menus stay plain HTML (no GPU cost).
+- [ ] **R1.1** The Toolbelt: one list of the engine's tools (`toolbelt/tools.json`) and one page that opens them (`/toolbelt/`). *Check:* open joshuavelasco.com/toolbelt, every tool opens.
+- [ ] **R1.2** The theme files: every token described once (`ui/system/tokens.json`), the 4 themes as files (`ui/system/themes/`), `ui/themes.css` written from them by `tools/uikit.mjs`, a test that they agree. *Check:* nothing changes (the bar and Studio look the same).
+- [ ] **R1.3** Screen files and the web renderer: a screen is a tree of parts (stack, row, panel, text, key, chip, field, switch, fader...) in `ui/system/screens/`; `Looped.screen()` draws one; `/ui/screen.html?s=sampler` shows every part. *Check:* open /ui/screen.html?s=sampler, every part is there.
+- [ ] **R1.4** The UI Editor (`/toolbelt/ui-editor/`): live preview on top, parts list and a dense inspector below, built for the phone. *Check:* open it, tap a part in the preview, it's selected in the list.
+- [ ] **R1.5** Theme editing: every token, grouped (colour, type, shape, depth, motion), colour pickers and sliders, light/dark. *Check:* drag the corner slider, every control in the preview rounds.
+- [ ] **R1.6** Screen editing: add, move up/down, duplicate, delete parts, edit their words and options; phone, computer and in-game previews. *Check:* add a key to the sampler, rename it, move it up.
+- [ ] **R1.7** Save and publish: undo/redo, a draft kept on the phone, Publish keeps every version (`toolbelt/ui-editor/api.php`, the Studio's login), `node tools/uikit.mjs pull` brings published edits into the repo; Looped (C++) reads a theme file (`looped/ui_theme.h`, with a test). *Check:* change a colour, Publish, see it in History.
 
 ## Where we are (2026-10-22)
 - The engine plan E1-E9 is built and live (`22e9b28`).

@@ -1,8 +1,7 @@
-# The rework: one world, one Dev area, one UI tool (DRAFT v3, 2026-10-24)
+# The rework: one world, one Dev area, one UI tool (AGREED, 2026-10-24)
 
-Status: **being agreed with the user. Nothing built yet.** The user reviews
-the plan as an artifact page; this is the repo copy. Once agreed, R1 goes into
-`NEXT.md`.
+Status: **agreed with the user (2026-10-24).** R1 is in `NEXT.md`. The user
+reviewed it as an artifact page; this is the repo copy.
 
 ## Decided (user, 2026-10-24)
 - **All other work is paused** (L1.8, P1, P2, every engine step) until R6 is done.
@@ -88,12 +87,15 @@ Rules: every request lands in an area (no fit = a question, never a new
 part); a road item that serves no North star line goes to Parked; Claude
 edits only through the plan tool, which refuses shape breaks; Dev · Plan
 shows the same doc, nothing else keeps a tick list.
-Areas (draft): The world site, The bar, Characters, Games, Social, Homes,
-Shops and money, Engine (Looped), Script language, Toolbelt, Dev, Server and
-accounts, Speed and quality.
+**The 5 chapters (agreed; "areas" = chapters of the plan doc, not places in
+the game):** The world (what players see and do: the bar, avatars, games,
+people) · The site (front door, showcase, news) · The engine (Looped, the
+script language, speed) · The tools (the Toolbelt and Dev) · The backbone
+(server, accounts, money).
 
-## Open questions, round 3 (recommendation first)
-1. Front door scene: the bar from the street at night, slow drift to the lit door, ~8 s seamless loop (rec) / the whole block.
-2. The 13 areas: confirm or change now (fixed after).
-3. PLAN.md at the repo root replaces NEXT.md, PROGRESS.md, the Hub board and the progress parts of other docs (rec).
-4. Assumed unless the user objects: carry over still-wanted work and archive the rest; Dev at /dev with /hub and /portal redirecting.
+## Settled (2026-10-24)
+- Front door scene: the bar from the street at night, the camera drifting
+  slowly toward the lit door, people passing the windows, ~8 s seamless loop.
+- The 5 chapters above. PLAN.md at the repo root (Claude's call, agreed).
+- Still-wanted work from the 58 Hub cards and old plans moves into PLAN.md
+  (R3.2), the rest is archived. Dev at /dev; /hub and /portal redirect.
