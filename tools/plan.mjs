@@ -10,6 +10,7 @@
 //   node tools/plan.mjs rule "<rule>"            a dated line in Your rules (only on the user's word)
 //   node tools/plan.mjs start <TAG> --piece "<TAG.1>|<what>|<phone check>" [--piece ...]
 //                                                the road item becomes Now (the old Now must be all ticked)
+//   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
 // Chapters: world, site, engine, tools, backbone.
@@ -135,10 +136,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
       if (!pieces.length) throw new Error('give the step its pieces: --piece "TAG.1|what|phone check"');
       const title = m[1].split(':')[0].replace(/\*\*/g, '');
-      let t = text.slice(0, road.from) + road.body.replace(m[0], '') + text.slice(road.to);
+      let t = text.slice(0, road.from) + road.body.replace(m[0], '').replace(new RegExp(`(\\*\\*Up next, in order:\\*\\* )${tag} → `), '$1') + text.slice(road.to);
       const n2 = part(t, 3);
       t = t.slice(0, n2.from) + `**${tag} · ${title}** (${chapter.toLowerCase()}). ${m[1]} · ${m[2]}\n${pieces.join('\n')}\n\n` + t.slice(n2.to);
       save(t); console.log(`${tag} is now in Now with ${pieces.length} pieces`);
+    } else if (cmd === 'next') {
+      const p = part(text, 4);
+      if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');
+      save(text.slice(0, p.from) + p.body.replace(/\*\*Up next, in order:\*\*.*/, `**Up next, in order:** ${pos[0]}`) + text.slice(p.to)); console.log('Up next set');
     } else if (cmd === 'done') {
       save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
     } else {

@@ -46,14 +46,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R3 · The World Plan** (the tools). The plan system remade as this one doc.
-- [x] **R3.1** This file in its fixed shape: the North star, the rules, the chapters, Now, Done, where things are. *Check:* read PLAN.md on GitHub: it says what the project is in one screen.
-- [x] **R3.2** Carry over: every open thing from NEXT.md, PROGRESS.md, the 68 hub cards and the old plans into its chapter (road or parked); the old plan files move to `docs/archive/`. *Check:* the road has every open thing once.
-- [x] **R3.3** The plan tool (`tools/plan.mjs`): add a request into its chapter, tick pieces, write Done, refuse anything that breaks the shape; the piece and step tools use it. *Check:* none on the phone (Claude's tool).
+**R4 · Dev, the control room** (the tools). Dev, the control room: Overview (is everything up, what needs you, phone reports), Plan (this doc), Publish (news drafts, the site's words and pictures), People (accounts, invites, admins), Toolbelt; built from screen files in Ember; /hub and /portal send you there; the hub's board retired (its data kept). · N1 N5
+- [ ] **R4.1** Dev opens at /dev: staff login (the Studio's), Ember, the tab bar (Overview, Plan, Publish, People, Toolbelt); /hub and /portal send you there *Check:* open joshuavelasco.com/dev, log in: five tabs at the bottom
+- [ ] **R4.2** Overview: is the bar, the room and the site up, the live build, what needs you (Now's pieces waiting on a phone check), the latest phone reports *Check:* Overview shows the live build code and green dots
+- [ ] **R4.3** Plan: PLAN.md on your phone (Now with ticks, the five chapters, Parked, Done), and a box to park an idea or answer, which Claude reads at the next go *Check:* Plan shows R4 with its pieces; park a test idea
+- [ ] **R4.4** Publish: the news drafts Claude writes after each step, publish or unpublish with one tap; the site's words and pictures (ready for R5) *Check:* Publish lists this step's draft; publish it, it shows on /news
+- [ ] **R4.5** People: accounts, invites, admins and roles (moved from the bar's gate page) *Check:* People lists your account as owner
+- [ ] **R4.6** Toolbelt inside Dev; the old hub board and portal retired (their data kept), Dev in the Toolbelt's place on the front page for staff *Check:* the old /hub opens Dev; the Toolbelt tab lists every tool
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** R4 → R5 → R6, then engine work resumes: L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
+**Up next, in order:** R5 → R6, then engine work resumes: L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -108,7 +111,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **L8** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
 
 ### The tools
-- [ ] **R4** Dev, the control room: Overview (is everything up, what needs you, phone reports), Plan (this doc), Publish (news drafts, the site's words and pictures), People (accounts, invites, admins), Toolbelt; built from screen files in Ember; /hub and /portal send you there; the hub's board retired (its data kept). · N1 N5
 - [ ] **R6** Ember on everything: the Studio, the bar's menus, the loading screen; the old themes retired from use. · N5
 - [ ] **P2** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
 - [ ] **TL1** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
