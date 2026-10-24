@@ -584,6 +584,10 @@
  "done": [
   {
    "build": null,
+   "text": "J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc"
+  },
+  {
+   "build": "31cb32d",
    "text": "J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2"
   },
   {

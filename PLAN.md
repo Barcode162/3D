@@ -163,7 +163,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
+- (this push) J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
+- `31cb32d` J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
 - `f6d3335` J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d
 - `902cfba` J5.7: J5.7: the fix for J5's red site deploy → c4b3fca^..c4b3fca
 - `0a1886f` J5.1, J5.2, J5.3, J5.4, J5.5, J5.6: J5: data flows and Dev: the data map, the plan on Dev within a minute, one deployer per folder, the retired board out, one list of projects, Dev shows the truth → 7258356^..5cc1f57
