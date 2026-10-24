@@ -12,10 +12,11 @@ on:
 permissions:
   contents: read
 
-# Queue, never cancel: every hub push gets uploaded.
+# A newer push replaces a running one: each upload copies the whole folders,
+# so the newest run carries everything, and a stuck run can't hold the queue.
 concurrency:
   group: hub
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
