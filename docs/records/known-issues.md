@@ -13,7 +13,7 @@ spec: `docs/plan/restructure.md`.
 | KI-2 | Dev's plan is a copy uploaded at the very end of `hub.yml`, after nine browser tests: a failed or cancelled run leaves Dev stale (Dev showed R5 for 2 h on 2026-10-24). | J5.2 |
 | KI-3 | Finishing a step never moves the next item into Now, and the Done line waits for the next step to get its build code. (Stopgap 2026-10-24: `plan.mjs seal`.) | J4.1, J4.3 |
 | KI-4 | `PLAN.md` → 3. The chapters: the "Now" lines are stale ("R5 replaces them", "Dev (R4) next"); the plan tool has no command to update them. | J4.1 |
-| KI-5 | The browser smoke test fails on GitHub since the new light (R5: screenshot timeout 90 s; R6: "rotation should resize exactly once each way"), so 12 browser suites are skipped at every game deploy; R3–R6 deploys all ended red. | J2.1 |
+| KI-5 | The browser smoke test fails on GitHub since the new light (R5: screenshot timeout 90 s; R6: "rotation should resize exactly once each way"), so 12 browser suites are skipped at every game deploy; R3–R6 deploys all ended red. | J2.1 (the tests open the bar with `?light=classic` on GitHub: `TEST_LIGHT`; closes when a GitHub run passes the smoke test) |
 | KI-6 | Seven browser suites are `continue-on-error` in `deploy.yml` (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race): their failures are invisible. | J2.2 |
 | KI-7 | Dev's "Last deploy" only reports the game workflow, and it is always red (KI-5), so it says nothing; the hub workflow reports nothing. | J2.3 |
 | KI-8 | `deploy.yml` comments are stale ("a failing smoke blocks the deploy"; the smoke runs after the upload). | J2.3 |
