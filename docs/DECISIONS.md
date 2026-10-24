@@ -1506,3 +1506,4 @@ Grand Sport data), the skid pad, the live Car setup panel, telemetry.
   Apply merges by thing / kind id on top of your draft, one undo.
 - Tests: never run two browser suites at once on this machine (CPU starves
   the reloads and the multiplayer test); the step's full check runs alone.
+- (2026-10-24) The hub deploy's site test could hang CI for hours on a picture of a long moving page; pictures there are notes now, each test step has a 10-minute limit, and a newer hub deploy cancels a running one.
