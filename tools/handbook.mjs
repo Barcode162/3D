@@ -7,10 +7,13 @@
 //                                     Handbook leads to a file (exit 1 if not)
 // Pages: map.md (every folder: what, files, languages, who uploads it and where),
 // systems.md (every system page under docs/handbook/systems/, by chapter, with its status),
-// commands.md (the front door's commands, from tools/lib/commands.mjs).
+// commands.md (the front door's commands, from tools/lib/commands.mjs),
+// data-world.md, data-ui.md, data-lists.md, data-protocol.md (the data reference, J6.3)
+// and inventory.md (every thing in every place, its model; tools/lib/handbook_data.mjs).
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, join, extname } from 'node:path';
+import { worldPage, uiPage, listsPage, protocolPage, inventoryPage } from './lib/handbook_data.mjs';
 
 const OUT = 'docs/handbook/generated';
 const BANNER = (src) => `<!-- generated: node tools/handbook.mjs write (from ${src}); never edit by hand -->\n`;
@@ -86,7 +89,10 @@ async function commandsPageAsync() {
     COMMANDS.map((c) => `| \`${c.name}\` | ${cell(c.summary)} | \`node tools/project.mjs ${cell(c.usage)}\` | ${c.own ? 'project.mjs itself' : '`' + c.run.join(' ') + '`'} |`).join('\n') + '\n';
 }
 const COMMANDS_PAGE = await commandsPageAsync();
-const PAGES = { 'map.md': mapPage, 'systems.md': systemsPage, 'commands.md': () => COMMANDS_PAGE };
+const PROTOCOL_PAGE = await protocolPage(BANNER);
+const PAGES = { 'map.md': mapPage, 'systems.md': systemsPage, 'commands.md': () => COMMANDS_PAGE,
+  'data-world.md': () => worldPage(BANNER), 'data-ui.md': () => uiPage(BANNER), 'data-lists.md': () => listsPage(BANNER),
+  'data-protocol.md': () => PROTOCOL_PAGE, 'inventory.md': () => inventoryPage(BANNER) };
 
 function problems() {
   const out = [], files = tracked(), described = json('docs/handbook/folders.json').folders;

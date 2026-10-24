@@ -173,6 +173,8 @@ if (has('dry')) { console.log(JSON.stringify(shots.stats, null, 1)); process.exi
 step('commit');
 // The piece is ticked in PLAN.md → Now (if it's one of Now's pieces), in this same commit.
 try { tickPiece(tag); } catch (e) { console.log(`(the plan refused the tick: ${e.message})`); }
+// The Handbook's generated pages follow the files they're written from (the world, the themes, the lists...), in this same commit.
+if (existsSync('tools/handbook.mjs') && !run('node tools/handbook.mjs write >/dev/null')) { console.log(`✗ ${tag}: the Handbook's pages could not be written (node tools/handbook.mjs write)`); process.exit(1); }
 sh('git add -A');
 const staged = sh('git diff --cached --numstat');
 if (!staged) { console.log(`✗ ${tag}: nothing to commit`); process.exit(1); }

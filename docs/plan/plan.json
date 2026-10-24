@@ -61,7 +61,7 @@
     "id": "J6.3",
     "text": "The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed)",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J6.4",

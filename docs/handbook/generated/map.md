@@ -30,12 +30,12 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 10 | JavaScript, PHP, CSS | hub.yml → home/dev |
-| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 68 | Markdown, JSON | plan.yml → private/dev |
+| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 121 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans and instructions. Never instructions. | 16 | Markdown | not uploaded |
 | `docs/audit/` | Old audits of the code (large JSON); sorted in J6.6. | 7 | JSON | not uploaded |
 | `docs/charter/` | The Charter: what the project is, the user's rules (rules.json, word for word), the glossary. | 3 | Markdown, JSON | plan.yml → private/dev |
-| `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 5 | Markdown, JSON | not uploaded |
-| `docs/handbook/generated/` | Handbook pages written from the files by node tools/handbook.mjs; never edited by hand. | 1 | Markdown | not uploaded |
+| `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 58 | Markdown, JSON | not uploaded |
+| `docs/handbook/generated/` | Handbook pages written from the files by node tools/handbook.mjs; never edited by hand. | 3 | Markdown | not uploaded |
 | `docs/manual/` | The old manual (light, materials, world, avatars, recipes, timeline); sorted in J6.6. | 7 | Markdown | not uploaded |
 | `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 3 | Markdown, JSON | plan.yml → private/dev |
 | `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 1 | Markdown | plan.yml → private/dev |

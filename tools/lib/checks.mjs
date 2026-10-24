@@ -50,7 +50,7 @@ export const RULES = [
   [/^docs\/charter\/|^docs\/plan\/|^CLAUDE\.md$|^tools\/lib\/plandata/, ['plan']],                       // the Charter's copy of the rules
   [/^docs\/records\/known-issues\.md$/, ['workflows']],  // allowed-to-fail tests name open issues
   [/^docs\/playbook\/|^tools\/lib\/commands\.mjs$/, ['workshop']],                                    // the Playbook names only what exists
-  [/^docs\/handbook\/|^tools\/handbook\.mjs$/, ['workshop']],                                         // the Handbook's generated pages and links
+  [/^docs\/handbook\/|^tools\/handbook\.mjs$|^tools\/lib\/handbook_data\.mjs$/, ['workshop']],                                         // the Handbook's generated pages and links
   [/^tools\/githooks\/|^tools\/lib\/guard\.mjs$|^\.claude\/|^tools\/setup\.sh$/, ['workshop']],          // the locks
   [/\.md$|^docs\//, []],
   [/^homepage\/|^tools\/site_test/, ['site']],
