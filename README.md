@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.5 Dev's Publish tab: News (every post Claude writes after a step, its build, pictures and words; Publish puts it on joshuavelasco.com/news in one tap, Unpublish takes it off) and The site (the front page's headline, line, news highlight and its link, saved in Dev's store and public for R5)
+
+`712a5ef` · 2026-10-24 06:27 · 5 files, +100 −1 · tests: quick, dev
+
+Phone check: Dev → Publish: the R3 post is there as Draft; tap Publish, it turns Public and shows on joshuavelasco.com/news; The site: type a headline, Save the words
+
+![R4.5 page-dev-index-demo-publish.jpg](R4.5/page-dev-index-demo-publish.jpg)
+
 ## R4.4 Dev's Plan tab: PLAN.md on the phone (Now with its pieces and checks, the road under the five chapters, Parked, Done, the North star, your rules; long lists fold), and Tell Claude: a note or an idea to park, kept in Dev's store; node tools/dev.mjs notes reads them at the start of every go (CLAUDE.md)
 
 `c5be89e` · 2026-10-24 06:22 · 7 files, +130 −2 · tests: quick, dev, toolbelt
