@@ -18,7 +18,10 @@ easy to pinpoint. So on "go":
    from the Studio → `assets/world/`; commit it as "World: from the studio vN"
    before any piece) and `node tools/uikit.mjs pull` (themes and screens the
    user published from the UI Editor → `ui/system/`; commit as "UI: from the
-   editor vN"). Never edit either store by hand.
+   editor vN"). Never edit either store by hand. Then `node tools/dev.mjs
+   notes`: what the user left in Dev → Plan (ideas to park go in through
+   `plan.mjs park`, then `dev.mjs read <ids>`; a note that changes the step:
+   ask once, with a recommendation).
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
    **One piece = one commit**, message starting with its tag (`E3.2 ...`).

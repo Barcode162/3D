@@ -58,6 +58,19 @@ const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
 check(ci.ok === 1 && ci.ci === null, 'the store answers the owner');
 check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status === 403, 'the store keeps a player out');
 
+// R4.4: Plan
+await page.click('#tabs [data-tab="plan"]');
+await page.waitForSelector('#view [data-chapter="The engine"]');
+check(await ed(() => ['The world', 'The site', 'The engine', 'The tools', 'The backbone'].every((c) => document.querySelector(`#view [data-chapter="${c}"]`))), 'Plan shows the five chapters');
+check(await ed(() => /R4\.1/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Now lists R4\'s pieces');
+await page.click('#view [data-id="note-kind"] button:nth-child(2)');
+await page.fill('#view [data-id="note"]', 'A rooftop terrace');
+await page.click('#view [data-id="note-send"]');
+await page.waitForFunction(() => /A rooftop terrace/.test(document.querySelector('#view [data-id="notes"]')?.textContent || ''));
+const notes = await ws.post('dev/api.php', { a: 'notes', token: owner.token });
+check(notes.ok && notes.notes[0].kind === 'park' && notes.notes[0].text === 'A rooftop terrace' && notes.notes[0].read === 0, 'Park an idea sends it to Claude, waiting');
+check((await ws.post('dev/api.php', { a: 'read', ids: [notes.notes[0].id], token: owner.token })).status === 403, 'only Claude marks notes as read');
+
 // R4.2: Projects
 await page.click('#tabs [data-tab="projects"]');
 await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');
