@@ -150,9 +150,13 @@
     });
     var save = D.part({ type: 'key', text: 'Save the words', style: 'go' }), when = D.part({ type: 'text', text: '', tone: 'dim' });
     form.appendChild(save); form.appendChild(when); slot.appendChild(form);
+    // The saved words fill only the boxes you haven't typed in yet: a slow answer
+    // never wipes what you've just written (J5.7).
+    var typed = {};
+    FIELDS.forEach(function (f) { inputs[f[0]].addEventListener('input', function () { typed[f[0]] = true; }); });
     if (!D.demo) D.get('/dev/api.php?site').then(function (j) {
       var s = j.site || {};
-      FIELDS.forEach(function (f) { inputs[f[0]].value = s[f[0]] || ''; });
+      FIELDS.forEach(function (f) { if (!typed[f[0]]) inputs[f[0]].value = s[f[0]] || ''; });
       if (s.at) when.textContent = 'Last saved ' + D.ago(s.at) + ' by ' + s.by + '.';
     }).catch(function () {});
     save.addEventListener('click', function () {

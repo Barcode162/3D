@@ -131,9 +131,12 @@ const hl = (await (await fetch(ws.url + 'dev/api.php?highlight')).json()).highli
 check(hl && hl.title === 'Live music on Fridays' && hl.img === '/site/img/stage.jpg' && hl.link === '/bar/', 'Push puts it on the front page (public)');
 check((await ws.post('dev/api.php', { a: 'push', id: hl.id, on: 0 }, { 'X-Hub-Key': hubKey })).status === 403, 'Claude can\'t push highlights');
 
+// The saved words answer slowly (as on GitHub's machines, or a slow phone): what you type first must survive (J5.7).
+await page.route(/\/dev\/api\.php\?site$/, async (r) => { await new Promise((s) => setTimeout(s, 1500)); await r.continue(); });
 await page.click('#view [data-id="pub-tab"] button:nth-child(3)');
 await page.waitForSelector('#view [data-field="headline"]');
 await page.fill('#view [data-field="headline"]', 'The lights are on.');
+await page.waitForTimeout(2000);  // the slow answer has come
 await page.click('#view >> text=Save the words');
 await page.waitForFunction(() => /Saved just now/.test(document.querySelector('#view [data-id="posts"]').textContent));
 const site = await (await fetch(ws.url + 'dev/api.php?site')).json();
