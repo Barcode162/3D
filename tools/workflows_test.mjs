@@ -25,10 +25,12 @@ const scriptsIn = (text) => [...String(text).matchAll(/\btools\/[\w/]+\.(?:mjs|s
 // The steps of a workflow: each "      - " item under a job's steps, with its keys.
 function parseSteps(file) {
   const lines = readFileSync(file, 'utf8').split('\n'), steps = [];
-  let cur = null, inRun = false;
+  let cur = null, inRun = false, job = '', inJobs = false;
   lines.forEach((line, i) => {
+    if (/^jobs:\s*$/.test(line)) inJobs = true; else if (/^\S/.test(line)) inJobs = false;
+    const j = inJobs && /^ {2}([\w-]+):\s*$/.exec(line); if (j) job = j[1];
     if (/^ {6}- /.test(line)) {
-      cur = { file, line: i + 1, name: '', id: '', if: '', timeout: '', coe: false, run: '' };
+      cur = { file, job, line: i + 1, name: '', id: '', if: '', timeout: '', coe: false, run: '', uses: /^ {6}- uses:/.test(line) ? line.trim().slice(8) : '' };
       steps.push(cur); inRun = false;
       line = '        ' + line.slice(8);  // "      - name: x" reads like "        name: x"
     } else if (cur && /^ {0,5}\S/.test(line)) { cur = null; inRun = false; return; }
@@ -42,6 +44,7 @@ function parseSteps(file) {
       else if (k === 'if') cur.if = val;
       else if (k === 'timeout-minutes') cur.timeout = val;
       else if (k === 'continue-on-error') cur.coe = val === 'true';
+      else if (k === 'uses') cur.uses = val;
       else if (k === 'run') { cur.run = v === '|' ? '' : v; inRun = v === '|'; }
     } else if (inRun && (/^ {10}/.test(line) || line.trim() === '')) cur.run += line.trim() + '\n';
   });
@@ -84,6 +87,20 @@ for (const s of deploy.slice(upload + 1).filter(isTest)) {
 for (const s of hub.filter(isTest)) {
   check(/!cancelled\(\)/.test(s.if) && /^\d+$/.test(s.timeout), `hub.yml "${s.name}": runs after any failure, time limit ${s.timeout || 'none'} min`);
 }
+
+// 3b. A deploy never waits for, or is stopped by, the game's tests (J66, KI-32):
+// they run in their own job after the deploy job, in their own queue; every
+// step but the checkout has a time limit (a hung setup step can't hold the
+// queue for GitHub's 6 hours).
+const upJob = deploy[upload]?.job, wfText = readFileSync('.github/workflows/deploy.yml', 'utf8');
+const gameTests = deploy.filter((s) => isTest(s) && s.job !== 'changes' && s.job === upJob && deploy.indexOf(s) > upload);
+check(!gameTests.length, 'deploy.yml: no game test runs in the deploy job after the upload (they have their own job)' + (gameTests.length ? ': ' + gameTests.map((s) => s.name).join(', ') : ''));
+const testJob = deploy.find((s) => /node tools\/smoke\.mjs/.test(s.run))?.job;
+check(!!testJob && testJob !== upJob && new RegExp(`\\n  ${testJob}:\\n    needs: ${upJob}\\n`).test(wfText), `deploy.yml: the game's tests (job "${testJob}") start after the deploy job ("${upJob}")`);
+const groups = [...wfText.matchAll(/^ {4}concurrency:\n {6}group: ([\w-]+)/gm)].map((m) => m[1]);
+check(!/^concurrency:/m.test(wfText) && groups.length === 2 && new Set(groups).size === 2, `deploy.yml: the deploy and its tests queue apart (job-level groups: ${groups.join(', ')})`);
+const untimed = deploy.filter((s) => !/^actions\/checkout@/.test(s.uses) && !/^\d+$/.test(s.timeout) && s.job !== 'changes');
+check(!untimed.length, 'deploy.yml: every step of the deploy and the tests has a time limit' + (untimed.length ? ': none on ' + untimed.map((s) => `${s.job}/${s.name || s.uses}`).join(', ') : ''));
 
 // 4. A test allowed to fail names its open known issue.
 const known = readFileSync('docs/records/known-issues.md', 'utf8');

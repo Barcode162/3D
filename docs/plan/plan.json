@@ -48,7 +48,7 @@
     "id": "J66.1",
     "text": "The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's",
     "check": "The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing",
-    "done": false
+    "done": true
    },
    {
     "id": "J66.2",
@@ -1122,7 +1122,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "a29204e",
    "text": "J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e"
   },
   {

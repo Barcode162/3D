@@ -16,7 +16,7 @@ See each deploy's state in Dev → Overview (game and site rows with their tests
 
 ## How it works
 
-- `deploy.yml` (the game and the room): build → room tests → room deploy → upload `home/bar/` (live first) → `gh-pages` → then every test, each with a time limit.
+- `deploy.yml` (the game and the room), two jobs since J66: **build-and-publish** (build → quick checks and the room's tests → room deploy → upload `home/bar/`, live in about 6 minutes → `gh-pages`), queued one at a time (`pages`); then **tests** on its own machine and in its own queue (`game-tests`): the same commit built again, then every test, each with a time limit. The next deploy waits only for the previous deploy, never its tests. Every step has a time limit (`tools/workflows_test.mjs`).
 - `hub.yml` (the site and the tools' pages): tests first, upload only if all pass.
 - `plan.yml` (the plan to Dev, about a minute).
 - `classic.yml` (the old public bar, by hand).
@@ -41,7 +41,7 @@ A game deploy takes about an hour with its tests; the bar is live within about 6
 
 ## Known traps
 
-A cancelled run (a newer push took over) is not a failure. Tag pushes and branch deletions are refused in this environment. Game deploys queue: one runs at a time and keeps its turn through its tests (about an hour), so a run waiting with no steps is behind the one before, not hung (KI-32; [the Playbook](../../../playbook/failures.md#a-deploy-looks-stuck)).
+A cancelled run (a newer push took over) is not a failure. Tag pushes and branch deletions are refused in this environment. Game deploys queue one at a time, and the tests queue apart (J66): a deploy waiting with no steps is behind the deploy before it (minutes), not hung; a tests job waiting is behind the previous build's tests (KI-32; [the Playbook](../../../playbook/failures.md#a-deploy-looks-stuck)). A tests job's end report for a build that's no longer live isn't sent to Dev (it would overwrite the newer build's row).
 
 ## History
 

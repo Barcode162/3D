@@ -33,8 +33,9 @@ Never make a test "allowed to fail" without an open known issue (the check
 
 **When:** a GitHub run has been "in progress" or "queued" for a long time.
 1. The run before it, of the same workflow: game deploys run one at a time
-   and each keeps its turn through its hour of tests (KI-32), so a new run
-   waits with no steps until the one before ends. That's a queue, not a hang.
+   (a few minutes each), and since J66 their tests queue apart, so a new
+   run's deploy job waits with no steps until the deploy before it ends, and
+   its tests job until the tests before it end. That's a queue, not a hang.
 2. Inside the run: each step's start and end times. A step is hung only when
    it started long ago and hasn't ended; never judge by the run's status alone.
 3. A real hang → the known issue gets the run's link and the step; cancelling

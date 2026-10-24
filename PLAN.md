@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J66 · Deploys never wait for, or get stopped by, the tests** (the tools). Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
-- [ ] **J66.1** The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's *Check:* The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
+- [x] **J66.1** The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's *Check:* The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
 - [ ] **J66.2** The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s) *Check:* GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)
 
 ## 5. The road
@@ -260,7 +260,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
+- `a29204e` J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
 - `450fb52` J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
 - `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
 - `31cb32d` J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2

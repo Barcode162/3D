@@ -17,12 +17,6 @@ permissions:
   pages: write        # to cancel a stuck Pages deployment (see below)
   deployments: read
 
-# Queue instead of cancel: a push during a deploy waits, then deploys
-# everything since the live build (a restart wasted the first 10 minutes).
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 env:
   EMSDK_VERSION: 6.0.12
   # IONOS web hosting login (repo Settings -> Secrets and variables ->
@@ -67,28 +61,41 @@ jobs:
           if [ -n "$game" ]; then echo "game=true" >> "$GITHUB_OUTPUT"; echo "→ the game changed ($game ...): build, test, deploy";
           else echo "game=false" >> "$GITHUB_OUTPUT"; echo "→ nothing in the game changed: left alone"; fi
 
+  # The build goes live here (about 6 minutes); its tests run in the next job
+  # (J66, KI-32). Deploys queue instead of cancel: a push during a deploy
+  # waits, then deploys everything since the live build (a restart wasted the
+  # first 10 minutes), but it waits only for that deploy, never its tests.
   build-and-publish:
     needs: changes
     if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    outputs:
+      live: ${{ steps.upload.outcome == 'success' }}
+      ws: ${{ steps.cfroom.outputs.ws }}
     steps:
       - uses: actions/checkout@v4
 
       # Dev's Overview shows each deploy's real state (restructure J2.3): started,
       # live, then every test's result by name (tools/ci_status.mjs).
       - name: "Report: started (for Dev)"
+        timeout-minutes: 5
         if: env.IONOS_SFTP_HOST != ''
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: node tools/ci_status.mjs game start
 
       - name: Cache Emscripten
+        timeout-minutes: 10
         uses: actions/cache@v4
         with:
           path: emsdk
           key: emsdk-${{ env.EMSDK_VERSION }}-v1
 
       - name: Install Emscripten
+        timeout-minutes: 15
         run: |
           if [ ! -d emsdk ]; then git clone --depth 1 https://github.com/emscripten-core/emsdk.git; fi
           ./emsdk/emsdk install $EMSDK_VERSION
@@ -98,6 +105,7 @@ jobs:
       # ARM's astcenc, and the textures already encoded (only new or changed
       # images are encoded again).
       - name: Cache compressed textures
+        timeout-minutes: 10
         uses: actions/cache@v4
         with:
           path: build/astc_cache
@@ -105,12 +113,14 @@ jobs:
           restore-keys: astc-${{ hashFiles('tools/assets/astc_pack.py') }}-
 
       - name: Install astcenc
+        timeout-minutes: 10
         run: |
           curl -sSL -o /tmp/astcenc.zip https://github.com/ARM-software/astc-encoder/releases/download/5.2.0/astcenc-5.2.0-linux-x64.zip
           mkdir -p .astcenc && unzip -o -q /tmp/astcenc.zip -d .astcenc
           sudo apt-get install -y python3-numpy python3-pil >/dev/null  # astc_pack.py reads and mipmaps images
 
       - name: Build
+        timeout-minutes: 30
         id: build
         run: |
           source ./emsdk/emsdk_env.sh
@@ -162,6 +172,7 @@ jobs:
       # accepts the token, and whether a workers.dev subdomain is registered.
       - name: "Check: Cloudflare"
         continue-on-error: true
+        timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -181,7 +192,9 @@ jobs:
       # Its address is written into config.json, which the game reads at
       # start-up to find the room (docs/archive/RESTRUCTURE.md 2.12, step 3.3).
       - name: "Deploy: Cloudflare room"
+        id: cfroom
         if: env.HAVE_CF == 'true'
+        timeout-minutes: 10
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -198,10 +211,12 @@ jobs:
             sleep 5
           done
           echo "CF_WS=${url/https:/wss:}" >> "$GITHUB_ENV"
+          echo "ws=${url/https:/wss:}" >> "$GITHUB_OUTPUT"  # the tests job writes the same config.json
 
       # What the game reads at start-up: this build, the room's address, the
       # accounts and reports servers. Written even without Cloudflare (ws "").
       - name: Write config.json
+        timeout-minutes: 5
         run: |
           python3 - <<PY
           import json, os
@@ -216,6 +231,7 @@ jobs:
       # one ("in progress deployment, please cancel <sha> first"). Cancel
       # any unfinished ones so this build can go live.
       - name: Cancel stuck Pages deployments
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -235,6 +251,7 @@ jobs:
       - name: Upload to IONOS
         id: upload
         if: env.IONOS_SFTP_HOST != ''
+        timeout-minutes: 20
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
@@ -257,6 +274,7 @@ jobs:
 
       - name: "Report: live (for Dev)"
         if: steps.upload.outcome == 'success' && env.IONOS_SFTP_HOST != ''
+        timeout-minutes: 5
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: node tools/ci_status.mjs game live
@@ -266,6 +284,7 @@ jobs:
       # live build for the `changes` job above. After the IONOS upload, so a
       # failed upload isn't recorded as live.
       - name: Publish to gh-pages
+        timeout-minutes: 5
         run: |
           mkdir -p build/pages && cd build/pages
           cat > index.html <<'HTML'
@@ -284,6 +303,88 @@ jobs:
           git add -A
           git commit -q -m "Site build ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      # Dev's Overview: a deploy that stopped before its tests (a quick check
+      # or the room's tests failed, the upload broke) reports how it ended
+      # here; one that went live reports from the tests job (J2.3, J66).
+      - name: "Report: stopped before the tests (for Dev)"
+        if: failure() && env.IONOS_SFTP_HOST != ''
+        timeout-minutes: 5
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          JOB_STATUS: ${{ job.status }}
+          STEPS_JSON: ${{ toJSON(steps) }}
+        run: node tools/ci_status.mjs game end
+
+  # The game's tests, after it's live (J66): its own machine and its own
+  # queue, so the next deploy never waits for them. The same commit is built
+  # again here (the caches make it a few minutes) and given the same
+  # config.json as the live one.
+  tests:
+    needs: build-and-publish
+    if: needs.build-and-publish.result == 'success'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: game-tests
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Emscripten
+        timeout-minutes: 10
+        uses: actions/cache@v4
+        with:
+          path: emsdk
+          key: emsdk-${{ env.EMSDK_VERSION }}-v1
+
+      - name: Install Emscripten
+        timeout-minutes: 15
+        run: |
+          if [ ! -d emsdk ]; then git clone --depth 1 https://github.com/emscripten-core/emsdk.git; fi
+          ./emsdk/emsdk install $EMSDK_VERSION
+          ./emsdk/emsdk activate $EMSDK_VERSION
+
+      - name: Cache compressed textures
+        timeout-minutes: 10
+        uses: actions/cache@v4
+        with:
+          path: build/astc_cache
+          key: astc-${{ hashFiles('tools/assets/astc_pack.py') }}-${{ hashFiles('assets/models/*.glb') }}
+          restore-keys: astc-${{ hashFiles('tools/assets/astc_pack.py') }}-
+
+      - name: Install astcenc
+        timeout-minutes: 10
+        run: |
+          curl -sSL -o /tmp/astcenc.zip https://github.com/ARM-software/astc-encoder/releases/download/5.2.0/astcenc-5.2.0-linux-x64.zip
+          mkdir -p .astcenc && unzip -o -q /tmp/astcenc.zip -d .astcenc
+          sudo apt-get install -y python3-numpy python3-pil >/dev/null
+
+      - name: Build
+        id: build
+        timeout-minutes: 30
+        run: |
+          source ./emsdk/emsdk_env.sh
+          sudo apt-get install -y ninja-build >/dev/null
+          emcmake cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          sed -i "s/__BUILD__/${GITHUB_SHA::7}/g" build/site/index.html
+          echo "${GITHUB_SHA::7}" > build/site/version.txt
+          touch build/site/.nojekyll
+          bash cloud/sim/build.sh
+          npm ci --prefix cloud --no-audit --no-fund >/dev/null  # wrangler dev, for the tests that need a room
+
+      - name: Write config.json
+        timeout-minutes: 5
+        env:
+          CF_WS: ${{ needs.build-and-publish.outputs.ws }}
+        run: |
+          python3 - <<PY
+          import json, os
+          json.dump({"build": os.environ["GITHUB_SHA"][:7], "proto": 1, "ws": os.environ.get("CF_WS", ""), "room": "main",
+                     "accountsUrl": "https://joshuavelasco.com/bar/account.php",
+                     "reportUrl": "https://joshuavelasco.com/bar/report.php"},
+                    open("build/site/config.json", "w"))
+          PY
 
       # --- The game's tests, after it's live (about an hour). Every test runs
       # even when an earlier one failed, so one failure never hides another,
@@ -426,8 +527,10 @@ jobs:
       # run was stopped: which tests failed, which were allowed to (J2.3).
       - name: "Report: finished (for Dev)"
         if: always() && env.IONOS_SFTP_HOST != ''
+        timeout-minutes: 5
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
           JOB_STATUS: ${{ job.status }}
           STEPS_JSON: ${{ toJSON(steps) }}
+          LIVE: ${{ needs.build-and-publish.outputs.live }}
         run: node tools/ci_status.mjs game end
