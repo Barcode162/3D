@@ -11,6 +11,10 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
 import { mkdirSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+// The step in Now, whatever it is today (the test must not go stale when the plan moves on).
+const NOW = /^\*\*([A-Z]+\d+) · ([^*]+)\*\*/m.exec(readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1]);
+const NOW_PIECES = (readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1].split('## 5.')[0].match(/^- \[[ x]\] /gm) || []).length;
 const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub' }, files: { 'bar/account.php': 'server/account.php' } });
 // What CI and the deploy put there: the game's config, the plan, no deploy report yet.
 writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
@@ -51,8 +55,8 @@ await page.waitForFunction(() => /build abc1234/.test(document.querySelector('#v
 check(true, 'Overview shows the live build from the game\'s config');
 await page.waitForFunction(() => /No report yet/.test(document.querySelector('#view [data-id="status"]').textContent));
 check(true, 'no deploy report yet is said plainly');
-await page.waitForFunction(() => /R4 · Dev/.test(document.querySelector('#view [data-id="now"]').textContent));
-check(await ed(() => / of 7/.test(document.querySelector('#view [data-id="now"]').textContent)), 'Now shows R4 and how many of its pieces are done');
+await page.waitForFunction((t) => document.querySelector('#view [data-id="now"]').textContent.includes(t), `${NOW[1]} · ${NOW[2]}`);
+check(await ed((n) => document.querySelector('#view [data-id="now"]').textContent.includes(` of ${n}`), NOW_PIECES), `Now shows ${NOW[1]} and how many of its ${NOW_PIECES} pieces are done`);
 await page.waitForFunction(() => /Nothing waiting|to publish/.test(document.querySelector('#view [data-id="needs"]').textContent));
 check(true, 'Needs you answers (news drafts)');
 const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
@@ -63,7 +67,7 @@ check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status ==
 await page.click('#tabs [data-tab="plan"]');
 await page.waitForSelector('#view [data-chapter="The engine"]');
 check(await ed(() => ['The world', 'The site', 'The engine', 'The tools', 'The backbone'].every((c) => document.querySelector(`#view [data-chapter="${c}"]`))), 'Plan shows the five chapters');
-check(await ed(() => /R4\.1/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Now lists R4\'s pieces');
+check(await ed((t) => document.querySelector('#view [data-id="plan-now"]').textContent.includes(t + '.1'), NOW[1]), `Now lists ${NOW[1]}'s pieces`);
 await page.click('#view [data-id="note-kind"] button:nth-child(2)');
 await page.fill('#view [data-id="note"]', 'A rooftop terrace');
 await page.click('#view [data-id="note-send"]');
