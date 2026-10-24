@@ -61,7 +61,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J4.2** One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age *Check:* Nothing on the phone
 - [x] **J4.3** The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal *Check:* Nothing on the phone
 - [x] **J4.4** Records tools: requests word for word, incidents, decisions, the session line *Check:* Nothing on the phone
-- [ ] **J4.5** Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session *Check:* Nothing on the phone
+- [x] **J4.5** Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session *Check:* Nothing on the phone
 - [ ] **J4.6** The Playbook and the tools agree: every command the Playbook names exists; the (J4) marks removed *Check:* Nothing on the phone
 
 ## 5. The road

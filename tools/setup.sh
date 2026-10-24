@@ -43,3 +43,6 @@ fi
 if [ ! -f cloud/sim/room_sim.wasm ] && [ -f "$EMSDK_DIR/emsdk_env.sh" ]; then
   (source "$EMSDK_DIR/emsdk_env.sh" >/dev/null 2>&1 && bash cloud/sim/build.sh >/dev/null 2>&1) && echo "Room physics built (cloud/sim/room_sim.wasm)." || echo "Note: cloud/sim/build.sh failed (room_test needs it)."
 fi
+
+# The locks (restructure J4.5): the repo's own git hooks (tools/githooks/).
+git config core.hooksPath tools/githooks 2>/dev/null && echo "Git locks on (tools/githooks)." || true

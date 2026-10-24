@@ -62,7 +62,7 @@ const mainSha = sh('git rev-parse --short HEAD');
 for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);
 if (!has('no-main')) {
   console.log('▶ push main (CI deploys in ~6 min)');
-  for (let i = 0; i < 4 && !run('git push -q origin HEAD:main'); i++) execSync(`sleep ${2 ** (i + 1)}`);
+  for (let i = 0; i < 4 && !run('SHIP_OK=1 git push -q origin HEAD:main'); i++) execSync(`sleep ${2 ** (i + 1)}`);
 }
 if (has('bench')) run('node tools/bench.mjs');
 

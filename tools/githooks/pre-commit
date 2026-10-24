@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Lock (restructure J4.5; tools/setup.sh turns it on with core.hooksPath).
+# Refuses a commit that (1) adds a secret, or (2) leaves the plan's files
+# disagreeing (PLAN.md, the Charter's rules block, CLAUDE.md's Never list vs
+# docs/plan/plan.json and docs/charter/rules.json). Skipped where the plan
+# keeper isn't (the gallery branch's worktree).
+set -u
+added=$(git diff --cached -U0 --no-color | grep -E '^\+[^+]' || true)
+pat='-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|sk-ant-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}'
+if printf '%s\n' "$added" | grep -qE -- "$pat"; then
+  echo "✗ commit refused: it adds something that looks like a secret (tools/githooks/pre-commit). Take it out."; exit 1
+fi
+if [ -n "${HUB_KEY:-}" ] && printf '%s\n' "$added" | grep -qF -- "$HUB_KEY"; then
+  echo "✗ commit refused: it adds the HUB_KEY value. Take it out."; exit 1
+fi
+if [ -f tools/plan.mjs ] && ! node tools/plan.mjs check >/dev/null 2>&1; then
+  echo "✗ commit refused: the plan's files disagree (node tools/plan.mjs check). Change the plan only through node tools/plan.mjs."; exit 1
+fi
+exit 0

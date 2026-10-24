@@ -7,6 +7,23 @@
             "type": "command",
             "command": "if [ \"$CLAUDE_CODE_REMOTE\" = \"true\" ]; then bash \"$CLAUDE_PROJECT_DIR/tools/setup.sh\"; fi",
             "timeout": 600
+          },
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && [ -f tools/project.mjs ] && echo 'The project right now (node tools/project.mjs status --brief; start at CLAUDE.md):' && node tools/project.mjs status --brief 2>/dev/null || true",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/tools/lib/guard.mjs\"",
+            "timeout": 10
           }
         ]
       }

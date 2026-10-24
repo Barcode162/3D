@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Lock (restructure J4.5): main moves only through the ship (tools/ship.mjs →
+# tools/step.mjs finish, which sets SHIP_OK=1), and never by a force push.
+# stdin: <local ref> <local sha> <remote ref> <remote sha>, one line per ref.
+set -u
+zero=0000000000000000000000000000000000000000
+while read -r lref lsha rref rsha; do
+  [ "$rref" = "refs/heads/main" ] || continue
+  if [ "$lsha" = "$zero" ]; then echo "✗ push refused: deleting main."; exit 1; fi
+  if [ "${SHIP_OK:-}" != "1" ]; then
+    echo "✗ push refused: main moves only through the ship (node tools/project.mjs ship \"<what>\"; docs/playbook/job.md)."; exit 1
+  fi
+  if [ "$rsha" != "$zero" ] && ! git merge-base --is-ancestor "$rsha" "$lsha" 2>/dev/null; then
+    echo "✗ push refused: that would rewrite main's history (a force push)."; exit 1
+  fi
+done
+exit 0

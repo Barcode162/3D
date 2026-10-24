@@ -73,7 +73,7 @@
     "id": "J4.5",
     "text": "Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J4.6",
