@@ -59,14 +59,14 @@ The combination: a world you move through + grabbable motion + live
 presence, with the same map turning into a 3D scene later.
 
 ## Steps (one "go" each)
-- **R1 Toolbelt + UI Editor:** R1.1 the Toolbelt (one list and page of the
+- **R1 Toolbelt + UI Editor (BUILT 2026-10-24):** R1.1 the Toolbelt (one list and page of the
   engine's tools) · R1.2 theme/screen file format + test, Faceplate as the
   first theme file · R1.3 web renderer, /ui/ drawn from files (same look) ·
   R1.4 editor shell (preview, parts, dense inspector, phone-first) · R1.5
   theme editing (every token, light/dark) · R1.6 screen editing (phone,
   computer, in-game previews) · R1.7 save, versions, undo, publish, pull tool;
   Looped C++ reads the theme file (no engine drawing yet).
-- **R2 The house theme:** 3 candidates, the user picks or mixes, it gets a name.
+- **R2 The house theme:** R2.1 real screens to judge on (front door, Dev Overview, a bar menu) · R2.2 light and dark in one theme · R2.3 three candidates (Clean, Warm, Bold) · R2.4 compare side by side and mix groups · R2.5 the user's pick becomes the house theme, named.
 - **R3 The World Plan, one doc:** R3.1 write it in its fixed shape · R3.2
   carry over the open work (58 Hub cards, NEXT.md, PROGRESS.md, old plans)
   into its areas, archive the old files · R3.3 the plan tool (adds a request

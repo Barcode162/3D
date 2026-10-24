@@ -8,18 +8,24 @@ Alive plan, replanned 2026-10-22: tracks L M T R A W, wow and foundation
 take turns, every visual piece has an off switch and before/after pictures,
 every piece writes its page in `docs/manual/`).
 
-## The next step: R1, the Toolbelt and the UI Editor (docs/UI_PLAN.md)
-The rework (user, 2026-10-24): one world site, a Dev area, a UI Editor in
-the engine's Toolbelt, one house theme, one plan doc. **All engine work is
-paused** (L1.8, P1, P2 and every later step below) until R6 is done.
-R1 builds the tool first. The bar's menus stay plain HTML (no GPU cost).
-- [ ] **R1.1** The Toolbelt: one list of the engine's tools (`toolbelt/tools.json`) and one page that opens them (`/toolbelt/`). *Check:* open joshuavelasco.com/toolbelt, every tool opens.
-- [ ] **R1.2** The theme files: every token described once (`ui/system/tokens.json`), the 4 themes as files (`ui/system/themes/`), `ui/themes.css` written from them by `tools/uikit.mjs`, a test that they agree. *Check:* nothing changes (the bar and Studio look the same).
-- [ ] **R1.3** Screen files and the web renderer: a screen is a tree of parts (stack, row, panel, text, key, chip, field, switch, fader...) in `ui/system/screens/`; `Looped.screen()` draws one; `/ui/screen.html?s=sampler` shows every part. *Check:* open /ui/screen.html?s=sampler, every part is there.
-- [ ] **R1.4** The UI Editor (`/toolbelt/ui-editor/`): live preview on top, parts list and a dense inspector below, built for the phone. *Check:* open it, tap a part in the preview, it's selected in the list.
-- [ ] **R1.5** Theme editing: every token, grouped (colour, type, shape, depth, motion), colour pickers and sliders, light/dark. *Check:* drag the corner slider, every control in the preview rounds.
-- [ ] **R1.6** Screen editing: add, move up/down, duplicate, delete parts, edit their words and options; phone, computer and in-game previews. *Check:* add a key to the sampler, rename it, move it up.
-- [ ] **R1.7** Save and publish: undo/redo, a draft kept on the phone, Publish keeps every version (`toolbelt/ui-editor/api.php`, the Studio's login), `node tools/uikit.mjs pull` brings published edits into the repo; Looped (C++) reads a theme file (`looped/ui_theme.h`, with a test). *Check:* change a colour, Publish, see it in History.
+## The next step: R2, the house theme (docs/UI_PLAN.md)
+R1 (the Toolbelt and the UI Editor) is built. R2 uses the editor to find the
+one look for the whole project. **All engine work stays paused** (L1.8, P1,
+P2 and every later step below) until R6 is done.
+- [ ] **R2.1** Real screens to judge a theme on, as screen files: the front door, Dev's Overview, a bar menu (plus the parts they need: list row, tab bar, picture card). *Check:* in the UI Editor's screen menu, open each one.
+- [ ] **R2.2** Light and dark in one theme: a theme carries both, the page follows the phone's setting, the editor flips between them. *Check:* in the editor, Light / Dark flips the preview.
+- [ ] **R2.3** Three candidates as theme files, each light and dark: Clean (calm, Apple-like), Warm (the bar at night), Bold. *Check:* pick each in the preview's theme menu.
+- [ ] **R2.4** Compare and mix: one screen in every candidate side by side; take a group (colour, shape, type...) from one theme into another. *Check:* Compare shows three phones; "Take Shape from Clean" changes the corners.
+- [ ] **R2.5** The user's pick becomes the house theme: named, the default theme file, used by the Toolbelt and the editor. (Waits for the user's choice after R2.4.)
+
+## R1, the Toolbelt and the UI Editor (built 2026-10-24)
+- [x] **R1.1** The Toolbelt (`toolbelt/tools.json`, `/toolbelt/`). *Check:* open joshuavelasco.com/toolbelt, every tool opens.
+- [x] **R1.2** Theme files (`ui/system/tokens.json`, `ui/system/themes/`), `ui/themes.css` written by `tools/uikit.mjs`. *Check:* nothing changes.
+- [x] **R1.3** Screen files and the web renderer (`ui/screen.js`, `/ui/screen.html?s=sampler`). *Check:* every part on the sampler.
+- [x] **R1.4** The UI Editor shell (`/toolbelt/ui-editor/`). *Check:* tap a part, it's selected in the list.
+- [x] **R1.5** Theme editing, undo/redo. *Check:* drag key-r, keys round.
+- [x] **R1.6** Screen editing. *Check:* rename Publish, add a chip, move it up.
+- [x] **R1.7** Save and publish (`api.php`, `uikit.mjs pull`), the engine reads themes (`looped/ui_theme.*`). *Check:* Publish, History shows v1.
 
 ## Where we are (2026-10-22)
 - The engine plan E1-E9 is built and live (`22e9b28`).

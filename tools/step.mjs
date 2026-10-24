@@ -59,7 +59,8 @@ writeFileSync('build/step-msg.txt', `Notes: ${stepName} built (${tags.join(', ')
 sh('git add NEXT.md');
 try { sh('git commit -q -F build/step-msg.txt'); } catch {}
 const mainSha = sh('git rev-parse --short HEAD');
-for (let i = 0; i < 4 && !run('git push -q -u origin HEAD:work-go'); i++) execSync(`sleep ${2 ** (i + 1)}`);
+const target = process.env.PIECE_BRANCH ?? 'work-go';  // the work branch (tools/piece.mjs --branch)
+for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);
 if (!has('no-main')) {
   console.log('▶ push main (CI deploys in ~6 min)');
   for (let i = 0; i < 4 && !run('git push -q origin HEAD:main'); i++) execSync(`sleep ${2 ** (i + 1)}`);
