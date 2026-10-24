@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.5 Dials, World notes and News in Ember: World notes drops its old purple look and joins the house look (warm cards, a moving title, amber filter keys, Alive in amber); News's cards take Ember's round corners and its line reads What's new at J Production; Dials and News get Ember's dark top colour on the phone
+
+`874ebf7` · 2026-10-24 09:17 · 4 files, +29 −31 · tests: quick
+
+Phone check: Dev → Projects → World notes: warm cards, amber keys, no purple; open /news: round warm cards, 'What's new at J Production'
+
+![R6.5 page-hub-dials.jpg](R6.5/page-hub-dials.jpg)
+
 ## R6.4 The Studio in Ember: the top bar, the bottom tools, the Monitor, the sheets, the library and every row take the theme's corners (the panels Ember's round 22, the rows a little tighter), the place's name in the top bar is a moving amber title, the last fixed colours (the world's backdrop, the magnifier, the lifecycle map) come from the theme
 
 `304abce` · 2026-10-24 09:10 · 3 files, +34 −31 · tests: quick
