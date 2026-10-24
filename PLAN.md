@@ -49,7 +49,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 **R3 · The World Plan** (the tools). The plan system remade as this one doc.
 - [x] **R3.1** This file in its fixed shape: the North star, the rules, the chapters, Now, Done, where things are. *Check:* read PLAN.md on GitHub: it says what the project is in one screen.
 - [x] **R3.2** Carry over: every open thing from NEXT.md, PROGRESS.md, the 68 hub cards and the old plans into its chapter (road or parked); the old plan files move to `docs/archive/`. *Check:* the road has every open thing once.
-- [ ] **R3.3** The plan tool (`tools/plan.mjs`): add a request into its chapter, tick pieces, write Done, refuse anything that breaks the shape; the piece and step tools use it. *Check:* none on the phone (Claude's tool).
+- [x] **R3.3** The plan tool (`tools/plan.mjs`): add a request into its chapter, tick pieces, write Done, refuse anything that breaks the shape; the piece and step tools use it. *Check:* none on the phone (Claude's tool).
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*

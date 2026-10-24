@@ -1,0 +1,148 @@
+#!/usr/bin/env node
+// The World Plan's keeper (PLAN.md, the one doc of truth). Claude edits
+// PLAN.md only through this tool, so its shape never changes: eight parts in
+// order, five chapters, every road item tagged and serving a North star line.
+//   node tools/plan.mjs check                    the shape; exit 1 with what's wrong
+//   node tools/plan.mjs now                      part 4: the step "go" does, its pieces
+//   node tools/plan.mjs tick <PIECE>             tick a piece in Now (piece.mjs does it)
+//   node tools/plan.mjs add <chapter> <TAG> "<what>" --serves N3[,N4]   a road item
+//   node tools/plan.mjs park <chapter> "<idea>"  a line in Parked (the user's "park:")
+//   node tools/plan.mjs rule "<rule>"            a dated line in Your rules (only on the user's word)
+//   node tools/plan.mjs start <TAG> --piece "<TAG.1>|<what>|<phone check>" [--piece ...]
+//                                                the road item becomes Now (the old Now must be all ticked)
+//   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
+//                                                a Done line on top (step.mjs does it)
+// Chapters: world, site, engine, tools, backbone.
+import { readFileSync, writeFileSync } from 'node:fs';
+
+export const FILE = 'PLAN.md';
+export const PARTS = ['1. North star', '2. Your rules', '3. The chapters', '4. Now', '5. The road', '6. Parked', '7. Done', '8. Where things are'];
+export const CHAPTERS = { world: 'The world', site: 'The site', engine: 'The engine', tools: 'The tools', backbone: 'The backbone' };
+const NAMES = Object.values(CHAPTERS);
+const TAG = '[A-Z]{1,3}\\d+(?:\\.\\d+)?';
+
+export function read(file = FILE) { return readFileSync(file, 'utf8'); }
+
+// The text of one part (without its heading), and where it sits.
+function part(text, n) {
+  const head = `\n## ${PARTS[n]}\n`, a = text.indexOf(head);
+  if (a < 0) return null;
+  const from = a + head.length, b = text.indexOf('\n## ', from);
+  return { from, to: b < 0 ? text.length : b + 1, body: text.slice(from, b < 0 ? text.length : b + 1) };
+}
+function chapterBlock(body, name) {
+  const head = `### ${name}\n`, a = body.indexOf(head);
+  if (a < 0) return null;
+  const from = a + head.length, b = body.indexOf('\n### ', from);
+  return { from, to: b < 0 ? body.length : b + 1 };
+}
+const tagsIn = (s) => [...s.matchAll(new RegExp(`\\*\\*(${TAG})\\*\\*`, 'g'))].map((m) => m[1]);
+
+export function problems(text) {
+  const out = [];
+  if (!/^# J Production · The World Plan\n/.test(text)) out.push('the first line must be "# J Production · The World Plan"');
+  const heads = [...text.matchAll(/^## (.*)$/gm)].map((m) => m[1]);
+  if (JSON.stringify(heads) !== JSON.stringify(PARTS)) out.push(`the parts must be exactly, in order: ${PARTS.join(' / ')} (found: ${heads.join(' / ')})`);
+  if (out.length) return out;
+  const north = part(text, 0).body, stars = new Set([...north.matchAll(/\*\*(N\d+) /g)].map((m) => m[1]));
+  if (!stars.size) out.push('North star: no N1, N2... lines');
+  for (const [n, kind] of [[2, 'bullets'], [4, 'headings'], [5, 'headings']]) {
+    const body = part(text, n).body;
+    const found = kind === 'bullets' ? [...body.matchAll(/^- \*\*(The [a-z]+):\*\*/gm)].map((m) => m[1]) : [...body.matchAll(/^### (.*)$/gm)].map((m) => m[1]);
+    if (JSON.stringify(found) !== JSON.stringify(NAMES)) out.push(`${PARTS[n]}: the chapters must be exactly ${NAMES.join(', ')} (found: ${found.join(', ') || 'none'})`);
+  }
+  const now = part(text, 3).body;
+  if (!new RegExp(`^\\*\\*${TAG} · `, 'm').test(now)) out.push('Now: no "**TAG · title**" step line');
+  for (const l of now.split('\n').filter((l) => l.startsWith('- '))) {
+    if (!new RegExp(`^- \\[( |x)\\] \\*\\*${TAG}\\*\\* .+`).test(l)) out.push(`Now: a piece line must be "- [ ] **TAG.n** what" (${l.slice(0, 60)})`);
+  }
+  const road = part(text, 4).body, seen = new Set(tagsIn(now).filter((t) => t.includes('.')).map((t) => t.split('.')[0]));
+  for (const l of road.split('\n').filter((l) => l.startsWith('- '))) {
+    const m = new RegExp(`^- \\[( |x)\\] \\*\\*(${TAG})\\*\\* .+ · (N\\d+(?: N\\d+)*)$`).exec(l);
+    if (!m) { out.push(`The road: an item must be "- [ ] **TAG** what · N1" (${l.slice(0, 70)})`); continue; }
+    if (seen.has(m[2])) out.push(`The road: ${m[2]} is listed twice`); seen.add(m[2]);
+    for (const n of m[3].split(' ')) if (!stars.has(n)) out.push(`The road: ${m[2]} serves ${n}, which is not a North star line`);
+  }
+  const next = /\*\*Up next, in order:\*\*(.*)/.exec(road);
+  if (next) for (const t of next[1].match(new RegExp(TAG, 'g')) || []) if (!seen.has(t) && !tagsIn(now).includes(t)) out.push(`The road: "Up next" names ${t}, which isn't on the road`);
+  const done = part(text, 6).body;
+  for (const l of done.split('\n').filter((l) => l.startsWith('- '))) if (!/^- (`[0-9a-f]{7}`|\(this push\)) /.test(l)) out.push(`Done: a line must start with its build code (${l.slice(0, 50)})`);
+  return out;
+}
+
+function save(text, file = FILE) {
+  const bad = problems(text);
+  if (bad.length) throw new Error('refused, PLAN.md would break its shape:\n' + bad.join('\n'));
+  writeFileSync(file, text);
+}
+function chapterName(c) {
+  const name = CHAPTERS[c] || NAMES.find((n) => n.toLowerCase() === String(c).toLowerCase());
+  if (!name) throw new Error(`"${c}" is not a chapter: ${Object.keys(CHAPTERS).join(', ')}`);
+  return name;
+}
+function addLine(text, n, chapter, line) {
+  const p = part(text, n), block = chapterBlock(p.body, chapterName(chapter));
+  let before = p.body.slice(0, block.to).replace(/\n*$/, '\n');
+  return text.slice(0, p.from) + before + line + '\n' + (p.body.slice(block.to).startsWith('\n') ? '' : '\n') + p.body.slice(block.to) + text.slice(p.to);
+}
+
+export function tick(text, piece) {
+  const re = new RegExp(`^- \\[ \\] \\*\\*${piece.replace('.', '\\.')}\\*\\*`, 'm');
+  const p = part(text, 3);
+  if (!re.test(p.body)) return null;
+  return text.slice(0, p.from) + p.body.replace(re, `- [x] **${piece}**`) + text.slice(p.to);
+}
+export function addDone(text, { sha, what, range }) {
+  let t = text.replace('- (this push) ', `- \`${sha}\` `);
+  const p = part(t, 6), first = p.body.indexOf('\n- ');
+  const at = first < 0 ? p.body.length : first + 1;
+  const body = p.body.slice(0, at) + `- (this push) ${what}${range ? ' → ' + range : ''}\n` + p.body.slice(at);
+  return t.slice(0, p.from) + body + t.slice(p.to);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const flags = (n) => { const out = []; rest.forEach((a, i) => { if (a === '--' + n) out.push(rest[i + 1]); }); return out; };
+  const pos = rest.filter((a, i) => !a.startsWith('--') && !(i > 0 && rest[i - 1].startsWith('--')));
+  try {
+    let text = read();
+    if (cmd === 'check' || !cmd) {
+      const bad = problems(text);
+      console.log(bad.length ? bad.join('\n') : 'ok  plan: PLAN.md keeps its eight parts and five chapters');
+      process.exit(bad.length ? 1 : 0);
+    } else if (cmd === 'now') {
+      console.log(part(text, 3).body.trim());
+    } else if (cmd === 'tick') {
+      const t = tick(text, pos[0]);
+      if (!t) { console.log(`${pos[0]} is not an open piece in Now`); process.exit(1); }
+      save(t); console.log(`ticked ${pos[0]}`);
+    } else if (cmd === 'add') {
+      const [chapter, tag, what] = pos, serves = (flags('serves')[0] || '').split(',').filter(Boolean);
+      if (!serves.length) throw new Error('--serves N1[,N2]: which North star line does it serve? (none: park it instead)');
+      if (new RegExp(`\\*\\*${tag}\\*\\*`).test(text)) throw new Error(`${tag} is already in the plan`);
+      save(addLine(text, 4, chapter, `- [ ] **${tag}** ${what} · ${serves.join(' ')}`)); console.log(`added ${tag} to ${chapterName(chapter)}`);
+    } else if (cmd === 'park') {
+      save(addLine(text, 5, pos[0], `- ${pos[1]}`)); console.log(`parked under ${chapterName(pos[0])}`);
+    } else if (cmd === 'rule') {
+      const p = part(text, 1), at = p.body.indexOf('\n- ') + 1, day = new Date().toISOString().slice(0, 10);
+      save(text.slice(0, p.from) + p.body.slice(0, at) + `- (${day}) ${pos[0]}\n` + p.body.slice(at) + text.slice(p.to)); console.log('rule added');
+    } else if (cmd === 'start') {
+      const tag = pos[0], now = part(text, 3);
+      if (/^- \[ \]/m.test(now.body)) throw new Error('Now still has open pieces: tick them (or take them out by hand with the user) first');
+      const road = part(text, 4), m = new RegExp(`^- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* (.+) · (N\\d+(?: N\\d+)*)\\n`, 'm').exec(road.body);
+      if (!m) throw new Error(`${tag} is not an open road item`);
+      const chapter = NAMES.find((n) => { const b = chapterBlock(road.body, n); return b && road.body.slice(b.from, b.to).includes(m[0]); });
+      const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
+      if (!pieces.length) throw new Error('give the step its pieces: --piece "TAG.1|what|phone check"');
+      const title = m[1].split(':')[0].replace(/\*\*/g, '');
+      let t = text.slice(0, road.from) + road.body.replace(m[0], '') + text.slice(road.to);
+      const n2 = part(t, 3);
+      t = t.slice(0, n2.from) + `**${tag} · ${title}** (${chapter.toLowerCase()}). ${m[1]} · ${m[2]}\n${pieces.join('\n')}\n\n` + t.slice(n2.to);
+      save(t); console.log(`${tag} is now in Now with ${pieces.length} pieces`);
+    } else if (cmd === 'done') {
+      save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
+    } else {
+      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 17).join('\n')); process.exit(2);
+    }
+  } catch (e) { console.log(e.message); process.exit(1); }
+}

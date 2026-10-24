@@ -21,7 +21,8 @@ const CHECKS = {
   quick:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
              ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
-             ['toolbelt', 'node tools/toolbelt_test.mjs'], ['uikit', 'node tools/uikit.mjs check']],
+             ['toolbelt', 'node tools/toolbelt_test.mjs'], ['uikit', 'node tools/uikit.mjs check'], ['plan', 'node tools/plan_test.mjs']],
+  plan:     [['plan', 'node tools/plan_test.mjs']],
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
   native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
@@ -48,6 +49,7 @@ const CHECKS = {
 };
 // Which systems a changed file needs (first match wins; unknown files → game).
 const RULES = [
+  [/^PLAN\.md$|^tools\/plan/, ['plan']],
   [/\.md$|^docs\//, []],
   [/^homepage\/|^tools\/site_test/, ['site']],
   [/^hub\/.*\.php$|^server\//, ['server']],

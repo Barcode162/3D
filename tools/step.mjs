@@ -8,6 +8,7 @@
 // NEXT.md (the previous "(this push)" gets its real sha), runs the benchmark
 // (--bench), posts to the hub (if HUB_KEY is set) and prints the reply for
 // the user: one line per piece with its phone check.
+import { FILE as PLAN_FILE, read as readPlan, addDone } from './plan.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openGallery, readJsonl, appendJsonl, commitGallery, writeReadme } from './lib/gallery.mjs';
@@ -47,16 +48,12 @@ console.log('▶ merge origin/main');
 run('git fetch -q origin main');
 if (!run('git merge -q --no-edit origin/main')) { console.log('✗ merge conflict: resolve, commit, finish again (--skip-check)'); process.exit(1); }
 
-// The Build log line (NEXT.md): the previous "(this push)" gets its sha.
+// The Done line (PLAN.md → 7. Done, through the plan keeper): the previous "(this push)" gets its sha.
 const range = `${pieces[0].sha}^..${pieces[pieces.length - 1].sha}`;
 const tags = pieces.map((p) => p.tag);
-let next = readFileSync('NEXT.md', 'utf8');
-if (lastDone?.mainSha) next = next.replace('- (this push) ', `- \`${lastDone.mainSha}\` `);
-const line = `- (this push) ${tags.join(', ')}: ${what} → ${range}`;
-next = next.replace(/(## Build log[^\n]*\n)/, `$1${line}\n`);
-writeFileSync('NEXT.md', next);
+writeFileSync(PLAN_FILE, addDone(readPlan(), { sha: lastDone?.mainSha ?? '0000000', what: `${tags.join(', ')}: ${what}`, range }));
 writeFileSync('build/step-msg.txt', `Notes: ${stepName} built (${tags.join(', ')})\n\n${ATTRIBUTION}`);
-sh('git add NEXT.md');
+sh(`git add ${PLAN_FILE}`);
 try { sh('git commit -q -F build/step-msg.txt'); } catch {}
 const mainSha = sh('git rev-parse --short HEAD');
 const target = process.env.PIECE_BRANCH ?? 'work-go';  // the work branch (tools/piece.mjs --branch)
