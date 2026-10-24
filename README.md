@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J7.2 The world remake as proposed jobs: J35 (formerly W24) becomes its first step, the kit (every new thing a kind with its own model at real size, grown by script, within a checked budget, copies drawn together), then J70 the lounge taken apart, J71 the walls' props, J72 bottles and glasses as real things, J73 the stage, the darts corner, the construction and the arcade, J74 the room shells remade, J75 placement made strict, J76 light carried by its things, J77 sound carried by its things, each with its verdict; its plan in docs/plan/jobs/J35.md from the models as measured today (seven room-sized models with 175 objects baked in, 33 lights with no thing of their own); the small interactions (J24), the physics props (J25) and the parked street now wait on the steps they need; the world chapter's Now line names the remake; checked by the plan, Playbook, locks and Handbook tests
+
+`102545e` · 2026-10-24 19:08 · 4 files, +220 −21 · tests: changed
+
+Phone check: Dev → Plan → The world: J35 and J70–J77 in order, each with its verdict; tap J35 for the remake's plan
+
 ## J7.1 Every road and parked item has a verdict and every road item a job number: the old road renumbered J9–J65 in order (each keeps its old tag as Formerly; J8 keeps its own; the duplicate L1.8 is now J36, KI-20 closed), four new jobs from the known issues (J66 deploys never wait behind or get stopped by the tests, KI-32/KI-33; J67 the account test for the room server, KI-27; J68 the hub's unused tuning out, KI-29; J69 a GitHub machine with a graphics card, a cost, KI-28), each with one of the Playbook's six verdicts and why, tied to the Charter's limits; the plan tool keeps verdicts (add needs one, verdict changes one, park takes one, nextid gives the next number; the plan check refuses a road item without one) and finds a renumbered job's spec through its old tag; Dev → Plan shows each item's verdict word, its reason and its old tag; the freeze is now a lock (tools/lib/freeze.mjs in a commit-msg hook) after a path rename reached frozen code (incident 2026-10-24-freeze-unlocked); checked by the plan, workflows, Playbook, locks, Handbook, Dev and labels tests
 
 `2334b6b` · 2026-10-24 19:07 · 23 files, +947 −244 · tests: changed
