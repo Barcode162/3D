@@ -56,18 +56,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**J3 · The Playbook** (the tools). The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
-- [x] **J3.1** Test only what changed, push only what you want: the user's two new rules (and "Speed over tests" taken out: the user never said it), pieces run only the checks for what they change and build only when needed, the engine's self-check idea parked *Check:* Nothing on the phone
-- [x] **J3.2** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind *Check:* Nothing on the phone; the Playbook's first page is on GitHub
-- [x] **J3.3** Intake (docs/playbook/intake.md): every kind of message → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
-- [x] **J3.4** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
-- [x] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
-- [x] **J3.6** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
-- [x] **J3.7** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* On GitHub CLAUDE.md is short and points to the Playbook
+**J4 · Tools and locks** (the tools). Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
+- [ ] **J4.1** The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data *Check:* Dev → Plan looks the same, nothing missing
+- [ ] **J4.2** One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age *Check:* Nothing on the phone
+- [ ] **J4.3** The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal *Check:* Nothing on the phone
+- [ ] **J4.4** Records tools: requests word for word, incidents, decisions, the session line *Check:* Nothing on the phone
+- [ ] **J4.5** Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session *Check:* Nothing on the phone
+- [ ] **J4.6** The Playbook and the tools agree: every command the Playbook names exists; the (J4) marks removed *Check:* Nothing on the phone
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -127,7 +126,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J4** Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
 - [ ] **J5** Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
 - [ ] **J6** The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
 - [ ] **J7** The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
