@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.7 Fix for J5's red site deploy: Dev → Publish → the front page's words no longer wipes what you've typed when the saved words load slowly (it saved an empty headline on GitHub); the Dev test makes that answer slow on purpose and checks the typed words survive; incident recorded
+
+`c4b3fca` · 2026-10-24 14:03 · 4 files, +41 −1 · tests: changed
+
+Phone check: Dev → Publish → the front page's words: type a headline at once, wait, Save: the headline you typed is the one saved
+
 ## J5.6 Dev shows the truth: Overview adds Claude's errors this week (from the incidents), world changes proposed for you to look at, and the questions only you can settle (open known issues that wait for your call), next to both deploys, the news drafts and the job in Now with its next piece; Plan: tap the job in Now, or a job on the road, to read its spec; the plan workflow also sends the jobs' specs (node tools/plan.mjs specs) and your questions (node tools/records.mjs questions); the Dev test covers each and saves two pictures; KI-30 noted (two Studio checks unsettled here)
 
 `5cc1f57` · 2026-10-24 13:52 · 11 files, +101 −21 · tests: changed
