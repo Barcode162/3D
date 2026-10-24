@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.8 Fix for the red site deploy, second cause: the Dev test's two pictures (added in J5.6) timed out on GitHub's software-drawing machine and failed the test; they now go through the same helper as the site test (a slow picture prints a note, never fails the deploy); incident recorded
+
+`544f17d` · 2026-10-24 14:13 · 3 files, +36 −2 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J5.7 Fix for J5's red site deploy: Dev → Publish → the front page's words no longer wipes what you've typed when the saved words load slowly (it saved an empty headline on GitHub); the Dev test makes that answer slow on purpose and checks the typed words survive; incident recorded
 
 `c4b3fca` · 2026-10-24 14:03 · 4 files, +41 −1 · tests: changed
