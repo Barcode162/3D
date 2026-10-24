@@ -85,6 +85,40 @@ export function withLooks(js, themes) {
   return js.slice(0, a + MARK_A.length) + '\n' + looksJs(themes) + '\n' + js.slice(b);
 }
 
+export function loadParts() { return readJson(join(SYS, 'parts.json')); }
+const ICONS = () => new Set([...readFileSync('ui/icons.svg', 'utf8').matchAll(/id="i-([a-z-]+)"/g)].map((m) => m[1]));
+
+// A screen's tree: every part a known type, every prop known and of its kind,
+// children only on containers.
+export function screenProblems(parts, screen, icons = ICONS()) {
+  const out = [], at = `screen "${screen.id}"`, defs = Object.fromEntries(parts.parts.map((p) => [p.type, p]));
+  if (screen.format !== 1) out.push(`${at}: format is not 1`);
+  if (!/^[a-z][a-z0-9-]*$/.test(screen.id || '')) out.push(`${at}: id must be lower-case words`);
+  if (screen.file && screen.file !== `${screen.id}.json`) out.push(`${at}: the file must be called ${screen.id}.json`);
+  if (!screen.name) out.push(`${at}: no name`);
+  const walk = (part, path) => {
+    const where = `${at} part ${path || 'root'}`, d = defs[part?.type];
+    if (!d) { out.push(`${where}: unknown type "${part?.type}"`); return; }
+    for (const [k, v] of Object.entries(part)) {
+      if (k === 'type' || k === 'id') continue;
+      if (k === 'children') {
+        if (!d.children) out.push(`${where}: a ${part.type} can't hold parts`);
+        else if (!Array.isArray(v)) out.push(`${where}: children must be a list`);
+        else v.forEach((c, i) => walk(c, path === '' ? String(i) : `${path}.${i}`));
+        continue;
+      }
+      const p = d.props[k];
+      if (!p) { out.push(`${where}: a ${part.type} has no "${k}"`); continue; }
+      const ok = p.kind === 'text' ? typeof v === 'string' : p.kind === 'number' ? typeof v === 'number' && isFinite(v)
+        : p.kind === 'bool' ? typeof v === 'boolean' : p.kind === 'choice' ? p.choices.includes(v)
+        : p.kind === 'icon' ? v === '' || icons.has(v) : p.kind === 'list' ? Array.isArray(v) && v.every((x) => typeof x === 'string') : false;
+      if (!ok) out.push(`${where}: "${k}" = ${JSON.stringify(v)} is not a ${p.kind}${p.kind === 'icon' ? ' in ui/icons.svg' : ''}`);
+    }
+  };
+  walk(screen.root, '');
+  return out;
+}
+
 export function problems() {
   const out = [];
   const tokens = loadTokens(), { index, themes } = loadThemes();
@@ -97,6 +131,12 @@ export function problems() {
   }
   if (!index.order.includes(index.default)) out.push('themes/index.json: the default theme is not in the order');
   for (const th of themes) out.push(...themeProblems(tokens, th));
+  const parts = loadParts(), types = new Set();
+  for (const p of parts.parts) {
+    if (types.has(p.type)) out.push(`parts.json: "${p.type}" is listed twice`); types.add(p.type);
+    for (const [k, d] of Object.entries(p.props)) if (!['text', 'number', 'bool', 'choice', 'icon', 'list'].includes(d.kind)) out.push(`parts.json: ${p.type}.${k} has an unknown kind "${d.kind}"`);
+  }
+  for (const sc of loadScreens()) out.push(...screenProblems(parts, sc));
   if (readFileSync('ui/themes.css', 'utf8') !== themesCss(tokens, index, themes)) out.push('ui/themes.css is out of date: run `node tools/uikit.mjs css`');
   const js = readFileSync('ui/looped.js', 'utf8');
   try { if (withLooks(js, themes) !== js) out.push('ui/looped.js theme list is out of date: run `node tools/uikit.mjs css`'); } catch (e) { out.push(e.message); }
@@ -114,7 +154,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`wrote ui/themes.css and looped.js's list: ${themes.length} themes, ${tokens.tokens.length} tokens each`);
   } else if (cmd === 'check') {
     const bad = problems();
-    console.log(bad.length ? bad.join('\n') : 'ok  uikit: themes, tokens and themes.css agree');
+    console.log(bad.length ? bad.join('\n') : 'ok  uikit: themes, tokens, screens and themes.css agree');
     process.exit(bad.length ? 1 : 0);
   } else if (cmd === 'list') {
     const { index, themes } = loadThemes();

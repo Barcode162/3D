@@ -1,0 +1,14 @@
+/* The layout pieces screens need beyond looped.css (ui/screen.js). */
+.lp .ls-stack { display: grid; align-content: start; min-width: 0; }
+.lp .ls-row { display: flex; align-items: center; min-width: 0; }
+.lp .ls-grid { display: grid; min-width: 0; }
+.lp .ls-t-xl { font-size: clamp(40px, 10vw, 76px); }
+.lp .ls-t-l { font-size: clamp(28px, 6vw, 40px); }
+.lp .ls-t-m { font-size: 22px; }
+.lp .ls-t-s { font-size: 16px; }
+.lp .ls-switch { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.lp .ls-icon { display: inline-flex; color: var(--text); }
+.lp .ls-icon .ico { width: 24px; height: 24px; }
+.lp .ls-image { overflow: hidden; width: 100%; max-width: 100%; }
+.lp .ls-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lp .ls-unknown { border: 1px dashed var(--bad); color: var(--bad); padding: 8px; border-radius: 8px; font-size: 13px; }
