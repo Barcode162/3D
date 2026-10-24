@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R5.4 Projects: the site's tabs are now Home, Projects, News (+ Dev for staff); /projects shows every J Production project: Bar3D (live, its page is the old Play page), Looped the engine (in progress, used by admins and devs; the old Engine page), the script language (planned), and where we're going (the old Vision page); new project folders join the list; the footer follows
+
+`c2ffbfe` · 2026-10-24 08:00 · 7 files, +66 −18 · tests: none
+
+Phone check: on joshuavelasco.com the tabs read Home, Projects, News; tap Projects: Bar3D, Looped, the script language and Where we're going; Bar3D opens its page
+
 ## R5.3 The front page rearranged: J Production's intro (headline and line from Dev → Publish → The site, the last sentence glowing), Enter the bar and See the bar; the highlight you pushed, big, right under it; then Bar3D, our first world (what it is, every bulb, every corner); Made here: Looped and the script language as works in progress; the news, more projects and Open. stay
 
 `e6fd29b` · 2026-10-24 07:43 · 3 files, +41 −46 · tests: quick, site
