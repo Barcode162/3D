@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.4 The Studio in Ember: the top bar, the bottom tools, the Monitor, the sheets, the library and every row take the theme's corners (the panels Ember's round 22, the rows a little tighter), the place's name in the top bar is a moving amber title, the last fixed colours (the world's backdrop, the magnifier, the lifecycle map) come from the theme
+
+`304abce` · 2026-10-24 09:10 · 3 files, +34 −31 · tests: quick
+
+Phone check: open the Studio: the place's name at the top shimmers amber, the bars and the Monitor have Ember's round warm corners
+
+![R6.4 page-studio.jpg](R6.4/page-studio.jpg)
+
 ## R6.3 The private bar's door in Ember: the sign-in, waiting and People screens take the house look (warm frosted card, amber glow drifting behind, the Bar3D title in amber and still waving, amber Come in key, the guest key in warm glass, amber links and chips); the values come from the theme, with Ember's own as a fallback
 
 `bab7d8a` · 2026-10-24 09:06 · 2 files, +40 −32 · tests: quick
