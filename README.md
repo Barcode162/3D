@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J7.3 The script language's realistic scope and its first jobs: small (things, states, events, timers, loops, remembered values, messages), safe (only its own thing, a step budget and a memory limit, never breaks the bar), built on the world model's kind data (a script and a kind's states, rules and loops convert both ways), written for people and AIs, every error with its line, plain words and a fix hint; not a replacement for C++ or JavaScript; its spec in docs/plan/jobs/J43.md with a first sketch; J43 (formerly T1) becomes step 1, the design on paper with 20 scripts for things that exist today, then J78 the parser and checker, J79 the safe runner, J80 scripts in the Studio, J81 five behaviours rewritten as scripts; the light show (J50) and the timeline (J57) wait on them; the Handbook's script language page says it; checked by the plan, Playbook, locks and Handbook tests
+
+`e8b4dbb` · 2026-10-24 19:09 · 6 files, +187 −22 · tests: changed
+
+Phone check: Dev → Plan → The engine: J43 and J78–J81 in order, each with its verdict; tap J43 for the language's scope and a first sketch
+
 ## J7.2 The world remake as proposed jobs: J35 (formerly W24) becomes its first step, the kit (every new thing a kind with its own model at real size, grown by script, within a checked budget, copies drawn together), then J70 the lounge taken apart, J71 the walls' props, J72 bottles and glasses as real things, J73 the stage, the darts corner, the construction and the arcade, J74 the room shells remade, J75 placement made strict, J76 light carried by its things, J77 sound carried by its things, each with its verdict; its plan in docs/plan/jobs/J35.md from the models as measured today (seven room-sized models with 175 objects baked in, 33 lights with no thing of their own); the small interactions (J24), the physics props (J25) and the parked street now wait on the steps they need; the world chapter's Now line names the remake; checked by the plan, Playbook, locks and Handbook tests
 
 `102545e` · 2026-10-24 19:08 · 4 files, +220 −21 · tests: changed
