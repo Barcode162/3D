@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J1.1 Close R6, freeze, write the restructure down: R6 sealed with 87bd110 (new plan.mjs seal), the user's new rules, J1-J8 on the road with J1 in Now, the governing spec docs/plan/restructure.md, docs/records/known-issues.md (23 problems, each with its job), the branch clean-up incident, step.mjs --no-news, a restructure pointer at the top of CLAUDE.md
+
+`b8bcf57` · 2026-10-24 11:11 · 8 files, +702 −12 · tests: quick
+
+Phone check: Open Dev → Plan: Now is J1 · Freeze and the Charter with three pieces; Up next lists J2 to J8 (after J1 goes live)
+
 ## R6.6 The UI Editor, Compare, Screens and the style page in Ember; the old hub boards gone: the editor's own frame (top bar, buttons, inspector, dialogs) and Compare's are now Ember's dark half, fixed, amber where they were blue, in Archivo (they still never wear the theme being edited); every page's phone top colour is Ember's; hub/board.html and hub/list.html are deleted (and removed from the server at deploy), /hub opens Dev; the hub test now checks hub.php directly (cards, Claude's key, questions, news, places, passwords)
 
 `197d923` · 2026-10-24 09:23 · 11 files, +81 −2153 · tests: quick
