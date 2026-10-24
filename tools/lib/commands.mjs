@@ -6,7 +6,7 @@
 export const COMMANDS = [
   { name: 'help', own: true, summary: 'this list', usage: 'help' },
   { name: 'status', own: true, summary: 'the whole truth on one screen, each part with its age (--brief: a few lines)', usage: 'status [--brief]' },
-  { name: 'plan', run: ['tools/plan.mjs'], summary: 'the plan: now, check, tick, add, park, rule, start, next, chapter, seal, render', usage: 'plan <command> …' },
+  { name: 'plan', run: ['tools/plan.mjs'], summary: 'the plan: now, check, tick, add, park, verdict, nextid, rule, start, next, chapter, seal, render', usage: 'plan <command> …' },
   { name: 'piece', run: ['tools/piece.mjs'], summary: 'one piece: its checks, pictures, commit, push (docs/playbook/job.md)', usage: 'piece <ID> "<title>" --check "<phone check>" [--no-shots | --pages <page>]' },
   { name: 'check', run: ['tools/check.mjs'], summary: 'the checks for what changed (or named systems, or all)', usage: 'check [changed | all | <systems…>]' },
   { name: 'ship', run: ['tools/ship.mjs'], summary: 'finish a job: checks, merge, push main once, verify live, record, reply', usage: 'ship "<what the job did>" [--news "<friendly lines>"]' },

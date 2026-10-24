@@ -9,6 +9,14 @@
   var D = window.Dev;
   var plain = function (s) { return String(s || '').replace(/\*\*/g, '').replace(/`/g, '').replace(/\*([^*]+)\*/g, '$1').trim(); };
   D.plain = plain;
+  // An item's verdict (J7.1, docs/playbook/intake.md step 3): a short word for
+  // the row's value, its colour, and the whole line.
+  var VERDICT = { now: ['Doable', 'ok'], after: ['After', 'normal'], cost: ['At a cost', 'warn'], experiment: ['Try first', 'warn'], impossible: ['Not possible', 'bad'], rule: ['Against a rule', 'bad'] };
+  var LONG = { now: 'Doable now', after: 'Doable after', cost: 'Doable at a cost', experiment: 'Needs an experiment', impossible: 'Not possible', rule: 'Against a rule' };
+  var verdictOf = function (v) {
+    if (!v || !VERDICT[v.kind]) return null;
+    return { kind: v.kind, word: v.kind === 'after' ? 'After ' + v.after : VERDICT[v.kind][0], tone: VERDICT[v.kind][1], line: LONG[v.kind] + (v.after ? ' ' + v.after : '') + ': ' + plain(v.why) };
+  };
   // The plan's data (docs/plan/plan.json and docs/charter/rules.json, written
   // only by tools/plan.mjs) in the shape the tabs draw.
   D.planFromData = function (p, r) {
@@ -21,9 +29,9 @@
       chapters: p.chapters.map(function (c) { return { name: c.name, what: plain(c.what), now: plain(c.now) }; }),
       now: n ? { tag: n.id, title: n.title, chapter: n.chapter, about: plain(n.about),
         pieces: n.pieces.map(function (x) { return { tag: x.id, done: x.done, text: plain(x.text), check: plain(x.check) }; }) } : null,
-      road: byName(p.road, function (x) { return { tag: x.id, done: x.done, text: plain(x.text), serves: x.serves }; }),
+      road: byName(p.road, function (x) { return { tag: x.id, formerly: x.formerly || '', done: x.done, text: plain(x.text), serves: x.serves, verdict: verdictOf(x.verdict) }; }),
       upNext: plain(p.upNext),
-      parked: byName(p.parked, plain),
+      parked: byName(p.parked, function (x) { return typeof x === 'string' ? { text: plain(x), verdict: null } : { text: plain(x.text), verdict: verdictOf(x.verdict) }; }),
       done: p.done.map(function (d) { return { sha: d.build || 'this push', text: plain(d.text) }; }),
     };
   };

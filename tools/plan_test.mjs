@@ -34,12 +34,21 @@ const text = () => readFileSync(join(dir, 'PLAN.md'), 'utf8');
 const json = () => JSON.parse(readFileSync(join(dir, 'docs/plan/plan.json'), 'utf8'));
 try {
   check(plan('render').status === 0 && /\*\*X1 · A test step\*\*/.test(text()), 'render writes PLAN.md from the data');
-  check(plan('add', 'world', 'W99', 'A test road item', '--serves', 'N3').status === 0 && /\*\*W99\*\* A test road item · N3/.test(text()) && json().road.world.some((r) => r.id === 'W99'), 'add puts a road item in its chapter (data and PLAN.md)');
-  check(plan('add', 'world', 'W99', 'Again', '--serves', 'N3').status === 1, 'the same id twice is refused');
-  check(plan('add', 'world', 'W98', 'Serves nothing').status === 1, 'an item that serves no North star line is refused');
-  check(plan('add', 'world', 'W97', 'Bad star', '--serves', 'N9').status === 1, 'a North star line that does not exist is refused');
-  check(plan('add', 'kitchen', 'W96', 'No such chapter', '--serves', 'N1').status === 1, 'an unknown chapter is refused');
-  check(plan('park', 'site', 'A parked test idea').status === 0 && /### The site\n(- .*\n)*- A parked test idea\n/.test(text().split('## 6. Parked')[1]), 'park adds a line under its chapter in Parked');
+  check(plan('add', 'world', 'W99', 'A test road item', '--serves', 'N3', '--verdict', 'now', '--why', 'A test reason').status === 0 && /\*\*W99\*\* A test road item · N3/.test(text()) && json().road.world.some((r) => r.id === 'W99'), 'add puts a road item in its chapter (data and PLAN.md)');
+  check(plan('add', 'world', 'W99', 'Again', '--serves', 'N3', '--verdict', 'now', '--why', 'A test reason').status === 1, 'the same id twice is refused');
+  check(plan('add', 'world', 'W98', 'Serves nothing', '--verdict', 'now', '--why', 'A test reason').status === 1, 'an item that serves no North star line is refused');
+  check(plan('add', 'world', 'W97', 'Bad star', '--serves', 'N9', '--verdict', 'now', '--why', 'A test reason').status === 1, 'a North star line that does not exist is refused');
+  check(plan('add', 'kitchen', 'W96', 'No such chapter', '--serves', 'N1', '--verdict', 'now', '--why', 'A test reason').status === 1, 'an unknown chapter is refused');
+  check(plan('add', 'world', 'W95', 'No verdict', '--serves', 'N3').status === 1, 'an item without a verdict is refused (intake.md step 3)');
+  check(plan('add', 'world', 'W94', 'After nothing', '--serves', 'N3', '--verdict', 'after', '--why', 'x').status === 1 && plan('add', 'world', 'W93', 'Bad kind', '--serves', 'N3', '--verdict', 'maybe', '--why', 'x').status === 1, 'a verdict "after" without its jobs, or an unknown kind, is refused');
+  check(plan('add', 'world', 'W92', 'Waits', '--serves', 'N3', '--verdict', 'after', '--after', 'W99', '--why', 'x').status === 1, '--after takes job numbers only');
+  check(plan('add', 'world', 'J90', 'A later test item', '--serves', 'N3', '--verdict', 'after', '--after', 'J8', '--why', 'It needs J8 first', '--formerly', 'W90').status === 0
+    && /- \[ \] \*\*J90\*\* A later test item · N3\n  \*Formerly\* W90 · \*Verdict:\* Doable after J8 — It needs J8 first\n/.test(text()) && json().road.world.find((r) => r.id === 'J90').formerly === 'W90', 'add writes the verdict (and the old tag) under the item');
+  check(plan('nextid').stdout.trim() === 'J91', 'nextid gives the next free job number');
+  check(plan('verdict', 'J90', 'cost', 'A test cost').status === 0 && /\*Verdict:\* Doable at a cost — A test cost/.test(text()), 'verdict changes a road item\'s verdict');
+  check(plan('park', 'site', 'A parked test idea').status === 0 && /### The site\n(- .*\n(  .*\n)?)*- A parked test idea\n/.test(text().split('## 6. Parked')[1]), 'park adds a line under its chapter in Parked');
+  check(plan('verdict', 'A parked test', 'rule', 'A test rule says no').status === 0 && /- A parked test idea\n  \*Verdict:\* Against a rule — A test rule says no\n/.test(text()) && plan('check').status === 0, 'verdict gives a parked line its verdict, and the plan reads back');
+  check(problems(text().replace(/\n  \*Formerly\* W90 · \*Verdict:\*[^\n]*/, '')).some((p) => /J90 has no verdict/.test(p)), 'a road item without its verdict line is caught');
   check(plan('start', 'W99', '--piece', 'W99.1|One|look').status === 1, 'start is refused while Now has open pieces');
   check(plan('drop', 'X1.9').status === 1, 'drop refuses a piece that is not in Now');
   check(plan('tick', 'X1.1').status === 0 && /- \[x\] \*\*X1\.1\*\*/.test(text()), 'tick ticks a piece in Now');
@@ -55,7 +64,7 @@ try {
   check(plan('rule', 'x', '--replaces', 'No such rule').status === 1, 'rule --replaces refuses a rule that is not there');
   check(/\*\*A test rule:\*\* one/.test(readFileSync(join(dir, 'docs/charter/charter.md'), 'utf8')), 'a new rule reaches the Charter\'s block by itself');
   check(plan('chapter', 'site', 'A test now line.').status === 0 && /- \*\*The site:\*\* .* \*Now:\* A test now line\./.test(text()), 'chapter sets a chapter\'s Now line');
-  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1').status === 0 && plan('next', 'X2 → W1').status === 0 && /Up next, in order:\*\* X2 → W1/.test(text()), 'next sets the Up next line');
+  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1', '--verdict', 'now', '--why', 'A test reason').status === 0 && plan('next', 'X2 → J90').status === 0 && /Up next, in order:\*\* X2 → J90/.test(text()), 'next sets the Up next line');
   check(plan('check').status === 0, 'after all that the copy still keeps its shape and its files agree');
   writeFileSync(join(dir, 'PLAN.md'), text().replace('A test road item', 'Edited by hand'));
   check(plan('check').status === 1, 'a hand edit of PLAN.md is caught');

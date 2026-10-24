@@ -68,7 +68,7 @@
     "toolbelt/ui-editor": "The UI Editor (themes and screens) and the UI store's API.",
     "tools": "The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools.",
     "tools/assets": "Scripts that make the 3D models (headless Blender) and the compressed textures.",
-    "tools/githooks": "The git locks (pre-commit, pre-push).",
+    "tools/githooks": "The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main).",
     "tools/lib": "Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands).",
     "tools/migrations": "One-time conversions of the world files (kept as the record of what changed).",
     "tools/native": "Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light.",

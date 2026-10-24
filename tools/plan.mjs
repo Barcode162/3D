@@ -9,8 +9,11 @@
 //   node tools/plan.mjs check                    the shape, and PLAN.md / the Charter / CLAUDE.md match the data
 //   node tools/plan.mjs now                      the job in Now and its pieces
 //   node tools/plan.mjs tick <PIECE>             tick a piece in Now (piece.mjs does it)
-//   node tools/plan.mjs add <chapter> <ID> "<what>" --serves N3[,N4]   a road item
-//   node tools/plan.mjs park <chapter> "<idea>"  a line in Parked (the user's "park:")
+//   node tools/plan.mjs add <chapter> <ID> "<what>" --serves N3[,N4] --verdict <kind> --why "<one line>" [--after "J9, J12"] [--formerly <old tag>]
+//                                                a road item, with its verdict (intake.md step 3)
+//   node tools/plan.mjs park <chapter> "<idea>" [--verdict <kind> --why "<one line>" [--after …]]   a line in Parked (the user's "park:")
+//   node tools/plan.mjs verdict <ID | start of a parked line> <kind> "<why>" [--after "J9, J12"]   give or change an item's verdict
+//   node tools/plan.mjs nextid                   the next free job number (J<n>: never reused)
 //   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated rule (only on the user's word, with
 //                                                its request); --replaces takes out the rule whose bold name starts so
 //   node tools/plan.mjs start <ID> --piece "<ID.1>|<what>|<phone check>" [--piece ...]
@@ -26,10 +29,12 @@
 //   node tools/plan.mjs render [--check]         write PLAN.md and the blocks from the data (--check: only compare)
 //   node tools/plan.mjs relink                   every doc path in the plan that moved (J6.6, tools/lib/docmoves.mjs) → its new place
 //   node tools/plan.mjs specs                    every job's spec as JSON {id: text} (docs/plan/jobs/<ID>.md, and
-//                                                J1–J8's sections of docs/plan/restructure.md); plan.yml sends it to Dev
-// Chapters: world, site, engine, tools, backbone.
+//                                                J1–J8's sections of docs/plan/restructure.md; a spec under a job's old
+//                                                tag counts for it too); plan.yml sends it to Dev
+// Chapters: world, site, engine, tools, backbone. Verdict kinds: now, after
+// (with --after), cost, experiment, impossible, rule.
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
-import { load, write, render, PARTS, CHAPTERS, PLAN_MD } from './lib/plandata.mjs';
+import { load, write, render, parseVerdict, VERDICTS, PARTS, CHAPTERS, PLAN_MD } from './lib/plandata.mjs';
 export { PARTS, CHAPTERS };
 
 export const FILE = PLAN_MD;
@@ -71,9 +76,12 @@ export function problems(text) {
     if (!new RegExp(`^- \\[( |x)\\] \\*\\*${TAG}\\*\\* .+`).test(l)) out.push(`Now: a piece line must be "- [ ] **TAG.n** what" (${l.slice(0, 60)})`);
   }
   const road = part(text, 4).body, seen = new Set(tagsIn(now).filter((t) => t.includes('.')).map((t) => t.split('.')[0]));
-  for (const l of road.split('\n').filter((l) => l.startsWith('- '))) {
+  const roadLines = road.split('\n');
+  for (const [i, l] of roadLines.entries()) {
+    if (!l.startsWith('- ')) continue;
     const m = new RegExp(`^- \\[( |x)\\] \\*\\*(${TAG})\\*\\* .+ · (N\\d+(?: N\\d+)*)$`).exec(l);
     if (!m) { out.push(`The road: an item must be "- [ ] **TAG** what · N1" (${l.slice(0, 70)})`); continue; }
+    if (m[1] === ' ' && !parseVerdict(roadLines[i + 1] || '')) out.push(`The road: ${m[2]} has no verdict line ("  *Verdict:* Doable now — why"; intake.md step 3)`);
     if (seen.has(m[2])) out.push(`The road: ${m[2]} is listed twice`); seen.add(m[2]);
     for (const n of m[3].split(' ')) if (!stars.has(n)) out.push(`The road: ${m[2]} serves ${n}, which is not a North star line`);
   }
@@ -135,6 +143,19 @@ function chapterId(c) {
   return id;
 }
 const roadItems = (plan) => Object.values(plan.road).flat();
+// A verdict from the flags: --verdict <kind> --why "<one line>" [--after "J9, J12"].
+function verdictFrom(kind, why, after) {
+  if (!VERDICTS[kind]) throw new Error(`--verdict: one of ${Object.keys(VERDICTS).join(', ')} (${Object.values(VERDICTS).join(', ')})`);
+  if (!why || /\n| — /.test(why)) throw new Error('--why "<one line>": the reason, tied to the Charter\'s limits (no line breaks, no " — ")');
+  if ((kind === 'after') !== Boolean(after)) throw new Error(kind === 'after' ? '--after "J9, J12": which jobs come first' : '--after only goes with --verdict after');
+  if (after && !/^J\d+(, J\d+)*$/.test(after)) throw new Error('--after: job numbers, "J9" or "J9, J12"');
+  return { kind, ...(after ? { after } : {}), why };
+}
+// The highest job number anywhere in the plan (Now, the road, Done), +1.
+export function nextId(plan) {
+  const ids = [plan.now?.id, ...roadItems(plan).map((r) => r.id), ...plan.done.map((d) => d.text)].join(' ');
+  return `J${Math.max(8, ...[...ids.matchAll(/\bJ(\d+)\b/g)].map((m) => +m[1])) + 1}`;
+}
 const newPieces = (specs) => specs.map((s) => { const [id, text, check] = s.split('|'); return { id, text, check: check ?? '', done: false }; });
 
 // For the piece runner and the step finisher.
@@ -172,10 +193,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const [chapter, id, what] = pos, serves = (flags('serves')[0] || '').split(',').filter(Boolean);
       if (!serves.length) throw new Error('--serves N1[,N2]: which North star line does it serve? (none: park it instead)');
       if (roadItems(plan).some((r) => r.id === id) || plan.now?.id === id) throw new Error(`${id} is already in the plan`);
-      plan.road[chapterId(chapter)].push({ id, text: what, serves, done: false });
+      const verdict = verdictFrom(flags('verdict')[0], flags('why')[0], flags('after')[0]), formerly = flags('formerly')[0];
+      plan.road[chapterId(chapter)].push({ id, ...(formerly ? { formerly } : {}), text: what, serves, done: false, verdict });
       save(data); console.log(`added ${id} to ${CHAPTERS[chapterId(chapter)]}`);
     } else if (cmd === 'park') {
-      plan.parked[chapterId(pos[0])].push(pos[1]); save(data); console.log(`parked under ${CHAPTERS[chapterId(pos[0])]}`);
+      const kind = flags('verdict')[0];
+      plan.parked[chapterId(pos[0])].push(kind ? { text: pos[1], verdict: verdictFrom(kind, flags('why')[0], flags('after')[0]) } : pos[1]);
+      save(data); console.log(`parked under ${CHAPTERS[chapterId(pos[0])]}`);
+    } else if (cmd === 'verdict') {
+      const [which, kind, why] = pos, verdict = verdictFrom(kind, why, flags('after')[0]);
+      const item = roadItems(plan).find((r) => r.id === which && !r.done);
+      if (item) item.verdict = verdict;
+      else {
+        const hits = Object.values(plan.parked).flatMap((list) => list.map((t, i) => ({ list, i, text: typeof t === 'string' ? t : t.text }))).filter((x) => x.text.startsWith(which));
+        if (hits.length !== 1) throw new Error(`"${which}" is ${hits.length ? 'the start of ' + hits.length + ' parked lines' : 'not an open road item nor the start of a parked line'}`);
+        hits[0].list[hits[0].i] = { text: hits[0].text, verdict };
+      }
+      save(data); console.log(`${which}: ${VERDICTS[kind]}`);
+    } else if (cmd === 'nextid') {
+      console.log(nextId(plan));
     } else if (cmd === 'rule') {
       const old = flags('replaces')[0];
       if (old) {
@@ -238,6 +274,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const restructure = read('docs/plan/restructure.md');
       for (const m of restructure.matchAll(/^### (J\d+) · [^\n]*\n[\s\S]*?(?=^#{2,3} |(?![\s\S]))/gm)) specs[m[1]] = m[0].trim();
       for (const f of readdirSync(dir).filter((x) => /^[A-Z]+\d+(\.\d+)?\.md$/.test(x))) specs[f.slice(0, -3)] = read(`${dir}/${f}`).trim();
+      // A spec written under a job's old tag (docs/plan/jobs/W20.md) is its renumbered job's too (J7.1: "Formerly").
+      for (const r of roadItems(plan)) if (r.formerly && specs[r.formerly] && !specs[r.id]) specs[r.id] = specs[r.formerly];
       console.log(JSON.stringify(specs));
     } else if (cmd === 'charter') {
       const bad = stale(data);

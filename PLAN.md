@@ -57,109 +57,189 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J7 · The plan rebuilt with a reality check** (the tools). The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
-- [ ] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
+- [x] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
 - [ ] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
 - [ ] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
 - [ ] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
 
 ## 5. The road
-*Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
+*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
 **Up next, in order:** J8 (the restructure; then the road as J7 orders it)
 
 ### The world
-- [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
-- [ ] **A2** Real people: skin light passes into, hair strands, wet see-through eyes, clothes that swing, lips that follow voice. · N3
-- [ ] **A3** Your face: an avatar face from a few selfies. · N3 N4
-- [ ] **W1** Memory: the floor wears where people walk, the dartboard gets holes, your usual stool gets your nameplate. · N3
-- [ ] **W2** Mood and chance: one cozy↔wild dial for the whole bar; "maybe" events (30% rain, a surprise band). · N3
-- [ ] **W3** Time and era: scrub time back and see ghosts replay the night; a "what if" copy; the era dial (1920s ↔ neon future). · N3
-- [ ] **W4** Scale and layers: shrink to mouse size; blend two places. · N3
-- [ ] **W5** Home screen with "Happening now": start at your home, one tap to a busy hub, a live event or a friend. · N4
-- [ ] **W6** Lobbies and matchmaking: a few main hubs (the bar first), instances, matching by age band, preferences and skill; the no-friends lobby. · N4
-- [ ] **W7** Your home: invite-only, placing things on a smooth grid, expand up to 3x, levels 1-3. · N4
-- [ ] **W8** Events and the memory book: date, time, RSVP, a clean invite card; the in-game camera, a photo book with likes, no comments, per-photo privacy. · N4
-- [ ] **W9** Safety in the world: teens and adults kept apart (lobbies, voice, messages); block, mute, report (keeps the last seconds of voice); the teen phrase builder, filtered text for adults. · N4
-- [ ] **W10** The mall, IKEA-style: walk in, pick things up, cart, checkout, delivery and install at home. · N4
-- [ ] **W11** The casino: 18+, earned credits only, never bought or cashed out. · N4
-- [ ] **W12** VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown). · N4
-- [ ] **W13** Small interactions done properly: bell, guitar, books, TV, door, taps. · N3
-- [ ] **W14** Physics props: knock bottles off, glasses break and stack, pour drinks. · N3
-- [ ] **W15** The pool table. · N4
-- [ ] **W16** Room 3, taped off today (its question is still open). · N3
-- [ ] **W17** Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot. · N4
-- [ ] **W18** Live low-res machine screens and a fair queue (20 s to claim your turn). · N4
-- [ ] **W19** More arcade games; bots in two-player races. · N4
-- [ ] **W20** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md). · N3
-- [ ] **W21** Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk. · N3
-- [ ] **W22** Your own character builder (face, details); outfits and gadgets to show off (shop items). · N4
-- [ ] **W23** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
-- [ ] **W24** Remaster the crude first versions of props and rooms. · N3
+- [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
+  *Formerly* A1 · *Verdict:* Doable now — Procedural motion on the skeleton the engine already has; Claude writes it, your phone judges how alive it feels
+- [ ] **J10** Real people: skin light passes into, hair strands, wet see-through eyes, clothes that swing, lips that follow voice. · N3
+  *Formerly* A2 · *Verdict:* Doable at a cost — Phone speed: skin light, hair strands and swinging cloth are among the most expensive things to draw on a phone; each ships only if the frame budget allows (J37's report)
+- [ ] **J11** Your face: an avatar face from a few selfies. · N3 N4
+  *Formerly* A3 · *Verdict:* Needs an experiment — Building a face from photos with no outside libraries (rule: from scratch) is research; a time-boxed try shows whether it looks like you
+- [ ] **J12** Memory: the floor wears where people walk, the dartboard gets holes, your usual stool gets your nameplate. · N3
+  *Formerly* W1 · *Verdict:* Doable after J62 — Wear and holes that everyone sees and that last need the room to decide and keep shared things
+- [ ] **J13** Mood and chance: one cozy↔wild dial for the whole bar; "maybe" events (30% rain, a surprise band). · N3
+  *Formerly* W2 · *Verdict:* Doable now — The world model's states, rules and loops already cover moods and chance; a dial and events are data plus a little engine
+- [ ] **J14** Time and era: scrub time back and see ghosts replay the night; a "what if" copy; the era dial (1920s ↔ neon future). · N3
+  *Formerly* W3 · *Verdict:* Doable after J62 — Replaying the night needs the room to record every shared move; the room's storage is limited, so a replay keeps one night
+- [ ] **J15** Scale and layers: shrink to mouse size; blend two places. · N3
+  *Formerly* W4 · *Verdict:* Needs an experiment — Mouse size strains the engine's precision, light and physics; a try shows whether it holds on the phone
+- [ ] **J16** Home screen with "Happening now": start at your home, one tap to a busy hub, a live event or a friend. · N4
+  *Formerly* W5 · *Verdict:* Doable after J18, J19 — It shows homes and events, so those come first
+- [ ] **J17** Lobbies and matchmaking: a few main hubs (the bar first), instances, matching by age band, preferences and skill; the no-friends lobby. · N4
+  *Formerly* W6 · *Verdict:* Doable after J65 — Matching by age band needs ages enforced on the server (Charter: teens and adults apart)
+- [ ] **J18** Your home: invite-only, placing things on a smooth grid, expand up to 3x, levels 1-3. · N4
+  *Formerly* W7 · *Verdict:* Doable after J62 — Homes others visit need the room to keep their state; invite-only rooms already exist (the room "looped")
+- [ ] **J19** Events and the memory book: date, time, RSVP, a clean invite card; the in-game camera, a photo book with likes, no comments, per-photo privacy. · N4
+  *Formerly* W8 · *Verdict:* Doable after J20, J65 — Shared photos of teens need the safety tools and server-side age bands first (Charter: law and safety)
+- [ ] **J20** Safety in the world: teens and adults kept apart (lobbies, voice, messages); block, mute, report (keeps the last seconds of voice); the teen phrase builder, filtered text for adults. · N4
+  *Formerly* W9 · *Verdict:* Doable after J65 — Age bands and reports enforced on the server first; keeping seconds of voice for reports needs a privacy notice: your call
+- [ ] **J21** The mall, IKEA-style: walk in, pick things up, cart, checkout, delivery and install at home. · N4
+  *Formerly* W10 · *Verdict:* Doable after J18 — Delivery and install go to your home; buying uses earned credits through the ledger, which exists
+- [ ] **J22** The casino: 18+, earned credits only, never bought or cashed out. · N4
+  *Formerly* W11 · *Verdict:* Doable after J20, J65 — 18+ enforced on the server and the safety tools in place first (Charter: the 18+ casino, earned credits only)
+- [ ] **J23** VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown). · N4
+  *Formerly* W12 · *Verdict:* Doable at a cost — Real money needs a payment provider, tax handling and terms (Charter: law and money): your decision, with J64 first
+- [ ] **J24** Small interactions done properly: bell, guitar, books, TV, door, taps. · N3
+  *Formerly* W13 · *Verdict:* Doable after J35 — Books, the TV and the taps are baked into room-sized models today; each needs its own model first (the world remake)
+- [ ] **J25** Physics props: knock bottles off, glasses break and stack, pour drinks. · N3
+  *Formerly* W14 · *Verdict:* Doable after J35 — Bottles and glasses on the walls are baked into the room models; they need their own models first (the world remake); the physics exists
+- [ ] **J26** The pool table. · N4
+  *Formerly* W15 · *Verdict:* Doable now — A new thing with physics (balls, a cue) the engine already has; its model grown by script
+- [ ] **J27** Room 3, taped off today (its question is still open). · N3
+  *Formerly* W16 · *Verdict:* Doable now — Waits only on your answer to its open question: what room 3 becomes (a music studio, a quiet library lounge, or something else)
+- [ ] **J28** Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot. · N4
+  *Formerly* W17 · *Verdict:* Doable now — A chess engine with a chosen strength, from scratch in C++, is well within reach; finding a 1v1 uses the room
+- [ ] **J29** Live low-res machine screens and a fair queue (20 s to claim your turn). · N4
+  *Formerly* W18 · *Verdict:* Doable at a cost — Phone speed: every live screen draws a second picture each frame; the fair queue itself is room logic and cheap
+- [ ] **J30** More arcade games; bots in two-player races. · N4
+  *Formerly* W19 · *Verdict:* Doable now — Our own game code, like the arcade today; race bots reuse the race's AI
+- [ ] **J31** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md). · N3
+  *Formerly* W20 · *Verdict:* Doable at a cost — The physics stages are doable; the four real cars need their makers' permission or made-up cars in their spirit (Charter: licences, never pretend to be a real company), and the rigs' look waits on your answer
+- [ ] **J32** Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk. · N3
+  *Formerly* W21 · *Verdict:* Doable after J9 — Builds on the alive avatars' motion
+- [ ] **J33** Your own character builder (face, details); outfits and gadgets to show off (shop items). · N4
+  *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
+- [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
+  *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
+- [ ] **J35** Remaster the crude first versions of props and rooms. · N3
+  *Formerly* W24 · *Verdict:* Doable now — Models are grown by Blender scripts (tools/assets/), the way Claude makes 3D; J7.2 breaks it into the world remake's jobs
 
 ### The site
 
 ### The engine
-- [ ] **L1.8** Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7). · N3
-- [ ] **P1** The engine phone check: fix every "broke" from the E1-E9 list; a ?perf=1 report by the fire with the mirror in view (against 63H3FJ, 16.7 ms); if reflections or shadows cost over 1 ms, make them cheaper. · N5
-- [ ] **EN1** Bug: the menu stops answering after some games. · N5
-- [ ] **EN2** Speed: three phone reports (after entering, at the mirror, after 2 min walking); faster drawing part 2 (render core, layout from Blender, quality settings). · N5
-- [ ] **EN3** Clean core leftovers: 4.1c, 4.3b, the darts / bartending / race adapters, entity ids on the wire. · N2
-- [ ] **M1** Real surfaces: textures that never visibly repeat, rounded edges, automatic wear, dirt and smudges. · N3
-- [ ] **L2** Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade. · N3
-- [ ] **T1** The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts. · N2 N3
-- [ ] **L3** Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus. · N3
-- [ ] **M2** Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces. · N3
-- [ ] **L4** Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics. · N3
-- [ ] **L5** The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer. · N3
-- [ ] **RC1** Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio. · N2 N3
-- [ ] **M3** Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size. · N3
-- [ ] **L6** Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb. · N3
-- [ ] **L7** Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow. · N3
-- [ ] **RC3** Scan it: bring real things in with the iPhone camera. · N3 N5
-- [ ] **L8** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
-- [ ] **EN4** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
+- [ ] **J36** Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7). · N3
+  *Formerly* L1.8 · *Verdict:* Doable now — Small additions to the light that's live
+- [ ] **J37** The engine phone check: fix every "broke" from the E1-E9 list; a ?perf=1 report by the fire with the mirror in view (against 63H3FJ, 16.7 ms); if reflections or shadows cost over 1 ms, make them cheaper. · N5
+  *Formerly* P1 · *Verdict:* Doable now — Needs your phone: a ?perf=1 report by the fire; Claude can't measure the phone (Charter: Claude)
+- [ ] **J38** Bug: the menu stops answering after some games. · N5
+  *Formerly* EN1 · *Verdict:* Needs an experiment — GitHub's "the menu still answers after every game" passed in run 214; a try on your phone shows whether it still happens
+- [ ] **J39** Speed: three phone reports (after entering, at the mirror, after 2 min walking); faster drawing part 2 (render core, layout from Blender, quality settings). · N5
+  *Formerly* EN2 · *Verdict:* Doable now — Three ?perf=1 reports from your phone, then the drawing work they point to
+- [ ] **J40** Clean core leftovers: 4.1c, 4.3b, the darts / bartending / race adapters, entity ids on the wire. · N2
+  *Formerly* EN3 · *Verdict:* Doable now — Clean-up inside our own engine code
+- [ ] **J41** Real surfaces: textures that never visibly repeat, rounded edges, automatic wear, dirt and smudges. · N3
+  *Formerly* M1 · *Verdict:* Doable at a cost — Phone speed and memory: textures that never repeat, and wear, cost texture memory in a browser tab; built within the budget
+- [ ] **J42** Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade. · N3
+  *Formerly* L2 · *Verdict:* Doable at a cost — Phone speed: a shadow from every light costs a lot on a phone; done light by light against the frame budget (J37's report)
+- [ ] **J43** The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts. · N2 N3
+  *Formerly* T1 · *Verdict:* Doable now — Our own small language on top of the world model; J7.3 sets its realistic scope and first jobs
+- [ ] **J44** Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus. · N3
+  *Formerly* L3 · *Verdict:* Doable at a cost — Phone speed: smooth edges, glare and grain are extra full-screen passes; each gets an off switch
+- [ ] **J45** Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces. · N3
+  *Formerly* M2 · *Verdict:* Doable after J41 — Layers sit on top of the real surfaces
+- [ ] **J46** Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics. · N3
+  *Formerly* L4 · *Verdict:* Doable at a cost — Phone speed and memory: more reflection captures and screen reflections cost frame time
+- [ ] **J47** The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer. · N3
+  *Formerly* L5 · *Verdict:* Doable at a cost — Phone speed: haze and beams through the air are expensive; a cheap version first
+- [ ] **J48** Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio. · N2 N3
+  *Formerly* RC1 · *Verdict:* Doable now — Models grown from recipes by script is how Claude makes 3D (Charter: Claude); the Studio's dials show them
+- [ ] **J49** Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size. · N3
+  *Formerly* M3 · *Verdict:* Doable at a cost — Phone speed: light through wax and skin, and thick glass, are expensive; every model at real size costs nothing
+- [ ] **J50** Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb. · N3
+  *Formerly* L6 · *Verdict:* Doable after J43 — Cues and light that follows the music are written as scripts
+- [ ] **J51** Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow. · N3
+  *Formerly* L7 · *Verdict:* Doable at a cost — Your local time is free; real weather needs an outside weather service (Charter: ask first), and a sky through the windows costs phone speed
+- [ ] **J52** Scan it: bring real things in with the iPhone camera. · N3 N5
+  *Formerly* RC3 · *Verdict:* Needs an experiment — Safari gives the camera but not the depth sensor; a model from photos, from scratch, is research: a time-boxed try
+- [ ] **J53** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
+  *Formerly* L8 · *Verdict:* Needs an experiment — Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable
+- [ ] **J54** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
+  *Formerly* EN4 · *Verdict:* Doable now — Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing
 
 ### The tools
-- [ ] **P2** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
-- [ ] **TL1** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
-- [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
-- [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
-- [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
+- [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
+  *Formerly* P2 · *Verdict:* Doable now — Needs your phone: every "broke S…" you report, and a ?perf=1 report with the Monitor open
+- [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
+  *Formerly* TL1 · *Verdict:* Doable now — A list of switches in the Toolbelt; no engine change
+- [ ] **J57** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
+  *Formerly* T2 · *Verdict:* Doable after J43 — The timeline's events are the script language's events, on the shared clock that exists
+- [ ] **J58** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
+  *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
+- [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
+  *Formerly* RC2 · *Verdict:* Doable now — Claude already writes to the Studio's store with its key; the open Studio shows each edit as it lands
 - [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
+  *Verdict:* Doable now — The restructure's last job: drills with fresh AI sessions (approved 2026-10-24), the final audit, the unfreeze
+- [ ] **J66** Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
+  *Verdict:* Doable now — Our own workflows and tests (the freeze allows them)
+- [ ] **J67** The sign-up and profile browser test rewritten for the room server (tools/account_test.mjs, KI-27). · N4
+  *Verdict:* Doable now — Our own test; sign-up and profiles have no browser test on GitHub today
+- [ ] **J68** The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29). · N2
+  *Verdict:* Doable now — Nothing reads them since S4.2; the hub test covers what stays
+- [ ] **J69** The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28). · N5
+  *Verdict:* Doable at a cost — GitHub's machines with a graphics card are paid (Charter: money): your decision; today the shader check, the pictures here and your phone cover the new light
 
 ### The backbone
-- [ ] **B1** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
-- [ ] **B2** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
-- [ ] **B3** The room decides every shared thing (Phase 5). · N4
-- [ ] **B4** Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies. · N4
-- [ ] **B5** Payments (Stripe) for the VIP store. · N4
-- [ ] **B6** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
+- [ ] **J60** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
+  *Formerly* B1 · *Verdict:* Doable now — Touches accounts, so it starts only on your yes (Charter §5); the ledger's side on Cloudflare can hold the logins
+- [ ] **J61** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
+  *Formerly* B2 · *Verdict:* Doable now — Touches credits, so it starts only on your yes (Charter §5); the room already runs the games' shared state
+- [ ] **J62** The room decides every shared thing (Phase 5). · N4
+  *Formerly* B3 · *Verdict:* Doable now — The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits
+- [ ] **J63** Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies. · N4
+  *Formerly* B4 · *Verdict:* Doable at a cost — A relay for strict networks and a voice server cost money per use (Charter: money): your decision
+- [ ] **J64** Payments (Stripe) for the VIP store. · N4
+  *Formerly* B5 · *Verdict:* Doable at a cost — A payment provider, tax handling and terms (Charter: law and money): your decision
+- [ ] **J65** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
+  *Formerly* B6 · *Verdict:* Doable now — Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it
 
 ## 6. Parked
 *Not on the road yet, by chapter. The user promotes them.*
 
 ### The world
 - The street and the city outside; homes there as your "real home".
+  *Verdict:* Doable after J35 — The world remake first; a city is many places, a big time cost after that
 - A kids edition: a separate, simpler game in the same universe (under 13).
+  *Verdict:* Against a rule — The 13+ rule (2026-10-19): the platform is 13+ only, and an under-13 game brings children's privacy laws
 - A new name for the world and its currency (Bar3D is a working name).
+  *Verdict:* Doable now — Claude can propose names and check they're free to use; the choice is yours
 - Mini music studio (a DAW in the bar).
+  *Verdict:* Doable at a cost — A big time cost: a music studio in the browser, from scratch; the sound engine exists, and room 3 could hold it (J27)
 - Avatar from a face scan (the user's own character builder).
+  *Verdict:* Needs an experiment — The same research as J11 (a face from photos)
 - The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)
+  *Verdict:* Doable after J35 — A new place, after the world remake
 
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
+  *Verdict:* Doable at a cost — Phone speed and loading: the front page would load the whole engine before showing anything; the clip below is the light way
 - The front page's looping clip: the camera drifting to the bar's lit door, ~8 s, rendered from the engine, behind the intro (was R5.6)
+  *Verdict:* Needs an experiment — Drawing ~8 s of the bar here without a graphics card is very slow in the new light; a try shows whether a session can do it
 
 ### The engine
 - World-simulation engines: sound made from the physics, heat, smell as a field, day and night.
+  *Verdict:* Needs an experiment — Sound from the physics, heat, and day and night are within reach; smell can only show through what you see and hear (a phone makes no smells)
 - The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)
+  *Verdict:* Doable now — Checks on the world's data and in the engine (a thing out of place, a missing model, a broken loop); the Handbook's inventory already flags some
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.
+  *Verdict:* Doable at a cost — Talking to Claude from the site needs a paid API key kept on a server (Charter: money, secrets): your decision
 - AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once.
+  *Verdict:* Doable at a cost — The AI part needs a paid API (your decision); each imported model needs a licence; mesh editing and editing together are big time costs
 - A design for the Studio more like a 3D modelling room (the hub card "Design idea").
+  *Verdict:* Doable now — A new look for the Studio's frame in Ember; your phone judges it
 
 ### The backbone
 - The site on Cloudflare Pages (unlocks threads in the game).
+  *Verdict:* Doable at a cost — A hosting change is your decision (Charter §5: hosting); Cloudflare Pages is free and can send the headers threads need, IONOS can't
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*

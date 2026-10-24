@@ -51,19 +51,23 @@
    recommendation; "never" → don't, and say which rule; not listed → ask.
 
 4. **Make it a job.** A wish becomes a job (or joins the open job it belongs
-   to, if it's the same work): the next free number `J<n>`, a spec from
-   `docs/plan/jobs/TEMPLATE.md` saved as `docs/plan/jobs/J<n>.md`, linking the
-   request id. Put it on the road with `node tools/plan.mjs add <chapter> J<n>
-   "<what>" --serves N…`. While the freeze holds (until J8), a new wish is
-   parked unless it's an urgent fix ([ways.md](ways.md)).
+   to, if it's the same work): the next free number (`node tools/plan.mjs
+   nextid`), a spec from `docs/plan/jobs/TEMPLATE.md` saved as
+   `docs/plan/jobs/J<n>.md`, linking the request id. Put it on the road with
+   its verdict: `node tools/plan.mjs add <chapter> J<n> "<what>" --serves N…
+   --verdict <now|after|cost|experiment|impossible|rule> --why "<one line>"
+   [--after "J<x>"]` (the plan check refuses a road item without one; `node
+   tools/plan.mjs verdict <J<n>> …` changes it). While the freeze holds (until
+   J8), a new wish is parked unless it's an urgent fix ([ways.md](ways.md)).
 5. **Reply** ([reply.md](reply.md) → Understood): what you understood, the
    verdict, what happens next. Then do it ([job.md](job.md)), or wait for the
    answer if a question was asked.
 
 ## Park
 
-`node tools/plan.mjs park <chapter> "<the idea in one line> (request <id>)"`.
-No work, no debate. Chapters: world, site, engine, tools, backbone.
+`node tools/plan.mjs park <chapter> "<the idea in one line> (request <id>)"
+--verdict <kind> --why "<one line>"`. No work, no debate: the verdict is the
+same quick check as step 3, in one line. Chapters: world, site, engine, tools, backbone.
 
 ## A new rule
 

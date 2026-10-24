@@ -33,6 +33,14 @@ check(push(`refs/heads/x ${head} refs/heads/main ${parent}`) === 1, 'pre-push re
 check(push(`refs/heads/x ${head} refs/heads/main ${parent}`, true) === 0, 'pre-push lets the ship move main forward');
 check(push(`refs/heads/x ${parent} refs/heads/main ${head}`, true) === 1, 'pre-push refuses rewriting main, even from the ship');
 check(push(`(delete) ${z} refs/heads/main ${head}`, true) === 1, 'pre-push refuses deleting main');
+// The freeze's lock (J7.1): only the files restructure §7 allows, while the rule stands.
+const { outside, frozenOn } = await import('./lib/freeze.mjs');
+check(outside(['docs/plan/plan.json', 'tools/plan.mjs', 'dev/plan.js', 'PLAN.md', 'bar/test_hooks.cpp', '.github/workflows/deploy.yml'], 'J7.1 x').length === 0, 'the freeze lets docs, tools, Dev, the plan, test switches and workflows through');
+check(JSON.stringify(outside(['docs/plan/plan.json', 'looped/drive/tire.h', 'bar/projects/racing/cars.h', 'assets/world/x.json'], 'J7.1 x')) === JSON.stringify(['looped/drive/tire.h', 'bar/projects/racing/cars.h', 'assets/world/x.json']), 'the freeze refuses the engine, the bar and the world');
+check(outside(['assets/world/x.json'], 'World: from the studio v4').length === 0 && outside(['ui/system/x.json'], 'UI: from the editor v1').length === 0, 'the user\'s own store changes (World:, UI:) pass');
+const rulesNow = JSON.parse(readFileSync('docs/charter/rules.json', 'utf8'));
+check(frozenOn(rulesNow) === rulesNow.rules.some((r) => r.text.startsWith('**Freeze:')) && !frozenOn({ rules: [{ text: '**Other:** x' }] }), 'the lock is on exactly while the Freeze rule stands');
+check(/freeze\.mjs/.test(readFileSync('tools/githooks/commit-msg', 'utf8')), 'the commit-msg hook runs the freeze\'s lock');
 const hook = readFileSync('tools/githooks/pre-commit', 'utf8');
 check(/plan\.mjs check/.test(hook) && /PRIVATE KEY/.test(hook) && /HUB_KEY/.test(hook), 'pre-commit checks the plan, secret patterns and the HUB_KEY value');
 console.log(failed ? `LOCKS TEST: ${failed} FAILED` : 'LOCKS TEST PASSED');

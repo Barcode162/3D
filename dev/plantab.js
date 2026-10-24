@@ -1,5 +1,5 @@
-// Dev → Plan (PLAN.md R4.4, J5.6): the plan on the phone (Now with its ticks,
-// the road by chapter, Parked, Done, the North star and your rules; tap a job
+// Dev → Plan (PLAN.md R4.4, J5.6, J7.1): the plan on the phone (Now with its ticks,
+// the road by chapter with each item's verdict, Parked, Done, the North star and your rules; tap a job
 // that has a spec, in Now or on the road, to read it) and the box
 // to tell Claude something: a note, or an idea to park. Claude reads them at
 // the start of every go (node tools/dev.mjs notes).
@@ -10,6 +10,15 @@
   function itemRow(tag, text, extra) {
     var s = short(text);
     return D.part(Object.assign({ type: 'listrow', text: (tag ? tag + ' · ' : '') + s[0], detail: s[1] }, extra || {}));
+  }
+  // A road or parked row with its verdict: the short word as its value, the
+  // reason under the words (J7.1).
+  function verdictRow(tag, text, verdict, note, extra) {
+    var s = short(text), v = verdict;
+    var row = D.part(Object.assign({ type: 'listrow', text: (tag ? tag + ' · ' : '') + s[0], detail: [s[1], v ? v.line : '', note].filter(Boolean).join(' · '),
+      value: v ? v.word : '', tone: v ? v.tone : 'normal' }, extra || {}));
+    if (v) row.dataset.verdict = v.kind;
+    return row;
   }
   function wrapRows(rows) { var p = D.part({ type: 'panel', pad: 0, gap: 0 }); rows.forEach(function (r) { p.appendChild(r); }); return p; }
   // A long list folds: the first few, then "Show all".
@@ -88,9 +97,14 @@
           { type: 'text', text: c.now || c.what, tone: 'dim' },
         ] });
         card.dataset.chapter = c.name;
-        if (items.length) card.appendChild(folded(items.map(function (it) { var s = (plan.specs || {})[it.tag]; return withSpec(itemRow(it.tag, it.text, s ? { chevron: true } : null), s); }), 4));
+        if (items.length) card.appendChild(folded(items.map(function (it) {
+          var s = (plan.specs || {})[it.tag], row = verdictRow(it.tag, it.text, it.verdict, it.formerly ? 'Formerly ' + it.formerly : '', s ? { chevron: true } : null);
+          row.dataset.tag = it.tag;
+          if (it.formerly) row.dataset.formerly = it.formerly;
+          return withSpec(row, s);
+        }), 4));
         var parked = plan.parked[c.name] || [];
-        if (parked.length) card.appendChild(folded(parked.map(function (t) { return itemRow('', t, { icon: 'place', detail: 'Parked' }); }), 2));
+        if (parked.length) card.appendChild(folded(parked.map(function (t) { var row = verdictRow('', t.text, t.verdict, 'Parked', { icon: 'place' }); row.dataset.parked = '1'; return row; }), 2));
         ch.appendChild(card);
       });
       ch.appendChild(D.part({ type: 'title', text: 'Done', size: 's' }));

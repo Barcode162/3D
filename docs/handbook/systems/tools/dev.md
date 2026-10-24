@@ -44,4 +44,4 @@ Pictures in its test go through a helper that notes a slow one (J5.8).
 
 ## History
 
-The hub became Dev (R4, 2026-10-23); the plan as data (J4.1), the plan's own workflow and the truth on Overview (J5, 2026-10-24).
+The hub became Dev (R4, 2026-10-23); the plan as data (J4.1), the plan's own workflow and the truth on Overview (J5, 2026-10-24); each road item's verdict and job number on Plan (J7.1).

@@ -49,7 +49,7 @@
     "id": "J7.1",
     "text": "Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits",
     "check": "Dev → Plan: each road item shows its verdict",
-    "done": false
+    "done": true
    },
    {
     "id": "J7.2",
@@ -71,426 +71,698 @@
    }
   ]
  },
- "roadIntro": "*Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*",
+ "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
  "upNext": "J8 (the restructure; then the road as J7 orders it)",
  "road": {
   "world": [
    {
-    "id": "A1",
+    "id": "J9",
+    "formerly": "A1",
     "text": "Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Procedural motion on the skeleton the engine already has; Claude writes it, your phone judges how alive it feels"
+    }
    },
    {
-    "id": "A2",
+    "id": "J10",
+    "formerly": "A2",
     "text": "Real people: skin light passes into, hair strands, wet see-through eyes, clothes that swing, lips that follow voice.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: skin light, hair strands and swinging cloth are among the most expensive things to draw on a phone; each ships only if the frame budget allows (J37's report)"
+    }
    },
    {
-    "id": "A3",
+    "id": "J11",
+    "formerly": "A3",
     "text": "Your face: an avatar face from a few selfies.",
     "serves": [
      "N3",
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Building a face from photos with no outside libraries (rule: from scratch) is research; a time-boxed try shows whether it looks like you"
+    }
    },
    {
-    "id": "W1",
+    "id": "J12",
+    "formerly": "W1",
     "text": "Memory: the floor wears where people walk, the dartboard gets holes, your usual stool gets your nameplate.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J62",
+     "why": "Wear and holes that everyone sees and that last need the room to decide and keep shared things"
+    }
    },
    {
-    "id": "W2",
+    "id": "J13",
+    "formerly": "W2",
     "text": "Mood and chance: one cozy↔wild dial for the whole bar; \"maybe\" events (30% rain, a surprise band).",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The world model's states, rules and loops already cover moods and chance; a dial and events are data plus a little engine"
+    }
    },
    {
-    "id": "W3",
+    "id": "J14",
+    "formerly": "W3",
     "text": "Time and era: scrub time back and see ghosts replay the night; a \"what if\" copy; the era dial (1920s ↔ neon future).",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J62",
+     "why": "Replaying the night needs the room to record every shared move; the room's storage is limited, so a replay keeps one night"
+    }
    },
    {
-    "id": "W4",
+    "id": "J15",
+    "formerly": "W4",
     "text": "Scale and layers: shrink to mouse size; blend two places.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Mouse size strains the engine's precision, light and physics; a try shows whether it holds on the phone"
+    }
    },
    {
-    "id": "W5",
+    "id": "J16",
+    "formerly": "W5",
     "text": "Home screen with \"Happening now\": start at your home, one tap to a busy hub, a live event or a friend.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J18, J19",
+     "why": "It shows homes and events, so those come first"
+    }
    },
    {
-    "id": "W6",
+    "id": "J17",
+    "formerly": "W6",
     "text": "Lobbies and matchmaking: a few main hubs (the bar first), instances, matching by age band, preferences and skill; the no-friends lobby.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J65",
+     "why": "Matching by age band needs ages enforced on the server (Charter: teens and adults apart)"
+    }
    },
    {
-    "id": "W7",
+    "id": "J18",
+    "formerly": "W7",
     "text": "Your home: invite-only, placing things on a smooth grid, expand up to 3x, levels 1-3.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J62",
+     "why": "Homes others visit need the room to keep their state; invite-only rooms already exist (the room \"looped\")"
+    }
    },
    {
-    "id": "W8",
+    "id": "J19",
+    "formerly": "W8",
     "text": "Events and the memory book: date, time, RSVP, a clean invite card; the in-game camera, a photo book with likes, no comments, per-photo privacy.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J20, J65",
+     "why": "Shared photos of teens need the safety tools and server-side age bands first (Charter: law and safety)"
+    }
    },
    {
-    "id": "W9",
+    "id": "J20",
+    "formerly": "W9",
     "text": "Safety in the world: teens and adults kept apart (lobbies, voice, messages); block, mute, report (keeps the last seconds of voice); the teen phrase builder, filtered text for adults.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J65",
+     "why": "Age bands and reports enforced on the server first; keeping seconds of voice for reports needs a privacy notice: your call"
+    }
    },
    {
-    "id": "W10",
+    "id": "J21",
+    "formerly": "W10",
     "text": "The mall, IKEA-style: walk in, pick things up, cart, checkout, delivery and install at home.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J18",
+     "why": "Delivery and install go to your home; buying uses earned credits through the ledger, which exists"
+    }
    },
    {
-    "id": "W11",
+    "id": "J22",
+    "formerly": "W11",
     "text": "The casino: 18+, earned credits only, never bought or cashed out.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J20, J65",
+     "why": "18+ enforced on the server and the safety tools in place first (Charter: the 18+ casino, earned credits only)"
+    }
    },
    {
-    "id": "W12",
+    "id": "J23",
+    "formerly": "W12",
     "text": "VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown).",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Real money needs a payment provider, tax handling and terms (Charter: law and money): your decision, with J64 first"
+    }
    },
    {
-    "id": "W13",
+    "id": "J24",
+    "formerly": "W13",
     "text": "Small interactions done properly: bell, guitar, books, TV, door, taps.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J35",
+     "why": "Books, the TV and the taps are baked into room-sized models today; each needs its own model first (the world remake)"
+    }
    },
    {
-    "id": "W14",
+    "id": "J25",
+    "formerly": "W14",
     "text": "Physics props: knock bottles off, glasses break and stack, pour drinks.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J35",
+     "why": "Bottles and glasses on the walls are baked into the room models; they need their own models first (the world remake); the physics exists"
+    }
    },
    {
-    "id": "W15",
+    "id": "J26",
+    "formerly": "W15",
     "text": "The pool table.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "A new thing with physics (balls, a cue) the engine already has; its model grown by script"
+    }
    },
    {
-    "id": "W16",
+    "id": "J27",
+    "formerly": "W16",
     "text": "Room 3, taped off today (its question is still open).",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Waits only on your answer to its open question: what room 3 becomes (a music studio, a quiet library lounge, or something else)"
+    }
    },
    {
-    "id": "W17",
+    "id": "J28",
+    "formerly": "W17",
     "text": "Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "A chess engine with a chosen strength, from scratch in C++, is well within reach; finding a 1v1 uses the room"
+    }
    },
    {
-    "id": "W18",
+    "id": "J29",
+    "formerly": "W18",
     "text": "Live low-res machine screens and a fair queue (20 s to claim your turn).",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: every live screen draws a second picture each frame; the fair queue itself is room logic and cheap"
+    }
    },
    {
-    "id": "W19",
+    "id": "J30",
+    "formerly": "W19",
     "text": "More arcade games; bots in two-player races.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own game code, like the arcade today; race bots reuse the race's AI"
+    }
    },
    {
-    "id": "W20",
+    "id": "J31",
+    "formerly": "W20",
     "text": "Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md).",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "The physics stages are doable; the four real cars need their makers' permission or made-up cars in their spirit (Charter: licences, never pretend to be a real company), and the rigs' look waits on your answer"
+    }
    },
    {
-    "id": "W21",
+    "id": "J32",
+    "formerly": "W21",
     "text": "Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J9",
+     "why": "Builds on the alive avatars' motion"
+    }
    },
    {
-    "id": "W22",
+    "id": "J33",
+    "formerly": "W22",
     "text": "Your own character builder (face, details); outfits and gadgets to show off (shop items).",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J9",
+     "why": "The body with sliders first; outfits are sold for earned credits through the ledger"
+    }
    },
    {
-    "id": "W23",
+    "id": "J34",
+    "formerly": "W23",
     "text": "The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen.",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
+    }
    },
    {
-    "id": "W24",
+    "id": "J35",
+    "formerly": "W24",
     "text": "Remaster the crude first versions of props and rooms.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Models are grown by Blender scripts (tools/assets/), the way Claude makes 3D; J7.2 breaks it into the world remake's jobs"
+    }
    }
   ],
   "site": [],
   "engine": [
    {
-    "id": "L1.8",
+    "id": "J36",
+    "formerly": "L1.8",
     "text": "Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7).",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Small additions to the light that's live"
+    }
    },
    {
-    "id": "P1",
+    "id": "J37",
+    "formerly": "P1",
     "text": "The engine phone check: fix every \"broke\" from the E1-E9 list; a ?perf=1 report by the fire with the mirror in view (against 63H3FJ, 16.7 ms); if reflections or shadows cost over 1 ms, make them cheaper.",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Needs your phone: a ?perf=1 report by the fire; Claude can't measure the phone (Charter: Claude)"
+    }
    },
    {
-    "id": "EN1",
+    "id": "J38",
+    "formerly": "EN1",
     "text": "Bug: the menu stops answering after some games.",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "GitHub's \"the menu still answers after every game\" passed in run 214; a try on your phone shows whether it still happens"
+    }
    },
    {
-    "id": "EN2",
+    "id": "J39",
+    "formerly": "EN2",
     "text": "Speed: three phone reports (after entering, at the mirror, after 2 min walking); faster drawing part 2 (render core, layout from Blender, quality settings).",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Three ?perf=1 reports from your phone, then the drawing work they point to"
+    }
    },
    {
-    "id": "EN3",
+    "id": "J40",
+    "formerly": "EN3",
     "text": "Clean core leftovers: 4.1c, 4.3b, the darts / bartending / race adapters, entity ids on the wire.",
     "serves": [
      "N2"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Clean-up inside our own engine code"
+    }
    },
    {
-    "id": "M1",
+    "id": "J41",
+    "formerly": "M1",
     "text": "Real surfaces: textures that never visibly repeat, rounded edges, automatic wear, dirt and smudges.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed and memory: textures that never repeat, and wear, cost texture memory in a browser tab; built within the budget"
+    }
    },
    {
-    "id": "L2",
+    "id": "J42",
+    "formerly": "L2",
     "text": "Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: a shadow from every light costs a lot on a phone; done light by light against the frame budget (J37's report)"
+    }
    },
    {
-    "id": "T1",
+    "id": "J43",
+    "formerly": "T1",
     "text": "The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts.",
     "serves": [
      "N2",
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own small language on top of the world model; J7.3 sets its realistic scope and first jobs"
+    }
    },
    {
-    "id": "L3",
+    "id": "J44",
+    "formerly": "L3",
     "text": "Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: smooth edges, glare and grain are extra full-screen passes; each gets an off switch"
+    }
    },
    {
-    "id": "M2",
+    "id": "J45",
+    "formerly": "M2",
     "text": "Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J41",
+     "why": "Layers sit on top of the real surfaces"
+    }
    },
    {
-    "id": "L4",
+    "id": "J46",
+    "formerly": "L4",
     "text": "Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed and memory: more reflection captures and screen reflections cost frame time"
+    }
    },
    {
-    "id": "L5",
+    "id": "J47",
+    "formerly": "L5",
     "text": "The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: haze and beams through the air are expensive; a cheap version first"
+    }
    },
    {
-    "id": "RC1",
+    "id": "J48",
+    "formerly": "RC1",
     "text": "Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio.",
     "serves": [
      "N2",
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Models grown from recipes by script is how Claude makes 3D (Charter: Claude); the Studio's dials show them"
+    }
    },
    {
-    "id": "M3",
+    "id": "J49",
+    "formerly": "M3",
     "text": "Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: light through wax and skin, and thick glass, are expensive; every model at real size costs nothing"
+    }
    },
    {
-    "id": "L6",
+    "id": "J50",
+    "formerly": "L6",
     "text": "Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J43",
+     "why": "Cues and light that follows the music are written as scripts"
+    }
    },
    {
-    "id": "L7",
+    "id": "J51",
+    "formerly": "L7",
     "text": "Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Your local time is free; real weather needs an outside weather service (Charter: ask first), and a sky through the windows costs phone speed"
+    }
    },
    {
-    "id": "RC3",
+    "id": "J52",
+    "formerly": "RC3",
     "text": "Scan it: bring real things in with the iPhone camera.",
     "serves": [
      "N3",
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Safari gives the camera but not the depth sensor; a model from photos, from scratch, is research: a time-boxed try"
+    }
    },
    {
-    "id": "L8",
+    "id": "J53",
+    "formerly": "L8",
     "text": "Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable"
+    }
    },
    {
-    "id": "EN4",
+    "id": "J54",
+    "formerly": "EN4",
     "text": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing"
+    }
    }
   ],
   "tools": [
    {
-    "id": "P2",
+    "id": "J55",
+    "formerly": "P2",
     "text": "The Studio phone check: fix every \"broke S…\"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too.",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Needs your phone: every \"broke S…\" you report, and a ?perf=1 report with the Monitor open"
+    }
    },
    {
-    "id": "TL1",
+    "id": "J56",
+    "formerly": "TL1",
     "text": "Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses.",
     "serves": [
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "A list of switches in the Toolbelt; no engine change"
+    }
    },
    {
-    "id": "T2",
+    "id": "J57",
+    "formerly": "T2",
     "text": "The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J43",
+     "why": "The timeline's events are the script language's events, on the shared clock that exists"
+    }
    },
    {
-    "id": "T3",
+    "id": "J58",
+    "formerly": "T3",
     "text": "Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo.",
     "serves": [
      "N3"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J57",
+     "why": "Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)"
+    }
    },
    {
-    "id": "RC2",
+    "id": "J59",
+    "formerly": "RC2",
     "text": "Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch.",
     "serves": [
      "N2"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Claude already writes to the Studio's store with its key; the open Studio shows each edit as it lands"
+    }
    },
    {
     "id": "J8",
@@ -499,85 +771,253 @@
      "N2",
      "N5"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The restructure's last job: drills with fresh AI sessions (approved 2026-10-24), the final audit, the unfreeze"
+    }
+   },
+   {
+    "id": "J66",
+    "text": "Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33).",
+    "serves": [
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own workflows and tests (the freeze allows them)"
+    }
+   },
+   {
+    "id": "J67",
+    "text": "The sign-up and profile browser test rewritten for the room server (tools/account_test.mjs, KI-27).",
+    "serves": [
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own test; sign-up and profiles have no browser test on GitHub today"
+    }
+   },
+   {
+    "id": "J68",
+    "text": "The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29).",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Nothing reads them since S4.2; the hub test covers what stays"
+    }
+   },
+   {
+    "id": "J69",
+    "text": "The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28).",
+    "serves": [
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "GitHub's machines with a graphics card are paid (Charter: money): your decision; today the shader check, the pictures here and your phone cover the new light"
+    }
    }
   ],
   "backbone": [
    {
-    "id": "B1",
+    "id": "J60",
+    "formerly": "B1",
     "text": "Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Touches accounts, so it starts only on your yes (Charter §5); the ledger's side on Cloudflare can hold the logins"
+    }
    },
    {
-    "id": "B2",
+    "id": "J61",
+    "formerly": "B2",
     "text": "The room checks chess moves and 4K Mania scores; then more games pay credits.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Touches credits, so it starts only on your yes (Charter §5); the room already runs the games' shared state"
+    }
    },
    {
-    "id": "B3",
+    "id": "J62",
+    "formerly": "B3",
     "text": "The room decides every shared thing (Phase 5).",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits"
+    }
    },
    {
-    "id": "B4",
+    "id": "J63",
+    "formerly": "B4",
     "text": "Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "A relay for strict networks and a voice server cost money per use (Charter: money): your decision"
+    }
    },
    {
-    "id": "B5",
+    "id": "J64",
+    "formerly": "B5",
     "text": "Payments (Stripe) for the VIP store.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "A payment provider, tax handling and terms (Charter: law and money): your decision"
+    }
    },
    {
-    "id": "B6",
+    "id": "J65",
+    "formerly": "B6",
     "text": "Safety on the server: age bands enforced, reports kept, blocks remembered.",
     "serves": [
      "N4"
     ],
-    "done": false
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it"
+    }
    }
   ]
  },
  "parkedIntro": "*Not on the road yet, by chapter. The user promotes them.*",
  "parked": {
   "world": [
-   "The street and the city outside; homes there as your \"real home\".",
-   "A kids edition: a separate, simpler game in the same universe (under 13).",
-   "A new name for the world and its currency (Bar3D is a working name).",
-   "Mini music studio (a DAW in the bar).",
-   "Avatar from a face scan (the user's own character builder).",
-   "The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)"
+   {
+    "text": "The street and the city outside; homes there as your \"real home\".",
+    "verdict": {
+     "kind": "after",
+     "after": "J35",
+     "why": "The world remake first; a city is many places, a big time cost after that"
+    }
+   },
+   {
+    "text": "A kids edition: a separate, simpler game in the same universe (under 13).",
+    "verdict": {
+     "kind": "rule",
+     "why": "The 13+ rule (2026-10-19): the platform is 13+ only, and an under-13 game brings children's privacy laws"
+    }
+   },
+   {
+    "text": "A new name for the world and its currency (Bar3D is a working name).",
+    "verdict": {
+     "kind": "now",
+     "why": "Claude can propose names and check they're free to use; the choice is yours"
+    }
+   },
+   {
+    "text": "Mini music studio (a DAW in the bar).",
+    "verdict": {
+     "kind": "cost",
+     "why": "A big time cost: a music studio in the browser, from scratch; the sound engine exists, and room 3 could hold it (J27)"
+    }
+   },
+   {
+    "text": "Avatar from a face scan (the user's own character builder).",
+    "verdict": {
+     "kind": "experiment",
+     "why": "The same research as J11 (a face from photos)"
+    }
+   },
+   {
+    "text": "The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)",
+    "verdict": {
+     "kind": "after",
+     "after": "J35",
+     "why": "A new place, after the world remake"
+    }
+   }
   ],
   "site": [
-   "The front door scene running live in Looped instead of a clip (after R6, same places).",
-   "The front page's looping clip: the camera drifting to the bar's lit door, ~8 s, rendered from the engine, behind the intro (was R5.6)"
+   {
+    "text": "The front door scene running live in Looped instead of a clip (after R6, same places).",
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed and loading: the front page would load the whole engine before showing anything; the clip below is the light way"
+    }
+   },
+   {
+    "text": "The front page's looping clip: the camera drifting to the bar's lit door, ~8 s, rendered from the engine, behind the intro (was R5.6)",
+    "verdict": {
+     "kind": "experiment",
+     "why": "Drawing ~8 s of the bar here without a graphics card is very slow in the new light; a try shows whether a session can do it"
+    }
+   }
   ],
   "engine": [
-   "World-simulation engines: sound made from the physics, heat, smell as a field, day and night.",
-   "The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)"
+   {
+    "text": "World-simulation engines: sound made from the physics, heat, smell as a field, day and night.",
+    "verdict": {
+     "kind": "experiment",
+     "why": "Sound from the physics, heat, and day and night are within reach; smell can only show through what you see and hear (a phone makes no smells)"
+    }
+   },
+   {
+    "text": "The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)",
+    "verdict": {
+     "kind": "now",
+     "why": "Checks on the world's data and in the engine (a thing out of place, a missing model, a broken loop); the Handbook's inventory already flags some"
+    }
+   }
   ],
   "tools": [
-   "AI dock: a workspace on the site where you talk to Claude and it works on the project there.",
-   "AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once.",
-   "A design for the Studio more like a 3D modelling room (the hub card \"Design idea\")."
+   {
+    "text": "AI dock: a workspace on the site where you talk to Claude and it works on the project there.",
+    "verdict": {
+     "kind": "cost",
+     "why": "Talking to Claude from the site needs a paid API key kept on a server (Charter: money, secrets): your decision"
+    }
+   },
+   {
+    "text": "AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once.",
+    "verdict": {
+     "kind": "cost",
+     "why": "The AI part needs a paid API (your decision); each imported model needs a licence; mesh editing and editing together are big time costs"
+    }
+   },
+   {
+    "text": "A design for the Studio more like a 3D modelling room (the hub card \"Design idea\").",
+    "verdict": {
+     "kind": "now",
+     "why": "A new look for the Studio's frame in Ember; your phone judges it"
+    }
+   }
   ],
   "backbone": [
-   "The site on Cloudflare Pages (unlocks threads in the game)."
+   {
+    "text": "The site on Cloudflare Pages (unlocks threads in the game).",
+    "verdict": {
+     "kind": "cost",
+     "why": "A hosting change is your decision (Charter §5: hosting); Cloudflare Pages is free and can send the headers threads need, IONOS can't"
+    }
+   }
   ]
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",

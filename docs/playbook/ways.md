@@ -13,6 +13,9 @@ during the freeze).
 - The smallest change that fixes it, or a revert ([revert.md](revert.md)).
 - Its own job number, one piece, shipped at once (it may push `main` outside
   the one-push-per-job rhythm).
+- During the freeze, a fix outside its allowed files is refused by the lock
+  (`tools/lib/freeze.mjs`) unless the piece runs with `FREEZE_OK="urgent fix:
+  <what broke>"`.
 - Always an incident ([incident.md](incident.md)).
 
 ## Experiment (a try-out)

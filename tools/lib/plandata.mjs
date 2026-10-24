@@ -14,6 +14,23 @@ export const CHAPTERS = { world: 'The world', site: 'The site', engine: 'The eng
 const IDS = Object.keys(CHAPTERS), NAMES = Object.values(CHAPTERS);
 const idOf = (name) => IDS[NAMES.indexOf(name)];
 
+// Every road and parked item's verdict (J7.1; the Playbook's six, intake.md
+// step 3): what it is, and why, in one line tied to the Charter's limits.
+// "after" names the jobs that must come first.
+export const VERDICTS = { now: 'Doable now', after: 'Doable after', cost: 'Doable at a cost', experiment: 'Needs an experiment', impossible: 'Not possible', rule: 'Against a rule' };
+const KIND_OF = Object.fromEntries(Object.entries(VERDICTS).map(([k, v]) => [v, k]));
+export const verdictText = (v) => `${VERDICTS[v.kind]}${v.kind === 'after' ? ' ' + v.after : ''} — ${v.why}`;
+// The line under an item in PLAN.md: "  *Formerly* A1 · *Verdict:* Doable after J20 — why".
+const verdictLine = (v, formerly) => `  ${formerly ? `*Formerly* ${formerly} · ` : ''}*Verdict:* ${verdictText(v)}`;
+const VERDICT_RE = new RegExp(`^  (?:\\*Formerly\\* (\\S+) · )?\\*Verdict:\\* (${Object.values(VERDICTS).join('|')})(?: (.+?))? — (.*)$`);
+export function parseVerdict(line) {
+  const m = VERDICT_RE.exec(line);
+  if (!m) return null;
+  const kind = KIND_OF[m[2]];
+  if ((kind === 'after') !== Boolean(m[3])) return null;
+  return { formerly: m[1] ?? null, verdict: { kind, ...(kind === 'after' ? { after: m[3] } : {}), why: m[4] } };
+}
+
 function split(md) {
   const heads = [...md.matchAll(/^## (.*)$/gm)];
   const head = md.slice(0, heads[0].index);
@@ -30,14 +47,19 @@ function items(body) {
   return out;
 }
 const introOf = (body) => body.split('\n').filter((l) => /^\*[^*]/.test(l)).join('\n');
+// fn(the item's line, its verdict line parsed or null).
 function byChapter(body, fn) {
   const out = Object.fromEntries(IDS.map((c) => [c, []]));
-  let cur = null;
+  let cur = null, last = null;
+  const flush = () => { if (last) out[cur].push(fn(last.line, last.v)); last = null; };
   for (const l of body.split('\n')) {
     const h = /^### (.*)$/.exec(l);
-    if (h) { cur = idOf(h[1]); continue; }
-    if (cur && l.startsWith('- ')) out[cur].push(fn(l.slice(2)));
+    if (h) { if (cur) flush(); cur = idOf(h[1]); continue; }
+    if (!cur) continue;
+    if (l.startsWith('- ')) { flush(); last = { line: l.slice(2), v: null }; }
+    else if (last && l.startsWith('  ')) last.v = parseVerdict(l);
   }
+  if (cur) flush();
   return out;
 }
 
@@ -66,9 +88,12 @@ export function parse(md) {
         pieces: now.split('\n').filter((l) => l.startsWith('- ')).map((l) => piece(l.slice(2))) } : null,
       roadIntro: introOf(road),
       upNext: (/^\*\*Up next, in order:\*\* (.*)$/m.exec(road) || [])[1] ?? '',
-      road: byChapter(road, (l) => { const m = /^\[( |x)\] \*\*([^*]+)\*\* ([\s\S]*) · (N\d+(?: N\d+)*)$/.exec(l); return { id: m[2], text: m[3], serves: m[4].split(' '), done: m[1] === 'x' }; }),
+      road: byChapter(road, (l, v) => {
+        const m = /^\[( |x)\] \*\*([^*]+)\*\* ([\s\S]*) · (N\d+(?: N\d+)*)$/.exec(l);
+        return { id: m[2], ...(v?.formerly ? { formerly: v.formerly } : {}), text: m[3], serves: m[4].split(' '), done: m[1] === 'x', ...(v ? { verdict: v.verdict } : {}) };
+      }),
       parkedIntro: introOf(parked),
-      parked: byChapter(parked, (l) => l),
+      parked: byChapter(parked, (l, v) => (v ? { text: l, verdict: v.verdict } : l)),
       doneIntro: introOf(done),
       done: items(done).map((t) => { const m = /^(?:`([0-9a-f]{7})`|\(this push\)) ([\s\S]*)$/.exec(t); return { build: m[1] ?? null, text: m[2] }; }),
       where: where.replace(/^\n+|\n+$/g, ''),
@@ -87,8 +112,8 @@ export function render({ plan, rules }) {
     ...n.pieces.map((p) => `- [${p.done ? 'x' : ' '}] **${p.id}** ${p.text}${p.check ? ` *Check:* ${p.check}` : ''}`)] : []));
   const chapters = (map, line) => IDS.flatMap((c) => [`### ${CHAPTERS[c]}`, ...map[c].map(line), '']);
   out.push(`## ${PARTS[4]}`, plan.roadIntro, `**Up next, in order:** ${plan.upNext}`, '',
-    ...chapters(plan.road, (r) => `- [${r.done ? 'x' : ' '}] **${r.id}** ${r.text} · ${r.serves.join(' ')}`));
-  out.push(`## ${PARTS[5]}`, plan.parkedIntro, '', ...chapters(plan.parked, (t) => `- ${t}`));
+    ...chapters(plan.road, (r) => `- [${r.done ? 'x' : ' '}] **${r.id}** ${r.text} · ${r.serves.join(' ')}${r.verdict ? '\n' + verdictLine(r.verdict, r.formerly) : ''}`));
+  out.push(`## ${PARTS[5]}`, plan.parkedIntro, '', ...chapters(plan.parked, (t) => (typeof t === 'string' ? `- ${t}` : `- ${t.text}\n${verdictLine(t.verdict)}`)));
   part(6, plan.doneIntro, ...plan.done.map((d) => `- ${d.build ? '`' + d.build + '`' : '(this push)'} ${d.text}`));
   out.push(`## ${PARTS[7]}`, plan.where, '');
   return out.join('\n');

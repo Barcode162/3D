@@ -95,6 +95,10 @@ await page.click('#tabs [data-tab="plan"]');
 await page.waitForSelector('#view [data-chapter="The engine"]');
 check(await ed(() => ['The world', 'The site', 'The engine', 'The tools', 'The backbone'].every((c) => document.querySelector(`#view [data-chapter="${c}"]`))), 'Plan shows the five chapters');
 check(await ed((t) => document.querySelector('#view [data-id="plan-now"]').textContent.includes(t + '.1'), NOW[1]), `Now lists ${NOW[1]}'s pieces`);
+// J7.1: every road item on screen shows its verdict (the short word, the reason), and its old tag.
+check(await ed(() => { const rows = [...document.querySelectorAll('#view [data-chapter] [data-tag]')]; return rows.length > 0 && rows.every((r) => r.dataset.verdict && r.querySelector('.ls-lr-value')?.textContent && / — |: /.test(r.querySelector('.ls-lr-detail')?.textContent || '')); }), 'each road item shows its verdict and why (J7.1)');
+check(await ed(() => [...document.querySelectorAll('#view [data-chapter] [data-formerly]')].some((r) => /Formerly /.test(r.textContent))), 'a road item shows its old tag (Formerly …)');
+check(await ed(() => [...document.querySelectorAll('#view [data-chapter] [data-parked]')].every((r) => r.dataset.verdict)), 'each parked idea on screen shows its verdict');
 check(await ed(() => /As of build fed4321, 2 min ago/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Plan says which build it came from and how long ago (J5.2)');
 await page.click('#view [data-id="plan-now"] .dev-row-btn');
 await page.waitForSelector('#view [data-id="plan-now"] [data-spec]');

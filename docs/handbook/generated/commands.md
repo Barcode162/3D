@@ -7,7 +7,7 @@ Every tool runs through one front door: `node tools/project.mjs <command>` (Clau
 |---|---|---|---|
 | `help` | this list | `node tools/project.mjs help` | project.mjs itself |
 | `status` | the whole truth on one screen, each part with its age (--brief: a few lines) | `node tools/project.mjs status [--brief]` | project.mjs itself |
-| `plan` | the plan: now, check, tick, add, park, rule, start, next, chapter, seal, render | `node tools/project.mjs plan <command> …` | `tools/plan.mjs` |
+| `plan` | the plan: now, check, tick, add, park, verdict, nextid, rule, start, next, chapter, seal, render | `node tools/project.mjs plan <command> …` | `tools/plan.mjs` |
 | `piece` | one piece: its checks, pictures, commit, push (docs/playbook/job.md) | `node tools/project.mjs piece <ID> "<title>" --check "<phone check>" [--no-shots \| --pages <page>]` | `tools/piece.mjs` |
 | `check` | the checks for what changed (or named systems, or all) | `node tools/project.mjs check [changed \| all \| <systems…>]` | `tools/check.mjs` |
 | `ship` | finish a job: checks, merge, push main once, verify live, record, reply | `node tools/project.mjs ship "<what the job did>" [--news "<friendly lines>"]` | `tools/ship.mjs` |

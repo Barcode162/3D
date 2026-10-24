@@ -2,7 +2,7 @@
 
 *Page and controls* · joshuavelasco.com/dev/#plan · [all pages](README.md)
 
-The job in Now (tap it for its spec), the road by chapter (tap a job for its spec), Parked, Done, the North star, your rules, and the box to tell Claude something.
+The job in Now (tap it for its spec), the road by chapter (tap a job for its spec), Parked, Done, the North star, your rules, and the box to tell Claude something. Each job on the road and each parked idea shows its verdict on the right (Doable, After J…, At a cost, Try first, Not possible, Against a rule) and, under its words, why; a job renumbered in J7.1 also shows its old tag (Formerly A1).
 
 | Control | What it does |
 |---|---|
