@@ -29,10 +29,12 @@
         Promise.all(S.index.order.map(function (id) { return getJson('themes/' + id + '.json'); })),
         Promise.all(a[3].order.map(function (id) { return getJson('screens/' + id + '.json'); })),
         Looped.loadParts(),
+        fetch('/ui/icons.svg').then(function (r) { return r.text(); }),
       ]);
     }).then(function (b) {
       b[0].forEach(function (t) { S.themes[t.id] = t; });
       S.base = JSON.parse(JSON.stringify(S.themes));
+      S.icons = (b[3].match(/id="i-[a-z-]+"/g) || []).map(function (m) { return m.slice(6, -1); });
       b[1].forEach(function (s) { S.screens[s.id] = s; });
       S.themeId = S.index.default; S.screenId = b[1][0].id;
     });
@@ -106,18 +108,121 @@
     var d = S.defs[p.type];
     $('inspTitle').textContent = d ? d.name : p.type;
     $('inspWhat').textContent = d ? d.what : 'Unknown part.';
+    box.appendChild(partActions(p, d));
+    if (S.sel === '') screenMeta(box);
     if (!d) return;
-    Object.keys(d.props).forEach(function (k) {
-      var row = h('div', 'ed-row'), v = p[k] !== undefined ? p[k] : d.props[k].default;
-      row.appendChild(h('span', null, k));
-      row.appendChild(h('span', 'ed-val', Array.isArray(v) ? v.join(', ') : String(v)));
-      box.appendChild(row);
+    Object.keys(d.props).forEach(function (k) { box.appendChild(propRow(p, k, d.props[k])); });
+  }
+
+  // ---- Screen editing ----
+  function parentOf(path) { var i = path.lastIndexOf('.'); return i < 0 ? '' : path.slice(0, i); }
+  function indexOf(path) { return +path.slice(path.lastIndexOf('.') + 1); }
+  function join(parent, i) { return parent === '' ? String(i) : parent + '.' + i; }
+  function fresh(type) {
+    var d = S.defs[type], p = { type: type };
+    if (d.props.text) p.text = d.props.text.default;
+    if (d.children) p.children = [];
+    return p;
+  }
+  function setProp(k, v, key) {
+    var path = S.sel;
+    change('prop:' + path + ':' + k + (key || ''), function () {
+      var p = partAt(path), d = S.defs[p.type];
+      if (d && JSON.stringify(d.props[k].default) === JSON.stringify(v)) delete p[k]; else p[k] = v;
+    }, function () { drawPreview(); drawTree(); });
+  }
+  function propRow(p, k, def) {
+    var v = p[k] !== undefined ? p[k] : def.default, row = h('div', 'ed-row'), lab = h('label', null, k), c;
+    if (def.what) lab.title = def.what;
+    row.appendChild(lab);
+    if (def.kind === 'bool') {
+      c = h('input'); c.type = 'checkbox'; c.checked = !!v; c.className = 'ed-check';
+      c.addEventListener('change', function () { setProp(k, c.checked); });
+    } else if (def.kind === 'choice' || def.kind === 'icon') {
+      c = h('select', 'ed-in');
+      var opts = def.kind === 'icon' ? [''].concat(S.icons) : def.choices;
+      opts.forEach(function (o) { var e = h('option', null, o === '' ? '(none)' : o); e.value = o; c.appendChild(e); });
+      c.value = v;
+      c.addEventListener('change', function () { setProp(k, c.value); });
+    } else if (def.kind === 'number') {
+      c = h('input', 'ed-in'); c.type = 'number'; c.value = v; c.step = 'any'; c.inputMode = 'decimal';
+      c.addEventListener('input', function () { var n = parseFloat(c.value); if (isFinite(n)) setProp(k, n, ':type'); });
+    } else if (def.kind === 'list') {
+      c = h('textarea', 'ed-in'); c.value = (v || []).join('\n'); c.rows = Math.max(2, (v || []).length);
+      c.addEventListener('change', function () { setProp(k, c.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean)); });
+      row.classList.add('ed-tall');
+    } else {
+      c = h('input', 'ed-in'); c.value = v; c.spellcheck = false;
+      c.addEventListener('input', function () { setProp(k, c.value, ':type'); });
+    }
+    c.setAttribute('aria-label', k);
+    row.appendChild(c);
+    if (def.what) row.appendChild(h('div', 'ed-note', def.what));
+    return row;
+  }
+  function actBtn(label, icon, fn, disabled) {
+    var b = h('button', 'ed-btn'); b.type = 'button'; b.setAttribute('aria-label', label); b.title = label; b.disabled = !!disabled;
+    if (icon) { var ns = 'http://www.w3.org/2000/svg', sv = document.createElementNS(ns, 'svg'), u = document.createElementNS(ns, 'use'); u.setAttribute('href', '/ui/icons.svg#i-' + icon); sv.appendChild(u); b.appendChild(sv); b.classList.add('ed-icon'); }
+    else b.textContent = label;
+    b.addEventListener('click', fn); return b;
+  }
+  function partActions(p, d) {
+    var bar = h('div', 'ed-actions'), path = S.sel, root = path === '';
+    var sib = root ? 0 : partAt(parentOf(path)).children.length, i = root ? 0 : indexOf(path);
+    bar.appendChild(actBtn('Move up', 'up', function () { move(-1); }, root || i === 0));
+    bar.appendChild(actBtn('Move down', 'down', function () { move(1); }, root || i === sib - 1));
+    bar.appendChild(actBtn('Duplicate', 'duplicate', duplicate, root));
+    bar.appendChild(actBtn('Delete', 'delete', remove, root));
+    var add = h('select', 'ed-in ed-add'); add.setAttribute('aria-label', 'Add a part');
+    var first = h('option', null, d && d.children ? '+ Add inside…' : '+ Add after…'); first.value = ''; add.appendChild(first);
+    S.parts.forEach(function (x) { var o = h('option', null, x.name); o.value = x.type; add.appendChild(o); });
+    add.addEventListener('change', function () { if (add.value) addPart(add.value); });
+    bar.appendChild(add);
+    return bar;
+  }
+  function move(dir) {
+    var path = S.sel, par = parentOf(path), i = indexOf(path), j = i + dir;
+    change('', function () { var list = partAt(par).children, x = list.splice(i, 1)[0]; list.splice(j, 0, x); S.sel = join(par, j); });
+  }
+  function duplicate() {
+    var path = S.sel, par = parentOf(path), i = indexOf(path);
+    change('', function () { var list = partAt(par).children; list.splice(i + 1, 0, JSON.parse(JSON.stringify(list[i]))); S.sel = join(par, i + 1); });
+    toast('Duplicated');
+  }
+  function remove() {
+    var path = S.sel, par = parentOf(path), i = indexOf(path);
+    change('', function () { var list = partAt(par).children; list.splice(i, 1); S.sel = list.length ? join(par, Math.min(i, list.length - 1)) : par; });
+    toast('Deleted. Undo brings it back.');
+  }
+  function addPart(type) {
+    var path = S.sel, p = partAt(path), d = S.defs[p.type];
+    change('', function () {
+      if (d && d.children) { p.children = p.children || []; p.children.push(fresh(type)); S.sel = join(path, p.children.length - 1); }
+      else { var par = parentOf(path), i = indexOf(path); partAt(par).children.splice(i + 1, 0, fresh(type)); S.sel = join(par, i + 1); }
     });
+    toast('Added a ' + S.defs[type].name.toLowerCase());
+  }
+  function screenMeta(box) {
+    var sc = screen();
+    [['name', 'Screen name'], ['about', 'What the screen is for']].forEach(function (f) {
+      var row = h('div', 'ed-row'), c = h('input', 'ed-in'); c.value = sc[f[0]] || ''; c.setAttribute('aria-label', f[1]);
+      c.addEventListener('change', function () { var v = c.value.trim(); if (f[0] === 'name' && !v) return; change('', function () { screen()[f[0]] = v; }); });
+      row.appendChild(h('label', null, 'screen ' + f[0])); row.appendChild(c); box.appendChild(row);
+    });
+  }
+  function newScreen() {
+    var n = 1, id; do { id = 'screen-' + n++; } while (S.screens[id]);
+    change('', function () {
+      S.screens[id] = { format: 1, id: id, name: 'New screen', about: '', root: { type: 'stack', gap: 16, pad: 16, children: [{ type: 'title', text: 'New screen', size: 'l' }] } };
+      S.screenId = id; S.sel = '';
+    });
+    toast('A new screen');
   }
 
   function drawPickers() {
     var pick = $('pick'); pick.textContent = '';
     Object.keys(S.screens).forEach(function (id) { var o = h('option', null, S.screens[id].name); o.value = id; pick.appendChild(o); });
+    var nw = h('option', null, '+ New screen'); nw.value = '+new'; pick.appendChild(nw);
     pick.value = S.screenId;
     var tp = $('themePick'); tp.textContent = '';
     Object.keys(S.themes).forEach(function (id) { var o = h('option', null, S.themes[id].name); o.value = id; tp.appendChild(o); });
@@ -286,17 +391,21 @@
     var m = e.target.closest && e.target.closest('[data-mode]');
     if (m) { S.mode = m.dataset.mode; pressed('[data-mode]', 'mode', S.mode); document.body.dataset.mode = S.mode; drawAll(); }
   });
-  $('pick').addEventListener('change', function () { S.screenId = this.value; S.sel = null; drawAll(); });
+  $('pick').addEventListener('change', function () {
+    if (this.value === '+new') { newScreen(); return; }
+    S.screenId = this.value; S.sel = null; drawAll();
+  });
   $('themePick').addEventListener('change', function () { S.themeId = this.value; drawAll(); });
 
-  // Deep links: ?mode=theme&group=shape&theme=jukebox&screen=sampler&device=computer
+  // Deep links: ?mode=theme&group=shape&theme=jukebox&screen=sampler&device=computer&sel=1.0.1.0
   function fromAddress() {
-    var q = {}; location.search.replace(/[?&]([a-z]+)=([a-z0-9-]+)/g, function (_, k, v) { q[k] = v; });
+    var q = {}; location.search.replace(/[?&]([a-z]+)=([a-z0-9.-]+)/g, function (_, k, v) { q[k] = v; });
     if (q.mode === 'theme' || q.mode === 'screen') S.mode = q.mode;
     if (q.group) S.group = q.group;
     if (q.theme && S.themes[q.theme]) S.themeId = q.theme;
     if (q.screen && S.screens[q.screen]) S.screenId = q.screen;
     if (/^(phone|computer|game)$/.test(q.device || '')) S.device = q.device;
+    if (q.sel && partAt(q.sel)) S.sel = q.sel;
     pressed('[data-mode]', 'mode', S.mode); pressed('[data-device]', 'device', S.device);
   }
   load().then(function () {

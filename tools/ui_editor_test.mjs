@@ -57,6 +57,28 @@ await page.click('#insp >> text=Copy as a new theme');
 check(await ed(() => UIEditor.state.themeId === 'faceplate-2' && document.getElementById('themePick').value === 'faceplate-2'), 'Copy makes a new theme and picks it');
 await page.click('[data-mode="screen"]');
 
+// R1.6: screen editing
+await page.click('#frame .key.go');
+const goPath = await ed(() => UIEditor.state.sel);
+await page.fill('#insp input[aria-label="text"]', 'Go live');
+check(await ed(() => document.querySelector('#frame .key.go').textContent.trim() === 'Go live' && UIEditor.partAt(UIEditor.state.sel).text === 'Go live'), 'typing new words renames the key in the preview');
+await page.selectOption('#insp .ed-add', 'chip');
+const added = await ed(() => ({ sel: UIEditor.state.sel, type: UIEditor.partAt(UIEditor.state.sel).type }));
+check(added.type === 'chip' && added.sel !== goPath, `Add after puts a chip next to the key (${added.sel})`);
+await page.click('#insp [aria-label="Move up"]');
+check(await ed((p) => UIEditor.state.sel === p && UIEditor.partAt(p).type === 'chip', goPath), 'Move up swaps it before the key');
+await page.click('#insp [aria-label="Duplicate"]');
+await page.click('#insp [aria-label="Delete"]');
+const n = await ed(() => UIEditor.partAt('1.0.1').children.length);
+check(n === 4, `Duplicate then Delete leaves one chip added (${n} in the row)`);
+await page.click('#tree button[data-path="1.0"]');
+await page.selectOption('#insp .ed-add', 'text');
+check(await ed(() => UIEditor.state.sel === '1.0.' + (UIEditor.partAt('1.0').children.length - 1) && UIEditor.partAt(UIEditor.state.sel).type === 'text'), 'Add inside a panel puts it last in the panel');
+await page.click('#tree button[data-path=""]');
+check(await ed(() => document.querySelector('#insp [aria-label="Delete"]').disabled), 'the root can\'t be deleted');
+await page.selectOption('#pick', '+new');
+check(await ed(() => UIEditor.state.screenId === 'screen-1' && document.querySelectorAll('#tree button').length === 2), 'New screen starts with a title');
+
 check(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); close();
 console.log(failed ? `UI EDITOR TEST: ${failed} FAILED` : 'UI EDITOR TEST PASSED');
