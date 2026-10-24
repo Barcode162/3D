@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 **J1 · Freeze and the Charter** (the tools). Freeze and the Charter: R6 closed, features frozen, the restructure written down, the Charter (what's allowed, what's realistic, word for word your rules) and the glossary · N2 N5
 - [x] **J1.1** Close R6, freeze, write the restructure down: R6 sealed with its build, your new rules, J1–J8 on the plan, the full spec in docs/plan/restructure.md, every problem found so far in docs/records/known-issues.md, the stray note from the last session brought home *Check:* Open Dev → Plan: Now is J1 · Freeze and the Charter with three pieces; Up next lists J2 to J8
 - [x] **J1.2** The Charter (docs/charter/charter.md): what the project is, your North star and rules word for word with what each means in practice, what's realistic, and the permission list (allowed / ask first / never; anything not listed: ask) *Check:* Read the Charter on GitHub and tell me yes or what to change
-- [ ] **J1.3** The glossary (docs/charter/glossary.md): every word we use, one meaning each *Check:* Open the glossary on GitHub: words like job, piece, build, ship, live, store each have one plain meaning
+- [x] **J1.3** The glossary (docs/charter/glossary.md): every word we use, one meaning each *Check:* Open the glossary on GitHub: words like job, piece, build, ship, live, store each have one plain meaning
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
