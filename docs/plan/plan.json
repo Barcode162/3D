@@ -73,7 +73,7 @@
     "id": "J5.5",
     "text": "One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it",
     "check": "joshuavelasco.com → Projects: the same list as Dev",
-    "done": false
+    "done": true
    },
    {
     "id": "J5.6",

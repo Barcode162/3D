@@ -54,7 +54,7 @@ export const RULES = [
   [/\.md$|^docs\//, []],
   [/^homepage\/|^tools\/site_test/, ['site']],
   [/^hub\/.*\.php$|^server\//, ['server']],
-  [/^hub\/|^tools\/hub/, ['hub']],
+  [/^hub\/|^tools\/hub|^news\//, ['hub']],  // the news page is tested by tools/hub_test.mjs
   [/^ui\/system\/|^tools\/uikit/, ['uikit', 'ui']],
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
   [/^tools\/ui_test/, ['ui']],

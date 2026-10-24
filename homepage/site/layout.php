@@ -218,21 +218,24 @@ function site_icon($name) {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
 }
 
-// The other projects on the site: each folder with a project.json, except
-// the ones the site already has pages for.
-function site_projects() {
-  $skip = ['bar', 'studio', 'news', 'hub', 'site', 'ui', 'portal', 'dev', 'toolbelt', 'projects', 'play', 'engine', 'vision', 'signin'];
+// J Production's projects: the one list, toolbelt/tools.json → projects
+// (restructure J5.5; Dev and the news page read it too). Each project's
+// "site" says how the site shows it (none: not on the site).
+function site_project_list() {
+  $file = getenv('SITE_TOOLS') ?: dirname(__DIR__) . '/toolbelt/tools.json';
   $out = [];
-  foreach (glob(dirname(__DIR__) . '/*/project.json') ?: [] as $file) {
-    $dir = basename(dirname($file));
-    if (in_array($dir, $skip, true)) continue;
-    $info = site_json($file);
-    if (!$info) continue;
-    $out[] = ['url' => '/' . rawurlencode($dir) . '/', 'name' => (string)($info['name'] ?? $dir),
-              'description' => (string)($info['description'] ?? ''), 'order' => (int)($info['order'] ?? 100)];
+  foreach ((site_json($file)['projects'] ?? []) as $p) {
+    if (!is_array($p['site'] ?? null)) continue;
+    $s = $p['site'];
+    $out[] = ['id' => (string)$p['id'], 'name' => (string)($s['name'] ?? $p['name']), 'place' => (string)($s['place'] ?? 'more'),
+              'url' => (string)($s['href'] ?? ''), 'img' => (string)($s['img'] ?? ''), 'alt' => (string)($s['alt'] ?? ''),
+              'icon' => (string)($s['icon'] ?? ''), 'tag' => (string)($s['tag'] ?? ''), 'description' => (string)($s['line'] ?? $p['about'])];
   }
-  usort($out, fn($a, $b) => [$a['order'], $a['name']] <=> [$b['order'], $b['name']]);
   return $out;
+}
+// The small "More projects" list (the front page, Projects): the projects placed "more".
+function site_projects() {
+  return array_values(array_filter(site_project_list(), fn($p) => $p['place'] === 'more'));
 }
 
 // A plain "nothing here" page (also what non-staff get from portal/).

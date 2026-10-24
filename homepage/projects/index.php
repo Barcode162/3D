@@ -1,9 +1,13 @@
 <?php
 // joshuavelasco.com/projects (PLAN.md R5.4): every J Production project, one
-// card each. Bar3D's page is play/, Looped's is engine/, where it's all going
-// is vision/. A new project folder with a project.json joins the list.
+// card each, from the one list (toolbelt/tools.json → projects, J5.5): a
+// project with a picture is a big picture card, one without a card with its
+// icon; where it's all going (vision/) closes the second row.
 require __DIR__ . '/../site/layout.php';
 site_head('projects', 'Projects', 'What J Production makes: Bar3D, a 3D bar you walk into from your browser; Looped, our own engine; and our own script language, coming.');
+$all = site_project_list();
+$shots = array_values(array_filter($all, fn($p) => $p['place'] === 'featured' && $p['img'] !== ''));
+$cards = array_values(array_filter($all, fn($p) => $p['place'] === 'featured' && $p['img'] === ''));
 $more = site_projects();
 ?>
 <section class="hero hero-small">
@@ -18,12 +22,15 @@ $more = site_projects();
 <section class="section tight">
   <div class="wrap">
     <div class="grid g2">
-      <a class="shot reveal" href="/play/"><img src="/site/img/counter.jpg" alt="The bar counter under warm lamps" loading="lazy"><span class="tag">Live · play now</span><span class="cap"><b>Bar3D</b><span>A living 3D bar in your browser: games, music and real people. Our first world.</span></span></a>
-      <a class="shot reveal" style="--d:.08s" href="/engine/"><img src="/site/img/backbar.jpg" alt="Bottles glowing on the back bar" loading="lazy"><span class="tag">In progress · admins and devs</span><span class="cap"><b>Looped, the engine</b><span>Ours from the first line: light, sound, touch and people, live on a phone.</span></span></a>
+<?php foreach ($shots as $i => $p): ?>
+      <a class="shot reveal"<?= $i ? ' style="--d:.' . sprintf('%02d', 8 * $i) . 's"' : '' ?> href="<?= site_h($p['url']) ?>"><img src="<?= site_h($p['img']) ?>" alt="<?= site_h($p['alt']) ?>" loading="lazy"><span class="tag"><?= site_h($p['tag']) ?></span><span class="cap"><b><?= site_h($p['name']) ?></b><span><?= site_h($p['description']) ?></span></span></a>
+<?php endforeach; ?>
     </div>
     <div class="grid g2" style="margin-top:16px">
-      <article class="card glow reveal"><span class="idx mono">Planned</span><span class="ic"><?= site_icon('cursor') ?></span><h3>The script language</h3><p>A small, safe language for the things that live in our worlds: a candle that flickers, a jukebox that knows the mood, a door that remembers who came in.</p></article>
-      <a class="card glow reveal" style="--d:.08s" href="/vision/"><span class="idx mono">Where we're going</span><span class="ic"><?= site_icon('rocket') ?></span><h3>Don't fake the world. Simulate it.</h3><p>Light, sound, touch, heat, weather: each a real system, and every system makes the others stronger. The bar is just the first room.</p></a>
+<?php foreach ($cards as $i => $p): ?>
+      <article class="card glow reveal"<?= $i ? ' style="--d:.' . sprintf('%02d', 8 * $i) . 's"' : '' ?>><span class="idx mono"><?= site_h($p['tag']) ?></span><span class="ic"><?= site_icon($p['icon'] ?: 'rocket') ?></span><h3><?= site_h($p['name']) ?></h3><p><?= site_h($p['description']) ?></p></article>
+<?php endforeach; ?>
+      <a class="card glow reveal" style="--d:.<?= sprintf('%02d', 8 * count($cards)) ?>s" href="/vision/"><span class="idx mono">Where we're going</span><span class="ic"><?= site_icon('rocket') ?></span><h3>Don't fake the world. Simulate it.</h3><p>Light, sound, touch, heat, weather: each a real system, and every system makes the others stronger. The bar is just the first room.</p></a>
     </div>
 <?php if ($more): ?>
     <div class="section-head" style="margin-top:clamp(48px,7vw,90px)"><span class="eyebrow">Also in the workshop</span><h2 class="h-md">More projects.</h2></div>

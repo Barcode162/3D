@@ -25,6 +25,7 @@ mkdirSync('build', { recursive: true });
 const dir = mkdtempSync(join(tmpdir(), 'site-'));
 for (const f of readdirSync('homepage')) symlinkSync(resolve('homepage', f), join(dir, f));
 symlinkSync(resolve('ui'), join(dir, 'ui'));
+symlinkSync(resolve('toolbelt'), join(dir, 'toolbelt'));  // the one list of projects (J5.5)
 
 // Pretend accounts: "boss" (the owner), "mia" (a player).
 const acc = mkdtempSync(join(tmpdir(), 'site-acc-'));
@@ -38,7 +39,7 @@ writeFileSync(join(acc, 'admins.json'), JSON.stringify(['boss']));
 writeFileSync(join(acc, 'names.json'), JSON.stringify({ boss: people.boss[0], mia: people.mia[0] }));
 
 const port = 8797;
-const php = spawn('php', ['-S', `127.0.0.1:${port}`, '-t', dir], { stdio: 'ignore', env: { ...process.env, SITE_ACCOUNTS: acc } });
+const php = spawn('php', ['-S', `127.0.0.1:${port}`, '-t', dir], { stdio: 'ignore', env: { ...process.env, SITE_ACCOUNTS: acc, SITE_TOOLS: resolve('toolbelt/tools.json') } });
 await new Promise((r) => setTimeout(r, 900));
 const base = `http://127.0.0.1:${port}`;
 const browser = await launchBrowser();
@@ -55,6 +56,12 @@ async function open(path, { token = null, width = 390, height = 844 } = {}) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
   return { ctx, page, errors, status: res.status() };
+}
+// Projects shows every project the one list puts on the site (toolbelt/tools.json, J5.5).
+{
+  const list = JSON.parse((await import('node:fs')).readFileSync('toolbelt/tools.json', 'utf8')).projects.filter((p) => p.site);
+  const html = await (await fetch(base + '/projects/')).text();
+  check(list.length > 0 && list.every((p) => html.includes(`<b>${p.site.name || p.name}</b>`) || html.includes(`<h3>${p.site.name || p.name}</h3>`)), `Projects lists the ${list.length} projects of toolbelt/tools.json`);
 }
 const tabsOf = (page) => page.$$eval('.tabs a', (a) => a.map((x) => x.textContent.trim()));
 

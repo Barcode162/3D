@@ -12,6 +12,10 @@ const groups = new Set(data.groups.map((g) => g.id));
 const projects = new Set((data.projects || []).map((p) => p.id));
 check(projects.size > 0 && projects.size === data.projects.length, 'projects listed once each');
 for (const p of data.projects || []) check(!!p.name && !!p.about && !!p.status, `project "${p.id}": a name, a line and a status`);
+for (const p of (data.projects || []).filter((x) => x.site)) {  // its card on the site (J5.5)
+  const s = p.site;
+  check(['featured', 'more'].includes(s.place) && !!s.line && (s.place === 'more' ? !!s.href : !!s.tag) && (!s.img || (!!s.alt && !!s.href)), `project "${p.id}": its site card is complete (place, line, tag or link, a picture's words)`);
+}
 const ids = new Set();
 // Where a site path lives in this repo (the rest, like /bar/ and /classic/, is built or kept elsewhere).
 const LOCAL = [['/toolbelt/', 'toolbelt/'], ['/studio/', 'studio/'], ['/hub/', 'hub/'], ['/ui/', 'ui/']];

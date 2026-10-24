@@ -85,6 +85,12 @@ Decided in J5.1 (KI-17; decision 0001):
 - **Dev → Publish** holds the user's switches: news, front-page highlights,
   the front page's words. Claude only writes drafts.
 
+### The projects
+One list: `toolbelt/tools.json` → `projects` (J5.5), in the repo. Dev →
+Projects, the site's Projects page and front page (each project's `site`
+card), and the news page (project names) all read it; a new project is one
+entry there.
+
 ### Accounts, the room, the ledger
 A login token is made by `account.php` and kept on the phone. The bar's door
 (`gate.php`) lets in the owner, admins and invited players. The room checks

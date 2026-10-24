@@ -13,8 +13,9 @@ function read_json($path) {
   return is_array($v) ? $v : null;
 }
 function published($data) {
+  // The projects' names: the one list (toolbelt/tools.json → projects, J5.5).
   $names = ['bar3d' => 'Bar3D'];
-  foreach ((read_json("$data/projects.json")['projects'] ?? []) as $p) $names[$p['id']] = $p['name'];
+  foreach ((read_json(getenv('SITE_TOOLS') ?: dirname(__DIR__) . '/toolbelt/tools.json')['projects'] ?? []) as $p) $names[$p['id']] = $p['name'];
   $out = [];
   foreach (glob("$data/posts-*.json") ?: [] as $f) {
     if (!preg_match('#posts-([a-z0-9-]{1,24})\.json$#', $f, $m)) continue;

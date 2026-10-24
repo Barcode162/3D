@@ -1,10 +1,13 @@
 {
   "format": 1,
-  "about": "The Toolbelt: every tool, one entry each, grouped by project (Dev → Projects) and by kind (the /toolbelt page). tools/toolbelt_test.mjs checks it. A new tool: one entry here; a new project: one entry in projects.",
+  "about": "The Toolbelt: every tool, one entry each, grouped by project (Dev → Projects) and by kind (the /toolbelt page). projects is the one list of J Production's projects (restructure J5.5): Dev, the site (its Projects page, with each project's site card; place: featured = a big card, more = the small list on the front page and Projects) and the news page all read it. tools/toolbelt_test.mjs checks it. A new tool: one entry here; a new project: one entry in projects.",
   "projects": [
-    {"id": "bar3d", "name": "Bar3D", "status": "Live", "about": "The hangout bar: the game, its world and the tools that build it.", "href": "/bar/"},
-    {"id": "looped", "name": "Looped", "status": "In progress", "about": "Our engine, from scratch: C++ to WebAssembly to WebGPU. Its tools build the looks and screens every project uses."},
-    {"id": "script", "name": "The script language", "status": "Planned", "about": "Our own small, safe language for things that live in the world (T1 on the road)."},
+    {"id": "bar3d", "name": "Bar3D", "status": "Live", "about": "The hangout bar: the game, its world and the tools that build it.", "href": "/bar/",
+     "site": {"place": "featured", "href": "/play/", "img": "/site/img/counter.jpg", "alt": "The bar counter under warm lamps", "tag": "Live · play now", "line": "A living 3D bar in your browser: games, music and real people. Our first world."}},
+    {"id": "looped", "name": "Looped", "status": "In progress", "about": "Our engine, from scratch: C++ to WebAssembly to WebGPU. Its tools build the looks and screens every project uses.",
+     "site": {"place": "featured", "name": "Looped, the engine", "href": "/engine/", "img": "/site/img/backbar.jpg", "alt": "Bottles glowing on the back bar", "tag": "In progress · admins and devs", "line": "Ours from the first line: light, sound, touch and people, live on a phone."}},
+    {"id": "script", "name": "The script language", "status": "Planned", "about": "Our own small, safe language for things that live in the world (T1 on the road).",
+     "site": {"place": "featured", "icon": "cursor", "tag": "Planned", "line": "A small, safe language for the things that live in our worlds: a candle that flickers, a jukebox that knows the mood, a door that remembers who came in."}},
     {"id": "workshop", "name": "The workshop", "status": "Tools", "about": "How Claude builds, checks, pictures and ships every piece."}
   ],
   "groups": [
