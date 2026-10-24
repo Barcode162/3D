@@ -12,11 +12,11 @@ every piece writes its page in `docs/manual/`).
 R1 (the Toolbelt and the UI Editor) is built. R2 uses the editor to find the
 one look for the whole project. **All engine work stays paused** (L1.8, P1,
 P2 and every later step below) until R6 is done.
-- [ ] **R2.1** Real screens to judge a theme on, as screen files: the front door, Dev's Overview, a bar menu (plus the parts they need: list row, tab bar, picture card). *Check:* in the UI Editor's screen menu, open each one.
-- [ ] **R2.2** Light and dark in one theme: a theme carries both, the page follows the phone's setting, the editor flips between them. *Check:* in the editor, Light / Dark flips the preview.
-- [ ] **R2.3** Three candidates as theme files, each light and dark: Clean (calm, Apple-like), Warm (the bar at night), Bold. *Check:* pick each in the preview's theme menu.
-- [ ] **R2.4** Compare and mix: one screen in every candidate side by side; take a group (colour, shape, type...) from one theme into another. *Check:* Compare shows three phones; "Take Shape from Clean" changes the corners.
-- [ ] **R2.5** The user's pick becomes the house theme: named, the default theme file, used by the Toolbelt and the editor. (Waits for the user's choice after R2.4.)
+- [x] **R2.1** Real screens to judge a theme on, as screen files: the front door, Dev's Overview, a bar menu (plus the parts they need: list row, tab bar, picture card). *Check:* in the UI Editor's screen menu, open each one.
+- [x] **R2.2** Light and dark in one theme: a theme carries both, the page follows the phone's setting, the editor flips between them. *Check:* in the editor, Light / Dark flips the preview.
+- [x] **R2.3** Six candidates as theme files, each light and dark: Clean (calm, Apple-like), Warm (the bar at night), Bold, Glass, Neon, Soft. *Check:* pick each in the preview's theme menu.
+- [x] **R2.4** Compare and mix: one screen in every candidate side by side; take a group (colour, shape, type...) from one theme into another. *Check:* Compare shows three phones; "Take Shape from Clean" changes the corners.
+- [ ] **R2.5** The user's pick becomes the house theme: named, the default theme file, used by the Toolbelt and the editor. **Waiting on the user's pick** (the picture board in the chat; Toolbelt → Compare themes).
 
 ## R1, the Toolbelt and the UI Editor (built 2026-10-24)
 - [x] **R1.1** The Toolbelt (`toolbelt/tools.json`, `/toolbelt/`). *Check:* open joshuavelasco.com/toolbelt, every tool opens.
