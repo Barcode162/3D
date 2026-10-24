@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -42,6 +42,9 @@ jobs:
       - name: "Test: the site (homepage/: every page, the staff-only portal)"
         run: node tools/site_test.mjs
 
+      - name: "Test: the Toolbelt's list (toolbelt/tools.json)"
+        run: node tools/toolbelt_test.mjs
+
       - name: "Test: the shared look (ui/, every theme)"
         run: node tools/ui_test.mjs
 
@@ -66,6 +69,8 @@ jobs:
           mkdir -p -f $IONOS_HOME/studio
           mkdir -p -f private/studio
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/studio $IONOS_HOME/studio
+          mkdir -p -f $IONOS_HOME/toolbelt
+          mirror -R --verbose --no-perms $GITHUB_WORKSPACE/toolbelt $IONOS_HOME/toolbelt
           mkdir -p -f $IONOS_HOME/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/ui $IONOS_HOME/ui
           mkdir -p -f $IONOS_HOME/news

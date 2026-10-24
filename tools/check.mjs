@@ -20,7 +20,8 @@ const CHECKS = {
   // tests run on CI at deploy (user, 2026-10-23).
   quick:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
-             ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`]],
+             ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
+             ['toolbelt', 'node tools/toolbelt_test.mjs']],
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
   native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
@@ -29,6 +30,7 @@ const CHECKS = {
              ['ledger', 'node tools/ledger_test.mjs'], ['mp', `${NP} node tools/mp_test.mjs`]],
   hub:      [['hub', 'node tools/hub_test.mjs']],
   ui:       [['ui', `${NP} node tools/ui_test.mjs`]],
+  toolbelt: [['toolbelt', 'node tools/toolbelt_test.mjs']],
   site:     [['site_php', 'for f in $(find homepage -name "*.php"); do php -l "$f" >/dev/null || exit 1; done'], ['site', `${NP} node tools/site_test.mjs`]],
   studio:   [['studio_api', 'node tools/studio_api_test.mjs'], ['ops', 'node tools/ops_test.mjs'], ['studio', `${NP} node tools/studio_test.mjs`]],
   server:   [['php', 'for f in server/*.php hub/*.php; do php -l "$f" >/dev/null || exit 1; done'],
@@ -50,6 +52,7 @@ const RULES = [
   [/^hub\/|^tools\/hub/, ['hub']],
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
   [/^tools\/ui_test/, ['ui']],
+  [/^toolbelt\/|^tools\/toolbelt_test/, ['toolbelt']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
   [/^assets\/world\/|^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],

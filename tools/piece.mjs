@@ -14,7 +14,11 @@
 //   --check "..."     the phone check: where to stand, what to see (kept for the reply)
 //   --compare "x=0"   also pictures with this page option vs without (the feature's switch)
 //   --spots a,b       only these spots (default: all of tools/lib/spots.mjs)
+//   --pages a,b       pictures of site pages instead of the bar (repo paths, e.g.
+//                     toolbelt/index.html or "ui/screen.html?s=sampler"), at phone width,
+//                     before/after against the last picture of the same page
 //   --no-shots        skip pictures (code that changes nothing on screen)
+//   --branch b        push to this branch (default work-go; also PIECE_BRANCH)
 //   --no-build        skip the build
 //   --no-push         commit only
 //   --dry             do everything but commit and push
@@ -25,6 +29,8 @@ import { join } from 'node:path';
 import { openCapture, SPOT_NAMES } from './lib/capture.mjs';
 import { openGallery, appendJsonl, writeReadme, commitGallery, GALLERY } from './lib/gallery.mjs';
 import { diffPercentBuffers, exposureStats } from './lib/imgcmp.mjs';
+import { launchBrowser } from './lib/browser.mjs';
+import { serveSite } from './lib/site.mjs';
 
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 26 }).trim();
 const run = (cmd) => spawnSync('bash', ['-c', cmd], { stdio: 'inherit' }).status === 0;
@@ -81,6 +87,46 @@ async function pictures(compare, spots) {
   return { images, stats, perf, errors };
 }
 
+// Site and tool pages (no game): a phone-width picture of each, side by side
+// with the last picture of the same page (gallery latest/page-<name>.png).
+async function pagePictures(pages) {
+  openGallery();
+  mkdirSync(join(GALLERY, tag), { recursive: true });
+  const site = serveSite('.');
+  const browser = await launchBrowser();
+  const images = [], stats = {}, errors = [];
+  for (const path of pages) {
+    const name = path.replace(/\/index\.html$/, '').replace(/\.html/, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
+    step(`page picture: ${path}`);
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+    page.on('pageerror', (e) => errors.push(`${path}: ${e}`));
+    page.on('response', (r) => { if (r.status() >= 400 && !/favicon/.test(r.url())) errors.push(`${path}: ${r.status()} ${r.url()}`); });
+    // Pages use site paths (/ui/...): the repo root is the site root here.
+    await page.goto(site.url + path);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(500);
+    const png = await page.screenshot({ fullPage: true });
+    await page.close();
+    stats[name] = exposureStats(png);
+    const latest = join(GALLERY, 'latest', `page-${name}.png`);
+    const before = existsSync(latest) ? readFileSync(latest) : null;
+    const out = join(GALLERY, tag, `page-${name}.jpg`);
+    const show = await browser.newPage({ viewport: { width: 390 * 2 + 12, height: 400 }, deviceScaleFactor: 1 });
+    const img = (b) => `data:image/png;base64,${b.toString('base64')}`;
+    await show.setContent(`<body style="margin:0;background:#111;color:#eee;font:15px sans-serif">
+      <div style="height:30px;line-height:30px;padding-left:8px;font-weight:bold">${tag} ${title} · ${path}</div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="width:390px"><div style="height:30px;line-height:30px;padding-left:8px;color:#bbb">before</div>${before ? `<img src="${img(before)}">` : '<div style="padding:8px;color:#888">(new page)</div>'}</div>
+      <div><div style="height:30px;line-height:30px;padding-left:8px;color:#fc6">after</div><img src="${img(png)}"></div></div></body>`);
+    await show.screenshot({ path: out, type: 'jpeg', quality: 72, fullPage: true });
+    await show.close();
+    images.push(`page-${name}.jpg`);
+    writeFileSync(latest, png);
+  }
+  await browser.close(); site.close();
+  return { images, stats, perf: null, errors };
+}
+
 if (tag === 'baseline') {
   if (!has('no-build')) build();
   const r = await pictures(null, SPOT_NAMES);
@@ -91,7 +137,8 @@ if (tag === 'baseline') {
 
 if (!title) { console.log('usage: node tools/piece.mjs <TAG> "<title>" [--test ...] [--check "..."] [--compare "x=0"]'); process.exit(2); }
 const branch = sh('git rev-parse --abbrev-ref HEAD');
-if (branch !== 'work-go' && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to work-go)`);
+const target = opt('branch') ?? process.env.PIECE_BRANCH ?? 'work-go';
+if (branch !== target && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to ${target})`);
 if (!has('no-build')) build();
 
 const tests = (opt('test') ?? 'quick').split(',').filter((t) => t && t !== 'none');
@@ -101,7 +148,13 @@ if (tests.length) {
 }
 
 let shots = { images: [], stats: {}, perf: null, errors: [] };
-if (!has('no-shots')) {
+if (opt('pages')) {
+  shots = await pagePictures(opt('pages').split(','));
+  if (shots.errors.length) {
+    console.log(`✗ ${tag}: the page logged errors:\n${shots.errors.join('\n')}`);
+    if (!has('allow-errors')) process.exit(1);
+  }
+} else if (!has('no-shots')) {
   const spots = (opt('spots') ?? SPOT_NAMES.join(',')).split(',');
   shots = await pictures(opt('compare'), spots);
   if (shots.errors.length) {
@@ -122,8 +175,8 @@ writeFileSync('build/piece-msg.txt', body);
 sh('git commit -q -F build/piece-msg.txt');
 const sha = sh('git rev-parse --short HEAD');
 if (!has('no-push')) {
-  step('push work-go');
-  for (let i = 0; i < 4 && !run('git push -q -u origin HEAD:work-go'); i++) execSync(`sleep ${2 ** (i + 1)}`);
+  step(`push ${target}`);
+  for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);
 }
 
 openGallery();
