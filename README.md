@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J66.1 The game's tests in their own job after the deploy (KI-32): deploy.yml's deploy job (build, quick checks and the room's tests, the room, the upload, gh-pages) queues alone (pages) and goes live in about 6 minutes; the tests job builds the same commit again on its own machine, writes the same config.json (the room's address passed on from the deploy job) and runs every test, in its own queue (game-tests), so the next deploy waits only for the deploy before it; every step of both jobs now has a time limit; Dev's reports keep working (the deploy job reports started and live, and its end if it stops before the tests; the tests job reports the end with live passed on), and a tests job's end report for a build that's no longer live isn't sent; a build stopped by a quick check no longer runs the browser tests (nothing of it went live); tools/workflows_test.mjs checks the split, the two queues and the time limits (all four checks fail on the old workflow); the CI page and the stuck-deploy procedure say it; checked by the workflows, Playbook, locks and Handbook tests and a dry run of the reporter
+
+`c3980dd` · 2026-10-24 20:08 · 8 files, +151 −19 · tests: changed
+
+Phone check: The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
+
 ## J8.3 Unfreeze: your Freeze rule taken out on your word (request 2026-10-24 #7, go finish J8) by the plan tool's new retire command (it takes a rule out only on a recorded request and writes nothing in its place; the plan test covers it); the freeze's lock turns itself off with the rule; the Charter's in-practice lines, CLAUDE.md, the Playbook's intake and the chapters' Now lines say the freeze is lifted; the first real job's spec written (docs/plan/jobs/J66.md: the tests in their own job after the deploy, the room test's grace check made steady); checked by the plan, Playbook, locks and Handbook tests
 
 `e3e310e` · 2026-10-24 19:54 · 11 files, +101 −25 · tests: changed
