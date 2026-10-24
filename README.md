@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J4.6 The Playbook names only what exists: tools/playbook_test.mjs (every tool, front-door command, tool command and link it names is real; no 'arrives with J<n>' marker left) and tools/locks_test.mjs (the locks refuse what they should, let the rest through), both in every quick check and in the new 'workshop' system; the Playbook now uses the real commands (status, request, incident, session, ship); ship commits the next job and the session line with the finish; the guard reads only real git commands, not text that mentions git; a changed test runs only its own system
+
+`4a3e765` · 2026-10-24 12:54 · 14 files, +127 −31 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J4.5 Locks: git hooks in tools/githooks (setup.sh turns them on): a commit is refused if it adds a secret or the plan's files disagree; a push to main is refused unless the ship does it, and never as a force push or a delete; Claude Code's lock (tools/lib/guard.mjs, .claude/settings.json) refuses a hand push to main, force pushes, --no-verify, turning the git locks off, and hand edits of PLAN.md, the plan's data, the rules and the theme CSS; every session starts by printing the project's status
 
 `9e6acce` · 2026-10-24 12:42 · 8 files, +94 −3 · tests: changed
