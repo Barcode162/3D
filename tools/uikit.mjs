@@ -4,11 +4,17 @@
 //   node tools/uikit.mjs css      write ui/themes.css and looped.js's theme list from ui/system/themes/
 //   node tools/uikit.mjs check    exit 1 if a theme or screen file is wrong, or themes.css is out of date
 //   node tools/uikit.mjs list     the themes and screens, one line each
+//   node tools/uikit.mjs status   the UI Editor's live version vs the one the repo has
+//   node tools/uikit.mjs pull     the UI Editor's published version → ui/system/ (then css); says what changed
+//   node tools/uikit.mjs push --note ".."   the repo's themes and screens → a new version by Claude
+//                                 (refused if someone published since the last pull; needs HUB_KEY)
+// The published version the repo matches: ui/system/live-version.json (commit it).
+// UI_URL overrides the store (toolbelt/ui-editor/api.php).
 // Files:
 //   ui/system/tokens.json        every token once: its group, kind and what it does
 //   ui/system/themes/<id>.json   {format, id, name, about, scheme, click, tokens:{"bg": "#0A0908", ...}}
 //   ui/system/screens/<id>.json  {format, id, name, about, root: <part>} (R1.3)
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const SYS = 'ui/system';
@@ -148,8 +154,68 @@ export function problems() {
   return out;
 }
 
+// ---- The UI Editor's store ----
+const STORE = process.env.UI_URL || 'https://joshuavelasco.com/toolbelt/ui-editor/api.php';
+const MARK = join(SYS, 'live-version.json');
+const mark = () => (existsSync(MARK) ? readJson(MARK) : { version: 0 });
+async function storeGet(q) { const r = await fetch(STORE + q, { cache: 'no-store' }); if (!r.ok) throw new Error(`${q}: HTTP ${r.status}`); return r.json(); }
+export function repoBundle() {
+  const files = {}, { themes } = loadThemes();
+  for (const t of themes) files[`themes/${t.id}.json`] = t;
+  for (const sc of loadScreens()) { const { file, ...rest } = sc; files[`screens/${sc.id}.json`] = rest; }
+  return { format: 1, files };
+}
+// Writes a bundle's files into ui/system/ (new themes and screens join the end
+// of their index), then the CSS. Returns the paths that changed.
+export function writeBundle(bundle) {
+  const changed = [];
+  for (const [path, content] of Object.entries(bundle.files)) {
+    const m = /^(themes|screens)\/([a-z][a-z0-9-]*)\.json$/.exec(path);
+    if (!m || content.id !== m[2]) continue;
+    const file = join(SYS, path), text = JSON.stringify(content, null, 2) + '\n';
+    if (!existsSync(file) || readFileSync(file, 'utf8') !== text) { mkdirSync(join(SYS, m[1]), { recursive: true }); writeFileSync(file, text); changed.push(path); }
+    const ix = join(SYS, m[1], 'index.json'), index = readJson(ix);
+    if (!index.order.includes(m[2])) { index.order.push(m[2]); writeFileSync(ix, JSON.stringify(index, null, 2) + '\n'); }
+  }
+  return changed;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const cmd = process.argv[2] ?? 'check';
+  const flag = (n) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : undefined; };
+  if (cmd === 'status') {
+    const live = await storeGet('?live');
+    console.log(`UI Editor live: v${live.version}${live.author ? ` by ${live.author}` : ''}${live.note ? ': ' + live.note : ''}; the repo matches v${mark().version}`);
+    process.exit(0);
+  }
+  if (cmd === 'pull') {
+    const live = await storeGet('?live');
+    if (!live.version) { console.log('Nothing published from the UI Editor yet.'); process.exit(0); }
+    if (live.version === mark().version) { console.log(`Up to date (v${live.version}).`); process.exit(0); }
+    const b = await storeGet('?bundle=' + live.version);
+    const changed = writeBundle(b);
+    const bad = problems().filter((p) => !/out of date/.test(p));
+    if (bad.length) { console.log('The published version has problems (files written, CSS not):\n' + bad.join('\n')); process.exit(1); }
+    const tokens = loadTokens(), { index, themes } = loadThemes();
+    writeFileSync('ui/themes.css', themesCss(tokens, index, themes));
+    writeFileSync('ui/looped.js', withLooks(readFileSync('ui/looped.js', 'utf8'), themes));
+    writeFileSync(MARK, JSON.stringify({ version: live.version, author: live.author, at: live.at, note: live.note }, null, 2) + '\n');
+    console.log(`Pulled v${live.version} by ${live.author}${live.note ? ' ("' + live.note + '")' : ''}: ` + (changed.length ? 'changed ' + changed.join(', ') : 'no file changed'));
+    process.exit(0);
+  }
+  if (cmd === 'push') {
+    const KEY = process.env.HUB_KEY;
+    if (!KEY) { console.log('No HUB_KEY in the environment.'); process.exit(2); }
+    const bad = problems();
+    if (bad.length) { console.log(bad.join('\n')); process.exit(1); }
+    const r = await fetch(STORE, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'X-Hub-Key': KEY },
+      body: JSON.stringify({ a: 'publish', base: mark().version, note: flag('note') || 'From the repo', bundle: repoBundle() }) });
+    const j = await r.json();
+    if (!j.ok) { console.log(`Refused: ${j.error}`); process.exit(1); }
+    writeFileSync(MARK, JSON.stringify({ version: j.live.version, author: j.live.author, at: j.live.at, note: j.live.note }, null, 2) + '\n');
+    console.log(`Published v${j.live.version} (commit ${MARK}).`);
+    process.exit(0);
+  }
   if (cmd === 'css') {
     const tokens = loadTokens(), { index, themes } = loadThemes();
     const bad = themes.flatMap((t) => themeProblems(tokens, t));

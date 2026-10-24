@@ -14,7 +14,9 @@ easy to pinpoint. So on "go":
    questions unless truly blocked (then: ask once, with a recommendation).
    **World first:** `node tools/studio.mjs pull` (the world the user published
    from the Studio → `assets/world/`; commit it as "World: from the studio vN"
-   before any piece). Never edit the store by hand.
+   before any piece) and `node tools/uikit.mjs pull` (themes and screens the
+   user published from the UI Editor → `ui/system/`; commit as "UI: from the
+   editor vN"). Never edit either store by hand.
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
    **One piece = one commit**, message starting with its tag (`E3.2 ...`).

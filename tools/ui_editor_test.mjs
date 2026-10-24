@@ -1,19 +1,32 @@
 // The UI Editor (toolbelt/ui-editor/, docs/UI_PLAN.md R1.4-R1.7) at phone
-// width: it loads the theme and screen files, draws the preview, and a tap
-// selects a part in both the preview and the list. Later pieces add their
-// checks below. A static page: seconds, no game.
+// width, on PHP's built-in server laid out like the webspace (ui/, toolbelt/,
+// bar/account.php; the store's data in a temp folder): the preview and
+// selection (R1.4), theme editing and undo (R1.5), screen editing (R1.6), the
+// draft kept on the phone and Publish with history (R1.7). No game: seconds.
 // Usage: NODE_PATH=$(npm root -g) node tools/ui_editor_test.mjs
+import { spawn } from 'node:child_process';
+import { mkdtempSync, mkdirSync, cpSync, copyFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { launchBrowser } from './lib/browser.mjs';
-import { serveSite } from './lib/site.mjs';
 
-const { url, close } = serveSite('.');
+const PORT = 8799, url = `http://127.0.0.1:${PORT}/`;
+const root = mkdtempSync(join(tmpdir(), 'uied-'));
+mkdirSync(join(root, 'home/bar'), { recursive: true });
+cpSync('ui', join(root, 'home/ui'), { recursive: true });
+cpSync('toolbelt', join(root, 'home/toolbelt'), { recursive: true });
+copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
+const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
+  env: { ...process.env, UI_DATA: join(root, 'private/ui'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
+const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
+await new Promise((r) => setTimeout(r, 700));
 const browser = await launchBrowser();
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
-page.on('response', (r) => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
+page.on('response', (r) => { if (r.status() >= 400 && !(r.status() === 401 && /api\.php/.test(r.url()))) errors.push(r.status() + ' ' + r.url()); });  // 401: not logged in yet
 await page.goto(url + 'toolbelt/ui-editor/index.html');
 await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
 const ed = (fn, arg) => page.evaluate(fn, arg);
@@ -78,6 +91,35 @@ await page.click('#tree button[data-path=""]');
 check(await ed(() => document.querySelector('#insp [aria-label="Delete"]').disabled), 'the root can\'t be deleted');
 await page.selectOption('#pick', '+new');
 check(await ed(() => UIEditor.state.screenId === 'screen-1' && document.querySelectorAll('#tree button').length === 2), 'New screen starts with a title');
+
+// R1.7: the draft on the phone, login, publish, history
+check(await ed(() => /unpublished/.test(document.getElementById('status').textContent) && /Publish \d/.test(document.getElementById('pubOpen').textContent)), 'the top bar counts what is unpublished');
+await page.reload();
+await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
+check(await ed(() => !!UIEditor.state.screens['screen-1'] && UIEditor.state.themes.faceplate.tokens.accent === '#00AAFF'), 'after a reload the draft is back');
+const year = new Date().getFullYear();
+const signup = await page.evaluate(async (y) => (await fetch('/bar/account.php', { method: 'POST', body: JSON.stringify({ a: 'signup', user: 'josh', pass: 'secret1', name: 'Josh', birth: `${y - 30}-03-04` }) })).json(), year);
+check(signup.ok === 1, 'an owner account');
+await page.click('#pubOpen');
+await page.waitForSelector('#login:not([hidden])');
+check(true, 'Publish asks for a login first');
+await page.fill('#user', 'josh'); await page.fill('#pass', 'secret1');
+await page.click('#login button[type=submit]');
+await page.waitForSelector('#pubForm:not([hidden])');
+check(await ed(() => document.querySelectorAll('#pubChanges li').length >= 2), 'the sheet lists what changed (a theme, screens)');
+await page.fill('#pubNote', 'Blue accent, a new screen');
+await page.click('#pubGo');
+await page.waitForFunction(() => document.getElementById('pub').hidden);
+const live = await page.evaluate(async () => (await fetch('/toolbelt/ui-editor/api.php?bundle=live')).json());
+check(live.version === 1 && live.files['themes/faceplate.json'].tokens.accent === '#00AAFF' && !!live.files['screens/screen-1.json'], 'Publish makes version 1 with the edits');
+check(await ed(() => /v1 live/.test(document.getElementById('status').textContent) && !localStorage.getItem('uiEditorDraft')), 'the draft is cleared, v1 is live');
+await page.click('#pubOpen');
+await page.waitForFunction(() => document.querySelectorAll('#history li b').length === 1);
+check(await ed(() => /Blue accent/.test(document.getElementById('history').textContent)), 'History shows v1 and its note');
+await page.click('#pubClose');
+await page.reload();
+await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
+check(await ed(() => UIEditor.state.themes.faceplate.tokens.accent === '#00AAFF' && UIEditor.state.live.version === 1), 'a fresh load starts from the published version (newer than the repo)');
 
 check(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); close();

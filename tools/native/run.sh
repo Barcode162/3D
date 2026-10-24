@@ -15,6 +15,7 @@ declare -A TESTS=(
   [race_test]="tools/native/race_test.cpp $RACE"
   [steering_test]="tools/native/steering_test.cpp looped/steering.cpp $RACE"
   [json_test]="tools/native/json_test.cpp looped/json.cpp"
+  [ui_theme_test]="tools/native/ui_theme_test.cpp looped/ui_theme.cpp looped/json.cpp"
   [math_test]="tools/native/math_test.cpp"
   [light_units_test]="tools/native/light_units_test.cpp"
   [radiosity_test]="tools/native/radiosity_test.cpp looped/radiosity.cpp looped/bvh.cpp looped/scene_geometry.cpp looped/gltf.cpp looped/json.cpp"

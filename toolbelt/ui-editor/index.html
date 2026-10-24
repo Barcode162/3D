@@ -27,6 +27,7 @@
   <span class="ed-status" id="status"></span>
   <button class="ed-btn ed-icon" id="undo" type="button" aria-label="Undo" disabled><svg><use href="/ui/icons.svg#i-undo"/></svg></button>
   <button class="ed-btn ed-icon" id="redo" type="button" aria-label="Redo" disabled><svg><use href="/ui/icons.svg#i-redo"/></svg></button>
+  <button class="ed-btn ed-go" id="pubOpen" type="button">Publish</button>
 </header>
 
 <section class="ed-stage" id="stage" aria-label="Preview">
@@ -50,6 +51,28 @@
     <div class="ed-h"><b id="inspTitle">Nothing selected</b><span class="ed-grow"></span></div>
     <p class="ed-dim ed-what" id="inspWhat">Tap a part in the preview or the list.</p>
     <div class="ed-insp" id="insp"></div>
+  </div>
+</section>
+<div class="ed-scrim" id="pubScrim" hidden></div>
+<section class="ed-dialog" id="pub" role="dialog" aria-modal="true" aria-labelledby="pubTitle" hidden>
+  <div class="ed-h"><b id="pubTitle">Publish</b><span class="ed-grow"></span><button class="ed-btn ed-icon" id="pubClose" type="button" aria-label="Close"><svg><use href="/ui/icons.svg#i-x"/></svg></button></div>
+  <div class="ed-dbody">
+    <form id="login" hidden>
+      <p class="ed-dim">Log in with your bar account (owner or admin).</p>
+      <input class="ed-in" id="user" autocomplete="username" placeholder="Username" aria-label="Username" autocapitalize="none">
+      <input class="ed-in" id="pass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <button class="ed-btn ed-go" type="submit">Log in</button>
+      <p class="ed-dim" id="loginMsg"></p>
+    </form>
+    <div id="pubForm">
+      <p class="ed-dim" id="pubWhat"></p>
+      <ul class="ed-list" id="pubChanges"></ul>
+      <input class="ed-in" id="pubNote" maxlength="200" placeholder="What changed, in a few words" aria-label="Note">
+      <div class="ed-actions"><button class="ed-btn ed-go" id="pubGo" type="button">Publish</button><button class="ed-btn" id="discard" type="button">Discard my draft</button></div>
+      <p class="ed-dim" id="pubMsg"></p>
+    </div>
+    <b class="ed-group">History</b>
+    <ol class="ed-list" id="history"><li class="ed-dim">Log in to see it.</li></ol>
   </div>
 </section>
 <div class="ed-toast" id="toast" role="status"></div>

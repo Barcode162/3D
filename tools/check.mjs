@@ -31,7 +31,8 @@ const CHECKS = {
   hub:      [['hub', 'node tools/hub_test.mjs']],
   ui:       [['uikit', 'node tools/uikit.mjs check'], ['ui', `${NP} node tools/ui_test.mjs`]],
   uikit:    [['uikit', 'node tools/uikit.mjs check']],
-  toolbelt: [['toolbelt', 'node tools/toolbelt_test.mjs'], ['ui_editor', `${NP} node tools/ui_editor_test.mjs`]],
+  toolbelt: [['toolbelt', 'node tools/toolbelt_test.mjs'], ['ui_php', 'php -l toolbelt/ui-editor/api.php >/dev/null'],
+             ['ui_api', 'node tools/ui_api_test.mjs'], ['ui_editor', `${NP} node tools/ui_editor_test.mjs`]],
   site:     [['site_php', 'for f in $(find homepage -name "*.php"); do php -l "$f" >/dev/null || exit 1; done'], ['site', `${NP} node tools/site_test.mjs`]],
   studio:   [['studio_api', 'node tools/studio_api_test.mjs'], ['ops', 'node tools/ops_test.mjs'], ['studio', `${NP} node tools/studio_test.mjs`]],
   server:   [['php', 'for f in server/*.php hub/*.php; do php -l "$f" >/dev/null || exit 1; done'],
@@ -54,7 +55,7 @@ const RULES = [
   [/^ui\/system\/|^tools\/uikit/, ['uikit', 'ui']],
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
   [/^tools\/ui_test/, ['ui']],
-  [/^toolbelt\/|^tools\/(toolbelt|ui_editor)_test/, ['toolbelt']],
+  [/^toolbelt\/|^tools\/(toolbelt|ui_editor|ui_api)_test/, ['toolbelt']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
   [/^assets\/world\/|^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],

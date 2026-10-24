@@ -14,6 +14,9 @@ missing or clumsy, fixing the tool is part of the piece.
 | `node tools/bench.mjs [native]` | benchmarks (native C++ and wasm benches `tools/native/bench_*.cpp`, the bar at every spot), saved forever, each number shown against the last run |
 | `node tools/beforeafter.mjs "<option A>" "<option B>" [spots]` | side-by-side pictures of two page options, any time |
 | `node tools/piece.mjs baseline` | pictures of the current build as the next "before" |
+| `node tools/piece.mjs <TAG> "<title>" --pages a,b` | a site or tool piece: phone-width before/after pictures of those pages (repo paths, e.g. `toolbelt/ui-editor/index.html?mode=theme`) instead of the bar |
+| `node tools/uikit.mjs css / check / pull / push` | the UI kit: `ui/themes.css` written from `ui/system/` (never by hand), the check that they agree, the UI Editor's published version into the repo and back |
+| `toolbelt/tools.json` | the Toolbelt: every tool, one entry each (a new tool = one line there) |
 
 ## The gallery (branch `gallery`, worktree `build/gallery`)
 Never merged or deployed. Keeps, for every piece: its before/after pictures

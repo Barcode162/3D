@@ -3,66 +3,263 @@
   "id": "sampler",
   "name": "Sampler",
   "about": "Every part once, so a theme can be judged on one screen. The UI Editor's default preview.",
-  "root": { "type": "stack", "gap": 18, "pad": 16, "children": [
-    { "type": "stack", "gap": 6, "children": [
-      { "type": "label", "text": "Looped · sampler" },
-      { "type": "title", "text": "Every part", "size": "xl" },
-      { "type": "text", "text": "One of each part a screen can use, in the theme you're looking at.", "tone": "dim" }
-    ] },
-    { "type": "grid", "min": 280, "gap": 14, "children": [
-      { "type": "panel", "children": [
-        { "type": "title", "text": "Keys", "size": "s" },
-        { "type": "row", "children": [
-          { "type": "key", "text": "Publish", "style": "go" },
-          { "type": "key", "text": "Discard" },
-          { "type": "key", "text": "Off", "disabled": true }
-        ] },
-        { "type": "row", "children": [
-          { "type": "key", "text": "Snap", "led": true, "on": true },
-          { "type": "key", "text": "Lock", "led": true },
-          { "type": "key", "text": "Small", "style": "small" }
-        ] },
-        { "type": "row", "wrap": false, "children": [
-          { "type": "key", "text": "Jukebox", "style": "tile", "icon": "note" },
-          { "type": "key", "text": "Darts", "style": "tile", "icon": "target" },
-          { "type": "key", "text": "Settings", "style": "tile", "icon": "gear" }
-        ] }
-      ] },
-      { "type": "panel", "children": [
-        { "type": "title", "text": "Choose", "size": "s" },
-        { "type": "seg", "options": ["Thing", "Part", "Face"], "on": 0 },
-        { "type": "row", "children": [
-          { "type": "chip", "text": "Lit", "on": true, "led": true },
-          { "type": "chip", "text": "Swinging", "led": true },
-          { "type": "chip", "text": "Tag" }
-        ] },
-        { "type": "switch", "text": "Lights dim", "on": true },
-        { "type": "field", "placeholder": "Name this place" }
-      ] },
-      { "type": "panel", "children": [
-        { "type": "title", "text": "How much", "size": "s" },
-        { "type": "row", "gap": 18, "children": [
-          { "type": "knob", "min": 0, "max": 6, "value": 1.6, "dec": 1, "unit": "°" },
-          { "type": "steps", "period": 2, "big": true }
-        ] },
-        { "type": "fader", "min": 0, "max": 100, "value": 70, "unit": "%" },
-        { "type": "meter", "level": 0.7 }
-      ] },
-      { "type": "panel", "children": [
-        { "type": "title", "text": "State", "size": "s" },
-        { "type": "lamps", "stage": "saved" },
-        { "type": "row", "children": [
-          { "type": "icon", "name": "light" }, { "type": "icon", "name": "sound" }, { "type": "icon", "name": "people" },
-          { "type": "steps", "period": 1 }
-        ] },
-        { "type": "image", "ratio": "16:9" }
-      ] },
-      { "type": "panel", "over": true, "children": [
-        { "type": "label", "text": "Over the 3D view" },
-        { "type": "text", "text": "A see-through panel, the kind the bar's menus use." },
-        { "type": "space", "size": 4 },
-        { "type": "key", "text": "Enter the bar", "style": "go", "icon": "bar" }
-      ] }
-    ] }
-  ] }
+  "root": {
+    "type": "stack",
+    "gap": 18,
+    "pad": 16,
+    "children": [
+      {
+        "type": "stack",
+        "gap": 6,
+        "children": [
+          {
+            "type": "label",
+            "text": "Looped · sampler"
+          },
+          {
+            "type": "title",
+            "text": "Every part",
+            "size": "xl"
+          },
+          {
+            "type": "text",
+            "text": "One of each part a screen can use, in the theme you're looking at.",
+            "tone": "dim"
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "min": 280,
+        "gap": 14,
+        "children": [
+          {
+            "type": "panel",
+            "children": [
+              {
+                "type": "title",
+                "text": "Keys",
+                "size": "s"
+              },
+              {
+                "type": "row",
+                "children": [
+                  {
+                    "type": "key",
+                    "text": "Publish",
+                    "style": "go"
+                  },
+                  {
+                    "type": "key",
+                    "text": "Discard"
+                  },
+                  {
+                    "type": "key",
+                    "text": "Off",
+                    "disabled": true
+                  }
+                ]
+              },
+              {
+                "type": "row",
+                "children": [
+                  {
+                    "type": "key",
+                    "text": "Snap",
+                    "led": true,
+                    "on": true
+                  },
+                  {
+                    "type": "key",
+                    "text": "Lock",
+                    "led": true
+                  },
+                  {
+                    "type": "key",
+                    "text": "Small",
+                    "style": "small"
+                  }
+                ]
+              },
+              {
+                "type": "row",
+                "wrap": false,
+                "children": [
+                  {
+                    "type": "key",
+                    "text": "Jukebox",
+                    "style": "tile",
+                    "icon": "note"
+                  },
+                  {
+                    "type": "key",
+                    "text": "Darts",
+                    "style": "tile",
+                    "icon": "target"
+                  },
+                  {
+                    "type": "key",
+                    "text": "Settings",
+                    "style": "tile",
+                    "icon": "gear"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "panel",
+            "children": [
+              {
+                "type": "title",
+                "text": "Choose",
+                "size": "s"
+              },
+              {
+                "type": "seg",
+                "options": [
+                  "Thing",
+                  "Part",
+                  "Face"
+                ],
+                "on": 0
+              },
+              {
+                "type": "row",
+                "children": [
+                  {
+                    "type": "chip",
+                    "text": "Lit",
+                    "on": true,
+                    "led": true
+                  },
+                  {
+                    "type": "chip",
+                    "text": "Swinging",
+                    "led": true
+                  },
+                  {
+                    "type": "chip",
+                    "text": "Tag"
+                  }
+                ]
+              },
+              {
+                "type": "switch",
+                "text": "Lights dim",
+                "on": true
+              },
+              {
+                "type": "field",
+                "placeholder": "Name this place"
+              }
+            ]
+          },
+          {
+            "type": "panel",
+            "children": [
+              {
+                "type": "title",
+                "text": "How much",
+                "size": "s"
+              },
+              {
+                "type": "row",
+                "gap": 18,
+                "children": [
+                  {
+                    "type": "knob",
+                    "min": 0,
+                    "max": 6,
+                    "value": 1.6,
+                    "dec": 1,
+                    "unit": "°"
+                  },
+                  {
+                    "type": "steps",
+                    "period": 2,
+                    "big": true
+                  }
+                ]
+              },
+              {
+                "type": "fader",
+                "min": 0,
+                "max": 100,
+                "value": 70,
+                "unit": "%"
+              },
+              {
+                "type": "meter",
+                "level": 0.7
+              }
+            ]
+          },
+          {
+            "type": "panel",
+            "children": [
+              {
+                "type": "title",
+                "text": "State",
+                "size": "s"
+              },
+              {
+                "type": "lamps",
+                "stage": "saved"
+              },
+              {
+                "type": "row",
+                "children": [
+                  {
+                    "type": "icon",
+                    "name": "light"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "sound"
+                  },
+                  {
+                    "type": "icon",
+                    "name": "people"
+                  },
+                  {
+                    "type": "steps",
+                    "period": 1
+                  }
+                ]
+              },
+              {
+                "type": "image",
+                "ratio": "16:9"
+              }
+            ]
+          },
+          {
+            "type": "panel",
+            "over": true,
+            "children": [
+              {
+                "type": "label",
+                "text": "Over the 3D view"
+              },
+              {
+                "type": "text",
+                "text": "A see-through panel, the kind the bar's menus use."
+              },
+              {
+                "type": "space",
+                "size": 4
+              },
+              {
+                "type": "key",
+                "text": "Enter the bar",
+                "style": "go",
+                "icon": "bar"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -76,6 +76,15 @@ textarea.ed-in { resize: vertical; min-height: 54px; line-height: 1.35; }
 .ed-toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translate(-50%, 16px); opacity: 0; transition: opacity .2s, transform .2s; background: #2A2D33; color: var(--e-text); border: 1px solid var(--e-line); padding: 8px 14px; border-radius: 10px; pointer-events: none; z-index: 9; max-width: calc(100% - 32px); }
 .ed-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+.ed-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 7; }
+.ed-dialog { position: fixed; z-index: 8; left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); max-width: 520px; margin: 0 auto; max-height: 80vh; display: flex; flex-direction: column; background: var(--e-bg2); border: 1px solid var(--e-line); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.ed-dbody { overflow: auto; padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ed-dbody form { display: flex; flex-direction: column; gap: 8px; }
+.ed-dbody .ed-in { font-family: var(--e-font); font-size: 16px; min-height: 40px; }
+.ed-dbody p { margin: 0; }
+.ed-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ed-list li { font-size: 12.5px; padding: 6px 8px; border-radius: 6px; background: var(--e-bg); overflow-wrap: anywhere; }
+.ed-list li b { font-family: var(--e-mono); }
 @media (min-width: 900px) {
   body.ed { grid-template-rows: auto minmax(0, 1fr); grid-template-columns: 260px minmax(0, 1fr) 340px; grid-template-areas: "top top top" "tree stage insp"; }
   .ed-sheet { display: contents; }

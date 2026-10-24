@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Test: PHP syntax"
-        run: for f in hub/*.php news/*.php $(find homepage -name "*.php") studio/*.php server/account.php; do php -l "$f"; done
+        run: for f in hub/*.php news/*.php $(find homepage -name "*.php") studio/*.php toolbelt/ui-editor/*.php server/account.php; do php -l "$f"; done
 
       - name: Install Playwright
         run: |
@@ -45,8 +45,8 @@ jobs:
       - name: "Test: the Toolbelt's list (toolbelt/tools.json)"
         run: node tools/toolbelt_test.mjs
 
-      - name: "Test: the UI Editor (toolbelt/ui-editor/)"
-        run: node tools/ui_editor_test.mjs
+      - name: "Test: the UI Editor (toolbelt/ui-editor/) and its store (api.php)"
+        run: node tools/ui_api_test.mjs && node tools/ui_editor_test.mjs
 
       - name: "Test: the theme files and themes.css agree (tools/uikit.mjs)"
         run: node tools/uikit.mjs check
@@ -76,6 +76,7 @@ jobs:
           mkdir -p -f private/studio
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/studio $IONOS_HOME/studio
           mkdir -p -f $IONOS_HOME/toolbelt
+          mkdir -p -f private/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/toolbelt $IONOS_HOME/toolbelt
           mkdir -p -f $IONOS_HOME/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/ui $IONOS_HOME/ui

@@ -33,10 +33,28 @@
       ]);
     }).then(function (b) {
       b[0].forEach(function (t) { S.themes[t.id] = t; });
-      S.base = JSON.parse(JSON.stringify(S.themes));
       S.icons = (b[3].match(/id="i-[a-z-]+"/g) || []).map(function (m) { return m.slice(6, -1); });
       b[1].forEach(function (s) { S.screens[s.id] = s; });
-      S.themeId = S.index.default; S.screenId = b[1][0].id;
+      return liveVersion();
+    }).then(function () {
+      S.base = JSON.parse(JSON.stringify(S.themes)); S.baseScreens = JSON.parse(JSON.stringify(S.screens));
+      S.themeId = S.index.default; S.screenId = Object.keys(S.screens)[0];
+      restoreDraft();
+    });
+  }
+  // The site is built from the repo's files; the store may hold a newer
+  // published version Claude hasn't pulled yet: start from that one.
+  function liveVersion() {
+    return Promise.all([getJson('live-version.json').catch(function () { return { version: 0 }; }), apiGet('?live')]).then(function (a) {
+      S.repoVersion = a[0].version || 0; S.live = a[1] && a[1].ok ? a[1] : { version: S.repoVersion };
+      if (!(S.live.version > S.repoVersion)) return;
+      return apiGet('?bundle=' + S.live.version).then(function (b) {
+        if (!b || !b.files) return;
+        Object.keys(b.files).forEach(function (path) {
+          var f = b.files[path], m = /^(themes|screens)\/([a-z0-9-]+)\.json$/.exec(path);
+          if (m && m[1] === 'themes') S.themes[f.id] = f; else if (m) S.screens[f.id] = f;
+        });
+      });
     });
   }
 
@@ -98,6 +116,8 @@
       (p.children || []).forEach(function (c, i) { walk(c, path === '' ? String(i) : path + '.' + i, depth + 1); });
     })(screen().root, '', 0);
     $('count').textContent = n + ' parts';
+    var cur = ol.querySelector('[aria-current="true"]');
+    if (cur && cur.scrollIntoView) { var r = cur.getBoundingClientRect(), v = ol.getBoundingClientRect(); if (r.top < v.top || r.bottom > v.bottom) cur.scrollIntoView({ block: 'nearest' }); }
   }
 
   function drawInspector() {
@@ -245,6 +265,7 @@
   }
   function edited() {
     $('undo').disabled = !S.undo.length; $('redo').disabled = !S.redo.length;
+    saveDraft();
     if (window.UIEditor && UIEditor.onEdit) UIEditor.onEdit();
   }
   function undo() { if (!S.undo.length) return; S.redo.push(snap()); restore(S.undo.pop()); S.lastKey = ''; edited(); drawAll(); toast('Undone'); }
@@ -330,7 +351,7 @@
     var acts = h('div', 'ed-actions'), cp = h('button', 'ed-btn', 'Copy as a new theme');
     cp.type = 'button'; cp.addEventListener('click', copyTheme); acts.appendChild(cp);
     var rs = h('button', 'ed-btn', 'Back to as loaded'); rs.type = 'button';
-    rs.disabled = !S.base[th.id] || JSON.stringify(S.base[th.id]) === JSON.stringify(th);
+    rs.disabled = !S.base || !S.base[th.id] || JSON.stringify(S.base[th.id]) === JSON.stringify(th);
     rs.addEventListener('click', function () { change('', function () { S.themes[th.id] = JSON.parse(JSON.stringify(S.base[th.id])); }); });
     if (S.base[th.id]) acts.appendChild(rs);
     box.appendChild(acts);
@@ -366,6 +387,97 @@
     drawInspectorRowState();
   }
   $('tree').addEventListener('click', function (e) { var b = e.target.closest('button[data-group]'); if (b) { S.group = b.dataset.group; drawTree(); drawInspector(); } });
+
+  // ---- Draft, login, publish ----
+  var API = 'api.php', DRAFT = 'uiEditorDraft';
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  function apiGet(q) { return fetch(API + q, { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; }); }
+  function apiPost(body) {
+    body.token = store('hubToken') || '';
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { j.status = r.status; return j; }); })
+      .catch(function () { return { ok: 0, status: 0, error: 'No connection to the store.' }; });
+  }
+  // What differs from the published version: one line per file.
+  function changes() {
+    var out = [];
+    Object.keys(S.themes).forEach(function (id) { if (JSON.stringify(S.themes[id]) !== JSON.stringify(S.base[id])) out.push((S.base[id] ? 'Theme ' : 'New theme ') + S.themes[id].name); });
+    Object.keys(S.screens).forEach(function (id) { if (JSON.stringify(S.screens[id]) !== JSON.stringify(S.baseScreens[id])) out.push((S.baseScreens[id] ? 'Screen ' : 'New screen ') + S.screens[id].name); });
+    return out;
+  }
+  function saveDraft() {
+    var n = changes().length;
+    if (!n) store(DRAFT, null);
+    else store(DRAFT, JSON.stringify({ base: S.live.version, at: Date.now(), themes: S.themes, screens: S.screens }));
+    status();
+  }
+  function restoreDraft() {
+    var d = null; try { d = JSON.parse(store(DRAFT) || 'null'); } catch (e) {}
+    if (!d || !d.themes || !d.screens) return;
+    S.themes = d.themes; S.screens = d.screens;
+    toast(d.base === S.live.version ? 'Your draft is back.' : 'Your draft is back (someone published since you started it).');
+  }
+  function status() {
+    var n = changes().length;
+    $('status').textContent = (n ? n + ' unpublished · ' : '') + 'v' + S.live.version + ' live';
+    $('pubOpen').textContent = n ? 'Publish ' + n : 'Publish';
+  }
+  function openPublish() {
+    $('pub').hidden = false; $('pubScrim').hidden = false; $('pubMsg').textContent = '';
+    var list = changes(), ul = $('pubChanges'); ul.textContent = '';
+    list.forEach(function (c) { ul.appendChild(h('li', null, c)); });
+    $('pubWhat').textContent = list.length ? 'These go live as version ' + (S.live.version + 1) + '. Every version is kept.' : 'Nothing changed since version ' + S.live.version + '.';
+    $('pubGo').disabled = !list.length; $('discard').disabled = !list.length; $('discard').textContent = 'Discard my draft';
+    apiPost({ a: 'me' }).then(function (j) {
+      var out = j.status === 401 || j.status === 403;
+      $('login').hidden = !out; $('pubForm').hidden = out;
+      if (j.status === 403) $('loginMsg').textContent = j.error;
+      if (j.ok) history();
+    });
+  }
+  function closePublish() { $('pub').hidden = true; $('pubScrim').hidden = true; }
+  function history() {
+    apiPost({ a: 'history' }).then(function (j) {
+      var ol = $('history'); ol.textContent = '';
+      if (!j.ok) { ol.appendChild(h('li', 'ed-dim', j.error || 'Not available.')); return; }
+      if (!j.versions.length) ol.appendChild(h('li', 'ed-dim', 'Nothing published yet.'));
+      j.versions.forEach(function (v) {
+        var li = h('li'); li.appendChild(h('b', null, 'v' + v.version + ' '));
+        li.appendChild(document.createTextNode(v.author + ' · ' + new Date(v.at * 1000).toLocaleString() + (v.note ? ' · ' + v.note : '')));
+        ol.appendChild(li);
+      });
+    });
+  }
+  function publish() {
+    var files = {};
+    Object.keys(S.themes).forEach(function (id) { files['themes/' + id + '.json'] = S.themes[id]; });
+    Object.keys(S.screens).forEach(function (id) { files['screens/' + id + '.json'] = S.screens[id]; });
+    $('pubGo').disabled = true; $('pubMsg').textContent = 'Publishing…';
+    apiPost({ a: 'publish', base: S.live.version, note: $('pubNote').value.trim(), bundle: { format: 1, files: files } }).then(function (j) {
+      if (!j.ok) { $('pubMsg').textContent = j.error || 'That didn\'t work.'; $('pubGo').disabled = false; return; }
+      S.live = j.live; S.base = JSON.parse(JSON.stringify(S.themes)); S.baseScreens = JSON.parse(JSON.stringify(S.screens));
+      store(DRAFT, null); $('pubNote').value = ''; status(); closePublish(); drawInspector();
+      toast('Published v' + j.live.version + '. Claude brings it into the site at the next go.');
+    });
+  }
+  $('pubOpen').addEventListener('click', openPublish);
+  $('pubClose').addEventListener('click', closePublish);
+  $('pubScrim').addEventListener('click', closePublish);
+  $('pubGo').addEventListener('click', publish);
+  $('discard').addEventListener('click', function () {
+    var b = $('discard');
+    if (b.textContent !== 'Tap again to discard') { b.textContent = 'Tap again to discard'; return; }
+    change('', function () { S.themes = JSON.parse(JSON.stringify(S.base)); S.screens = JSON.parse(JSON.stringify(S.baseScreens)); if (!S.themes[S.themeId]) S.themeId = S.index.default; if (!S.screens[S.screenId]) S.screenId = Object.keys(S.screens)[0]; S.sel = null; });
+    closePublish(); toast('Draft discarded. Undo brings it back.');
+  });
+  $('login').addEventListener('submit', function (e) {
+    e.preventDefault(); $('loginMsg').textContent = 'Logging in…';
+    fetch('/bar/account.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ a: 'login', user: $('user').value.trim(), pass: $('pass').value }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        if (!j.ok) { $('loginMsg').textContent = j.error || 'That didn\'t work.'; return; }
+        store('hubToken', j.token); openPublish();
+      }).catch(function () { $('loginMsg').textContent = 'No connection.'; });
+  });
 
   // ---- Selecting ----
   function select(path) { S.sel = path; markSel(); drawTree(); drawInspector(); }
@@ -412,7 +524,7 @@
     fromAddress();
     document.body.dataset.mode = S.mode;
     drawAll();
-    $('status').textContent = Object.keys(S.screens).length + ' screens · ' + Object.keys(S.themes).length + ' themes';
+    status();
   }).catch(function (e) { $('status').textContent = 'Did not load: ' + e.message; });
 
   window.UIEditor = { state: S, select: select, partAt: partAt, toast: toast, change: change, undo: undo, redo: redo, drawAll: drawAll };
