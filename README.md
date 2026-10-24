@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J1.2 The Charter (docs/charter/charter.md): the project and the user, the North star and the user's rules word for word (a generated block checked by the quick check: plan.mjs charter), each rule in practice, what's realistic (phone, hosting, CI, the cloud machine, Claude, money, law, licences), the permission list (allowed / ask first / never; anything not listed: ask), how the Charter changes
+
+`711f0d8` · 2026-10-24 11:15 · 4 files, +246 −3 · tests: quick
+
+Phone check: Read docs/charter/charter.md on GitHub and tell me yes or what to change
+
 ## J1.1 Close R6, freeze, write the restructure down: R6 sealed with 87bd110 (new plan.mjs seal), the user's new rules, J1-J8 on the road with J1 in Now, the governing spec docs/plan/restructure.md, docs/records/known-issues.md (23 problems, each with its job), the branch clean-up incident, step.mjs --no-news, a restructure pointer at the top of CLAUDE.md
 
 `b8bcf57` · 2026-10-24 11:11 · 8 files, +702 −12 · tests: quick
