@@ -23,6 +23,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-24) **Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job.
+- (2026-10-24) **Test only what the change touches:** a check runs because it covers what changed, any kind of test included (browser tests too, on this machine or on GitHub); nothing unrelated runs. Replaces "Speed over tests", which the user never said (request 2026-10-24 #5).
 - (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
 - (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
 - (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
@@ -38,7 +40,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - (2026-10-24) **The bar's menus stay plain HTML** over the 3D (no GPU cost) until Looped is understood better.
 - (2026-10-24) **The UI Editor is an engine tool** in the Toolbelt: dense, every setting.
 - (2026-10-24) **The site keeps few words**: the minimum text, a real 3D scene behind it later.
-- (2026-10-23) **Speed over tests**: no browser tests on the cloud machine; the quick check + pictures gate a piece; CI runs the rest; the phone is the real test.
 - (2026-10-22) **Light only comes from light sources**: no fake fill; darkness is real; eyes adjust.
 - (2026-10-22) **Automation first**: anything done twice becomes a tool.
 - (2026-10-22) **Wow and foundation take turns**; every visual piece has an off switch and before/after pictures.
@@ -56,12 +57,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J3 · The Playbook** (the tools). The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
-- [ ] **J3.1** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind (everything saved, records written, the session line with its error count) *Check:* Nothing on the phone; the Playbook's first page is on GitHub
-- [ ] **J3.2** Intake (docs/playbook/intake.md): every kind of message you send → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
-- [ ] **J3.3** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
-- [ ] **J3.4** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure scenario, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
-- [ ] **J3.5** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
-- [ ] **J3.6** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* Nothing on the phone; on GitHub CLAUDE.md is short and points to the Playbook
+- [x] **J3.1** Test only what changed, push only what you want: the user's two new rules (and "Speed over tests" taken out: the user never said it), pieces run only the checks for what they change and build only when needed, the engine's self-check idea parked *Check:* Nothing on the phone
+- [ ] **J3.2** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind *Check:* Nothing on the phone; the Playbook's first page is on GitHub
+- [ ] **J3.3** Intake (docs/playbook/intake.md): every kind of message → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
+- [ ] **J3.4** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
+- [ ] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
+- [ ] **J3.6** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
+- [ ] **J3.7** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* On GitHub CLAUDE.md is short and points to the Playbook
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
@@ -156,6 +158,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ### The engine
 - World-simulation engines: sound made from the physics, heat, smell as a field, day and night.
+- The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.

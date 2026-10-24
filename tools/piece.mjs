@@ -8,9 +8,10 @@
 // brightness) in the gallery's pieces.jsonl.
 // Options:
 //   --test a,b        check.mjs systems to run first (a failure stops the piece); default
-//                     "quick" (build, C++ tests, shaders: minutes, no browser); "changed"
-//                     for every system the files touch (slow here: no graphics card);
-//                     "none" for none. The slow browser tests run on CI at deploy.
+//                     "changed": only the checks covering the files this piece changes,
+//                     whatever kind (the user, 2026-10-24: test only what the change
+//                     touches); "quick" for the old quick set; "none" for none.
+//                     GitHub runs the full set at every deploy.
 //   --check "..."     the phone check: where to stand, what to see (kept for the reply)
 //   --compare "x=0"   also pictures with this page option vs without (the feature's switch)
 //   --spots a,b       only these spots (default: all of tools/lib/spots.mjs)
@@ -140,9 +141,11 @@ if (!title) { console.log('usage: node tools/piece.mjs <TAG> "<title>" [--test .
 const branch = sh('git rev-parse --abbrev-ref HEAD');
 const target = opt('branch') ?? process.env.PIECE_BRANCH ?? 'work-go';
 if (branch !== target && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to ${target})`);
-if (!has('no-build')) build();
+// Build only when the change needs it (code or world files), or for pictures of the bar.
+const touched = JSON.parse(sh('node tools/check.mjs changed --list') || '[]');
+if (!has('no-build') && (touched.includes('build') || (!has('no-shots') && !opt('pages')))) build();
 
-const tests = (opt('test') ?? 'quick').split(',').filter((t) => t && t !== 'none');
+const tests = (opt('test') ?? 'changed').split(',').filter((t) => t && t !== 'none');
 if (tests.length) {
   step(`tests: ${tests.join(', ')}`);
   if (!run(`FAST=1 node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }

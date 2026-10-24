@@ -38,6 +38,8 @@ try {
   check(plan('done', '--sha', 'def5678', '--what', 'next').status === 0 && /- `def5678` W99\.1-W99\.2: a test/.test(text()), 'the next done gives the last line its build code');
   check(plan('done', '--sha', 'aaa1111', '--what', 'sealed later').status === 0 && plan('seal', 'bbb2222').status === 0 && /- `bbb2222` sealed later/.test(text()) && !/\(this push\)/.test(text()), 'seal gives the "(this push)" line its build code');
   check(plan('seal', 'ccc3333').status === 1, 'seal refuses when nothing is waiting for a build code');
+  check(plan('rule', '**An old test rule:** before').status === 0 && plan('rule', '**A test rule:** one', '--replaces', 'An old test rule').status === 0 && !/\*\*An old test rule/.test(text()) && /\*\*A test rule:\*\* one/.test(text()), 'rule --replaces swaps a rule for a new one');
+  check(plan('rule', 'x', '--replaces', 'No such rule').status === 1, 'rule --replaces refuses a rule that is not there');
   check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1').status === 0 && plan('next', 'X2 → W1').status === 0 && /Up next, in order:\*\* X2 → W1/.test(text()), 'next sets the Up next line');
   check(plan('check').status === 0, 'after all that the copy still keeps its shape');
   const broken = text().replace('## 6. Parked', '## 6. Ideas');

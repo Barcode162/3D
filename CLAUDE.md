@@ -31,8 +31,8 @@ easy to pinpoint. So on "go":
 2. Work out of a branch `work-go` (`git fetch origin main && git checkout -B
    work-go origin/main` if it doesn't exist). Do the step's pieces in order.
    **One piece = one commit**, message starting with its tag (`E3.2 ...`).
-   Per piece only the **quick** check (`node tools/check.mjs quick`: build,
-   C++ tests, shaders; the piece runner's default) plus the pictures. Push
+   Per piece the checks for what it changed (`node tools/check.mjs changed`,
+   the piece runner's default) plus the pictures. Push
    each commit: `git push -u origin HEAD:work-go` (the container is temporary).
 3. End of the step: `git fetch origin main && git merge origin/main`, push
    `main` **once**. CI runs every test at deploy. CI deploys in ~6 min; the
@@ -52,24 +52,18 @@ easy to pinpoint. So on "go":
    from Dev → Publish. Nothing else on the hub during a go.
 7. Don't sit watching CI. If a run goes red, fix it, then tell the user.
 
-## Speed over tests (user, 2026-10-23)
-This cloud machine has no graphics card, so any test that runs the game in a
-browser (studio, smoke, touch, travel, mp, ...) is slow: 20-30 min each, an
-hour+ per piece with the new lighting. The user won't wait on them. So:
-- Never run the browser tests here, never wait on them, never block a piece
-  or a step on them. The quick check + the pictures are the gate.
-- CI runs the whole set at every deploy. A red CI run: fix it after,
-  without stopping the current step (and only the part that's really broken).
-- The phone check is the real visual test. A slower, safer run only when
-  the user asks or for a "broke <piece>" that needs it.
-- Tracking never gets skipped: one piece = one commit, the Build log, the
-  gallery, the PLAN.md ticks. That's what lets us fix things later.
+## Testing and pushing (the user, 2026-10-24: replaces "Speed over tests", which the user never said)
+- Test only what the change touches: `node tools/check.mjs changed` (the piece
+  runner's default) runs the checks covering the changed files, browser tests
+  included; nothing unrelated. GitHub runs the full set at every deploy.
+- Only what the user wants gets pushed: talking, questions, checks and
+  try-outs are never committed or pushed.
 
 ## Automation first (user, 2026-10-22)
 Anything done twice becomes a tool; Claude runs the tools, not the steps by
 hand, and improves a tool whenever it's missing or clumsy
 (`docs/AUTOMATION.md`). Each piece: `node tools/piece.mjs <TAG> "<title>"
---check "<phone check>"` (build, quick check, before/after
+--check "<phone check>"` (build if needed, the checks for what changed, before/after
 pictures into the `gallery` branch, commit, push). Each step's end: `node
 tools/step.mjs finish <STEP> "<what>" --bench`. Before/after is the norm.
 

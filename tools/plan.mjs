@@ -7,7 +7,8 @@
 //   node tools/plan.mjs tick <PIECE>             tick a piece in Now (piece.mjs does it)
 //   node tools/plan.mjs add <chapter> <TAG> "<what>" --serves N3[,N4]   a road item
 //   node tools/plan.mjs park <chapter> "<idea>"  a line in Parked (the user's "park:")
-//   node tools/plan.mjs rule "<rule>"            a dated line in Your rules (only on the user's word)
+//   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated line in Your rules (only on the
+//                                                user's word); --replaces takes out the rule whose bold name starts so
 //   node tools/plan.mjs start <TAG> --piece "<TAG.1>|<what>|<phone check>" [--piece ...]
 //                                                the road item becomes Now (the old Now must be all ticked)
 //   node tools/plan.mjs edit <TAG> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
@@ -147,8 +148,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     } else if (cmd === 'park') {
       save(addLine(text, 5, pos[0], `- ${pos[1]}`)); console.log(`parked under ${chapterName(pos[0])}`);
     } else if (cmd === 'rule') {
-      const p = part(text, 1), at = p.body.indexOf('\n- ') + 1, day = new Date().toISOString().slice(0, 10);
-      save(text.slice(0, p.from) + p.body.slice(0, at) + `- (${day}) ${pos[0]}\n` + p.body.slice(at) + text.slice(p.to)); console.log('rule added');
+      let p = part(text, 1);
+      const old = flags('replaces')[0];
+      if (old) {
+        const re = new RegExp(`^- \\(\\d{4}-\\d\\d-\\d\\d\\) \\*\\*${old.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*\\n`, 'm');
+        if (!re.test(p.body)) throw new Error(`no rule starts with "**${old}"`);
+        text = text.slice(0, p.from) + p.body.replace(re, '') + text.slice(p.to); p = part(text, 1);
+      }
+      const at = p.body.indexOf('\n- ') + 1, day = new Date().toISOString().slice(0, 10);
+      save(text.slice(0, p.from) + p.body.slice(0, at) + `- (${day}) ${pos[0]}\n` + p.body.slice(at) + text.slice(p.to)); console.log(old ? `rule "${old}" replaced` : 'rule added');
     } else if (cmd === 'start') {
       const tag = pos[0], now = part(text, 3);
       if (/^- \[ \]/m.test(now.body)) throw new Error('Now still has open pieces: tick them (or take them out by hand with the user) first');
@@ -206,7 +214,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     } else if (cmd === 'done') {
       save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
     } else {
-      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 21).join('\n')); process.exit(2);
+      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 22).join('\n')); process.exit(2);
     }
   } catch (e) { console.log(e.message); process.exit(1); }
 }

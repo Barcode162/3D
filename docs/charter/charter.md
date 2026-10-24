@@ -57,6 +57,8 @@ quick check.
   (Safari): smooth first, one look (the house theme Ember) everywhere.
 
 ### Your rules (newest first)
+- (2026-10-24) **Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job.
+- (2026-10-24) **Test only what the change touches:** a check runs because it covers what changed, any kind of test included (browser tests too, on this machine or on GitHub); nothing unrelated runs. Replaces "Speed over tests", which the user never said (request 2026-10-24 #5).
 - (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
 - (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
 - (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
@@ -72,7 +74,6 @@ quick check.
 - (2026-10-24) **The bar's menus stay plain HTML** over the 3D (no GPU cost) until Looped is understood better.
 - (2026-10-24) **The UI Editor is an engine tool** in the Toolbelt: dense, every setting.
 - (2026-10-24) **The site keeps few words**: the minimum text, a real 3D scene behind it later.
-- (2026-10-23) **Speed over tests**: no browser tests on the cloud machine; the quick check + pictures gate a piece; CI runs the rest; the phone is the real test.
 - (2026-10-22) **Light only comes from light sources**: no fake fill; darkness is real; eyes adjust.
 - (2026-10-22) **Automation first**: anything done twice becomes a tool.
 - (2026-10-22) **Wow and foundation take turns**; every visual piece has an off switch and before/after pictures.
@@ -90,6 +91,8 @@ fixed. Newest first, by the rule's bold name. **Confirmed by the user on
 
 | Rule | In practice |
 |---|---|
+| Only what the user wants gets pushed | A conversation, a question, a check or a try-out leaves nothing on GitHub. Only a change the user asked to add or edit is committed and pushed, as a job's piece. Records of that work (the request, the session line) ride with the job's pieces. |
+| Test only what the change touches | Each piece runs the checks that cover the files it changed (`node tools/check.mjs changed` picks them), whatever kind they are, browser tests included; nothing unrelated. GitHub runs the full set at every deploy. |
 | Never assume the user knows anything | Replies use plain words, no file names or commands unless asked. Every term used with the user is in the glossary. When a request could mean two things, Claude picks the likelier one, says so in one line, and continues (asking only when the choice is the user's to make). |
 | Zero errors per session | An error is anything that didn't go as expected because of us: a red check we caused, a failed deploy, something broken on the live site, a tool or procedure step that didn't work as written, a wrong statement to the user, lost work, a permission crossed. Each one gets an incident record (`docs/records/incidents/`) with its root cause and the change that stops it recurring; each session's record counts its errors. |
 | Nothing outside the guidelines | Every request gets a verdict before any work (doable now · after something else · at a cost, the user decides · needs an experiment · not possible, with the closest thing that is · against a rule). Section 5 is the permission list; whatever it doesn't list, Claude asks about first. |
@@ -105,7 +108,6 @@ fixed. Newest first, by the rule's bold name. **Confirmed by the user on
 | The bar's menus stay plain HTML | No menus drawn by the engine until the user decides Looped is ready. |
 | The UI Editor is an engine tool | It lives in the Toolbelt and shows every setting, densely. |
 | The site keeps few words | Site text stays minimal. |
-| Speed over tests | No browser tests on the cloud machine unless the user asks; the quick check and pictures gate a piece; GitHub runs the full set at every deploy, and a red result is fixed right after. |
 | Light only comes from light sources | No fake fill light anywhere; dark places stay dark. |
 | Automation first | Anything done twice becomes a tool; Claude runs the tools and improves them when they're missing or clumsy. |
 | Wow and foundation take turns | Every visual piece has an off switch and before/after pictures. |
@@ -132,8 +134,8 @@ game is drawn in software, slowly, so the browser tests are slow and
 sometimes time out. Deploys put the game live first (about 6 minutes) and
 run the long tests after.
 
-**The cloud machine Claude works on.** No graphics card (browser tests take
-20–30 minutes each); temporary (anything not pushed is lost when it ends);
+**The cloud machine Claude works on.** No graphics card (a browser test that
+runs the game takes minutes, the new light makes it slower); temporary (anything not pushed is lost when it ends);
 the network goes through a proxy; **tag pushes and branch deletions on
 GitHub are refused here.**
 
@@ -204,7 +206,8 @@ music.
   report it instead.
 - Publish news or push a front-page highlight (the user's switches).
 - Tell the user something is done or live without checking it.
-- Run the browser tests on the cloud machine, unless the user asks.
+- Push a conversation, a question, a check or a try-out to GitHub.
+- Run checks that don't cover what changed.
 
 **Anything not listed above: ask first.**
 

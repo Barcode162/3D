@@ -288,6 +288,8 @@ PIECE_BRANCH=job/J<n> PIECE_ATTRIBUTION="<this session's two lines>" \
   age. Stale comments in `deploy.yml` fixed.
 
 ### J3 · The Playbook
+(2026-10-24: J3.1 added for the user's request #5 (test only what changed, push
+only what the user wants); the pieces below are J3.2–J3.7 in `PLAN.md`.)
 Every procedure file uses one template: **When** (the trigger) · **Before
 you start** · **Steps** (numbered; each names the exact command or file) ·
 **Done when** · **If something goes wrong** (→ which procedure) ·

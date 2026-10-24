@@ -5,7 +5,7 @@
 //   node tools/check.mjs            checks for what changed since origin/main
 //   node tools/check.mjs all        every check
 //   node tools/check.mjs game room  only these systems
-//   node tools/check.mjs changed    only for what isn't committed yet
+//   node tools/check.mjs changed    only the checks covering what isn't committed yet (each piece; --list: the systems)
 //   node tools/check.mjs quick      build, C++ tests, shaders: no browser (each piece)
 // Systems: build, native, game, room, hub, server, plus the game's own tests
 // (mania, chess, arcade, meridian, race, menu, avatar, voice). The list itself:
@@ -32,7 +32,7 @@ function changedSystems(uncommittedOnly = false) {
       break;
     }
   }
-  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site'].includes(s))) want.add('build');
+  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'toolbelt', 'dev'].includes(s))) want.add('build');
   return { files, systems: ORDER.filter(s => want.has(s)) };
 }
 
@@ -41,6 +41,8 @@ let systems;
 if (args[0] === 'all') systems = ORDER.filter(s => s !== 'quick');
 else if (args[0] === 'changed') {  // only what isn't committed yet (tools/piece.mjs)
   const c = changedSystems(true);
+  // --list: just the systems (with "build" if the change needs one), for the piece runner.
+  if (args.includes('--list')) { console.log(JSON.stringify(c.systems)); process.exit(0); }
   systems = c.systems.filter((s) => s !== 'build');  // piece.mjs has just built
   console.log(`${c.files.length} uncommitted file(s) → ${systems.join(', ') || 'nothing to test'}`);
 }
