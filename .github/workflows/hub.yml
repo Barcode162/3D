@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -44,6 +44,9 @@ jobs:
 
       - name: "Test: the Toolbelt's list (toolbelt/tools.json)"
         run: node tools/toolbelt_test.mjs
+
+      - name: "Test: the UI Editor (toolbelt/ui-editor/)"
+        run: node tools/ui_editor_test.mjs
 
       - name: "Test: the theme files and themes.css agree (tools/uikit.mjs)"
         run: node tools/uikit.mjs check

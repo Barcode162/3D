@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-look="faceplate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121316">
+<meta name="robots" content="noindex, nofollow">
+<title>UI Editor · Toolbelt</title>
+<!-- The UI Editor (docs/UI_PLAN.md R1.4-R1.7), a Toolbelt tool: edits the
+     theme and screen files in ui/system/. The editor's own chrome has a fixed
+     plain look (editor.css) so it stays readable whatever the theme being
+     edited; only the preview wears the theme. editor.js. -->
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<link rel="stylesheet" href="/ui/screen.css">
+<link rel="stylesheet" href="editor.css">
+</head>
+<body class="ed">
+<header class="ed-top">
+  <a class="ed-btn ed-icon" href="/toolbelt/" aria-label="Back to the Toolbelt"><svg><use href="/ui/icons.svg#i-back"/></svg></a>
+  <div class="ed-seg" role="tablist" aria-label="What you edit">
+    <button type="button" data-mode="screen" aria-pressed="true">Screen</button>
+    <button type="button" data-mode="theme" aria-pressed="false">Theme</button>
+  </div>
+  <select class="ed-pick" id="pick" aria-label="Which screen"></select>
+  <span class="ed-grow"></span>
+  <span class="ed-status" id="status"></span>
+</header>
+
+<section class="ed-stage" id="stage" aria-label="Preview">
+  <div class="ed-stagebar">
+    <div class="ed-seg ed-small" aria-label="Preview size">
+      <button type="button" data-device="phone" aria-pressed="true">Phone</button>
+      <button type="button" data-device="computer" aria-pressed="false">Computer</button>
+      <button type="button" data-device="game" aria-pressed="false">In game</button>
+    </div>
+    <select class="ed-pick ed-small" id="themePick" aria-label="Preview theme"></select>
+  </div>
+  <div class="ed-viewport" id="viewport"><div class="lp ed-frame" id="frame"></div></div>
+</section>
+
+<section class="ed-sheet" id="sheet">
+  <div class="ed-pane" id="treePane">
+    <div class="ed-h"><b>Parts</b><span class="ed-grow"></span><span class="ed-dim" id="count"></span></div>
+    <ol class="ed-tree" id="tree"></ol>
+  </div>
+  <div class="ed-pane" id="inspPane">
+    <div class="ed-h"><b id="inspTitle">Nothing selected</b><span class="ed-grow"></span></div>
+    <p class="ed-dim ed-what" id="inspWhat">Tap a part in the preview or the list.</p>
+    <div class="ed-insp" id="insp"></div>
+  </div>
+</section>
+<div class="ed-toast" id="toast" role="status"></div>
+<script src="/ui/looped.js"></script>
+<script src="/ui/screen.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@ export function loadThemes() {
 export function loadScreens() {
   const dir = join(SYS, 'screens');
   if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => ({ file: f, ...readJson(join(dir, f)) }));
+  return readdirSync(dir).filter((f) => f.endsWith('.json') && f !== 'index.json').sort().map((f) => ({ file: f, ...readJson(join(dir, f)) }));
 }
 
 // What a value of each kind looks like (the editor shows a matching control).
@@ -136,7 +136,12 @@ export function problems() {
     if (types.has(p.type)) out.push(`parts.json: "${p.type}" is listed twice`); types.add(p.type);
     for (const [k, d] of Object.entries(p.props)) if (!['text', 'number', 'bool', 'choice', 'icon', 'list'].includes(d.kind)) out.push(`parts.json: ${p.type}.${k} has an unknown kind "${d.kind}"`);
   }
-  for (const sc of loadScreens()) out.push(...screenProblems(parts, sc));
+  const screens = loadScreens(), order = readJson(join(SYS, 'screens', 'index.json')).order;
+  for (const sc of screens) {
+    out.push(...screenProblems(parts, sc));
+    if (!order.includes(sc.id)) out.push(`screens/index.json: "${sc.id}" is not in the order`);
+  }
+  for (const id of order) if (!screens.some((sc) => sc.id === id)) out.push(`screens/index.json: "${id}" has no file`);
   if (readFileSync('ui/themes.css', 'utf8') !== themesCss(tokens, index, themes)) out.push('ui/themes.css is out of date: run `node tools/uikit.mjs css`');
   const js = readFileSync('ui/looped.js', 'utf8');
   try { if (withLooks(js, themes) !== js) out.push('ui/looped.js theme list is out of date: run `node tools/uikit.mjs css`'); } catch (e) { out.push(e.message); }
