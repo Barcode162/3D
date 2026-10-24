@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.2 One page per system: 51 pages under docs/handbook/systems/ (engine 17, world 13, site 5, tools 9, backbone 7), each with the same ten parts (what it is, status, what you can do, how it works, data, commands, limits, checks, known traps, history), from the code and the old notes; the Handbook tool writes the index (generated/systems.md, with each status) and the command list (generated/commands.md, from the front door), and its check refuses a page that breaks the template
+
+`9334698` · 2026-10-24 16:37 · 57 files, +2456 −9 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J6.1 The map of every folder and of every technology: docs/handbook/generated/map.md written by the new Handbook tool (node tools/project.mjs handbook write) from one line per folder (docs/handbook/folders.json), the deploy map and the files themselves (how many, which languages, who uploads them where); docs/handbook/tech.md: every language and outside tool, its version, where, why, runtime or build, ours or not, and the outside assets with their credits; the Handbook check (generated pages current, every folder described, every link leads to a file) runs in every quick check
 
 `694f753` · 2026-10-24 16:06 · 9 files, +312 −5 · tests: changed
