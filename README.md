@@ -6,6 +6,24 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R2.3 Six candidate themes, each with a light and a dark half: Clean (calm, Apple-like), Warm (the bar at night), Bold (black frames, hard shadows, yellow), Glass (frosted panels over violet and cyan), Neon (the bar's signs), Soft (round, pastel); system fonts in the editor's font menu
+
+`7542058` · 2026-10-24 04:30 · 10 files, +1197 −4 · tests: quick, toolbelt
+
+Phone check: in the UI Editor pick each of Clean, Warm, Bold, Glass, Neon, Soft in the preview's theme menu and flip Dark / Light
+
+![R2.3 page-ui-screen-s-dev-overview-look-clean-scheme-light.jpg](R2.3/page-ui-screen-s-dev-overview-look-clean-scheme-light.jpg)
+
+![R2.3 page-ui-screen-s-dev-overview-look-warm-scheme-dark.jpg](R2.3/page-ui-screen-s-dev-overview-look-warm-scheme-dark.jpg)
+
+![R2.3 page-ui-screen-s-dev-overview-look-bold-scheme-light.jpg](R2.3/page-ui-screen-s-dev-overview-look-bold-scheme-light.jpg)
+
+![R2.3 page-ui-screen-s-dev-overview-look-glass-scheme-dark.jpg](R2.3/page-ui-screen-s-dev-overview-look-glass-scheme-dark.jpg)
+
+![R2.3 page-ui-screen-s-dev-overview-look-neon-scheme-dark.jpg](R2.3/page-ui-screen-s-dev-overview-look-neon-scheme-dark.jpg)
+
+![R2.3 page-ui-screen-s-dev-overview-look-soft-scheme-light.jpg](R2.3/page-ui-screen-s-dev-overview-look-soft-scheme-light.jpg)
+
 ## R2.2 Light and dark in one theme: a theme file can carry its other half (only the tokens that differ), the page follows the phone's setting (or ?scheme= / Looped.setScheme), the editor's Dark / Light switch shows and edits either half (Light on a dark-only theme starts a plain light half); new type tokens (word font, key case, size, weight, spacing, width) so a theme can drop the capitals; the engine reads both halves
 
 `3386773` · 2026-10-24 04:24 · 15 files, +244 −20 · tests: quick, toolbelt
