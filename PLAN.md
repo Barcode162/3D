@@ -55,13 +55,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J66 · Deploys never wait for, or get stopped by, the tests** (the tools). Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
-- [x] **J66.1** The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's *Check:* The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
-- [x] **J66.2** The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s) *Check:* GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)
+**J54 · CI's browser tests** (the engine). CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
+- [ ] **J54.1** Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5 *Check:* Dev → Plan: J54.1 ticked; the known issue names the cause
+- [ ] **J54.2** The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened) *Check:* Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
+**Up next, in order:** J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -172,8 +172,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* RC3 · *Verdict:* Needs an experiment — Safari gives the camera but not the depth sensor; a model from photos, from scratch, is research: a time-boxed try
 - [ ] **J53** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
   *Formerly* L8 · *Verdict:* Needs an experiment — Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable
-- [ ] **J54** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
-  *Formerly* EN4 · *Verdict:* Doable now — Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing
 - [ ] **J78** The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them. · N2
   *Verdict:* Doable after J43 — Needs the grammar settled first; plain C++ with native tests, no graphics card needed
 - [ ] **J79** The script language, step 3, the tiny safe runner: events, states, timers, loops, remembered values, messages; a step budget per frame and a memory limit, a script touching only its own thing; a kind's states, rules and loops turned into a script and back without losing anything. · N2 N3
@@ -260,6 +258,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116
 - `a29204e` J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
 - `450fb52` J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
 - `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc

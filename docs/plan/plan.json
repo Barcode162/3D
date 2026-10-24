@@ -36,30 +36,30 @@
   }
  ],
  "now": {
-  "id": "J66",
-  "title": "Deploys never wait for, or get stopped by, the tests",
-  "chapter": "the tools",
-  "about": "Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33).",
+  "id": "J54",
+  "title": "CI's browser tests",
+  "chapter": "the engine",
+  "about": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again",
   "serves": [
    "N5"
   ],
   "pieces": [
    {
-    "id": "J66.1",
-    "text": "The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's",
-    "check": "The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing",
-    "done": true
+    "id": "J54.1",
+    "text": "Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5",
+    "check": "Dev → Plan: J54.1 ticked; the known issue names the cause",
+    "done": false
    },
    {
-    "id": "J66.2",
-    "text": "The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s)",
-    "check": "GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)",
-    "done": true
+    "id": "J54.2",
+    "text": "The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened)",
+    "check": "Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)",
+ "upNext": "J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)",
  "road": {
   "world": [
    {
@@ -761,19 +761,6 @@
     }
    },
    {
-    "id": "J54",
-    "formerly": "EN4",
-    "text": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again",
-    "serves": [
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing"
-    }
-   },
-   {
     "id": "J78",
     "text": "The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them.",
     "serves": [
@@ -1121,6 +1108,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116"
+  },
   {
    "build": "a29204e",
    "text": "J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e"
