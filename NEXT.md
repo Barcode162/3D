@@ -8,15 +8,22 @@ Alive plan, replanned 2026-10-22: tracks L M T R A W, wow and foundation
 take turns, every visual piece has an off switch and before/after pictures,
 every piece writes its page in `docs/manual/`).
 
-## The next step: R2, the house theme (docs/UI_PLAN.md)
-R1 (the Toolbelt and the UI Editor) is built. R2 uses the editor to find the
-one look for the whole project. **All engine work stays paused** (L1.8, P1,
-P2 and every later step below) until R6 is done.
-- [x] **R2.1** Real screens to judge a theme on, as screen files: the front door, Dev's Overview, a bar menu (plus the parts they need: list row, tab bar, picture card). *Check:* in the UI Editor's screen menu, open each one.
-- [x] **R2.2** Light and dark in one theme: a theme carries both, the page follows the phone's setting, the editor flips between them. *Check:* in the editor, Light / Dark flips the preview.
-- [x] **R2.3** Six candidates as theme files, each light and dark: Clean (calm, Apple-like), Warm (the bar at night), Bold, Glass, Neon, Soft. *Check:* pick each in the preview's theme menu.
-- [x] **R2.4** Compare and mix: one screen in every candidate side by side; take a group (colour, shape, type...) from one theme into another. *Check:* Compare shows three phones; "Take Shape from Clean" changes the corners.
-- [ ] **R2.5** The user's pick becomes the house theme: named, the default theme file, used by the Toolbelt and the editor. **Waiting on the user's pick** (the picture board in the chat; Toolbelt → Compare themes).
+## The next step: R3, the World Plan (docs/UI_PLAN.md)
+R2 is built: the house theme is **Ember** (the user's mix of Warm + Glass +
+glow + moving titles); the other ten themes stay as options. R3 makes the
+one plan doc. **All engine work stays paused** (L1.8, P1, P2 and every later
+step below) until R6 is done.
+- [ ] **R3.1** `PLAN.md` in its fixed shape (8 parts: North star, Your rules, the 5 chapters, Now, the road, Parked, Done, Where things are), the North star from docs/VISION.md, the rules from the chat and CLAUDE.md. *Check:* read PLAN.md on GitHub: it says what the project is in one screen.
+- [ ] **R3.2** Carry over: the open work in NEXT.md, PROGRESS.md, the 58 Hub cards and the old plans goes into its chapter (road or Parked); the old plan files move to `docs/archive/`. *Check:* the road has every open thing once.
+- [ ] **R3.3** The plan tool (`tools/plan.mjs`): add a request into its chapter, tick pieces, write the build log, refuse anything that breaks the shape; piece.mjs and step.mjs use it; NEXT.md becomes a pointer. *Check:* none on the phone (Claude's tool).
+
+## R2, the house theme (built 2026-10-24)
+- [x] **R2.1** Real screens: front door, Dev Overview, bar jukebox menu (new parts: backdrop, list row, tab bar).
+- [x] **R2.2** Light and dark in one theme; type tokens (key case, size, weight).
+- [x] **R2.3** Six candidates: Clean, Warm, Bold, Glass, Neon, Soft.
+- [x] **R2.4** Compare (`/ui/compare.html`) and mix ("Take Shape from…").
+- [x] **R2.5** Motion tokens: moving titles, drifting background glow.
+- [x] **R2.6** Ember, the house theme; the Toolbelt wears it, the editor and Compare start on it.
 
 ## R1, the Toolbelt and the UI Editor (built 2026-10-24)
 - [x] **R1.1** The Toolbelt (`toolbelt/tools.json`, `/toolbelt/`). *Check:* open joshuavelasco.com/toolbelt, every tool opens.
