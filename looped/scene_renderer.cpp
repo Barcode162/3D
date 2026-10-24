@@ -1467,7 +1467,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   frame_.env[0] = 0;
   frame_.env[1] = envReady_ ? 1.0f : 0.0f;
   frame_.env[2] = static_cast<float>(kEnvLevels - 1);
-  frame_.env[3] = classic_ ? 1.0f : 0.0f;
+  frame_.env[3] = testLight_ ? 2.0f : classic_ ? 1.0f : 0.0f;  // 2: test lighting (scene.wgsl)
   frame_.units[0] = emissiveNits_;
   frame_.units[1] = ambientNits_;
   frame_.units[2] = 1.0f / engine::kPi;

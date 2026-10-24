@@ -671,7 +671,8 @@ void handleCommands() {
                                                        : engine::settings::number("lighting", 0) != 0;
     if (first || classic != g_app.renderer.classicLighting()) {
       g_app.renderer.setClassicLighting(classic);
-      LOG_INFO("Lighting: %s.", classic ? "classic" : "new");
+      g_app.renderer.setTestLighting(g_app.hooks.lightTest);
+      LOG_INFO("Lighting: %s.", g_app.hooks.lightTest ? "test" : classic ? "classic" : "new");
     }
     g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
     g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));

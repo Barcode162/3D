@@ -37,10 +37,11 @@ env:
   # Only a flag here: the Cloudflare token itself goes only into the env of
   # the steps that run wrangler (a job-level `if:` can't read secrets).
   HAVE_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
-  # The browser tests open the bar with ?light=classic here (tools/lib/browser.mjs):
-  # GitHub's machines draw in software, too slowly for the new light (KI-5).
-  # The phone and the piece pictures cover the new light.
-  TEST_LIGHT: classic
+  # The browser tests open the bar with ?light=test here (tools/lib/browser.mjs):
+  # the tests' own lighting (a flat light, no lamps, reflections, glow or full
+  # mirrors), quick on GitHub's machines that draw in software (KI-5). The
+  # phone and the piece pictures cover the real light.
+  TEST_LIGHT: test
 
 jobs:
   # Did anything in the game change since the live build? Files that never

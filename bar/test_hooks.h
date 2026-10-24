@@ -16,6 +16,8 @@
 //   ?coin                 the credit coin pops out once (screenshots)
 //   ?post=0|1             glow and mood after the scene off / on (looped/post.h)
 //   ?light=classic        the old lighting (docs/manual/light.md); New is the default
+//   ?light=test           the tests' lighting: classic, a flat light instead of the lamps,
+//                         no reflections, no glow and mood, simple mirrors (quick in software)
 //   ?<feature>=0          one feature of the Alive plan off, e.g. ?bounce=0
 //                         (every feature's switch: docs/manual/)
 // (?skipintro, ?server=, ?cloud=, ?room=, ?name=, ?testerror are read by
@@ -46,6 +48,7 @@ struct TestHooks {
   // ?light=classic: the lighting before L1 (Settings → Graphics → Lighting
   // also switches it; this forces it). -1 = the setting, 0 = new, 1 = classic.
   int lightClassic = -1;
+  bool lightTest = false;  // ?light=test (see above)
   // ?<name>=0 for any feature switch (docs/manual/): false = turned off.
   bool feature(const char* name) const;
   // ?<name>=<number> for tuning by hand (e.g. ?eyekeep=0.5): `def` when absent.

@@ -204,3 +204,9 @@ _Not built yet._
 ## L8 Paint the light
 
 _Not built yet._
+
+## The tests' lighting (`?light=test`)
+For the automatic tests only (GitHub's machines draw without a graphics card):
+classic lighting plus a flat light from above instead of the lamps, and no
+bounced light, reflections, glow and mood or full mirrors. The tests check
+what happens, not how it looks. Never on the phone.

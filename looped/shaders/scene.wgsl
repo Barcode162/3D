@@ -28,6 +28,7 @@ struct Frame {
   // Reflections (E4.4): x = 1 while capturing the cube (store light, not
   // display colour), y = 1 once the cube is ready, z = its last mip level.
   // w = 1: classic lighting (before L1), the picture leaves here tone mapped.
+  // w = 2: test lighting (?light=test): a flat light from above, no lamps.
   env: vec4f,
   envMin: vec4f,     // the room's box: reflections are matched to it
   envMax: vec4f,
@@ -536,6 +537,9 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
 // ambient light in creases (ambient occlusion).
 fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32, emission: vec3f,
          ao: f32) -> vec4f {
+  // Test lighting: the tests check what happens, not how it looks; software
+  // drawing on machines without a graphics card can't afford every lamp.
+  if (frame.env.w > 1.5) { return vec4f(min(base * (0.45 + 0.55 * max(n.y, 0.0)) * ao + emission, vec3f(1.0)), 1.0); }
   let v = normalize(frame.cameraPos.xyz - worldPos);
   let roughness = clamp(roughnessIn, 0.04, 1.0);
   let a = roughness * roughness;

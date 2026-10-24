@@ -85,6 +85,9 @@ class SceneRenderer {
   // The lighting before L1 (docs/manual/light.md): Settings → Graphics →
   // Lighting, or ?light=classic.
   void setClassicLighting(bool classic);
+  // Test lighting (?light=test, the tests only): classic, plus a flat light from
+  // above instead of every lamp per pixel (scene.wgsl), so software drawing is quick.
+  void setTestLighting(bool on) { testLight_ = on; }
   bool classicLighting() const { return classic_; }
   // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
   void setEyes(bool on) { eyes_ = on; }
@@ -318,7 +321,7 @@ class SceneRenderer {
   engine::Gpu* gpu_ = nullptr;
   PostEffects post_;
   bool postOn_ = true;
-  bool classic_ = false, eyes_ = true;
+  bool classic_ = false, eyes_ = true, testLight_ = false;
   size_t mirrorCount_ = 0;
   int mirrorDetail_ = 0;
   wgpu::RenderPipeline pipeline_;          // normal view

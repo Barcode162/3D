@@ -61,7 +61,15 @@ TestHooks TestHooks::parse() {
   if (param(query, "mirrorq", v) && !v.empty()) h.mirrorQ = std::atoi(v.c_str());
   if (param(query, "coin", v)) h.coin = true;
   if (param(query, "post", v) && !v.empty()) h.post = std::atoi(v.c_str()) ? 1 : 0;
-  if (param(query, "light", v)) h.lightClassic = v == "classic" ? 1 : 0;
+  if (param(query, "light", v)) {
+    h.lightClassic = v == "classic" || v == "test" ? 1 : 0;
+    h.lightTest = v == "test";
+  }
+  if (h.lightTest) {  // the tests' lighting: everything costly off
+    h.noReflect = true;
+    if (h.post < 0) h.post = 0;
+    if (h.mirrorQ < 0) h.mirrorQ = 1;
+  }
   if (param(query, "quality", v)) {
     const char* names[] = {"auto", "high", "medium", "low"};
     for (int i = 0; i < 4; ++i) if (v == names[i]) h.quality = i;

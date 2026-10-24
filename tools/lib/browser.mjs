@@ -13,9 +13,10 @@ export function loadPlaywright() {
 export const GPU_ARGS = ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
                          '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'];
 
-// TEST_LIGHT=classic (deploy.yml sets it): GitHub's machines draw in
-// software, too slowly for the new light (docs/records/known-issues.md
-// KI-5), so there the bar's page opens with ?light=classic. Only the bar's
+// TEST_LIGHT=test (deploy.yml sets it; or classic): GitHub's machines draw
+// in software, too slowly for the real light (docs/records/known-issues.md
+// KI-5), so there the bar's page opens with ?light=test, the tests' own
+// lighting (bar/test_hooks.h). Only the bar's
 // own page gets it (the site root or /bar/, with or without index.html), and
 // only when its address names no light itself; it's added before the page's
 // scripts run. Unset (here, and for the pictures): the new light.

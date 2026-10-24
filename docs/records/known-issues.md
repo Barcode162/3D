@@ -13,7 +13,7 @@ spec: `docs/plan/restructure.md`.
 | KI-2 | Dev's plan is a copy uploaded at the very end of `hub.yml`, after nine browser tests: a failed or cancelled run leaves Dev stale (Dev showed R5 for 2 h on 2026-10-24). | J5.2 |
 | KI-3 | Finishing a step never moves the next item into Now, and the Done line waits for the next step to get its build code. (Stopgap 2026-10-24: `plan.mjs seal`.) | J4.1, J4.3 |
 | KI-4 | `PLAN.md` → 3. The chapters: the "Now" lines are stale ("R5 replaces them", "Dev (R4) next"); the plan tool has no command to update them. | J4.1 |
-| KI-5 | The browser smoke test fails on GitHub since the new light (R5: screenshot timeout 90 s; R6: "rotation should resize exactly once each way"), so 12 browser suites are skipped at every game deploy; R3–R6 deploys all ended red. | J2.1 (the tests open the bar with `?light=classic` on GitHub: `TEST_LIGHT`; closes when a GitHub run passes the smoke test) |
+| KI-5 | The browser smoke test fails on GitHub since the new light (R5: screenshot timeout 90 s; R6: "rotation should resize exactly once each way"), so 12 browser suites are skipped at every game deploy; R3–R6 deploys all ended red. | J2.1 (J2.1: the tests open the bar with a test lighting on GitHub, `TEST_LIGHT`; first `?light=classic`, then its own `?light=test` (request 2026-10-24 #6); closes when a GitHub run passes the smoke test) |
 | KI-9 | `homepage/` is uploaded by both `deploy.yml` and `hub.yml`. | J5.3 |
 | KI-10 | Two separate parsers of `PLAN.md` (`tools/plan.mjs`, `dev/plan.js`). | J4.1 |
 | KI-11 | Three lists of projects: `toolbelt/tools.json` (Dev), the site's hand-written list + folder scan (`homepage/site/layout.php` `site_projects()`), the old hub boards (`hub/hub.php`). | J5.5 |
@@ -31,7 +31,7 @@ spec: `docs/plan/restructure.md`.
 | KI-24 | The Studio test failed on GitHub on 2026-10-22 (run 179, before the new light) at one check, "S3.4 reopening the Studio: your draft is still there (undefined vs -2)", after a 4-minute wait; every run since stopped before it (KI-5), so its state today is unknown. It may be a real bug (a draft lost when the Studio reopens) or slow-machine timing. Allowed to fail on GitHub until settled. | J2 follow-up (the first J2 run), then a fix |
 | KI-25 | Three browser tests have never run on GitHub: touching things, travel between places, voice chat. Added in J2.2 and allowed to fail until their first GitHub results are in. | J2 follow-up (the first J2 run) |
 | KI-27 | `tools/account_test.mjs` was built for the old multiplayer relay (`server/relay.php`, retired 2026-10-18); no list runs it (`tools/lib/checks.mjs` → `NOT_LISTED`). Sign-up and profiles have no browser test on GitHub (`hub_test` and `gate_test` cover `account.php`'s API). | J7.1 (a job to rewrite it for the room server) |
-| KI-28 | GitHub's tests use the classic light (J2.1), so the new light is covered only by the shaders' compile check (`wgsl`), the piece pictures (taken here with the new light) and the phone. A GitHub machine with a graphics card would cover it, at a cost: the user's call. | J7.1 (verdict; the user decides) |
+| KI-28 | GitHub's tests use the tests' own light (`?light=test`, J2.1 / request #6), so the new light is covered only by the shaders' compile check (`wgsl`), the piece pictures (taken here with the new light) and the phone. A GitHub machine with a graphics card would cover it, at a cost: the user's call. | J7.1 (verdict; the user decides) |
 
 ## Closed
 
