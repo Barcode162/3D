@@ -41,7 +41,7 @@ A game deploy takes about an hour with its tests; the bar is live within about 6
 
 ## Known traps
 
-A cancelled run (a newer push took over) is not a failure. Tag pushes and branch deletions are refused in this environment.
+A cancelled run (a newer push took over) is not a failure. Tag pushes and branch deletions are refused in this environment. Game deploys queue: one runs at a time and keeps its turn through its tests (about an hour), so a run waiting with no steps is behind the one before, not hung (KI-32; [the Playbook](../../../playbook/failures.md#a-deploy-looks-stuck)).
 
 ## History
 

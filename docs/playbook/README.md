@@ -41,6 +41,7 @@ book names exists.
 | Replying to the user | [reply.md](reply.md) |
 | A check fails here | [failures.md](failures.md) → A check fails |
 | GitHub's run is red | [failures.md](failures.md) → A deploy is red |
+| A GitHub run looks stuck (in progress or queued for long) | [failures.md](failures.md) → A deploy looks stuck |
 | The live site or the room is down | [failures.md](failures.md) → Live is broken |
 | A conflict (merge, store) | [failures.md](failures.md) → Conflicts |
 | A tool crashes, a key is missing, the network or disk refuses | [failures.md](failures.md) → The machine |

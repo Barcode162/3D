@@ -29,6 +29,18 @@ Each case: what to do, in order. Anything we caused is also an incident
 Never make a test "allowed to fail" without an open known issue (the check
 `tools/workflows_test.mjs` refuses it).
 
+## A deploy looks stuck
+
+**When:** a GitHub run has been "in progress" or "queued" for a long time.
+1. The run before it, of the same workflow: game deploys run one at a time
+   and each keeps its turn through its hour of tests (KI-32), so a new run
+   waits with no steps until the one before ends. That's a queue, not a hang.
+2. Inside the run: each step's start and end times. A step is hung only when
+   it started long ago and hasn't ended; never judge by the run's status alone.
+3. A real hang → the known issue gets the run's link and the step; cancelling
+   is refused here (403), so the user can cancel it on GitHub (Actions → the
+   run → Cancel); say so once.
+
 ## Live is broken
 
 **When:** the user reports it, Dev shows the bar or the room down, or a check
