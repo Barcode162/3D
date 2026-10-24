@@ -61,7 +61,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J6.2** One page per system (about 40, one template: what it is, status, what you can do, how it works, data, commands, limits, checks, traps, history) *Check:* Nothing on the phone
 - [x] **J6.3** The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed) *Check:* Nothing on the phone
 - [x] **J6.4** Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door *Check:* Nothing on the phone
-- [ ] **J6.5** How-to recipes (about 25): each common request mapped to its exact steps *Check:* Nothing on the phone
+- [x] **J6.5** How-to recipes (about 25): each common request mapped to its exact steps *Check:* Nothing on the phone
 - [ ] **J6.6** The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check *Check:* Nothing on the phone
 
 ## 5. The road

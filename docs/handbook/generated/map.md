@@ -30,11 +30,11 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 10 | JavaScript, PHP, CSS | hub.yml → home/dev |
-| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 126 | Markdown, JSON | plan.yml → private/dev |
+| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 148 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans and instructions. Never instructions. | 16 | Markdown | not uploaded |
 | `docs/audit/` | Old audits of the code (large JSON); sorted in J6.6. | 7 | JSON | not uploaded |
 | `docs/charter/` | The Charter: what the project is, the user's rules (rules.json, word for word), the glossary. | 3 | Markdown, JSON | plan.yml → private/dev |
-| `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 63 | Markdown, JSON | not uploaded |
+| `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 85 | Markdown, JSON | not uploaded |
 | `docs/handbook/generated/` | Handbook pages written from the files by node tools/handbook.mjs; never edited by hand. | 8 | Markdown | not uploaded |
 | `docs/manual/` | The old manual (light, materials, world, avatars, recipes, timeline); sorted in J6.6. | 7 | Markdown | not uploaded |
 | `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 3 | Markdown, JSON | plan.yml → private/dev |
@@ -69,10 +69,10 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 145 | JavaScript, Python, C++ | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 147 | JavaScript, Python, C++ | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 36 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit, pre-push). | 2 | other | not uploaded |
-| `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 16 | JavaScript | not uploaded |
+| `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 17 | JavaScript | not uploaded |
 | `tools/migrations/` | One-time conversions of the world files (kept as the record of what changed). | 3 | JavaScript, JSON | not uploaded |
 | `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 24 | C++, shell | not uploaded |
 | `ui/` | The look kit shared by the site, the tools and the bar's menus: looped.js and looped.css (the parts), screens, fonts, icons, the theme CSS. | 46 | JSON, fonts, text | hub.yml → home/ui |

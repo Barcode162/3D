@@ -1,4 +1,4 @@
-// The Playbook names only what exists (restructure J4.6). In docs/playbook/,
+// The Playbook names only what exists (restructure J4.6). In docs/playbook/, the Handbook's recipes,
 // CLAUDE.md and docs/plan/jobs/TEMPLATE.md: every `node tools/<x>.mjs` is a
 // file; every `project.mjs <command>` is in tools/lib/commands.mjs; every
 // `<tool>.mjs <word>` names a command that tool has; every link leads to a
@@ -10,7 +10,7 @@ import { COMMANDS } from './lib/commands.mjs';
 
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
-const docs = [...readdirSync('docs/playbook').filter((f) => f.endsWith('.md')).map((f) => `docs/playbook/${f}`), 'CLAUDE.md', 'docs/plan/jobs/TEMPLATE.md'];
+const docs = [...readdirSync('docs/playbook').filter((f) => f.endsWith('.md')).map((f) => `docs/playbook/${f}`), 'CLAUDE.md', 'docs/plan/jobs/TEMPLATE.md', 'docs/handbook/recipes.md'];
 const now = +((JSON.parse(readFileSync('docs/plan/plan.json', 'utf8')).now?.id || '').match(/^J(\d+)$/) || [0, 0])[1];
 const sources = {};
 const source = (f) => (sources[f] ??= readFileSync(f, 'utf8'));
