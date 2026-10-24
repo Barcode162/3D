@@ -10,6 +10,8 @@
 //   node tools/plan.mjs rule "<rule>"            a dated line in Your rules (only on the user's word)
 //   node tools/plan.mjs start <TAG> --piece "<TAG.1>|<what>|<phone check>" [--piece ...]
 //                                                the road item becomes Now (the old Now must be all ticked)
+//   node tools/plan.mjs edit <TAG> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
+//   node tools/plan.mjs pieces [--about "<what the step is>"] --piece "<TAG.1>|<what>|<check>" ...   replace Now's pieces (only before any is ticked)
 //   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
@@ -140,6 +142,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const n2 = part(t, 3);
       t = t.slice(0, n2.from) + `**${tag} · ${title}** (${chapter.toLowerCase()}). ${m[1]} · ${m[2]}\n${pieces.join('\n')}\n\n` + t.slice(n2.to);
       save(t); console.log(`${tag} is now in Now with ${pieces.length} pieces`);
+    } else if (cmd === 'edit') {
+      const [tag, what] = pos, road = part(text, 4);
+      const re = new RegExp(`^(- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* ).+( · N\\d+(?: N\\d+)*)$`, 'm');
+      if (!re.test(road.body)) throw new Error(`${tag} is not an open road item`);
+      const serves = flags('serves')[0];
+      save(text.slice(0, road.from) + road.body.replace(re, (_, a, b) => a + what + (serves ? ' · ' + serves.split(',').join(' ') : b)) + text.slice(road.to)); console.log(`${tag} rewritten`);
+    } else if (cmd === 'pieces') {
+      const now = part(text, 3);
+      if (flags('piece').length && /^- \[x\]/m.test(now.body)) throw new Error('Now already has ticked pieces: its pieces can only be added to, not replaced');
+      const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
+      if (!pieces.length && !flags('about').length) throw new Error('--piece "TAG.1|what|phone check" ... (or --about alone)');
+      if (!pieces.length) pieces.push(...now.body.split('\n').filter((l) => l.startsWith('- ')));
+      let head = now.body.split('\n').filter((l) => !l.startsWith('- ') && l.trim()).join('\n');
+      const about = flags('about')[0];
+      if (about) head = head.replace(/^(\*\*[^*]+\*\* \([a-z ]+\)\.) .*$/m, `$1 ${about}`);
+      save(text.slice(0, now.from) + head + '\n' + pieces.join('\n') + '\n\n' + text.slice(now.to)); console.log(`Now has ${pieces.length} pieces`);
     } else if (cmd === 'next') {
       const p = part(text, 4);
       if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');

@@ -23,6 +23,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-24) **joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use.
+- (2026-10-24) **Dev holds everything except the main page and the games:** the Studio, every tool, the plan, publishing, people; organised by project (Bar3D, the Looped engine, the script language, every future project).
 - (2026-10-24) **All engine work is paused until the rework (R3-R6) is done.**
 - (2026-10-24) **This plan:** one doc, eight fixed parts, five chapters; every road item names the North star line it serves.
 - (2026-10-24) **The house theme is Ember**; the other themes stay as options. One look for the site, Dev, the tools and the menus (R6).
@@ -46,13 +48,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R4 · Dev, the control room** (the tools). Dev, the control room: Overview (is everything up, what needs you, phone reports), Plan (this doc), Publish (news drafts, the site's words and pictures), People (accounts, invites, admins), Toolbelt; built from screen files in Ember; /hub and /portal send you there; the hub's board retired (its data kept). · N1 N5
-- [ ] **R4.1** Dev opens at /dev: staff login (the Studio's), Ember, the tab bar (Overview, Plan, Publish, People, Toolbelt); /hub and /portal send you there *Check:* open joshuavelasco.com/dev, log in: five tabs at the bottom
-- [ ] **R4.2** Overview: is the bar, the room and the site up, the live build, what needs you (Now's pieces waiting on a phone check), the latest phone reports *Check:* Overview shows the live build code and green dots
-- [ ] **R4.3** Plan: PLAN.md on your phone (Now with ticks, the five chapters, Parked, Done), and a box to park an idea or answer, which Claude reads at the next go *Check:* Plan shows R4 with its pieces; park a test idea
-- [ ] **R4.4** Publish: the news drafts Claude writes after each step, publish or unpublish with one tap; the site's words and pictures (ready for R5) *Check:* Publish lists this step's draft; publish it, it shows on /news
-- [ ] **R4.5** People: accounts, invites, admins and roles (moved from the bar's gate page) *Check:* People lists your account as owner
-- [ ] **R4.6** Toolbelt inside Dev; the old hub board and portal retired (their data kept), Dev in the Toolbelt's place on the front page for staff *Check:* the old /hub opens Dev; the Toolbelt tab lists every tool
+**R4 · Dev, the control room** (the tools). Dev, the control room for everything but the main page and the games: Overview (is everything up, what needs you), Projects (each project with its tools: Bar3D with the Studio, Looped with the Toolbelt, the script language), Plan (this doc), Publish (news, the site's words), People (accounts, invites, admins); built from screen files in Ember; the old hub, portal and Toolbelt pages lead here. · N1 N5
+- [ ] **R4.1** Dev opens at /dev: staff login (your bar account), Ember, five tabs (Overview, Projects, Plan, Publish, People); its screens are screen files you can edit in the UI Editor, live data filled into them *Check:* open joshuavelasco.com/dev, log in: five tabs at the bottom
+- [ ] **R4.2** Projects: every project with its own tools: Bar3D (the Studio, Dials, World notes, the live bar, perf reports, the gallery, classic), Looped the engine (UI Editor, Screens, Compare, Style page, tests, benchmarks), the script language (planned); new projects are one line *Check:* Projects → Bar3D → Studio opens the Studio
+- [ ] **R4.3** Overview: the bar, the room and the site up or down, the live build, the last deploy's tests (CI writes a status file), the step in Now and its phone checks, news waiting for you *Check:* Overview shows the live build code and green dots
+- [ ] **R4.4** Plan: PLAN.md on your phone (Now with ticks, the five chapters, the road, Parked, Done) and a box to leave Claude a note or park an idea, read at the start of every go *Check:* Plan shows R4; leave a test note
+- [ ] **R4.5** Publish: the news posts Claude writes after each step, publish or unpublish in one tap; the site's words (headline, news highlight) kept for R5 *Check:* Publish lists the R3 post; publish it, it shows on /news
+- [ ] **R4.6** People: everyone with an account, invite or remove players, choose admins (the bar's gate page moved into Dev) *Check:* People lists you as owner
+- [ ] **R4.7** The old doors lead to Dev: /hub, /portal and /toolbelt open Dev; the site's staff tab says Dev; the Studio has a way back to Dev *Check:* open joshuavelasco.com/hub: Dev opens
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
@@ -88,7 +91,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **W24** Remaster the crude first versions of props and rooms. · N3
 
 ### The site
-- [ ] **R5** The world front door: a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop) shown as a clip; the front door, Showcase, News, Made here, Sign in as one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
+- [ ] **R5** The front door, J Production's site: an intro, one eye-catching news item and Enter the bar over a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop, shown as a clip); scroll down for the bar's screenshots and what there is to do; a tab per project (Bar3D first, more later); Looped and the script language as works in progress; News, Sign in; one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
 
 ### The engine
 - [ ] **L1.8** Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7). · N3
