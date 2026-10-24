@@ -10,7 +10,7 @@ const [cmd, ...rest] = process.argv.slice(2);
 if (!KEY) { console.log('No HUB_KEY in the environment.'); process.exit(2); }
 async function post(body) {
   const r = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'X-Hub-Key': KEY }, body: JSON.stringify(body) });
-  return { status: r.status, ...(await r.json()) };
+  try { return { status: r.status, ...(await r.json()) }; } catch { return { ok: 0, status: r.status, error: `Dev's store did not answer (HTTP ${r.status}; is Dev deployed yet?)` }; }
 }
 if (cmd === 'notes') {
   const j = await post({ a: 'notes' });
