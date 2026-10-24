@@ -23,6 +23,11 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
+- (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
+- (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
+- (2026-10-24) **Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed.
+- (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/plan/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
 - (2026-10-24) **News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish.
 - (2026-10-24) **The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page.
 - (2026-10-24) **joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use.
@@ -50,17 +55,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R6 · Ember on everything that's left** (the tools). Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the arcade's web games or the minigames (the user's call), not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
-- [x] **R6.1** Ember is the default theme: every page that wears the Looped look switches (the bar's menus, the Studio, Dials, News...); a theme picked on purpose is still remembered; pages over the 3D keep Ember's dark half; the other ten themes stay options *Check:* open the bar's menu: amber keys, words as typed, not capitals
-- [x] **R6.2** The bar's menus and loading screen in Ember: panels you can read over the 3D (no extra blur, so no extra GPU work), keys, tiles, toggles, the player card, the top keys and the toasts on the house theme's tokens; the loading screen with the glow and the moving title *Check:* enter the bar: the loading screen glows amber; open Menu: warm frosted-looking panels, amber keys
-- [x] **R6.3** The private bar's door page (sign in, waiting to be let in) in Ember *Check:* open joshuavelasco.com/bar signed out: the door page is amber, like the site
-- [x] **R6.4** The Studio in Ember: its top bar, panels and keys *Check:* open the Studio: amber top bar and keys
-- [x] **R6.5** Dials, World notes and the public News page in Ember (World notes loses its purple) *Check:* open Dials, World notes and /news: all amber
-- [x] **R6.6** The last tools: the UI Editor's own buttons and panels, Compare, Screens and the style page in Ember; the retired hub board pages deleted (their data stays, Dev shows it) *Check:* open the UI Editor: its bars are amber, the preview still shows any theme
+**J1 · Freeze and the Charter** (the tools). Freeze and the Charter: R6 closed, features frozen, the restructure written down, the Charter (what's allowed, what's realistic, word for word your rules) and the glossary · N2 N5
+- [x] **J1.1** Close R6, freeze, write the restructure down: R6 sealed with its build, your new rules, J1–J8 on the plan, the full spec in docs/plan/restructure.md, every problem found so far in docs/records/known-issues.md, the stray note from the last session brought home *Check:* Open Dev → Plan: Now is J1 · Freeze and the Charter with three pieces; Up next lists J2 to J8
+- [ ] **J1.2** The Charter (docs/charter/charter.md): what the project is, your North star and rules word for word with what each means in practice, what's realistic, and the permission list (allowed / ask first / never; anything not listed: ask) *Check:* Read the Charter on GitHub and tell me yes or what to change
+- [ ] **J1.3** The glossary (docs/charter/glossary.md): every word we use, one meaning each *Check:* Open the glossary on GitHub: words like job, piece, build, ship, live, store each have one plain meaning
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
+**Up next, in order:** J2 → J3 → J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -120,6 +122,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
+- [ ] **J2** Honest checks: the browser tests run on GitHub again (a light test-only drawing mode), every test counts, both deploys report their real state · N2 N5
+- [ ] **J3** The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
+- [ ] **J4** Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
+- [ ] **J5** Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
+- [ ] **J6** The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
+- [ ] **J7** The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
+- [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
 
 ### The backbone
 - [ ] **B1** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
@@ -157,7 +166,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
+- `87bd110` R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
 - `ebca03a` R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
 - `ad87523` R4.1, R4.2, R4.3, R4.4, R4.5, R4.6, R4.7: Dev, the control room: Overview, Projects, Plan, Publish, People; the old hub, portal and Toolbelt lead there → 03c3fe4^..f247b0b
 - `58d93ec` R3.1, R3.2, R3.3: The World Plan: one doc (PLAN.md), the old plans archived, the plan keeper → 882582d^..a75881c

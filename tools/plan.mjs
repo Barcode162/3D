@@ -16,6 +16,8 @@
 //   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
+//   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
+//                                                (once its deploy is live; step.mjs does it at the next finish)
 // Chapters: world, site, engine, tools, backbone.
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -172,10 +174,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const p = part(text, 4);
       if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');
       save(text.slice(0, p.from) + p.body.replace(/\*\*Up next, in order:\*\*.*/, `**Up next, in order:** ${pos[0]}`) + text.slice(p.to)); console.log('Up next set');
+    } else if (cmd === 'seal') {
+      if (!/^[0-9a-f]{7}$/.test(pos[0] || '')) throw new Error('seal <sha>: the 7-letter build code');
+      const p = part(text, 6);
+      if (!p.body.includes('- (this push) ')) throw new Error('Done has no "(this push)" line to seal');
+      save(text.slice(0, p.from) + p.body.replace('- (this push) ', `- \`${pos[0]}\` `) + text.slice(p.to)); console.log(`sealed with ${pos[0]}`);
     } else if (cmd === 'done') {
       save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
     } else {
-      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 17).join('\n')); process.exit(2);
+      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 19).join('\n')); process.exit(2);
     }
   } catch (e) { console.log(e.message); process.exit(1); }
 }

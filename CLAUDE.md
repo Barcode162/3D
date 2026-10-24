@@ -1,5 +1,11 @@
 # Bar3D: guide for Claude sessions (short version, 2026-10-21)
 
+> **Restructure in progress (2026-10-24, the user's "go"): J1–J8.** Its spec,
+> `docs/plan/restructure.md`, governs until J8 is done: where anything below
+> (or in `docs/`) disagrees, the spec wins. Features are frozen (spec §7).
+> Work on `job/J<n>` (spec §4.4), not `work-go`. Open problems:
+> `docs/records/known-issues.md`. This file is rewritten in J3.6.
+
 A from-scratch 3D engine in **C++ → WebAssembly → WebGPU**: a VRChat-style 3D
 hangout bar. Engine in `looped/`, the bar in `bar/`, page in `bar/web/`,
 multiplayer room in `cloud/`. **The plan is `PLAN.md`**: one doc, eight fixed
