@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R5.3 The front page rearranged: J Production's intro (headline and line from Dev → Publish → The site, the last sentence glowing), Enter the bar and See the bar; the highlight you pushed, big, right under it; then Bar3D, our first world (what it is, every bulb, every corner); Made here: Looped and the script language as works in progress; the news, more projects and Open. stay
+
+`e6fd29b` · 2026-10-24 07:43 · 3 files, +41 −46 · tests: quick, site
+
+Phone check: open joshuavelasco.com: 'J Production' over 'We build worlds. From nothing.', Enter the bar; push a highlight in Dev and reload: it's right under the intro; scroll: Bar3D, then Made here
+
 ## R5.2 Highlights in Dev → Publish: make one (a short title, one or two friendly lines, where a tap goes, one of the bar's pictures or your own photo, shrunk on the phone), see it as the front page will, Push to the front page (one at a time) or take it down, change, delete; public for the front page (dev/api.php?highlight); the step finisher's news post takes plain friendly words (--news)
 
 `333967a` · 2026-10-24 07:33 · 8 files, +234 −14 · tests: quick, dev
