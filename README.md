@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.5 One list of projects: toolbelt/tools.json → projects is the source (each project with its site card: featured or more, picture, tag, line); Dev → Projects, the site's Projects page (and front page's More projects) and the news page's project names all read it; the Projects page comes out byte for byte the same as before; the toolbelt test checks every site card, the site test that Projects lists the list's projects; the news page is checked by the hub test; KI-11 closed
+
+`b595089` · 2026-10-24 13:48 · 11 files, +59 −28 · tests: changed
+
+Phone check: joshuavelasco.com → Projects: the same three cards as before (Bar3D, Looped, the script language) and Where we're going
+
 ## J5.4 The retired board out of the hub: hub.php keeps only news posts, screenshots, the Claude key and the loops' tuning (its board, projects, places and sections actions gone, hub/seed.json and hub/projects/ removed; the server's data left as it was); tools/hub.mjs keeps post and posts; the hub test covers what stays and that the old actions are gone; the Studio's Note for Claude, which still wrote board cards nobody read, now lands in Dev's notes with the thing, the camera and a picture (Studio test S10.1 passes); KI-12 closed, KI-29 noted (the tuning has no reader)
 
 `dad3928` · 2026-10-24 13:45 · 14 files, +88 −1708 · tests: workflows, hub, server
