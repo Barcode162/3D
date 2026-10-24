@@ -9,7 +9,7 @@
 // PLAN.md (the previous "(this push)" gets its real sha), runs the benchmark
 // (--bench), posts to the hub (if HUB_KEY is set) and prints the reply for
 // the user: one line per piece with its phone check.
-import { FILE as PLAN_FILE, read as readPlan, addDone } from './plan.mjs';
+import { addDoneLine } from './plan.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openGallery, readJsonl, appendJsonl, commitGallery, writeReadme } from './lib/gallery.mjs';
@@ -54,9 +54,9 @@ if (!run('git merge -q --no-edit origin/main')) { console.log('✗ merge conflic
 // The Done line (PLAN.md → 7. Done, through the plan keeper): the previous "(this push)" gets its sha.
 const range = `${pieces[0].sha}^..${pieces[pieces.length - 1].sha}`;
 const tags = pieces.map((p) => p.tag);
-writeFileSync(PLAN_FILE, addDone(readPlan(), { sha: lastDone?.mainSha ?? '0000000', what: `${tags.join(', ')}: ${what}`, range }));
+addDoneLine({ sha: lastDone?.mainSha ?? '0000000', what: `${tags.join(', ')}: ${what}`, range });
 writeFileSync('build/step-msg.txt', `Notes: ${stepName} built (${tags.join(', ')})\n\n${ATTRIBUTION}`);
-sh(`git add ${PLAN_FILE}`);
+sh('git add PLAN.md docs/plan docs/charter CLAUDE.md');
 try { sh('git commit -q -F build/step-msg.txt'); } catch {}
 const mainSha = sh('git rev-parse --short HEAD');
 for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);

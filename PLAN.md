@@ -49,15 +49,15 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 3. The chapters
 *The fixed list. Every road and parked item sits under one of these.*
-- **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live.
-- **The site:** the front door, the showcase, the news. *Now:* six long pages in their own look (Home, Play, Engine, Vision, News, Sign in); R5 replaces them with the one-world front door.
-- **The engine:** Looped, the script language, speed. *Now:* E1-E9 built (things with live loops, physics, sound, net); real light L1.1-L1.7 live; paused for the rework.
-- **The tools:** the Toolbelt and Dev. *Now:* the Studio (S1-S10), the Dials, the Toolbelt, the UI Editor and Ember (R1-R2); Dev (R4) next, replacing the hub and the portal.
-- **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
+- **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item (J7 lays it out).
+- **The site:** the front door, the showcase, the news. *Now:* J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); frozen until J8.
+- **The engine:** Looped, the script language, speed. *Now:* Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is planned; paused until J8.
+- **The tools:** the Toolbelt and Dev. *Now:* Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8).
+- **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
 **J4 · Tools and locks** (the tools). Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
-- [ ] **J4.1** The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data *Check:* Dev → Plan looks the same, nothing missing
+- [x] **J4.1** The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data *Check:* Dev → Plan looks the same, nothing missing
 - [ ] **J4.2** One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age *Check:* Nothing on the phone
 - [ ] **J4.3** The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal *Check:* Nothing on the phone
 - [ ] **J4.4** Records tools: requests word for word, incidents, decisions, the session line *Check:* Nothing on the phone

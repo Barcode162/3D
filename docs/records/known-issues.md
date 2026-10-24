@@ -12,10 +12,8 @@ spec: `docs/plan/restructure.md`.
 | KI-1 | Five files give instructions and contradict each other: `CLAUDE.md` (branch `work-go`, quick check only), `docs/REFERENCE.md` ("go" = hub inbox and cards, branch `work`, run every test locally first, "Runs queue, they don't cancel"), `docs/DECISIONS.md` ("NEXT.md is all a session reads", "keep PROGRESS.md current", "push straight to main after every step"), `docs/AUTOMATION.md`, `docs/STUDIO.md` ("this file is the plan", `NEXT.md`). | J3.6, J6.6 |
 | KI-2 | Dev's plan is a copy uploaded at the very end of `hub.yml`, after nine browser tests: a failed or cancelled run leaves Dev stale (Dev showed R5 for 2 h on 2026-10-24). | J5.2 |
 | KI-3 | Finishing a step never moves the next item into Now, and the Done line waits for the next step to get its build code. (Stopgap 2026-10-24: `plan.mjs seal`.) | J4.1, J4.3 |
-| KI-4 | `PLAN.md` → 3. The chapters: the "Now" lines are stale ("R5 replaces them", "Dev (R4) next"); the plan tool has no command to update them. | J4.1 |
 | KI-5 | The browser smoke test fails on GitHub since the new light (R5: screenshot timeout 90 s; R6: "rotation should resize exactly once each way"), so 12 browser suites are skipped at every game deploy; R3–R6 deploys all ended red. | J2.1 (J2.1: the tests open the bar with a test lighting on GitHub, `TEST_LIGHT`; first `?light=classic`, then its own `?light=test` (request 2026-10-24 #6); closes when a GitHub run passes the smoke test) |
 | KI-9 | `homepage/` is uploaded by both `deploy.yml` and `hub.yml`. | J5.3 |
-| KI-10 | Two separate parsers of `PLAN.md` (`tools/plan.mjs`, `dev/plan.js`). | J4.1 |
 | KI-11 | Three lists of projects: `toolbelt/tools.json` (Dev), the site's hand-written list + folder scan (`homepage/site/layout.php` `site_projects()`), the old hub boards (`hub/hub.php`). | J5.5 |
 | KI-12 | `hub/hub.php`, `tools/hub.mjs`, `tools/hub_test.mjs` still carry the retired board (cards, sections, projects, places/spots, `hub/seed.json`, `hub/projects/*`). | J5.4 |
 | KI-13 | The docs say the repo is public (`docs/DECISIONS.md` → Hosting; `docs/REFERENCE.md` → "this public repo"); it is private (GitHub API, 2026-10-24). | J6.6 |
@@ -37,6 +35,7 @@ spec: `docs/plan/restructure.md`.
 
 | Id | Problem | Closed by |
 |---|---|---|
+| KI-4 | `PLAN.md` → 3. The chapters: the "Now" lines are stale ("R5 replaces them", "Dev (R4) next"); the plan tool has no command to update them. | J4.1: `node tools/plan.mjs chapter <chapter> "<now line>"`; the five lines brought up to date. |
 | KI-7 | Dev's "Last deploy" only reports the game workflow, and it is always red (KI-5), so it says nothing; the hub workflow reports nothing. | J2.3: both workflows report their real state (`tools/ci_status.mjs` → `private/dev/ci-game.json`, `ci-site.json`): started, live, then every failed test by name and the ones allowed to fail; Dev → Overview shows two rows with their age. |
 | KI-8 | `deploy.yml` comments are stale ("a failing smoke blocks the deploy"; the smoke runs after the upload). | J2.2/J2.3: the test section's comments rewritten (tests run after the upload, every test runs after any failure, each with a time limit). |
 | KI-6 | Seven browser suites were allowed to fail in silence. | J2.2: each test now either counts or names its open known issue in its step name ("allowed to fail: KI-…"), checked by `tools/workflows_test.mjs`; J2.3 shows every failure in Dev. |

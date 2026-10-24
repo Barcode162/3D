@@ -12,14 +12,16 @@ import { mkdirSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-// The step in Now, whatever it is today (the test must not go stale when the plan moves on).
-const NOW = /^\*\*([A-Z]+\d+) · ([^*]+)\*\*/m.exec(readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1]);
-const NOW_PIECES = (readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1].split('## 5.')[0].match(/^- \[[ x]\] /gm) || []).length;
+// The job in Now, whatever it is today (the test must not go stale when the plan moves on).
+const PLAN = JSON.parse(readFileSync('docs/plan/plan.json', 'utf8'));
+const NOW = [null, PLAN.now.id, PLAN.now.title];
+const NOW_PIECES = PLAN.now.pieces.length;
 const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub', site: 'homepage/site' }, files: { 'bar/account.php': 'server/account.php' } });
 // What CI and the deploy put there: the game's config, the plan, no deploy report yet.
 writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
 mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
-copyFileSync('PLAN.md', join(ws.root, 'private/dev/plan.md'));
+copyFileSync('docs/plan/plan.json', join(ws.root, 'private/dev/plan.json'));
+copyFileSync('docs/charter/rules.json', join(ws.root, 'private/dev/rules.json'));
 const browser = await launchBrowser();
 process.on('uncaughtException', (e) => { console.log('FAIL ' + e.message); ws.close(); process.exit(1); });
 const year = new Date().getFullYear();

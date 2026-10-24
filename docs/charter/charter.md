@@ -38,11 +38,11 @@ and where to look.
 
 ## 2. The North star and the user's rules (word for word)
 
-The user's own words. Their source is `PLAN.md` parts 1–2 until J4.1, then
-`docs/charter/rules.json`; this copy is checked against the source by the
-quick check.
+The user's own words. Their source is `docs/charter/rules.json` (changed
+only with `node tools/plan.mjs rule`, on the user's word); this copy and
+`PLAN.md` parts 1–2 are written from it and checked against it.
 
-<!-- generated: node tools/plan.mjs charter (from PLAN.md parts 1-2, word for word; never edit by hand) -->
+<!-- generated: node tools/plan.mjs charter (from docs/charter/rules.json, word for word; never edit by hand) -->
 ### North star
 - **N1 A world you're inside.** joshuavelasco.com is one place, not a set of
   pages: the bar, the showcase and Dev are places in it, joined by movement.

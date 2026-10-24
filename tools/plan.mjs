@@ -1,36 +1,37 @@
 #!/usr/bin/env node
-// The World Plan's keeper (PLAN.md, the one doc of truth). Claude edits
-// PLAN.md only through this tool, so its shape never changes: eight parts in
-// order, five chapters, every road item tagged and serving a North star line.
-//   node tools/plan.mjs check                    the shape; exit 1 with what's wrong
-//   node tools/plan.mjs now                      part 4: the step "go" does, its pieces
+// The plan's keeper (restructure J4.1). The plan is data: docs/plan/plan.json
+// (chapters, Now, the road, Parked, Done) and docs/charter/rules.json (the
+// user's North star and rules, word for word). Claude changes them only
+// through this tool; every save writes PLAN.md (the readable plan, never
+// edited by hand), the Charter's rules block and CLAUDE.md's "Never" list, and
+// refuses anything that would break the plan's shape (eight parts, five
+// chapters, every road item serving a North star line).
+//   node tools/plan.mjs check                    the shape, and PLAN.md / the Charter / CLAUDE.md match the data
+//   node tools/plan.mjs now                      the job in Now and its pieces
 //   node tools/plan.mjs tick <PIECE>             tick a piece in Now (piece.mjs does it)
-//   node tools/plan.mjs add <chapter> <TAG> "<what>" --serves N3[,N4]   a road item
+//   node tools/plan.mjs add <chapter> <ID> "<what>" --serves N3[,N4]   a road item
 //   node tools/plan.mjs park <chapter> "<idea>"  a line in Parked (the user's "park:")
-//   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated line in Your rules (only on the
-//                                                user's word); --replaces takes out the rule whose bold name starts so
-//   node tools/plan.mjs start <TAG> --piece "<TAG.1>|<what>|<phone check>" [--piece ...]
+//   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated rule (only on the user's word, with
+//                                                its request); --replaces takes out the rule whose bold name starts so
+//   node tools/plan.mjs start <ID> --piece "<ID.1>|<what>|<phone check>" [--piece ...]
 //                                                the road item becomes Now (the old Now must be all ticked)
-//   node tools/plan.mjs edit <TAG> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
-//   node tools/plan.mjs pieces [--about "<what the step is>"] --piece "<TAG.1>|<what>|<check>" ...   replace Now's pieces (only before any is ticked)
+//   node tools/plan.mjs edit <ID> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
+//   node tools/plan.mjs pieces [--about "<what the job is>"] --piece "<ID.1>|<what>|<check>" ...   replace Now's pieces (only before any is ticked)
 //   node tools/plan.mjs drop <PIECE> ["<parked line>" --park <chapter>]   take an open piece out of Now (the user said not now)
-//   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
+//   node tools/plan.mjs next "J5 → J6 → …"      the road's "Up next, in order" line (start drops the started id)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
-//   node tools/plan.mjs charter [--check]        the Charter's North star and rules block, copied word for word
-//                                                from parts 1-2, and CLAUDE.md's "Never" list from the Charter
-//                                                (--check: exit 1 if either is stale)
 //   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
-//                                                (once its deploy is live; step.mjs does it at the next finish)
+//   node tools/plan.mjs chapter <chapter> "<now line>"   a chapter's "Now:" line (where it stands today)
+//   node tools/plan.mjs render [--check]         write PLAN.md and the blocks from the data (--check: only compare)
 // Chapters: world, site, engine, tools, backbone.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { load, write, render, PARTS, CHAPTERS, PLAN_MD } from './lib/plandata.mjs';
+export { PARTS, CHAPTERS };
 
-export const FILE = 'PLAN.md';
-export const PARTS = ['1. North star', '2. Your rules', '3. The chapters', '4. Now', '5. The road', '6. Parked', '7. Done', '8. Where things are'];
-export const CHAPTERS = { world: 'The world', site: 'The site', engine: 'The engine', tools: 'The tools', backbone: 'The backbone' };
+export const FILE = PLAN_MD;
 const NAMES = Object.values(CHAPTERS);
 const TAG = '[A-Z]{1,3}\\d+(?:\\.\\d+)?';
-
 export function read(file = FILE) { return readFileSync(file, 'utf8'); }
 
 // The text of one part (without its heading), and where it sits.
@@ -80,26 +81,10 @@ export function problems(text) {
   return out;
 }
 
-function save(text, file = FILE) {
-  const bad = problems(text);
-  if (bad.length) throw new Error('refused, PLAN.md would break its shape:\n' + bad.join('\n'));
-  writeFileSync(file, text);
-}
-function chapterName(c) {
-  const name = CHAPTERS[c] || NAMES.find((n) => n.toLowerCase() === String(c).toLowerCase());
-  if (!name) throw new Error(`"${c}" is not a chapter: ${Object.keys(CHAPTERS).join(', ')}`);
-  return name;
-}
-function addLine(text, n, chapter, line) {
-  const p = part(text, n), block = chapterBlock(p.body, chapterName(chapter));
-  let before = p.body.slice(0, block.to).replace(/\n*$/, '\n');
-  return text.slice(0, p.from) + before + line + '\n' + (p.body.slice(block.to).startsWith('\n') ? '' : '\n') + p.body.slice(block.to) + text.slice(p.to);
-}
-
 // The Charter (docs/charter/charter.md) shows parts 1-2 word for word between
-// two markers; PLAN.md stays their source until J4.1 (restructure D3).
+// two markers, from docs/charter/rules.json (through the rendered PLAN.md).
 export const CHARTER = 'docs/charter/charter.md';
-const MARK_A = '<!-- generated: node tools/plan.mjs charter (from PLAN.md parts 1-2, word for word; never edit by hand) -->';
+const MARK_A = '<!-- generated: node tools/plan.mjs charter (from docs/charter/rules.json, word for word; never edit by hand) -->';
 const MARK_B = '<!-- end generated -->';
 export function charterBlock(text) {
   const items = (n) => part(text, n).body.split('\n').reduce((out, l) => { if (l.startsWith('- ')) out.push(l); else if (/^  \S/.test(l) && out.length) out[out.length - 1] += '\n' + l; return out; }, []);
@@ -123,18 +108,43 @@ export function withCharter(doc, text) {
   return doc.slice(0, a) + charterBlock(text) + doc.slice(b + MARK_B.length);
 }
 
-export function tick(text, piece) {
-  const re = new RegExp(`^- \\[ \\] \\*\\*${piece.replace('.', '\\.')}\\*\\*`, 'm');
-  const p = part(text, 3);
-  if (!re.test(p.body)) return null;
-  return text.slice(0, p.from) + p.body.replace(re, `- [x] **${piece}**`) + text.slice(p.to);
+// Writes the data, PLAN.md and the two generated blocks, after the checks.
+export function save(data) {
+  const text = render(data), bad = problems(text);
+  if (bad.length) throw new Error('refused, the plan would break its shape:\n' + bad.join('\n'));
+  write(data);
+  const charter = withCharter(read(CHARTER), text);
+  writeFileSync(CHARTER, charter);
+  writeFileSync(ENTRY, withNever(read(ENTRY), charter));
 }
-export function addDone(text, { sha, what, range }) {
-  let t = text.replace('- (this push) ', `- \`${sha}\` `);
-  const p = part(t, 6), first = p.body.indexOf('\n- ');
-  const at = first < 0 ? p.body.length : first + 1;
-  const body = p.body.slice(0, at) + `- (this push) ${what}${range ? ' → ' + range : ''}\n` + p.body.slice(at);
-  return t.slice(0, p.from) + body + t.slice(p.to);
+// Whether PLAN.md and the blocks match the data (nobody edited them by hand).
+export function stale(data = load()) {
+  const text = render(data), out = [];
+  if (read(FILE) !== text) out.push(`${FILE} differs from the data (run node tools/plan.mjs render)`);
+  const charter = withCharter(read(CHARTER), text);
+  if (read(CHARTER) !== charter) out.push(`${CHARTER}'s rules block differs from docs/charter/rules.json`);
+  if (read(ENTRY) !== withNever(read(ENTRY), charter)) out.push(`${ENTRY}'s "Never" list differs from the Charter`);
+  return out;
+}
+function chapterId(c) {
+  const id = CHAPTERS[c] ? c : Object.keys(CHAPTERS).find((k) => CHAPTERS[k].toLowerCase() === String(c).toLowerCase());
+  if (!id) throw new Error(`"${c}" is not a chapter: ${Object.keys(CHAPTERS).join(', ')}`);
+  return id;
+}
+const roadItems = (plan) => Object.values(plan.road).flat();
+const newPieces = (specs) => specs.map((s) => { const [id, text, check] = s.split('|'); return { id, text, check: check ?? '', done: false }; });
+
+// For the piece runner and the step finisher.
+export function tickPiece(id) {
+  const data = load(), p = data.plan.now?.pieces.find((x) => x.id === id && !x.done);
+  if (!p) return false;
+  p.done = true; save(data); return true;
+}
+export function addDoneLine({ sha, what, range }) {
+  const data = load();
+  for (const d of data.plan.done) if (!d.build) d.build = sha;
+  data.plan.done.unshift({ build: null, text: `${what}${range ? ' → ' + range : ''}` });
+  save(data);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -142,93 +152,84 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const flags = (n) => { const out = []; rest.forEach((a, i) => { if (a === '--' + n) out.push(rest[i + 1]); }); return out; };
   const pos = rest.filter((a, i) => !a.startsWith('--') && !(i > 0 && rest[i - 1].startsWith('--')));
   try {
-    let text = read();
+    const data = load(), { plan, rules } = data;
     if (cmd === 'check' || !cmd) {
-      const bad = problems(text);
-      console.log(bad.length ? bad.join('\n') : 'ok  plan: PLAN.md keeps its eight parts and five chapters');
+      const bad = [...problems(render(data)), ...stale(data)];
+      console.log(bad.length ? bad.join('\n') : 'ok  plan: the data keeps its eight parts and five chapters; PLAN.md, the Charter and CLAUDE.md match it');
       process.exit(bad.length ? 1 : 0);
     } else if (cmd === 'now') {
-      console.log(part(text, 3).body.trim());
+      console.log(part(render(data), 3).body.trim());
+    } else if (cmd === 'render') {
+      if (rest.includes('--check')) { const bad = stale(data); console.log(bad.length ? bad.join('\n') : 'ok  render: PLAN.md and the blocks match the data'); process.exit(bad.length ? 1 : 0); }
+      save(data); console.log('PLAN.md and the blocks written');
     } else if (cmd === 'tick') {
-      const t = tick(text, pos[0]);
-      if (!t) { console.log(`${pos[0]} is not an open piece in Now`); process.exit(1); }
-      save(t); console.log(`ticked ${pos[0]}`);
+      if (!tickPiece(pos[0])) { console.log(`${pos[0]} is not an open piece in Now`); process.exit(1); }
+      console.log(`ticked ${pos[0]}`);
     } else if (cmd === 'add') {
-      const [chapter, tag, what] = pos, serves = (flags('serves')[0] || '').split(',').filter(Boolean);
+      const [chapter, id, what] = pos, serves = (flags('serves')[0] || '').split(',').filter(Boolean);
       if (!serves.length) throw new Error('--serves N1[,N2]: which North star line does it serve? (none: park it instead)');
-      if (new RegExp(`\\*\\*${tag}\\*\\*`).test(text)) throw new Error(`${tag} is already in the plan`);
-      save(addLine(text, 4, chapter, `- [ ] **${tag}** ${what} · ${serves.join(' ')}`)); console.log(`added ${tag} to ${chapterName(chapter)}`);
+      if (roadItems(plan).some((r) => r.id === id) || plan.now?.id === id) throw new Error(`${id} is already in the plan`);
+      plan.road[chapterId(chapter)].push({ id, text: what, serves, done: false });
+      save(data); console.log(`added ${id} to ${CHAPTERS[chapterId(chapter)]}`);
     } else if (cmd === 'park') {
-      save(addLine(text, 5, pos[0], `- ${pos[1]}`)); console.log(`parked under ${chapterName(pos[0])}`);
+      plan.parked[chapterId(pos[0])].push(pos[1]); save(data); console.log(`parked under ${CHAPTERS[chapterId(pos[0])]}`);
     } else if (cmd === 'rule') {
-      let p = part(text, 1);
       const old = flags('replaces')[0];
       if (old) {
-        const re = new RegExp(`^- \\(\\d{4}-\\d\\d-\\d\\d\\) \\*\\*${old.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*\\n`, 'm');
-        if (!re.test(p.body)) throw new Error(`no rule starts with "**${old}"`);
-        text = text.slice(0, p.from) + p.body.replace(re, '') + text.slice(p.to); p = part(text, 1);
+        const i = rules.rules.findIndex((r) => r.text.startsWith(`**${old}`));
+        if (i < 0) throw new Error(`no rule starts with "**${old}"`);
+        rules.rules.splice(i, 1);
       }
-      const at = p.body.indexOf('\n- ') + 1, day = new Date().toISOString().slice(0, 10);
-      save(text.slice(0, p.from) + p.body.slice(0, at) + `- (${day}) ${pos[0]}\n` + p.body.slice(at) + text.slice(p.to)); console.log(old ? `rule "${old}" replaced` : 'rule added');
+      rules.rules.unshift({ date: new Date().toISOString().slice(0, 10), text: pos[0] });
+      save(data); console.log(old ? `rule "${old}" replaced` : 'rule added');
     } else if (cmd === 'start') {
-      const tag = pos[0], now = part(text, 3);
-      if (/^- \[ \]/m.test(now.body)) throw new Error('Now still has open pieces: tick them (or take them out by hand with the user) first');
-      const road = part(text, 4), m = new RegExp(`^- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* (.+) · (N\\d+(?: N\\d+)*)\\n`, 'm').exec(road.body);
-      if (!m) throw new Error(`${tag} is not an open road item`);
-      const chapter = NAMES.find((n) => { const b = chapterBlock(road.body, n); return b && road.body.slice(b.from, b.to).includes(m[0]); });
-      const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
-      if (!pieces.length) throw new Error('give the step its pieces: --piece "TAG.1|what|phone check"');
-      const title = m[1].split(':')[0].replace(/\*\*/g, '');
-      let t = text.slice(0, road.from) + road.body.replace(m[0], '').replace(new RegExp(`(\\*\\*Up next, in order:\\*\\* )${tag}(?: →|,) `), '$1') + text.slice(road.to);
-      const n2 = part(t, 3);
-      t = t.slice(0, n2.from) + `**${tag} · ${title}** (${chapter.toLowerCase()}). ${m[1]} · ${m[2]}\n${pieces.join('\n')}\n\n` + t.slice(n2.to);
-      save(t); console.log(`${tag} is now in Now with ${pieces.length} pieces`);
+      const id = pos[0];
+      if (plan.now?.pieces.some((p) => !p.done)) throw new Error('Now still has open pieces: tick them (or take them out with the user) first');
+      const ch = Object.keys(plan.road).find((c) => plan.road[c].some((r) => r.id === id && !r.done));
+      if (!ch) throw new Error(`${id} is not an open road item`);
+      const pieces = newPieces(flags('piece'));
+      if (!pieces.length) throw new Error('give the job its pieces: --piece "ID.1|what|phone check"');
+      const item = plan.road[ch].find((r) => r.id === id);
+      plan.road[ch] = plan.road[ch].filter((r) => r !== item);
+      plan.upNext = plan.upNext.replace(new RegExp(`^${id}(?: →|,) `), '');
+      plan.now = { id, title: item.text.split(':')[0].replace(/\*\*/g, ''), chapter: CHAPTERS[ch].toLowerCase(), about: item.text, serves: item.serves, pieces };
+      save(data); console.log(`${id} is now in Now with ${pieces.length} pieces`);
     } else if (cmd === 'edit') {
-      const [tag, what] = pos, road = part(text, 4);
-      const re = new RegExp(`^(- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* ).+( · N\\d+(?: N\\d+)*)$`, 'm');
-      if (!re.test(road.body)) throw new Error(`${tag} is not an open road item`);
-      const serves = flags('serves')[0];
-      save(text.slice(0, road.from) + road.body.replace(re, (_, a, b) => a + what + (serves ? ' · ' + serves.split(',').join(' ') : b)) + text.slice(road.to)); console.log(`${tag} rewritten`);
+      const [id, what] = pos, item = roadItems(plan).find((r) => r.id === id && !r.done);
+      if (!item) throw new Error(`${id} is not an open road item`);
+      item.text = what; const serves = flags('serves')[0]; if (serves) item.serves = serves.split(',');
+      save(data); console.log(`${id} rewritten`);
     } else if (cmd === 'pieces') {
-      const now = part(text, 3);
-      if (flags('piece').length && /^- \[x\]/m.test(now.body)) throw new Error('Now already has ticked pieces: its pieces can only be added to, not replaced');
-      const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
-      if (!pieces.length && !flags('about').length) throw new Error('--piece "TAG.1|what|phone check" ... (or --about alone)');
-      if (!pieces.length) pieces.push(...now.body.split('\n').filter((l) => l.startsWith('- ')));
-      let head = now.body.split('\n').filter((l) => !l.startsWith('- ') && l.trim()).join('\n');
-      const about = flags('about')[0];
-      if (about) head = head.replace(/^(\*\*[^*]+\*\* \([a-z ]+\)\.) .*$/m, `$1 ${about}`);
-      save(text.slice(0, now.from) + head + '\n' + pieces.join('\n') + '\n\n' + text.slice(now.to)); console.log(`Now has ${pieces.length} pieces`);
+      if (!plan.now) throw new Error('nothing in Now');
+      const pieces = newPieces(flags('piece'));
+      if (pieces.length && plan.now.pieces.some((p) => p.done)) throw new Error('Now already has ticked pieces: its pieces can only be added to, not replaced');
+      if (!pieces.length && !flags('about').length) throw new Error('--piece "ID.1|what|phone check" ... (or --about alone)');
+      if (pieces.length) plan.now.pieces = pieces;
+      if (flags('about').length) plan.now.about = flags('about')[0];
+      save(data); console.log(`Now has ${plan.now.pieces.length} pieces`);
     } else if (cmd === 'drop') {
-      // A piece the user no longer wants in this step: out of Now (into Parked with --park <chapter> "<line>").
-      const tag = pos[0], now = part(text, 3);
-      const re = new RegExp(`^- \\[ \\] \\*\\*${tag.replace('.', '\\.')}\\*\\* .*\\n`, 'm');
-      if (!re.test(now.body)) throw new Error(`${tag} is not an open piece in Now`);
-      let t = text.slice(0, now.from) + now.body.replace(re, '') + text.slice(now.to);
-      const pk = flags('park');
-      if (pk.length) t = addLine(t, 5, pk[0], `- ${pos[1]}`);
-      save(t); console.log(`${tag} dropped from Now${pk.length ? ', parked under ' + chapterName(pk[0]) : ''}`);
+      const id = pos[0], i = plan.now?.pieces.findIndex((p) => p.id === id && !p.done) ?? -1;
+      if (i < 0) throw new Error(`${id} is not an open piece in Now`);
+      plan.now.pieces.splice(i, 1);
+      const pk = flags('park'); if (pk.length) plan.parked[chapterId(pk[0])].push(pos[1]);
+      save(data); console.log(`${id} dropped from Now${pk.length ? ', parked under ' + CHAPTERS[chapterId(pk[0])] : ''}`);
     } else if (cmd === 'next') {
-      const p = part(text, 4);
-      if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');
-      save(text.slice(0, p.from) + p.body.replace(/\*\*Up next, in order:\*\*.*/, `**Up next, in order:** ${pos[0]}`) + text.slice(p.to)); console.log('Up next set');
-    } else if (cmd === 'charter') {
-      const doc = read(CHARTER), want = withCharter(doc, text), entry = read(ENTRY), wantEntry = withNever(entry, want);
-      const ok = doc === want && entry === wantEntry;
-      if (rest.includes('--check')) {
-        console.log(ok ? 'ok  charter: its rules block matches PLAN.md, and CLAUDE.md\'s "Never" list matches the Charter' : `${doc !== want ? CHARTER : ENTRY} is stale: run node tools/plan.mjs charter`);
-        process.exit(ok ? 0 : 1);
-      }
-      writeFileSync(CHARTER, want); writeFileSync(ENTRY, wantEntry); console.log(ok ? 'charter already current' : 'charter blocks written');
+      plan.upNext = pos[0]; save(data); console.log('Up next set');
+    } else if (cmd === 'done') {
+      addDoneLine({ sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] }); console.log('Done line added');
     } else if (cmd === 'seal') {
       if (!/^[0-9a-f]{7}$/.test(pos[0] || '')) throw new Error('seal <sha>: the 7-letter build code');
-      const p = part(text, 6);
-      if (!p.body.includes('- (this push) ')) throw new Error('Done has no "(this push)" line to seal');
-      save(text.slice(0, p.from) + p.body.replace('- (this push) ', `- \`${pos[0]}\` `) + text.slice(p.to)); console.log(`sealed with ${pos[0]}`);
-    } else if (cmd === 'done') {
-      save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
+      const d = plan.done.find((x) => !x.build);
+      if (!d) throw new Error('Done has no "(this push)" line to seal');
+      d.build = pos[0]; save(data); console.log(`sealed with ${pos[0]}`);
+    } else if (cmd === 'chapter') {
+      plan.chapters.find((c) => c.id === chapterId(pos[0])).now = pos[1]; save(data); console.log(`${CHAPTERS[chapterId(pos[0])]}: Now line set`);
+    } else if (cmd === 'charter') {
+      const bad = stale(data);
+      if (rest.includes('--check')) { console.log(bad.length ? bad.join('\n') : 'ok  charter: its rules block matches docs/charter/rules.json, and CLAUDE.md\'s "Never" list matches the Charter'); process.exit(bad.length ? 1 : 0); }
+      save(data); console.log(bad.length ? 'charter blocks written' : 'charter already current');
     } else {
-      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 22).join('\n')); process.exit(2);
+      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 30).join('\n')); process.exit(2);
     }
   } catch (e) { console.log(e.message); process.exit(1); }
 }

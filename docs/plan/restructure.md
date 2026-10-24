@@ -339,7 +339,10 @@ they will be and marked "(J4)"; J4.6 removes the marks.
   `docs/archive/` and this spec.
 
 ### J4 · Tools and locks
-- **J4.1** The plan as data: `docs/plan/plan.json` (schema in
+- **J4.1** (Built 2026-10-24 with two choices: `PLAN.md` stays at the root as
+  the generated readable plan, since everything already points there; road
+  items keep their ids until J7.1 gives each its verdict and its J number.)
+  The plan as data: `docs/plan/plan.json` (schema in
   `docs/plan/plan.schema.json`: chapters with their "now" lines; jobs
   `{id, title, chapter, serves, status: proposed|planned|now|live|done|parked|dropped,
   verdict, formerly, requests, spec, pieces:[{id,title,check,status,commit}],

@@ -32,7 +32,7 @@ import { openCapture, SPOT_NAMES } from './lib/capture.mjs';
 import { openGallery, appendJsonl, writeReadme, commitGallery, GALLERY } from './lib/gallery.mjs';
 import { diffPercentBuffers, exposureStats } from './lib/imgcmp.mjs';
 import { launchBrowser } from './lib/browser.mjs';
-import { FILE as PLAN_FILE, read as readPlan, tick as tickPlan, problems } from './plan.mjs';
+import { tickPiece } from './plan.mjs';
 import { serveSite } from './lib/site.mjs';
 
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 26 }).trim();
@@ -172,7 +172,7 @@ if (opt('pages')) {
 if (has('dry')) { console.log(JSON.stringify(shots.stats, null, 1)); process.exit(0); }
 step('commit');
 // The piece is ticked in PLAN.md → Now (if it's one of Now's pieces), in this same commit.
-{ const t = tickPlan(readPlan(), tag); if (t && !problems(t).length) writeFileSync(PLAN_FILE, t); }
+try { tickPiece(tag); } catch (e) { console.log(`(the plan refused the tick: ${e.message})`); }
 sh('git add -A');
 const staged = sh('git diff --cached --numstat');
 if (!staged) { console.log(`✗ ${tag}: nothing to commit`); process.exit(1); }

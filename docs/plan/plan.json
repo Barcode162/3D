@@ -1,0 +1,722 @@
+{
+ "format": 1,
+ "about": "The plan (the source; PLAN.md is written from it). Edited only with node tools/plan.mjs. Dev reads it.",
+ "head": "# J Production · The World Plan\n\nThe one document of truth for the whole project: where it's going, what\nholds always, every part of the world, what's being built now, what comes\nnext, what's parked and what's done. **Its eight parts never change** (shape\nkept by `node tools/plan.mjs check`). Any request lands in one of them;\nnothing ever adds another plan file. Details that *explain* how things work\nlive in the docs listed in part 8; they never hold plans or ticks.",
+ "chaptersIntro": "*The fixed list. Every road and parked item sits under one of these.*",
+ "chapters": [
+  {
+   "id": "world",
+   "name": "The world",
+   "what": "what players see and do: the bar, avatars, games, people.",
+   "now": "the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item (J7 lays it out)."
+  },
+  {
+   "id": "site",
+   "name": "The site",
+   "what": "the front door, the showcase, the news.",
+   "now": "J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); frozen until J8."
+  },
+  {
+   "id": "engine",
+   "name": "The engine",
+   "what": "Looped, the script language, speed.",
+   "now": "Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is planned; paused until J8."
+  },
+  {
+   "id": "tools",
+   "name": "The tools",
+   "what": "the Toolbelt and Dev.",
+   "now": "Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8)."
+  },
+  {
+   "id": "backbone",
+   "name": "The backbone",
+   "what": "server, accounts, money.",
+   "now": "accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2)."
+  }
+ ],
+ "now": {
+  "id": "J4",
+  "title": "Tools and locks",
+  "chapter": "the tools",
+  "about": "Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps",
+  "serves": [
+   "N2",
+   "N5"
+  ],
+  "pieces": [
+   {
+    "id": "J4.1",
+    "text": "The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data",
+    "check": "Dev → Plan looks the same, nothing missing",
+    "done": true
+   },
+   {
+    "id": "J4.2",
+    "text": "One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age",
+    "check": "Nothing on the phone",
+    "done": false
+   },
+   {
+    "id": "J4.3",
+    "text": "The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal",
+    "check": "Nothing on the phone",
+    "done": false
+   },
+   {
+    "id": "J4.4",
+    "text": "Records tools: requests word for word, incidents, decisions, the session line",
+    "check": "Nothing on the phone",
+    "done": false
+   },
+   {
+    "id": "J4.5",
+    "text": "Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session",
+    "check": "Nothing on the phone",
+    "done": false
+   },
+   {
+    "id": "J4.6",
+    "text": "The Playbook and the tools agree: every command the Playbook names exists; the (J4) marks removed",
+    "check": "Nothing on the phone",
+    "done": false
+   }
+  ]
+ },
+ "roadIntro": "*Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*",
+ "upNext": "J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)",
+ "road": {
+  "world": [
+   {
+    "id": "A1",
+    "text": "Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "A2",
+    "text": "Real people: skin light passes into, hair strands, wet see-through eyes, clothes that swing, lips that follow voice.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "A3",
+    "text": "Your face: an avatar face from a few selfies.",
+    "serves": [
+     "N3",
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W1",
+    "text": "Memory: the floor wears where people walk, the dartboard gets holes, your usual stool gets your nameplate.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W2",
+    "text": "Mood and chance: one cozy↔wild dial for the whole bar; \"maybe\" events (30% rain, a surprise band).",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W3",
+    "text": "Time and era: scrub time back and see ghosts replay the night; a \"what if\" copy; the era dial (1920s ↔ neon future).",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W4",
+    "text": "Scale and layers: shrink to mouse size; blend two places.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W5",
+    "text": "Home screen with \"Happening now\": start at your home, one tap to a busy hub, a live event or a friend.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W6",
+    "text": "Lobbies and matchmaking: a few main hubs (the bar first), instances, matching by age band, preferences and skill; the no-friends lobby.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W7",
+    "text": "Your home: invite-only, placing things on a smooth grid, expand up to 3x, levels 1-3.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W8",
+    "text": "Events and the memory book: date, time, RSVP, a clean invite card; the in-game camera, a photo book with likes, no comments, per-photo privacy.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W9",
+    "text": "Safety in the world: teens and adults kept apart (lobbies, voice, messages); block, mute, report (keeps the last seconds of voice); the teen phrase builder, filtered text for adults.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W10",
+    "text": "The mall, IKEA-style: walk in, pick things up, cart, checkout, delivery and install at home.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W11",
+    "text": "The casino: 18+, earned credits only, never bought or cashed out.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W12",
+    "text": "VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown).",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W13",
+    "text": "Small interactions done properly: bell, guitar, books, TV, door, taps.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W14",
+    "text": "Physics props: knock bottles off, glasses break and stack, pour drinks.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W15",
+    "text": "The pool table.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W16",
+    "text": "Room 3, taped off today (its question is still open).",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W17",
+    "text": "Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W18",
+    "text": "Live low-res machine screens and a fair queue (20 s to claim your turn).",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W19",
+    "text": "More arcade games; bots in two-player races.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W20",
+    "text": "Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/DRIVING_REWORK.md).",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W21",
+    "text": "Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "W22",
+    "text": "Your own character builder (face, details); outfits and gadgets to show off (shop items).",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "W23",
+    "text": "The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen.",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "W24",
+    "text": "Remaster the crude first versions of props and rooms.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   }
+  ],
+  "site": [],
+  "engine": [
+   {
+    "id": "L1.8",
+    "text": "Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7).",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "P1",
+    "text": "The engine phone check: fix every \"broke\" from the E1-E9 list; a ?perf=1 report by the fire with the mirror in view (against 63H3FJ, 16.7 ms); if reflections or shadows cost over 1 ms, make them cheaper.",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "EN1",
+    "text": "Bug: the menu stops answering after some games.",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "EN2",
+    "text": "Speed: three phone reports (after entering, at the mirror, after 2 min walking); faster drawing part 2 (render core, layout from Blender, quality settings).",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "EN3",
+    "text": "Clean core leftovers: 4.1c, 4.3b, the darts / bartending / race adapters, entity ids on the wire.",
+    "serves": [
+     "N2"
+    ],
+    "done": false
+   },
+   {
+    "id": "M1",
+    "text": "Real surfaces: textures that never visibly repeat, rounded edges, automatic wear, dirt and smudges.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L2",
+    "text": "Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "T1",
+    "text": "The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts.",
+    "serves": [
+     "N2",
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L3",
+    "text": "Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "M2",
+    "text": "Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L4",
+    "text": "Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L5",
+    "text": "The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "RC1",
+    "text": "Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio.",
+    "serves": [
+     "N2",
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "M3",
+    "text": "Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L6",
+    "text": "Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "L7",
+    "text": "Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "RC3",
+    "text": "Scan it: bring real things in with the iPhone camera.",
+    "serves": [
+     "N3",
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "L8",
+    "text": "Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "EN4",
+    "text": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   }
+  ],
+  "tools": [
+   {
+    "id": "P2",
+    "text": "The Studio phone check: fix every \"broke S…\"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too.",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "TL1",
+    "text": "Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses.",
+    "serves": [
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "T2",
+    "text": "The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "T3",
+    "text": "Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo.",
+    "serves": [
+     "N3"
+    ],
+    "done": false
+   },
+   {
+    "id": "RC2",
+    "text": "Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch.",
+    "serves": [
+     "N2"
+    ],
+    "done": false
+   },
+   {
+    "id": "J5",
+    "text": "Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth",
+    "serves": [
+     "N2",
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "J6",
+    "text": "The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted",
+    "serves": [
+     "N2",
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "J7",
+    "text": "The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order",
+    "serves": [
+     "N2",
+     "N5"
+    ],
+    "done": false
+   },
+   {
+    "id": "J8",
+    "text": "Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system",
+    "serves": [
+     "N2",
+     "N5"
+    ],
+    "done": false
+   }
+  ],
+  "backbone": [
+   {
+    "id": "B1",
+    "text": "Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "B2",
+    "text": "The room checks chess moves and 4K Mania scores; then more games pay credits.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "B3",
+    "text": "The room decides every shared thing (Phase 5).",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "B4",
+    "text": "Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "B5",
+    "text": "Payments (Stripe) for the VIP store.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   },
+   {
+    "id": "B6",
+    "text": "Safety on the server: age bands enforced, reports kept, blocks remembered.",
+    "serves": [
+     "N4"
+    ],
+    "done": false
+   }
+  ]
+ },
+ "parkedIntro": "*Not on the road yet, by chapter. The user promotes them.*",
+ "parked": {
+  "world": [
+   "The street and the city outside; homes there as your \"real home\".",
+   "A kids edition: a separate, simpler game in the same universe (under 13).",
+   "A new name for the world and its currency (Bar3D is a working name).",
+   "Mini music studio (a DAW in the bar).",
+   "Avatar from a face scan (the user's own character builder).",
+   "The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)"
+  ],
+  "site": [
+   "The front door scene running live in Looped instead of a clip (after R6, same places).",
+   "The front page's looping clip: the camera drifting to the bar's lit door, ~8 s, rendered from the engine, behind the intro (was R5.6)"
+  ],
+  "engine": [
+   "World-simulation engines: sound made from the physics, heat, smell as a field, day and night.",
+   "The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)"
+  ],
+  "tools": [
+   "AI dock: a workspace on the site where you talk to Claude and it works on the project there.",
+   "AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once.",
+   "A design for the Studio more like a 3D modelling room (the hub card \"Design idea\")."
+  ],
+  "backbone": [
+   "The site on Cloudflare Pages (unlocks threads in the game)."
+  ]
+ },
+ "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
+ "done": [
+  {
+   "build": null,
+   "text": "J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86"
+  },
+  {
+   "build": "8793265",
+   "text": "J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef"
+  },
+  {
+   "build": "546c7d4",
+   "text": "J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c"
+  },
+  {
+   "build": "87bd110",
+   "text": "R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923"
+  },
+  {
+   "build": "ebca03a",
+   "text": "R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe"
+  },
+  {
+   "build": "ad87523",
+   "text": "R4.1, R4.2, R4.3, R4.4, R4.5, R4.6, R4.7: Dev, the control room: Overview, Projects, Plan, Publish, People; the old hub, portal and Toolbelt lead there → 03c3fe4^..f247b0b"
+  },
+  {
+   "build": "58d93ec",
+   "text": "R3.1, R3.2, R3.3: The World Plan: one doc (PLAN.md), the old plans archived, the plan keeper → 882582d^..a75881c"
+  },
+  {
+   "build": "2eabe5f",
+   "text": "R2.5-R2.6: Ember, the house theme (Warm + frosted glass + a drifting glow + moving titles); motion tokens → 393d12e^..b4f2fea"
+  },
+  {
+   "build": "45292a6",
+   "text": "R2.1-R2.4: real screens, light and dark in one theme, six candidates (Clean, Warm, Bold, Glass, Neon, Soft), compare and mix → 0bdee82^..8b9d289"
+  },
+  {
+   "build": "aa0d3ae",
+   "text": "R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/UI_PLAN.md), engine work paused → a28d85c^..b394ba3"
+  },
+  {
+   "build": "fde3f14",
+   "text": "M0.2 truly matte (no plastic rim on rough things, cloth keeps little shine, coats not black, floor 0.75) → M0.2 commit"
+  },
+  {
+   "build": "8722f75",
+   "text": "Phone feedback: L1.8 no squares of light, M0 real roughness (matte coats, floor not a mirror), L1.9 softer highlights (bright light keeps its colour), L1.10 calmer light (darker, less glow); tools: place_check, stage_hunks → 5622548..HEAD"
+  },
+  {
+   "build": "336e1d9",
+   "text": "L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72"
+  },
+  {
+   "build": "7322b92",
+   "text": "L1.1-L1.6: eyes (HDR, adapting, AgX), real units (lumens, Kelvin), real material brightness, bounced light (core + in the game), lights with size; tools: piece runner, gallery, benchmarks, light tool → 69fb05c^..5d99353"
+  },
+  {
+   "build": "96fbf26",
+   "text": "S9.1-S9.3, S10.1-S10.4: live for everyone (a publish reaches an open bar within seconds, try your draft with a friend, undo a publish) and Claude in the loop (notes from the Studio, Claude's versions in History with what changed, deep links, proposals) → c00af5e..HEAD"
+  },
+  {
+   "build": "c00af5e",
+   "text": "S7.1-S7.3, S8.1-S8.4: light and look (materials as data, live lights, moods and the budget meter) and life (states and rules, the Loop Rack, drawn keys and presets, sounds) → 2c8b4da..c00af5e"
+  },
+  {
+   "build": "2c8b4da",
+   "text": "S5.1-S5.4, S6.1-S6.4: precision (magnifier, part mode, this one / every one, Inspect edits everything) and building (Library with pictures and prices, duplicate / row / rename / delete, boxes with push-pull and extrude, places) → f3a2dc4..2c8b4da"
+  },
+  {
+   "build": "f3a2dc4",
+   "text": "S4.1-S4.4: the hub as Needs you · Dials · Board · News, tuning baked into the world, the bar's menus, news and loading screen in Faceplate → 8797ac4..f3a2dc4 (with the room's grace fix and S5.1)"
+  },
+  {
+   "build": "8797ac4",
+   "text": "S2.1-S2.5, S3.1-S3.5: the Studio opens (login, cameras, picking, the Monitor, X-ray) and edits (Move/Turn/Size, slide, Drop, Put on, undo, the draft, Publish, History, Restore) → 5a04c79..8797ac4"
+  },
+  {
+   "build": "5a04c79",
+   "text": "S1.1-S1.6: the theme system (/ui), the front door, the schema, the world store, the bar and the room load the live world, studio.mjs → 988d71f..5a04c79 (world v1 published after)"
+  },
+  {
+   "build": "22e9b28",
+   "text": "E8.1, E8.2, E9.1, E9.2: the hub's World page and live tuning, projects as a part, old keys gone → fa64f17..22e9b28 (66526ef was the same game; 22e9b28 only fixed a test)"
+  },
+  {
+   "build": "fa64f17",
+   "text": "E3.3–E3.7, E4.1–E4.4, E5.1–E5.2, E6.1–E6.2, E7.1–E7.4 → e807e99..fa64f17"
+  },
+  {
+   "build": "ff60ac4",
+   "text": "E3.1, E3.2, E3.6 (half): touch things, the room runs their rules → a2fe850..HEAD"
+  },
+  {
+   "build": "a2fe850",
+   "text": "E2 done: the bar as a place file, every object alive (before this file existed)."
+  }
+ ],
+ "where": "*Docs that explain; they never hold plans or ticks.*\n- `CLAUDE.md`: how a \"go\" runs. `docs/REFERENCE.md`: the long guide (layout, every tool, iOS limits).\n- `docs/AUTOMATION.md`: the tools (piece, step, plan, uikit, studio, bench, gallery).\n- `docs/ENGINE.md`: how Looped is built (things, loops, layers). `docs/STUDIO.md`: how the Studio works.\n- `docs/manual/`: the manual (light, materials, recipes, timeline, world, avatars).\n- `docs/PROTOCOL.md`: the multiplayer wire format. `docs/DRIVING_REWORK.md`: the driving spec.\n- `docs/DECISIONS.md`: gotchas and why things are the way they are.\n- `docs/archive/`: every old plan and progress file, kept to read, never to plan from."
+}

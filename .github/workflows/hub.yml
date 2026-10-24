@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'PLAN.md', 'docs/charter/**', 'tools/plan.mjs', 'tools/plan_test.mjs', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'PLAN.md', 'docs/charter/**', 'docs/plan/**', 'tools/plan.mjs', 'tools/plan_test.mjs', 'tools/lib/plandata.mjs', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -130,7 +130,8 @@ jobs:
           mkdir -p -f $IONOS_HOME/dev
           mkdir -p -f private/dev
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/dev $IONOS_HOME/dev
-          put $GITHUB_WORKSPACE/PLAN.md -o private/dev/plan.md
+          put $GITHUB_WORKSPACE/docs/plan/plan.json -o private/dev/plan.json
+          put $GITHUB_WORKSPACE/docs/charter/rules.json -o private/dev/rules.json
           mkdir -p -f $IONOS_HOME/toolbelt
           mkdir -p -f private/ui
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/toolbelt $IONOS_HOME/toolbelt

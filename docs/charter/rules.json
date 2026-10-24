@@ -1,0 +1,127 @@
+{
+ "format": 1,
+ "about": "The user's North star and rules, word for word (the source; PLAN.md parts 1-2 and the Charter show them). Only the user changes them: node tools/plan.mjs rule.",
+ "northIntro": "*Only the user changes this part.*",
+ "north": [
+  {
+   "id": "N1",
+   "title": "A world you're inside.",
+   "text": "joshuavelasco.com is one place, not a set of\n  pages: the bar, the showcase and Dev are places in it, joined by movement."
+  },
+  {
+   "id": "N2",
+   "title": "Made from scratch.",
+   "text": "Our own engine, Looped, and our own script\n  language: no outside engines. Made by J Production."
+  },
+  {
+   "id": "N3",
+   "title": "Real, and alive.",
+   "text": "Real light, shapes, materials, physics and sound,\n  pushed livelier than real life: the world keeps moving on its own; joining\n  in is optional and fun. Engines that stack: each one makes the others better."
+  },
+  {
+   "id": "N4",
+   "title": "A life with other people.",
+   "text": "A hangout for 13+: homes, games, events,\n  credits, voice; safe by design."
+  },
+  {
+   "id": "N5",
+   "title": "Made on the iPhone.",
+   "text": "Everything is judged on the user's phone\n  (Safari): smooth first, one look (the house theme Ember) everywhere."
+  }
+ ],
+ "rulesIntro": "*Decisions that always hold, newest first. Only the user adds or changes them.*",
+ "rules": [
+  {
+   "date": "2026-10-24",
+   "text": "**Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Test only what the change touches:** a check runs because it covers what changed, any kind of test included (browser tests too, on this machine or on GitHub); nothing unrelated runs. Replaces \"Speed over tests\", which the user never said (request 2026-10-24 #5)."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The restructure (J1–J8) governs until it's done:** its spec is `docs/plan/restructure.md`; where an older instruction disagrees, the spec wins. It replaces \"one doc, eight fixed parts\" with five books: Charter, Playbook, Handbook, Plan, Records."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**Dev holds everything except the main page and the games:** the Studio, every tool, the plan, publishing, people; organised by project (Bar3D, the Looped engine, the script language, every future project)."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**All engine work is paused until the rework (R3-R6) is done.**"
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**This plan:** one doc, eight fixed parts, five chapters; every road item names the North star line it serves."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The house theme is Ember**; the other themes stay as options. One look for the site, Dev, the tools and the menus (R6)."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The bar's menus stay plain HTML** over the 3D (no GPU cost) until Looped is understood better."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The UI Editor is an engine tool** in the Toolbelt: dense, every setting."
+  },
+  {
+   "date": "2026-10-24",
+   "text": "**The site keeps few words**: the minimum text, a real 3D scene behind it later."
+  },
+  {
+   "date": "2026-10-22",
+   "text": "**Light only comes from light sources**: no fake fill; darkness is real; eyes adjust."
+  },
+  {
+   "date": "2026-10-22",
+   "text": "**Automation first**: anything done twice becomes a tool."
+  },
+  {
+   "date": "2026-10-22",
+   "text": "**Wow and foundation take turns**; every visual piece has an off switch and before/after pictures."
+  },
+  {
+   "date": "2026-10-21",
+   "text": "**\"go\" = one whole step**: one piece = one commit with its own phone check (\"broke <piece>\" finds it); one push to main per step."
+  },
+  {
+   "date": "2026-10-19",
+   "text": "**13+ only**; teens (13-17) and adults kept apart. The casino is 18+ and earned credits only."
+  },
+  {
+   "date": "2026-10-15",
+   "text": "**From scratch in C++**: no outside engines or libraries (three.js only for Meridian and the platformer). Every third-party asset licensed and credited; no copyrighted music."
+  }
+ ]
+}
