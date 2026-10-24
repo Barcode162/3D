@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** R5 → R6, then engine work resumes: L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
+**Up next, in order:** R5 → R6, then engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -109,6 +109,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **L7** Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow. · N3
 - [ ] **RC3** Scan it: bring real things in with the iPhone camera. · N3 N5
 - [ ] **L8** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
+- [ ] **EN4** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
 
 ### The tools
 - [ ] **R6** Ember on everything: the Studio, the bar's menus, the loading screen; the old themes retired from use. · N5
