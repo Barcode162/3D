@@ -67,7 +67,7 @@
     "id": "J4.4",
     "text": "Records tools: requests word for word, incidents, decisions, the session line",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J4.5",
