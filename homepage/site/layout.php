@@ -74,11 +74,11 @@ function site_head($active, $title, $description, $opts = []) {
   $full = $active === 'home' ? 'Joshua Velasco: worlds built from scratch' : "$title · Joshua Velasco";
   $bodyClass = 'pg-' . preg_replace('/[^a-z0-9-]/', '', $active) . (isset($opts['class']) ? ' ' . $opts['class'] : '');
   ?><!doctype html>
-<html lang="en">
+<html lang="en" data-look="ember" data-scheme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#070605">
+<meta name="theme-color" content="#0E0906">
 <meta name="color-scheme" content="dark">
 <script>document.documentElement.classList.add('js')</script>
 <title><?= site_h($full) ?></title>
@@ -91,7 +91,8 @@ function site_head($active, $title, $description, $opts = []) {
 <link rel="icon" href="/site/img/mark.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/site/img/touch.png">
 <link rel="preload" href="/ui/fonts/Archivo.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/site/site.css?v=1">
+<link rel="stylesheet" href="/ui/themes.css?v=2">
+<link rel="stylesheet" href="/site/site.css?v=2">
 </head>
 <body class="<?= site_h($bodyClass) ?>">
 <a class="skip" href="#main">Skip to content</a>

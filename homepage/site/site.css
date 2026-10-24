@@ -1,6 +1,9 @@
 /* joshuavelasco.com: the public site (homepage/). One look for every page:
-   deep smoke, warm orange light (the Faceplate theme's accent), neon from the
-   bar's signs, wide Archivo for headlines, Martian Mono for labels.
+   deep smoke, warm orange light, neon from the bar's signs, wide Archivo for
+   headlines, Martian Mono for labels. Since R5.1 it wears the house theme,
+   Ember (/ui/themes.css, <html data-look="ember" data-scheme="dark">): the
+   theme's bg/text tokens override the ones below, and the "Ember" section at
+   the end adds its glow, frosted boxes and moving titles.
    Fonts come from /ui/fonts (OFL, credits in ui/CREDITS.md). */
 
 @font-face { font-family: "Archivo"; src: url("/ui/fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
@@ -405,3 +408,37 @@ body.menu-open { overflow: hidden; }
   .js .reveal { opacity: 1; transform: none; }
   html { scroll-behavior: auto; }
 }
+
+/* ---------- Ember (PLAN.md R5.1): the house theme on the site ----------
+   The layout, boxes and animations above stay; these lines dress them in
+   Ember's tokens: a three-colour glow drifting behind everything, frosted
+   see-through boxes, a light passing through the big titles. */
+:root[data-look="ember"] { --orange: var(--accent); --line: var(--rule); --r: var(--panel-r); }
+body { background: var(--bg); }
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -10; pointer-events: none;
+  background-image: var(--bg-glow); background-size: var(--bg-size); background-repeat: no-repeat;
+  animation: var(--bg-motion, none) 28s ease-in-out infinite alternate;
+}
+.card, .tile, .flow-step, .steps li, .news-item, .tool, .auth-box .panel, .projects a {
+  background: var(--panel); box-shadow: var(--panel-edge);
+  -webkit-backdrop-filter: var(--panel-blur); backdrop-filter: var(--panel-blur);
+}
+.tile.hero-tile { background: radial-gradient(ellipse 60% 100% at 100% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 65%), var(--panel); }
+.tile:hover { box-shadow: var(--panel-edge), 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+.card .ic, .tile .ic { background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent); }
+.marquee { background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: var(--panel-blur); backdrop-filter: var(--panel-blur); }
+.top, .top.scrolled { background: var(--over); }
+.btn-go { background: var(--go-bg); color: var(--go-text); }
+.h-xl, .h-lg, .hero h1 {
+  background-image: var(--title-fill, none); background-size: 260% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: var(--title-ink, currentColor);
+  animation: var(--title-motion, none) var(--title-speed, 7s) ease-in-out infinite;
+}
+.h-xl em, .h-lg em, .hero h1 em, .h-xl .hl, .h-lg .hl, .h-lg .neon, .h-xl .neon { -webkit-text-fill-color: currentColor; }
+@keyframes lp-drift { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+@keyframes lp-shimmer { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@keyframes lp-glow { 0%, 100% { filter: drop-shadow(0 0 6px var(--title-glow)); } 50% { filter: drop-shadow(0 0 18px var(--title-glow)); } }
+@keyframes lp-shimmer-glow { 0% { background-position: 100% 0; filter: drop-shadow(0 0 6px var(--title-glow)); } 50% { filter: drop-shadow(0 0 16px var(--title-glow)); } 100% { background-position: 0% 0; filter: drop-shadow(0 0 6px var(--title-glow)); } }
+@keyframes lp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { body::before, .h-xl, .h-lg, .hero h1 { animation: none; } }

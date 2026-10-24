@@ -23,6 +23,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-24) **News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish.
+- (2026-10-24) **The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page.
 - (2026-10-24) **joshuavelasco.com is J Production's company site, not only Bar3D:** an intro, one eye-catching news item, Enter the bar; scroll down for the bar's screenshots and what there is to do; other projects in their own tab; Looped and the script language shown as works in progress that admins and devs use.
 - (2026-10-24) **Dev holds everything except the main page and the games:** the Studio, every tool, the plan, publishing, people; organised by project (Bar3D, the Looped engine, the script language, every future project).
 - (2026-10-24) **All engine work is paused until the rework (R3-R6) is done.**
@@ -48,13 +50,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R5 · The front door, J Production's site** (the site). The front door, J Production's site: an intro, one eye-catching news item and Enter the bar over a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop, shown as a clip); scroll down for the bar's screenshots and what there is to do; a tab per project (Bar3D first, more later); Looped and the script language as works in progress; News, Sign in; one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
-- [ ] **R5.1** The street front: a new place in the world, the bar seen from the street at night (the front wall, the lit door, windows with people moving behind them, a street lamp), made in the Studio's place format *Check:* in the Studio's place menu, open The street: the bar's front at night
-- [ ] **R5.2** The clip: a tool flies the camera slowly toward the lit door and renders a seamless ~8 s loop from the engine (a small video for phones, a still for slow connections) *Check:* open the clip's link: 8 seconds that loop with no jump
-- [ ] **R5.3** The front page: J Production's intro, the news highlight and Enter the bar over the clip (words from Dev → Publish → The site), in Ember *Check:* open joshuavelasco.com: the clip plays behind the words; Enter the bar opens the bar
-- [ ] **R5.4** Scroll down: Bar3D's pictures and what there is to do (the rooms, the games, the people), each a place you glide to, not a new page *Check:* scroll the front page: the bar's pictures slide in, tap one to see more
-- [ ] **R5.5** Projects: a tab per project (Bar3D first, more later); Looped and the script language shown as works in progress that admins and devs use *Check:* tap Projects: Bar3D, Looped and the script language
-- [ ] **R5.6** The old pages fold in: Play, Engine and Vision lead to their new places; News and Sign in wear Ember; the site's own look (site.css) retired *Check:* open joshuavelasco.com/play: it lands on the front page's Bar3D part
+**R5 · The front door, J Production's site** (the site). J Production's front page: the current site (its boxes, layout and animations) dressed in Ember and rearranged: an intro, a news highlight (a picture and a friendly line, pushed from Dev → Publish) and Enter the bar; scroll down for the bar's pictures and what there is to do; a tab per project, Looped and the script language as works in progress; then the street-front scene and its looping clip behind the intro. · N1 N5
+- [x] **R5.1** The site in Ember: every page keeps its layout, boxes and animations, now with frosted see-through boxes, the drifting amber glow and moving titles (the house theme's tokens) *Check:* open joshuavelasco.com: the same site, boxes frosted over a slow amber glow, the big title has a light passing through it
+- [ ] **R5.2** Highlights in Publish: make one (a picture, a short title, one or two friendly lines, where it leads), see it as the front page will, Push to the front page or take it down; Claude's news posts written in plain friendly words *Check:* Dev → Publish → Highlights: make one with a picture, Push: it's on the front page
+- [ ] **R5.3** The front page rearranged: J Production's intro, the pushed highlight, Enter the bar; scroll: Bar3D's pictures and what there is to do *Check:* open joshuavelasco.com: intro, your highlight, Enter the bar; scroll for the bar
+- [ ] **R5.4** Projects: a page per project (Bar3D first; Looped and the script language as works in progress that admins and devs use); Play, Engine and Vision fold in and their old addresses lead there *Check:* tap Projects: Bar3D, Looped, the script language; /engine opens Looped's page
+- [ ] **R5.5** The street front: a new place, the bar seen from the street at night (the front wall, the lit door, windows with people moving behind them, a street lamp) *Check:* in the Studio's place menu, open The street
+- [ ] **R5.6** The clip: the camera drifts toward the lit door, an ~8 s seamless loop rendered from the engine (a small video, a still for slow connections), behind the front page's intro *Check:* open joshuavelasco.com: the clip plays behind the intro and loops with no jump
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*

@@ -32,7 +32,7 @@ try {
   check(/- \[ \] \*\*W99\.1\*\* The first piece \*Check:\* stand by the bar/.test(t), 'the pieces carry their phone checks');
   check(plan('done', '--sha', 'abc1234', '--what', 'W99.1-W99.2: a test', '--range', 'a..b').status === 0 && /## 7\. Done\n.*\n- \(this push\) W99\.1-W99\.2: a test → a\.\.b\n/.test(text()), 'done puts a line on top of Done');
   check(plan('done', '--sha', 'def5678', '--what', 'next').status === 0 && /- `def5678` W99\.1-W99\.2: a test/.test(text()), 'the next done gives the last line its build code');
-  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1').status === 0 && plan('next', 'X2 → R5').status === 0 && /Up next, in order:\*\* X2 → R5/.test(text()), 'next sets the Up next line');
+  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1').status === 0 && plan('next', 'X2 → W1').status === 0 && /Up next, in order:\*\* X2 → W1/.test(text()), 'next sets the Up next line');
   check(plan('check').status === 0, 'after all that the copy still keeps its shape');
   const broken = text().replace('## 6. Parked', '## 6. Ideas');
   check(problems(broken).some((p) => /parts must be exactly/.test(p)), 'a renamed part is caught');
