@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J1.3 The glossary (docs/charter/glossary.md): the words the user can say, then 82 terms A to Z with one plain meaning each; the clashes settled (a piece is always a piece of work, a loop's channel is a lane, a rule is always the user's or a thing's)
+
+`34ad18c` · 2026-10-24 11:19 · 2 files, +167 −1 · tests: quick
+
+Phone check: Open docs/charter/glossary.md on GitHub: job, piece, build, ship, live, store each have one plain meaning
+
 ## J1.2 The Charter (docs/charter/charter.md): the project and the user, the North star and the user's rules word for word (a generated block checked by the quick check: plan.mjs charter), each rule in practice, what's realistic (phone, hosting, CI, the cloud machine, Claude, money, law, licences), the permission list (allowed / ask first / never; anything not listed: ask), how the Charter changes
 
 `711f0d8` · 2026-10-24 11:15 · 4 files, +246 −3 · tests: quick
