@@ -26,7 +26,7 @@ if (!what) refuse('say what the job did: node tools/ship.mjs "<what>"');
 const branch = sh('git rev-parse --abbrev-ref HEAD'), job = (/^job\/(J\d+)$/.exec(branch) || [])[1];
 if (!job) refuse(`ship runs on a job branch (job/J<n>), not "${branch}"`);
 // Only the finish's own files may be unsaved (the next job in Now, the session line): it commits them.
-const unsaved = sh('git status --porcelain').split('\n').filter(Boolean).map((l) => l.slice(3))
+const unsaved = execSync('git status --porcelain', { encoding: 'utf8' }).split('\n').filter(Boolean).map((l) => l.slice(3))  // untrimmed: each line starts with its two status letters
   .filter((f) => !/^(PLAN\.md|CLAUDE\.md|docs\/plan\/|docs\/charter\/|docs\/records\/sessions\/)/.test(f));
 if (unsaved.length) refuse(`there are unsaved changes (${unsaved.join(', ')}): commit them as a piece (or take them out) first`);
 sh('git fetch -q origin main');
