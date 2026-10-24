@@ -277,12 +277,15 @@ PIECE_BRANCH=job/J<n> PIECE_ATTRIBUTION="<this session's two lines>" \
   problem or never run there are allowed to fail with their known issue
   (KI-24, KI-25) until their GitHub results are in. No test is deleted or
   weakened to get green.
-- **J2.3** Both workflows report their real state to Dev's store:
-  `private/dev/ci-game.json` and `private/dev/ci-site.json` =
-  `{build, workflow, status: running|live|passed|failed, failed: [step names],
-  at, url}`, written at start, after the upload, and at the end (always).
-  `dev/api.php` `{"a":"ci"}` returns both; Dev's Overview shows both, with
-  their age. Stale comments in `deploy.yml` fixed.
+- **J2.3** Both workflows report their real state to Dev's store through
+  `tools/ci_status.mjs`: `private/dev/ci-game.json` and
+  `private/dev/ci-site.json` = `{workflow, build, live, tests:
+  running|passed|failed|cancelled, failed: [step ids], allowed: [step ids
+  that failed but may], at, url}`, written at the start, after the upload
+  (the game), and at the end (always, from `toJSON(steps)`). `dev/api.php`
+  `{"a":"ci"}` returns `{game, site}` (the old `ci.json` reads as the game's
+  until the next game deploy); Dev's Overview shows both rows, with their
+  age. Stale comments in `deploy.yml` fixed.
 
 ### J3 · The Playbook
 Every procedure file uses one template: **When** (the trigger) · **Before

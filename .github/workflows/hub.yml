@@ -29,6 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Dev's Overview shows each deploy's real state (restructure J2.3).
+      - name: "Report: started (for Dev)"
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: node tools/ci_status.mjs site start
+
       # Every test runs even when an earlier one failed (one failure never
       # hides another); the upload only happens when they all passed. Every
       # check is listed once in tools/lib/checks.mjs (tools/workflows_test.mjs).
@@ -101,6 +108,7 @@ jobs:
         run: node tools/plan_test.mjs
 
       - name: Upload the hub to IONOS
+        id: upload
         if: env.IONOS_SFTP_HOST != ''
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
@@ -132,3 +140,12 @@ jobs:
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/news $IONOS_HOME/news
           bye
           EOF2
+
+      # How this deploy ended, even when a test failed or a newer run took over (J2.3).
+      - name: "Report: finished (for Dev)"
+        if: always() && env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          JOB_STATUS: ${{ job.status }}
+          STEPS_JSON: ${{ toJSON(steps) }}
+        run: node tools/ci_status.mjs site end

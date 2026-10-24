@@ -60,8 +60,17 @@ check(await ed((n) => document.querySelector('#view [data-id="now"]').textConten
 await page.waitForFunction(() => /Nothing waiting|to publish/.test(document.querySelector('#view [data-id="needs"]').textContent));
 check(true, 'Needs you answers (news drafts)');
 const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
-check(ci.ok === 1 && ci.ci === null, 'the store answers the owner');
+check(ci.ok === 1 && ci.ci && ci.ci.game === null && ci.ci.site === null, 'the store answers the owner (no deploy reports yet)');
 check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status === 403, 'the store keeps a player out');
+// J2.3: each deploy's real state (tools/ci_status.mjs writes these at deploy)
+const at = Math.floor(Date.now() / 1000);
+writeFileSync(join(ws.root, 'private/dev/ci-game.json'), JSON.stringify({ workflow: 'game', build: 'abc1234', live: true, tests: 'failed', failed: ['smoke'], allowed: ['studio'], at: at - 120, url: 'https://github.com/' }));
+writeFileSync(join(ws.root, 'private/dev/ci-site.json'), JSON.stringify({ workflow: 'site', build: 'abc1234', live: true, tests: 'passed', failed: [], allowed: [], at: at - 60, url: 'https://github.com/' }));
+await page.click('#tabs [data-tab="projects"]');
+await page.click('#tabs [data-tab="overview"]');
+await page.waitForFunction(() => /1 failed: smoke/.test(document.querySelector('#view [data-id="status"]')?.textContent || ''));
+check(await ed(() => { const t = document.querySelector('#view [data-id="status"]').textContent; return /Game deploy/.test(t) && /allowed to fail: studio/.test(t) && /Site deploy/.test(t) && /every test passed/.test(t); }),
+  'Overview shows both deploys: the game\'s failed test and the one allowed to fail by name, the site green');
 
 // R4.4: Plan
 await page.click('#tabs [data-tab="plan"]');

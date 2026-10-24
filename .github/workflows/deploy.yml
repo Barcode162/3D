@@ -72,6 +72,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Dev's Overview shows each deploy's real state (restructure J2.3): started,
+      # live, then every test's result by name (tools/ci_status.mjs).
+      - name: "Report: started (for Dev)"
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: node tools/ci_status.mjs game start
+
       - name: Cache Emscripten
         uses: actions/cache@v4
         with:
@@ -246,6 +254,12 @@ jobs:
           bye
           EOF
 
+      - name: "Report: live (for Dev)"
+        if: steps.upload.outcome == 'success' && env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: node tools/ci_status.mjs game live
+
       # The game is private now (docs/LOOPED.md A1): gh-pages keeps only a
       # signpost to joshuavelasco.com/bar, and its commit message records the
       # live build for the `changes` job above. After the IONOS upload, so a
@@ -407,14 +421,12 @@ jobs:
         timeout-minutes: 15
         run: NODE_PATH=$(npm root -g):$PWD/node_modules node tools/race_mp_test.mjs
 
-      # Dev's Overview shows how the last deploy went (PLAN.md R4.3): passed,
-      # or which run to open. Written even when a test failed.
-      - name: "Report: the deploy's result for Dev (private/dev/ci.json)"
+      # Dev's Overview: how this deploy ended, even when a test failed or the
+      # run was stopped: which tests failed, which were allowed to (J2.3).
+      - name: "Report: finished (for Dev)"
         if: always() && env.IONOS_SFTP_HOST != ''
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
           JOB_STATUS: ${{ job.status }}
-        run: |
-          python3 -c "import json,os,time; json.dump({'build': os.environ['GITHUB_SHA'][:7], 'status': os.environ['JOB_STATUS'], 'at': int(time.time()), 'url': os.environ['GITHUB_SERVER_URL'] + '/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID']}, open('ci.json', 'w'))"
-          command -v lftp >/dev/null || sudo apt-get install -y lftp >/dev/null
-          lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" -e "set sftp:auto-confirm yes; set net:max-retries 3; mkdir -p -f private/dev; put ci.json -o private/dev/ci.json; bye"
+          STEPS_JSON: ${{ toJSON(steps) }}
+        run: node tools/ci_status.mjs game end

@@ -1,6 +1,7 @@
 // Dev → Overview (PLAN.md R4.3): is everything up (the bar's live build, the
-// room server, the last deploy's tests), what needs you (news to publish),
-// and the step in Now. Each row shows "Checking…" until its answer comes.
+// room server, each deploy's real state: the game's and the site's, J2.3),
+// what needs you (news to publish), and the step in Now. Each row shows
+// "Checking…" until its answer comes.
 (function () {
   'use strict';
   var D = window.Dev;
@@ -18,6 +19,27 @@
     a.className = 'dev-row-btn'; a.href = href; a.dataset.row = key; slot.replaceChild(a, el); el.removeAttribute('data-row'); a.appendChild(el);
     if (/^https?:/.test(href)) { a.target = '_blank'; a.rel = 'noopener'; }
   }
+  // One deploy's report (tools/ci_status.mjs) in words: {detail, value, tone}.
+  function deployState(c) {
+    if (!c) return { detail: 'No report yet (the next deploy writes one)', value: '?', tone: 'warn' };
+    var list = function (a) { return (a || []).join(', '); };
+    var tests = c.tests === 'running' ? 'tests running…'
+      : c.tests === 'passed' ? 'every test passed'
+      : c.tests === 'cancelled' ? 'stopped (a newer deploy took over)'
+      : (c.failed && c.failed.length ? c.failed.length + ' failed: ' + list(c.failed) : 'a step failed');
+    var allowed = c.allowed && c.allowed.length ? ' · allowed to fail: ' + list(c.allowed) : '';
+    return {
+      detail: 'build ' + c.build + ' · ' + (c.live ? 'live' : 'not live') + ' · ' + tests + allowed + ' · ' + ago(c.at),
+      value: { running: 'Running', passed: 'Green', cancelled: 'Stopped' }[c.tests] || 'Red',
+      tone: c.tests === 'passed' ? 'ok' : c.tests === 'failed' ? 'bad' : 'warn',
+    };
+  }
+  D.deployState = deployState;
+  function deployRow(slot, key, name, c) {
+    var st = deployState(c), p = { text: name, icon: 'check', detail: st.detail, value: st.value, tone: st.tone };
+    if (c && c.url) { p.chevron = true; linkRow(slot, 'ci-' + key, p, c.url); } else row(slot, 'ci-' + key, p);
+  }
+
   D.tabs.overview.fill = function () {
     var d = new Date(), today = D.slot('today');
     if (today) today.textContent = 'Dev · ' + DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + d.toLocaleString('en', { month: 'short' });
@@ -25,7 +47,8 @@
     if (status) {
       row(status, 'bar', { text: 'The bar', icon: 'bar', detail: 'Checking…' });
       row(status, 'room', { text: 'Room server', icon: 'people', detail: 'Checking…' });
-      row(status, 'ci', { text: 'Last deploy', icon: 'check', detail: 'Checking…' });
+      row(status, 'ci-game', { text: 'Game deploy', icon: 'check', detail: 'Checking…' });
+      row(status, 'ci-site', { text: 'Site deploy', icon: 'check', detail: 'Checking…' });
       (D.demo ? Promise.resolve({ build: 'demo', ws: '' }) : D.get('/bar/config.json')).then(function (c) {
         row(status, 'bar', { text: 'The bar', icon: 'bar', detail: 'build ' + c.build, value: 'Up', tone: 'ok' });
         if (!c.ws) return row(status, 'room', { text: 'Room server', icon: 'people', detail: 'Not set up', value: '?', tone: 'warn' });
@@ -37,11 +60,10 @@
         row(status, 'bar', { text: 'The bar', icon: 'bar', detail: 'Its config did not answer', value: 'Down', tone: 'bad' });
         row(status, 'room', { text: 'Room server', icon: 'people', detail: 'Not checked', value: '?', tone: 'warn' });
       });
-      (D.demo ? Promise.resolve({ ok: 1, ci: null }) : D.post('/dev/api.php', { a: 'ci' })).then(function (j) {
-        var c = j.ok && j.ci;
-        if (!c) return row(status, 'ci', { text: 'Last deploy', icon: 'check', detail: 'No report yet (the next game deploy writes one)', value: '?', tone: 'warn' });
-        var good = c.status === 'success';
-        linkRow(status, 'ci', { text: 'Last deploy', icon: 'check', detail: 'build ' + c.build + ' · ' + ago(c.at) + (good ? ' · every test passed' : ' · a test failed'), value: good ? 'Green' : 'Red', tone: good ? 'ok' : 'bad', chevron: true }, c.url);
+      (D.demo ? Promise.resolve({ ok: 1, ci: { game: null, site: null } }) : D.post('/dev/api.php', { a: 'ci' })).then(function (j) {
+        var ci = (j.ok && j.ci) || {};
+        deployRow(status, 'game', 'Game deploy', ci.game);
+        deployRow(status, 'site', 'Site deploy', ci.site);
       });
     }
     if (needs) {

@@ -2,13 +2,15 @@
 // Dev's store (PLAN.md R4): what Dev shows that no other server keeps.
 // On IONOS at joshuavelasco.com/dev/api.php; data outside the web root in
 // private/dev/ (DEV_DATA overrides, for tests). CI puts plan.md (the repo's
-// PLAN.md) and ci.json (the last deploy's result) there.
+// PLAN.md) and each deploy's real state there: ci-game.json and ci-site.json
+// (tools/ci_status.mjs; ci.json was the old, game-only report).
 //
 // Public (no login):
 //   GET ?site                   the site's words for the front door (R5): {"ok":1,"site":{..}}
 // Owner and admins (the bar's login token), or Claude (the hub's key, X-Hub-Key):
 //   POST {"a":"plan"}           -> {"ok":1,"plan":"<PLAN.md>","at":unix}
-//   POST {"a":"ci"}             -> {"ok":1,"ci":{build,status,at,url}|null}
+//   POST {"a":"ci"}             -> {"ok":1,"ci":{"game":R|null,"site":R|null}}, each deploy's state:
+//        R = {workflow, build, live, tests: running|passed|failed|cancelled, failed:[ids], allowed:[ids], at, url}
 //   POST {"a":"notes"}          -> {"ok":1,"notes":[{id,kind,text,by,at,read}]} newest first
 //   POST {"a":"note","kind":"note|park","text":".."}   leave Claude a note, or an idea to park
 // Claude only (the key):
@@ -110,7 +112,14 @@ if ($a === 'plan') {
   $s = @file_get_contents("$data/plan.md");
   reply(['ok' => 1, 'plan' => $s === false ? '' : $s, 'at' => $s === false ? 0 : filemtime("$data/plan.md")]);
 }
-if ($a === 'ci') reply(['ok' => 1, 'ci' => read_json("$data/ci.json")]);
+if ($a === 'ci') {
+  $game = read_json("$data/ci-game.json");
+  $old = $game ? null : read_json("$data/ci.json");  // the report from before J2.3, until the next game deploy
+  if ($old) $game = ['workflow' => 'game', 'build' => (string)($old['build'] ?? ''), 'live' => true,
+                     'tests' => ($old['status'] ?? '') === 'success' ? 'passed' : 'failed', 'failed' => [], 'allowed' => [],
+                     'at' => (int)($old['at'] ?? 0), 'url' => (string)($old['url'] ?? '')];
+  reply(['ok' => 1, 'ci' => ['game' => $game, 'site' => read_json("$data/ci-site.json")]]);
+}
 if ($a === 'notes') reply(['ok' => 1, 'notes' => array_reverse(read_json("$data/notes.json") ?? [])]);
 if ($a === 'note') {
   $text = clean($in['text'] ?? '', TEXT_MAX);
