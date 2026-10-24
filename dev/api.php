@@ -14,7 +14,13 @@
 // Claude only (the key):
 //   POST {"a":"read","ids":[..]}   mark notes as read (taken into the plan at a go)
 // Owner and admins:
-//   POST {"a":"site","site":{headline,lede,news,newsLink}}   the front door's words
+//   POST {"a":"site","site":{headline,lede}}   the front door's words
+//   POST {"a":"highlights"}     -> {"ok":1,"highlights":[{id,title,text,link,img,pushed,at,by}]} newest first
+//   POST {"a":"highlight","highlight":{id?,title,text,link,pic?},"image":"data:image/jpeg;base64,.."?}
+//        make or change one (pic: a site picture like "/site/img/counter.jpg"; or image: an upload, JPEG/PNG, <= 600 KB)
+//   POST {"a":"push","id":"..","on":1}   put it on the front page (one at a time) or take it down
+//   POST {"a":"unhighlight","id":".."}   delete it
+// Public: GET ?highlight -> the pushed one {title,text,link,img} or null; GET ?hi=<id> its uploaded picture (only while pushed)
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Hub-Key');
@@ -72,8 +78,27 @@ function who($in) {
   return ['name' => $u['name'] ?: $u['user'], 'role' => (string)($list[0] ?? '') === $u['user'] ? 'owner' : 'admin'];
 }
 
+function hl_out($h) {
+  $img = $h['pic'] !== '' ? $h['pic'] : (is_file($GLOBALS['data'] . "/highlights/{$h['id']}.jpg") ? "/dev/api.php?hi={$h['id']}" : '');
+  return ['id' => $h['id'], 'title' => $h['title'], 'text' => $h['text'], 'link' => $h['link'], 'img' => $img,
+          'pushed' => !empty($h['pushed']), 'at' => $h['at'], 'by' => $h['by']];
+}
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
   if (isset($_GET['site'])) reply(['ok' => 1, 'site' => read_json("$data/site.json") ?? (object)[]]);
+  if (isset($_GET['highlight'])) {
+    foreach (read_json("$data/highlights.json") ?? [] as $h) if (!empty($h['pushed'])) reply(['ok' => 1, 'highlight' => hl_out($h)]);
+    reply(['ok' => 1, 'highlight' => null]);
+  }
+  if (isset($_GET['hi'])) {
+    $id = preg_replace('/[^0-9a-f]/', '', (string)$_GET['hi']);
+    foreach (read_json("$data/highlights.json") ?? [] as $h) {
+      if ($h['id'] === $id && !empty($h['pushed']) && is_file("$data/highlights/$id.jpg")) {
+        header('Content-Type: image/jpeg'); header('Cache-Control: public, max-age=300');
+        readfile("$data/highlights/$id.jpg"); exit;
+      }
+    }
+    fail('No such picture.', 404);
+  }
   fail('Ask for ?site.', 404);
 }
 
@@ -115,9 +140,74 @@ if ($a === 'site') {
   if ($me['role'] === 'claude') fail('The site\'s words are yours to write.', 403);
   $in_site = is_array($in['site'] ?? null) ? $in['site'] : [];
   $site = [];
-  foreach (['headline' => 120, 'lede' => 300, 'news' => 200, 'newsLink' => 300] as $k => $max) $site[$k] = clean($in_site[$k] ?? '', $max);
+  foreach (['headline' => 120, 'lede' => 300] as $k => $max) $site[$k] = clean($in_site[$k] ?? '', $max);
   $site['at'] = time(); $site['by'] = $me['name'];
   write_json("$data/site.json", $site);
   reply(['ok' => 1, 'site' => $site]);
+}
+
+// ---- Highlights: what the front page shows, made for people (a picture, a few friendly words) ----
+function with_highlights($fn) {
+  global $data;
+  $fp = fopen("$data/.lock", 'c'); flock($fp, LOCK_EX);
+  $list = read_json("$data/highlights.json") ?? [];
+  $out = $fn($list);
+  write_json("$data/highlights.json", $list);
+  flock($fp, LOCK_UN);
+  return $out;
+}
+if (in_array($a, ['highlights', 'highlight', 'push', 'unhighlight'], true) && $me['role'] === 'claude' && $a !== 'highlights') fail('Highlights are yours to make and push.', 403);
+if ($a === 'highlights') {
+  $list = array_map('hl_out', read_json("$data/highlights.json") ?? []);
+  usort($list, fn($x, $y) => $y['at'] <=> $x['at']);
+  reply(['ok' => 1, 'highlights' => $list]);
+}
+if ($a === 'highlight') {
+  $in_h = is_array($in['highlight'] ?? null) ? $in['highlight'] : fail('No highlight.');
+  $title = clean($in_h['title'] ?? '', 80);
+  if ($title === '') fail('Give it a short title.');
+  $pic = clean($in_h['pic'] ?? '', 200);
+  if ($pic !== '' && !preg_match('#^/site/img/[a-z0-9_-]+\.(jpg|png)$#', $pic)) fail('That picture is not one of the site\'s.');
+  $bytes = null;
+  if (!empty($in['image'])) {
+    if (!is_string($in['image']) || strlen($in['image']) > 820000 || !preg_match('#^data:image/(jpeg|png);base64,([A-Za-z0-9+/=]+)$#', $in['image'], $m)) fail('That picture is too big or not a JPEG/PNG.');
+    $bytes = base64_decode($m[2], true);
+    $info = $bytes !== false ? @getimagesizefromstring($bytes) : false;
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) fail('That isn\'t a picture.');
+  }
+  $link = clean($in_h['link'] ?? '', 300);
+  if ($link !== '' && !preg_match('#^(/|https://)#', $link)) fail('A link starts with / or https://');
+  reply(with_highlights(function (&$list) use ($in_h, $title, $pic, $bytes, $link, $me, $data) {
+    $id = is_string($in_h['id'] ?? null) ? $in_h['id'] : '';
+    $i = -1;
+    foreach ($list as $k => $h) if ($h['id'] === $id) $i = $k;
+    if ($id !== '' && $i < 0) fail('That highlight is gone.', 404);
+    if ($i < 0) { $list[] = ['id' => bin2hex(random_bytes(5)), 'pushed' => false, 'pic' => '']; $i = count($list) - 1; }
+    $h = &$list[$i];
+    $h['title'] = $title; $h['text'] = clean($in_h['text'] ?? '', 240); $h['link'] = $link;
+    $h['at'] = time(); $h['by'] = $me['name'];
+    if ($bytes !== null) {
+      if (!is_dir("$data/highlights")) @mkdir("$data/highlights", 0755, true);
+      file_put_contents("$data/highlights/{$h['id']}.jpg", $bytes); $h['pic'] = '';
+    } elseif ($pic !== '') { $h['pic'] = $pic; @unlink("$data/highlights/{$h['id']}.jpg"); }
+    $out = hl_out($h); unset($h);
+    return ['ok' => 1, 'highlight' => $out];
+  }));
+}
+if ($a === 'push' || $a === 'unhighlight') {
+  $id = is_string($in['id'] ?? null) ? $in['id'] : '';
+  reply(with_highlights(function (&$list) use ($a, $id, $in, $data) {
+    $found = false;
+    foreach ($list as $k => &$h) {
+      if ($h['id'] === $id) {
+        $found = true;
+        if ($a === 'unhighlight') { @unlink("$data/highlights/$id.jpg"); array_splice($list, $k, 1); break; }
+        $h['pushed'] = !empty($in['on']);
+      } elseif ($a === 'push' && !empty($in['on'])) $h['pushed'] = false;   // one on the front page at a time
+    }
+    unset($h);
+    if (!$found) fail('That highlight is gone.', 404);
+    return ['ok' => 1];
+  }));
 }
 fail('Unknown action.');

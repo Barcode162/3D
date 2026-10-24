@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The end of a step, done the same way every time (docs/AUTOMATION.md):
 //   node tools/step.mjs status [STEP]          the step's pieces so far (from the gallery)
-//   node tools/step.mjs finish <STEP> "<what>" [--skip-check] [--full-check] [--bench] [--no-main]
+//   node tools/step.mjs finish <STEP> "<what>" [--news "<a few friendly lines for the news post>"] [--skip-check] [--full-check] [--bench] [--no-main]
 // finish: the quick check (--full-check: every test, an hour+ here with no
 // graphics card; CI runs them all at deploy anyway), merges origin/main,
 // pushes work-go and main once (CI deploys), writes the Build log line in
@@ -71,7 +71,9 @@ commitGallery(`${stepName} finished (${mainSha})`);
 
 const reply = [`build ${mainSha}`, ...pieces.map((p) => `- ${p.tag} ${p.title}: ${p.check || '(nothing to see)'} If not, say: broke ${p.tag}`)];
 if (process.env.HUB_KEY) {
-  const text = reply.slice(1).join('\n') + '\nPictures: the gallery branch, folder per piece.';
+  // The news post is for people (PLAN.md rule): --news gives it in plain, friendly words; without it, the phone checks.
+  const news = argv.includes('--news') ? argv[argv.indexOf('--news') + 1] : null;
+  const text = news ?? (reply.slice(1).join('\n') + '\nPictures: the gallery branch, folder per piece.');
   run(`node tools/hub.mjs post --build ${mainSha} --title ${JSON.stringify(`${stepName}: ${what}`)} --text ${JSON.stringify(text)}`);
 }
 console.log('\n=== reply for the user ===\n' + reply.join('\n'));

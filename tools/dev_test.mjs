@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 // The step in Now, whatever it is today (the test must not go stale when the plan moves on).
 const NOW = /^\*\*([A-Z]+\d+) · ([^*]+)\*\*/m.exec(readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1]);
 const NOW_PIECES = (readFileSync('PLAN.md', 'utf8').split('## 4. Now')[1].split('## 5.')[0].match(/^- \[[ x]\] /gm) || []).length;
-const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub' }, files: { 'bar/account.php': 'server/account.php' } });
+const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub', site: 'homepage/site' }, files: { 'bar/account.php': 'server/account.php' } });
 // What CI and the deploy put there: the game's config, the plan, no deploy report yet.
 writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
 mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
@@ -87,7 +87,23 @@ await page.waitForSelector(`#view [data-post="${made.post.id}"] [data-act="publi
 await page.click(`#view [data-post="${made.post.id}"] [data-act="publish"]`);
 await page.waitForFunction((id) => /Unpublish/.test(document.querySelector(`#view [data-post="${id}"] [data-act="publish"]`)?.textContent || ''), made.post.id);
 check((await ws.post('hub/hub.php', { a: 'posts', token: owner.token })).posts[0].published === true, 'Publish puts it on the public news');
+// R5.2: highlights (made, previewed, pushed: one on the front page at a time)
 await page.click('#view [data-id="pub-tab"] button:nth-child(2)');
+await page.click('#view [data-act="new-hl"]');
+await page.fill('#view [data-field="title"]', 'Live music on Fridays');
+await page.fill('#view [data-field="text"]', 'Pull up a stool: the band starts at nine.');
+await page.click('#view [data-pic="/site/img/stage.jpg"]');
+check(await ed(() => /Live music on Fridays/.test(document.querySelector('#view .dev-hl').textContent) && /stage\.jpg/.test(document.querySelector('#view .dev-hl').style.backgroundImage)), 'the preview shows the title and the picture as the front page will');
+await page.click('#view [data-act="save-hl"]');
+await page.waitForSelector('#view [data-highlight] [data-act="push"]');
+check((await (await fetch(ws.url + 'dev/api.php?highlight')).json()).highlight === null, 'saved, but not on the front page until pushed');
+await page.click('#view [data-highlight] [data-act="push"]');
+await page.waitForFunction(() => /On the front page/.test(document.querySelector('#view [data-highlight]')?.textContent || ''));
+const hl = (await (await fetch(ws.url + 'dev/api.php?highlight')).json()).highlight;
+check(hl && hl.title === 'Live music on Fridays' && hl.img === '/site/img/stage.jpg' && hl.link === '/bar/', 'Push puts it on the front page (public)');
+check((await ws.post('dev/api.php', { a: 'push', id: hl.id, on: 0 }, { 'X-Hub-Key': hubKey })).status === 403, 'Claude can\'t push highlights');
+
+await page.click('#view [data-id="pub-tab"] button:nth-child(3)');
 await page.waitForSelector('#view [data-field="headline"]');
 await page.fill('#view [data-field="headline"]', 'The lights are on.');
 await page.click('#view >> text=Save the words');

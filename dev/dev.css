@@ -23,3 +23,11 @@ body.lp { min-height: 100vh; min-height: 100dvh; }
 .lp .dev-ask .field { font-size: 15px; padding: 6px 10px; text-transform: uppercase; }
 .lp [data-id="chapters"] .ls-lr-main, .lp [data-id="plan-now"] .ls-lr-main, .lp [data-id="notes"] .ls-lr-main { white-space: normal; }
 .lp .dev-post-text { white-space: pre-line; max-height: 9.5em; overflow: hidden; }
+.lp .dev-hl { position: relative; min-height: 190px; border-radius: var(--panel-r); padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 40%, #000), #000) center / cover; color: #fff; overflow: hidden; box-shadow: var(--panel-edge); }
+.lp .dev-hl b { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); font-size: 22px; line-height: 1.1; }
+.lp .dev-hl span { font-size: 14.5px; color: rgba(255,255,255,.85); }
+.lp .dev-pics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.lp .dev-pics button { all: unset; aspect-ratio: 1; border-radius: 10px; background: center / cover; cursor: pointer; box-shadow: inset 0 0 0 1px var(--rule); }
+.lp .dev-pics button.on { box-shadow: inset 0 0 0 3px var(--accent); }
+.lp .dev-up { aspect-ratio: 1; min-height: 0 !important; padding: 0 !important; font-size: 11px !important; cursor: pointer; }

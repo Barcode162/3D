@@ -2,7 +2,7 @@
   "format": 1,
   "id": "dev-publish",
   "name": "Dev · Publish",
-  "about": "News posts (publish in one tap) and the site's words for the front door.",
+  "about": "News posts (publish in one tap), highlights for the front page (a picture and a few friendly words, pushed when you want), and the site's words.",
   "root": {
     "type": "stack",
     "gap": 14,
@@ -28,6 +28,7 @@
         "id": "pub-tab",
         "options": [
           "News",
+          "Highlights",
           "The site"
         ],
         "on": 0

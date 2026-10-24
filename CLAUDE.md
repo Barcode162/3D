@@ -40,8 +40,10 @@ easy to pinpoint. So on "go":
    chapter or another plan file. Gotchas → `docs/DECISIONS.md`.
 5. Reply to the user, short: the build code, then one line per piece:
    where to stand, what they should see, and "if not, say: broke E3.2".
-6. Hub (if `HUB_KEY` is set): one `node tools/hub.mjs post --build <sha>
-   --title ... --text ...` at the end. Nothing else on the hub during a go.
+6. News (if `HUB_KEY` is set): the step finisher posts one news post; give it
+   `--news "<two or three friendly lines: what people can now see or do, no
+   technical words>"`. The user publishes it (and makes front-page highlights)
+   from Dev → Publish. Nothing else on the hub during a go.
 7. Don't sit watching CI. If a run goes red, fix it, then tell the user.
 
 ## Speed over tests (user, 2026-10-23)
