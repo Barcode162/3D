@@ -16,24 +16,29 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { CHECKS, RULES } from './lib/checks.mjs';
 
 const ORDER = Object.keys(CHECKS);
+let ONLY = {};  // set by changedSystems(): a system → the only checks of it to run
 
 function changedSystems(uncommittedOnly = false) {
   const files = execSync((uncommittedOnly ? '' : 'git diff --name-only origin/main...HEAD; ') + 'git diff --name-only HEAD; git ls-files -o --exclude-standard',
     { encoding: 'utf8' }).split('\n').filter(Boolean);
-  const want = new Set();
+  const want = new Set(), only = {};  // only: a system → the checks of it that run (a changed test runs only itself)
   for (const f of files) {
     for (const [re, sys] of RULES) {
       if (!re.test(f)) continue;
       if (sys === null) {
         const name = f.match(re)[1];
         const has = Object.entries(CHECKS).filter(([, list]) => list.some(([, cmd]) => cmd.includes(`tools/${name}_test.mjs`))).map(([s]) => s);
-        (has.length > 1 ? has.filter((s) => s !== 'quick') : has).forEach((s) => want.add(s));  // its own system, not the whole quick set
+        const home = (has.length > 1 ? has.filter((s) => s !== 'quick') : has)[0];  // its own system, not the whole quick set
+        if (home) (only[home] ??= new Set()).add(CHECKS[home].find(([, cmd]) => cmd.includes(`tools/${name}_test.mjs`))[0]);  // and only itself in it (J66.2)
       } else sys.forEach(s => want.add(s));
       break;
     }
   }
-  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'workshop', 'labels', 'toolbelt', 'dev'].includes(s))) want.add('build');
-  return { files, systems: ORDER.filter(s => want.has(s)) };
+  for (const s of Object.keys(only)) if (want.has(s)) delete only[s];  // the whole system is wanted anyway
+  const all = new Set([...want, ...Object.keys(only)]);
+  if ([...all].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'workshop', 'labels', 'toolbelt', 'dev'].includes(s))) { all.add('build'); want.add('build'); }
+  ONLY = only;
+  return { files, systems: ORDER.filter(s => all.has(s)) };
 }
 
 const args = process.argv.slice(2);
@@ -58,7 +63,7 @@ mkdirSync('build/check', { recursive: true });
 const done = new Set(), rows = [];
 let buildFailed = false;
 for (const s of systems) {
-  for (const [name, cmd] of CHECKS[s]) {
+  for (const [name, cmd] of CHECKS[s].filter(([n]) => !ONLY[s] || ONLY[s].has(n))) {
     if (done.has(name)) continue;
     done.add(name);
     const log = `build/check/${name}.log`;

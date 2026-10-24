@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J66 · Deploys never wait for, or get stopped by, the tests** (the tools). Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
 - [x] **J66.1** The tests in their own job after the deploy: the next deploy waits only for the previous deploy, never its tests; every setup step has a time limit; Dev's reports keep working, and an old build's end report never overwrites the newer one's *Check:* The next push: Dev's game row says live about 6 minutes after it, even while the previous build is still testing
-- [ ] **J66.2** The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s) *Check:* GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)
+- [x] **J66.2** The room test's grace check made steady: its watcher stays active longer than the leave can take (the test's away time 9 s → 20 s) *Check:* GitHub's room test passes on the next deploy (Dev's game row lists no failed room test)
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

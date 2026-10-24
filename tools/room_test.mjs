@@ -17,7 +17,7 @@ import { decodeText, encodeText, decodeBinary, encodeState } from '../cloud/prot
 const PORT = 8790;
 const GRACE_MS = 3000;
 const GHOST_MS = 4000;
-const AFK_MS = 9000;
+const AFK_MS = 20000;  // longer than a ghost's close + grace + leave takes on a slow machine, so the watcher sees the leave before it's away itself (KI-33, J66.2)
 const SERVER_PROTO = 2;
 let base = process.env.ROOM_URL;
 let server = null, stateDir = null;
