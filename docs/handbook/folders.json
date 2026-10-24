@@ -38,6 +38,7 @@
     "docs/plan/jobs": "One spec per job after the restructure (J<n>.md), from TEMPLATE.md.",
     "docs/playbook": "The Playbook: the only instructions, one procedure per situation.",
     "docs/records": "The Records: known issues, and the folders below.",
+    "docs/records/drills": "Cold-start drills: requests given to fresh AI sessions, the answer key, the results (J8.1).",
     "docs/records/decisions": "Decisions in force, numbered (tools/records.mjs decision).",
     "docs/records/incidents": "One file per error: what happened, the root cause, the fix, the proof.",
     "docs/records/requests": "The user's words, exactly as sent, one file per month.",

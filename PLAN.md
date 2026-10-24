@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J8 · Proof, then unfreeze** (the tools). Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
-- [ ] **J8.1** Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass *Check:* Dev → Plan: J8.1 ticked; the drills' record lists every request and its result
+- [x] **J8.1** Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass *Check:* Dev → Plan: J8.1 ticked; the drills' record lists every request and its result
 - [ ] **J8.2** Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived *Check:* Dev → Plan: J8.2 ticked; Overview shows no drift
 - [ ] **J8.3** Unfreeze (your Freeze rule taken out, on your word of 2026-10-24 #7) and the first real job (J66) runs through the new system end to end *Check:* Dev → Plan: no Freeze line in your rules; J66 in Now
 
@@ -264,7 +264,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
+- `450fb52` J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
 - `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
 - `31cb32d` J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
 - `f6d3335` J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d

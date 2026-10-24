@@ -26,8 +26,15 @@
 2. **Record the user's words exactly** in `docs/records/requests/<YYYY-MM>.md`
    with the next id (`<date> #<n>`) and one line "Understood: …" for what you
    took it to mean. Questions, talk and stops are not recorded (nothing is
-   pushed for them). `node tools/project.mjs request "<the words>" --understood "<one line>"`
-   writes it and prints the id.
+   pushed for them), nor is a bare "go" (the job's pieces are its record).
+   `node tools/project.mjs request "<the words>" --understood "<one line>"`
+   writes it and prints the id. **A secret in the words** (a key, a password,
+   a token) is written as `[secret removed]`, never as itself (Charter:
+   never), and the message also goes to [failures.md](failures.md) →
+   Security. **When it's saved:** a request, a park or a rule is committed on
+   the job's branch with the next piece; if no piece is due this session, as
+   its own `Notes: …` commit pushed to the job's branch (never `main`); it
+   reaches `main` with the job's ship.
 3. **Check it's possible and allowed: the verdict.** Before any work, give it
    one of six verdicts, with a reason tied to the Charter's limits (§4) or
    rules (§2–3):

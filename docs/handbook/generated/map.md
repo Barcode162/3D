@@ -30,7 +30,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 10 | JavaScript, PHP, CSS | hub.yml → home/dev |
-| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 168 | Markdown, JSON | plan.yml → private/dev |
+| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 169 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans, instructions and notes (DECISIONS, STUDIO, ENGINE, REFERENCE, AUTOMATION, the audits...). Never instructions. | 28 | Markdown, JSON | not uploaded |
 | `docs/charter/` | The Charter: what the project is, the user's rules (rules.json, word for word), the glossary. | 3 | Markdown, JSON | plan.yml → private/dev |
 | `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 98 | Markdown, JSON | not uploaded |
@@ -41,8 +41,9 @@ What each folder is, how many files it holds, its main languages, and which work
 | `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 6 | Markdown, JSON | plan.yml → private/dev |
 | `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 4 | Markdown | plan.yml → private/dev |
 | `docs/playbook/` | The Playbook: the only instructions, one procedure per situation. | 10 | Markdown | not uploaded |
-| `docs/records/` | The Records: known issues, and the folders below. | 23 | Markdown | plan.yml → private/dev |
+| `docs/records/` | The Records: known issues, and the folders below. | 24 | Markdown | plan.yml → private/dev |
 | `docs/records/decisions/` | Decisions in force, numbered (tools/records.mjs decision). | 10 | Markdown | plan.yml → private/dev |
+| `docs/records/drills/` | Cold-start drills: requests given to fresh AI sessions, the answer key, the results (J8.1). | 1 | Markdown | plan.yml → private/dev |
 | `docs/records/incidents/` | One file per error: what happened, the root cause, the fix, the proof. | 9 | Markdown | plan.yml → private/dev |
 | `docs/records/requests/` | The user's words, exactly as sent, one file per month. | 1 | Markdown | plan.yml → private/dev |
 | `docs/records/sessions/` | One line per session that changed something, one file per month. | 1 | Markdown | plan.yml → private/dev |

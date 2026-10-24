@@ -63,6 +63,11 @@ try {
   check(plan('done', '--sha', 'def5678', '--what', 'next').status === 0 && /- `def5678` W99\.1-W99\.2: a test/.test(text()), 'the next done gives the last line its build code');
   check(plan('seal', 'bbb2222').status === 0 && /- `bbb2222` next/.test(text()) && !/\(this push\)/.test(text()), 'seal gives the "(this push)" line its build code');
   check(plan('seal', 'ccc3333').status === 1, 'seal refuses when nothing is waiting for a build code');
+  check(plan('done', '--sha', 'eee5555', '--what', 'J77.1: a shipped test job').status === 0, 'a "(this push)" line for the seal test');
+  {
+    const r = spawnSync('node', ['--input-type=module', '-e', `import { sealShipped } from '${tool}'; console.log(sealShipped('aaa1111\\tJ78.1 other\\nfff6666\\tNotes: J77 built (J77.1)\\nbbb2222\\tJ77.1 x'))`], { cwd: dir, encoding: 'utf8' });
+    check(r.stdout.trim() === 'fff6666' && /- `fff6666` J77\.1: a shipped test job/.test(text()), 'sealShipped gives the shipped job its finish commit\'s build code (J8.1)');
+  }
   check(plan('rule', '**An old test rule:** before').status === 0 && plan('rule', '**A test rule:** one', '--replaces', 'An old test rule').status === 0 && !/\*\*An old test rule/.test(text()) && /\*\*A test rule:\*\* one/.test(text()), 'rule --replaces swaps a rule for a new one');
   check(plan('rule', 'x', '--replaces', 'No such rule').status === 1, 'rule --replaces refuses a rule that is not there');
   check(/\*\*A test rule:\*\* one/.test(readFileSync(join(dir, 'docs/charter/charter.md'), 'utf8')), 'a new rule reaches the Charter\'s block by itself');

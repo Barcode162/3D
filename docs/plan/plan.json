@@ -49,7 +49,7 @@
     "id": "J8.1",
     "text": "Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass",
     "check": "Dev → Plan: J8.1 ticked; the drills' record lists every request and its result",
-    "done": false
+    "done": true
    },
    {
     "id": "J8.2",
@@ -1141,7 +1141,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "450fb52",
    "text": "J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6"
   },
   {

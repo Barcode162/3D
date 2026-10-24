@@ -165,6 +165,16 @@ export function tickPiece(id) {
   if (!p) return false;
   p.done = true; save(data); return true;
 }
+// The Done line still "(this push)" gets its build code once its finish commit
+// ("Notes: J<n> built …") is in the history: the next piece seals it, so Dev
+// never shows a shipped job as "going live now" (J8.1's drills).
+export function sealShipped(log) {
+  const data = load(), d = data.plan.done.find((x) => !x.build), id = d && (/\bJ\d+/.exec(d.text) || [])[0];
+  if (!id) return null;
+  const hit = log.split('\n').map((l) => l.split('\t')).find(([, subject]) => subject?.startsWith(`Notes: ${id} built`));
+  if (!hit) return null;
+  d.build = hit[0].slice(0, 7); save(data); return d.build;
+}
 export function addDoneLine({ sha, what, range }) {
   const data = load();
   for (const d of data.plan.done) if (!d.build) d.build = sha;

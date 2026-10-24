@@ -43,5 +43,9 @@ check(frozenOn(rulesNow) === rulesNow.rules.some((r) => r.text.startsWith('**Fre
 check(/freeze\.mjs/.test(readFileSync('tools/githooks/commit-msg', 'utf8')), 'the commit-msg hook runs the freeze\'s lock');
 const hook = readFileSync('tools/githooks/pre-commit', 'utf8');
 check(/plan\.mjs check/.test(hook) && /PRIVATE KEY/.test(hook) && /HUB_KEY/.test(hook), 'pre-commit checks the plan, secret patterns and the HUB_KEY value');
+{ // the hook's own pattern, fed made-up keys built here (never written whole in the repo)
+  const pat = new RegExp(/pat='([^']+)'/.exec(hook)[1]), fake = (p) => p + 'x'.repeat(24);
+  check(pat.test(fake('sk_' + 'live_')) && pat.test(fake('rk_' + 'test_')) && pat.test(fake('wh' + 'sec_')) && !pat.test('sk_live_ in a sentence'), 'pre-commit refuses Stripe keys too (J8.1, drill 12)');
+}
 console.log(failed ? `LOCKS TEST: ${failed} FAILED` : 'LOCKS TEST PASSED');
 process.exit(failed ? 1 : 0);
