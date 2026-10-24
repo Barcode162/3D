@@ -61,7 +61,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J3.2** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind *Check:* Nothing on the phone; the Playbook's first page is on GitHub
 - [x] **J3.3** Intake (docs/playbook/intake.md): every kind of message → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
 - [x] **J3.4** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
-- [ ] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
+- [x] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
 - [ ] **J3.6** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
 - [ ] **J3.7** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* On GitHub CLAUDE.md is short and points to the Playbook
 
