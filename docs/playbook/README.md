@@ -10,8 +10,9 @@ Records > Archive. The Playbook never contradicts the Charter; if it seems to,
 the Charter wins and this book is fixed in the same session (an incident).
 Until J8, `docs/plan/restructure.md` sits just under the Charter.
 
-Commands marked **(J4)** arrive with J4; until then each says what to run
-today.
+Every command runs through the front door, `node tools/project.mjs <command>`
+(`help` lists them); `tools/playbook_test.mjs` checks that every command this
+book names exists.
 
 ## Every session
 

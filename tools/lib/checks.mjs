@@ -13,9 +13,10 @@ export const CHECKS = {
              ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
              ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
              ['toolbelt', 'node tools/toolbelt_test.mjs'], ['uikit', 'node tools/uikit.mjs check'], ['plan', 'node tools/plan_test.mjs'],
-             ['workflows', 'node tools/workflows_test.mjs']],
+             ['workflows', 'node tools/workflows_test.mjs'], ['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs']],
   plan:     [['plan', 'node tools/plan_test.mjs']],
   workflows: [['workflows', 'node tools/workflows_test.mjs']],
+  workshop: [['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs']],
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
   native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
@@ -48,6 +49,8 @@ export const RULES = [
   [/^tools\/(check|piece|step|ci_status|dev|studio|hub|project|ship|records)\.mjs$|^tools\/lib\/(checks|gallery|commands|attribution)\.mjs$/, ['workflows']],  // the workshop's own tools: not the game
   [/^docs\/charter\/|^docs\/plan\/|^CLAUDE\.md$|^tools\/lib\/plandata/, ['plan']],                       // the Charter's copy of the rules
   [/^docs\/records\/known-issues\.md$/, ['workflows']],  // allowed-to-fail tests name open issues
+  [/^docs\/playbook\/|^tools\/lib\/commands\.mjs$/, ['workshop']],                                    // the Playbook names only what exists
+  [/^tools\/githooks\/|^tools\/lib\/guard\.mjs$|^\.claude\/|^tools\/setup\.sh$/, ['workshop']],          // the locks
   [/\.md$|^docs\//, []],
   [/^homepage\/|^tools\/site_test/, ['site']],
   [/^hub\/.*\.php$|^server\//, ['server']],
@@ -76,6 +79,8 @@ export const RULES = [
 // Checks GitHub doesn't run, and why (each one is a known issue or a deliberate choice).
 export const NOT_ON_CI = {
   'tools/workflows_test.mjs': 'it checks the workflows themselves; it runs in every quick check before a piece is committed',
+  'tools/playbook_test.mjs': 'it checks the Playbook against the tools, nothing that deploys; it runs in every quick check before a piece is committed',
+  'tools/locks_test.mjs': 'it checks the locks of the work machine (git hooks, Claude Code hooks), nothing that deploys; it runs in every quick check',
 };
 // Test files that aren't in CHECKS at all, and why.
 export const NOT_LISTED = {

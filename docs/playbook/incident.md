@@ -18,8 +18,8 @@ error. Problems we only discover (they were there before) are known issues
    Make it safe first: undo the change ([revert.md](revert.md)), stop a
    publish, keep the user's work.
 3. **Record** it: `docs/records/incidents/<YYYY-MM-DD>-<slug>.md` with: what
-   happened, the impact, the root cause, the fix, the proof. **(J4)** `node
-   tools/project.mjs incident new`.
+   happened, the impact, the root cause, the fix, the proof. `node
+   tools/project.mjs incident <slug> "<what happened>"` starts it with the five parts.
 4. **The root cause:** not "what broke" but **why the way we work let it
    through**: which procedure, tool, check or doc was missing or wrong. Ask
    "why?" until the answer is something we can change.

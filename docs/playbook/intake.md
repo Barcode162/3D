@@ -26,7 +26,8 @@
 2. **Record the user's words exactly** in `docs/records/requests/<YYYY-MM>.md`
    with the next id (`<date> #<n>`) and one line "Understood: …" for what you
    took it to mean. Questions, talk and stops are not recorded (nothing is
-   pushed for them). **(J4)** `node tools/project.mjs request`.
+   pushed for them). `node tools/project.mjs request "<the words>" --understood "<one line>"`
+   writes it and prints the id.
 3. **Check it's possible and allowed: the verdict.** Before any work, give it
    one of six verdicts, with a reason tied to the Charter's limits (§4) or
    rules (§2–3):

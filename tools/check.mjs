@@ -26,13 +26,13 @@ function changedSystems(uncommittedOnly = false) {
       if (!re.test(f)) continue;
       if (sys === null) {
         const name = f.match(re)[1];
-        for (const [s, list] of Object.entries(CHECKS))
-          if (list.some(([, cmd]) => cmd.includes(`tools/${name}_test.mjs`))) want.add(s);
+        const has = Object.entries(CHECKS).filter(([, list]) => list.some(([, cmd]) => cmd.includes(`tools/${name}_test.mjs`))).map(([s]) => s);
+        (has.length > 1 ? has.filter((s) => s !== 'quick') : has).forEach((s) => want.add(s));  // its own system, not the whole quick set
       } else sys.forEach(s => want.add(s));
       break;
     }
   }
-  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'toolbelt', 'dev'].includes(s))) want.add('build');
+  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'workshop', 'toolbelt', 'dev'].includes(s))) want.add('build');
   return { files, systems: ORDER.filter(s => want.has(s)) };
 }
 

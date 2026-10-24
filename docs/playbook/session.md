@@ -8,12 +8,12 @@ greeting.
 **Before you start:** nothing; this procedure finds out the state.
 
 **Steps:**
-1. Read the state. Today: `git status -sb`, `git log -1 --oneline origin/main`,
-   `node tools/plan.mjs now`. **(J4)** `node tools/project.mjs status` shows it
-   all on one screen and loads by itself when the session opens.
-2. The deploys: Dev's report (`curl -s -X POST -H "X-Hub-Key: $HUB_KEY" -d
-   '{"a":"ci"}' https://joshuavelasco.com/dev/api.php`) or the GitHub runs
-   (the GitHub tools). A red or unfinished run from the last session →
+1. Read the state: `node tools/project.mjs status` (the work here, the job in
+   Now, the live build, both deploys, the user's notes, open problems, whether
+   the plan's files agree; each part with its age). Its short form is printed
+   by itself when the session opens.
+2. The deploys: the status's "Deploys" line (Dev's reports), or the GitHub
+   runs (the GitHub tools) for the details. A red or unfinished run from the last session →
    [failures.md](failures.md) → A deploy is red, after answering the user.
 3. What the user published: `node tools/studio.mjs status`, `node tools/uikit.mjs
    status`. If either is newer than the repo: `pull`, and commit it on the
@@ -45,8 +45,8 @@ long wait; when the user says stop.
    committed (Charter: only what the user wants is pushed).
 2. The session line in `docs/records/sessions/<YYYY-MM>.md`: date, session
    link, what was asked (request ids), pieces done, builds shipped, errors
-   (the count, each linked to its incident). **(J4)** `node tools/project.mjs
-   session end`. Committed on the job's branch with the next piece or the
+   (the count, each linked to its incident). `node tools/project.mjs
+   session --asked "<ids>" --done "<pieces>" --shipped "<builds>" [--errors "<incident files>"]`. Committed on the job's branch with the next piece or the
    job's finish; a session that only talked writes no line.
 3. Every error of the session has its incident ([incident.md](incident.md)).
 4. The reply ([reply.md](reply.md)): what was done, what to look at, what's

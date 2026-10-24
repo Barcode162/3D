@@ -56,7 +56,7 @@ const range = `${pieces[0].sha}^..${pieces[pieces.length - 1].sha}`;
 const tags = pieces.map((p) => p.tag);
 addDoneLine({ sha: lastDone?.mainSha ?? '0000000', what: `${tags.join(', ')}: ${what}`, range });
 writeFileSync('build/step-msg.txt', `Notes: ${stepName} built (${tags.join(', ')})\n\n${ATTRIBUTION}`);
-sh('git add PLAN.md docs/plan docs/charter CLAUDE.md');
+sh('git add PLAN.md docs/plan docs/charter CLAUDE.md docs/records/sessions');
 try { sh('git commit -q -F build/step-msg.txt'); } catch {}
 const mainSha = sh('git rev-parse --short HEAD');
 for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);

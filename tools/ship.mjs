@@ -2,7 +2,8 @@
 // Ship a job (restructure J4.3; docs/playbook/job.md → Ship):
 //   node tools/ship.mjs "<what the job did>" [--news "<friendly lines>"] [--skip-check "<why>"] [--no-wait]
 // 1. Refuses unless: on a job branch job/J<n>; nothing unsaved; every commit
-//    not on main belongs to the job (subject "J<x>.<k> …", "J<x> …", "Notes: …",
+//    not on main belongs to the job (only the plan and the session line may be
+//    unsaved: the finish commits them) (subject "J<x>.<k> …", "J<x> …", "Notes: …",
 //    "World: …", "UI: …"); every piece of J<n> ticked; the plan's files agree.
 // 2. Runs the checks for everything the job changed since main (--skip-check
 //    only with the reason, which goes into the reply).
@@ -24,7 +25,10 @@ const refuse = (why) => { console.log(`✗ not shipped: ${why}`); process.exit(1
 if (!what) refuse('say what the job did: node tools/ship.mjs "<what>"');
 const branch = sh('git rev-parse --abbrev-ref HEAD'), job = (/^job\/(J\d+)$/.exec(branch) || [])[1];
 if (!job) refuse(`ship runs on a job branch (job/J<n>), not "${branch}"`);
-if (sh('git status --porcelain')) refuse('there are unsaved changes: commit them as a piece (or take them out) first');
+// Only the finish's own files may be unsaved (the next job in Now, the session line): it commits them.
+const unsaved = sh('git status --porcelain').split('\n').filter(Boolean).map((l) => l.slice(3))
+  .filter((f) => !/^(PLAN\.md|CLAUDE\.md|docs\/plan\/|docs\/charter\/|docs\/records\/sessions\/)/.test(f));
+if (unsaved.length) refuse(`there are unsaved changes (${unsaved.join(', ')}): commit them as a piece (or take them out) first`);
 sh('git fetch -q origin main');
 const foreign = sh('git log --format=%s origin/main..HEAD').split('\n').filter(Boolean)
   .filter((s) => !/^(J\d+(\.\d+)? |Notes: |World: |UI: |Merge )/.test(s));

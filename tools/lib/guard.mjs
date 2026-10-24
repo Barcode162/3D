@@ -16,10 +16,12 @@ const refuse = (why) => { process.stderr.write(`Refused by the project's lock (t
 if (call.tool_name === 'Bash') {
   const cmd = String(input.command || '');
   for (const part of cmd.split(/&&|\|\||;|\n|\|/)) {
+    // Only a git command itself (after env settings and shell words), not text that mentions git.
     const words = part.trim().split(/\s+/);
-    const g = words.indexOf('git');
-    if (g < 0) continue;
-    const args = words.slice(g + 1).filter((w) => !/^-C$/.test(w));
+    while (words.length && /^(\w+=\S*|[({]|then|do|else|sudo|command|exec|env|time)$/.test(words[0])) words.shift();
+    if (words[0] !== 'git') continue;
+    const args = words.slice(1);
+    while (/^-[Cc]$/.test(args[0])) args.splice(0, 2);
     if (args.includes('--no-verify') || (args[0] === 'commit' && args.includes('-n'))) refuse('--no-verify skips the locks; fix what they refuse instead.');
     if (args[0] === 'config' && args.some((a) => /hooksPath/i.test(a)) && !args.includes('tools/githooks')) refuse('the git locks stay on (core.hooksPath = tools/githooks).');
     if (!args.includes('push')) continue;

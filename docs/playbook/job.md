@@ -41,7 +41,7 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 3. A check fails → nothing is committed; fix it and run again
    ([failures.md](failures.md) → A check fails).
 4. The commit message carries the attribution lines of this session
-   (`PIECE_ATTRIBUTION`, until J4.3 takes them from the session itself).
+   (taken from the session itself; `PIECE_ATTRIBUTION` overrides them).
 
 ## Ship
 
@@ -50,12 +50,16 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 2. The session line ([session.md](session.md) → End), committed with the
    finish.
 3. ```
-   PIECE_BRANCH=job/J<n> node tools/step.mjs finish J<n> "<what the job did>" [--news "<friendly lines>" | --no-news]
+   node tools/project.mjs ship "<what the job did>" [--news "<friendly lines>"]
    ```
-   It merges `origin/main` (stops on a conflict: [failures.md](failures.md) →
-   Conflicts), writes the Done line, commits "Notes: J<n> built (…)", pushes
-   the job branch and `main` **once**. **(J4)** `node tools/project.mjs ship`
-   adds the checks before and the live check after.
+   It refuses unless: on the job's branch, nothing else unsaved, every commit
+   belongs to the job, every piece ticked, the plan's files agree. Then it
+   runs the checks for everything the job changed, merges `origin/main`
+   (stops on a conflict: [failures.md](failures.md) → Conflicts), writes the
+   Done line, commits "Notes: J<n> built (…)" with the plan and the session
+   line, pushes the job branch and `main` **once** (the only way `main`
+   moves: the locks refuse any other push to it), then waits up to 12 min
+   for Dev's reports and says exactly what is live and what isn't confirmed.
 4. News: only for something people can see or do, in friendly words
    (`--news`); the user publishes it from Dev → Publish. Restructure jobs:
    `--no-news`.
