@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J3.1 Test only what changed, push only what you want: the user's two new rules in PLAN.md and the Charter ("Speed over tests" taken out with plan.mjs rule --replaces: the user never said it; incident written), pieces now run only the checks covering their files (check.mjs changed, browser tests included) and build only when needed, the engine's self-check idea parked, request 2026-10-24 #5 recorded word for word
+
+`00d6601` · 2026-10-24 12:01 · 11 files, +112 −38 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J2.3 Both deploys report their real state to Dev
 
 `1c9c7ef` · 2026-10-24 12:20 · 9 files, +152 −28 · tests: quick
