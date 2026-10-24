@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R3.3 The plan keeper (tools/plan.mjs): check the shape, now, tick, add (needs its chapter and North star line), park, rule, start (a road item becomes Now with its pieces), done; refuses anything that breaks the eight parts or five chapters; piece.mjs ticks Now's pieces, step.mjs writes Done through it; a test on a copy (quick check); in the Toolbelt
+
+`a75881c` · 2026-10-24 05:32 · 9 files, +204 −11 · tests: quick
+
+Phone check: none on the phone; open PLAN.md: R3.3 is ticked
+
 ## R3.2 Carry over: every open thing from NEXT.md, PROGRESS.md, the 68 hub cards, the Alive plan and the rework plan into PLAN.md's road (60 items, each in its chapter with the North star line it serves) and Parked; 14 old plan files moved to docs/archive/ (with a README); NEXT.md points to PLAN.md; CLAUDE.md, REFERENCE.md and README.md read the plan from PLAN.md
 
 `9628809` · 2026-10-24 05:27 · 20 files, +128 −137 · tests: none
