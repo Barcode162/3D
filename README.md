@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J4.5 Locks: git hooks in tools/githooks (setup.sh turns them on): a commit is refused if it adds a secret or the plan's files disagree; a push to main is refused unless the ship does it, and never as a force push or a delete; Claude Code's lock (tools/lib/guard.mjs, .claude/settings.json) refuses a hand push to main, force pushes, --no-verify, turning the git locks off, and hand edits of PLAN.md, the plan's data, the rules and the theme CSS; every session starts by printing the project's status
+
+`9e6acce` · 2026-10-24 12:42 · 8 files, +94 −3 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J4.4 Records tools (tools/records.mjs, through the front door): request (the user's words exactly, the next id of the day, what was understood), incident (the five parts to fill), decision (numbered, its parts), session (the line with the session's own link and its errors linked, refusing an incident that doesn't exist); docs/records/README.md says what each record is and what writes it
 
 `9669b0f` · 2026-10-24 12:28 · 4 files, +77 −2 · tests: changed
