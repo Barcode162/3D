@@ -95,6 +95,10 @@ textarea.ed-in { resize: vertical; min-height: 54px; line-height: 1.35; }
 }
 @media (max-width: 560px) {
   .ed-status { display: none; }
+  body.ed { font-stretch: 92%; }
+  .ed-top { gap: 4px; }
+  .ed-top .ed-btn { padding: 0 8px; }
+  .ed-top .ed-seg button { padding: 6px 8px; }
   .ed-top .ed-pick { max-width: 30vw; flex: 0 1 auto; min-width: 0; }
   .ed-sheet { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, .8fr) minmax(0, 1.2fr); }
   .ed-pane + .ed-pane { border-left: 0; border-top: 1px solid var(--e-line); }
