@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.3 The private bar's door in Ember: the sign-in, waiting and People screens take the house look (warm frosted card, amber glow drifting behind, the Bar3D title in amber and still waving, amber Come in key, the guest key in warm glass, amber links and chips); the values come from the theme, with Ember's own as a fallback
+
+`bab7d8a` · 2026-10-24 09:06 · 2 files, +40 −32 · tests: quick
+
+Phone check: open the bar while signed out: the door is warm amber glass, Bar3D waves in amber, Come in is an amber key
+
 ## R6.2 The bar's menus and loading screen in Ember: the menu panels are warm near-solid (no blur over the 3D, no extra cost), their titles move and shimmer, keys, tiles, toggles, inputs, the toast, the card and the HUD keys all take the theme's corners, fonts and amber; the loading screen glows like the site, its bar fills amber
 
 `be21a32` · 2026-10-24 09:01 · 2 files, +50 −24 · tests: quick
