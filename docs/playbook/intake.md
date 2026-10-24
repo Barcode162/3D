@@ -41,7 +41,7 @@
 
 | Verdict | Means | Then |
 |---|---|---|
-| **Doable now** | fits the rules, the limits, the freeze | a job (step 4) |
+| **Doable now** | fits the rules and the limits (and a freeze, if one holds) | a job (step 4) |
 | **Doable after X** | needs another job first | a job with X before it |
 | **Doable at a cost** | money, phone speed, a rule bent, a big time cost | one question to the user, with Claude's recommendation |
 | **Needs an experiment** | nobody knows yet if it works here | a time-boxed experiment ([ways.md](ways.md)); nothing pushed until it works |
@@ -70,8 +70,9 @@
    its verdict: `node tools/plan.mjs add <chapter> J<n> "<what>" --serves N…
    --verdict <now|after|cost|experiment|impossible|rule> --why "<one line>"
    [--after "J<x>"]` (the plan check refuses a road item without one; `node
-   tools/plan.mjs verdict <J<n>> …` changes it). While the freeze holds (until
-   J8), a new wish is parked unless it's an urgent fix ([ways.md](ways.md)).
+   tools/plan.mjs verdict <J<n>> …` changes it). While a freeze holds (a
+   Freeze rule in the Charter), a new wish is parked unless it's an urgent fix
+   ([ways.md](ways.md)).
 5. **Reply** ([reply.md](reply.md) → Understood): what you understood, the
    verdict, what happens next. Then do it ([job.md](job.md)), or wait for the
    answer if a question was asked.

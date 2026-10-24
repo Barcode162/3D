@@ -28,7 +28,7 @@ Not built. It will live in the engine (`looped/script/`, C++ → WebAssembly) on
 
 ## Limits
 
-Small on purpose: things, states, events, timers, loops, remembered values, messages. No files, network, accounts, credits or other players' data; no server-side scripts. Features are frozen until the restructure ends (J8).
+Small on purpose: things, states, events, timers, loops, remembered values, messages. No files, network, accounts, credits or other players' data; no server-side scripts. Its jobs start in the order on the road (J43 first).
 
 ## Checks
 

@@ -53,10 +53,6 @@
   },
   {
    "date": "2026-10-24",
-   "text": "**Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed."
-  },
-  {
-   "date": "2026-10-24",
    "text": "**The restructure (J1–J8) governs until it's done:** its spec is `docs/archive/restructure.md`; where an older instruction disagrees, the spec wins. It replaces \"one doc, eight fixed parts\" with five books: Charter, Playbook, Handbook, Plan, Records."
   },
   {

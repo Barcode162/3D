@@ -32,8 +32,8 @@ what to look at on the phone.
    sessions, known issues, decisions.
 
 `docs/archive/` is history, never instructions. **The restructure (J1–J8) is
-done** (its spec is history: `docs/archive/restructure.md`); until J8.3 lifts
-the freeze, features stay frozen (its §7 list, kept by a lock).
+done** (its spec is history: `docs/archive/restructure.md`); the freeze it
+held was lifted in J8.3, so the road's jobs run in the order in the Plan.
 
 ## Every session
 

@@ -8,19 +8,19 @@
    "id": "world",
    "name": "The world",
    "what": "what players see and do: the bar, avatars, games, people.",
-   "now": "the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item: the world remake J35, J70-J77 (every thing its own model, placed, lit and heard)."
+   "now": "the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; the freeze lifted (J8.3), now remade item by item: the world remake J35, J70-J77 (every thing its own model, placed, lit and heard)."
   },
   {
    "id": "site",
    "name": "The site",
    "what": "the front door, the showcase, the news.",
-   "now": "J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); frozen until J8."
+   "now": "J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); open again since J8.3."
   },
   {
    "id": "engine",
    "name": "The engine",
    "what": "Looped, the script language, speed.",
-   "now": "Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is scoped (J43, J78-J81: small, safe, errors with a line and a fix hint); paused until J8."
+   "now": "Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is scoped (J43, J78-J81: small, safe, errors with a line and a fix hint); open again since J8.3."
   },
   {
    "id": "tools",
@@ -61,7 +61,7 @@
     "id": "J8.3",
     "text": "Unfreeze (your Freeze rule taken out, on your word of 2026-10-24 #7) and the first real job (J66) runs through the new system end to end",
     "check": "Dev → Plan: no Freeze line in your rules; J66 in Now",
-    "done": false
+    "done": true
    }
   ]
  },

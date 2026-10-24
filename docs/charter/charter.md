@@ -62,7 +62,6 @@ only with `node tools/plan.mjs rule`, on the user's word); this copy and
 - (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
 - (2026-10-24) **Zero errors per session:** any error, however small, gets its root cause found and recorded, and the procedure, tool or check that let it through is changed so it can't happen the same way again.
 - (2026-10-24) **Nothing outside the guidelines:** every request is checked against what's possible and allowed before any work; anything the Charter doesn't allow, or doesn't mention, doesn't happen without asking the user first.
-- (2026-10-24) **Freeze:** no new features and no world, engine or language changes until J8 unfreezes; the live site keeps running; an urgent fix for something live that broke is still allowed.
 - (2026-10-24) **The restructure (J1–J8) governs until it's done:** its spec is `docs/archive/restructure.md`; where an older instruction disagrees, the spec wins. It replaces "one doc, eight fixed parts" with five books: Charter, Playbook, Handbook, Plan, Records.
 - (2026-10-24) **News highlights are for people, not engineers:** a picture and a short, friendly line, no technical words; they go on the front page only when the user pushes them from Dev → Publish.
 - (2026-10-24) **The website keeps what works:** the current site's boxes, layout and animations stay; it's dressed in Ember (amber, frosted boxes, the glow, moving titles) and rearranged for the company front page.
@@ -96,13 +95,13 @@ fixed. Newest first, by the rule's bold name. **Confirmed by the user on
 | Never assume the user knows anything | Replies use plain words, no file names or commands unless asked. Every term used with the user is in the glossary. When a request could mean two things, Claude picks the likelier one, says so in one line, and continues (asking only when the choice is the user's to make). |
 | Zero errors per session | An error is anything that didn't go as expected because of us: a red check we caused, a failed deploy, something broken on the live site, a tool or procedure step that didn't work as written, a wrong statement to the user, lost work, a permission crossed. Each one gets an incident record (`docs/records/incidents/`) with its root cause and the change that stops it recurring; each session's record counts its errors. |
 | Nothing outside the guidelines | Every request gets a verdict before any work (doable now · after something else · at a cost, the user decides · needs an experiment · not possible, with the closest thing that is · against a rule). Section 5 is the permission list; whatever it doesn't list, Claude asks about first. |
-| Freeze | Until J8 unfreezes: no new features, no world, engine or language changes. Only the restructure's own files change (`docs/archive/restructure.md` §7). Something live that breaks still gets an urgent fix. |
+| Freeze (lifted) | Taken out by J8.3 on the user's word (request 2026-10-24 #7: "go finish J8"). The lock (`tools/lib/freeze.mjs`) turns on again only if a Freeze rule comes back. |
 | The restructure (J1–J8) governs until it's done | Done (J8, 2026-10-24): its spec is history in `docs/archive/restructure.md`; the five books it made are how the project works. Replaced the rule "This plan: one doc, eight fixed parts". |
 | News highlights are for people, not engineers | Claude never writes technical words in news or highlights, and never pushes a highlight or publishes news: that switch is the user's, in Dev → Publish. |
 | The website keeps what works | Site changes keep the existing boxes, layout and animations unless the user asks otherwise. |
 | joshuavelasco.com is J Production's company site | The front page introduces the company first; Bar3D is one project among others. |
 | Dev holds everything except the main page and the games | Every new tool, list or switch for the user goes in Dev, organised by project. |
-| All engine work is paused until the rework (R3–R6) is done | Done with R6; the Freeze now covers engine work until J8. |
+| All engine work is paused until the rework (R3–R6) is done | Done with R6; the Freeze that followed was lifted in J8.3 (2026-10-24, request #7). |
 | This plan: one doc, eight fixed parts | Replaced by the restructure rule (the five books) on 2026-10-24. |
 | The house theme is Ember | Every page and tool wears Ember unless the user picks another theme on purpose. |
 | The bar's menus stay plain HTML | No menus drawn by the engine until the user decides Looped is ready. |

@@ -70,6 +70,10 @@ try {
   }
   check(plan('rule', '**An old test rule:** before').status === 0 && plan('rule', '**A test rule:** one', '--replaces', 'An old test rule').status === 0 && !/\*\*An old test rule/.test(text()) && /\*\*A test rule:\*\* one/.test(text()), 'rule --replaces swaps a rule for a new one');
   check(plan('rule', 'x', '--replaces', 'No such rule').status === 1, 'rule --replaces refuses a rule that is not there');
+  mkdirSync(join(dir, 'docs/records/requests'), { recursive: true }); writeFileSync(join(dir, 'docs/records/requests', '2099-01' + '.md'), '## 2099-01-01 #1\n\n> take it out\n');
+  check(plan('retire', 'A test rule').status === 1 && plan('retire', 'A test rule', '--request', '2099-01-01 #2').status === 1, 'retire refuses without a recorded request');
+  check(plan('retire', 'A test rule', '--request', '2099-01-01 #1').status === 0 && !/\*\*A test rule:\*\*/.test(text()) && plan('retire', 'A test rule', '--request', '2099-01-01 #1').status === 1, 'retire takes a rule out on a recorded request, once');
+  check(plan('rule', '**A test rule:** one').status === 0, '(the test rule back for the checks below)');
   check(/\*\*A test rule:\*\* one/.test(readFileSync(join(dir, 'docs/charter/charter.md'), 'utf8')), 'a new rule reaches the Charter\'s block by itself');
   check(plan('chapter', 'site', 'A test now line.').status === 0 && /- \*\*The site:\*\* .* \*Now:\* A test now line\./.test(text()), 'chapter sets a chapter\'s Now line');
   check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1', '--verdict', 'now', '--why', 'A test reason').status === 0 && plan('next', 'X2 → J90').status === 0 && /Up next, in order:\*\* X2 → J90/.test(text()), 'next sets the Up next line');

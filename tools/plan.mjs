@@ -17,6 +17,8 @@
 //   node tools/plan.mjs nextid                   the next free job number (J<n>: never reused)
 //   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated rule (only on the user's word, with
 //                                                its request); --replaces takes out the rule whose bold name starts so
+//   node tools/plan.mjs retire "<bold name>" --request "<id>"   take a rule out on the user's word (its request id
+//                                                must be in docs/records/requests/); nothing is written in its place
 //   node tools/plan.mjs start <ID> --piece "<ID.1>|<what>|<phone check>" [--piece ...]
 //                                                the road item becomes Now (the old Now must be all ticked)
 //   node tools/plan.mjs edit <ID> "<what>" [--serves N1,N3]   rewrite an open road item (the user changed it)
@@ -241,6 +243,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
       rules.rules.unshift({ date: new Date().toISOString().slice(0, 10), text: pos[0] });
       save(data); console.log(old ? `rule "${old}" replaced` : 'rule added');
+    } else if (cmd === 'retire') {
+      const name = pos[0], req = flags('request')[0];
+      if (!req || !/^\d{4}-\d\d-\d\d #\d+$/.test(req)) throw new Error('--request "<YYYY-MM-DD #n>": the user\'s words that take the rule out');
+      let found = false;
+      try { found = readFileSync(`docs/records/requests/${req.slice(0, 7)}.md`, 'utf8').includes(`## ${req}\n`); } catch {}
+      if (!found) throw new Error(`request ${req} is not in docs/records/requests/: record the user's words first`);
+      const i = rules.rules.findIndex((r) => r.text.startsWith(`**${name}`));
+      if (i < 0) throw new Error(`no rule starts with "**${name}"`);
+      rules.rules.splice(i, 1);
+      save(data); console.log(`rule "${name}" taken out (request ${req})`);
     } else if (cmd === 'start') {
       const id = pos[0];
       if (plan.now?.pieces.some((p) => !p.done)) throw new Error('Now still has open pieces: tick them (or take them out with the user) first');
