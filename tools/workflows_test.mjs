@@ -19,7 +19,7 @@ let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
 const WORKFLOWS = ['.github/workflows/deploy.yml', '.github/workflows/hub.yml'];
 // A test script: what a step or a check runs to test something.
-const TEST = /^tools\/(?:\w+_test\.mjs|smoke\.mjs|wgsl_check\.mjs|lint_emasm\.mjs|uikit\.mjs|native\/run\.sh)$/;
+const TEST = /^tools\/(?:\w+_test\.mjs|smoke\.mjs|wgsl_check\.mjs|lint_emasm\.mjs|uikit\.mjs|handbook\.mjs|native\/run\.sh)$/;
 const scriptsIn = (text) => [...String(text).matchAll(/\btools\/[\w/]+\.(?:mjs|sh)\b/g)].map((m) => m[0]);
 
 // The steps of a workflow: each "      - " item under a job's steps, with its keys.

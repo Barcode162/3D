@@ -14,6 +14,7 @@ export const COMMANDS = [
   { name: 'incident', run: ['tools/records.mjs', 'incident'], summary: 'start an incident record (docs/playbook/incident.md)', usage: 'incident "<slug>" "<what happened>"' },
   { name: 'decision', run: ['tools/records.mjs', 'decision'], summary: 'start a decision record', usage: 'decision "<slug>" "<the decision>"' },
   { name: 'session', run: ['tools/records.mjs', 'session'], summary: 'the session line for the Records', usage: 'session --asked "<request ids>" --done "<pieces>" --shipped "<builds>" [--errors "<incident files>"]' },
+  { name: 'handbook', run: ['tools/handbook.mjs'], summary: 'the Handbook\'s generated pages: write them, or check them (current, every folder described, links)', usage: 'handbook <write | check>' },
   { name: 'world', run: ['tools/studio.mjs'], summary: 'the world store: status, pull, push, propose, log', usage: 'world <status | pull | push --note … | propose --note … | log>' },
   { name: 'ui', run: ['tools/uikit.mjs'], summary: 'the UI store and the theme CSS: status, pull, push, css, check', usage: 'ui <status | pull | push --note … | css | check>' },
   { name: 'notes', run: ['tools/dev.mjs'], summary: 'the user\'s notes from Dev → Plan: notes, read <ids>', usage: 'notes <notes [--all] | read <ids…>>' },
