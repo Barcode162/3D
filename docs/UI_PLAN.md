@@ -1,4 +1,4 @@
-# The rework: one world, one Dev area, one UI tool (DRAFT v2, 2026-10-24)
+# The rework: one world, one Dev area, one UI tool (DRAFT v3, 2026-10-24)
 
 Status: **being agreed with the user. Nothing built yet.** The user reviews
 the plan as an artifact page; this is the repo copy. Once agreed, R1 goes into
@@ -14,6 +14,11 @@ the plan as an artifact page; this is the repo copy. Once agreed, R1 goes into
   enter the bar, look around (showcase), or go to Dev (staff). Plus a short
   humble part: we make the engine and our own script language.
 - It should use studied techniques for retention, smoothness and wow, combined in a new way.
+- The front door gets **a new scene built in the engine**, shown for now as a
+  short looping render (a clip), not live 3D. Live 3D is parked for after R6.
+- The maker's name is **J Production** (the humble part, across the site).
+- **The World Plan:** one single doc of truth whose structure never changes,
+  whatever the user asks for; it always points at the project's direction.
 
 ## What we have
 - Pages: 14 in 4 looks (site.css; ui/themes.css with 4 themes; world.html
@@ -63,15 +68,32 @@ presence, with the same map turning into a 3D scene later.
   computer, in-game previews) · R1.7 save, versions, undo, publish, pull tool;
   Looped C++ reads the theme file (no engine drawing yet).
 - **R2 The house theme:** 3 candidates, the user picks or mixes, it gets a name.
-- **R3 The new plan system** (detailed once question 3 is answered).
+- **R3 The World Plan, one doc:** R3.1 write it in its fixed shape · R3.2
+  carry over the open work (58 Hub cards, NEXT.md, PROGRESS.md, old plans)
+  into its areas, archive the old files · R3.3 the plan tool (adds a request
+  into its area, ticks pieces, writes the build log, refuses anything that
+  breaks the shape; piece.mjs and step.mjs use it).
 - **R4 Dev.**
-- **R5 The world front door.**
+- **R5 The world front door:** the new scene built in the engine, rendered as a short looping clip; then the front door, Showcase, News, Made here, Sign in.
 - **R6 The theme on everything;** old themes removed. Then engine work resumes.
-- Parked: a real 3D scene behind the website (after R6, same places).
+- Parked: the front door scene live in the engine instead of a clip (after R6, same places).
 
-## Open questions, round 2 (recommendation first)
-1. Front door now: layered real pictures with slight motion, 3D stays parked (rec) / bring 3D into R5.
-2. "We": "Built by Joshua Velasco, with Claude" (rec) / name only or a studio name. The script language is said to be *in progress*.
-3. Plan truth: one data file, Dev · Plan shows it, NEXT.md generated (rec) / Markdown stays the truth.
-4. Hub cards and old plans: carry over what's still wanted, archive the rest (rec) / start empty.
-5. Dev address: /dev with /hub and /portal redirecting (rec) / no address of its own.
+## The World Plan's fixed shape (PLAN.md, proposed)
+1. North star (only the user changes it) · 2. Your rules, dated (only the
+user) · 3. The areas, fixed list, one status line each · 4. Now: the step
+"go" does, pieces, phone checks · 5. The road: Next and Later, each item
+under its area, naming the North star line it serves · 6. Parked, by area ·
+7. Done: the build log · 8. Where things are: links to how-it-works docs.
+Rules: every request lands in an area (no fit = a question, never a new
+part); a road item that serves no North star line goes to Parked; Claude
+edits only through the plan tool, which refuses shape breaks; Dev · Plan
+shows the same doc, nothing else keeps a tick list.
+Areas (draft): The world site, The bar, Characters, Games, Social, Homes,
+Shops and money, Engine (Looped), Script language, Toolbelt, Dev, Server and
+accounts, Speed and quality.
+
+## Open questions, round 3 (recommendation first)
+1. Front door scene: the bar from the street at night, slow drift to the lit door, ~8 s seamless loop (rec) / the whole block.
+2. The 13 areas: confirm or change now (fixed after).
+3. PLAN.md at the repo root replaces NEXT.md, PROGRESS.md, the Hub board and the progress parts of other docs (rec).
+4. Assumed unless the user objects: carry over still-wanted work and archive the rest; Dev at /dev with /hub and /portal redirecting.
