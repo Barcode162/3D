@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.6 Screen editing in the UI Editor: every option of the selected part (words, numbers, on/off, choices, icons, lists), move up and down, duplicate, delete, add a part after it or inside it, a new screen, the screen's name; deep link to a part (&sel=1.0.1.0); fix: the theme notes no longer overlap, the top bar fits a phone
+
+`0b6722f` · 2026-10-24 04:02 · 4 files, +148 −11 · tests: quick, toolbelt
+
+Phone check: in the UI Editor tap Publish: change its words to 'Go live', the key changes; '+ Add after…' → Chip, then the up arrow moves it before the key; the bin deletes it; undo brings it back
+
+![R1.6 page-toolbelt-ui-editor-index-sel-1-0-1-0.jpg](R1.6/page-toolbelt-ui-editor-index-sel-1-0-1-0.jpg)
+
 ## R1.5 Theme editing in the UI Editor: every token in 6 groups (colour, surfaces, shape, depth, type, lights) with colour pickers that keep see-through, sliders, font and choice menus and the exact text; name, about, light or dark, copy as a new theme, back to as loaded; undo and redo (one step per slider drag); deep links (?mode=theme&group=shape)
 
 `f138572` · 2026-10-24 03:57 · 5 files, +511 −51 · tests: quick, toolbelt
