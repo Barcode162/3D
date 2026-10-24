@@ -6,6 +6,16 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.2 The theme files: every token described once (ui/system/tokens.json: group, kind, what it does), the 4 themes as files (ui/system/themes/), ui/themes.css and looped.js's theme list written from them by tools/uikit.mjs, a check that they agree (quick check and CI); every token's value is unchanged
+
+`a21442c` · 2026-10-24 03:43 · 14 files, +580 −73 · tests: quick
+
+Phone check: nothing should change: the bar's menus, the Studio and joshuavelasco.com/ui look exactly as before in every theme
+
+![R1.2 page-ui.jpg](R1.2/page-ui.jpg)
+
+![R1.2 page-toolbelt.jpg](R1.2/page-toolbelt.jpg)
+
 ## R1.1 The Toolbelt: one list of the engine's tools (toolbelt/tools.json) and one page that opens them (/toolbelt/); the piece runner takes phone pictures of site pages (--pages) and pushes to any branch (--branch)
 
 `a28d85c` · 2026-10-24 03:39 · 7 files, +230 −7 · tests: quick
