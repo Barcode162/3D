@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J3 · The Playbook** (the tools). The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
 - [x] **J3.1** Test only what changed, push only what you want: the user's two new rules (and "Speed over tests" taken out: the user never said it), pieces run only the checks for what they change and build only when needed, the engine's self-check idea parked *Check:* Nothing on the phone
-- [ ] **J3.2** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind *Check:* Nothing on the phone; the Playbook's first page is on GitHub
+- [x] **J3.2** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind *Check:* Nothing on the phone; the Playbook's first page is on GitHub
 - [ ] **J3.3** Intake (docs/playbook/intake.md): every kind of message → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
 - [ ] **J3.4** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
 - [ ] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
