@@ -25,6 +25,7 @@
 //   --no-push         commit only
 //   --dry             do everything but commit and push
 //   node tools/piece.mjs baseline    pictures of the current build as the "before"
+import { attribution } from './lib/attribution.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -38,8 +39,7 @@ import { serveSite } from './lib/site.mjs';
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 26 }).trim();
 const run = (cmd) => spawnSync('bash', ['-c', cmd], { stdio: 'inherit' }).status === 0;
 const EMSDK = 'source /opt/emsdk/emsdk_env.sh >/dev/null 2>&1;';
-const ATTRIBUTION = process.env.PIECE_ATTRIBUTION ??
-  'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Nrk1rpfmMgEQWZYFLjtXXi';
+const ATTRIBUTION = attribution();
 
 const argv = process.argv.slice(2);
 const opt = (name, def = null) => { const i = argv.indexOf('--' + name); return i >= 0 ? argv[i + 1] : def; };

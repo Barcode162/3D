@@ -10,6 +10,7 @@
 // (--bench), posts to the hub (if HUB_KEY is set) and prints the reply for
 // the user: one line per piece with its phone check.
 import { addDoneLine } from './plan.mjs';
+import { attribution } from './lib/attribution.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openGallery, readJsonl, appendJsonl, commitGallery, writeReadme } from './lib/gallery.mjs';
@@ -19,8 +20,7 @@ const run = (cmd) => spawnSync('bash', ['-c', cmd], { stdio: 'inherit' }).status
 const argv = process.argv.slice(2);
 const has = (n) => argv.includes('--' + n);
 const [cmd, stepName, what = ''] = argv;
-const ATTRIBUTION = process.env.PIECE_ATTRIBUTION ??
-  'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Nrk1rpfmMgEQWZYFLjtXXi';
+const ATTRIBUTION = attribution();
 
 openGallery();
 const steps = readJsonl('steps.jsonl');

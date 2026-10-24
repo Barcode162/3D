@@ -61,7 +61,7 @@
     "id": "J4.3",
     "text": "The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J4.4",
