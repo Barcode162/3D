@@ -26,7 +26,6 @@ spec: `docs/plan/restructure.md`.
 | KI-15 | `tools/piece.mjs` and `tools/step.mjs` hard-code an old session's attribution lines (overridable with `PIECE_ATTRIBUTION`). | J4.3 |
 | KI-16 | Stale pointers: `tools/step.mjs`'s header says it writes `NEXT.md`; `NEXT.md` is a stub; `docs/manual/README.md` points to `docs/PLAN.md`. | J3.6, J6.6 |
 | KI-17 | Three channels are pulled at every "go" but have never carried anything from the user: the Studio store (world v1–v3 all published by Claude), the UI Editor store (v0), Dev notes (none). Their role is undecided. | J5.1 |
-| KI-18 | 12 stale side branches (`backup-wip`, 8 × `claude/…`, `work`, `work-go`, `work-looped`) and one made by a capability test (`tmp-capability-check`). The approved plan was to save them as tags and delete them, but this environment refuses both tag pushes and branch deletions (HTTP 403). Waiting for the user: leave them (recommended) or delete them from GitHub by hand. | the user's decision |
 | KI-19 | Duplicate pictures: `homepage/site/img/jukebox.jpg` = `ui/system/img/jukebox.jpg`, `homepage/site/img/counter.jpg` = `ui/system/img/door.jpg`. | J6.6 |
 | KI-20 | The roadmap has no feasibility verdicts; tag `L1.8` is used twice (Done `8722f75` and a road item). | J4.1, J7.1 |
 | KI-21 | `docs/audit/*.json` (seven large audits of old paths like `app/main.cpp`, `engine/`): status unknown, probably history. | J6.6 |
@@ -35,4 +34,6 @@ spec: `docs/plan/restructure.md`.
 
 ## Closed
 
-(none yet)
+| Id | Problem | Closed by |
+|---|---|---|
+| KI-18 | 12 stale side branches and `tmp-capability-check`; this environment can't save tags or delete branches. | The user's decision, 2026-10-24 #4: leave them. |

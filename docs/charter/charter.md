@@ -85,7 +85,8 @@ quick check.
 
 What each rule means for the work, written by Claude. **The user confirms
 these;** if one is wrong, the user's words above win and this line gets
-fixed. Newest first, by the rule's bold name.
+fixed. Newest first, by the rule's bold name. **Confirmed by the user on
+2026-10-24** (the whole Charter: request 2026-10-24 #4).
 
 | Rule | In practice |
 |---|---|
