@@ -56,17 +56,15 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J6 · The Handbook** (the tools). The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
-- [x] **J6.1** The map of every folder (what it is, its language, who deploys it, its address) and of every language and outside tool *Check:* Nothing on the phone
-- [x] **J6.2** One page per system (about 40, one template: what it is, status, what you can do, how it works, data, commands, limits, checks, traps, history) *Check:* Nothing on the phone
-- [x] **J6.3** The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed) *Check:* Nothing on the phone
-- [x] **J6.4** Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door *Check:* Nothing on the phone
-- [x] **J6.5** How-to recipes (about 25): each common request mapped to its exact steps *Check:* Nothing on the phone
-- [x] **J6.6** The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check *Check:* Nothing on the phone
+**J7 · The plan rebuilt with a reality check** (the tools). The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
+- [ ] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
+- [ ] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
+- [ ] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
+- [ ] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,7 +124,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J7** The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
 - [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
 
 ### The backbone
@@ -166,7 +163,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d
+- (this push) J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
+- `f6d3335` J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d
 - `902cfba` J5.7: J5.7: the fix for J5's red site deploy → c4b3fca^..c4b3fca
 - `0a1886f` J5.1, J5.2, J5.3, J5.4, J5.5, J5.6: J5: data flows and Dev: the data map, the plan on Dev within a minute, one deployer per folder, the retired board out, one list of projects, Dev shows the truth → 7258356^..5cc1f57
 - `c215278` J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765

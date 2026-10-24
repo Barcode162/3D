@@ -36,55 +36,43 @@
   }
  ],
  "now": {
-  "id": "J6",
-  "title": "The Handbook",
+  "id": "J7",
+  "title": "The plan rebuilt with a reality check",
   "chapter": "the tools",
-  "about": "The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted",
+  "about": "The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order",
   "serves": [
    "N2",
    "N5"
   ],
   "pieces": [
    {
-    "id": "J6.1",
-    "text": "The map of every folder (what it is, its language, who deploys it, its address) and of every language and outside tool",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J7.1",
+    "text": "Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits",
+    "check": "Dev → Plan: each road item shows its verdict",
+    "done": false
    },
    {
-    "id": "J6.2",
-    "text": "One page per system (about 40, one template: what it is, status, what you can do, how it works, data, commands, limits, checks, traps, history)",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J7.2",
+    "text": "The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order",
+    "check": "Dev → Plan: the world remake's jobs on the road",
+    "done": false
    },
    {
-    "id": "J6.3",
-    "text": "The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed)",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J7.3",
+    "text": "The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs",
+    "check": "Dev → Plan: the script language's first jobs",
+    "done": false
    },
    {
-    "id": "J6.4",
-    "text": "Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door",
-    "check": "Nothing on the phone",
-    "done": true
-   },
-   {
-    "id": "J6.5",
-    "text": "How-to recipes (about 25): each common request mapped to its exact steps",
-    "check": "Nothing on the phone",
-    "done": true
-   },
-   {
-    "id": "J6.6",
-    "text": "The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J7.4",
+    "text": "The order: Claude's recommendation with reasons; you approve or change it (one question)",
+    "check": "Dev → Plan: Up next in the order you approved",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*",
- "upNext": "J7 → J8 (the restructure; then the road as J7 orders it)",
+ "upNext": "J8 (the restructure; then the road as J7 orders it)",
  "road": {
   "world": [
    {
@@ -505,15 +493,6 @@
     "done": false
    },
    {
-    "id": "J7",
-    "text": "The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order",
-    "serves": [
-     "N2",
-     "N5"
-    ],
-    "done": false
-   },
-   {
     "id": "J8",
     "text": "Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system",
     "serves": [
@@ -605,6 +584,10 @@
  "done": [
   {
    "build": null,
+   "text": "J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2"
+  },
+  {
+   "build": "f6d3335",
    "text": "J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d"
   },
   {
