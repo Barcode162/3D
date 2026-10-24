@@ -39,6 +39,20 @@ body.ed { margin: 0; background: var(--e-bg); color: var(--e-text); font: 13px/1
 .ed-frame .ed-sel { outline: 2px dashed var(--e-acc) !important; outline-offset: 2px; }
 .ed-frame .ed-hover { outline: 1px solid rgba(77,163,255,.5); outline-offset: 1px; }
 
+/* Controls in the inspector */
+.ed-in { width: 100%; min-width: 0; background: var(--e-bg); color: var(--e-text); border: 1px solid var(--e-line); border-radius: 6px; padding: 5px 7px; font: 12px var(--e-mono); min-height: 30px; }
+textarea.ed-in { resize: vertical; min-height: 54px; line-height: 1.35; }
+.ed-in:focus { outline: none; border-color: var(--e-acc); }
+.ed-pair { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 6px; align-items: center; }
+.ed-pair.ed-wide { grid-template-columns: minmax(0, 1fr) 64px; }
+.ed-swatch { width: 34px; height: 30px; padding: 0; border: 1px solid var(--e-line); border-radius: 6px; background: none; cursor: pointer; }
+.ed-swatch::-webkit-color-swatch-wrapper { padding: 2px; } .ed-swatch::-webkit-color-swatch { border: 0; border-radius: 4px; }
+.ed-range { width: 100%; accent-color: var(--e-acc); min-height: 30px; }
+.ed-row.ed-tall { align-items: start; padding-top: 4px; }
+.ed-row.ed-changed > span:first-child, .ed-row.ed-changed > label { color: var(--e-acc); }
+.ed-note { font-size: 11px; color: var(--e-faint); grid-column: 1 / -1; margin-top: -2px; }
+.ed-actions { display: flex; gap: 6px; flex-wrap: wrap; padding: 4px 0 8px; }
+
 /* The sheet: parts list and inspector */
 .ed-sheet { grid-area: sheet; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); border-top: 1px solid var(--e-line); background: var(--e-bg2); min-height: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
 .ed-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }

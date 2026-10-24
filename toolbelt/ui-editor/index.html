@@ -25,6 +25,8 @@
   <select class="ed-pick" id="pick" aria-label="Which screen"></select>
   <span class="ed-grow"></span>
   <span class="ed-status" id="status"></span>
+  <button class="ed-btn ed-icon" id="undo" type="button" aria-label="Undo" disabled><svg><use href="/ui/icons.svg#i-undo"/></svg></button>
+  <button class="ed-btn ed-icon" id="redo" type="button" aria-label="Redo" disabled><svg><use href="/ui/icons.svg#i-redo"/></svg></button>
 </header>
 
 <section class="ed-stage" id="stage" aria-label="Preview">
@@ -41,7 +43,7 @@
 
 <section class="ed-sheet" id="sheet">
   <div class="ed-pane" id="treePane">
-    <div class="ed-h"><b>Parts</b><span class="ed-grow"></span><span class="ed-dim" id="count"></span></div>
+    <div class="ed-h"><b id="treeTitle">Parts</b><span class="ed-grow"></span><span class="ed-dim" id="count"></span></div>
     <ol class="ed-tree" id="tree"></ol>
   </div>
   <div class="ed-pane" id="inspPane">
