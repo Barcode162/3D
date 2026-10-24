@@ -4,18 +4,21 @@
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body.lp { -webkit-user-select: none; user-select: none; }
 #app { position: fixed; inset: 0; }
-#world { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: #0D0B0A; }
+#world { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
 #top {
   position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 6px);
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px; border-radius: var(--panel-r);
 }
 #top .key { min-height: 36px; }
 #placeKey { text-transform: none; letter-spacing: 0; font-stretch: 100%; font-size: 15px; font-weight: 750; gap: 4px; }
-#placeKey #placeName { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); }
+#placeKey #placeName { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s);
+  background-image: var(--title-fill, none); background-size: 260% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: var(--title-ink, currentColor); animation: var(--title-motion, none) var(--title-speed, 6s) ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { #placeKey #placeName { animation: none; } }
 .saved { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); min-width: 0; white-space: nowrap; overflow: hidden; }
 #bottom {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-  display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 16px;
+  display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: var(--panel-r);
 }
 #bottom .seg { flex: 1; }
 #bottom .seg button { min-height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -24,22 +27,22 @@ body.lp { -webkit-user-select: none; user-select: none; }
 #crumb {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
   transition: bottom .15s;
-  display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 12px; border-radius: 12px; font-size: 13px; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 12px; border-radius: var(--panel-r); font-size: 13px; color: var(--text-2);
 }
 #crumb .path { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #crumb b { color: var(--accent); font-weight: 650; }
 #crumb .key { min-height: 34px; min-width: 38px; padding: 0 8px; }
 #hits, .pop, #partList {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 124px);
-  display: grid; gap: 4px; padding: 8px; border-radius: 14px; max-height: 40vh; overflow: auto;
+  display: grid; gap: 4px; padding: 8px; border-radius: var(--panel-r); max-height: 40vh; overflow: auto;
 }
-#hits > button, .pop > button { all: unset; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: var(--mono); font-size: 13px; }
+#hits > button, .pop > button { all: unset; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: calc(var(--field-r) * .6); cursor: pointer; font-family: var(--mono); font-size: 13px; }
 #hits > button small, .pop > button small { color: var(--text-2); font-family: var(--text-font); }
 #hits > button:active, #hits > button:focus-visible, .pop > button:active, .pop > button:focus-visible { background: var(--field); }
 
 /* The Monitor: a drawer over the bottom of the world. */
 #monitor {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 62vh; border-radius: 20px 20px 0 0;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 62vh; border-radius: var(--panel-r) var(--panel-r) 0 0;
   padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 12px); display: grid; grid-template-rows: auto auto 1fr; gap: 10px;
 }
 #monitor.full { height: calc(100% - env(safe-area-inset-top, 0px) - 8px); }
@@ -49,16 +52,16 @@ body.lp { -webkit-user-select: none; user-select: none; }
 #monitor .body { overflow: auto; min-height: 0; display: grid; gap: 8px; align-content: start; -webkit-user-select: text; user-select: text; }
 .row { display: flex; gap: 8px; align-items: center; }
 .tree { display: grid; gap: 2px; }
-.tree button { all: unset; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-family: var(--mono); font-size: 13px; min-width: 0; }
+.tree button { all: unset; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: calc(var(--field-r) * .6); cursor: pointer; font-family: var(--mono); font-size: 13px; min-width: 0; }
 .tree button span.id { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tree button small { color: var(--text-2); font-family: var(--text-font); font-size: 12px; }
 .tree button.sel { background: var(--field); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .tree button:focus-visible { outline: 2px solid var(--accent); }
-.fieldrow { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
+.fieldrow { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 10px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge); }
 .fieldrow .v { font-family: var(--mono); font-size: 13px; text-align: right; overflow-wrap: anywhere; }
 .fieldrow .about { grid-column: 1 / -1; font-size: 12px; color: var(--text-2); }
-.problem { padding: 8px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge), inset 3px 0 0 var(--bad, #FF6A64); font-size: 13px; }
-.ok { padding: 8px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge), inset 3px 0 0 var(--ok); font-size: 13px; }
+.problem { padding: 8px 10px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge), inset 3px 0 0 var(--bad); font-size: 13px; }
+.ok { padding: 8px 10px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge), inset 3px 0 0 var(--ok); font-size: 13px; }
 
 #login { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; }
 #login form { width: min(100%, 360px); padding: 22px 18px; display: grid; gap: 12px; }
@@ -69,7 +72,7 @@ body.lp { -webkit-user-select: none; user-select: none; }
 /* The tools (S3.2): above the bottom bar; the breadcrumb sits above them. */
 #tools {
   position: absolute; left: 8px; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 74px);
-  display: grid; gap: 7px; padding: 8px; border-radius: 16px;
+  display: grid; gap: 7px; padding: 8px; border-radius: var(--panel-r);
 }
 body.tooling #crumb { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 6px); }
 body.tooling #hits { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(--tools-h, 230px) + 56px); }
@@ -84,17 +87,17 @@ body.tooling #hits { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + var(
 #tools .jog { height: 52px; }
 #tools .jog .cap { left: 50%; }
 #tools .jog.drag .bubble { opacity: 1; }
-.change { all: unset; display: block; padding: 10px 12px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); font-size: 14px; cursor: pointer; }
+.change { all: unset; display: block; padding: 10px 12px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge); font-size: 14px; cursor: pointer; }
 .change:focus-visible { outline: 2px solid var(--accent); }
-#publishSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); padding: 16px; border-radius: 18px; display: grid; gap: 12px; }
+#publishSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); padding: 16px; border-radius: var(--panel-r); display: grid; gap: 12px; }
 #publishSheet h2 { font-size: 28px; }
 #publishSheet .row .key { flex: 1; }
-.hist { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
+.hist { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge); }
 .hist small { color: var(--text-2); grid-column: 1; }
 .hist .key { grid-row: 1 / span 2; grid-column: 2; }
 /* The magnifier (S5.1). */
 #lens { position: absolute; left: 0; top: 0; width: 168px; height: 168px; border-radius: 50%; pointer-events: none; z-index: 9;
-  box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px rgba(0,0,0,.6), 0 10px 30px rgba(0,0,0,.6); background: rgba(10,9,8,.35); }
+  box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px rgba(0,0,0,.6), 0 10px 30px rgba(0,0,0,.6); background: color-mix(in srgb, var(--bg) 35%, transparent); }
 #lens canvas { width: 100%; height: 100%; border-radius: 50%; opacity: 0; }
 #lens.pic canvas { opacity: 1; }
 #lens .cross { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
@@ -112,7 +115,7 @@ body.tooling #partList { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + 
 #tools .rowk .seg { flex: 1.6 1 0; min-width: 0; }
 #tools .rowk .seg button { padding: 0 4px; font-size: 10px; }
 /* Inspect's controls (S5.4, fields.mjs). */
-.ctl { display: grid; grid-template-columns: 1fr 96px 24px; gap: 4px 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); }
+.ctl { display: grid; grid-template-columns: 1fr 96px 24px; gap: 4px 8px; align-items: center; padding: 8px 10px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge); }
 .ctl .name { font-size: 13px; min-width: 0; }
 .ctl .field { font-size: 14px; padding: 6px 8px; text-align: right; width: 100%; }
 .ctl .unit { font-size: 12px; color: var(--text-2); }
@@ -131,10 +134,10 @@ body.tooling #partList { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px + 
 .ctl.vec { grid-template-columns: minmax(0, 1fr) repeat(3, 72px); gap: 4px 5px; }
 .ctl.vec .field { font-size: 12px; padding: 6px 5px; }
 /* The Library (S6.1). */
-#library { position: absolute; left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto; border-radius: 20px 20px 0 0; padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 14px); display: grid; gap: 8px; }
+#library { position: absolute; left: 0; right: 0; bottom: 0; max-height: 70vh; overflow: auto; border-radius: var(--panel-r) var(--panel-r) 0 0; padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 14px); display: grid; gap: 8px; }
 #library h2 { margin: 0; font-size: 28px; }
 .libgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.libitem { all: unset; display: grid; gap: 4px; padding: 8px; border-radius: 10px; background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); cursor: pointer; text-align: center; }
+.libitem { all: unset; display: grid; gap: 4px; padding: 8px; border-radius: calc(var(--field-r) * .75); background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); cursor: pointer; text-align: center; }
 .libitem:active { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down); }
 .libitem .pic { aspect-ratio: 1; border-radius: 7px; background: var(--field) center / cover no-repeat; box-shadow: var(--field-edge); display: grid; place-items: center; font: 800 26px var(--display); color: var(--text-3); }
 .libitem .nm { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -165,30 +168,30 @@ body.tooling #thingMenu { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px +
 .meterrow .bar i.warn { background: var(--warn); }
 .meterrow .bar i.bad { background: var(--bad); }
 /* Life (S8). */
-.lifemap { width: 100%; height: auto; color: var(--text-2); background: var(--field); border-radius: 10px; box-shadow: var(--field-edge); }
+.lifemap { width: 100%; height: auto; color: var(--text-2); background: var(--field); border-radius: calc(var(--field-r) * .75); box-shadow: var(--field-edge); }
 .lifemap .arrow { fill: none; stroke: currentColor; stroke-width: 1.4; }
 .lifemap .arrow.timed { stroke-dasharray: 4 3; }
 .lifemap .rule { fill: var(--text-2); font: 9px var(--mono); text-anchor: middle; }
-.lifemap .node rect { fill: #24211E; stroke: var(--rule); }
+.lifemap .node rect { fill: color-mix(in srgb, var(--text) 10%, var(--bg)); stroke: var(--rule); }
 .lifemap .node.start rect { stroke: var(--text-3); }
-.lifemap .node.on rect { fill: #3B2A1A; stroke: var(--accent); }
+.lifemap .node.on rect { fill: color-mix(in srgb, var(--accent) 22%, var(--bg)); stroke: var(--accent); }
 .lifemap .node text { fill: var(--text); font: 600 10px var(--text-font); text-anchor: middle; }
 .rules { display: grid; gap: 4px; }
-.rulerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; background: var(--field); box-shadow: var(--field-edge); font-size: 13px; }
+.rulerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: calc(var(--field-r) * .6); background: var(--field); box-shadow: var(--field-edge); font-size: 13px; }
 #ruleEvent { width: 120px; padding: 6px 8px; }
 #monitor .tabs button { padding-left: 2px; padding-right: 2px; font-size: 10px; }
 /* The Loop Rack (S8.2). */
-.rack { display: grid; gap: 8px; padding: 10px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--rule); }
+.rack { display: grid; gap: 8px; padding: 10px; border-radius: var(--field-r); box-shadow: inset 0 0 0 1px var(--rule); }
 .racktop { display: grid; gap: 6px; }
 #rackScrub { height: 42px; }
-.lane2 { display: grid; gap: 6px; padding: 8px; border-radius: 10px; background: rgba(255,255,255,.02); box-shadow: inset 0 0 0 1px var(--rule); }
+.lane2 { display: grid; gap: 6px; padding: 8px; border-radius: calc(var(--field-r) * .75); background: var(--field); box-shadow: inset 0 0 0 1px var(--rule); }
 .lane2 b { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; flex: 1; }
-.keyspad { width: 100%; height: 90px; background: var(--field); border-radius: 8px; box-shadow: var(--field-edge); touch-action: none; }
+.keyspad { width: 100%; height: 90px; background: var(--field); border-radius: calc(var(--field-r) * .6); box-shadow: var(--field-edge); touch-action: none; }
 .histwhat { display: grid; gap: 2px; padding: 4px 12px 8px; font-size: 13px; }
 .hist { grid-template-columns: 1fr auto auto; }
 /* Proposals (S10.4). */
-#propSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: 70vh; overflow: auto; padding: 14px; border-radius: 18px; display: grid; gap: 8px; z-index: 12; }
+#propSheet { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: 70vh; overflow: auto; padding: 14px; border-radius: var(--panel-r); display: grid; gap: 8px; z-index: 12; }
 #propSheet h2 { margin: 0; font-size: 26px; }
-#previewBar { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 14px; font-size: 13px; z-index: 11; box-shadow: var(--panel-edge), inset 0 0 0 1.5px var(--accent); }
+#previewBar { position: absolute; left: 8px; right: 8px; top: calc(env(safe-area-inset-top, 0px) + 64px); display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--panel-r); font-size: 13px; z-index: 11; box-shadow: var(--panel-edge), inset 0 0 0 1.5px var(--accent); }
 #previewBar span { flex: 1; }
 #propKey.lit { color: var(--accent); }

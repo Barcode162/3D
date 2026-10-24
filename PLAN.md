@@ -54,7 +54,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **R6.1** Ember is the default theme: every page that wears the Looped look switches (the bar's menus, the Studio, Dials, News...); a theme picked on purpose is still remembered; pages over the 3D keep Ember's dark half; the other ten themes stay options *Check:* open the bar's menu: amber keys, words as typed, not capitals
 - [x] **R6.2** The bar's menus and loading screen in Ember: panels you can read over the 3D (no extra blur, so no extra GPU work), keys, tiles, toggles, the player card, the top keys and the toasts on the house theme's tokens; the loading screen with the glow and the moving title *Check:* enter the bar: the loading screen glows amber; open Menu: warm frosted-looking panels, amber keys
 - [x] **R6.3** The private bar's door page (sign in, waiting to be let in) in Ember *Check:* open joshuavelasco.com/bar signed out: the door page is amber, like the site
-- [ ] **R6.4** The Studio in Ember: its top bar, panels and keys *Check:* open the Studio: amber top bar and keys
+- [x] **R6.4** The Studio in Ember: its top bar, panels and keys *Check:* open the Studio: amber top bar and keys
 - [ ] **R6.5** Dials, World notes and the public News page in Ember (World notes loses its purple) *Check:* open Dials, World notes and /news: all amber
 - [ ] **R6.6** The last tools: the UI Editor's own buttons and panels, Compare, Screens and the style page in Ember; the retired hub board pages deleted (their data stays, Dev shows it) *Check:* open the UI Editor: its bars are amber, the preview still shows any theme
 
