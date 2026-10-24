@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J7.4 The order, approved (request 2026-10-24 #7: go): Up next is J8, then quick checks fixes (J66, J54, J68), your phone's speed reports (J37, J39), the world remake and the script language taking turns (J35, J43, J70, J78 … J77), what they unlock (J24, J25, J13, J9), safety before growth (J65, J20); the racing job carries your own plan (made-up makes with close shapes and real specs, the rigs' screens for watchers, the visual upgrade with the track in stage 14; its spec's decision 5 quotes you), and its wrong verdict is fixed; accounts off IONOS (J60) has your yes on record; the paid items parked (J63 voice relays, J64 payments, J23 the VIP marketplace, J69 a GitHub machine with a graphics card; KI-28 parked with J69); the plan tool's park --from moves a road item to Parked and its verdict command names the item's spec; the Playbook's verdict step reads what the user already said first (incident 2026-10-24-verdict-without-spec); checked by the plan, workflows, Playbook, locks and Handbook tests
+
+`fc947b6` · 2026-10-24 19:19 · 10 files, +127 −78 · tests: changed
+
+Phone check: Dev → Plan: Up next lists J8, J66, J54 … in this order; The backbone no longer lists voice relays or payments (they're in Parked)
+
 ## J7.3 The script language's realistic scope and its first jobs: small (things, states, events, timers, loops, remembered values, messages), safe (only its own thing, a step budget and a memory limit, never breaks the bar), built on the world model's kind data (a script and a kind's states, rules and loops convert both ways), written for people and AIs, every error with its line, plain words and a fix hint; not a replacement for C++ or JavaScript; its spec in docs/plan/jobs/J43.md with a first sketch; J43 (formerly T1) becomes step 1, the design on paper with 20 scripts for things that exist today, then J78 the parser and checker, J79 the safe runner, J80 scripts in the Studio, J81 five behaviours rewritten as scripts; the light show (J50) and the timeline (J57) wait on them; the Handbook's script language page says it; checked by the plan, Playbook, locks and Handbook tests
 
 `e8b4dbb` · 2026-10-24 19:09 · 6 files, +187 −22 · tests: changed
