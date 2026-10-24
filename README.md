@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J2.2 Every test counts: one list of checks (tools/lib/checks.mjs) and tools/workflows_test.mjs in the quick check (every check in exactly one workflow, every test file listed, every test runs after any failure with a time limit, allowed-to-fail only with an open known issue in its name, ids for the reports); deploy.yml and hub.yml rewritten to match; GitHub now also runs the albedo, shader, plan, touch, travel and voice checks; KI-6 and KI-26 closed, KI-24/25/27/28 written down
+
+`2dd5d99` · 2026-10-24 11:43 · 9 files, +326 −91 · tests: quick
+
+Phone check: Nothing to see on the phone; Dev → Overview names any failing test (after J2.3)
+
 ## J2.1 The browser tests open the bar with the classic light on GitHub (TEST_LIGHT=classic in deploy.yml; tools/lib/browser.mjs adds ?light=classic to the bar's page, before its scripts run, in every page, context and frame, unless the address names a light); unset locally, so the pictures keep the new light; checked on 17 cases with static pages
 
 `a8e1dd9` · 2026-10-24 11:36 · 4 files, +28 −3 · tests: quick
