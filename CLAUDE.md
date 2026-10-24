@@ -2,14 +2,16 @@
 
 A from-scratch 3D engine in **C++ → WebAssembly → WebGPU**: a VRChat-style 3D
 hangout bar. Engine in `looped/`, the bar in `bar/`, page in `bar/web/`,
-multiplayer room in `cloud/`. The long guide (layout, every tool, hub details,
-iOS limits) is **`docs/REFERENCE.md`**: open the part you need, not all of it.
+multiplayer room in `cloud/`. **The plan is `PLAN.md`**: one doc, eight fixed
+parts (North star, your rules, the 5 chapters, Now, the road, Parked, Done,
+where things are). The long guide (layout, every tool, iOS limits) is
+**`docs/REFERENCE.md`**: open the part you need, not all of it.
 
 ## The user's one word: "go" (user, 2026-10-21)
 The user only says **"go"**. They work from an iPhone (Safari), are a beginner
 in graphics and C++, and want one whole step done per go, fast, with breakage
 easy to pinpoint. So on "go":
-1. Read **`NEXT.md`** only (the next step, its pieces, the build log). Open
+1. Read **`PLAN.md` → 4. Now** (the step, its pieces; part 7 is the build log). Open
    other docs only when a piece needs them. No menu, no plan reply, no
    questions unless truly blocked (then: ask once, with a recommendation).
    **World first:** `node tools/studio.mjs pull` (the world the user published
@@ -29,9 +31,10 @@ easy to pinpoint. So on "go":
    If the step changed files in `assets/world/`: once the deploy is live,
    `node tools/studio.mjs push --note "<pieces>"` (publishes them as a new
    version by Claude; refused if the user published since: pull, merge, push).
-4. Update `NEXT.md` in the same push: tick the pieces, add one Build log line
-   (build sha, the pieces, the commit range), write the **next** step's pieces.
-   Tick the step in `docs/ENGINE.md` → Progress. Gotchas → `docs/DECISIONS.md`.
+4. Update `PLAN.md` in the same push, **only through `node tools/plan.mjs`**:
+   tick the pieces, one Done line (build sha, the pieces, the commit range),
+   move the next road item into Now with its pieces. Never add a part, a
+   chapter or another plan file. Gotchas → `docs/DECISIONS.md`.
 5. Reply to the user, short: the build code, then one line per piece:
    where to stand, what they should see, and "if not, say: broke E3.2".
 6. Hub (if `HUB_KEY` is set): one `node tools/hub.mjs post --build <sha>
@@ -49,7 +52,7 @@ hour+ per piece with the new lighting. The user won't wait on them. So:
 - The phone check is the real visual test. A slower, safer run only when
   the user asks or for a "broke <piece>" that needs it.
 - Tracking never gets skipped: one piece = one commit, the Build log, the
-  gallery, NEXT.md ticks. That's what lets us fix things later.
+  gallery, the PLAN.md ticks. That's what lets us fix things later.
 
 ## Automation first (user, 2026-10-22)
 Anything done twice becomes a tool; Claude runs the tools, not the steps by
@@ -64,18 +67,19 @@ tools/step.mjs finish <STEP> "<what>" --bench`. Before/after is the norm.
   names the exact commit. `git log --grep '^E3.2'` finds it.
 - **"broke <piece>"**: reproduce with tests/screenshots, fix it (or `git revert`
   that piece's commit), push `main`, give the new build code.
-- **"undo"**: `git revert` the last step's whole range (Build log in
-  `NEXT.md`), push `main`; the bar is back to the build before.
+- **"undo"**: `git revert` the last step's whole range (`PLAN.md` → Done), push
+  `main`; the bar is back to the build before.
 - `node tools/check.mjs` prints PASS/FAIL per system and, for a failure, its
   log file and first error lines (`build/check/<name>.log`).
   `node tools/check.mjs all` runs everything; `node tools/check.mjs room chess`
   only those.
 
 ## Other words the user may use
-- **"park: <idea>"**: one line to Parked in `PROGRESS.md`. No work.
+- **"park: <idea>"**: one line to `PLAN.md` → Parked, under its chapter (`node tools/plan.mjs park`). No work.
 - **"talk"**: conversation only, no tools.
-- **"status"**: read `NEXT.md` and `docs/ENGINE.md` → Progress, answer in a few lines.
-- A new idea in chat: one line to Parked; never onto the plan on your own.
+- **"status"**: read `PLAN.md` (Now, the chapters' lines), answer in a few lines.
+- A new idea in chat: one line to Parked under its chapter; never onto the road on your own.
+- A new rule from the user ("always…", "never…"): one dated line in `PLAN.md` → Your rules.
 
 ## Rules that always hold
 - No outside engines or libraries (approved exceptions: three.js for Meridian

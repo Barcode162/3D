@@ -48,30 +48,105 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **R3 · The World Plan** (the tools). The plan system remade as this one doc.
 - [x] **R3.1** This file in its fixed shape: the North star, the rules, the chapters, Now, Done, where things are. *Check:* read PLAN.md on GitHub: it says what the project is in one screen.
-- [ ] **R3.2** Carry over: every open thing from NEXT.md, PROGRESS.md, the 68 hub cards and the old plans into its chapter (road or parked); the old plan files move to `docs/archive/`. *Check:* the road has every open thing once.
+- [x] **R3.2** Carry over: every open thing from NEXT.md, PROGRESS.md, the 68 hub cards and the old plans into its chapter (road or parked); the old plan files move to `docs/archive/`. *Check:* the road has every open thing once.
 - [ ] **R3.3** The plan tool (`tools/plan.mjs`): add a request into its chapter, tick pieces, write Done, refuse anything that breaks the shape; the piece and step tools use it. *Check:* none on the phone (Claude's tool).
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** R4 → R5 → R6, then engine work resumes.
+**Up next, in order:** R4 → R5 → R6, then engine work resumes: L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
 
 ### The world
+- [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
+- [ ] **A2** Real people: skin light passes into, hair strands, wet see-through eyes, clothes that swing, lips that follow voice. · N3
+- [ ] **A3** Your face: an avatar face from a few selfies. · N3 N4
+- [ ] **W1** Memory: the floor wears where people walk, the dartboard gets holes, your usual stool gets your nameplate. · N3
+- [ ] **W2** Mood and chance: one cozy↔wild dial for the whole bar; "maybe" events (30% rain, a surprise band). · N3
+- [ ] **W3** Time and era: scrub time back and see ghosts replay the night; a "what if" copy; the era dial (1920s ↔ neon future). · N3
+- [ ] **W4** Scale and layers: shrink to mouse size; blend two places. · N3
+- [ ] **W5** Home screen with "Happening now": start at your home, one tap to a busy hub, a live event or a friend. · N4
+- [ ] **W6** Lobbies and matchmaking: a few main hubs (the bar first), instances, matching by age band, preferences and skill; the no-friends lobby. · N4
+- [ ] **W7** Your home: invite-only, placing things on a smooth grid, expand up to 3x, levels 1-3. · N4
+- [ ] **W8** Events and the memory book: date, time, RSVP, a clean invite card; the in-game camera, a photo book with likes, no comments, per-photo privacy. · N4
+- [ ] **W9** Safety in the world: teens and adults kept apart (lobbies, voice, messages); block, mute, report (keeps the last seconds of voice); the teen phrase builder, filtered text for adults. · N4
+- [ ] **W10** The mall, IKEA-style: walk in, pick things up, cart, checkout, delivery and install at home. · N4
+- [ ] **W11** The casino: 18+, earned credits only, never bought or cashed out. · N4
+- [ ] **W12** VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown). · N4
+- [ ] **W13** Small interactions done properly: bell, guitar, books, TV, door, taps. · N3
+- [ ] **W14** Physics props: knock bottles off, glasses break and stack, pour drinks. · N3
+- [ ] **W15** The pool table. · N4
+- [ ] **W16** Room 3, taped off today (its question is still open). · N3
+- [ ] **W17** Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot. · N4
+- [ ] **W18** Live low-res machine screens and a fair queue (20 s to claim your turn). · N4
+- [ ] **W19** More arcade games; bots in two-player races. · N4
+- [ ] **W20** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/DRIVING_REWORK.md). · N3
+- [ ] **W21** Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk. · N3
+- [ ] **W22** Your own character builder (face, details); outfits and gadgets to show off (shop items). · N4
+- [ ] **W23** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
+- [ ] **W24** Remaster the crude first versions of props and rooms. · N3
+
 ### The site
 - [ ] **R5** The world front door: a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop) shown as a clip; the front door, Showcase, News, Made here, Sign in as one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
+
 ### The engine
+- [ ] **L1.8** Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7). · N3
+- [ ] **P1** The engine phone check: fix every "broke" from the E1-E9 list; a ?perf=1 report by the fire with the mirror in view (against 63H3FJ, 16.7 ms); if reflections or shadows cost over 1 ms, make them cheaper. · N5
+- [ ] **EN1** Bug: the menu stops answering after some games. · N5
+- [ ] **EN2** Speed: three phone reports (after entering, at the mirror, after 2 min walking); faster drawing part 2 (render core, layout from Blender, quality settings). · N5
+- [ ] **EN3** Clean core leftovers: 4.1c, 4.3b, the darts / bartending / race adapters, entity ids on the wire. · N2
+- [ ] **M1** Real surfaces: textures that never visibly repeat, rounded edges, automatic wear, dirt and smudges. · N3
+- [ ] **L2** Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade. · N3
+- [ ] **T1** The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts. · N2 N3
+- [ ] **L3** Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus. · N3
+- [ ] **M2** Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces. · N3
+- [ ] **L4** Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics. · N3
+- [ ] **L5** The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer. · N3
+- [ ] **RC1** Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio. · N2 N3
+- [ ] **M3** Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size. · N3
+- [ ] **L6** Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb. · N3
+- [ ] **L7** Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow. · N3
+- [ ] **RC3** Scan it: bring real things in with the iPhone camera. · N3 N5
+- [ ] **L8** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
+
 ### The tools
-- [ ] **R4** Dev, the control room: Overview (is everything up, what needs you, phone reports), Plan (this doc), Publish (news drafts, the site's words and pictures), People (accounts, invites, admins), Toolbelt; built from screen files in Ember; /hub and /portal send you there. · N1 N5
+- [ ] **R4** Dev, the control room: Overview (is everything up, what needs you, phone reports), Plan (this doc), Publish (news drafts, the site's words and pictures), People (accounts, invites, admins), Toolbelt; built from screen files in Ember; /hub and /portal send you there; the hub's board retired (its data kept). · N1 N5
 - [ ] **R6** Ember on everything: the Studio, the bar's menus, the loading screen; the old themes retired from use. · N5
+- [ ] **P2** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
+- [ ] **TL1** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
+- [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
+- [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
+- [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
+
 ### The backbone
+- [ ] **B1** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
+- [ ] **B2** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
+- [ ] **B3** The room decides every shared thing (Phase 5). · N4
+- [ ] **B4** Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies. · N4
+- [ ] **B5** Payments (Stripe) for the VIP store. · N4
+- [ ] **B6** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
 
 ## 6. Parked
 *Not on the road yet, by chapter. The user promotes them.*
+
 ### The world
+- The street and the city outside; homes there as your "real home".
+- A kids edition: a separate, simpler game in the same universe (under 13).
+- A new name for the world and its currency (Bar3D is a working name).
+- Mini music studio (a DAW in the bar).
+- Avatar from a face scan (the user's own character builder).
+
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
+
 ### The engine
+- World-simulation engines: sound made from the physics, heat, smell as a field, day and night.
+
 ### The tools
+- AI dock: a workspace on the site where you talk to Claude and it works on the project there.
+- AI inside the Studio (needs a paid API), importing your own models, mesh editing, several people editing at once.
+- A design for the Studio more like a 3D modelling room (the hub card "Design idea").
+
 ### The backbone
+- The site on Cloudflare Pages (unlocks threads in the game).
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*

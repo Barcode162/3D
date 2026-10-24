@@ -1,17 +1,15 @@
-# Bar3D reference (the long guide; CLAUDE.md is the short one, NEXT.md the next step)
+# Bar3D reference (the long guide; CLAUDE.md is the short one, PLAN.md the plan)
 
 A from-scratch 3D engine in **C++ → WebAssembly → WebGPU**, building toward a
 VRChat-style **3D hangout bar**: walkable, every object interactive, an avatar
 visible in a mirror, and real music.
 
 ## Start of every session (the user often starts fresh chats to save tokens)
-0. **Top priority since 2026-10-21: `docs/ENGINE.md`** (Looped 2: the whole
-   engine rebuilt around things, states and always-live loops; E1-E9).
-   `docs/LOOPED.md` is the earlier phase (A-C done, its lighting and loops
-   plans fold into ENGINE.md).
-1. Read **`PROGRESS.md`** (the master list and Parked), **`docs/VISION.md`**
-   (the user's dream; "The product" is the current direction) and
-   **`docs/DECISIONS.md`** (what was chosen, why, and what failed).
+0. **The plan is `PLAN.md`** (2026-10-24): one doc, eight fixed parts; the
+   old plans (PROGRESS, VISION, the Alive plan, LOOPED...) are in
+   `docs/archive/`, to read, never to plan from.
+1. Read **`PLAN.md`** (North star, your rules, Now) and **`docs/DECISIONS.md`**
+   (what was chosen, why, and what failed).
 2. The SessionStart hook (`.claude/settings.json` → `tools/setup.sh`)
    installs Emscripten. If it didn't run, run `bash tools/setup.sh`.
 3. Don't build or run headless tests until the user says "go" (tokens).
@@ -51,10 +49,8 @@ questions, answers, reports, messages). Claude reads and updates it with
   Write only NEEDS by hand; `node tools/hub.mjs links` writes every UNLOCKS line.
   After any board change run `node tools/hub.mjs check` (0 errors before you stop).
   Keep the user's own words in YOUR NOTES; never overwrite them.
-- At "wrap up", `node tools/hub.mjs snapshot` writes the board into
-  `docs/hub/bar3d.md` (the repo's copy; commit it).
-- No HUB_KEY in the environment: fall back to `docs/hub/bar3d.md` and
-  `PROGRESS.md`'s master list, and say so.
+- (2026-10-24) The board's cards were carried into `PLAN.md`; the board is
+  retired when Dev (R4) is live. Its last snapshot: `docs/archive/hub-board-bar3d.md`.
 
 ## The routine (user, 2026-10-19: fewer, deeper passes; save tokens)
 - **"start"**: read the docs, show a short menu: the master list + Parked, one
@@ -63,7 +59,7 @@ questions, answers, reports, messages). Claude reads and updates it with
   on the phone, open questions. No code yet. The user says "go" or edits it.
 - **"go"**: build it in steps (each saved to `work`); test and deploy **once at the end** (not after
   each small step), then the "How to check it worked" list.
-- **"park: <idea>"**: add one line to Parked in `PROGRESS.md`. No work, no debate.
+- **"park: <idea>"**: one line to `PLAN.md` → Parked, under its chapter. No work, no debate.
 - **"talk"**: conversation only, no tools.
 - **"wrap up"**: write decisions and progress into the docs, commit, push.
 - Never add ideas to the master list on your own; they go to Parked.
@@ -109,9 +105,9 @@ that changed get rebuilt (docs/DECISIONS.md → Deploys by system).
 - **Two sessions at once:** each pushes to its own `work-<topic>` branch and
   merges `origin/main` right before its one push to `main`.
 - An urgent one-line fix the user is waiting on may go straight to `main`.
-- Update `PROGRESS.md` in the same commit whenever a step is finished or a plan
-  changes. Record new decisions or gotchas in `docs/DECISIONS.md`, and new
-  ideas from the user in `docs/VISION.md`. A fresh session only knows what's
+- Update `PLAN.md` (through `tools/plan.mjs`) in the same commit whenever a
+  step is finished or the plan changes. Record new decisions or gotchas in
+  `docs/DECISIONS.md`; new ideas from the user go to `PLAN.md` → Parked. A fresh session only knows what's
   written in the repo.
 - **Don't make the user wait (user, 2026-10-21).** The deploy puts the game
   live ~6 minutes after the push (build + room tests + upload); the game's
@@ -253,7 +249,7 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   `docs/DECISIONS.md` → Asset pipeline); output goes to `assets/models/`.
 - `.github/workflows/deploy.yml` builds on every push to `main` and publishes
   to the `gh-pages` branch (see `docs/DECISIONS.md` → Hosting).
-- `docs/` holds the long-term context: `VISION.md` and `DECISIONS.md`.
+- `PLAN.md` holds the plan; `docs/` explains (`DECISIONS.md`, the manual; old plans in `docs/archive/`).
 
 ## Conventions
 - C++20, 2-space indent, `namespace engine` for engine code. Use the Dawn
