@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.1 Dev opens at /dev: the bar's login (owner and admins only; a player is told so), Ember, five tabs (Overview, Projects, Plan, Publish, People), each tab a screen file (ui/system/screens/dev-*.json, editable in the UI Editor) whose slots (parts with an id) dev.js fills with live data; Looped.part() draws single parts; a throwaway-webspace helper for PHP page tests; its test
+
+`03c3fe4` · 2026-10-24 06:04 · 16 files, +661 −128 · tests: quick, dev
+
+Phone check: open joshuavelasco.com/dev and log in with your bar account: five tabs at the bottom (Overview, Projects, Plan, Publish, People); each opens its page (example rows for now)
+
+![R4.1 page-dev.jpg](R4.1/page-dev.jpg)
+
 ## R3.3 The plan keeper (tools/plan.mjs): check the shape, now, tick, add (needs its chapter and North star line), park, rule, start (a road item becomes Now with its pieces), done; refuses anything that breaks the eight parts or five chapters; piece.mjs ticks Now's pieces, step.mjs writes Done through it; a test on a copy (quick check); in the Toolbelt
 
 `a75881c` · 2026-10-24 05:32 · 9 files, +204 −11 · tests: quick
