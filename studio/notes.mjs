@@ -1,16 +1,18 @@
 // Notes for Claude (docs/STUDIO.md S10.1): on any selection, ⋯ → Note for
-// Claude. The note goes to the hub as a card (Claude's inbox at the next
-// "go") with the thing's id and kind, your camera view and a picture of it.
+// Claude. The note goes to Dev's notes (dev/api.php; Claude reads them at the
+// start of every session: decision 0001) with the thing's id and kind, your
+// camera view and a picture of it (kept by the hub, hub.php?shot=…).
+// Until J5.4 it went to the retired hub board, which nothing read any more.
 import { S, on, send } from './studio.js';
 import { MENU_EXTRAS } from './build.mjs';
 
-const HUB = '/hub/hub.php';
+const HUB = '/hub/hub.php', DEV = '/dev/api.php';
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
 export const NOTES = { last: null };
 window.bar3dNotes = NOTES;
 
-async function hub(body) {
-  const r = await fetch(HUB, { method: 'POST', body: JSON.stringify({ ...body, token: S.token, project: 'bar3d' }), headers: { 'Content-Type': 'text/plain' } });
+async function hub(body, to = HUB) {
+  const r = await fetch(to, { method: 'POST', body: JSON.stringify({ ...body, token: S.token, project: 'bar3d' }), headers: { 'Content-Type': 'text/plain' } });
   let j = {};
   try { j = await r.json(); } catch (e) {}
   return j;
@@ -53,23 +55,23 @@ async function sendNote(t, text) {
     if (shot.ok) picture = shot.url;
   }
   const v = cap.view ? cap.view.map((x) => +(+x).toFixed(2)).join(',') : '';
-  const notes = [
-    text,
+  const note = [
+    `Studio: ${text}`,
     '',
     `Thing: ${t.id} (kind ${t.kind}) in ${S.place}`,
     v ? `Camera: ${v}  (open the Studio there: st.view ${v})` : '',
     picture ? `Picture: /hub/${picture}` : '',
     `From the Studio, draft based on v${S.draftBase || 0}.`,
   ].filter((x) => x !== '').join('\n');
-  const r = await hub({ a: 'save', card: { section: 'studio', title: `Studio: ${t.id} — ${text.slice(0, 60)}`, stage: 'idea', notes } });
-  if (!r.ok) throw new Error(r.error || 'The hub didn\'t take it.');
-  NOTES.last = { card: r.card && r.card.id, picture, thing: t.id };
-  return r.card;
+  const r = await hub({ a: 'note', kind: 'note', text: note }, DEV);
+  if (!r.ok) throw new Error(r.error || 'Dev didn\'t take it.');
+  NOTES.last = { note: r.note && r.note.id, picture, thing: t.id };
+  return r.note;
 }
 
 MENU_EXTRAS.push({
   label: 'Note for Claude',
-  small: 'to the hub, with a picture',
+  small: 'to Dev\'s notes, with a picture',
   run(box, t) {
     box.hidden = false;
     box.textContent = '';
@@ -83,7 +85,7 @@ MENU_EXTRAS.push({
       const text = area.value.trim();
       if (!text) { Looped.toast('Write the note first'); return; }
       box.hidden = true;
-      try { await sendNote(t, text); Looped.toast('Sent: it\'s in the hub for Claude'); } catch (e) { Looped.toast(e.message); }
+      try { await sendNote(t, text); Looped.toast('Sent: Claude reads it at the start of the next session'); } catch (e) { Looped.toast(e.message); }
     };
     const row = el('div', 'rowform');
     row.append(area, go);

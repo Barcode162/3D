@@ -60,7 +60,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J5.1** The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17) *Check:* Nothing on the phone
 - [x] **J5.2** The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago' *Check:* Dev → Plan: the job in Now with 'as of …' under it
 - [x] **J5.3** Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site *Check:* Nothing on the phone
-- [ ] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
+- [x] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
 - [ ] **J5.5** One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it *Check:* joshuavelasco.com → Projects: the same list as Dev
 - [ ] **J5.6** Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done *Check:* Dev → Overview: J5's next piece and both deploy rows
 

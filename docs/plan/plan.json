@@ -67,7 +67,7 @@
     "id": "J5.4",
     "text": "The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay",
     "check": "Dev → Publish: news still there",
-    "done": false
+    "done": true
    },
    {
     "id": "J5.5",

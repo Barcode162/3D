@@ -123,9 +123,10 @@ before; `kind` native → C++ built into the game): `meridian`, `platformer`,
   its address written into the site's `config.json`. The game finds it there
   (`bar/web/net.js`, which uses `proto.js`: `cloud/proto.js` copied in by the build).
   On localhost multiplayer is off unless `?cloud=ws://...` is given.
-- `hub/` is the project hub at joshuavelasco.com/hub (page + `hub.php`; its
-  board lives in the private folder outside the web root; `seed.json` was the
-  starting board; test `tools/hub_test.mjs`).
+- `hub/` at joshuavelasco.com/hub: `hub.php` keeps the news posts, their
+  screenshots, the Claude key and the loops' tuning (the board was taken out
+  in J5.4; `/hub/` opens Dev); also World notes and the Dials; test
+  `tools/hub_test.mjs`.
 - `server/` is PHP on the user's IONOS hosting: `account.php` (logins,
   profiles) and `report.php`, uploaded by the deploy with a second copy of the
   game at joshuavelasco.com/bar (the user wants their domain kept: home page

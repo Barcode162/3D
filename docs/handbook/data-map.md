@@ -18,8 +18,8 @@ file below reads the store's folder from an environment variable in tests
 | The repo | GitHub `Barcode162/3D`, `main` | all code, the built-in world, the plan, the books, the records | Claude, only through the tools (one commit per piece; `main` only through the ship) | CI (builds and deploys), every session |
 | World store | `private/studio/` (`studio/api.php`) | the live world: numbered versions, each editor's draft, shared drafts, Claude's proposals | the user and admins (Studio → Publish), Claude (`node tools/studio.mjs push` / `propose`) | the game as it starts and every 15 s (`bar/web/live.js`), the room, the Studio, `studio.mjs pull` |
 | UI store | `private/ui/` (`toolbelt/ui-editor/api.php`) | published themes and screens, numbered versions | the user and admins (UI Editor → Publish), Claude (`node tools/uikit.mjs push`) | `uikit.mjs pull` → `ui/system/` → the theme CSS the site and the bar use |
-| Dev's store | `private/dev/` (`dev/api.php`) | the plan's data (`plan.json`, `rules.json`), the deploy reports (`ci-game.json`, `ci-site.json`), the user's notes, the front page's words and highlights | CI (plan data, deploy reports), the user (notes, Publish), Claude (marks notes read) | Dev, the front page, `project.mjs status`, `ship.mjs` |
-| The hub | `private/hub/` (`hub/hub.php`) | news posts and their screenshots, the Claude key (`key.json`), the Dials' tuning; the retired board's files (`board.json`, `projects.json`) until J5.4 | Claude (news drafts: `tools/hub.mjs`), the user (publishes news, makes the key) | Dev → Publish, the news page (`news/`, published posts only), every server that checks the Claude key |
+| Dev's store | `private/dev/` (`dev/api.php`) | the plan's data (`plan.json`, `rules.json`, `incidents.json`, `plan-meta.json`), the deploy reports (`ci-game.json`, `ci-site.json`), the user's notes, the front page's words and highlights | CI (plan.yml: the plan; deploy.yml and hub.yml: their reports), the user (notes from Dev → Plan and the Studio's Note for Claude, Publish), Claude (marks notes read) | Dev, the front page, `project.mjs status`, `ship.mjs` |
+| The hub | `private/hub/` (`hub/hub.php`) | news posts and their screenshots (and the Studio notes' pictures), the Claude key (`key.json`), the loops' tuning (`tuning.json`, no reader since S4.2: KI-29); the retired board's files (`board.json`, `projects.json`) stay on the server, unused since J5.4 | Claude (news drafts: `tools/hub.mjs`), the user (publishes news, makes the key) | Dev → Publish, the news page (`news/`, published posts only; project names from `projects.json`), every server that checks the Claude key |
 | Accounts | `home/bar/accounts/` (`server/account.php`; refused to the web by `.htaccess`) | users, names, login tokens (as SHA-256), avatars, admins and invited players | the bar's sign-up, profile and People screens | the bar's door (`gate.php`), the room (checks a token), Dev, the Studio, the UI Editor (who is an editor) |
 | Phone reports | `private/bar/reports/` (`server/report.php`) | performance and crash reports, one file per 6-letter code, 30 days | the game (Send report) | Claude (`curl …report.php?code=XXXXXX`) |
 | The room | Cloudflare Durable Objects (`cloud/room.js`, one per room name) | who is in the room right now, seats, games in play | the room server, from the phones' messages | the phones in that room |
@@ -74,8 +74,9 @@ how long ago (J5.2).
 Decided in J5.1 (KI-17; decision 0001):
 - **The chat** is the one channel for wishes, questions, rules, "go", "broke",
   "undo". Everything the user wants starts here.
-- **Dev → Plan notes** are the chat for when the user is away from it: read at
-  the start of every session (`project.mjs status` counts the unread ones) and
+- **Dev → Plan notes** (and the Studio's ⋯ → Note for Claude, which lands in
+  the same list with the thing, the camera view and a picture) are the chat
+  for when the user is away from it: read at the start of every session (`project.mjs status` counts the unread ones) and
   handled exactly like a chat message (`docs/playbook/intake.md`).
 - **The Studio** is the user's own hands on the world; **the UI Editor** the
   same for the look. When the user publishes, their version wins and Claude

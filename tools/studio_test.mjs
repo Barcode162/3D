@@ -19,8 +19,9 @@ copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
 symlinkSync(resolve('studio'), join(root, 'home/studio'));
 symlinkSync(resolve('ui'), join(root, 'home/ui'));
 symlinkSync(resolve('hub'), join(root, 'home/hub'));
+symlinkSync(resolve('dev'), join(root, 'home/dev'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
-  env: { ...process.env, STUDIO_DATA: join(root, 'private/studio'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
+  env: { ...process.env, STUDIO_DATA: join(root, 'private/studio'), HUB_DATA: join(root, 'private/hub'), DEV_DATA: join(root, 'private/dev'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
 const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
 process.on('exit', () => { try { php.kill(); } catch (e) {} });  // a crashed run leaves no server behind
 await new Promise((r) => setTimeout(r, 800));
@@ -541,7 +542,7 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.click('#monitor .key[aria-label="Close the Monitor"]');
 }
 
-// ---- S10.1 a note for Claude on the fireplace: it lands in the hub ----
+// ---- S10.1 a note for Claude on the fireplace: it lands in Dev's notes ----
 {
   const fire = (await S()).things.find((t) => t.id === 'fire_flames');
   await page.evaluate((i) => window.bar3dStudio.select(i, true), fire.i);
@@ -551,9 +552,9 @@ check(!/error/i.test(xrayLog.split('Studio: ready')[1] || ''), 'S2.5 X-ray draws
   await page.fill('#noteText', 'Make the fire a bit warmer, please');
   await page.click('#noteGo');
   await page.waitForFunction(() => window.bar3dNotes.last, null, { timeout: 15000 }).catch(() => {});
-  const board = await (await fetch(url + 'hub/hub.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ a: 'board', token: owner.token }) })).json();
-  const card = (board.cards || []).find((c) => /^Studio: /.test(c.title) && /warmer/.test(c.title));
-  check(!!card && card.notes.includes(`Thing: ${fire.id}`) && /Camera: -?\d/.test(card.notes) && /Picture: \/hub\/hub\.php\?shot=/.test(card.notes), `S10.1 the note is a card in the hub with the thing, the camera and a picture (${card && card.title})`);
+  const dev = await (await fetch(url + 'dev/api.php', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ a: 'notes', token: owner.token }) })).json();
+  const note = (dev.notes || []).find((n) => /^Studio: /.test(n.text) && /warmer/.test(n.text));
+  check(!!note && note.text.includes(`Thing: ${fire.id}`) && /Camera: -?\d/.test(note.text) && /Picture: \/hub\/hub\.php\?shot=/.test(note.text) && !note.read, `S10.1 the note reaches Dev's notes with the thing, the camera and a picture (J5.4)`);
 }
 
 // ---- S3.2 Move / Turn / Size ----
