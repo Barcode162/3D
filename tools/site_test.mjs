@@ -55,14 +55,14 @@ async function open(path, { token = null, width = 390, height = 844 } = {}) {
 const tabsOf = (page) => page.$$eval('.tabs a', (a) => a.map((x) => x.textContent.trim()));
 
 // Every page as a guest, on a phone.
-for (const [name, path] of [['home', '/'], ['play', '/play/'], ['engine', '/engine/'], ['vision', '/vision/'], ['signin', '/signin/']]) {
+for (const [name, path] of [['home', '/'], ['projects', '/projects/'], ['play', '/play/'], ['engine', '/engine/'], ['vision', '/vision/'], ['signin', '/signin/']]) {
   const { ctx, page, errors, status } = await open(path);
   check(status === 200, `${name}: 200 (${status})`);
   check(errors.length === 0, `${name}: no errors` + (errors.length ? ': ' + errors.join(' | ') : ''));
   check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${name}: fits the phone`);
   check((await page.$$('h1')).length === 1, `${name}: one headline`);
   const tabs = await tabsOf(page);
-  check(tabs.join(' ') === 'Home Play Engine Vision News', `${name}: guest tabs (${tabs.join(' ')})`);
+  check(tabs.join(' ') === 'Home Projects News', `${name}: guest tabs (${tabs.join(' ')})`);
   // Every image on the page exists.
   const broken = await page.$$eval('img', (imgs) => imgs.filter((i) => i.getAttribute('src').startsWith('/site/')).map((i) => i.getAttribute('src')));
   for (const src of broken) {

@@ -2,7 +2,7 @@
 // joshuavelasco.com/play: the bar for people who haven't been in yet. What's
 // inside, the games, how to get in, the usual questions.
 require __DIR__ . '/../site/layout.php';
-site_head('play', 'The bar', 'Bar3D: a 3D hangout bar in your browser. Racing rigs, a rhythm cabinet, darts, chess, a grand piano, a jukebox and real people. Free, nothing to install.');
+site_head('play', 'Bar3D', 'Bar3D: a 3D hangout bar in your browser. Racing rigs, a rhythm cabinet, darts, chess, a grand piano, a jukebox and real people. Free, nothing to install.');
 
 $games = [
   ['Racing', 'Two sim rigs side by side. Race the bots or the person in the next seat while the room watches.', 'The racing rigs', '#FF5A3D', 'pad'],

@@ -7,7 +7,7 @@ site_head('engine', 'Looped, the engine', 'Looped is the engine behind the bar: 
 <section class="hero hero-small">
   <div class="hero-media"><img src="/site/img/counter.jpg" alt="Close up of the bar counter, lit bottles and glassware" fetchpriority="high"></div>
   <div class="hero-in wrap">
-    <span class="eyebrow reveal">The engine · Looped</span>
+    <span class="eyebrow reveal">Looped · in progress, used by our admins and devs</span>
     <h1 class="h-xl reveal" style="--d:.05s">We didn't pick an engine. <em>We wrote one.</em></h1>
     <p class="lede reveal" style="--d:.1s">Every pixel of light, every echo, every chair you sit in runs on code made here, from the very first line. No Unity. No Unreal. No shortcuts. That's why it feels like nothing else in a browser.</p>
   </div>

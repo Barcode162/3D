@@ -2,12 +2,12 @@
 // joshuavelasco.com/vision: where it's all heading (docs/VISION.md, told for
 // visitors). Inspiring, not technical.
 require __DIR__ . '/../site/layout.php';
-site_head('vision', 'The vision', 'Not a set of props: a world that simulates what you see, hear and feel. The bar is the first room. Here is where it goes next.');
+site_head('vision', 'Where we\'re going', 'Not a set of props: a world that simulates what you see, hear and feel. The bar is the first room. Here is where it goes next.');
 ?>
 <section class="hero hero-small">
   <div class="hero-media"><img src="/site/img/arcade.jpg" alt="The arcade room glowing with neon lines" fetchpriority="high"></div>
   <div class="hero-in wrap">
-    <span class="eyebrow reveal">The vision</span>
+    <span class="eyebrow reveal">J Production · where we're going</span>
     <h1 class="h-xl reveal" style="--d:.05s">Don't fake the world. <em>Simulate it.</em></h1>
     <p class="lede reveal" style="--d:.1s">Most virtual places are stage sets: painted walls, canned sounds, props that do one trick. We're building the opposite. Systems that behave like the real thing, so the world can surprise even us.</p>
   </div>

@@ -51,11 +51,9 @@ function site_is_staff() { $v = site_viewer(); return $v && $v['role'] !== 'memb
 // The tabs. Portal is added for staff only.
 function site_tabs() {
   $tabs = [
-    'home'   => ['/', 'Home'],
-    'play'   => ['/play/', 'Play'],
-    'engine' => ['/engine/', 'Engine'],
-    'vision' => ['/vision/', 'Vision'],
-    'news'   => ['/news/', 'News'],
+    'home'     => ['/', 'Home'],
+    'projects' => ['/projects/', 'Projects'],   // Bar3D (play/), Looped (engine/), where we're going (vision/): PLAN.md R5.4
+    'news'     => ['/news/', 'News'],
   ];
   if (site_is_staff()) $tabs['portal'] = ['/dev/', 'Dev'];
   return $tabs;
@@ -71,6 +69,7 @@ function site_mark() {
 function site_head($active, $title, $description, $opts = []) {
   header('Cache-Control: no-cache');
   $v = site_viewer();
+  $tabActive = in_array($active, ['play', 'engine', 'vision', 'projects'], true) ? 'projects' : $active;
   $full = $active === 'home' ? 'Joshua Velasco: worlds built from scratch' : "$title · Joshua Velasco";
   $bodyClass = 'pg-' . preg_replace('/[^a-z0-9-]/', '', $active) . (isset($opts['class']) ? ' ' . $opts['class'] : '');
   ?><!doctype html>
@@ -101,7 +100,7 @@ function site_head($active, $title, $description, $opts = []) {
     <a class="brand" href="/" aria-label="Joshua Velasco, home"><?= site_mark() ?><span>Joshua Velasco</span></a>
     <nav class="tabs" aria-label="Main">
 <?php foreach (site_tabs() as $key => [$href, $label]): ?>
-      <a href="<?= site_h($href) ?>"<?= $key === $active ? ' aria-current="page"' : '' ?><?= $key === 'portal' ? ' class="tab-portal"' : '' ?>><?= site_h($label) ?></a>
+      <a href="<?= site_h($href) ?>"<?= $key === $tabActive ? ' aria-current="page"' : '' ?><?= $key === 'portal' ? ' class="tab-portal"' : '' ?>><?= site_h($label) ?></a>
 <?php endforeach; ?>
     </nav>
     <div class="top-act">
@@ -117,7 +116,7 @@ function site_head($active, $title, $description, $opts = []) {
   <div class="drawer" id="drawer" hidden>
     <nav class="wrap" aria-label="Menu">
 <?php $i = 0; foreach (site_tabs() as $key => [$href, $label]): $i++; ?>
-      <a href="<?= site_h($href) ?>"<?= $key === $active ? ' aria-current="page"' : '' ?>><span class="num"><?= sprintf('%02d', $i) ?></span><?= site_h($label) ?></a>
+      <a href="<?= site_h($href) ?>"<?= $key === $tabActive ? ' aria-current="page"' : '' ?>><span class="num"><?= sprintf('%02d', $i) ?></span><?= site_h($label) ?></a>
 <?php endforeach; ?>
 <?php if ($v): ?>
       <button type="button" class="drawer-out" data-signout>Sign out @<?= site_h($v['user']) ?></button>
@@ -146,9 +145,10 @@ function site_foot() {
     </div>
     <nav class="foot-col" aria-label="Explore">
       <span class="eyebrow">Explore</span>
-      <a href="/play/">The bar</a>
-      <a href="/engine/">The engine</a>
-      <a href="/vision/">The vision</a>
+      <a href="/projects/">Projects</a>
+      <a href="/play/">Bar3D</a>
+      <a href="/engine/">Looped, the engine</a>
+      <a href="/vision/">Where we're going</a>
       <a href="/news/">News</a>
     </nav>
     <nav class="foot-col" aria-label="Play">
@@ -221,7 +221,7 @@ function site_icon($name) {
 // The other projects on the site: each folder with a project.json, except
 // the ones the site already has pages for.
 function site_projects() {
-  $skip = ['bar', 'studio', 'news', 'hub', 'site', 'ui', 'portal', 'dev', 'toolbelt', 'play', 'engine', 'vision', 'signin'];
+  $skip = ['bar', 'studio', 'news', 'hub', 'site', 'ui', 'portal', 'dev', 'toolbelt', 'projects', 'play', 'engine', 'vision', 'signin'];
   $out = [];
   foreach (glob(dirname(__DIR__) . '/*/project.json') ?: [] as $file) {
     $dir = basename(dirname($file));
