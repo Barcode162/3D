@@ -6,6 +6,16 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.6 The UI Editor, Compare, Screens and the style page in Ember; the old hub boards gone: the editor's own frame (top bar, buttons, inspector, dialogs) and Compare's are now Ember's dark half, fixed, amber where they were blue, in Archivo (they still never wear the theme being edited); every page's phone top colour is Ember's; hub/board.html and hub/list.html are deleted (and removed from the server at deploy), /hub opens Dev; the hub test now checks hub.php directly (cards, Claude's key, questions, news, places, passwords)
+
+`197d923` · 2026-10-24 09:23 · 11 files, +81 −2153 · tests: quick
+
+Phone check: Dev → Projects → UI Editor: the frame around the preview is warm dark with amber buttons (no blue); /hub/board.html is gone
+
+![R6.6 page-toolbelt-ui-editor.jpg](R6.6/page-toolbelt-ui-editor.jpg)
+
+![R6.6 page-ui-compare.jpg](R6.6/page-ui-compare.jpg)
+
 ## R6.5 Dials, World notes and News in Ember: World notes drops its old purple look and joins the house look (warm cards, a moving title, amber filter keys, Alive in amber); News's cards take Ember's round corners and its line reads What's new at J Production; Dials and News get Ember's dark top colour on the phone
 
 `874ebf7` · 2026-10-24 09:17 · 4 files, +29 −31 · tests: quick
