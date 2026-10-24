@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.3 Exactly one deployer per folder: docs/handbook/deploy-map.json (every path → the workflow that uploads it and where, or not uploaded); tools/workflows_test.mjs checks every tracked file has its entry, each workflow uploads only its own folders and starts on changes to them; the game's deploy no longer uploads the site (only hub.yml does); a plan-only change no longer starts a game deploy; KI-9 closed
+
+`8083557` · 2026-10-24 13:20 · 6 files, +70 −8 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J5.2 The plan reaches Dev within about a minute: its own workflow (.github/workflows/plan.yml: on the plan, the Charter and the Records; only the plan's shape check, then the plan's data, the rules, the incidents index and the build it came from into Dev's store); the site deploy no longer carries the plan; Dev → Plan says 'As of build <sha>, N min ago'; node tools/records.mjs index lists the incidents
 
 `fc09e28` · 2026-10-24 13:18 · 9 files, +94 −11 · tests: changed
