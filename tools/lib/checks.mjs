@@ -27,6 +27,7 @@ export const CHECKS = {
   ui:       [['uikit', 'node tools/uikit.mjs check'], ['ui', `${NP} node tools/ui_test.mjs`]],
   uikit:    [['uikit', 'node tools/uikit.mjs check']],
   dev:      [['dev', `${NP} node tools/dev_test.mjs`]],
+  labels:   [['ui_labels', `${NP} node tools/ui_labels_test.mjs`]],  // the Handbook's pages and controls (J6.4)
   toolbelt: [['toolbelt', 'node tools/toolbelt_test.mjs'], ['ui_php', 'php -l toolbelt/ui-editor/api.php >/dev/null'],
              ['ui_api', 'node tools/ui_api_test.mjs'], ['ui_editor', `${NP} node tools/ui_editor_test.mjs`]],
   site:     [['site_php', 'for f in $(find homepage -name "*.php"); do php -l "$f" >/dev/null || exit 1; done'], ['site', `${NP} node tools/site_test.mjs`]],
@@ -50,17 +51,18 @@ export const RULES = [
   [/^docs\/charter\/|^docs\/plan\/|^CLAUDE\.md$|^tools\/lib\/plandata/, ['plan']],                       // the Charter's copy of the rules
   [/^docs\/records\/known-issues\.md$/, ['workflows']],  // allowed-to-fail tests name open issues
   [/^docs\/playbook\/|^tools\/lib\/commands\.mjs$/, ['workshop']],                                    // the Playbook names only what exists
+  [/^docs\/handbook\/ui\/|^tools\/lib\/labels\.mjs$/, ['workshop', 'labels']],                                // the pages and their controls
   [/^docs\/handbook\/|^tools\/handbook\.mjs$|^tools\/lib\/handbook_data\.mjs$/, ['workshop']],                                         // the Handbook's generated pages and links
   [/^tools\/githooks\/|^tools\/lib\/guard\.mjs$|^\.claude\/|^tools\/setup\.sh$/, ['workshop']],          // the locks
   [/\.md$|^docs\//, []],
-  [/^homepage\/|^tools\/site_test/, ['site']],
+  [/^homepage\/|^tools\/site_test/, ['site', 'labels']],
   [/^hub\/.*\.php$|^server\//, ['server']],
-  [/^hub\/|^tools\/hub|^news\//, ['hub']],  // the news page is tested by tools/hub_test.mjs
+  [/^hub\/|^tools\/hub|^news\//, ['hub', 'labels']],  // the news page is tested by tools/hub_test.mjs
   [/^ui\/system\/|^tools\/uikit/, ['uikit', 'ui']],
   [/^ui\//, ['ui', 'build', 'game']],  // the bar's site carries /ui too (bar/ui/, S4.3)
   [/^tools\/ui_test/, ['ui']],
-  [/^toolbelt\/|^tools\/(toolbelt|ui_editor|ui_api)_test/, ['toolbelt']],
-  [/^dev\/|^tools\/dev_test|^tools\/lib\/webspace/, ['dev']],
+  [/^toolbelt\/|^tools\/(toolbelt|ui_editor|ui_api)_test/, ['toolbelt', 'labels']],
+  [/^dev\/|^tools\/dev_test|^tools\/lib\/webspace/, ['dev', 'labels']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
   [/^assets\/world\/|^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],

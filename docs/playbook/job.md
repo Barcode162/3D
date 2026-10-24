@@ -38,9 +38,14 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
    `--pages` for a site page; `--no-shots` when nothing on screen changes),
    ticks the piece in the plan, commits "J<n>.<k> …", pushes the job branch,
    and records the piece in the gallery.
-3. A check fails → nothing is committed; fix it and run again
+3. A change to a page's controls (a button, a tab, a field) changes its
+   Handbook page in the same piece (`docs/handbook/ui/`, the control's exact
+   label first): `tools/ui_labels_test.mjs` compares the pages a test can
+   open; for the Studio and the bar's menus the piece tool refuses the
+   commit without their page (or `--docs-unchanged "<why>"`).
+4. A check fails → nothing is committed; fix it and run again
    ([failures.md](failures.md) → A check fails).
-4. The commit message carries the attribution lines of this session
+5. The commit message carries the attribution lines of this session
    (taken from the session itself; `PIECE_ATTRIBUTION` overrides them).
 
 ## Ship

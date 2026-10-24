@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'tools/plan.mjs', 'tools/plan_test.mjs', 'tools/lib/plandata.mjs', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'tools/plan.mjs', 'tools/plan_test.mjs', 'tools/lib/plandata.mjs', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', 'tools/ui_labels_test.mjs', 'tools/lib/labels.mjs', 'docs/handbook/ui/**', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -76,6 +76,12 @@ jobs:
         if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/dev_test.mjs
+
+      - name: "Test: every page's controls are the Handbook's (docs/handbook/ui/)"
+        id: ui_labels
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
+        timeout-minutes: 10
+        run: node tools/ui_labels_test.mjs
 
       - name: "Test: the UI Editor (toolbelt/ui-editor/) and its store (api.php)"
         id: ui_editor

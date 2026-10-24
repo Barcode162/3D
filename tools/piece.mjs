@@ -19,6 +19,8 @@
 //                     toolbelt/index.html or "ui/screen.html?s=sampler"), at phone width,
 //                     before/after against the last picture of the same page
 //   --no-shots        skip pictures (code that changes nothing on screen)
+//   --docs-unchanged "<why>"  a change to studio/ or bar/web/menu.js whose controls didn't change
+//                     (else their Handbook page, docs/handbook/ui/studio.md or menus.md, must change too)
 //   --branch b        push to this branch (default: the branch you're on, which must be
 //                     a job branch job/J<n>; also PIECE_BRANCH; docs/playbook/job.md)
 //   --no-build        skip the build
@@ -178,6 +180,18 @@ if (existsSync('tools/handbook.mjs') && !run('node tools/handbook.mjs write >/de
 sh('git add -A');
 const staged = sh('git diff --cached --numstat');
 if (!staged) { console.log(`✗ ${tag}: nothing to commit`); process.exit(1); }
+// The Studio and the bar's menus can't be crawled in a quick check: their Handbook
+// pages (docs/handbook/ui/) change with them, or --docs-unchanged says why not (J6.4).
+{
+  const names = sh('git diff --cached --name-only').split('\n');
+  const owed = [[/^studio\/[^/]+\.(html|js|mjs|css)$/, 'docs/handbook/ui/studio.md'], [/^bar\/web\/menu\.js$/, 'docs/handbook/ui/menus.md']]
+    .filter(([re, doc]) => names.some((n) => re.test(n)) && !names.includes(doc)).map(([, doc]) => doc);
+  if (owed.length && !opt('docs-unchanged')) {
+    sh('git reset -q');
+    console.log(`✗ ${tag}: the page changed but its Handbook page didn't: ${owed.join(', ')} (update it, or --docs-unchanged "<why its controls didn't change>")`);
+    process.exit(1);
+  }
+}
 let added = 0, removed = 0, files = 0;
 for (const l of staged.split('\n')) { const [a, r] = l.split('\t'); files++; added += +a || 0; removed += +r || 0; }
 const body = `${tag} ${title}\n\n${opt('check') ? 'Phone check: ' + opt('check') + '\n\n' : ''}${ATTRIBUTION}`;

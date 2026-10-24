@@ -1,0 +1,25 @@
+# Every page and its controls
+
+One page per screen, with every control by its exact label (the first column) and what it does. The pages a test can open are compared with their live labels by `tools/ui_labels_test.mjs`; the Studio and the bar's menus are listed from their code, and the piece tool refuses a change to them without their page.
+
+- [Dev: the tab bar](dev-frame.md)
+- [Dev → Overview](dev-overview.md)
+- [Dev → People](dev-people.md)
+- [Dev → Plan](dev-plan.md)
+- [Dev → Projects](dev-projects.md)
+- [Dev → Publish (News)](dev-publish.md)
+- [Dev → Publish → Highlights](dev-publish-highlights.md)
+- [Dev → Publish → The site](dev-publish-site.md)
+- [The Dials](dials.md)
+- [The bar's menus](menus.md)
+- [The news page](news.md)
+- [The site: the engine](site-engine.md)
+- [The site: header and footer](site-frame.md)
+- [The site: the front page](site-home.md)
+- [The site: Bar3D (Play)](site-play.md)
+- [The site: Projects](site-projects.md)
+- [The site: Sign in](site-signin.md)
+- [The site: where we're going](site-vision.md)
+- [The Studio](studio.md)
+- [The UI Editor](ui-editor.md)
+- [World notes](world-notes.md)

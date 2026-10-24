@@ -67,7 +67,7 @@
     "id": "J6.4",
     "text": "Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J6.5",

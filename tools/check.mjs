@@ -32,7 +32,7 @@ function changedSystems(uncommittedOnly = false) {
       break;
     }
   }
-  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'workshop', 'toolbelt', 'dev'].includes(s))) want.add('build');
+  if ([...want].some(s => !['hub', 'server', 'room', 'build', 'native', 'site', 'plan', 'workflows', 'workshop', 'labels', 'toolbelt', 'dev'].includes(s))) want.add('build');
   return { files, systems: ORDER.filter(s => want.has(s)) };
 }
 
