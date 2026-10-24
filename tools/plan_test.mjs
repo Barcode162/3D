@@ -26,6 +26,7 @@ const dir = mkdtempSync(join(tmpdir(), 'plan-')), tool = resolve('tools/plan.mjs
 mkdirSync(join(dir, 'docs/plan'), { recursive: true }); mkdirSync(join(dir, 'docs/charter'), { recursive: true });
 for (const f of ['docs/charter/rules.json', 'docs/charter/charter.md', 'CLAUDE.md', 'PLAN.md']) copyFileSync(f, join(dir, f));
 const copy = structuredClone(data.plan);
+copy.upNext = Object.values(copy.road).flat()[0].id;  // the real Up next may name the real Now's job (J7), gone from the copy
 copy.now = { id: 'X1', title: 'A test step', chapter: 'the tools', about: 'For the test.', serves: ['N1'], pieces: [{ id: 'X1.1', text: 'The only piece.', check: '', done: false }] };
 writeFileSync(join(dir, 'docs/plan/plan.json'), JSON.stringify(copy));
 const plan = (...a) => spawnSync('node', [tool, ...a], { cwd: dir, encoding: 'utf8' });

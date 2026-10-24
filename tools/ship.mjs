@@ -39,7 +39,10 @@ if (Object.values(plan.road).flat().some((r) => r.id === job)) refuse(`${job} is
 if (!run('node tools/plan.mjs check >/dev/null')) refuse('the plan\'s files disagree (node tools/plan.mjs check)');
 
 let checked = 'the checks for everything the job changed passed';
-if (opt('skip-check')) checked = `the checks were skipped: ${opt('skip-check')}`;
+// The plan and the workflows are checked on the final state even when the rest is skipped:
+// the next job and the session line are written after the last piece's checks.
+if (!run('node tools/check.mjs plan workflows workshop')) refuse('the plan, workflows or workshop checks failed on the final state (above)');
+if (opt('skip-check')) checked = `the other checks were skipped: ${opt('skip-check')}`;
 else if (!run('node tools/check.mjs')) refuse('a check failed (its log is named above)');
 
 const finish = ['node tools/step.mjs finish', job, JSON.stringify(what), '--skip-check', opt('news') ? `--news ${JSON.stringify(opt('news'))}` : '--no-news'].join(' ');
