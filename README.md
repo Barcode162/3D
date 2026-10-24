@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.2 The plan reaches Dev within about a minute: its own workflow (.github/workflows/plan.yml: on the plan, the Charter and the Records; only the plan's shape check, then the plan's data, the rules, the incidents index and the build it came from into Dev's store); the site deploy no longer carries the plan; Dev → Plan says 'As of build <sha>, N min ago'; node tools/records.mjs index lists the incidents
+
+`fc09e28` · 2026-10-24 13:18 · 9 files, +94 −11 · tests: changed
+
+Phone check: Dev → Plan: under J5's title, 'As of build …, N min ago'
+
 ## J5.1 The data map (docs/handbook/data-map.md): every store (the repo, the world store, the UI store, Dev's store, the hub, accounts, phone reports, the room, the ledger, the gallery and gh-pages branches, the phone's saves): who writes and reads it, how it flows, what wins on a conflict, how staleness shows; the world's rule written once (the store's live version is the live world, the repo's copy is the built-in fallback); decision 0001 gives each of the user's channels one role; KI-17 and KI-22 closed
 
 `7258356` · 2026-10-24 13:17 · 5 files, +132 −4 · tests: changed
