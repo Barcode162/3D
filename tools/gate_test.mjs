@@ -1,4 +1,4 @@
-// The private bar's door (server/gate.php + account.php, docs/LOOPED.md
+// The private bar's door (server/gate.php + account.php, docs/archive/LOOPED.md
 // A1-A3) on PHP's built-in server, with a router that does what the bar's
 // .htaccess does. Checks: nothing without a login; the first account (the
 // owner) gets in; a new account waits until invited; People lists and

@@ -23,9 +23,9 @@ what to look at on the phone.
    first / never; **anything not listed: ask first**). Only the user changes it.
 2. **Playbook** `docs/playbook/`: **the only instructions**: a procedure for
    every situation (index: `docs/playbook/README.md`).
-3. **Handbook**: how everything works (arrives in J6; until then the facts are
-   in `docs/REFERENCE.md`, `docs/ENGINE.md`, `docs/STUDIO.md`, `docs/PROTOCOL.md`,
-   `docs/manual/`).
+3. **Handbook** `docs/handbook/`: how everything works: every folder, technology,
+   system, page and control, the data, recipes for common changes (index:
+   `docs/handbook/README.md`; its generated pages are written from the files).
 4. **Plan** `PLAN.md`: Now (the job), the road, Parked, Done. Edited only with
    `node tools/plan.mjs`.
 5. **Records** `docs/records/`: the user's requests word for word, incidents,

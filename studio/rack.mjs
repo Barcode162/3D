@@ -1,4 +1,4 @@
-// The Loop Rack (docs/STUDIO.md 5.7, S8.2-S8.3): the selected state's loop
+// The Loop Rack (docs/archive/STUDIO.md 5.7, S8.2-S8.3): the selected state's loop
 // as lanes, one per piece (what moves, its shape, how much, how fast).
 // Every change plays at once (the kind goes to the engine, st.kind). Pause
 // and scrub hold the world's clock (st.clock). Keys: draw the curve with your

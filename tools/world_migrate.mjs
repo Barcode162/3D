@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Changes the world's files (assets/world/) by a named migration, the same
-// way every time (docs/AUTOMATION.md):
+// way every time (docs/archive/AUTOMATION.md):
 //   node tools/world_migrate.mjs <name> [--dry]
 // A migration is tools/migrations/<name>.mjs exporting `migrate(file, json)`
 // that changes `json` in place and returns a list of what it changed (plain

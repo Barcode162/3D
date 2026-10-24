@@ -4,5 +4,5 @@
   "kind": "native",
   "code": ["game.cpp", "world.cpp", "track.cpp", "cars.cpp", "controls.cpp", "view.cpp", "mesh.cpp", "car_model.cpp"],
   "opens_from": "a racing rig's menu (bar/web/menu.js \"sim\")",
-  "docs": "docs/RACING.md, docs/DRIVING_REWORK.md"
+  "docs": "docs/archive/RACING.md, docs/plan/jobs/W20.md"
 }

@@ -242,7 +242,7 @@ window.bar3dUi = (function () {
       ['menu_bartender', 'Bartender', bartenderPanel], ['menu_help', 'Help', helpPanel],
     ];
     if (info.seated) tiles.push(['menu_standup', 'Stand up', function () { cmd('standUp'); close(); }]);
-    // Travel between places (docs/ENGINE.md E7.3): the page reloads into the
+    // Travel between places (docs/archive/ENGINE.md E7.3): the page reloads into the
     // other place, which has its own room.
     var url = new URL(location.href);
     var away = url.searchParams.get('place') && url.searchParams.get('place') !== 'bar';

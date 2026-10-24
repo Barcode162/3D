@@ -1,4 +1,4 @@
-// Part mode (docs/STUDIO.md 5.3, S5.2): a thing's parts you can see and
+// Part mode (docs/archive/STUDIO.md 5.3, S5.2): a thing's parts you can see and
 // move: its shapes you bump into (solids), tap areas (uses) and seats. A part
 // lives where it's written: the thing's own parts if it has them, else the
 // kind (or the kind it builds on) that defines it, so editing one changes

@@ -1,5 +1,5 @@
 [hidden] { display: none !important; }
-/* The Studio's screen (docs/STUDIO.md 5.1): the world full screen, a thin
+/* The Studio's screen (docs/archive/STUDIO.md 5.1): the world full screen, a thin
    top bar, tools in the bottom third where the thumb reaches. */
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body.lp { -webkit-user-select: none; user-select: none; }

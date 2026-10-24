@@ -1,5 +1,5 @@
 # Builds the new back bar against the back wall, from the floor to the
-# soffit (docs/BAR_REDESIGN.md): paneled lower cabinets with a marble top,
+# soffit (docs/archive/BAR_REDESIGN.md): paneled lower cabinets with a marble top,
 # eight mirrored bays with five lit shelves of bottles each, a glowing onyx
 # centerpiece with the premium bottles, a wine lattice, hanging stemware, a
 # rolling library ladder on a brass rail, and the working clutter on the

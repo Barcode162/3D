@@ -67,7 +67,7 @@ Every token a Looped theme sets, once: its group, its kind (which control the UI
 
 ## Screen parts
 
-The parts a screen is made of (docs/UI_PLAN.md R1.3). Each part has a type and props; containers also have children. ui/screen.js draws them with looped.css; the UI Editor shows a control per prop from its kind (text, number, bool, choice, icon, list).
+The parts a screen is made of (docs/archive/UI_PLAN.md R1.3). Each part has a type and props; containers also have children. ui/screen.js draws them with looped.css; the UI Editor shows a control per prop from its kind (text, number, bool, choice, icon, list).
 
 | Part | Name | What it is | Holds parts | Props (kind, default) |
 |---|---|---|---|---|

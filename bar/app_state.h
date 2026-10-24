@@ -98,7 +98,7 @@ struct App {
   app::CoinPop coinPop;    // the credit coin when you earn credits
   int coinPayoutsSeen = 0;
   bool coinShownForTest = false;
-  app::BarWorld world;  // the bar as things, every one alive (bar/world_bar.h, docs/ENGINE.md)
+  app::BarWorld world;  // the bar as things, every one alive (bar/world_bar.h, docs/archive/ENGINE.md)
   app::JukeboxMenu jukeboxMenu;
   app::RhythmGame rhythm;  // the playable 4K MANIA cabinet
   app::ChessGame chess;    // the lounge's chessboard

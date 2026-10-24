@@ -1,4 +1,4 @@
-// The world store (studio/api.php, docs/STUDIO.md S1.4) with the bar's
+// The world store (studio/api.php, docs/archive/STUDIO.md S1.4) with the bar's
 // account.php on PHP's built-in server, laid out like the IONOS webspace
 // (<root>/home/bar, <root>/home/studio, <root>/private). Checks: nothing live
 // at first; the owner saves a draft and publishes; the bundle is public and

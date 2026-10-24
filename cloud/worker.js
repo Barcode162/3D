@@ -2,7 +2,7 @@
 //
 // Every phone keeps one WebSocket open to its room: one Durable Object per
 // room name (cloud/room.js), so everyone in "main" talks to the same little
-// server. The protocol is docs/PROTOCOL.md (codec: cloud/proto.js).
+// server. The protocol is docs/handbook/protocol.md (codec: cloud/proto.js).
 //
 //   wss://<worker>/room/<name>   the room socket (name: a-z, 0-9, -; 1-32)
 //   GET /health                  {"ok":1,...} plus room "main"'s usage today,

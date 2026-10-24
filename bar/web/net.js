@@ -1,5 +1,5 @@
 // Thin bridge from the C++ multiplayer code (looped/net.cpp) to the room on
-// Cloudflare (cloud/room.js; protocol in docs/PROTOCOL.md). One WebSocket
+// Cloudflare (cloud/room.js; protocol in docs/handbook/protocol.md). One WebSocket
 // carries everything:
 // - your state (where you are, what you're doing) as a small binary STATE,
 //   sent up to 20 times a second and only when it changed;
@@ -541,7 +541,7 @@ window.bar3dNet = (function () {
     fetch('config.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
       if (!c || !c.ws) { status = 0; info('Multiplayer: no room server in this build.'); return; }
       url = c.ws;
-      // The private build's room (docs/LOOPED.md A5), unless ?room= chose one.
+      // The private build's room (docs/archive/LOOPED.md A5), unless ?room= chose one.
       if (param('room') === null && typeof c.room === 'string' && c.room) {
         room = c.room.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32) || room;
       }

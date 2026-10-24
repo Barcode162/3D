@@ -8,7 +8,7 @@ Your body and look: presets or a custom look made in the customizer; others see 
 
 ## Status
 
-**Live.** A1-A3 (alive avatars, real people, your face) planned (`docs/manual/avatars.md`).
+**Live.** A1-A3 (alive avatars, real people, your face) planned (`docs/handbook/manual/avatars.md`).
 
 ## What you can do with it
 

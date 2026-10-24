@@ -1,4 +1,4 @@
-# Bar3D classic (docs/LOOPED.md A4): the last public build from before the
+# Bar3D classic (docs/archive/LOOPED.md A4): the last public build from before the
 # bar went private, kept on the `classic` branch (gh-pages "Site build
 # 105f593"), uploaded once to joshuavelasco.com/classic/. Run by hand
 # (Actions → Classic → Run workflow), or on a push that changes this file.

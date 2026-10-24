@@ -1,5 +1,5 @@
 #pragma once
-// One car in the new driving physics (docs/DRIVING_REWORK.md, the MVP):
+// One car in the new driving physics (docs/plan/jobs/W20.md, the MVP):
 // - 6-DOF chassis at 480 Hz, semi-implicit Euler with an implicit
 //   gyroscopic step (§4.1);
 // - the road is a function (Road below), each tire probed at 15 points so

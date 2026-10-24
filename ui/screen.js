@@ -1,4 +1,4 @@
-// Looped screens (docs/UI_PLAN.md R1.3): a screen file (ui/system/screens/)
+// Looped screens (docs/archive/UI_PLAN.md R1.3): a screen file (ui/system/screens/)
 // is a tree of parts; this draws one with looped.css, in the theme in use.
 // Load after looped.js. Exposes:
 //   Looped.parts                       the part list (ui/system/parts.json), once loaded

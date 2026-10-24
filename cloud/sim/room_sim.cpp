@@ -17,7 +17,7 @@
 //   sim_place(i)            buffer = pos x,y,z, quat x,y,z,w: put down at rest
 //   sim_awake() → count of bodies moving or held
 //
-// Things (docs/ENGINE.md E3): the bar's world, the same rules the phones run.
+// Things (docs/archive/ENGINE.md E3): the bar's world, the same rules the phones run.
 //   sim_dbuffer() → 96 doubles for results that need them (times)
 //   sim_thing_event(net, nowS) the event named in sim_text (e.g. "tap") for
 //                           thing `net` → number of changes; dbuffer = net,

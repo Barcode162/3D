@@ -1,4 +1,4 @@
-# The rhythm corner on the diagonal wall (docs/BAR_REDESIGN.md): a 4-key
+# The rhythm corner on the diagonal wall (docs/archive/BAR_REDESIGN.md): a 4-key
 # rhythm game cabinet in the spirit of osu!mania / Quaver (a glowing
 # marquee, a big portrait screen with four lanes of falling notes, four big
 # lit keys, start and back buttons, speakers with woofers, a subwoofer, a

@@ -1,5 +1,8 @@
 # Looped 2: the whole engine, rebuilt around loops (planned 2026-10-21)
 
+> **History (archived in J6.6, 2026-10-24).** What's still true is in the Handbook
+> (`docs/handbook/README.md`); decisions still in force are in `docs/records/decisions/`.
+
 > **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
 > book that gives instructions). This file was Looped 2's plan (E1–E9, built)
 > and explains the engine's world model; it moves into the Handbook in J6.

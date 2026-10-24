@@ -1,4 +1,4 @@
-// Travel between places (docs/ENGINE.md E7.3): Menu → "Visit the test home"
+// Travel between places (docs/archive/ENGINE.md E7.3): Menu → "Visit the test home"
 // loads the home (its own place file and room), Menu → "Back to the bar"
 // comes back. Offline (no room).
 // Usage: NODE_PATH=$(npm root -g) node tools/travel_test.mjs

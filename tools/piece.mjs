@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One piece of work, done the same way every time (docs/AUTOMATION.md):
+// One piece of work, done the same way every time (docs/archive/AUTOMATION.md):
 //   node tools/piece.mjs <TAG> "<title>" [options]
 // builds, runs the piece's own tests, takes pictures of the standard spots,
 // keeps a before/after of every spot that changed (and of the feature's own

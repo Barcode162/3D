@@ -1,4 +1,4 @@
-# Builds the new bar counter (docs/BAR_REDESIGN.md): it bows into the room
+# Builds the new bar counter (docs/archive/BAR_REDESIGN.md): it bows into the room
 # along a big curve and turns back to the back wall. Customer side: plinth,
 # paneled front with pilasters, apron molding, a thick mahogany top, a
 # padded leather arm rest and a brass foot rail on cast brackets. Bartender

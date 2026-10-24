@@ -1,4 +1,4 @@
-// Proposals (docs/STUDIO.md S10.4): a world someone else (Claude) suggests,
+// Proposals (docs/archive/STUDIO.md S10.4): a world someone else (Claude) suggests,
 // waiting for you. Preview shows it in the Studio's frame (your draft is
 // untouched); Apply puts its changes on top of your draft as one undoable
 // edit; Discard throws it away. The same screen an AI inside the Studio

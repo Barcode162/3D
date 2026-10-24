@@ -1,6 +1,6 @@
 # Reports, per model in assets/models/: file size, gzipped size (what the
 # browser downloads), triangles, and GPU texture memory (with mipmaps), so
-# the room stays inside the phone's budget (docs/BAR_REDESIGN.md).
+# the room stays inside the phone's budget (docs/archive/BAR_REDESIGN.md).
 #   python3 tools/assets/glb_report.py [glb files...]
 import glob
 import gzip

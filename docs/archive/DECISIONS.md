@@ -1,5 +1,8 @@
 # Decisions and lessons learned
 
+> **History (archived in J6.6, 2026-10-24).** What's still true is in the Handbook
+> (`docs/handbook/README.md`); decisions still in force are in `docs/records/decisions/`.
+
 > **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
 > book that gives instructions). This file is the history of decisions and lessons, in the order they were
 > made; where an old entry describes a way of working, the Playbook has

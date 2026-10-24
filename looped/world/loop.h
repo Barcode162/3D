@@ -1,5 +1,5 @@
 #pragma once
-// Loops and their pieces (docs/ENGINE.md): the animation every thing plays,
+// Loops and their pieces (docs/archive/ENGINE.md): the animation every thing plays,
 // always, worked out from the shared clock alone. A loop lasts `period`
 // seconds (or beats, locked to the music) and is made of pieces; a piece is
 // one channel (move.y, turn.y, glow...) following one shape (a wave, keys,

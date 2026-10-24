@@ -1,5 +1,5 @@
 #pragma once
-// Every number of one car for the new driving physics (docs/DRIVING_REWORK.md
+// Every number of one car for the new driving physics (docs/plan/jobs/W20.md
 // §5), in SI units (m, kg, s, N, rad). Plain data: the sim reads it, the
 // tuning panel changes a copy of it (applySetup), tests check it (validate).
 // Car space as everywhere: x right, y up, -z forward, origin at the centre

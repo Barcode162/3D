@@ -1,5 +1,5 @@
 <?php
-// The UI store (docs/UI_PLAN.md R1.7): the UI Editor's published themes and
+// The UI store (docs/archive/UI_PLAN.md R1.7): the UI Editor's published themes and
 // screens, every version kept. On IONOS at joshuavelasco.com/toolbelt/ui-editor/api.php;
 // data outside the web root in private/ui/ (UI_DATA overrides, for tests).
 // The repo's ui/system/ is the truth the site is built from; `node tools/uikit.mjs pull`

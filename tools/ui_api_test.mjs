@@ -1,4 +1,4 @@
-// The UI store (toolbelt/ui-editor/api.php, docs/UI_PLAN.md R1.7) with the
+// The UI store (toolbelt/ui-editor/api.php, docs/archive/UI_PLAN.md R1.7) with the
 // bar's account.php on PHP's built-in server, laid out like the IONOS webspace
 // (<root>/home/bar, <root>/home/toolbelt/ui-editor, <root>/private). Checks:
 // nothing live at first; the owner publishes; the version is public and cached

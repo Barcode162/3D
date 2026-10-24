@@ -1,7 +1,7 @@
 # Builds the C++ app to WebAssembly and publishes the result to the
 # `gh-pages` branch when a push to main changes the game. GitHub Pages serves
 # that branch (repo Settings -> Pages -> Deploy from a branch -> gh-pages / root).
-# Deploys by system (docs/DECISIONS.md): the `changes` job compares main with
+# Deploys by system (docs/archive/DECISIONS.md): the `changes` job compares main with
 # the build that is live (gh-pages' "Site build <sha>"), so a batch of pushes is
 # one deploy and nothing is missed. Only the hub, docs or notes changed → the
 # game is left alone (the hub has its own workflow, hub.yml).
@@ -137,7 +137,7 @@ jobs:
           node tools/lint_emasm.mjs
           node tools/schema_test.mjs
           node tools/albedo_test.mjs
-          # Looped stays a real engine: it never reaches into the bar (docs/LOOPED.md B).
+          # Looped stays a real engine: it never reaches into the bar (docs/archive/LOOPED.md B).
           if grep -rn '#include "bar/' looped; then echo "looped/ must not include bar/"; exit 1; fi
 
       - name: "Test: room protocol codec (cloud/proto.js on the golden vectors)"
@@ -179,7 +179,7 @@ jobs:
 
       # The realtime room (cloud/) goes live before the game that needs it.
       # Its address is written into config.json, which the game reads at
-      # start-up to find the room (docs/RESTRUCTURE.md 2.12, step 3.3).
+      # start-up to find the room (docs/archive/RESTRUCTURE.md 2.12, step 3.3).
       - name: "Deploy: Cloudflare room"
         if: env.HAVE_CF == 'true'
         env:
@@ -261,7 +261,7 @@ jobs:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: node tools/ci_status.mjs game live
 
-      # The game is private now (docs/LOOPED.md A1): gh-pages keeps only a
+      # The game is private now (docs/archive/LOOPED.md A1): gh-pages keeps only a
       # signpost to joshuavelasco.com/bar, and its commit message records the
       # live build for the `changes` job above. After the IONOS upload, so a
       # failed upload isn't recorded as live.

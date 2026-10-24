@@ -1,4 +1,4 @@
-# The lounge by the fire on the left wall (docs/BAR_REDESIGN.md): the
+# The lounge by the fire on the left wall (docs/archive/BAR_REDESIGN.md): the
 # fireplace on the chimney breast (marble surround, mantel shelf, hearth,
 # firebox with grate, logs and glowing embers, a painting above, clock,
 # candlesticks, photos, books, a vase on the mantel, fire tools, a log

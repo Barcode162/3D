@@ -1,4 +1,4 @@
-# Builds the new bar's shell (docs/BAR_REDESIGN.md): parquet floor, walls
+# Builds the new bar's shell (docs/archive/BAR_REDESIGN.md): parquet floor, walls
 # (red brick at the bar, darker brick in the game corner, deep green plaster
 # over oak wainscot in the lounge), the diagonal corner wall, a wood-slat
 # soffit over the bar, an open ceiling with steel beams, ducts and

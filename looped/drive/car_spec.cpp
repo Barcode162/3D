@@ -26,7 +26,7 @@ float staticCornerLoad(const CarSpec& s, int corner) {
 }
 
 CarSpec ridgebackGS() {
-  // Sources and [S]/[E] labels: docs/DRIVING_REWORK.md §5.1.
+  // Sources and [S]/[E] labels: docs/plan/jobs/W20.md §5.1.
   CarSpec s;
   s.id = "ridgeback_gs";
   s.name = "Vance Ridgeback GS";

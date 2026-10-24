@@ -8,7 +8,7 @@ One record per kind of stuff (oak, glass, brass, leather...) for every sense: th
 
 ## Status
 
-**Live** (M0 real roughness); M1-M3 planned (`docs/manual/materials.md`).
+**Live** (M0 real roughness); M1-M3 planned (`docs/handbook/manual/materials.md`).
 
 ## What you can do with it
 

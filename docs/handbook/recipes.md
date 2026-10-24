@@ -72,7 +72,7 @@ At the start of a job when `node tools/project.mjs status` says a store is newer
 ## Pages and the look
 
 ### 14. A new site page
-*"A page about the games".* A folder `homepage/<name>/index.php` with `require __DIR__ . '/../site/layout.php'; site_head('<id>', '<title>', '<description>'); … site_foot();`; a tab in `site_tabs` (`homepage/site/layout.php`) if it's a tab; its Handbook page `docs/handbook/ui/site-<name>.md` and an entry in `tools/lib/labels.mjs` → `PAGES`; `tools/site_test.mjs` gets it in its list. Uploaded by `hub.yml`.
+*"A page about the games".* A folder `homepage/<name>/index.php` with `require __DIR__ . '/../site/layout.php'; site_head('<id>', '<title>', '<description>'); … site_foot();`; a tab in `site_tabs` (`homepage/site/layout.php`) if it's a tab; its Handbook page in `docs/handbook/ui/` (named `site-<name>.md`) and an entry in `tools/lib/labels.mjs` → `PAGES`; `tools/site_test.mjs` gets it in its list. Uploaded by `hub.yml`.
 
 ### 15. Change a theme
 *"Darker buttons".* Normally the user does it in the UI Editor (then recipe 13). Claude: edit `ui/system/themes/<id>.json` tokens (every token: [data-ui.md](generated/data-ui.md)), then `node tools/project.mjs ui css` (writes `ui/themes.css`; never by hand) and `ui check`; after the job is live, `ui push --note "<pieces>"`.
@@ -115,4 +115,4 @@ At the end of a job that people can see: the ship's `--news "<two or three frien
 One entry in `toolbelt/tools.json` → `projects` (id, name, status, about; a `site` card to show it on the site: `featured` with a tag and a line, or `more` with a link). Dev, the site's Projects page and the news page show it.
 
 ### 27. A new shared key in the room
-*(a thing everyone sees the same)* The key's rule in `cloud/rules.js` (what it may hold, who may write it), the game's writer, `docs/PROTOCOL.md` §4.5, and `tools/room_test.mjs`; every room saves its world and `schemaVersion`.
+*(a thing everyone sees the same)* The key's rule in `cloud/rules.js` (what it may hold, who may write it), the game's writer, `docs/handbook/protocol.md` §4.5, and `tools/room_test.mjs`; every room saves its world and `schemaVersion`.

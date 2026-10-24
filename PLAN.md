@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J6.3** The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed) *Check:* Nothing on the phone
 - [x] **J6.4** Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door *Check:* Nothing on the phone
 - [x] **J6.5** How-to recipes (about 25): each common request mapped to its exact steps *Check:* Nothing on the phone
-- [ ] **J6.6** The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check *Check:* Nothing on the phone
+- [x] **J6.6** The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check *Check:* Nothing on the phone
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
@@ -91,7 +91,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **W17** Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot. · N4
 - [ ] **W18** Live low-res machine screens and a fair queue (20 s to claim your turn). · N4
 - [ ] **W19** More arcade games; bots in two-player races. · N4
-- [ ] **W20** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/DRIVING_REWORK.md). · N3
+- [ ] **W20** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md). · N3
 - [ ] **W21** Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk. · N3
 - [ ] **W22** Your own character builder (face, details); outfits and gadgets to show off (shop items). · N4
 - [ ] **W23** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
@@ -179,7 +179,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - `58d93ec` R3.1, R3.2, R3.3: The World Plan: one doc (PLAN.md), the old plans archived, the plan keeper → 882582d^..a75881c
 - `2eabe5f` R2.5-R2.6: Ember, the house theme (Warm + frosted glass + a drifting glow + moving titles); motion tokens → 393d12e^..b4f2fea
 - `45292a6` R2.1-R2.4: real screens, light and dark in one theme, six candidates (Clean, Warm, Bold, Glass, Neon, Soft), compare and mix → 0bdee82^..8b9d289
-- `aa0d3ae` R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/UI_PLAN.md), engine work paused → a28d85c^..b394ba3
+- `aa0d3ae` R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/archive/UI_PLAN.md), engine work paused → a28d85c^..b394ba3
 - `fde3f14` M0.2 truly matte (no plastic rim on rough things, cloth keeps little shine, coats not black, floor 0.75) → M0.2 commit
 - `8722f75` Phone feedback: L1.8 no squares of light, M0 real roughness (matte coats, floor not a mirror), L1.9 softer highlights (bright light keeps its colour), L1.10 calmer light (darker, less glow); tools: place_check, stage_hunks → 5622548..HEAD
 - `336e1d9` L1.7: the new light in the Studio (lumens, Kelvin, shape live; moods in real units) → 73f2d72
@@ -197,10 +197,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 8. Where things are
 *Docs that explain; they never hold plans or ticks.*
-- `CLAUDE.md`: how a "go" runs. `docs/REFERENCE.md`: the long guide (layout, every tool, iOS limits).
-- `docs/AUTOMATION.md`: the tools (piece, step, plan, uikit, studio, bench, gallery).
-- `docs/ENGINE.md`: how Looped is built (things, loops, layers). `docs/STUDIO.md`: how the Studio works.
-- `docs/manual/`: the manual (light, materials, recipes, timeline, world, avatars).
-- `docs/PROTOCOL.md`: the multiplayer wire format. `docs/DRIVING_REWORK.md`: the driving spec.
-- `docs/DECISIONS.md`: gotchas and why things are the way they are.
+- `CLAUDE.md`: how a "go" runs. `docs/archive/REFERENCE.md`: the long guide (layout, every tool, iOS limits).
+- `docs/archive/AUTOMATION.md`: the tools (piece, step, plan, uikit, studio, bench, gallery).
+- `docs/archive/ENGINE.md`: how Looped is built (things, loops, layers). `docs/archive/STUDIO.md`: how the Studio works.
+- `docs/handbook/manual/`: the manual (light, materials, recipes, timeline, world, avatars).
+- `docs/handbook/protocol.md`: the multiplayer wire format. `docs/plan/jobs/W20.md`: the driving spec.
+- `docs/archive/DECISIONS.md`: gotchas and why things are the way they are.
 - `docs/archive/`: every old plan and progress file, kept to read, never to plan from.

@@ -109,7 +109,7 @@ void queueMachineScreens(double nowMs) {
       const int rig = std::max(0, g_app.scene.seats[static_cast<size_t>(seat)].machine);
       Vec3 c[4];
       simMonitor(rig, c);
-      // (The live 3D race on the three monitors comes in docs/RACING.md step 4.)
+      // (The live 3D race on the three monitors comes in docs/archive/RACING.md step 4.)
       text.addWorldQuad(c, {0.02f, 0.03f, 0.06f, 1});
       engine::TextStyle style;
       style.align = 0.5f;

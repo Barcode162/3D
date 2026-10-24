@@ -1,5 +1,5 @@
 #pragma once
-// A Looped UI theme (docs/UI_PLAN.md R1.7): the same theme files the web
+// A Looped UI theme (docs/archive/UI_PLAN.md R1.7): the same theme files the web
 // pages wear (ui/system/themes/<id>.json, made in the UI Editor), read by
 // the engine, so screens it draws later match the site and the menus.
 // Tokens stay as their CSS text; colour() and length() read the simple

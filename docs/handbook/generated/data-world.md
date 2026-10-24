@@ -1,7 +1,7 @@
 <!-- generated: node tools/handbook.mjs write (from assets/world/schema.json); never edit by hand -->
 # Data: the world's files
 
-Every field the world's files can hold, in plain words (docs/STUDIO.md 7.3). The Studio's Inspect panel, the hub's Dials and the checks are all drawn from this. Types: number, int, bool, text, id, choice (from 'choices'), vec3 (x y z), color (r g b, 0..1), rect (x0 z0 x1 z1 on the floor), box (two corners), quad (four corners), range (a number or [min, max]), list (of 'item'), map (named entries of 'item'), states (state names). 'live': the Studio can change it without rebuilding the scene. tools/schema_test.mjs fails if a world file uses a field missing here.
+Every field the world's files can hold, in plain words (docs/archive/STUDIO.md 7.3). The Studio's Inspect panel, the hub's Dials and the checks are all drawn from this. Types: number, int, bool, text, id, choice (from 'choices'), vec3 (x y z), color (r g b, 0..1), rect (x0 z0 x1 z1 on the floor), box (two corners), quad (four corners), range (a number or [min, max]), list (of 'item'), map (named entries of 'item'), states (state names). 'live': the Studio can change it without rebuilding the scene. tools/schema_test.mjs fails if a world file uses a field missing here.
 
 "Live": the Studio changes it without rebuilding the scene. The files: `assets/world/places/*.json`, `kinds/*.json`, `catalog.json`, `materials.json`, `songs.json` ([the world model](../systems/engine/world-model.md)).
 

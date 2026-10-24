@@ -1,4 +1,4 @@
-// The light tool (docs/AUTOMATION.md): the bar's real geometry, natively.
+// The light tool (docs/archive/AUTOMATION.md): the bar's real geometry, natively.
 //   build/native/light_tool stats [place]        triangles, materials, the ray tree
 //   build/native/light_tool gi [place]           builds the bounced light, times it, solves it on the CPU
 //   build/native/light_tool map [place] [y] [out.png]   a top-down map of the bounced light at height y

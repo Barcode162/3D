@@ -1,5 +1,5 @@
 #pragma once
-// The bar's world, live (docs/ENGINE.md): the things of the bar's place file
+// The bar's world, live (docs/archive/ENGINE.md): the things of the bar's place file
 // (assets/world/places/bar.json, kinds in kinds/bar.json), played every frame on the
 // shared clock and drawn: models move, turn, glow and tint; lights breathe,
 // flicker and thump; moths and sparks are small glowing shapes. The clock is
@@ -7,7 +7,7 @@
 // (tempos in assets/world/songs.json). The bar's events go to every thing:
 // "music" / "quiet". Touching a thing (a lamp, a table, the fire, the light
 // switch) follows its kind's "tap" rule at once here; online, the room runs
-// the same rule and shares the result (world key t<net>, docs/ENGINE.md E3).
+// the same rule and shares the result (world key t<net>, docs/archive/ENGINE.md E3).
 #include <string>
 #include <unordered_map>
 #include <vector>

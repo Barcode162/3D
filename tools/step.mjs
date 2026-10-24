@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The end of a step, done the same way every time (docs/AUTOMATION.md):
+// The end of a step, done the same way every time (docs/archive/AUTOMATION.md):
 //   node tools/step.mjs status [STEP]          the step's pieces so far (from the gallery)
 //   node tools/step.mjs finish <STEP> "<what>" [--news "<a few friendly lines for the news post>"] [--no-news] [--skip-check] [--full-check] [--bench] [--no-main]
 // finish: the checks for everything the job changed since main (the user,

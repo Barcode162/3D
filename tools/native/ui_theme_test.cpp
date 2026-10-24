@@ -1,4 +1,4 @@
-// The engine's theme reader (looped/ui_theme.*, docs/UI_PLAN.md R1.7): every
+// The engine's theme reader (looped/ui_theme.*, docs/archive/UI_PLAN.md R1.7): every
 // theme file in ui/system/themes/ parses, its colours read as the CSS means
 // them, and bad text never crashes it.
 #include <cmath>

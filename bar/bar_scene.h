@@ -1,7 +1,7 @@
 #pragma once
 // The bar's layout: which shapes go where, their colors, the lights and the
 // walls/furniture you can't walk through. Pure data, no GPU code. Since
-// 2026-10-21 (docs/ENGINE.md E2) it's made from the bar's place file
+// 2026-10-21 (docs/archive/ENGINE.md E2) it's made from the bar's place file
 // (assets/world/places/bar.json): every thing there with its parts (model,
 // solids, blocks, seats, uses, light...) turned into these lists.
 #include <memory>

@@ -52,4 +52,4 @@ Looped's world core: every thing in a place, each a kind, each in a state, each 
 
 ## History
 
-Looped 2 (2026-10-21, `docs/ENGINE.md`): the whole engine rebuilt around loops; the bar's layout became a file the same day.
+Looped 2 (2026-10-21, `docs/archive/ENGINE.md`): the whole engine rebuilt around loops; the bar's layout became a file the same day.

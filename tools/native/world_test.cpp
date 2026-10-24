@@ -1,4 +1,4 @@
-// The world core (looped/world/*, docs/ENGINE.md E1): kinds and places from
+// The world core (looped/world/*, docs/archive/ENGINE.md E1): kinds and places from
 // files, things sitting on things, states and rules, loops that never stop,
 // the same answer on every phone, and the check that every thing is alive.
 #include <chrono>

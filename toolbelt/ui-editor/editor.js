@@ -1,4 +1,4 @@
-// The UI Editor (docs/UI_PLAN.md R1.4-R1.7): the theme and screen files of
+// The UI Editor (docs/archive/UI_PLAN.md R1.4-R1.7): the theme and screen files of
 // ui/system/, edited live. One state object; every change goes through
 // change(), which keeps undo and redraws. The preview is a .lp frame that
 // wears the edited theme (its tokens set inline, so edits show at once).

@@ -1,4 +1,4 @@
-// The UI Editor (toolbelt/ui-editor/, docs/UI_PLAN.md R1.4-R1.7) at phone
+// The UI Editor (toolbelt/ui-editor/, docs/archive/UI_PLAN.md R1.4-R1.7) at phone
 // width, on PHP's built-in server laid out like the webspace (ui/, toolbelt/,
 // bar/account.php; the store's data in a temp folder): the preview and
 // selection (R1.4), theme editing and undo (R1.5), screen editing (R1.6), the

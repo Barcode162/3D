@@ -24,6 +24,7 @@
 //   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
 //   node tools/plan.mjs chapter <chapter> "<now line>"   a chapter's "Now:" line (where it stands today)
 //   node tools/plan.mjs render [--check]         write PLAN.md and the blocks from the data (--check: only compare)
+//   node tools/plan.mjs relink                   every doc path in the plan that moved (J6.6, tools/lib/docmoves.mjs) → its new place
 //   node tools/plan.mjs specs                    every job's spec as JSON {id: text} (docs/plan/jobs/<ID>.md, and
 //                                                J1–J8's sections of docs/plan/restructure.md); plan.yml sends it to Dev
 // Chapters: world, site, engine, tools, backbone.
@@ -226,6 +227,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       d.build = pos[0]; save(data); console.log(`sealed with ${pos[0]}`);
     } else if (cmd === 'chapter') {
       plan.chapters.find((c) => c.id === chapterId(pos[0])).now = pos[1]; save(data); console.log(`${CHAPTERS[chapterId(pos[0])]}: Now line set`);
+    } else if (cmd === 'relink') {
+      const { fixDocRefs } = await import('./lib/docmoves.mjs');
+      const before = JSON.stringify(plan);
+      const walk = (v) => (typeof v === 'string' ? fixDocRefs(v) : Array.isArray(v) ? v.map(walk) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)])) : v);
+      Object.assign(plan, walk(plan));
+      if (JSON.stringify(plan) === before) console.log('nothing to relink'); else { save(data); console.log('the plan\'s doc paths point to where the docs are now'); }
     } else if (cmd === 'specs') {
       const specs = {}, dir = 'docs/plan/jobs';
       const restructure = read('docs/plan/restructure.md');

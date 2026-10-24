@@ -1,4 +1,4 @@
-// Touching things (docs/ENGINE.md E3-E4): from a spot in front of each living
+// Touching things (docs/archive/ENGINE.md E3-E4): from a spot in front of each living
 // thing, a tap in the middle of the screen must touch it, follow its kind's
 // "tap" rule and say so in the log ("World: you touched <id> (<state>)").
 // Offline (no room), so this is the phone's own world.

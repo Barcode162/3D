@@ -1,5 +1,5 @@
 <?php
-// joshuavelasco.com/vision: where it's all heading (docs/VISION.md, told for
+// joshuavelasco.com/vision: where it's all heading (docs/archive/VISION.md, told for
 // visitors). Inspiring, not technical.
 require __DIR__ . '/../site/layout.php';
 site_head('vision', 'Where we\'re going', 'Not a set of props: a world that simulates what you see, hear and feel. The bar is the first room. Here is where it goes next.');

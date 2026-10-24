@@ -1,6 +1,6 @@
 // One Bar3D room (a Cloudflare Durable Object): the authority for who is in
 // the room, in which slot, who holds what (claims), the order of events and
-// the shared world. Protocol: docs/PROTOCOL.md (codec in proto.js).
+// the shared world. Protocol: docs/handbook/protocol.md (codec in proto.js).
 //
 // What it does:
 // - Slots and resume tokens, HELLO → WELCOME, guest first then an async login
@@ -29,7 +29,7 @@ import * as race from './games/race.js';
 import { Glasses, eyesOf } from './games/glasses.js';
 import { Sim } from './sim/sim.js';
 import simWasm from './sim/room_sim.wasm';
-// The bar's layout comes from its world files (docs/ENGINE.md), bundled in.
+// The bar's layout comes from its world files (docs/archive/ENGINE.md), bundled in.
 import barPlace from '../assets/world/places/bar.json';
 import barKinds from '../assets/world/kinds/bar.json';
 import homePlace from '../assets/world/places/home.json';
@@ -44,12 +44,12 @@ const GHOST_CHECK_IDLE_MS = 60000;  // how often an idle room checks (one alarm)
 const FLUSH_MS = 2500;           // world writes are saved at most this often
 const USAGE_SAVE_MS = 60000;     // usage counters are saved with a flush at most this often
 const WORLD_FORGET_MS = 30 * 60 * 1000;  // an empty room forgets its world after this
-const SCHEMA_VERSION = 1;        // docs/PROTOCOL.md §9: bump when stored keys change shape
+const SCHEMA_VERSION = 1;        // docs/handbook/protocol.md §9: bump when stored keys change shape
 const TOKEN_CACHE_MS = 10 * 60 * 1000;
 const TOKEN_TIMEOUT_MS = 2000;
 const PERSISTENT_ROOM = 'main';
 // Rooms that keep their world while empty, and the private bar's room: only
-// logins account.php says may play get in (docs/LOOPED.md A5).
+// logins account.php says may play get in (docs/archive/LOOPED.md A5).
 const PERSISTENT_ROOMS = new Set(['main', 'looped']);
 const PRIVATE_ROOMS = new Set(['looped']);
 const MAX_SOCKETS = MAX_SLOTS * 2;  // players + sockets still saying hello
@@ -212,7 +212,7 @@ export class Room {
     this.reschedule();
   }
 
-  // The world the Studio published (docs/STUDIO.md 7.6): the same files the
+  // The world the Studio published (docs/archive/STUDIO.md 7.6): the same files the
   // phones load, so the room runs the same things and rules. Checked when the
   // room starts and, at most every 30 s, when someone joins. Any problem: keep
   // what we have (the world built in at first).
@@ -595,7 +595,7 @@ export class Room {
 
   // Glasses (cloud/games/glasses.js): grab, put down (`pos`) or throw (`vel`).
   // The room's physics moves them; holding one is the claim `glass.<n>`.
-  // Things (docs/ENGINE.md E3): a player touches a thing; the room runs the
+  // Things (docs/archive/ENGINE.md E3): a player touches a thing; the room runs the
   // bar's own rules (the same files and C++ as the phones) and shares every
   // state change it makes as world key t<net> = [state, start (server s)],
   // written by the room (-1), so every phone ends on the room's word.

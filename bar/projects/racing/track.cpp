@@ -9,7 +9,7 @@ using engine::Vec3;
 namespace app::race {
 namespace {
 
-// The circuit, ~2.45 km (designed top-down, see docs/RACING.md): x, z,
+// The circuit, ~2.45 km (designed top-down, see docs/archive/RACING.md): x, z,
 // elevation, half width, banking (degrees, + = right side lower). Driven in
 // list order; the start line is the first point. -z is "north".
 struct Control {

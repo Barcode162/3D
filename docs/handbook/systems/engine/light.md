@@ -8,13 +8,13 @@ How light works in the bar: real units, eyes that adapt, bounced light, lights w
 
 ## Status
 
-**Live** (L1 done); L2-L8 planned (`docs/manual/light.md`).
+**Live** (L1 done); L2-L8 planned (`docs/handbook/manual/light.md`).
 
 ## What you can do with it
 
 - Settings → Graphics → Lighting: New / Classic.
 - The light switch and the lamps react to touch; the Studio's Look tab picks a place's mood and each light's colour and brightness.
-- Compare with page options: `?light=classic`, `?bounce=0`, `?exposure=-1`, `?eyekeep=0.6` (every dial: `docs/manual/light.md`).
+- Compare with page options: `?light=classic`, `?bounce=0`, `?exposure=-1`, `?eyekeep=0.6` (every dial: `docs/handbook/manual/light.md`).
 
 ## How it works
 

@@ -1,4 +1,4 @@
-// The bar as things (assets/world/places/bar.json, docs/ENGINE.md E2): the real layout
+// The bar as things (assets/world/places/bar.json, docs/archive/ENGINE.md E2): the real layout
 // and the real kinds file (assets/world/kinds/bar.json) make a world where
 // every thing has a kind and every kind a live loop, and the bar's events
 // (music, the fire) move the right things.

@@ -1,5 +1,5 @@
 #pragma once
-// The catalog (docs/ENGINE.md E7.4): every kind you could own, with a name,
+// The catalog (docs/archive/ENGINE.md E7.4): every kind you could own, with a name,
 // a category, a price in credits and whether it can be traded. Homes, the
 // mall and the VIP shop all read the same list (assets/world/catalog.json).
 #include <string>

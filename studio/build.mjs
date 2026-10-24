@@ -1,4 +1,4 @@
-// Building (docs/STUDIO.md 5.5, S6): the Library (every kind you can add,
+// Building (docs/archive/STUDIO.md 5.5, S6): the Library (every kind you can add,
 // with a picture the engine takes of it, its catalog name and price); a
 // thing you add lands on the surface in front of you, then the world
 // reloads from the draft with it selected.

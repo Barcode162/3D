@@ -1,7 +1,7 @@
 // Tests the Cloudflare room (cloud/worker.js + cloud/room.js) through real
 // WebSockets: slots, resume tokens, grace, close codes, login → PROFILE,
 // Origin allowlist, connect limit, storage left behind. Speaks the protocol
-// with cloud/proto.js (docs/PROTOCOL.md).
+// with cloud/proto.js (docs/handbook/protocol.md).
 // Usage: node tools/room_test.mjs
 //   Starts `wrangler dev` itself (needs `npm ci --prefix cloud`) with test
 //   settings: DEV=1, PROTO=2 (to check that PROTO-1 is still accepted),
@@ -272,7 +272,7 @@ try {
   await wait(200);
   ra.send('I', { i: 4, k: 'grab', g: 2 });
   check((await ra.until(() => ra.find('R', (r) => r.r === 4)))?.body.why === 'too far', 'a glass out of reach can\'t be grabbed');
-  // Things (docs/ENGINE.md E3): touching one runs the bar's rules in the room.
+  // Things (docs/archive/ENGINE.md E3): touching one runs the bar's rules in the room.
   const netOf = (id) => {  // looped/world/world.cpp World::netIdOf (no clash for these ids)
     let h = 2166136261;
     for (const c of Buffer.from(id)) { h ^= c; h = Math.imul(h, 16777619) >>> 0; }
@@ -527,7 +527,7 @@ try {
   await wait(500);
   check((await debug('main')).storageKeys.includes('schemaVersion'), 'room "main" records its schemaVersion');
 
-  // The private bar's room "looped" (docs/LOOPED.md A5): only logins that may play.
+  // The private bar's room "looped" (docs/archive/LOOPED.md A5): only logins that may play.
   for (const [ticket, what] of [[undefined, 'a guest'], ['test:mia:noplay', 'a login without an invite']]) {
     const x = client('looped');
     await x.open;

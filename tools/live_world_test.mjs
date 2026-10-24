@@ -1,4 +1,4 @@
-// The bar loads the Studio's live world (docs/STUDIO.md S1.5): a fake store
+// The bar loads the Studio's live world (docs/archive/STUDIO.md S1.5): a fake store
 // answers "version 7" with the bar minus one thing; the bar must say it uses
 // v7 and build one thing fewer. Without a store (404) it uses the world built
 // in; a bundle needing a newer engine is ignored.

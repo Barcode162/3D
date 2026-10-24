@@ -1,4 +1,4 @@
-// Life (docs/STUDIO.md 5.7, S8): the selected thing's kind as states and
+// Life (docs/archive/STUDIO.md 5.7, S8): the selected thing's kind as states and
 // rules, with a small diagram and Test buttons (S8.1), and the Loop Rack
 // (S8.2-S8.3). Changes go to the kind (every thing of it) and show at once:
 // the engine swaps the kind's loops and states in place (st.kind).

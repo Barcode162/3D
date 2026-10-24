@@ -13,3 +13,7 @@ Parked), each under one of the five chapters.
 | `UI_PLAN.md` | The rework plan (R1-R6) as agreed in chat; now PLAN.md's R items. |
 | `LOOPED.md`, `LIGHTING.md`, `RESTRUCTURE.md`, `UPGRADE_PLAN.md`, `RACING.md`, `BAR_REDESIGN.md`, `REMASTER.md`, `PLANS_ARCHIVE.md` | Older plans, all built or carried into PLAN.md. |
 | `HUB_MAP.md`, `hub-board-bar3d.md` | The hub board's sorting rules and its last snapshot (68 cards, carried into PLAN.md). |
+| `DECISIONS.md` | Decisions and lessons until 2026-10-24 (archived in J6.6): the decisions still in force are `docs/records/decisions/0002`–`0010`; its traps are listed in `docs/handbook/traps.md`. |
+| `STUDIO.md`, `ENGINE.md` | The Studio's plan (S1-S10) and Looped 2's plan (E1-E9), both built; their facts are on the Handbook's system pages. |
+| `REFERENCE.md`, `AUTOMATION.md` | The long guide and the tools list; their facts are in `docs/handbook/build-and-test.md`, `phone.md`, `tech.md` and the command list. |
+| `audit/` | Seven old audits of the code (2026-10-16 era paths like `app/main.cpp`), history (KI-21). |

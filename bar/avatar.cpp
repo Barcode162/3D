@@ -683,7 +683,7 @@ void Avatar::rotations(const AvatarMotion& m, std::vector<engine::Quat>& rot, Ve
     bone("forearm" + n) = X(14.0f + 38.0f * fidget * idle);
   }
 
-  // ---- Activities (crude key poses, see docs/REMASTER.md) ----
+  // ---- Activities (crude key poses, see docs/archive/REMASTER.md) ----
   const float t = m.actionTime;
   const bool seated = m.activity == Activity::kSit || m.activity == Activity::kDrive || m.activity == Activity::kPiano;
   if (seated) {

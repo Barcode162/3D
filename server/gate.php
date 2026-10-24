@@ -1,5 +1,5 @@
 <?php
-// The door of the private bar (joshuavelasco.com/bar, docs/LOOPED.md A1-A3).
+// The door of the private bar (joshuavelasco.com/bar, docs/archive/LOOPED.md A1-A3).
 // .htaccess sends every request here except account.php, report.php,
 // relay.php, version.txt and this file. Without a login that may play, the
 // page is the sign-in screen; with one, the file asked for is streamed

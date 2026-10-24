@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Benchmarks, kept forever in the gallery branch (bench.jsonl) so every
-// change in speed is visible over time (docs/AUTOMATION.md):
+// change in speed is visible over time (docs/archive/AUTOMATION.md):
 //   node tools/bench.mjs              native benches + the bar at every spot
 //   node tools/bench.mjs native       only the native benches (fast)
 //   node tools/bench.mjs --no-save    print only

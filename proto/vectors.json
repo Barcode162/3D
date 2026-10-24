@@ -1,6 +1,6 @@
 {
  "proto": 1,
- "note": "Golden vectors for docs/PROTOCOL.md. Checked by tools/proto_test.mjs (cloud/proto.js) and tools/native/proto_test.cpp (looped/netproto). Hex is the contract: check changes by hand against the spec tables.",
+ "note": "Golden vectors for docs/handbook/protocol.md. Checked by tools/proto_test.mjs (cloud/proto.js) and tools/native/proto_test.cpp (looped/netproto). Hex is the contract: check changes by hand against the spec tables.",
  "binary": [
   {
    "name": "state basic",

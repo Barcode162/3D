@@ -1,4 +1,4 @@
-// Notes for Claude (docs/STUDIO.md S10.1): on any selection, ⋯ → Note for
+// Notes for Claude (docs/archive/STUDIO.md S10.1): on any selection, ⋯ → Note for
 // Claude. The note goes to Dev's notes (dev/api.php; Claude reads them at the
 // start of every session: decision 0001) with the thing's id and kind, your
 // camera view and a picture of it (kept by the hub, hub.php?shot=…).

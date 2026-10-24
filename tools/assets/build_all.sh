@@ -12,7 +12,7 @@ bash tools/assets/fetch_textures.sh "$tex"
 B="/opt/blender/blender -b --factory-startup --python"
 out=assets/models
 run() { $B "tools/assets/$1" -- "${@:2}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }
-# The big bar upgrade (docs/BAR_REDESIGN.md): one model per zone, built in
+# The big bar upgrade (docs/archive/BAR_REDESIGN.md): one model per zone, built in
 # world space (except the piano, sim rig and rhythm corner, placed by the app).
 run hall.py "$tex" $out/hall.glb
 run bar_counter_l.py "$tex" $out/bar_counter_l.glb

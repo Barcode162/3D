@@ -1,5 +1,5 @@
 # The darts corner around the existing dartboard cabinet (front wall,
-# docs/BAR_REDESIGN.md): three darts stuck in the board, a black foam
+# docs/archive/BAR_REDESIGN.md): three darts stuck in the board, a black foam
 # surround, a wall holder with three more darts, the brass oche line at the
 # regulation 2.37 m, a rubber throwing mat with distance marks, a track
 # with two spotlights aimed at the board, and a neon "DARTS" sign.

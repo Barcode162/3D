@@ -1,4 +1,4 @@
-# Builds a concert grand piano with its insides (docs/BAR_REDESIGN.md,
+# Builds a concert grand piano with its insides (docs/archive/BAR_REDESIGN.md,
 # the hero piece): a curved bentside case in gloss black, the spruce
 # soundboard, the gold cast-iron plate with its struts, about 240 strings
 # (copper-wound bass strings crossing over the steel treble strings),

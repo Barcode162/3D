@@ -1,5 +1,5 @@
 #pragma once
-// Real light units (L1.2, docs/manual/light.md): lamps are described the way
+// Real light units (L1.2, docs/handbook/manual/light.md): lamps are described the way
 // they're sold, in lumens (how much light) and Kelvin (its colour: 1800 K a
 // candle, 2700 K a warm bulb, 6500 K daylight), and drawn with true
 // inverse-square falloff. Plain C++ (no GPU), so tools/native/light_units_test

@@ -1,5 +1,5 @@
 #pragma once
-// The live world (docs/STUDIO.md 7.6): the Studio's store says which version
+// The live world (docs/archive/STUDIO.md 7.6): the Studio's store says which version
 // of the world is live; the game loads it before building the scene, so a
 // publish reaches the bar without a new build. Anything wrong (no store on
 // this site, a network error, a format newer than this engine) → the world

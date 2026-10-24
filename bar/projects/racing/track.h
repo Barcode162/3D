@@ -50,7 +50,7 @@ class Track : public engine::Ground {
   bool cast(engine::Vec3 origin, engine::Vec3 dir, float maxDistance, engine::GroundHit& hit,
             int& hint) const override;
 
-  // The skid pad in the infield (docs/DRIVING_REWORK.md, the MVP): a flat
+  // The skid pad in the infield (docs/plan/jobs/W20.md, the MVP): a flat
   // asphalt circle with painted 30 m and 50 m rings, grass to a round tire
   // wall. Its own ground: inside the wall, the track doesn't count.
   struct Pad {

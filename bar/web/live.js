@@ -1,4 +1,4 @@
-// The world changes while you're in the bar (docs/STUDIO.md S9.1): every
+// The world changes while you're in the bar (docs/archive/STUDIO.md S9.1): every
 // 15 s the page asks the Studio's store which version is live; when a newer
 // one is published, it says so and comes back into the bar with it (the
 // game reads the live world as it starts). Not in the Studio's own frame,

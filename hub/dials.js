@@ -1,4 +1,4 @@
-// The hub's Dials (docs/STUDIO.md §6, S4.1): the world's numbers as dials.
+// The hub's Dials (docs/archive/STUDIO.md §6, S4.1): the world's numbers as dials.
 // Reads the live world and your draft from the Studio's store
 // (studio/api.php), draws every field the schema knows for kinds (their
 // loops and lanes) and things (where, turn, size), and puts each change into

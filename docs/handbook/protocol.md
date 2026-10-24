@@ -1,7 +1,7 @@
 # Bar3D room protocol (v1)
 
 How a phone talks to its room on Cloudflare (`cloud/room.js`, one Durable Object per
-room). Written in restructure step 3.1 from `docs/RESTRUCTURE.md` §2.5, which explains
+room). Written in restructure step 3.1 from `docs/archive/RESTRUCTURE.md` §2.5, which explains
 *why*; this file is the exact *what*. Two codecs implement it and must agree:
 `cloud/proto.js` (server, also used by the Node test tools) and `looped/netproto.*`
 (the game). Both are tested on the same golden vectors in `proto/vectors.json`:

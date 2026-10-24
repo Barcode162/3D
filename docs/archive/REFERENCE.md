@@ -1,5 +1,8 @@
 # Bar3D reference (the long guide; CLAUDE.md is the short one, PLAN.md the plan)
 
+> **History (archived in J6.6, 2026-10-24).** What's still true is in the Handbook
+> (`docs/handbook/README.md`); decisions still in force are in `docs/records/decisions/`.
+
 > **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
 > book that gives instructions). This file holds facts (build, layout, conventions, phone limits);
 > they move into the Handbook in J6. Its old "how to work" sections are in

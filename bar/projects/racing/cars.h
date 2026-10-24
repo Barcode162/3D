@@ -19,7 +19,7 @@ struct CarModel {
   engine::CarSpec spec;
   CarStyle style;
   float speed, handling, weight;  // 0..1 bars for the garage
-  // Drives on the new physics (looped/drive, docs/DRIVING_REWORK.md); `spec`
+  // Drives on the new physics (looped/drive, docs/plan/jobs/W20.md); `spec`
   // above is then its stand-in for the old physics (Car setup → Old physics),
   // drawing and collisions.
   bool newPhysics = false;

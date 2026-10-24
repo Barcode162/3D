@@ -1,5 +1,5 @@
 // The standard camera spots for "looks the same" checks (VIS in
-// docs/RESTRUCTURE.md): CAM / ?cam= strings "x,y,z,yaw,pitch" (degrees).
+// docs/archive/RESTRUCTURE.md): CAM / ?cam= strings "x,y,z,yaw,pitch" (degrees).
 export const SPOTS = {
   door: '0.4,1.65,5.2,0,0',          // where you spawn
   mirror: '6.0,1.65,3.6,90,0',       // facing the big mirror (right wall)

@@ -1,5 +1,5 @@
 // The Ledger: the money and the things people own (master list item 3,
-// docs/DECISIONS.md → "The ledger"). A Durable Object with its own SQLite
+// docs/archive/DECISIONS.md → "The ledger"). A Durable Object with its own SQLite
 // database, so every change is one transaction: a balance can never be half
 // updated, counted twice or go below zero.
 //

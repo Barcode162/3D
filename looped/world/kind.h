@@ -1,5 +1,5 @@
 #pragma once
-// Kinds and places (docs/ENGINE.md): the files that make a world.
+// Kinds and places (docs/archive/ENGINE.md): the files that make a world.
 //
 // A **kind** says what a thing is: its parts (the abilities each engine
 // system reads: model, collider, seat, light, sound, shared, price...), its

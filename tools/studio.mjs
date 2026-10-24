@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Claude's side of the world store (docs/STUDIO.md 7.7). The live world the
+// Claude's side of the world store (docs/archive/STUDIO.md 7.7). The live world the
 // user publishes from the Studio and the repo's assets/world/ stay one world:
 //   node tools/studio.mjs pull            the live world → assets/world/ (formatted); says what changed
 //   node tools/studio.mjs push --note ".." the repo's world → a new live version by "Claude"

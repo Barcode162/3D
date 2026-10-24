@@ -1,4 +1,4 @@
-# A racing simulator rig (docs/BAR_REDESIGN.md, placed twice on the right
+# A racing simulator rig (docs/archive/BAR_REDESIGN.md, placed twice on the right
 # wall): aluminum profile frame, a racing bucket seat with harness slots, a
 # direct-drive wheel base and wheel (rim, spokes, buttons, a little display,
 # shift paddles), three pedals, an H-shifter and a handbrake, triple

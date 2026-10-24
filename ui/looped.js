@@ -1,4 +1,4 @@
-// Looped UI (docs/STUDIO.md §4): themes, step lights and the feedback kit.
+// Looped UI (docs/archive/STUDIO.md §4): themes, step lights and the feedback kit.
 // Load after the page's markup (or with defer). Exposes window.Looped:
 //   Looped.look()              the theme in use ('ember', 'faceplate', ...)
 //   Looped.setLook(name)       switch (saved for next time on this device)

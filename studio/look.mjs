@@ -1,4 +1,4 @@
-// Moods and the budget meter (docs/STUDIO.md 5.6, S7.3), drawn in the
+// Moods and the budget meter (docs/archive/STUDIO.md 5.6, S7.3), drawn in the
 // Monitor's Look tab. A mood is a named set of light colours and brightness
 // (by kind, or by thing) in the place file: "moods": {"Party": {"lights":
 // {"light-sign": {"color": [..], "intensity": 1}}}}, "mood": "Party". The
@@ -9,7 +9,7 @@ import { S, on, send } from './studio.js';
 import { edit, placeFile, kindOf, thingEntry, refreshLights, setOp } from './draft.mjs';
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
-// Phone limits (60 fps on an iPhone, docs/ENGINE.md perf notes): the bar as built sits well inside.
+// Phone limits (60 fps on an iPhone, docs/archive/ENGINE.md perf notes): the bar as built sits well inside.
 export const LIMITS = { draws: 450, tris: 1200000 };
 const L = { budget: null, listeners: [] };
 

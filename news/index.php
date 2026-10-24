@@ -1,5 +1,5 @@
 <?php
-// The public news board (joshuavelasco.com/news, docs/LOOPED.md C4): the
+// The public news board (joshuavelasco.com/news, docs/archive/LOOPED.md C4): the
 // hub's news posts the owner switched to Public, newest first, with their
 // screenshots. Everything else in the hub stays private.
 //   GET /news/                  the page

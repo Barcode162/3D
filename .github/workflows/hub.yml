@@ -1,5 +1,5 @@
 # The project hub (hub/, joshuavelasco.com/hub) deploys on its own: about two
-# minutes, without rebuilding or retesting the game (docs/DECISIONS.md →
+# minutes, without rebuilding or retesting the game (docs/archive/DECISIONS.md →
 # Deploys by system). deploy.yml skips the game when only the hub changed.
 name: Hub
 

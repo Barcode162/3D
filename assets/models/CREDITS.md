@@ -1,7 +1,7 @@
 # Model credits
 
 Models are built by scripts in `tools/assets/` (run in Blender, see
-`docs/DECISIONS.md` → Asset pipeline). All geometry is our own. Photo
+`docs/archive/DECISIONS.md` → Asset pipeline). All geometry is our own. Photo
 textures inside them are CC0 sets from [Poly Haven](https://polyhaven.com/textures)
 (public domain, tinted/resized by the scripts); everything else (labels,
 posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.

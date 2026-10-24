@@ -4,7 +4,7 @@
 // The url can carry ?cam=x,y,z,yaw,pitch to look at a specific spot.
 // EXPECT_SHA=abc1234 exits 1 unless that build is the one live. The test
 // player stays offline (doesn't show up in the real room) unless NET=1.
-// The bar is private (docs/LOOPED.md A3): HUB_KEY (the hub's Claude key) is
+// The bar is private (docs/archive/LOOPED.md A3): HUB_KEY (the hub's Claude key) is
 // given to joshuavelasco.com only, as the gate's cookie bar_k.
 import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
 

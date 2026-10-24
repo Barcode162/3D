@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Finds things out of place in the bar (docs/AUTOMATION.md): every separate
+"""Finds things out of place in the bar (docs/archive/AUTOMATION.md): every separate
 piece of every model (a coat, a bottle, a frame: the models join pieces by
 material, so they are split back into connected pieces here) is checked
 against everything around it:

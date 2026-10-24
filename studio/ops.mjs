@@ -1,4 +1,4 @@
-// Edits as operations (docs/STUDIO.md 7.4). The draft is a bundle (its
+// Edits as operations (docs/archive/STUDIO.md 7.4). The draft is a bundle (its
 // files: {"places/bar.json": {...}, "kinds/bar.json": {...}}); an op changes
 // one spot in one file and gives back its inverse, so undo is applying the
 // inverse. Paths name array entries by id ({id: "table-3"}), never by index,

@@ -1,4 +1,4 @@
-// The Monitor (docs/STUDIO.md 5.3, 5.4): a drawer over the bottom of the
+// The Monitor (docs/archive/STUDIO.md 5.3, 5.4): a drawer over the bottom of the
 // world. World: every thing by what it sits on, searchable. Inspect: the
 // selected thing in words, from the schema (assets/world/schema.json).
 // Problems: what the schema and the engine's own checks find.

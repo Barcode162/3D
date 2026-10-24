@@ -1,5 +1,5 @@
 # "Under construction" at the two doorways to the rooms still being built
-# (docs/BAR_REDESIGN.md): crossed caution tape across each arch, a plastic
+# (docs/archive/BAR_REDESIGN.md): crossed caution tape across each arch, a plastic
 # sheet hanging behind it, striped sawhorse barricades, traffic cones, a
 # sign on an easel, and inside the unfinished room a work light on a
 # tripod, a step ladder, paint buckets, a drop cloth, lumber, drywall

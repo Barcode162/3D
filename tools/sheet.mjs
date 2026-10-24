@@ -1,5 +1,5 @@
 // A contact sheet: one spot with several page options, in one labelled
-// picture, for tuning by eye (docs/AUTOMATION.md):
+// picture, for tuning by eye (docs/archive/AUTOMATION.md):
 //   node tools/sheet.mjs bartop "light=classic" "" "eyekeep=0.3" "eyekeep=0.6"
 //   SPOTS=bartop,piano node tools/sheet.mjs - "a" "b"    (rows = spots)
 //   SPOTS='1,1.6,5,180,0;2,1.6,5,90,0' node tools/sheet.mjs - ""  (cameras)

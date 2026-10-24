@@ -129,7 +129,7 @@ if ($method === 'GET' && isset($_GET['shot'])) {
   readfile($path);
   exit;
 }
-// Live tuning of the bar's loops (docs/ENGINE.md E8.2): anyone may read it
+// Live tuning of the bar's loops (docs/archive/ENGINE.md E8.2): anyone may read it
 // (the bar does when it loads); only the owner changes it (action "tune").
 if ($method === 'GET' && isset($_GET['tuning'])) {
   header('Content-Type: application/json');

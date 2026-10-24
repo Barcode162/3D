@@ -19,8 +19,8 @@ rules, the plan's form, the Charter's shape.
 |---|---|---|
 | A procedure | a new section or page in `docs/playbook/`, in the index | the shape: When · Before · Steps · Done when · If wrong · Records |
 | A check | `tools/lib/checks.mjs` (CHECKS, and a RULES line for the files it covers) | a step in exactly one workflow (`tools/workflows_test.mjs` insists) |
-| A tool | `tools/<name>.mjs` with its usage in its first lines; one line in `toolbelt/tools.json` | its Handbook entry (J6) |
-| A system, page or data file | its code; its Handbook page (J6) | its checks |
+| A tool | `tools/<name>.mjs` with its usage in its first lines; one line in `toolbelt/tools.json` | its line in `tools/lib/commands.mjs` (the Handbook's command list follows) |
+| A system, page or data file | its code; its Handbook page (`docs/handbook/systems/`, `ui/`) | its checks |
 | A project | `toolbelt/tools.json` → `projects` | Dev and the site list it |
 | A word | `docs/charter/glossary.md` | before it's used anywhere |
 | A known issue | `docs/records/known-issues.md`, with the job that fixes it | |

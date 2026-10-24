@@ -1,5 +1,5 @@
 #pragma once
-// Bounced light, the CPU half (L1.5, docs/manual/light.md → Bounced light).
+// Bounced light, the CPU half (L1.5, docs/handbook/manual/light.md → Bounced light).
 // The still surfaces of a place are split into small patches ("surfels",
 // about 25 cm apart). Rays from each patch find which patches it sees; rays
 // from a grid of points in the air ("probes", about 50 cm apart) find what

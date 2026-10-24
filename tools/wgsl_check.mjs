@@ -1,7 +1,7 @@
 // Compiles every WGSL shader (looped/shaders/*.wgsl and the projects') with
 // the browser's real WebGPU compiler and prints each error and warning with
 // its line, so a shader mistake is found in seconds instead of from the
-// game's log (docs/AUTOMATION.md):
+// game's log (docs/archive/AUTOMATION.md):
 //   node tools/wgsl_check.mjs [file.wgsl ...]
 // Exits 1 on any error. In tools/check.mjs (game).
 import { readFileSync, readdirSync } from 'node:fs';

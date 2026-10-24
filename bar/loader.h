@@ -1,6 +1,6 @@
 #pragma once
 // The loading screen's stages, from start-up to "Tap to enter" (see
-// docs/RESTRUCTURE.md §2.7). Each stage is named on the loading screen and
+// docs/archive/RESTRUCTURE.md §2.7). Each stage is named on the loading screen and
 // timed by the profiler. "Ready" = every file is in (or failed, if not the
 // room itself), background jobs are done, every pipeline has compiled, the
 // warm-up frame has finished on the GPU, and frames are steady (30 in a row

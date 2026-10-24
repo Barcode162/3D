@@ -1,4 +1,4 @@
-// The shared look (ui/, docs/STUDIO.md S1.1): the style page in every theme,
+// The shared look (ui/, docs/archive/STUDIO.md S1.1): the style page in every theme,
 // at two phone widths. Checks: no errors, fonts and icons load, nothing wider
 // than the screen, the theme switch changes the colours, the step lights
 // step, the knob and fader answer a finger, the save lamps light.

@@ -754,7 +754,7 @@ bool studioCommand(const engine::ui::Command& c) {
   return true;
 }
 
-// X-ray (docs/STUDIO.md 5.3): the invisible parts as glowing edges, the
+// X-ray (docs/archive/STUDIO.md 5.3): the invisible parts as glowing edges, the
 // nearest first (the renderer draws at most so many boxes).
 struct Region {
   Vec3 center, half;
@@ -813,7 +813,7 @@ void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
     S.readySent = true;
     sendReady();
   }
-  // The selection breathes (docs/STUDIO.md 4.0: the selected thing pulses).
+  // The selection breathes (docs/archive/STUDIO.md 4.0: the selected thing pulses).
   const float glow = 0.6f + 0.35f * std::sin(static_cast<float>(nowMs) * 0.005f);
   for (size_t m : S.glowing) g_app.renderer.setGlow(0, 0, m, 1, glow);
   poseModels();

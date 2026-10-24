@@ -1,5 +1,5 @@
 #pragma once
-// The world (docs/ENGINE.md): every thing in a place, each sitting on its
+// The world (docs/archive/ENGINE.md): every thing in a place, each sitting on its
 // parent, each in a state, each state playing its loop, forever.
 //
 // Everything follows from the clock plus one fact per thing: **which state

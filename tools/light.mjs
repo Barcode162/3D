@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The light tool, built when its sources changed, then run (docs/AUTOMATION.md):
+// The light tool, built when its sources changed, then run (docs/archive/AUTOMATION.md):
 //   node tools/light.mjs stats [place]          the place's geometry and ray tree
 //   node tools/light.mjs gi [place]             builds the bounced light on the CPU, timed by phase
 //   node tools/light.mjs map [place] [y] [out]  a top-down map of the bounced light (PNG)

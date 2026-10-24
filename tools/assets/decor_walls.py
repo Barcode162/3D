@@ -1,4 +1,4 @@
-# The decor pass for the new bar (docs/BAR_REDESIGN.md): Edison string
+# The decor pass for the new bar (docs/archive/BAR_REDESIGN.md): Edison string
 # lights across the hall, neon signs (COCKTAILS, GAME ON, a music note,
 # PLAY), a gallery of framed photos, a collector wall of tin signs, license
 # plates and records, a big clock and a sports TV on the soffit, a

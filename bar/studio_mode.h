@@ -1,5 +1,5 @@
 #pragma once
-// Studio mode (docs/STUDIO.md S2): the bar's own engine inside the Studio
+// Studio mode (docs/archive/STUDIO.md S2): the bar's own engine inside the Studio
 // page (studio/index.html frames /bar/?studio=1). No room, no HUD, no body:
 // a free camera, and a tap picks a thing instead of using it. The page talks
 // to it with bar3dBridge.command("st.*", a, b, text) and hears back through

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Stages only the changes (hunks) of a piece, when two pieces touched the
-same files (docs/AUTOMATION.md: one piece = one commit):
+same files (docs/archive/AUTOMATION.md: one piece = one commit):
 
   python3 tools/stage_hunks.py 'regex' [file ...]
       stages every changed hunk whose text matches the regex (in any file),

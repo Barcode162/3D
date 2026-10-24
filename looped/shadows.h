@@ -1,5 +1,5 @@
 #pragma once
-// Soft shadows on the floor (docs/ENGINE.md E4.2): a dark, blurry disc under
+// Soft shadows on the floor (docs/archive/ENGINE.md E4.2): a dark, blurry disc under
 // each avatar, so people stand on the floor instead of floating over it.
 // Cheap: one quad each, one draw call, after the scene (depth-tested, so
 // furniture in front hides them).

@@ -1,4 +1,4 @@
-// Bounced light on the GPU (looped/gi.h, docs/manual/light.md → Bounced light).
+// Bounced light on the GPU (looped/gi.h, docs/handbook/manual/light.md → Bounced light).
 // Build (once per layout, in slices over a few frames):
 //   trace_patches  each patch's rays → the patch each one meets
 //   trace_lamps    each patch × lamp: light falling on it per candela (0 = hidden)

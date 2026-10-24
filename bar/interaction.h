@@ -7,7 +7,7 @@
 //   player standing behind the jukebox doesn't steal the tap;
 // - on an exact tie a thing to use beats a seat;
 // - touching a living thing (a lamp, a table: its kind has a "tap" rule,
-//   docs/ENGINE.md) comes last: it must be clearly nearer than the rest
+//   docs/archive/ENGINE.md) comes last: it must be clearly nearer than the rest
 //   (kTouchBias), so a stool's seat or the jukebox still wins.
 // Pure logic (no engine): tested by tools/native/interaction_test.cpp.
 #include <vector>

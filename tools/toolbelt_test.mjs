@@ -1,4 +1,4 @@
-// The Toolbelt's list (toolbelt/tools.json, docs/UI_PLAN.md R1.1): every
+// The Toolbelt's list (toolbelt/tools.json, docs/archive/UI_PLAN.md R1.1): every
 // tool has an id, a group that exists, a name, a line of what it does, an
 // icon that exists, and a way in (a page or a command) unless it's "soon";
 // pages inside this repo exist. No browser.  Usage: node tools/toolbelt_test.mjs

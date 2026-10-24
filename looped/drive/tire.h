@@ -1,5 +1,5 @@
 #pragma once
-// One tire's forces from its slip (docs/DRIVING_REWORK.md §4.5): Magic
+// One tire's forces from its slip (docs/plan/jobs/W20.md §4.5): Magic
 // Formula curves for pure longitudinal and lateral slip with load
 // sensitivity, the MF weighting functions for combined slip (braking and
 // turning share the grip), and at large slip a blend into plain sliding

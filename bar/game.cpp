@@ -666,7 +666,7 @@ void handleCommands() {
     g_app.mirrorSetting = g_app.hooks.mirrorQ >= 0 ? g_app.hooks.mirrorQ
                                                    : static_cast<int>(engine::settings::number("mirrorQ", 0));
     applyMirrorDetail();
-    // Lighting (L1): new, or the lighting before it (docs/manual/light.md).
+    // Lighting (L1): new, or the lighting before it (docs/handbook/manual/light.md).
     const bool classic = g_app.hooks.lightClassic >= 0 ? g_app.hooks.lightClassic == 1
                                                        : engine::settings::number("lighting", 0) != 0;
     if (first || classic != g_app.renderer.classicLighting()) {
@@ -738,7 +738,7 @@ void sendInfo() {
 // Lights, the fireplace, sounds and piano notes from other players.
 void handleShared(std::vector<engine::net::WorldEntry>& world, std::vector<engine::net::Event>& events) {
   for (const engine::net::WorldEntry& e : world) {
-    // A thing's state, decided by the room (world key t<net>, docs/ENGINE.md E3).
+    // A thing's state, decided by the room (world key t<net>, docs/archive/ENGINE.md E3).
     if (e.key.size() >= 2 && e.key[0] == 't' && std::isdigit(static_cast<unsigned char>(e.key[1])) && e.values.size() >= 2)
       g_app.world.applyShared(static_cast<uint16_t>(std::atoi(e.key.c_str() + 1)), static_cast<int>(e.values[0]), e.values[1]);
     if (e.key == "rc") g_app.race.onRoomRace(e.values);
@@ -1068,7 +1068,7 @@ struct ProfiledFrame {
 };
 
 // ---- The frame, phase by phase ----
-// Each frame runs these in order (docs/RESTRUCTURE.md §2.1): input, what you
+// Each frame runs these in order (docs/archive/RESTRUCTURE.md §2.1): input, what you
 // do, physics, what the room sent, the games, the room's claims, what you
 // send, then drawing. Each phase is its own function so the order is plain.
 
@@ -1254,7 +1254,7 @@ void phaseRender(FrameIn& f) {
   }
 }
 
-// Tuning the look by hand from the page's address (docs/manual/light.md):
+// Tuning the look by hand from the page's address (docs/handbook/manual/light.md):
 // ?exposure= ?eyekeep= ?eyeref= ?eyemin= ?eyemax= ?glow= ?glowth= override the
 // place's mood, so numbers can be tried on the phone without a build.
 void tuneMoodFromPage() {

@@ -44,4 +44,4 @@ The look kit ships twice: `/ui/` (the site's) and inside the bar (`bar/ui/`); bo
 
 ## History
 
-Themes and the Faceplate look (2026-10-22, `docs/STUDIO.md` §4); the UI Editor (R1, 2026-10-23).
+Themes and the Faceplate look (2026-10-22, `docs/archive/STUDIO.md` §4); the UI Editor (R1, 2026-10-23).

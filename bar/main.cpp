@@ -34,7 +34,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
 
 int main() {
   LOG_INFO("Bar3D starting (C++ / WebAssembly).");
-  app::fetchLiveWorld();  // while the GPU starts (docs/STUDIO.md 7.6)
+  app::fetchLiveWorld();  // while the GPU starts (docs/archive/STUDIO.md 7.6)
   g_app.gpu.init("#canvas", onGpuReady);
   return 0;
 }

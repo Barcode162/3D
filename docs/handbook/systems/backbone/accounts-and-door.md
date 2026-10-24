@@ -8,7 +8,7 @@ Who you are (accounts, profiles, badges) and who may come into the private bar.
 
 ## Status
 
-**Live.** Accounts may move to Cloudflare later (`docs/DECISIONS.md` → Product direction).
+**Live.** Accounts may move to Cloudflare later (`docs/archive/DECISIONS.md` → Product direction).
 
 ## What you can do with it
 

@@ -1,4 +1,4 @@
-# Stage props around the grand piano (docs/BAR_REDESIGN.md): a microphone
+# Stage props around the grand piano (docs/archive/BAR_REDESIGN.md): a microphone
 # on a boom stand, an acoustic guitar with strings on its stand, a combo
 # amp, a ceiling lighting bar with three PAR spotlights aimed at the piano,
 # cables on the floor, and a stool.

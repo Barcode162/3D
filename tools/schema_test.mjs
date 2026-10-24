@@ -1,4 +1,4 @@
-// The world schema is complete (docs/STUDIO.md 7.3): every field every world
+// The world schema is complete (docs/archive/STUDIO.md 7.3): every field every world
 // file uses is described in assets/world/schema.json, every choice used is in
 // its list, and the lists match what the engine knows (bar/scene_names.cpp,
 // looped/world/loop.cpp). Usage: node tools/schema_test.mjs

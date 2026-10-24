@@ -8,7 +8,7 @@ J Production's own small, safe language for things that live in the world: a can
 
 ## Status
 
-**Planned** (road item T1; `docs/manual/timeline.md`).
+**Planned** (road item T1; `docs/handbook/manual/timeline.md`).
 
 ## What you can do with it
 

@@ -4,7 +4,7 @@
 // readable string made from what the thing is and where it stands
 // ("seat.stool@-2.5,-1.3"), so it doesn't change when the layout code adds
 // or reorders things; its 16-bit net id is a hash of that string (what the
-// room protocol will carry, docs/PROTOCOL.md §3.3).
+// room protocol will carry, docs/handbook/protocol.md §3.3).
 // tools/native/entity_test.cpp checks they're unique and equal the saved list
 // bar/entity_ids.txt (a changed id there is a deliberate layout change).
 // Pure logic (no engine): the native test builds the real scene.

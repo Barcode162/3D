@@ -1,5 +1,5 @@
 // Bar3D room protocol v1 codec (server side; the Node test tools use it as a
-// client too). The spec is docs/PROTOCOL.md; the C++ twin is
+// client too). The spec is docs/handbook/protocol.md; the C++ twin is
 // looped/netproto.*. Both must pass proto/vectors.json (tools/proto_test.mjs).
 //
 // Binary (high rate): STATE and PROP from clients, TICK from the server.

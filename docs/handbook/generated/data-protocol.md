@@ -1,7 +1,7 @@
 <!-- generated: node tools/handbook.mjs write (from cloud/proto.js); never edit by hand -->
 # Data: the room protocol
 
-The messages between a phone and the room, read from the codec itself (`cloud/proto.js`; the game's twin is `looped/netproto.*`, both checked on `proto/vectors.json`). The full spec with every byte: `docs/PROTOCOL.md` ([the protocol](../systems/engine/net-codec-and-protocol.md)).
+The messages between a phone and the room, read from the codec itself (`cloud/proto.js`; the game's twin is `looped/netproto.*`, both checked on `proto/vectors.json`). The full spec with every byte: `docs/handbook/protocol.md` ([the protocol](../systems/engine/net-codec-and-protocol.md)).
 
 - Protocol version: **1** (the room also accepts the one before)
 - Slots per room: 16

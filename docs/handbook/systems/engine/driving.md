@@ -8,7 +8,7 @@ Car physics for the racing sim: the original `looped/vehicle.*` and the new driv
 
 ## Status
 
-**Partial.** Racing uses it; the driving rework (`docs/DRIVING_REWORK.md`) is in progress (its future job).
+**Partial.** Racing uses it; the driving rework (`docs/plan/jobs/W20.md`) is in progress (its future job).
 
 ## What you can do with it
 

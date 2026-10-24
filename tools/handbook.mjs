@@ -18,7 +18,8 @@ import { worldPage, uiPage, listsPage, protocolPage, inventoryPage } from './lib
 const OUT = 'docs/handbook/generated';
 const BANNER = (src) => `<!-- generated: node tools/handbook.mjs write (from ${src}); never edit by hand -->\n`;
 const json = (f) => JSON.parse(readFileSync(f, 'utf8'));
-const tracked = () => execSync('git ls-files', { encoding: 'utf8' }).split('\n').filter(Boolean);
+// The repo's files as they are now: tracked or new (not ignored), and still on disk.
+const tracked = () => [...new Set(execSync('git ls-files --cached --others --exclude-standard', { encoding: 'utf8' }).split('\n').filter(Boolean))].filter((f) => existsSync(f));
 const cell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 
 const LANG = {
@@ -108,6 +109,20 @@ function problems() {
     if (s.parts.join('|') !== PARTS.join('|')) out.push(`${f}: its parts must be exactly ${PARTS.join(', ')}`);
     if (s.status === '?') out.push(`${f}: its Status must start with **Live**, **Partial** or **Planned**`);
   }
+  // No file points at a doc that isn't there (J6.6). Not checked: history (the archive, the
+  // records, the restructure's spec) and the stores' copies (they keep old paths until
+  // their next publish, KI-31).
+  const SKIP = /^(docs\/archive\/|docs\/records\/|docs\/plan\/restructure\.md$|assets\/world\/|ui\/system\/|tools\/lib\/docmoves\.mjs$)/;  // (docmoves.mjs: the map of the old paths)
+  const TEXT = /\.(md|cpp|h|js|mjs|php|html|py|wgsl|yml|json|sh|css|txt|toml)$/;
+  for (const f of files.concat(untracked())) {
+    if (SKIP.test(f) || !TEXT.test(f) || !existsSync(f)) continue;
+    const text = readFileSync(f, 'utf8');
+    for (const m of text.matchAll(/(?<![\w/.-])docs\/[A-Za-z0-9_./-]*[A-Za-z0-9_/]/g)) {
+      const next = text[m.index + m[0].length] || '';
+      if ('<{$*'.includes(next) && next) continue;  // a pattern (docs/plan/jobs/J<n>.md, docs/plan/**)
+      if (!existsSync(m[0])) out.push(`${f}: points at ${m[0]}, which isn't there`);
+    }
+  }
   // Every relative link in the Handbook leads to a file.
   for (const f of files.concat(untracked()).filter((x) => x.startsWith('docs/handbook/') && x.endsWith('.md'))) {
     for (const [, link] of readFileSync(f, 'utf8').matchAll(/\]\(([^)#\s]+)(?:#[^)]*)?\)/g)) {
@@ -123,7 +138,7 @@ if (cmd === 'write') {
   for (const [name, make] of Object.entries(PAGES)) { writeFileSync(join(OUT, name), make()); console.log(`wrote ${join(OUT, name)}`); }
 } else if (cmd === 'check') {
   const bad = problems();
-  console.log(bad.length ? bad.join('\n') : 'ok  handbook: the generated pages are current, every folder is described, every link leads to a file');
+  console.log(bad.length ? bad.join('\n') : 'ok  handbook: the generated pages are current, every folder is described, every link leads to a file, no file points at a missing doc');
   process.exit(bad.length ? 1 : 0);
 } else {
   console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 9).join('\n')); process.exit(2);

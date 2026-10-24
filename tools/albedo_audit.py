@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real material brightness (L1.4, docs/manual/light.md) and roughness (M0):
+"""Real material brightness (L1.4, docs/handbook/manual/light.md) and roughness (M0):
 measures how much
 light every material of every model reflects (its albedo: the average of its
 base colour texture in linear light, times its colour factor) and how much

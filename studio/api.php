@@ -1,5 +1,5 @@
 <?php
-// The world store (docs/STUDIO.md 7.2): the live world every phone and the
+// The world store (docs/archive/STUDIO.md 7.2): the live world every phone and the
 // room load, its versions, and each editor's draft. On IONOS at
 // joshuavelasco.com/studio/api.php; data outside the web root in
 // private/studio/ (STUDIO_DATA overrides, for tests).

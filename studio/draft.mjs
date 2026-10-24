@@ -1,4 +1,4 @@
-// The draft (docs/STUDIO.md 5.8): the world's files as the Studio edits
+// The draft (docs/archive/STUDIO.md 5.8): the world's files as the Studio edits
 // them, with the undo history. Loads the files the engine runs (the live
 // version, else the ones built into the bar), keeps a copy to edit, and
 // tells the engine about every change it can show at once (positions, sizes,

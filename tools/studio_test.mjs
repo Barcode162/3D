@@ -1,4 +1,4 @@
-// The Studio (docs/STUDIO.md S2, S3...): the page at /studio/ with the bar's
+// The Studio (docs/archive/STUDIO.md S2, S3...): the page at /studio/ with the bar's
 // engine in studio mode in its frame, laid out like the IONOS webspace on
 // PHP's built-in server (<root>/home/bar = the built site + account.php,
 // <root>/home/studio, <root>/home/ui, <root>/private) with a real owner login.

@@ -1,6 +1,6 @@
 #pragma once
 // Bar3D room protocol v1 codec (the game's side). The spec is
-// docs/PROTOCOL.md; the server's twin is cloud/proto.js. Both are checked
+// docs/handbook/protocol.md; the server's twin is cloud/proto.js. Both are checked
 // on the same golden vectors (proto/vectors.json) by tools/proto_test.mjs
 // and tools/native/proto_test.cpp.
 //

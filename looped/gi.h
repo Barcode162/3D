@@ -1,5 +1,5 @@
 #pragma once
-// Bounced light, the GPU half (L1.5, docs/manual/light.md → Bounced light).
+// Bounced light, the GPU half (L1.5, docs/handbook/manual/light.md → Bounced light).
 // The CPU (looped/radiosity.h, as background jobs) gathers the still
 // surfaces, builds the ray tree and the patches; this uploads them and casts
 // every build ray on the GPU (looped/shaders/gi.wgsl: a few slices per frame,

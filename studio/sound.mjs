@@ -1,4 +1,4 @@
-// Sounds (docs/STUDIO.md 5.7, S8.4), in the Life tab: the sound a kind
+// Sounds (docs/archive/STUDIO.md 5.7, S8.4), in the Life tab: the sound a kind
 // makes by itself (which effect, how often, how loud, how far it carries)
 // and the sound when you touch it. ▶ plays it at the thing (st.sound). The
 // bar's voices are made when the place loads, so a change reloads the world.

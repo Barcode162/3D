@@ -1,4 +1,4 @@
-// The Studio's page (docs/STUDIO.md 5): logs you in, frames the bar's engine
+// The Studio's page (docs/archive/STUDIO.md 5): logs you in, frames the bar's engine
 // in studio mode (/bar/?studio=1, bar/studio_mode.cpp) and draws the
 // Studio's controls around it. Talks to the engine with
 // bar3dBridge.command('st.*', a, b, text) and hears it through

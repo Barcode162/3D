@@ -1,4 +1,4 @@
-# The giant 2-in-1 mirror on the right wall (docs/BAR_REDESIGN.md): a slim
+# The giant 2-in-1 mirror on the right wall (docs/archive/BAR_REDESIGN.md): a slim
 # black steel frame with a brass bead, from just above the floor to near
 # the ceiling, a vanity light bar on top, and its control panel (a brass
 # plate printed FULL / AVATARS / OFF). The three buttons are a separate

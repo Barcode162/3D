@@ -1,4 +1,4 @@
-// What changed between two worlds, in plain words (docs/STUDIO.md 7.4):
+// What changed between two worlds, in plain words (docs/archive/STUDIO.md 7.4):
 // "pint_glass-4 moved 12 cm left", "every bar_stool: idle loop 2.4 s → 3 s",
 // "added candle-7". Used by the Studio's Changes and History, the hub and
 // Claude's news posts.

@@ -1,5 +1,8 @@
 # Automation: the tools that do the work (user, 2026-10-22)
 
+> **History (archived in J6.6, 2026-10-24).** What's still true is in the Handbook
+> (`docs/handbook/README.md`); decisions still in force are in `docs/records/decisions/`.
+
 > **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
 > book that gives instructions). This file lists the tools; how and when to
 > run them is in `docs/playbook/job.md`. It moves into the Handbook in J6.

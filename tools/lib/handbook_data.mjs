@@ -3,9 +3,10 @@
 // token, screen part, list entry, config field and room message is, and every
 // thing in every place with the model that holds it.
 import { readFileSync, readdirSync } from 'node:fs';
+import { fixDocRefs } from './docmoves.mjs';
 
 const json = (f) => JSON.parse(readFileSync(f, 'utf8'));
-const cell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const cell = (s) => fixDocRefs(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
 const code = (s) => (s === undefined || s === '' ? '' : '`' + String(s).replace(/`/g, '') + '`');
 
 // One schema record ({label, about, fields}) as a table.
@@ -82,7 +83,7 @@ export async function protocolPage(banner) {
     return `| ${code(letter)} | ${cell(m.name)} | ${cell(fields)} |`;
   }).join('\n');
   return banner('cloud/proto.js') + '# Data: the room protocol\n\n' +
-    `The messages between a phone and the room, read from the codec itself (\`cloud/proto.js\`; the game's twin is \`looped/netproto.*\`, both checked on \`proto/vectors.json\`). The full spec with every byte: \`docs/PROTOCOL.md\` ([the protocol](../systems/engine/net-codec-and-protocol.md)).\n\n` +
+    `The messages between a phone and the room, read from the codec itself (\`cloud/proto.js\`; the game's twin is \`looped/netproto.*\`, both checked on \`proto/vectors.json\`). The full spec with every byte: \`docs/handbook/protocol.md\` ([the protocol](../systems/engine/net-codec-and-protocol.md)).\n\n` +
     `- Protocol version: **${PROTO}** (the room also accepts the one before)\n- Slots per room: ${MAX_SLOTS}\n- Largest text to the room: ${MAX_TEXT_TO_SERVER} bytes (a voice signal: ${MAX_SIGNAL_TO_SERVER}); largest to a phone: ${MAX_TO_CLIENT}\n\n` +
     '## Binary messages\n\n| Type | Byte |\n|---|---|\n' + Object.entries(BIN).map(([k, v]) => `| ${code(k)} | ${code('0x' + v.toString(16).padStart(2, '0'))} |`).join('\n') + '\n' +
     '\n## Text messages: phone → room\n\nOne type letter + a JSON object; `?` marks an optional field.\n\n| Letter | Message | Fields |\n|---|---|---|\n' + table(TO_SERVER) + '\n' +

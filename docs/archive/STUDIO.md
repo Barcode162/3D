@@ -1,5 +1,8 @@
 # The Studio, the Dials, and the new look (plan, 2026-10-21)
 
+> **History (archived in J6.6, 2026-10-24).** What's still true is in the Handbook
+> (`docs/handbook/README.md`); decisions still in force are in `docs/records/decisions/`.
+
 > **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
 > book that gives instructions). This file was the Studio's plan (S1–S10, all
 > built) and its design; the plan now lives in `PLAN.md`. Its facts move into

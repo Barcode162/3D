@@ -1,4 +1,4 @@
-// Move / Turn / Size (docs/STUDIO.md 5.4): the tools under the selection.
+// Move / Turn / Size (docs/archive/STUDIO.md 5.4): the tools under the selection.
 // The arrows on the thing (the engine draws them, bar/studio_mode.cpp) are
 // for quick drags; the strip is for exact values: axis keys, world or local,
 // the number itself (with a ± key: the iPhone number pad has none), and the

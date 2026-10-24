@@ -82,7 +82,7 @@ class SceneRenderer {
   // The glow after the scene (looped/post.h). Off at Low quality, or ?post=0
   // (the eyes and the mood stay).
   void setPostEffects(bool on) { postOn_ = on; }
-  // The lighting before L1 (docs/manual/light.md): Settings → Graphics →
+  // The lighting before L1 (docs/handbook/manual/light.md): Settings → Graphics →
   // Lighting, or ?light=classic.
   void setClassicLighting(bool classic);
   // Test lighting (?light=test, the tests only): classic, plus a flat light from

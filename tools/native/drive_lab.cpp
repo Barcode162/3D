@@ -1,4 +1,4 @@
-// The new driving physics, measured (docs/DRIVING_REWORK.md §17, the MVP's
+// The new driving physics, measured (docs/plan/jobs/W20.md §17, the MVP's
 // rows): static settle, drop, parked creep, slope hold, 0-60, top speed,
 // 60-0 braking, the 40 m skid pad, through zero into reverse, a 5 cm bump,
 // letting go of the wheel, the handbrake. Prints numbers and fails on limits.

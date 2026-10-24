@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The UI kit (docs/UI_PLAN.md R1): the theme and screen files in ui/system/
+// The UI kit (docs/archive/UI_PLAN.md R1): the theme and screen files in ui/system/
 // are the truth; the CSS the pages load is written from them.
 //   node tools/uikit.mjs css      write ui/themes.css and looped.js's theme list from ui/system/themes/
 //   node tools/uikit.mjs check    exit 1 if a theme or screen file is wrong, or themes.css is out of date

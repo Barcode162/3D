@@ -2,7 +2,7 @@
 // every PNG with the same name). A pixel differs when any channel differs by
 // more than THRESHOLD (default 16 of 255). Prints the % of differing pixels
 // per image; exits 1 if any is above LIMIT % (default 1). Used for "looks
-// the same" checks (docs/RESTRUCTURE.md → Visual check).
+// the same" checks (docs/archive/RESTRUCTURE.md → Visual check).
 import { readdirSync, statSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { readPng } from './lib/png.mjs';

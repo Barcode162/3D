@@ -8,7 +8,7 @@ How the phones and the room talk: one WebSocket, binary messages for movement, t
 
 ## Status
 
-**Live.** Protocol v1 (`docs/PROTOCOL.md`).
+**Live.** Protocol v1 (`docs/handbook/protocol.md`).
 
 ## What you can do with it
 
@@ -23,7 +23,7 @@ Be in the bar with others: see them move, sit, play, hear the same song.
 
 ## Data
 
-`docs/PROTOCOL.md` (the spec), `proto/vectors.json`.
+`docs/handbook/protocol.md` (the spec), `proto/vectors.json`.
 
 ## Commands
 

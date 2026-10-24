@@ -176,7 +176,7 @@ const bobThrows = [...(await logOf(bob)).matchAll(/Darts: (\S+) = (\d+), (\d+) l
 console.log('Bob\'s darts:', JSON.stringify(bobThrows), 'room told the others:', JSON.stringify(throwsSeen.map((t) => [t.label, t.pts, t.left])));
 sitter.close();
 
-// Things (docs/ENGINE.md E3): Dave touches a lamp over the counter; the room
+// Things (docs/archive/ENGINE.md E3): Dave touches a lamp over the counter; the room
 // runs its rule and everyone sees it swing.
 const dave = await open('Dave', '-4.3,1.66,-2.6,0,24');
 await dave.waitForFunction(() => /Stage entered/.test(document.getElementById('log').textContent), null,

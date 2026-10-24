@@ -46,4 +46,4 @@ Adding things reloads the Studio's frame from the draft. Commands land one frame
 
 ## History
 
-S1-S10, 2026-10-22 (`docs/STUDIO.md`).
+S1-S10, 2026-10-22 (`docs/archive/STUDIO.md`).

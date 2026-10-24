@@ -28,7 +28,7 @@
 //   {"a":"invite","token":"..","user":"mia","on":1}  (admins) invite / remove a player
 //   {"a":"admin","token":"..","user":"mia","on":1}   (the owner only) make / remove an admin
 //
-// The private bar (docs/LOOPED.md A1-A2): gate.php lets in the owner, the
+// The private bar (docs/archive/LOOPED.md A1-A2): gate.php lets in the owner, the
 // admins and the invited (accounts/players.json). Your own profile carries
 // "play" (1 = you may play) and "admin". Logging in, signing up, a reset and
 // "me" also set the cookie bar_t (HttpOnly) that gate.php reads; logout

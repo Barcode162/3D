@@ -1,7 +1,7 @@
 // The room's rules for the shared world: what each key may hold and who may
 // change it. Every world write (KV message or `set` intent) goes through
 // checkWrite(); a write that breaks a rule is refused and never reaches the
-// other players. (cloud/room.js calls this; docs/PROTOCOL.md §4.5 lists it.)
+// other players. (cloud/room.js calls this; docs/handbook/protocol.md §4.5 lists it.)
 //
 // Keys today (written by the game, bar/*.cpp):
 //   g<n>   glass n: x,y,z, quaternion x,y,z,w, velocity x,y,z, state
@@ -16,7 +16,7 @@
 //          AvatarStyle). Only that player writes it.
 //   rc     the racing rigs: lobby, picks, start time, results. Written only
 //          by the room (cloud/games/race.js); phones use `race` intents.
-//   t<net> a thing's state (docs/ENGINE.md E3): state, start (server s).
+//   t<net> a thing's state (docs/archive/ENGINE.md E3): state, start (server s).
 //          Written only by the room (the `thing` intent runs the bar's rules).
 //   dk<n>  drink on counter spot n (0..7): drink type + 1, 0 = empty.
 //          Serving one (non-zero) needs the bartender badge; taking one is a

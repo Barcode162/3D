@@ -79,7 +79,7 @@
     "id": "J6.6",
     "text": "The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -266,7 +266,7 @@
    },
    {
     "id": "W20",
-    "text": "Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/DRIVING_REWORK.md).",
+    "text": "Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md).",
     "serves": [
      "N3"
     ],
@@ -657,7 +657,7 @@
   },
   {
    "build": "aa0d3ae",
-   "text": "R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/UI_PLAN.md), engine work paused → a28d85c^..b394ba3"
+   "text": "R1.1-R1.7: the Toolbelt and the UI Editor (theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes); the plan rework (docs/archive/UI_PLAN.md), engine work paused → a28d85c^..b394ba3"
   },
   {
    "build": "fde3f14",
@@ -716,5 +716,5 @@
    "text": "E2 done: the bar as a place file, every object alive (before this file existed)."
   }
  ],
- "where": "*Docs that explain; they never hold plans or ticks.*\n- `CLAUDE.md`: how a \"go\" runs. `docs/REFERENCE.md`: the long guide (layout, every tool, iOS limits).\n- `docs/AUTOMATION.md`: the tools (piece, step, plan, uikit, studio, bench, gallery).\n- `docs/ENGINE.md`: how Looped is built (things, loops, layers). `docs/STUDIO.md`: how the Studio works.\n- `docs/manual/`: the manual (light, materials, recipes, timeline, world, avatars).\n- `docs/PROTOCOL.md`: the multiplayer wire format. `docs/DRIVING_REWORK.md`: the driving spec.\n- `docs/DECISIONS.md`: gotchas and why things are the way they are.\n- `docs/archive/`: every old plan and progress file, kept to read, never to plan from."
+ "where": "*Docs that explain; they never hold plans or ticks.*\n- `CLAUDE.md`: how a \"go\" runs. `docs/archive/REFERENCE.md`: the long guide (layout, every tool, iOS limits).\n- `docs/archive/AUTOMATION.md`: the tools (piece, step, plan, uikit, studio, bench, gallery).\n- `docs/archive/ENGINE.md`: how Looped is built (things, loops, layers). `docs/archive/STUDIO.md`: how the Studio works.\n- `docs/handbook/manual/`: the manual (light, materials, recipes, timeline, world, avatars).\n- `docs/handbook/protocol.md`: the multiplayer wire format. `docs/plan/jobs/W20.md`: the driving spec.\n- `docs/archive/DECISIONS.md`: gotchas and why things are the way they are.\n- `docs/archive/`: every old plan and progress file, kept to read, never to plan from."
 }
