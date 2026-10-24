@@ -15,6 +15,10 @@ import { launchBrowser } from './lib/browser.mjs';
 
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
+// The pictures are for looking at, not checks: a slow one (a long, moving page
+// on CI's machine with no graphics card) prints a note instead of failing the deploy.
+const shot = (page, opts) => page.screenshot({ animations: 'disabled', timeout: 20000, ...opts })
+  .catch((e) => console.log(`note ${opts.path}: no picture (${String(e.message).split('\n')[0]})`));
 mkdirSync('build', { recursive: true });
 
 // The site folder: homepage/'s files, /ui/ beside them.
@@ -72,7 +76,7 @@ for (const [name, path] of [['home', '/'], ['projects', '/projects/'], ['play', 
   // Scroll through so everything slides in, then a full-page shot.
   await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo({ top: y, behavior: 'instant' }); await new Promise((r) => setTimeout(r, 60)); } window.scrollTo({ top: 0, behavior: 'instant' }); });
   await page.waitForTimeout(1100);
-  await page.screenshot({ path: `build/site-${name}.png`, fullPage: true });
+  await shot(page, { path: `build/site-${name}.png`, fullPage: true });
   await ctx.close();
 }
 
@@ -81,7 +85,7 @@ for (const [name, path] of [['home', '/'], ['projects', '/projects/'], ['play', 
   const { ctx, page } = await open('/');
   await page.click('.burger');
   check(await page.isVisible('#drawer'), 'the menu opens');
-  await page.screenshot({ path: 'build/site-menu.png' });
+  await shot(page, { path: 'build/site-menu.png' });
   await page.click('.burger');
   check(!(await page.isVisible('#drawer')), 'the menu closes');
   await ctx.close();
@@ -92,7 +96,7 @@ for (const [name, path] of [['home', '/'], ['projects', '/projects/'], ['play', 
   const { ctx, page, errors } = await open('/', { width: 1440, height: 900 });
   check(await page.isVisible('.tabs'), 'wide: tabs in the header');
   check(errors.length === 0, 'wide: no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
-  await page.screenshot({ path: 'build/site-home-wide.png' });
+  await shot(page, { path: 'build/site-home-wide.png' });
   await ctx.close();
 }
 
