@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.4 The retired board out of the hub: hub.php keeps only news posts, screenshots, the Claude key and the loops' tuning (its board, projects, places and sections actions gone, hub/seed.json and hub/projects/ removed; the server's data left as it was); tools/hub.mjs keeps post and posts; the hub test covers what stays and that the old actions are gone; the Studio's Note for Claude, which still wrote board cards nobody read, now lands in Dev's notes with the thing, the camera and a picture (Studio test S10.1 passes); KI-12 closed, KI-29 noted (the tuning has no reader)
+
+`dad3928` · 2026-10-24 13:45 · 14 files, +88 −1708 · tests: workflows, hub, server
+
+Phone check: Studio: select a thing → ⋯ → Note for Claude → send; then Dev → Plan shows it under Notes
+
 ## J5.3 Exactly one deployer per folder: docs/handbook/deploy-map.json (every path → the workflow that uploads it and where, or not uploaded); tools/workflows_test.mjs checks every tracked file has its entry, each workflow uploads only its own folders and starts on changes to them; the game's deploy no longer uploads the site (only hub.yml does); a plan-only change no longer starts a game deploy; KI-9 closed
 
 `8083557` · 2026-10-24 13:20 · 6 files, +70 −8 · tests: changed
