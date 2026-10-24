@@ -49,7 +49,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 3. The chapters
 *The fixed list. Every road and parked item sits under one of these.*
-- **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item (J7 lays it out).
+- **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item: the world remake J35, J70-J77 (every thing its own model, placed, lit and heard).
 - **The site:** the front door, the showcase, the news. *Now:* J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); frozen until J8.
 - **The engine:** Looped, the script language, speed. *Now:* Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is planned; paused until J8.
 - **The tools:** the Toolbelt and Dev. *Now:* Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8).
@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J7 · The plan rebuilt with a reality check** (the tools). The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
 - [x] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
-- [ ] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
+- [x] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
 - [ ] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
 - [ ] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
 
@@ -98,9 +98,9 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **J23** VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown). · N4
   *Formerly* W12 · *Verdict:* Doable at a cost — Real money needs a payment provider, tax handling and terms (Charter: law and money): your decision, with J64 first
 - [ ] **J24** Small interactions done properly: bell, guitar, books, TV, door, taps. · N3
-  *Formerly* W13 · *Verdict:* Doable after J35 — Books, the TV and the taps are baked into room-sized models today; each needs its own model first (the world remake)
+  *Formerly* W13 · *Verdict:* Doable after J70, J71 — Books, the TV and the taps become their own things in the world remake
 - [ ] **J25** Physics props: knock bottles off, glasses break and stack, pour drinks. · N3
-  *Formerly* W14 · *Verdict:* Doable after J35 — Bottles and glasses on the walls are baked into the room models; they need their own models first (the world remake); the physics exists
+  *Formerly* W14 · *Verdict:* Doable after J72 — Bottles and glasses become real things first; the physics exists
 - [ ] **J26** The pool table. · N4
   *Formerly* W15 · *Verdict:* Doable now — A new thing with physics (balls, a cue) the engine already has; its model grown by script
 - [ ] **J27** Room 3, taped off today (its question is still open). · N3
@@ -119,8 +119,24 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J35** Remaster the crude first versions of props and rooms. · N3
-  *Formerly* W24 · *Verdict:* Doable now — Models are grown by Blender scripts (tools/assets/), the way Claude makes 3D; J7.2 breaks it into the world remake's jobs
+- [ ] **J35** The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md. · N3
+  *Formerly* W24 · *Verdict:* Doable now — Models are grown by Blender scripts, the way Claude makes 3D (Charter: Claude); splitting things apart costs draw calls on the phone, which the kit's instancing and budget keep in check (J37's report)
+- [ ] **J70** The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
+  *Verdict:* Doable after J35 — Uses the kit's rules and budget; the lounge's 33 baked parts are listed in lounge.glb
+- [ ] **J71** The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
+  *Verdict:* Doable after J35 — Uses the kit; decor_walls.glb holds 63 baked parts today, the most of any model
+- [ ] **J72** The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
+  *Verdict:* Doable after J35 — Uses the kit and the recipes' idea (J48); dozens of copies stay cheap only when drawn together (instancing, J35)
+- [ ] **J73** The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs. · N3
+  *Verdict:* Doable after J35 — Uses the kit; four smaller room models (stage, darts_zone, construction, arcade)
+- [ ] **J74** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open. · N3
+  *Verdict:* Doable after J70, J71, J73 — Once the props are out, the shells are only walls, floors and ceilings; their size is checked against real units
+- [ ] **J75** The world remake, step 7, placement: every thing sits on something real (a floor, a shelf, a table, a wall), snaps there in the Studio, and the place check refuses things floating, sunk or overlapping. · N3
+  *Verdict:* Doable after J70, J71, J72, J73, J74 — The place check (tools/place_check.py) and the inventory's Sits on column exist; this makes them strict
+- [ ] **J76** The world remake, step 8, light with the things: every lamp, bulb, sconce, neon sign and the fire is a thing that carries its own light at its real spot and bulb colour, each room balanced again (no light without a source). · N3
+  *Verdict:* Doable after J75 — The light rule (light only from light sources) and the light engine exist; the lights move from helper spots onto their things
+- [ ] **J77** The world remake, step 9, sound with the things: every thing that makes a sound carries it (the fire crackles from the fireplace, music from the speakers, glasses clink where they are), from its material's sound. · N3
+  *Verdict:* Doable after J75 — The sound engine and the materials' sounds exist; sources move onto their things; your phone judges how it sounds
 
 ### The site
 
@@ -205,7 +221,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ### The world
 - The street and the city outside; homes there as your "real home".
-  *Verdict:* Doable after J35 — The world remake first; a city is many places, a big time cost after that
+  *Verdict:* Doable after J77 — The world remake first; a city is many places, a big time cost after that
 - A kids edition: a separate, simpler game in the same universe (under 13).
   *Verdict:* Against a rule — The 13+ rule (2026-10-19): the platform is 13+ only, and an under-13 game brings children's privacy laws
 - A new name for the world and its currency (Bar3D is a working name).
@@ -215,7 +231,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - Avatar from a face scan (the user's own character builder).
   *Verdict:* Needs an experiment — The same research as J11 (a face from photos)
 - The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)
-  *Verdict:* Doable after J35 — A new place, after the world remake
+  *Verdict:* Doable after J77 — A new place, after the world remake
 
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
