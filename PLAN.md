@@ -50,7 +50,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R6 · Ember on everything that's left** (the tools). Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the arcade's two web games' menus; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
+**R6 · Ember on everything that's left** (the tools). Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the arcade's web games or the minigames (the user's call), not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
 - [x] **R6.1** Ember is the default theme: every page that wears the Looped look switches (the bar's menus, the Studio, Dials, News...); a theme picked on purpose is still remembered; pages over the 3D keep Ember's dark half; the other ten themes stay options *Check:* open the bar's menu: amber keys, words as typed, not capitals
 - [x] **R6.2** The bar's menus and loading screen in Ember: panels you can read over the 3D (no extra blur, so no extra GPU work), keys, tiles, toggles, the player card, the top keys and the toasts on the house theme's tokens; the loading screen with the glow and the moving title *Check:* enter the bar: the loading screen glows amber; open Menu: warm frosted-looking panels, amber keys
 - [x] **R6.3** The private bar's door page (sign in, waiting to be let in) in Ember *Check:* open joshuavelasco.com/bar signed out: the door page is amber, like the site
@@ -157,7 +157,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
+- (this push) R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
+- `ebca03a` R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
 - `ad87523` R4.1, R4.2, R4.3, R4.4, R4.5, R4.6, R4.7: Dev, the control room: Overview, Projects, Plan, Publish, People; the old hub, portal and Toolbelt lead there → 03c3fe4^..f247b0b
 - `58d93ec` R3.1, R3.2, R3.3: The World Plan: one doc (PLAN.md), the old plans archived, the plan keeper → 882582d^..a75881c
 - `2eabe5f` R2.5-R2.6: Ember, the house theme (Warm + frosted glass + a drifting glow + moving titles); motion tokens → 393d12e^..b4f2fea
