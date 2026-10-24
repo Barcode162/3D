@@ -6,6 +6,16 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.1 Ember is the default theme: every page on the Looped look (the bar's menus, the Studio, Dials, News, the style page, Screens, the UI Editor) opens in Ember; a theme picked on purpose (the style page) is still remembered, an old automatic save no longer counts; ?look= and ?scheme= in an address don't stick; the bar and the Studio keep Ember's dark half (pinned), other pages follow the phone; the other ten themes stay options; plan keeper: start also clears 'R6,' from Up next
+
+`14936f8` · 2026-10-24 08:55 · 13 files, +42 −34 · tests: quick, toolbelt
+
+Phone check: open the bar and tap Menu: amber keys, words as typed (not capitals); the Studio opens amber too
+
+![R6.1 page-ui.jpg](R6.1/page-ui.jpg)
+
+![R6.1 page-ui-screen-s-bar-menu.jpg](R6.1/page-ui-screen-s-bar-menu.jpg)
+
 ## R5.4 Projects: the site's tabs are now Home, Projects, News (+ Dev for staff); /projects shows every J Production project: Bar3D (live, its page is the old Play page), Looped the engine (in progress, used by admins and devs; the old Engine page), the script language (planned), and where we're going (the old Vision page); new project folders join the list; the footer follows
 
 `c2ffbfe` · 2026-10-24 08:00 · 7 files, +66 −18 · tests: none
