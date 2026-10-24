@@ -168,7 +168,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
+- (this push) J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86
+- `8793265` J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
 - `546c7d4` J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
 - `87bd110` R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
 - `ebca03a` R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
