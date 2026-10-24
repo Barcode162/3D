@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J2 · Honest checks** (the tools). Honest checks: the browser tests run on GitHub again (a light test-only drawing mode), every test counts, both deploys report their real state · N2 N5
 - [x] **J2.1** The browser tests run on GitHub again: one shared test switch opens the bar with the classic light on GitHub's machines only, so the smoke test stops timing out and the 12 skipped suites run *Check:* Nothing changes on your phone: the bar keeps the new light; Dev → Overview shows the game deploy's tests passed, or names the one that failed
-- [ ] **J2.2** Every test counts: each allowed-to-fail suite (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race) made blocking once it passes on GitHub, or listed as a known issue with a job; none deleted or weakened *Check:* Nothing to see on the phone; Dev → Overview names any failing test
+- [x] **J2.2** Every test counts: each allowed-to-fail suite (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race) made blocking once it passes on GitHub, or listed as a known issue with a job; none deleted or weakened *Check:* Nothing to see on the phone; Dev → Overview names any failing test
 - [ ] **J2.3** Both deploys report their real state to Dev (running, live, tests passed, which failed) with their age; the stale deploy notes fixed *Check:* Dev → Overview: two deploy rows (the game and the site), each with its state and how long ago
 
 ## 5. The road

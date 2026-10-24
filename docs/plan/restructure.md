@@ -267,10 +267,16 @@ PIECE_BRANCH=job/J<n> PIECE_ATTRIBUTION="<this session's two lines>" \
   full light. *Accept:* the smoke test passes on a GitHub run (link in the
   commit or the known issue); time-box one session: if it still fails, the
   known issue records exactly why.
-- **J2.2** Every test counts: each `continue-on-error` suite in `deploy.yml`
-  (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race)
-  is made blocking once it passes on GitHub, or stays non-blocking with a
-  known-issue entry and a job. No test is deleted or weakened to get green.
+- **J2.2** Every test counts: one list of checks (`tools/lib/checks.mjs`,
+  read by `tools/check.mjs`); `tools/workflows_test.mjs` (in the quick
+  check) fails unless every check runs in exactly one workflow (or
+  `NOT_ON_CI` says why), every test file is listed (or `NOT_LISTED` says
+  why), every test step runs after any failure with a time limit, and a test
+  allowed to fail names its open known issue in its step name. Tests that
+  passed on GitHub before (run 164, 2026-10-21) count; tests with a known
+  problem or never run there are allowed to fail with their known issue
+  (KI-24, KI-25) until their GitHub results are in. No test is deleted or
+  weakened to get green.
 - **J2.3** Both workflows report their real state to Dev's store:
   `private/dev/ci-game.json` and `private/dev/ci-site.json` =
   `{build, workflow, status: running|live|passed|failed, failed: [step names],

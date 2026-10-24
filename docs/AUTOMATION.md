@@ -32,7 +32,7 @@ piece that changes the picture has one.**
 - A new benchmark: `tools/native/bench_<name>.cpp`, first line
   `// sources: <files to compile with it>`, prints `name value unit` lines.
 - A new spot: `tools/lib/spots.mjs` (every piece then pictures it too).
-- A new check system: `tools/check.mjs` CHECKS and RULES.
+- A new check system: `tools/lib/checks.mjs` CHECKS and RULES (the one list; `tools/workflows_test.mjs` fails until GitHub runs it in exactly one workflow).
 - A new feature switch: read it with `hooks.feature("name")` (bar/test_hooks.h),
   document it in its `docs/manual/<track>.md` section; `--compare "name=0"`
   gives its before/after.

@@ -6,7 +6,7 @@ name: Hub
 on:
   push:
     branches: [main]
-    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'PLAN.md', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
+    paths: ['hub/**', 'news/**', 'ui/**', 'toolbelt/**', 'dev/**', 'tools/dev_test.mjs', 'tools/lib/webspace.mjs', 'PLAN.md', 'docs/charter/**', 'tools/plan.mjs', 'tools/plan_test.mjs', 'tools/toolbelt_test.mjs', 'tools/uikit.mjs', 'tools/ui_editor_test.mjs', 'tools/ui_api_test.mjs', 'homepage/**', 'tools/site_test.mjs', 'studio/**', 'tools/studio_api_test.mjs', 'tools/ui_test.mjs', 'tools/hub_test.mjs', 'server/account.php', '.github/workflows/hub.yml']
   workflow_dispatch:
 
 permissions:
@@ -29,46 +29,76 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Every test runs even when an earlier one failed (one failure never
+      # hides another); the upload only happens when they all passed. Every
+      # check is listed once in tools/lib/checks.mjs (tools/workflows_test.mjs).
       - name: "Test: PHP syntax"
+        id: php
+        if: ${{ !cancelled() }}
         timeout-minutes: 10
         run: for f in hub/*.php news/*.php $(find homepage -name "*.php") studio/*.php toolbelt/ui-editor/*.php dev/*.php server/account.php; do php -l "$f"; done
 
       - name: Install Playwright
+        id: playwright
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
         run: |
           npm i --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
 
       - name: "Test: the project hub (hub/ + account.php on PHP's server)"
+        id: hub
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: mkdir -p build && node tools/hub_test.mjs
 
       - name: "Test: the site (homepage/: every page, the staff-only portal)"
+        id: site
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/site_test.mjs
 
       - name: "Test: the Toolbelt's list (toolbelt/tools.json)"
+        id: toolbelt
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/toolbelt_test.mjs
 
       - name: "Test: Dev (dev/, the control room)"
+        id: dev
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/dev_test.mjs
 
       - name: "Test: the UI Editor (toolbelt/ui-editor/) and its store (api.php)"
+        id: ui_editor
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/ui_api_test.mjs && node tools/ui_editor_test.mjs
 
       - name: "Test: the theme files and themes.css agree (tools/uikit.mjs)"
+        id: uikit
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/uikit.mjs check
 
       - name: "Test: the shared look (ui/, every theme)"
+        id: ui
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/ui_test.mjs
 
       - name: "Test: the world store (studio/api.php) and the Studio's edits (studio/ops.mjs)"
+        id: studio_api
+        if: ${{ !cancelled() && steps.playwright.outcome == 'success' }}
         timeout-minutes: 10
         run: node tools/studio_api_test.mjs && node tools/ops_test.mjs
+
+      - name: "Test: the plan keeps its shape and the Charter matches it (tools/plan_test.mjs)"
+        id: plan
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        run: node tools/plan_test.mjs
 
       - name: Upload the hub to IONOS
         if: env.IONOS_SFTP_HOST != ''
