@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.5 How-to recipes: docs/handbook/recipes.md, 27 recipes mapping common requests to their exact files and commands (move, add or remove a thing; a light, a mood, a material, a sound, a loop, a rule; a new kind, a new place; publishing to and taking in from the stores; a site page, a theme, a screen; a game, a test, a tool, a check; a phone report; an urgent fix, a revert; music and outside assets; a news post; a project; a shared room key), each inside the Playbook's job; the Playbook test checks every command they name exists; the piece tool rewrites the Handbook's generated pages before its checks, not after
+
+`0109066` · 2026-10-24 16:49 · 6 files, +128 −10 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J6.4 Every page and control: 21 pages in docs/handbook/ui/ (Dev's tab bar and each tab and section, the UI Editor, the Dials, World notes, the site's frame and pages, the news page, the Studio, the bar's menus), each control by its exact label and what it does; tools/ui_labels_test.mjs crawls the pages a test can open (tools/lib/labels.mjs, on a copy of the webspace) and fails on any control missing from its page or listed but gone (on the site's deploy); the piece tool refuses a change to the Studio or the menus without their page (or --docs-unchanged with the reason); the command list is written from the front door (generated/commands.md, since J6.2); the Playbook says it
 
 `960957d` · 2026-10-24 16:48 · 32 files, +527 −15 · tests: changed
