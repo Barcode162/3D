@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.6 Dev's People tab: everyone with an account (owner and admins first, then who's waiting), Let in / Remove for players, Make admin / Remove admin for the owner only, invite by username (the bar's account.php, moved here from the gate page)
+
+`81477b2` · 2026-10-24 06:31 · 4 files, +59 −1 · tests: quick, dev
+
+Phone check: Dev → People: you at the top as Owner; anyone who signed up and waits has Let in
+
+![R4.6 page-dev-index-demo-people.jpg](R4.6/page-dev-index-demo-people.jpg)
+
 ## R4.5 Dev's Publish tab: News (every post Claude writes after a step, its build, pictures and words; Publish puts it on joshuavelasco.com/news in one tap, Unpublish takes it off) and The site (the front page's headline, line, news highlight and its link, saved in Dev's store and public for R5)
 
 `712a5ef` · 2026-10-24 06:27 · 5 files, +100 −1 · tests: quick, dev
