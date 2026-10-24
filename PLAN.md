@@ -56,15 +56,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J7 · The plan rebuilt with a reality check** (the tools). The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
-- [x] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
-- [x] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
-- [x] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
-- [x] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
+**J8 · Proof, then unfreeze** (the tools). Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
+- [ ] **J8.1** Cold-start drills: about 20 realistic requests in your style (a wish, a bug, undo, status, an impossible ask, a rule, a Studio publish, a red deploy, a stuck deploy, something you already decided…), each given to a fresh AI session with only the repo; it must name the right procedure, verdict, files and commands without breaking a permission; the answer key written first (the drills' record in the Records); every miss fixes the books; rerun until all pass *Check:* Dev → Plan: J8.1 ticked; the drills' record lists every request and its result
+- [ ] **J8.2** Final audit: the docs check green, every flow in the data map checked live, Dev matches the repo, no instruction outside the Playbook, no open drift; the restructure's spec archived *Check:* Dev → Plan: J8.2 ticked; Overview shows no drift
+- [ ] **J8.3** Unfreeze (your Freeze rule taken out, on your word of 2026-10-24 #7) and the first real job (J66) runs through the new system end to end *Check:* Dev → Plan: no Freeze line in your rules; J66 in Now
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J8 → J66 → J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
+**Up next, in order:** J66 → J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -197,8 +196,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
 - [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
   *Formerly* RC2 · *Verdict:* Doable now — Claude already writes to the Studio's store with its key; the open Studio shows each edit as it lands
-- [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
-  *Verdict:* Doable now — The restructure's last job: drills with fresh AI sessions (approved 2026-10-24), the final audit, the unfreeze
 - [ ] **J66** Deploys never wait for, or get stopped by, the tests: the tests in their own job after the deploy; the room test's grace-period check made steady (KI-32, KI-33). · N5
   *Verdict:* Doable now — Our own workflows and tests (the freeze allows them)
 - [ ] **J67** The sign-up and profile browser test rewritten for the room server (tools/account_test.mjs, KI-27). · N4
@@ -267,7 +264,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
+- (this push) J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
+- `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
 - `31cb32d` J6.1, J6.2, J6.3, J6.4, J6.5, J6.6: J6: the Handbook: the maps of folders and technology, a page per system, the data reference and world inventory written from the files, every page and control by label (checked against the live pages), recipes, the old notes sorted → 694f753^..820a1f2
 - `f6d3335` J5.8: J5.8: the second fix for J5's red site deploy → 544f17d^..544f17d
 - `902cfba` J5.7: J5.7: the fix for J5's red site deploy → c4b3fca^..c4b3fca
