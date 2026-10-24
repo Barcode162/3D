@@ -1,12 +1,18 @@
-/* The game's menus, cards and HUD in the Faceplate look (docs/STUDIO.md
-   §4.F, S4.3): smoked panels, glossy keys that press in, Archivo type, the
-   orange accent, line icons (ui/icons.svg). The tokens come from
-   ui/themes.css and the fonts from ui/looped.css, both shipped in the bar's
-   site as ui/ (CMakeLists.txt). Overrides the plain styles that
-   bar/web/menu.js and bar/web/account.js add (hence the "body" in front). */
+/* The game's menus, cards and HUD in the house theme, Ember (PLAN.md R6.2;
+   before that Faceplate, S4.3): warm panels you can read over the 3D,
+   keys that press in, Archivo, the amber accent, line icons (ui/icons.svg).
+   Every colour, shape and type setting is a theme token (ui/themes.css,
+   made in the UI Editor), so a theme change reaches the menus by itself.
+   No backdrop blur on the menus: it would cost GPU work every frame over
+   the 3D (the user's rule: menus stay light). Overrides the plain styles
+   that bar/web/menu.js and bar/web/account.js add (hence the "body"). */
 :root {
-  --fp-ink: #0A0908;
-  --fp-chip: #0D0C0B;
+  --fp-ink: var(--bg);
+  --fp-chip: var(--field);
+  /* A panel over the 3D: the theme's panel paint on a nearly solid base, so
+     it reads over a bright room without blurring what's behind. */
+  --menu-panel: var(--panel), color-mix(in srgb, var(--bg) 90%, transparent);
+  --key-font: var(--key-weight) var(--key-size) var(--text-font);
 }
 
 /* Text: Archivo, wide and heavy for titles. */
@@ -19,15 +25,22 @@ body .mPanel h3, body .acctSlotTitle {
   font-family: var(--text-font); font-stretch: 75%; font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--text-2);
 }
+/* Panel titles move like the site's (the theme's title motion: a light passing through). */
+body .mPanel h2, body .acctPanel h2 {
+  background-image: var(--title-fill, none); background-size: 260% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: var(--title-ink, currentColor);
+  animation: var(--title-motion, none) var(--title-speed, 7s) ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { body .mPanel h2, body .acctPanel h2 { animation: none; } }
 
 /* Panels: a smoked faceplate with a hairline edge. */
 body .mPanel, body .acctPanel {
-  background: var(--panel); border: 0; border-radius: 18px; box-shadow: var(--panel-edge); color: var(--text);
+  background: var(--menu-panel); border: 0; border-radius: var(--panel-r); box-shadow: var(--panel-edge); color: var(--text);
 }
 body .mPanel h2, body .acctPanel h2 { font-size: 26px; }
 body .mSmall, body .acctSmall, body .acctPanel label { color: var(--text-2); }
 body .mX {
-  width: 36px; height: 36px; border-radius: 9px; padding: 0; border: 0; color: var(--text); font-size: 18px;
+  width: 36px; height: 36px; border-radius: var(--key-r); padding: 0; border: 0; color: var(--text); font-size: 18px;
   background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
 
@@ -36,7 +49,7 @@ body .mBtn, body .acctBtn, body .mTile, body .mList button, body .mChoice button
   transition: transform .06s, box-shadow .06s;
 }
 body .mBtn, body .acctBtn {
-  border: 0; border-radius: 10px; padding: 13px; font: 800 14px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
+  border: 0; border-radius: var(--key-r); padding: 13px; font: var(--key-font); font-stretch: var(--key-stretch); letter-spacing: var(--key-ls); text-transform: var(--key-case);
   color: var(--go-text); background: var(--key-gloss), var(--go-bg); box-shadow: var(--key-shadow), var(--go-glow);
 }
 body .mBtn.ghost, body .acctBtn.ghost { color: var(--key-text); background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); }
@@ -48,8 +61,8 @@ body .acctSlot.mine:active {
 /* Menu tiles: keys with a line icon and a lamp that lights when on. */
 body .mGrid { gap: 8px; }
 body .mTile {
-  position: relative; border: 0; border-radius: 12px; padding: 14px 4px 10px; color: var(--text);
-  font: 700 11px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
+  position: relative; border: 0; border-radius: calc(var(--key-r) * .9); padding: 14px 4px 10px; color: var(--text);
+  font: var(--key-weight) calc(var(--key-size) - 1.5px) var(--text-font); font-stretch: var(--key-stretch); letter-spacing: var(--key-ls); text-transform: var(--key-case);
   background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
 body .mTile::after { content: ""; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--off); }
@@ -60,12 +73,12 @@ body .mTile svg.crIcon, body .mList svg.crIcon { fill: none; stroke: var(--text)
 body .mTile.on svg.crIcon { stroke: var(--accent); }
 body .mTile img.crIcon { width: 52px; height: 52px; }
 body .mList button {
-  border: 0; border-radius: 10px; color: var(--text); font: 600 15px var(--text-font);
+  border: 0; border-radius: calc(var(--key-r) * .8); color: var(--text); font: 600 15px var(--text-font);
   background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
 }
 body .mList button.on { box-shadow: var(--key-shadow), inset 0 0 0 1.5px var(--accent); color: var(--accent); }
-body .mChoice { padding: 3px; gap: 3px; border-radius: 10px; background: var(--field); box-shadow: var(--field-edge); }
-body .mChoice button { border: 0; border-radius: 7px; background: none; color: var(--text-2); box-shadow: none; font: 700 12px var(--text-font); font-stretch: 75%; letter-spacing: .08em; text-transform: uppercase; }
+body .mChoice { padding: 3px; gap: 3px; border-radius: var(--field-r); background: var(--field); box-shadow: var(--field-edge); }
+body .mChoice button { border: 0; border-radius: calc(var(--field-r) * .75); background: none; color: var(--text-2); box-shadow: none; font: var(--key-weight) calc(var(--key-size) - 1px) var(--text-font); font-stretch: var(--key-stretch); letter-spacing: var(--key-ls); text-transform: var(--key-case); }
 body .mChoice button.on { background: var(--key-gloss), var(--key-bg); color: var(--accent); box-shadow: var(--key-shadow); }
 body .avTab, body .avChip { border: 0; color: var(--text); background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow); font-family: var(--text-font); font-weight: 650; }
 body .avTab.on, body .avChip.on { color: var(--go-text); background: var(--key-gloss), var(--go-bg); }
@@ -83,15 +96,15 @@ body .mMeter .gate { background: var(--text); }
 body .mRow input[type=range] { accent-color: var(--accent); }
 body .mRow .val { color: var(--text-2); font-family: var(--mono); font-size: 12px; }
 body #menuToast {
-  background: var(--over); color: var(--text); border: 0; border-radius: 12px; font-size: 15px; box-shadow: var(--panel-edge);
+  background: var(--menu-panel); color: var(--text); border: 0; border-radius: calc(var(--panel-r) * .6); font-size: 15px; box-shadow: var(--panel-edge);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 body .acctPanel input, body .acctPanel textarea, body .acctPanel select {
-  background: var(--field); color: var(--text); border: 0; border-radius: 8px; box-shadow: var(--field-edge); font: 16px var(--text-font);
+  background: var(--field); color: var(--text); border: 0; border-radius: var(--field-r); box-shadow: var(--field-edge); font: 16px var(--text-font);
 }
 
 /* The player card. */
-body .acctCard { border: 0; border-radius: 20px; background: var(--panel); box-shadow: var(--panel-edge); color: var(--text); }
+body .acctCard { border: 0; border-radius: var(--panel-r); background: var(--menu-panel); box-shadow: var(--panel-edge); color: var(--text); }
 body .acctCardTop { height: 92px; border-bottom: 1px solid var(--rule); }
 body .acctCard .acctPic { border: 3px solid var(--fp-ink); box-shadow: 0 0 0 2px var(--accent), 0 6px 16px rgba(0,0,0,.6); }
 body .acctCard .nm { font-size: 28px; }
@@ -103,7 +116,7 @@ body .acctCard .facts .k { color: var(--accent); font-weight: 700; margin-right:
 /* Badge slots: recessed sockets; a badge sits in a lit frame. */
 body .acctSlotRow { gap: 7px; }
 body .acctSlot { position: relative; border: 0; border-radius: 12px; background: var(--field); box-shadow: var(--field-edge); transition: transform .06s; }
-body .acctSlot.on { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent), 0 0 14px rgba(242,140,44,.25); }
+body .acctSlot.on { box-shadow: var(--field-edge), inset 0 0 0 1.5px var(--accent), 0 0 14px color-mix(in srgb, var(--accent) 25%, transparent); }
 body .acctSlot img { width: 90%; height: 90%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
 body .acctSlot .ic { color: var(--text-3); font-size: 20px; }
 body .acctSlot .lb { display: none; }
@@ -113,8 +126,8 @@ body .acctBadgeChoice img { width: 44px; height: 44px; }
 
 /* The HUD keys (top right). */
 body #hudMenu, body #hudMic, body #acctMe {
-  border: 0; border-radius: 9px; color: var(--text); font: 700 12px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase;
-  background: var(--key-gloss), var(--key-bg); box-shadow: var(--key-shadow);
+  border: 0; border-radius: calc(var(--key-r) * .75); color: var(--text); font: var(--key-weight) calc(var(--key-size) - 1.5px) var(--text-font); font-stretch: var(--key-stretch); letter-spacing: var(--key-ls); text-transform: var(--key-case);
+  background: var(--key-gloss), var(--key-bg), color-mix(in srgb, var(--bg) 85%, transparent); box-shadow: var(--key-shadow);
 }
 body #hudMenu:active, body #hudMic:active, body #acctMe:active { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down); }
 body #hudMic.live { color: var(--go-text); background: var(--key-gloss), var(--go-bg); box-shadow: var(--key-shadow), var(--go-glow); }
@@ -122,6 +135,19 @@ body #hudMic.muted { color: var(--bad); }
 
 /* Credits: the coin and the amount (bar/web/menu.js coin()). */
 body .mCredits { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
-body .mCoin { width: 22px; height: 22px; filter: drop-shadow(0 0 6px rgba(242,140,44,.5)); animation: mCoinSpin 6s ease-in-out infinite; }
+body .mCoin { width: 22px; height: 22px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent)); animation: mCoinSpin 6s ease-in-out infinite; }
 @keyframes mCoinSpin { 0%, 70%, 100% { transform: rotateY(0); } 85% { transform: rotateY(360deg); } }
 body .mCredits b { font-size: 1.1em; color: var(--c3); font-family: var(--mono); }
+
+/* The loading screen (bar/web/index.html) in Ember: the theme's glow drifting
+   behind the bar's still, the load bar and the Enter key in the theme's
+   colours. The neon sign, the cocktail and the bokeh stay: they're the bar's. */
+body #loading { background: var(--bg-glow), var(--bg); background-size: var(--bg-size), auto; animation: var(--bg-motion, none) 28s ease-in-out infinite alternate; color: var(--text); }
+body #loading .sub { color: var(--text-2); }
+body #loadBar { background: var(--field); box-shadow: var(--field-edge); border-radius: var(--field-r); }
+body #loadFill { background: var(--go-bg); box-shadow: var(--go-glow); }
+body #loadText { color: var(--text-2); }
+body #enter { color: var(--go-text); background: var(--key-gloss), var(--go-bg); box-shadow: var(--key-shadow), var(--go-glow); border-radius: var(--key-r);
+  font: var(--key-weight) calc(var(--key-size) + 1px) var(--text-font); font-stretch: var(--key-stretch); letter-spacing: var(--key-ls); text-transform: var(--key-case); }
+body #enter:active { transform: translateY(var(--key-travel)); box-shadow: var(--key-shadow-down), var(--go-glow); }
+@media (prefers-reduced-motion: reduce) { body #loading { animation: none; } }
