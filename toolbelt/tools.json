@@ -10,6 +10,7 @@
     { "id": "studio", "group": "make", "name": "Studio", "icon": "studio", "href": "/studio/", "what": "Build, move and light anything in the world. Every version kept." },
     { "id": "ui-editor", "group": "make", "name": "UI Editor", "icon": "layers", "href": "/toolbelt/ui-editor/", "what": "Themes and screens for the site, Dev, the bar's menus and the engine." },
     { "id": "screens", "group": "make", "name": "Screens", "icon": "eye", "href": "/ui/screen.html", "what": "See any screen file drawn in the current theme." },
+    { "id": "compare", "group": "make", "name": "Compare themes", "icon": "layers", "href": "/ui/compare.html", "what": "One screen in every theme side by side, light and dark." },
     { "id": "style", "group": "make", "name": "Style page", "icon": "kind", "href": "/ui/", "what": "Every control in every theme." },
     { "id": "dials", "group": "tune", "name": "Dials", "icon": "dial", "href": "/hub/dials.html", "what": "Every number in the world as a dial: light, sound, feel." },
     { "id": "world", "group": "tune", "name": "World notes", "icon": "note", "href": "/hub/world.html", "what": "What each thing in the world does, its states and rules." },

@@ -8,9 +8,12 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, cpSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createServer } from 'node:net';
 import { launchBrowser } from './lib/browser.mjs';
 
-const PORT = 8799, url = `http://127.0.0.1:${PORT}/`;
+// A free port, so a server left over from another run can't answer instead.
+const PORT = await new Promise((r) => { const s = createServer().listen(0, () => { const p = s.address().port; s.close(() => r(p)); }); });
+const url = `http://127.0.0.1:${PORT}/`;
 const root = mkdtempSync(join(tmpdir(), 'uied-'));
 mkdirSync(join(root, 'home/bar'), { recursive: true });
 cpSync('ui', join(root, 'home/ui'), { recursive: true });
@@ -19,6 +22,9 @@ copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
 const php = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', join(root, 'home')], { stdio: 'ignore',
   env: { ...process.env, UI_DATA: join(root, 'private/ui'), HUB_DATA: join(root, 'private/hub'), HUB_ACCOUNTS: join(root, 'home/bar/accounts') } });
 const close = () => { php.kill(); rmSync(root, { recursive: true, force: true }); };
+process.on('exit', () => { try { php.kill(); } catch {} });
+process.on('uncaughtException', (e) => { console.log('FAIL ' + (e.message || e)); close(); process.exit(1); });
+process.on('unhandledRejection', (e) => { console.log('FAIL ' + (e?.message || e)); close(); process.exit(1); });
 await new Promise((r) => setTimeout(r, 700));
 const browser = await launchBrowser();
 let failed = 0;
@@ -102,6 +108,13 @@ await page.$eval('#insp [data-token="accent"] input[type=color]', (c) => { c.val
 check(await ed(() => UIEditor.state.themes.obsidian.other.tokens.accent === '#112233' && UIEditor.state.themes.obsidian.tokens.accent === '#8BE9FF'), 'an edit in the light half leaves the dark half alone');
 await page.click('#schemeSeg [data-scheme="dark"]');
 check(await ed(() => getComputedStyle(document.getElementById('frame')).getPropertyValue('--accent').trim() === '#8BE9FF'), 'Dark shows the dark half again');
+// R2.4: mixing: take Shape from Bold into Soft (both have both halves)
+await page.selectOption('#themePick', 'soft');
+await page.click('#tree [data-group="shape"]');
+await page.selectOption('#insp select[aria-label="Take Shape from another theme"]', 'bold');
+check(await ed(() => { const t = UIEditor.state.themes.soft; return t.tokens['key-r'] === '4px' && t.tokens['panel-bw'] === '2px' && getComputedStyle(document.getElementById('frame')).getPropertyValue('--key-r').trim() === '4px'; }), 'Take Shape from Bold squares Soft\'s corners');
+await page.click('#undo');
+check(await ed(() => UIEditor.state.themes.soft.tokens['key-r'] === '999px'), 'one undo takes the whole group back');
 await page.click('[data-mode="screen"]');
 
 // R1.7: the draft on the phone, login, publish, history

@@ -396,6 +396,32 @@
     if (S.base[th.id]) acts.appendChild(rs);
     box.appendChild(acts);
   }
+  // Mixing: take a whole group (say Shape) from another theme, both halves.
+  function takeFrom(g) {
+    var row = h('div', 'ed-actions'), sel = h('select', 'ed-in ed-add'); sel.setAttribute('aria-label', 'Take ' + g.name + ' from another theme');
+    var first = h('option', null, 'Take ' + g.name + ' from…'); first.value = ''; sel.appendChild(first);
+    Object.keys(S.themes).forEach(function (id) { if (id !== S.themeId) { var o = h('option', null, S.themes[id].name); o.value = id; sel.appendChild(o); } });
+    sel.addEventListener('change', function () {
+      var from = S.themes[sel.value]; if (!from) return;
+      var ids = S.tokens.tokens.filter(function (t) { return t.group === g.id; }).map(function (t) { return t.id; });
+      // The source's value for a light or dark half (its only half if it has just one).
+      function val(scheme, id) {
+        if (from.scheme === scheme) return from.tokens[id];
+        if (from.other && from.other.scheme === scheme && id in from.other.tokens) return from.other.tokens[id];
+        return from.tokens[id];
+      }
+      change('', function () {
+        var th = theme();
+        ids.forEach(function (id) {
+          th.tokens[id] = val(th.scheme, id);
+          if (th.other) { var v = val(th.other.scheme, id); if (v === th.tokens[id]) delete th.other.tokens[id]; else th.other.tokens[id] = v; }
+        });
+      });
+      toast(g.name + ' from ' + from.name);
+    });
+    row.appendChild(sel);
+    return row;
+  }
   function copyTheme() {
     var th = theme(), n = 2, id;
     do { id = th.id.replace(/-\d+$/, '') + '-' + n++; } while (S.themes[id]);
@@ -423,6 +449,7 @@
     $('inspTitle').textContent = g ? g.name : theme().name;
     $('inspWhat').textContent = g ? 'Editing the ' + S.scheme + ' half. Every change shows in the preview at once.' : 'Its name, light or dark, and copies.';
     if (!g) { themeMeta(box); return; }
+    box.appendChild(takeFrom(g));
     S.tokens.tokens.forEach(function (t) { if (t.group === g.id) box.appendChild(tokenRow(t)); });
     drawInspectorRowState();
   }

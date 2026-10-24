@@ -10,8 +10,9 @@ import { mkdtempSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readFileSy
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createServer } from 'node:net';
 
-const PORT = 8798, base = `http://127.0.0.1:${PORT}`;
+const PORT = await new Promise((r) => { const s = createServer().listen(0, () => { const p = s.address().port; s.close(() => r(p)); }); }), base = `http://127.0.0.1:${PORT}`;
 let failed = 0;
 const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (!ok) failed++; };
 const root = mkdtempSync(join(tmpdir(), 'uistore-'));
