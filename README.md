@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.1 The map of every folder and of every technology: docs/handbook/generated/map.md written by the new Handbook tool (node tools/project.mjs handbook write) from one line per folder (docs/handbook/folders.json), the deploy map and the files themselves (how many, which languages, who uploads them where); docs/handbook/tech.md: every language and outside tool, its version, where, why, runtime or build, ours or not, and the outside assets with their credits; the Handbook check (generated pages current, every folder described, every link leads to a file) runs in every quick check
+
+`694f753` · 2026-10-24 16:06 · 9 files, +312 −5 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J5.8 Fix for the red site deploy, second cause: the Dev test's two pictures (added in J5.6) timed out on GitHub's software-drawing machine and failed the test; they now go through the same helper as the site test (a slow picture prints a note, never fails the deploy); incident recorded
 
 `544f17d` · 2026-10-24 14:13 · 3 files, +36 −2 · tests: changed
