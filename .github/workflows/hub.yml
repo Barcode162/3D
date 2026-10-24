@@ -74,6 +74,7 @@ jobs:
           mkdir -p -f $IONOS_HOME/hub
           mkdir -p -f private/hub
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/hub $IONOS_HOME/hub
+          rm -f $IONOS_HOME/hub/board.html $IONOS_HOME/hub/list.html
           mirror -R --verbose --no-perms $GITHUB_WORKSPACE/homepage $IONOS_HOME
           mkdir -p -f $IONOS_HOME/studio
           mkdir -p -f private/studio

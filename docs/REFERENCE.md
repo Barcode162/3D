@@ -37,7 +37,7 @@ questions, answers, reports, messages). Claude reads and updates it with
   Explore = the bar's map of **places** (`hub/projects/bar3d-spots.json`:
   world, beyond, engine "under the floor", tools; cards land on a place by
   its `spot` or the rules there; `hub.mjs place <card> <spot>`); the old board
-  is `hub/list.html` ("Everything"). `hub.mjs inbox` also lists places the
+  pages are gone (R6.6), Dev is the control room. `hub.mjs inbox` also lists places the
   user wrote about (answer with `spotsay`).
 - **After every deploy, one news post:** `node tools/hub.mjs post --build <sha>
   --title "<plain words>" --text "<what changed, for anyone>" --shots

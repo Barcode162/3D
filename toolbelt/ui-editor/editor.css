@@ -1,8 +1,9 @@
-/* The UI Editor's own look: plain, dense, fixed (it never wears the theme
-   being edited, so it stays readable whatever you do to that theme). */
-:root { --e-bg: #121316; --e-bg2: #1A1C20; --e-bg3: #23262B; --e-line: #2E3138; --e-text: #E8EAED; --e-dim: #9097A1; --e-faint: #5F6670;
-        --e-acc: #4DA3FF; --e-acc2: rgba(77,163,255,.16); --e-bad: #FF6A64; --e-ok: #56CF86;
-        --e-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* The UI Editor's own look: Ember's dark half, dense and fixed (it never wears
+   the theme being edited, so it stays readable whatever you do to that theme). */
+@font-face { font-family: "Archivo"; src: url("/ui/fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+:root { --e-bg: #0E0906; --e-bg2: #17100B; --e-bg3: #241912; --e-line: #3A2B20; --e-text: #F6EBDD; --e-dim: #C2AC92; --e-faint: #7F6B57;
+        --e-acc: #F4A64A; --e-acc2: rgba(244,166,74,.16); --e-bad: #F27A68; --e-ok: #7BD08F;
+        --e-font: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
         --e-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 [hidden] { display: none !important; }
 * { box-sizing: border-box; }
@@ -13,14 +14,14 @@ body.ed { margin: 0; background: var(--e-bg); color: var(--e-text); font: 13px/1
 .ed-top { grid-area: top; display: flex; align-items: center; gap: 6px; padding: calc(env(safe-area-inset-top, 0px) + 6px) max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px)); background: var(--e-bg2); border-bottom: 1px solid var(--e-line); min-width: 0; }
 .ed-grow { flex: 1; }
 .ed-dim { color: var(--e-dim); }
-.ed-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; min-width: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--e-line); background: var(--e-bg3); color: var(--e-text); font: 600 13px var(--e-font); text-decoration: none; cursor: pointer; white-space: nowrap; }
+.ed-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; min-width: 34px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--e-line); background: var(--e-bg3); color: var(--e-text); font: 600 13px var(--e-font); text-decoration: none; cursor: pointer; white-space: nowrap; }
 .ed-btn:disabled { opacity: .4; cursor: default; }
-.ed-btn.ed-go { background: var(--e-acc); border-color: var(--e-acc); color: #051425; }
+.ed-btn.ed-go { background: var(--e-acc); border-color: var(--e-acc); color: #1E1206; }
 .ed-btn.ed-icon { padding: 0; }
 .ed-btn svg, .ed-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ed-btn:focus-visible, .ed-seg button:focus-visible, .ed-pick:focus-visible, .ed-tree button:focus-visible { outline: 2px solid var(--e-acc); outline-offset: 1px; }
-.ed-seg { display: inline-flex; background: var(--e-bg); border: 1px solid var(--e-line); border-radius: 8px; padding: 2px; gap: 2px; }
-.ed-seg button { border: 0; background: transparent; color: var(--e-dim); font: 600 13px var(--e-font); padding: 6px 10px; border-radius: 6px; cursor: pointer; min-height: 30px; }
+.ed-seg { display: inline-flex; background: var(--e-bg); border: 1px solid var(--e-line); border-radius: 10px; padding: 2px; gap: 2px; }
+.ed-seg button { border: 0; background: transparent; color: var(--e-dim); font: 600 13px var(--e-font); padding: 6px 10px; border-radius: 8px; cursor: pointer; min-height: 30px; }
 .ed-seg button[aria-pressed="true"] { background: var(--e-bg3); color: var(--e-text); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
 .ed-seg.ed-small button { font-size: 12px; padding: 4px 8px; min-height: 26px; }
 .ed-pick { background: var(--e-bg); color: var(--e-text); border: 1px solid var(--e-line); border-radius: 8px; padding: 6px 8px; font: 600 13px var(--e-font); min-height: 34px; max-width: 42vw; }
@@ -30,14 +31,14 @@ body.ed { margin: 0; background: var(--e-bg); color: var(--e-text); font: 13px/1
 /* Preview */
 .ed-stage { grid-area: stage; display: grid; grid-template-rows: auto 1fr; min-height: 0; background: var(--e-bg); }
 .ed-stagebar { display: flex; gap: 6px; align-items: center; justify-content: space-between; padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px)); flex-wrap: wrap; }
-.ed-viewport { overflow: auto; min-height: 0; padding: 10px; background: repeating-conic-gradient(#16181B 0 25%, #131518 0 50%) 0 0 / 20px 20px; -webkit-overflow-scrolling: touch; }
+.ed-viewport { overflow: auto; min-height: 0; padding: 10px; background: repeating-conic-gradient(#150F0B 0 25%, #110C08 0 50%) 0 0 / 20px 20px; -webkit-overflow-scrolling: touch; }
 .ed-frame { margin: 0 auto; background-color: var(--bg); background-image: var(--bg-glow); background-repeat: no-repeat; background-size: var(--bg-size, auto); animation: var(--bg-motion, none) 28s ease-in-out infinite alternate; color: var(--text); font-family: var(--text-font); font-size: 16px; line-height: 1.5; border-radius: 14px; box-shadow: 0 0 0 1px var(--e-line), 0 20px 40px rgba(0,0,0,.5); min-height: 100%; overflow: hidden; }
 .ed-frame.ed-phone { width: 390px; max-width: 100%; }
 .ed-frame.ed-computer { width: 100%; }
 .ed-frame.ed-game { width: 100%; background: radial-gradient(ellipse 70% 60% at 30% 40%, rgba(255,170,80,.35), transparent 60%), radial-gradient(ellipse 50% 40% at 80% 70%, rgba(255,60,120,.2), transparent 60%), linear-gradient(180deg, #2a1d14, #0d0907); }
 .ed-frame [data-path] { cursor: pointer; }
 .ed-frame .ed-sel { outline: 2px dashed var(--e-acc) !important; outline-offset: 2px; }
-.ed-frame .ed-hover { outline: 1px solid rgba(77,163,255,.5); outline-offset: 1px; }
+.ed-frame .ed-hover { outline: 1px solid rgba(244,166,74,.5); outline-offset: 1px; }
 
 /* Controls in the inspector */
 .ed-in { width: 100%; min-width: 0; background: var(--e-bg); color: var(--e-text); border: 1px solid var(--e-line); border-radius: 6px; padding: 5px 7px; font: 12px var(--e-mono); min-height: 30px; }
@@ -73,11 +74,11 @@ textarea.ed-in { resize: vertical; min-height: 54px; line-height: 1.35; }
 .ed-row > label, .ed-row > span:first-child { color: var(--e-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ed-val { font-family: var(--e-mono); font-size: 12px; overflow-wrap: anywhere; }
 .ed-group { margin: 10px 0 2px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--e-faint); }
-.ed-toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translate(-50%, 16px); opacity: 0; transition: opacity .2s, transform .2s; background: #2A2D33; color: var(--e-text); border: 1px solid var(--e-line); padding: 8px 14px; border-radius: 10px; pointer-events: none; z-index: 9; max-width: calc(100% - 32px); }
+.ed-toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translate(-50%, 16px); opacity: 0; transition: opacity .2s, transform .2s; background: #2A1E15; color: var(--e-text); border: 1px solid var(--e-line); padding: 8px 14px; border-radius: 10px; pointer-events: none; z-index: 9; max-width: calc(100% - 32px); }
 .ed-toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 .ed-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 7; }
-.ed-dialog { position: fixed; z-index: 8; left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); max-width: 520px; margin: 0 auto; max-height: 80vh; display: flex; flex-direction: column; background: var(--e-bg2); border: 1px solid var(--e-line); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.ed-dialog { position: fixed; z-index: 8; left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); max-width: 520px; margin: 0 auto; max-height: 80vh; display: flex; flex-direction: column; background: var(--e-bg2); border: 1px solid var(--e-line); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
 .ed-dbody { overflow: auto; padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
 .ed-dbody form { display: flex; flex-direction: column; gap: 8px; }
 .ed-dbody .ed-in { font-family: var(--e-font); font-size: 16px; min-height: 40px; }

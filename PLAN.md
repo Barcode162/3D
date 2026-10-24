@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **R6.3** The private bar's door page (sign in, waiting to be let in) in Ember *Check:* open joshuavelasco.com/bar signed out: the door page is amber, like the site
 - [x] **R6.4** The Studio in Ember: its top bar, panels and keys *Check:* open the Studio: amber top bar and keys
 - [x] **R6.5** Dials, World notes and the public News page in Ember (World notes loses its purple) *Check:* open Dials, World notes and /news: all amber
-- [ ] **R6.6** The last tools: the UI Editor's own buttons and panels, Compare, Screens and the style page in Ember; the retired hub board pages deleted (their data stays, Dev shows it) *Check:* open the UI Editor: its bars are amber, the preview still shows any theme
+- [x] **R6.6** The last tools: the UI Editor's own buttons and panels, Compare, Screens and the style page in Ember; the retired hub board pages deleted (their data stays, Dev shows it) *Check:* open the UI Editor: its bars are amber, the preview still shows any theme
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*

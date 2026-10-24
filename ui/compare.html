@@ -3,26 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#121316">
+<meta name="theme-color" content="#0E0906">
 <title>Compare themes · Looped</title>
 <!-- One screen in every theme, side by side (docs/UI_PLAN.md R2.4):
      /ui/compare.html?s=<screen>&scheme=light|dark|both. Tap a phone to open it full size.
-     Plain look of its own (like the UI Editor), so no theme is favoured. -->
+     A fixed look of its own (Ember's dark half, like the UI Editor), so the phones show each theme as it is. -->
 <style>
-  :root { --bg: #121316; --bg2: #1A1C20; --line: #2E3138; --text: #E8EAED; --dim: #9097A1; --acc: #4DA3FF;
-          --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color-scheme: dark; }
+  @font-face { font-family: "Archivo"; src: url("fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; }
+  :root { --bg: #0E0906; --bg2: #17100B; --line: #3A2B20; --text: #F6EBDD; --dim: #C2AC92; --acc: #F4A64A;
+          --font: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif; color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 var(--font); }
   header { position: sticky; top: 0; z-index: 2; background: var(--bg2); border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
     padding: calc(env(safe-area-inset-top, 0px) + 8px) max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); }
   h1 { font-size: 16px; margin: 0 6px 0 0; }
-  select, .seg button { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; font: 600 13px var(--font); min-height: 34px; padding: 4px 8px; }
+  select, .seg button { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; font: 600 13px var(--font); min-height: 34px; padding: 4px 8px; }
   .seg { display: inline-flex; gap: 2px; }
   .seg button[aria-pressed="true"] { border-color: var(--acc); color: var(--acc); }
   label { display: inline-flex; gap: 6px; align-items: center; color: var(--dim); }
   main { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px 12px; padding: 14px max(12px, env(safe-area-inset-right, 0px)) 40px max(12px, env(safe-area-inset-left, 0px)); }
   figure { margin: 0; display: grid; gap: 6px; align-content: start; }
-  .phone { position: relative; width: 100%; aspect-ratio: 390 / 760; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.4); }
+  .phone { position: relative; width: 100%; aspect-ratio: 390 / 760; border-radius: 22px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.4); }
   .phone iframe { position: absolute; top: 0; left: 0; width: 390px; height: 760px; border: 0; transform-origin: 0 0; pointer-events: none; }
   .phone a { position: absolute; inset: 0; }
   figcaption b { display: block; font-size: 14px; }
