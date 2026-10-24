@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.7 The old doors lead to Dev: /hub and /toolbelt open Dev (the old board kept as hub/board.html, unlinked; hub.php stays for news and Claude's key), /portal sends staff to Dev, the site's staff tab and sign-in say Dev, Dials, World notes and the UI Editor go back to Dev, the Studio gets a back key to Dev
+
+`f247b0b` · 2026-10-24 06:39 · 15 files, +836 −896 · tests: quick, dev, toolbelt, hub, site
+
+Phone check: open joshuavelasco.com/hub: Dev opens; joshuavelasco.com shows a Dev tab when you're signed in; in the Studio the back arrow (top left) goes to Dev
+
+![R4.7 page-dev-index-demo-overview.jpg](R4.7/page-dev-index-demo-overview.jpg)
+
 ## R4.6 Dev's People tab: everyone with an account (owner and admins first, then who's waiting), Let in / Remove for players, Make admin / Remove admin for the owner only, invite by username (the bar's account.php, moved here from the gate page)
 
 `81477b2` · 2026-10-24 06:31 · 4 files, +59 −1 · tests: quick, dev
