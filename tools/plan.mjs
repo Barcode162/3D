@@ -16,6 +16,8 @@
 //   node tools/plan.mjs next "R5 → R6 → …"      the road's "Up next, in order" line (start drops the started tag)
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
+//   node tools/plan.mjs charter [--check]        the Charter's North star and rules block, copied word for word
+//                                                from parts 1-2 (--check: exit 1 if docs/charter/charter.md is stale)
 //   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
 //                                                (once its deploy is live; step.mjs does it at the next finish)
 // Chapters: world, site, engine, tools, backbone.
@@ -90,6 +92,21 @@ function addLine(text, n, chapter, line) {
   const p = part(text, n), block = chapterBlock(p.body, chapterName(chapter));
   let before = p.body.slice(0, block.to).replace(/\n*$/, '\n');
   return text.slice(0, p.from) + before + line + '\n' + (p.body.slice(block.to).startsWith('\n') ? '' : '\n') + p.body.slice(block.to) + text.slice(p.to);
+}
+
+// The Charter (docs/charter/charter.md) shows parts 1-2 word for word between
+// two markers; PLAN.md stays their source until J4.1 (restructure D3).
+export const CHARTER = 'docs/charter/charter.md';
+const MARK_A = '<!-- generated: node tools/plan.mjs charter (from PLAN.md parts 1-2, word for word; never edit by hand) -->';
+const MARK_B = '<!-- end generated -->';
+export function charterBlock(text) {
+  const items = (n) => part(text, n).body.split('\n').reduce((out, l) => { if (l.startsWith('- ')) out.push(l); else if (/^  \S/.test(l) && out.length) out[out.length - 1] += '\n' + l; return out; }, []);
+  return `${MARK_A}\n### North star\n${items(0).join('\n')}\n\n### Your rules (newest first)\n${items(1).join('\n')}\n${MARK_B}`;
+}
+export function withCharter(doc, text) {
+  const a = doc.indexOf(MARK_A), b = doc.indexOf(MARK_B);
+  if (a < 0 || b < a) throw new Error(`${CHARTER} has no generated block (the two markers)`);
+  return doc.slice(0, a) + charterBlock(text) + doc.slice(b + MARK_B.length);
 }
 
 export function tick(text, piece) {
@@ -174,6 +191,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const p = part(text, 4);
       if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');
       save(text.slice(0, p.from) + p.body.replace(/\*\*Up next, in order:\*\*.*/, `**Up next, in order:** ${pos[0]}`) + text.slice(p.to)); console.log('Up next set');
+    } else if (cmd === 'charter') {
+      const doc = read(CHARTER), want = withCharter(doc, text);
+      if (rest.includes('--check')) {
+        console.log(doc === want ? 'ok  charter: the North star and rules block matches PLAN.md' : `${CHARTER} is stale: run node tools/plan.mjs charter`);
+        process.exit(doc === want ? 0 : 1);
+      }
+      writeFileSync(CHARTER, want); console.log(doc === want ? 'charter already current' : 'charter block written');
     } else if (cmd === 'seal') {
       if (!/^[0-9a-f]{7}$/.test(pos[0] || '')) throw new Error('seal <sha>: the 7-letter build code');
       const p = part(text, 6);
@@ -182,7 +206,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     } else if (cmd === 'done') {
       save(addDone(text, { sha: flags('sha')[0], what: flags('what')[0], range: flags('range')[0] })); console.log('Done line added');
     } else {
-      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 19).join('\n')); process.exit(2);
+      console.log(read(new URL(import.meta.url).pathname).split('\n').slice(1, 21).join('\n')); process.exit(2);
     }
   } catch (e) { console.log(e.message); process.exit(1); }
 }
