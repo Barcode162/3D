@@ -1,0 +1,37 @@
+{
+  "about": "Which workflow puts each tracked file where (restructure J5.3). Every file in the repo matches exactly one entry (the longest path that starts it); a folder is deployed by at most one workflow. tools/workflows_test.mjs checks both, and that each workflow uploads only the folders given to it here. 'workflow': null means the file is never uploaded as it is (it may still be read by a tool or built into something). Part of the Handbook (docs/handbook/data-map.md says how the stores behave).",
+  "entries": [
+    { "path": "bar/", "workflow": "deploy.yml", "to": "home/bar", "how": "built into the game (cmake), then uploaded" },
+    { "path": "looped/", "workflow": "deploy.yml", "to": "home/bar", "how": "the engine, built into the game" },
+    { "path": "assets/", "workflow": "deploy.yml", "to": "home/bar", "how": "the built-in world and models, packed into the game" },
+    { "path": "CMakeLists.txt", "workflow": "deploy.yml", "to": "home/bar", "how": "how the game is built" },
+    { "path": "server/", "workflow": "deploy.yml", "to": "home/bar", "how": "account.php, report.php, gate.php, gate.html, relay.php, .htaccess, sent by name next to the game" },
+    { "path": "server/rooms/", "workflow": null, "how": "not sent: a leftover of the old relay's room data" },
+    { "path": "cloud/", "workflow": "deploy.yml", "to": "Cloudflare (the room server and the ledger)", "how": "wrangler deploy" },
+    { "path": "proto/", "workflow": null, "how": "the network protocol's test vectors (tools/proto_test.mjs)" },
+    { "path": "homepage/", "workflow": "hub.yml", "to": "home/", "how": "the site: front page, play, engine, vision, sign-in, portal" },
+    { "path": "hub/", "workflow": "hub.yml", "to": "home/hub", "how": "news drafts, screenshots, the key, the Dials' tuning" },
+    { "path": "news/", "workflow": "hub.yml", "to": "home/news", "how": "the public news page" },
+    { "path": "studio/", "workflow": "hub.yml", "to": "home/studio", "how": "the Studio and the world store's API" },
+    { "path": "dev/", "workflow": "hub.yml", "to": "home/dev", "how": "Dev and its store's API" },
+    { "path": "toolbelt/", "workflow": "hub.yml", "to": "home/toolbelt", "how": "the Toolbelt and the UI Editor" },
+    { "path": "ui/", "workflow": "hub.yml", "to": "home/ui", "how": "the look kit for the site and the tools; deploy.yml also builds a copy into the game (bar/ui, CMakeLists.txt site_copy)" },
+    { "path": "docs/plan/", "workflow": "plan.yml", "to": "private/dev", "how": "plan.json (the rest is not sent)" },
+    { "path": "docs/charter/", "workflow": "plan.yml", "to": "private/dev", "how": "rules.json (the rest is not sent)" },
+    { "path": "docs/records/", "workflow": "plan.yml", "to": "private/dev", "how": "incidents.json, made from docs/records/incidents/ (the files themselves are not sent)" },
+    { "path": "PLAN.md", "workflow": null, "how": "made from docs/plan/plan.json; starts plan.yml when it changes" },
+    { "path": "docs/", "workflow": null, "how": "the books and the archive" },
+    { "path": "tools/", "workflow": null, "how": "the work tools and the tests; CI runs them" },
+    { "path": "incoming/", "workflow": null, "how": "source material (Blender scripts) before it becomes assets" },
+    { "path": ".github/", "workflow": null, "how": "the workflows themselves" },
+    { "path": ".claude/", "workflow": null, "how": "Claude Code's settings and locks" },
+    { "path": ".gitignore", "workflow": null, "how": "git's own" },
+    { "path": "CLAUDE.md", "workflow": null, "how": "the entry for AI sessions" },
+    { "path": "README.md", "workflow": null, "how": "the repo's front page on GitHub" }
+  ],
+  "branches": {
+    "gh-pages": "deploy.yml writes a pointer page; its last commit 'Site build <sha>' records the deployed game build",
+    "classic": "classic.yml uploads it to home/classic (the old public bar)",
+    "gallery": "tools/piece.mjs writes each piece's pictures; never deployed"
+  }
+}

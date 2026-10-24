@@ -29,7 +29,8 @@ env:
   # Actions). When set, the game and the multiplayer relay are also
   # uploaded to the IONOS site. joshuavelasco.com points at the webspace
   # folder IONOS_HOME; every project deploys into its own subfolder of it
-  # (this one: IONOS_DIR); homepage/ is the site around them.
+  # (this one: IONOS_DIR). The site around them (homepage/) is hub.yml's
+  # (docs/handbook/deploy-map.json: one workflow per folder).
   IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
   IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
   IONOS_HOME: home
@@ -62,7 +63,7 @@ jobs:
           fi
           echo "Live build: $live. Changed since then:"
           git diff --name-only "$live" HEAD | tee /tmp/changed
-          game=$(grep -v -E '^(hub/|news/|homepage/|studio/|toolbelt/|dev/|tools/dev_test\.mjs$|tools/lib/webspace\.mjs$|tools/toolbelt_test\.mjs$|tools/plan(_test)?\.mjs$|tools/studio_api_test\.mjs$|tools/ui_test\.mjs$|tools/site_test\.mjs$|docs/|\.claude/|[^/]+\.md$|tools/hub(_test)?\.mjs$|\.github/workflows/(hub|classic)\.yml$)' /tmp/changed | head -1)
+          game=$(grep -v -E '^(hub/|news/|homepage/|studio/|toolbelt/|dev/|tools/dev_test\.mjs$|tools/lib/webspace\.mjs$|tools/toolbelt_test\.mjs$|tools/plan(_test)?\.mjs$|tools/studio_api_test\.mjs$|tools/ui_test\.mjs$|tools/site_test\.mjs$|docs/|\.claude/|[^/]+\.md$|tools/hub(_test)?\.mjs$|\.github/workflows/(hub|classic|plan)\.yml$)' /tmp/changed | head -1)
           if [ -n "$game" ]; then echo "game=true" >> "$GITHUB_OUTPUT"; echo "→ the game changed ($game ...): build, test, deploy";
           else echo "game=false" >> "$GITHUB_OUTPUT"; echo "→ nothing in the game changed: left alone"; fi
 
@@ -247,7 +248,6 @@ jobs:
           set net:timeout 30
           mkdir -p -f $IONOS_DIR
           mkdir -p -f private/bar/reports
-          mirror -R --no-perms $GITHUB_WORKSPACE/homepage $IONOS_HOME
           mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
           mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php report.php gate.php gate.html .htaccess

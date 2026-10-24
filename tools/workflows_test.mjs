@@ -6,9 +6,13 @@
 // - every test step runs even when an earlier one failed, and has a time limit;
 // - a test allowed to fail names its open known issue in its step name
 //   ("… (allowed to fail: KI-24)", docs/records/known-issues.md);
-// - every step a deploy report reads has an id.
+// - every step a deploy report reads has an id;
+// - one deployer per folder (J5.3, docs/handbook/deploy-map.json): every
+//   tracked file has its entry, and each workflow uploads only its own folders
+//   and starts on changes to them.
 // Usage: node tools/workflows_test.mjs
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { CHECKS, NOT_ON_CI, NOT_LISTED } from './lib/checks.mjs';
 
 let failed = 0;
@@ -91,6 +95,27 @@ for (const s of steps.filter((x) => x.coe && isTest(x))) {
 
 // 5. The deploy reports (J2.3) read steps by id: every test step has one.
 for (const s of [...deploy, ...hub].filter(isTest)) check(/^[a-z][\w-]*$/.test(s.id), `"${s.name}" has an id (${s.id || 'none'})`);
+
+// 6. One deployer per folder (J5.3).
+const map = JSON.parse(readFileSync('docs/handbook/deploy-map.json', 'utf8')).entries;
+const paths = map.map((e) => e.path);
+check(new Set(paths).size === paths.length, 'deploy map: no path listed twice');
+const entryOf = (f) => map.filter((e) => e.path.endsWith('/') ? f.startsWith(e.path) : f === e.path).sort((a, b) => b.path.length - a.path.length)[0];
+const orphans = execSync('git ls-files', { encoding: 'utf8' }).split('\n').filter(Boolean).filter((f) => !entryOf(f));
+check(!orphans.length, 'deploy map: every tracked file has its entry' + (orphans.length ? ': ' + orphans.slice(0, 8).join(', ') : ''));
+for (const e of map.filter((x) => x.workflow)) check(existsSync(`.github/workflows/${e.workflow}`), `deploy map: ${e.path} → ${e.workflow} exists`);
+for (const wf of ['deploy.yml', 'hub.yml', 'plan.yml']) {
+  const text = readFileSync(`.github/workflows/${wf}`, 'utf8');
+  const sent = [...text.matchAll(/(?:mirror -R[^\n]*?|put) \$GITHUB_WORKSPACE\/([\w./-]+)/g)].map((m) => m[1]);
+  const wrong = sent.filter((s) => !s.startsWith('build/')).filter((s) => entryOf(s.includes('.') ? s : s + '/')?.workflow !== wf);
+  check(!wrong.length, `${wf} uploads only its own folders` + (wrong.length ? ': not its own: ' + wrong.join(', ') : ''));
+  const filter = (text.match(/^ {4}paths: \[(.*)\]$/m) || [])[1];
+  if (filter) {
+    const mine = map.filter((e) => e.workflow === wf).map((e) => e.path);
+    const missing = mine.filter((p) => !filter.includes(`'${p.endsWith('/') ? p + '**' : p}'`));
+    check(!missing.length, `${wf} starts on a change to each of its folders` + (missing.length ? ': missing ' + missing.join(', ') : ''));
+  }
+}
 
 console.log(failed ? `WORKFLOWS TEST: ${failed} FAILED` : 'WORKFLOWS TEST PASSED');
 process.exit(failed ? 1 : 0);

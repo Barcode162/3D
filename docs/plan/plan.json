@@ -61,7 +61,7 @@
     "id": "J5.3",
     "text": "Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J5.4",
