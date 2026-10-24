@@ -1,6 +1,6 @@
 // Looped UI (docs/STUDIO.md §4): themes, step lights and the feedback kit.
 // Load after the page's markup (or with defer). Exposes window.Looped:
-//   Looped.look()              the theme in use ('faceplate', 'backbar', ...)
+//   Looped.look()              the theme in use ('ember', 'faceplate', ...)
 //   Looped.setLook(name)       switch (saved for next time on this device)
 //   Looped.LOOKS               the themes, with their names in words
 //   Looped.lamps(el, stage)    save lamps: 'edit' | 'saving' | 'saved' | 'live'
@@ -28,34 +28,39 @@
     // end LOOKS
   };
   var root = document.documentElement;
-  var DEFAULT_LOOK = 'faceplate';
+  // tools/uikit.mjs writes the default theme first (ui/system/themes/index.json "default").
+  var DEFAULT_LOOK = Object.keys(LOOKS)[0];
   function load(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   var reduce = false;
   try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
   // ---- Themes ----
-  var look = 'faceplate';
-  function setLook(name) {
+  // The default theme, unless someone picked one on purpose (Looped.setLook,
+  // e.g. on the style page: remembered on this device), the page pins one
+  // (<html data-look="ember" data-look-pin>) or the address asks (?look=).
+  var look = DEFAULT_LOOK;
+  function apply(name) {
     if (!LOOKS[name]) name = DEFAULT_LOOK;
     look = name;
     root.setAttribute('data-look', name);
-    if (!root.hasAttribute('data-look-pin')) save('loopedLook', name);
     try { document.dispatchEvent(new CustomEvent('looped:look', { detail: name })); } catch (e) {}
   }
+  function setLook(name) { apply(name); if (!root.hasAttribute('data-look-pin')) save('loopedLookPick', look); }
   var asked = (location.search.match(/[?&]look=([a-z0-9-]+)/) || [])[1];
-  // A page can pin its theme (<html data-look="ember" data-look-pin>): the Toolbelt wears the house theme.
   var pinned = root.hasAttribute('data-look-pin') && root.getAttribute('data-look');
-  setLook(asked || pinned || load('loopedLook', 'faceplate'));
+  apply(asked || pinned || load('loopedLookPick', DEFAULT_LOOK));
   // Light or dark: 'auto' follows the phone (a theme with both halves switches
-  // by itself); 'light' or 'dark' pins it.
+  // by itself); 'light' or 'dark' pins it. A page over the 3D view pins the
+  // dark half (<html data-scheme="dark" data-scheme-pin>).
   var scheme = 'auto';
-  function setScheme(s) {
+  function applyScheme(s) {
     scheme = s === 'light' || s === 'dark' ? s : 'auto';
     if (scheme === 'auto') root.removeAttribute('data-scheme'); else root.setAttribute('data-scheme', scheme);
-    save('loopedScheme', scheme);
   }
-  setScheme((location.search.match(/[?&]scheme=([a-z]+)/) || [])[1] || load('loopedScheme', 'auto'));
+  function setScheme(s) { if (root.hasAttribute('data-scheme-pin')) return; applyScheme(s); save('loopedScheme', scheme); }
+  if (!root.hasAttribute('data-scheme-pin')) applyScheme((location.search.match(/[?&]scheme=([a-z]+)/) || [])[1] || load('loopedScheme', 'auto'));
+  else scheme = root.getAttribute('data-scheme') || 'auto';
 
   // ---- Key sounds ----
   var actx = null, clicksOn = load('loopedClicks', '0') === '1';

@@ -5,7 +5,7 @@
    looped.css builds every control from them. Pick one with
    <html data-look="...">; looped.js does it from the player's choice. */
 
-:root[data-look="ember"] {
+:root, :root[data-look="ember"] {
   /* ---- Ember: Warm amber, frosted glass you can see the glow through, titles with a light passing through them. ---- */
   color-scheme: dark;
   --bg: #0E0906;
@@ -64,7 +64,7 @@
   --title-motion: lp-shimmer-glow;
   --title-speed: 7s;
 }
-:root[data-look="ember"][data-scheme="light"] {
+:root:not([data-look])[data-scheme="light"], :root[data-look="ember"][data-scheme="light"] {
   color-scheme: light;
   --bg: #F5ECE1;
   --text: #2A1D13;
@@ -97,7 +97,7 @@
   --title-glow: rgba(212,102,28,.22);
 }
 @media (prefers-color-scheme: light) {
-  :root[data-look="ember"]:not([data-scheme]) {
+  :root:not([data-look]):not([data-scheme]), :root[data-look="ember"]:not([data-scheme]) {
     color-scheme: light;
     --bg: #F5ECE1;
     --text: #2A1D13;
@@ -131,7 +131,7 @@
   }
 }
 
-:root, :root[data-look="faceplate"] {
+:root[data-look="faceplate"] {
   /* ---- Faceplate: The drum machine: glossy keys, keycap lights. ---- */
   color-scheme: dark;
   --bg: #0A0908;

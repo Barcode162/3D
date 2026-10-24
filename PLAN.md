@@ -50,15 +50,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R5 · The front door, J Production's site** (the site). J Production's front page: the current site (its boxes, layout and animations) dressed in Ember and rearranged: an intro, a news highlight (a picture and a friendly line, pushed from Dev → Publish) and Enter the bar; scroll down for the bar's pictures and what there is to do; a tab per project, Looped and the script language as works in progress; then the street-front scene and its looping clip behind the intro. · N1 N5
-- [x] **R5.1** The site in Ember: every page keeps its layout, boxes and animations, now with frosted see-through boxes, the drifting amber glow and moving titles (the house theme's tokens) *Check:* open joshuavelasco.com: the same site, boxes frosted over a slow amber glow, the big title has a light passing through it
-- [x] **R5.2** Highlights in Publish: make one (a picture, a short title, one or two friendly lines, where it leads), see it as the front page will, Push to the front page or take it down; Claude's news posts written in plain friendly words *Check:* Dev → Publish → Highlights: make one with a picture, Push: it's on the front page
-- [x] **R5.3** The front page rearranged: J Production's intro, the pushed highlight, Enter the bar; scroll: Bar3D's pictures and what there is to do *Check:* open joshuavelasco.com: intro, your highlight, Enter the bar; scroll for the bar
-- [x] **R5.4** Projects: a page per project (Bar3D first; Looped and the script language as works in progress that admins and devs use); Play, Engine and Vision fold in and their old addresses lead there *Check:* tap Projects: Bar3D, Looped, the script language; /engine opens Looped's page
+**R6 · Ember on everything that's left** (the tools). Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the arcade's two web games' menus; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
+- [x] **R6.1** Ember is the default theme: every page that wears the Looped look switches (the bar's menus, the Studio, Dials, News...); a theme picked on purpose is still remembered; pages over the 3D keep Ember's dark half; the other ten themes stay options *Check:* open the bar's menu: amber keys, words as typed, not capitals
+- [ ] **R6.2** The bar's menus and loading screen in Ember: panels you can read over the 3D (no extra blur, so no extra GPU work), keys, tiles, toggles, the player card, the top keys and the toasts on the house theme's tokens; the loading screen with the glow and the moving title *Check:* enter the bar: the loading screen glows amber; open Menu: warm frosted-looking panels, amber keys
+- [ ] **R6.3** The private bar's door page (sign in, waiting to be let in) in Ember *Check:* open joshuavelasco.com/bar signed out: the door page is amber, like the site
+- [ ] **R6.4** The Studio in Ember: its top bar, panels and keys *Check:* open the Studio: amber top bar and keys
+- [ ] **R6.5** Dials, World notes and the public News page in Ember (World notes loses its purple) *Check:* open Dials, World notes and /news: all amber
+- [ ] **R6.6** The last tools: the UI Editor's own buttons and panels, Compare, Screens and the style page in Ember; the retired hub board pages deleted (their data stays, Dev shows it) *Check:* open the UI Editor: its bars are amber, the preview still shows any theme
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** R6, then engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
+**Up next, in order:** engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -113,7 +115,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **EN4** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
 
 ### The tools
-- [ ] **R6** Ember on everything that's left: the game's loading screen, its menus and the private bar's door page; the arcade's two web games' menus; the Studio, Dials, World notes, the UI Editor, Compare, Screens and the style page; the public News page; Ember becomes the default theme (the other ten stay as options); the retired hub board pages are removed. Not the 3D world, not the screens drawn inside it (later, W23), not Bar3D classic. · N5
 - [ ] **P2** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
 - [ ] **TL1** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3

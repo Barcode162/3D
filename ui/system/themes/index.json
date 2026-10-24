@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "default": "faceplate",
+  "default": "ember",
   "order": [
     "ember",
     "faceplate",

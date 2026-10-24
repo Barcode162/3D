@@ -52,7 +52,7 @@ if (isset($_GET['json'])) {
 $posts = published($data);
 $e = fn($s) => htmlspecialchars($s, ENT_QUOTES);
 ?><!doctype html>
-<html lang="en" data-look="faceplate">
+<html lang="en" data-look="ember">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

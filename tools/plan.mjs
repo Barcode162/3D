@@ -139,7 +139,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const pieces = flags('piece').map((s) => { const [t, w, c] = s.split('|'); return `- [ ] **${t}** ${w}${c ? ` *Check:* ${c}` : ''}`; });
       if (!pieces.length) throw new Error('give the step its pieces: --piece "TAG.1|what|phone check"');
       const title = m[1].split(':')[0].replace(/\*\*/g, '');
-      let t = text.slice(0, road.from) + road.body.replace(m[0], '').replace(new RegExp(`(\\*\\*Up next, in order:\\*\\* )${tag} → `), '$1') + text.slice(road.to);
+      let t = text.slice(0, road.from) + road.body.replace(m[0], '').replace(new RegExp(`(\\*\\*Up next, in order:\\*\\* )${tag}(?: →|,) `), '$1') + text.slice(road.to);
       const n2 = part(t, 3);
       t = t.slice(0, n2.from) + `**${tag} · ${title}** (${chapter.toLowerCase()}). ${m[1]} · ${m[2]}\n${pieces.join('\n')}\n\n` + t.slice(n2.to);
       save(t); console.log(`${tag} is now in Now with ${pieces.length} pieces`);

@@ -103,14 +103,16 @@ export function themesCss(tokens, index, themes) {
 }
 
 // looped.js keeps the theme list (names, the key click) between two marker lines.
-export function looksJs(themes) {
+export function looksJs(themes, index) {
+  // The default theme first: looped.js takes the first one as its default.
+  if (index) themes = [...themes].sort((a, b) => (b.id === index.default) - (a.id === index.default));
   return themes.map((t) => `    ${/^[a-z]+$/.test(t.id) ? t.id : JSON.stringify(t.id)}: { name: ${JSON.stringify(t.name)}, about: ${JSON.stringify(t.about)}, click: ${JSON.stringify(t.click)} }`).join(',\n');
 }
 const MARK_A = '    // LOOKS: written by tools/uikit.mjs from ui/system/themes/', MARK_B = '    // end LOOKS';
-export function withLooks(js, themes) {
+export function withLooks(js, themes, index = loadThemes().index) {
   const a = js.indexOf(MARK_A), b = js.indexOf(MARK_B);
   if (a < 0 || b < 0) throw new Error('ui/looped.js: the LOOKS marker lines are missing');
-  return js.slice(0, a + MARK_A.length) + '\n' + looksJs(themes) + '\n' + js.slice(b);
+  return js.slice(0, a + MARK_A.length) + '\n' + looksJs(themes, index) + '\n' + js.slice(b);
 }
 
 export function loadParts() { return readJson(join(SYS, 'parts.json')); }
