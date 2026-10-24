@@ -114,7 +114,7 @@ async function pagePictures(pages) {
     const show = await browser.newPage({ viewport: { width: 390 * 2 + 12, height: 400 }, deviceScaleFactor: 1 });
     const img = (b) => `data:image/png;base64,${b.toString('base64')}`;
     await show.setContent(`<body style="margin:0;background:#111;color:#eee;font:15px sans-serif">
-      <div style="height:30px;line-height:30px;padding-left:8px;font-weight:bold">${tag} ${title} · ${path}</div>
+      <div style="padding:6px 8px;font-weight:bold">${tag} · ${path}</div>
       <div style="display:flex;gap:12px;align-items:flex-start">
       <div style="width:390px"><div style="height:30px;line-height:30px;padding-left:8px;color:#bbb">before</div>${before ? `<img src="${img(before)}">` : '<div style="padding:8px;color:#888">(new page)</div>'}</div>
       <div><div style="height:30px;line-height:30px;padding-left:8px;color:#fc6">after</div><img src="${img(png)}"></div></div></body>`);

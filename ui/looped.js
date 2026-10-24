@@ -13,10 +13,12 @@
 (function () {
   'use strict';
   var LOOKS = {
-    faceplate: { name: 'Faceplate', about: 'The drum machine: glossy keys, keycap lights.', click: [2600, 0.025, 'square'] },
-    backbar: { name: 'Back Bar', about: 'Lacquered wood, brass, Edison bulbs.', click: [900, 0.04, 'triangle'] },
-    obsidian: { name: 'Obsidian', about: 'Deepest black, frosted glass, ice light.', click: [4200, 0.05, 'sine'] },
-    jukebox: { name: 'Jukebox', about: 'Chrome, candy jelly keys, bubble tubes.', click: [520, 0.06, 'square'] }
+    // LOOKS: written by tools/uikit.mjs from ui/system/themes/
+    faceplate: { name: "Faceplate", about: "The drum machine: glossy keys, keycap lights.", click: [2600,0.025,"square"] },
+    backbar: { name: "Back Bar", about: "Lacquered wood, brass, Edison bulbs.", click: [900,0.04,"triangle"] },
+    obsidian: { name: "Obsidian", about: "Deepest black, frosted glass, ice light.", click: [4200,0.05,"sine"] },
+    jukebox: { name: "Jukebox", about: "Chrome, candy jelly keys, bubble tubes.", click: [520,0.06,"square"] }
+    // end LOOKS
   };
   var root = document.documentElement;
   function load(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }

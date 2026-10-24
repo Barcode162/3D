@@ -23,7 +23,7 @@
     { "id": "step", "group": "claude", "name": "Step finisher", "icon": "publish", "run": "node tools/step.mjs finish <STEP> \"<what>\"", "what": "The end of a step: full check, deploy, build log." },
     { "id": "check", "group": "claude", "name": "Checks", "icon": "check", "run": "node tools/check.mjs quick", "what": "PASS or FAIL per system, with the first error lines." },
     { "id": "studio-cli", "group": "claude", "name": "World sync", "icon": "loop", "run": "node tools/studio.mjs pull", "what": "Brings the world you published into the repo, and back." },
-    { "id": "uikit", "group": "claude", "name": "UI kit", "icon": "layers", "run": "node tools/uikit.mjs", "status": "soon", "what": "Writes the theme CSS from the theme files and pulls UI Editor edits." },
+    { "id": "uikit", "group": "claude", "name": "UI kit", "icon": "layers", "run": "node tools/uikit.mjs check", "what": "Writes the theme CSS from the theme files (css) and checks they agree (check)." },
     { "id": "bench", "group": "claude", "name": "Benchmarks", "icon": "target", "run": "node tools/bench.mjs", "what": "Engine speed numbers, each against the last run." },
     { "id": "light", "group": "claude", "name": "Light tool", "icon": "light", "run": "node tools/light.mjs", "what": "Checks and bakes the world's light." }
   ]
