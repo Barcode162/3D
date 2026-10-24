@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.4 The UI Editor (toolbelt/ui-editor/): live preview on top (phone, computer, in game; any theme), the parts list and the inspector below, side by side on a computer; a tap in the preview or the list selects the part in both; its own test
+
+`98da435` · 2026-10-24 03:52 · 9 files, +340 −6 · tests: quick, toolbelt
+
+Phone check: open joshuavelasco.com/toolbelt/ui-editor: the sampler in the preview; tap Publish, it gets a dashed outline and 'Key' shows below with its options; tap a row in the list, the preview outlines that part
+
+![R1.4 page-toolbelt-ui-editor.jpg](R1.4/page-toolbelt-ui-editor.jpg)
+
 ## R1.3 Screen files and the web renderer: a screen is a tree of parts (ui/system/parts.json lists the 20 kinds and their options), Looped.screen() draws one (ui/screen.js), /ui/screen.html?s=sampler shows every part; uikit checks every screen
 
 `a6d79dd` · 2026-10-24 03:47 · 7 files, +309 −2 · tests: quick
