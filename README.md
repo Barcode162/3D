@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R4.4 Dev's Plan tab: PLAN.md on the phone (Now with its pieces and checks, the road under the five chapters, Parked, Done, the North star, your rules; long lists fold), and Tell Claude: a note or an idea to park, kept in Dev's store; node tools/dev.mjs notes reads them at the start of every go (CLAUDE.md)
+
+`c5be89e` · 2026-10-24 06:22 · 7 files, +130 −2 · tests: quick, dev, toolbelt
+
+Phone check: Dev → Plan: R4 at the top with its pieces; the five chapters below; under Tell Claude pick 'Park an idea', write one, Send: it shows as Waiting
+
+![R4.4 page-dev-index-demo-plan.jpg](R4.4/page-dev-index-demo-plan.jpg)
+
 ## R4.3 Dev's Overview, live: the bar's build (its config), the room server (its health: players, messages today), the last deploy (CI now writes its result to Dev's store, even when a test fails), news waiting to be published, the step in Now (how many pieces done, what's next, what comes after); Dev's store (dev/api.php: the plan, the deploy result, notes, the site's words; owner and admins); PLAN.md read in the browser; Projects drops its duplicate Open row
 
 `340ed5a` · 2026-10-24 06:18 · 9 files, +283 −4 · tests: quick, dev
