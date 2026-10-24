@@ -1,1 +1,2 @@
 {"step":"R1","what":"The Toolbelt and the UI Editor: theme and screen files, the web renderer, theme and screen editing, publish with every version kept, the engine reads themes","mainSha":"aa0d3ae","lastPiece":"b394ba3","pieces":["L0","L1.1","L1.2","L1.3","L1.4","L1.5","L1.6","L1.7","R1.1","R1.2","R1.3","R1.4","R1.5","R1.6","R1.7"],"date":"2026-10-24 04:10"}
+{"step":"R2.1-R2.4","what":"Six candidate themes to pick from: real screens, light and dark, compare and mix","mainSha":"45292a6","lastPiece":"8b9d289","pieces":["R2.1","R2.2","R2.3","R2.4"],"date":"2026-10-24 04:40"}
