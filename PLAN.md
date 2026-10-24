@@ -48,18 +48,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**R4 · Dev, the control room** (the tools). Dev, the control room for everything but the main page and the games: Overview (is everything up, what needs you), Projects (each project with its tools: Bar3D with the Studio, Looped with the Toolbelt, the script language), Plan (this doc), Publish (news, the site's words), People (accounts, invites, admins); built from screen files in Ember; the old hub, portal and Toolbelt pages lead here. · N1 N5
-- [x] **R4.1** Dev opens at /dev: staff login (your bar account), Ember, five tabs (Overview, Projects, Plan, Publish, People); its screens are screen files you can edit in the UI Editor, live data filled into them *Check:* open joshuavelasco.com/dev, log in: five tabs at the bottom
-- [x] **R4.2** Projects: every project with its own tools: Bar3D (the Studio, Dials, World notes, the live bar, perf reports, the gallery, classic), Looped the engine (UI Editor, Screens, Compare, Style page, tests, benchmarks), the script language (planned); new projects are one line *Check:* Projects → Bar3D → Studio opens the Studio
-- [x] **R4.3** Overview: the bar, the room and the site up or down, the live build, the last deploy's tests (CI writes a status file), the step in Now and its phone checks, news waiting for you *Check:* Overview shows the live build code and green dots
-- [x] **R4.4** Plan: PLAN.md on your phone (Now with ticks, the five chapters, the road, Parked, Done) and a box to leave Claude a note or park an idea, read at the start of every go *Check:* Plan shows R4; leave a test note
-- [x] **R4.5** Publish: the news posts Claude writes after each step, publish or unpublish in one tap; the site's words (headline, news highlight) kept for R5 *Check:* Publish lists the R3 post; publish it, it shows on /news
-- [x] **R4.6** People: everyone with an account, invite or remove players, choose admins (the bar's gate page moved into Dev) *Check:* People lists you as owner
-- [x] **R4.7** The old doors lead to Dev: /hub, /portal and /toolbelt open Dev; the site's staff tab says Dev; the Studio has a way back to Dev *Check:* open joshuavelasco.com/hub: Dev opens
+**R5 · The front door, J Production's site** (the site). The front door, J Production's site: an intro, one eye-catching news item and Enter the bar over a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop, shown as a clip); scroll down for the bar's screenshots and what there is to do; a tab per project (Bar3D first, more later); Looped and the script language as works in progress; News, Sign in; one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
+- [ ] **R5.1** The street front: a new place in the world, the bar seen from the street at night (the front wall, the lit door, windows with people moving behind them, a street lamp), made in the Studio's place format *Check:* in the Studio's place menu, open The street: the bar's front at night
+- [ ] **R5.2** The clip: a tool flies the camera slowly toward the lit door and renders a seamless ~8 s loop from the engine (a small video for phones, a still for slow connections) *Check:* open the clip's link: 8 seconds that loop with no jump
+- [ ] **R5.3** The front page: J Production's intro, the news highlight and Enter the bar over the clip (words from Dev → Publish → The site), in Ember *Check:* open joshuavelasco.com: the clip plays behind the words; Enter the bar opens the bar
+- [ ] **R5.4** Scroll down: Bar3D's pictures and what there is to do (the rooms, the games, the people), each a place you glide to, not a new page *Check:* scroll the front page: the bar's pictures slide in, tap one to see more
+- [ ] **R5.5** Projects: a tab per project (Bar3D first, more later); Looped and the script language shown as works in progress that admins and devs use *Check:* tap Projects: Bar3D, Looped and the script language
+- [ ] **R5.6** The old pages fold in: Play, Engine and Vision lead to their new places; News and Sign in wear Ember; the site's own look (site.css) retired *Check:* open joshuavelasco.com/play: it lands on the front page's Bar3D part
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** R5 → R6, then engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
+**Up next, in order:** R6, then engine work resumes: EN4 → L1.8 → P1 → P2 → EN1 → M1 → L2 → T1 → … (the Alive order).
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -91,7 +90,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **W24** Remaster the crude first versions of props and rooms. · N3
 
 ### The site
-- [ ] **R5** The front door, J Production's site: an intro, one eye-catching news item and Enter the bar over a new scene built in Looped (the bar from the street at night, the camera drifting to the lit door, ~8 s seamless loop, shown as a clip); scroll down for the bar's screenshots and what there is to do; a tab per project (Bar3D first, more later); Looped and the script language as works in progress; News, Sign in; one place you move through (places not pages, grabbable spring motion, continuity, answers under 0.4 s, thumb first). · N1 N5
 
 ### The engine
 - [ ] **L1.8** Light leftovers: Air gets bounce strength and exposure range; the budget meter counts patches (lights in real units shipped in L1.7). · N3
