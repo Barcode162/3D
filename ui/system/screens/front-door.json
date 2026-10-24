@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "id": "front-door",
+  "name": "Front door",
+  "about": "joshuavelasco.com, the first thing everyone sees (R5 builds it for real; the picture becomes a looping clip).",
+  "root": {
+    "type": "backdrop",
+    "src": "img/door.jpg",
+    "height": 780,
+    "shade": 0.85,
+    "gap": 12,
+    "pad": 22,
+    "children": [
+      {
+        "type": "label",
+        "text": "J Production"
+      },
+      {
+        "type": "title",
+        "text": "The lights are on.",
+        "size": "xl"
+      },
+      {
+        "type": "text",
+        "text": "3 people inside · live music at 9",
+        "tone": "dim"
+      },
+      {
+        "type": "space",
+        "size": 6
+      },
+      {
+        "type": "key",
+        "text": "Enter the bar",
+        "style": "go",
+        "icon": "bar"
+      },
+      {
+        "type": "key",
+        "text": "Look around"
+      },
+      {
+        "type": "key",
+        "text": "Dev",
+        "style": "small"
+      },
+      {
+        "type": "space",
+        "size": 4
+      },
+      {
+        "type": "text",
+        "text": "Made from scratch, on our own engine, Looped.",
+        "tone": "dim"
+      }
+    ]
+  }
+}

@@ -32,11 +32,21 @@
   }
   var JUSTIFY = { start: 'flex-start', center: 'center', end: 'flex-end', between: 'space-between' };
   var RATIO = { '16:9': '16 / 9', '4:3': '4 / 3', '1:1': '1 / 1', '3:4': '3 / 4', '9:16': '9 / 16' };
+  // Pictures named like "img/door.jpg" live in ui/system/.
+  function picture(src) { return /^(\/|https?:|data:)/.test(src) ? src : BASE + 'system/' + src; }
   var DRAW = {
     stack: function (p) { var e = h('div', 'ls-stack'); e.style.gap = prop(p, 'gap') + 'px'; e.style.padding = prop(p, 'pad') + 'px'; e.style.justifyItems = prop(p, 'align'); return e; },
     row: function (p) { var e = h('div', 'ls-row'); e.style.gap = prop(p, 'gap') + 'px'; e.style.justifyContent = JUSTIFY[prop(p, 'justify')] || 'flex-start'; e.style.flexWrap = prop(p, 'wrap') ? 'wrap' : 'nowrap'; return e; },
     grid: function (p) { var e = h('div', 'ls-grid'); e.style.gap = prop(p, 'gap') + 'px'; e.style.gridTemplateColumns = 'repeat(auto-fit, minmax(min(100%, ' + prop(p, 'min') + 'px), 1fr))'; return e; },
     panel: function (p) { var e = h('div', 'panel ls-stack' + (prop(p, 'over') ? ' over' : '')); e.style.padding = prop(p, 'pad') + 'px'; e.style.gap = prop(p, 'gap') + 'px'; return e; },
+    backdrop: function (p) {
+      var e = h('div', 'ls-backdrop ls-stack'), sh = Math.max(0, Math.min(1, +prop(p, 'shade') || 0));
+      e.style.minHeight = prop(p, 'height') + 'px'; e.style.padding = prop(p, 'pad') + 'px'; e.style.gap = prop(p, 'gap') + 'px';
+      e.style.alignContent = prop(p, 'align');
+      e.style.backgroundImage = 'linear-gradient(180deg, rgba(0,0,0,' + (sh * 0.25) + ') 0%, rgba(0,0,0,' + (sh * 0.35) + ') 45%, rgba(0,0,0,' + sh + ') 100%)' +
+        (prop(p, 'src') ? ', url("' + picture(prop(p, 'src')).replace(/"/g, '%22') + '")' : '');
+      return e;
+    },
     title: function (p) { var s = prop(p, 'size'), e = h(s === 'xl' ? 'h1' : s === 'l' ? 'h2' : 'h3', 'display ls-t-' + s, prop(p, 'text')); return e; },
     text: function (p) { return h('p', (prop(p, 'tone') === 'dim' ? 'dim' : '') + (prop(p, 'mono') ? ' mono' : ''), prop(p, 'text')); },
     label: function (p) { return h('span', 'label', prop(p, 'text')); },
@@ -75,7 +85,26 @@
     icon: function (p) { var e = h('span', 'ls-icon'); e.appendChild(icon(prop(p, 'name'), prop(p, 'size'))); return e; },
     image: function (p) {
       var e = h('div', 'ls-image field'); e.style.aspectRatio = RATIO[prop(p, 'ratio')] || '16 / 9';
-      if (prop(p, 'src')) { var i = h('img'); i.src = prop(p, 'src'); i.alt = prop(p, 'alt') || ''; i.loading = 'lazy'; e.appendChild(i); }
+      if (prop(p, 'src')) { var i = h('img'); i.src = picture(prop(p, 'src')); i.alt = prop(p, 'alt') || ''; i.loading = 'lazy'; e.appendChild(i); }
+      return e;
+    },
+    listrow: function (p) {
+      var e = h('div', 'ls-listrow');
+      if (prop(p, 'icon')) { var i = h('span', 'ls-lr-icon'); i.appendChild(icon(prop(p, 'icon'))); e.appendChild(i); }
+      var t = h('div', 'ls-lr-text'); t.appendChild(h('span', 'ls-lr-main', prop(p, 'text')));
+      if (prop(p, 'detail')) t.appendChild(h('span', 'ls-lr-detail', prop(p, 'detail')));
+      e.appendChild(t);
+      if (prop(p, 'value')) e.appendChild(h('span', 'ls-lr-value ls-tone-' + prop(p, 'tone'), prop(p, 'value')));
+      if (prop(p, 'chevron')) { var c = h('span', 'ls-lr-chev'); c.appendChild(icon('arrow')); e.appendChild(c); }
+      return e;
+    },
+    tabbar: function (p) {
+      var e = h('nav', 'ls-tabbar'), icons = prop(p, 'icons') || [], on = prop(p, 'on');
+      (prop(p, 'options') || []).forEach(function (o, i) {
+        var b = h('button', 'ls-tab' + (i === on ? ' on' : '')); b.type = 'button';
+        if (icons[i]) b.appendChild(icon(icons[i])); b.appendChild(h('span', null, o)); e.appendChild(b);
+      });
+      e.style.gridTemplateColumns = 'repeat(' + Math.max(1, (prop(p, 'options') || []).length) + ', 1fr)';
       return e;
     },
     space: function (p) { var e = h('div', 'ls-space'); e.style.height = prop(p, 'size') + 'px'; return e; },

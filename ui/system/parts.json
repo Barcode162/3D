@@ -2,45 +2,528 @@
   "format": 1,
   "about": "The parts a screen is made of (docs/UI_PLAN.md R1.3). Each part has a type and props; containers also have children. ui/screen.js draws them with looped.css; the UI Editor shows a control per prop from its kind (text, number, bool, choice, icon, list).",
   "parts": [
-    { "type": "stack", "name": "Stack", "what": "Parts one under another.", "children": true,
-      "props": { "gap": { "kind": "number", "default": 12, "unit": "px" }, "pad": { "kind": "number", "default": 0, "unit": "px" }, "align": { "kind": "choice", "choices": ["stretch", "start", "center", "end"], "default": "stretch" } } },
-    { "type": "row", "name": "Row", "what": "Parts side by side; they wrap on a narrow screen.", "children": true,
-      "props": { "gap": { "kind": "number", "default": 8, "unit": "px" }, "justify": { "kind": "choice", "choices": ["start", "center", "end", "between"], "default": "start" }, "wrap": { "kind": "bool", "default": true } } },
-    { "type": "grid", "name": "Grid", "what": "Parts in columns that fit the screen.", "children": true,
-      "props": { "min": { "kind": "number", "default": 240, "unit": "px", "what": "Narrowest column" }, "gap": { "kind": "number", "default": 12, "unit": "px" } } },
-    { "type": "panel", "name": "Panel", "what": "A raised surface holding parts.", "children": true,
-      "props": { "pad": { "kind": "number", "default": 16, "unit": "px" }, "gap": { "kind": "number", "default": 12, "unit": "px" }, "over": { "kind": "bool", "default": false, "what": "See-through, for over the 3D view" } } },
-    { "type": "title", "name": "Title", "what": "A heading in the display font.",
-      "props": { "text": { "kind": "text", "default": "Title" }, "size": { "kind": "choice", "choices": ["xl", "l", "m", "s"], "default": "l" } } },
-    { "type": "text", "name": "Text", "what": "A line or paragraph.",
-      "props": { "text": { "kind": "text", "default": "Some words." }, "tone": { "kind": "choice", "choices": ["normal", "dim"], "default": "normal" }, "mono": { "kind": "bool", "default": false } } },
-    { "type": "label", "name": "Label", "what": "Small capitals above something.",
-      "props": { "text": { "kind": "text", "default": "Label" } } },
-    { "type": "key", "name": "Key", "what": "A button.",
-      "props": { "text": { "kind": "text", "default": "Key" }, "style": { "kind": "choice", "choices": ["normal", "go", "small", "tile"], "default": "normal" }, "icon": { "kind": "icon", "default": "" }, "led": { "kind": "bool", "default": false, "what": "A light that says it's on" }, "on": { "kind": "bool", "default": false }, "disabled": { "kind": "bool", "default": false }, "href": { "kind": "text", "default": "" } } },
-    { "type": "chip", "name": "Chip", "what": "A small tag.",
-      "props": { "text": { "kind": "text", "default": "Chip" }, "on": { "kind": "bool", "default": false }, "led": { "kind": "bool", "default": false } } },
-    { "type": "seg", "name": "Choice", "what": "Pick one of a few.",
-      "props": { "options": { "kind": "list", "default": ["One", "Two", "Three"] }, "on": { "kind": "number", "default": 0 } } },
-    { "type": "field", "name": "Field", "what": "A text box.",
-      "props": { "placeholder": { "kind": "text", "default": "Type here" }, "value": { "kind": "text", "default": "" }, "mono": { "kind": "bool", "default": false } } },
-    { "type": "switch", "name": "Switch", "what": "On or off, with its words beside it.",
-      "props": { "text": { "kind": "text", "default": "Switch" }, "on": { "kind": "bool", "default": false } } },
-    { "type": "fader", "name": "Fader", "what": "Slide to set a number.",
-      "props": { "min": { "kind": "number", "default": 0 }, "max": { "kind": "number", "default": 100 }, "value": { "kind": "number", "default": 50 }, "dec": { "kind": "number", "default": 0 }, "unit": { "kind": "text", "default": "%" } } },
-    { "type": "knob", "name": "Knob", "what": "Turn to set a number.",
-      "props": { "min": { "kind": "number", "default": 0 }, "max": { "kind": "number", "default": 1 }, "value": { "kind": "number", "default": 0.5 }, "dec": { "kind": "number", "default": 2 }, "unit": { "kind": "text", "default": "" } } },
-    { "type": "steps", "name": "Step light", "what": "Four lights stepping at a real loop speed.",
-      "props": { "period": { "kind": "number", "default": 2, "unit": "s" }, "big": { "kind": "bool", "default": false } } },
-    { "type": "meter", "name": "Meter", "what": "How strong, as a row of bars.",
-      "props": { "level": { "kind": "number", "default": 0.6, "what": "0 to 1" } } },
-    { "type": "lamps", "name": "Save lamps", "what": "Edit, saving, saved, live.",
-      "props": { "stage": { "kind": "choice", "choices": ["edit", "saving", "saved", "live"], "default": "saved" } } },
-    { "type": "icon", "name": "Icon", "what": "One icon.",
-      "props": { "name": { "kind": "icon", "default": "note" }, "size": { "kind": "number", "default": 24, "unit": "px" } } },
-    { "type": "image", "name": "Picture", "what": "A picture, cropped to a shape.",
-      "props": { "src": { "kind": "text", "default": "" }, "alt": { "kind": "text", "default": "" }, "ratio": { "kind": "choice", "choices": ["16:9", "4:3", "1:1", "3:4", "9:16"], "default": "16:9" } } },
-    { "type": "space", "name": "Space", "what": "Empty room.",
-      "props": { "size": { "kind": "number", "default": 16, "unit": "px" } } }
+    {
+      "type": "stack",
+      "name": "Stack",
+      "what": "Parts one under another.",
+      "children": true,
+      "props": {
+        "gap": {
+          "kind": "number",
+          "default": 12,
+          "unit": "px"
+        },
+        "pad": {
+          "kind": "number",
+          "default": 0,
+          "unit": "px"
+        },
+        "align": {
+          "kind": "choice",
+          "choices": [
+            "stretch",
+            "start",
+            "center",
+            "end"
+          ],
+          "default": "stretch"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "name": "Row",
+      "what": "Parts side by side; they wrap on a narrow screen.",
+      "children": true,
+      "props": {
+        "gap": {
+          "kind": "number",
+          "default": 8,
+          "unit": "px"
+        },
+        "justify": {
+          "kind": "choice",
+          "choices": [
+            "start",
+            "center",
+            "end",
+            "between"
+          ],
+          "default": "start"
+        },
+        "wrap": {
+          "kind": "bool",
+          "default": true
+        }
+      }
+    },
+    {
+      "type": "grid",
+      "name": "Grid",
+      "what": "Parts in columns that fit the screen.",
+      "children": true,
+      "props": {
+        "min": {
+          "kind": "number",
+          "default": 240,
+          "unit": "px",
+          "what": "Narrowest column"
+        },
+        "gap": {
+          "kind": "number",
+          "default": 12,
+          "unit": "px"
+        }
+      }
+    },
+    {
+      "type": "backdrop",
+      "name": "Backdrop",
+      "what": "A picture behind parts, darkened toward the bottom so words read.",
+      "children": true,
+      "props": {
+        "src": {
+          "kind": "text",
+          "default": "img/door.jpg",
+          "what": "A picture (img/... is ui/system/img/)"
+        },
+        "height": {
+          "kind": "number",
+          "default": 640,
+          "unit": "px"
+        },
+        "shade": {
+          "kind": "number",
+          "default": 0.7,
+          "what": "0 none to 1 black"
+        },
+        "align": {
+          "kind": "choice",
+          "choices": [
+            "end",
+            "center",
+            "start"
+          ],
+          "default": "end"
+        },
+        "pad": {
+          "kind": "number",
+          "default": 20,
+          "unit": "px"
+        },
+        "gap": {
+          "kind": "number",
+          "default": 12,
+          "unit": "px"
+        }
+      }
+    },
+    {
+      "type": "panel",
+      "name": "Panel",
+      "what": "A raised surface holding parts.",
+      "children": true,
+      "props": {
+        "pad": {
+          "kind": "number",
+          "default": 16,
+          "unit": "px"
+        },
+        "gap": {
+          "kind": "number",
+          "default": 12,
+          "unit": "px"
+        },
+        "over": {
+          "kind": "bool",
+          "default": false,
+          "what": "See-through, for over the 3D view"
+        }
+      }
+    },
+    {
+      "type": "title",
+      "name": "Title",
+      "what": "A heading in the display font.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Title"
+        },
+        "size": {
+          "kind": "choice",
+          "choices": [
+            "xl",
+            "l",
+            "m",
+            "s"
+          ],
+          "default": "l"
+        }
+      }
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "what": "A line or paragraph.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Some words."
+        },
+        "tone": {
+          "kind": "choice",
+          "choices": [
+            "normal",
+            "dim"
+          ],
+          "default": "normal"
+        },
+        "mono": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "label",
+      "name": "Label",
+      "what": "Small capitals above something.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Label"
+        }
+      }
+    },
+    {
+      "type": "key",
+      "name": "Key",
+      "what": "A button.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Key"
+        },
+        "style": {
+          "kind": "choice",
+          "choices": [
+            "normal",
+            "go",
+            "small",
+            "tile"
+          ],
+          "default": "normal"
+        },
+        "icon": {
+          "kind": "icon",
+          "default": ""
+        },
+        "led": {
+          "kind": "bool",
+          "default": false,
+          "what": "A light that says it's on"
+        },
+        "on": {
+          "kind": "bool",
+          "default": false
+        },
+        "disabled": {
+          "kind": "bool",
+          "default": false
+        },
+        "href": {
+          "kind": "text",
+          "default": ""
+        }
+      }
+    },
+    {
+      "type": "chip",
+      "name": "Chip",
+      "what": "A small tag.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Chip"
+        },
+        "on": {
+          "kind": "bool",
+          "default": false
+        },
+        "led": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "seg",
+      "name": "Choice",
+      "what": "Pick one of a few.",
+      "props": {
+        "options": {
+          "kind": "list",
+          "default": [
+            "One",
+            "Two",
+            "Three"
+          ]
+        },
+        "on": {
+          "kind": "number",
+          "default": 0
+        }
+      }
+    },
+    {
+      "type": "field",
+      "name": "Field",
+      "what": "A text box.",
+      "props": {
+        "placeholder": {
+          "kind": "text",
+          "default": "Type here"
+        },
+        "value": {
+          "kind": "text",
+          "default": ""
+        },
+        "mono": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "switch",
+      "name": "Switch",
+      "what": "On or off, with its words beside it.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Switch"
+        },
+        "on": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "fader",
+      "name": "Fader",
+      "what": "Slide to set a number.",
+      "props": {
+        "min": {
+          "kind": "number",
+          "default": 0
+        },
+        "max": {
+          "kind": "number",
+          "default": 100
+        },
+        "value": {
+          "kind": "number",
+          "default": 50
+        },
+        "dec": {
+          "kind": "number",
+          "default": 0
+        },
+        "unit": {
+          "kind": "text",
+          "default": "%"
+        }
+      }
+    },
+    {
+      "type": "knob",
+      "name": "Knob",
+      "what": "Turn to set a number.",
+      "props": {
+        "min": {
+          "kind": "number",
+          "default": 0
+        },
+        "max": {
+          "kind": "number",
+          "default": 1
+        },
+        "value": {
+          "kind": "number",
+          "default": 0.5
+        },
+        "dec": {
+          "kind": "number",
+          "default": 2
+        },
+        "unit": {
+          "kind": "text",
+          "default": ""
+        }
+      }
+    },
+    {
+      "type": "steps",
+      "name": "Step light",
+      "what": "Four lights stepping at a real loop speed.",
+      "props": {
+        "period": {
+          "kind": "number",
+          "default": 2,
+          "unit": "s"
+        },
+        "big": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "meter",
+      "name": "Meter",
+      "what": "How strong, as a row of bars.",
+      "props": {
+        "level": {
+          "kind": "number",
+          "default": 0.6,
+          "what": "0 to 1"
+        }
+      }
+    },
+    {
+      "type": "lamps",
+      "name": "Save lamps",
+      "what": "Edit, saving, saved, live.",
+      "props": {
+        "stage": {
+          "kind": "choice",
+          "choices": [
+            "edit",
+            "saving",
+            "saved",
+            "live"
+          ],
+          "default": "saved"
+        }
+      }
+    },
+    {
+      "type": "icon",
+      "name": "Icon",
+      "what": "One icon.",
+      "props": {
+        "name": {
+          "kind": "icon",
+          "default": "note"
+        },
+        "size": {
+          "kind": "number",
+          "default": 24,
+          "unit": "px"
+        }
+      }
+    },
+    {
+      "type": "image",
+      "name": "Picture",
+      "what": "A picture, cropped to a shape.",
+      "props": {
+        "src": {
+          "kind": "text",
+          "default": ""
+        },
+        "alt": {
+          "kind": "text",
+          "default": ""
+        },
+        "ratio": {
+          "kind": "choice",
+          "choices": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "default": "16:9"
+        }
+      }
+    },
+    {
+      "type": "space",
+      "name": "Space",
+      "what": "Empty room.",
+      "props": {
+        "size": {
+          "kind": "number",
+          "default": 16,
+          "unit": "px"
+        }
+      }
+    },
+    {
+      "type": "listrow",
+      "name": "List row",
+      "what": "One line of a list: an icon, words, a value, an arrow.",
+      "props": {
+        "text": {
+          "kind": "text",
+          "default": "Row"
+        },
+        "detail": {
+          "kind": "text",
+          "default": ""
+        },
+        "icon": {
+          "kind": "icon",
+          "default": ""
+        },
+        "value": {
+          "kind": "text",
+          "default": ""
+        },
+        "tone": {
+          "kind": "choice",
+          "choices": [
+            "normal",
+            "ok",
+            "warn",
+            "bad"
+          ],
+          "default": "normal",
+          "what": "The value's colour"
+        },
+        "chevron": {
+          "kind": "bool",
+          "default": false
+        }
+      }
+    },
+    {
+      "type": "tabbar",
+      "name": "Tab bar",
+      "what": "The row of tabs at the bottom of a phone screen.",
+      "props": {
+        "options": {
+          "kind": "list",
+          "default": [
+            "One",
+            "Two",
+            "Three"
+          ]
+        },
+        "icons": {
+          "kind": "list",
+          "default": [],
+          "what": "One icon name per tab"
+        },
+        "on": {
+          "kind": "number",
+          "default": 0
+        }
+      }
+    }
   ]
 }

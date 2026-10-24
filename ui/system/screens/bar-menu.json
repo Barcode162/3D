@@ -1,0 +1,130 @@
+{
+  "format": 1,
+  "id": "bar-menu",
+  "name": "Bar · Jukebox",
+  "about": "A menu over the 3D view in the bar (see it with the In game preview).",
+  "root": {
+    "type": "stack",
+    "gap": 12,
+    "pad": 14,
+    "children": [
+      {
+        "type": "panel",
+        "over": true,
+        "gap": 12,
+        "children": [
+          {
+            "type": "row",
+            "justify": "between",
+            "children": [
+              {
+                "type": "title",
+                "text": "Jukebox",
+                "size": "m"
+              },
+              {
+                "type": "steps",
+                "period": 0.5
+              }
+            ]
+          },
+          {
+            "type": "seg",
+            "options": [
+              "Queue",
+              "Songs",
+              "Requests"
+            ],
+            "on": 0
+          },
+          {
+            "type": "panel",
+            "pad": 0,
+            "gap": 0,
+            "children": [
+              {
+                "type": "listrow",
+                "text": "Late Train Home",
+                "icon": "note",
+                "detail": "Playing · Maya",
+                "value": "2:41"
+              },
+              {
+                "type": "listrow",
+                "text": "Neon Rain",
+                "icon": "note",
+                "detail": "Next · you",
+                "value": "3:12"
+              },
+              {
+                "type": "listrow",
+                "text": "Slow Pour",
+                "icon": "note",
+                "detail": "Leo",
+                "value": "4:05"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "key",
+                "text": "Add a song",
+                "style": "go",
+                "icon": "plus"
+              },
+              {
+                "type": "key",
+                "text": "Skip",
+                "icon": "arrow"
+              }
+            ]
+          },
+          {
+            "type": "switch",
+            "text": "Party mode",
+            "on": true
+          },
+          {
+            "type": "fader",
+            "min": 0,
+            "max": 100,
+            "value": 64,
+            "unit": "%"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "wrap": false,
+        "children": [
+          {
+            "type": "key",
+            "text": "Emotes",
+            "style": "tile",
+            "icon": "hand"
+          },
+          {
+            "type": "key",
+            "text": "Seats",
+            "style": "tile",
+            "icon": "place"
+          },
+          {
+            "type": "key",
+            "text": "Mirror",
+            "style": "tile",
+            "icon": "mirror"
+          },
+          {
+            "type": "key",
+            "text": "Settings",
+            "style": "tile",
+            "icon": "gear"
+          }
+        ]
+      }
+    ]
+  }
+}

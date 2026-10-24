@@ -27,7 +27,7 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('response', (r) => { if (r.status() >= 400 && !(r.status() === 401 && /api\.php/.test(r.url()))) errors.push(r.status() + ' ' + r.url()); });  // 401: not logged in yet
-await page.goto(url + 'toolbelt/ui-editor/index.html');
+await page.goto(url + 'toolbelt/ui-editor/index.html?screen=sampler');
 await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
 const ed = (fn, arg) => page.evaluate(fn, arg);
 
@@ -94,7 +94,7 @@ check(await ed(() => UIEditor.state.screenId === 'screen-1' && document.querySel
 
 // R1.7: the draft on the phone, login, publish, history
 check(await ed(() => /unpublished/.test(document.getElementById('status').textContent) && /Publish \d/.test(document.getElementById('pubOpen').textContent)), 'the top bar counts what is unpublished');
-await page.reload();
+await page.goto(url + 'toolbelt/ui-editor/index.html?screen=sampler');
 await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
 check(await ed(() => !!UIEditor.state.screens['screen-1'] && UIEditor.state.themes.faceplate.tokens.accent === '#00AAFF'), 'after a reload the draft is back');
 const year = new Date().getFullYear();
@@ -117,7 +117,7 @@ await page.click('#pubOpen');
 await page.waitForFunction(() => document.querySelectorAll('#history li b').length === 1);
 check(await ed(() => /Blue accent/.test(document.getElementById('history').textContent)), 'History shows v1 and its note');
 await page.click('#pubClose');
-await page.reload();
+await page.goto(url + 'toolbelt/ui-editor/index.html?screen=sampler');
 await page.waitForFunction(() => document.querySelectorAll('#tree button').length > 0);
 check(await ed(() => UIEditor.state.themes.faceplate.tokens.accent === '#00AAFF' && UIEditor.state.live.version === 1), 'a fresh load starts from the published version (newer than the repo)');
 

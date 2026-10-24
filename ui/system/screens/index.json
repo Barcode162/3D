@@ -1,5 +1,10 @@
 {
   "format": 1,
   "about": "The screens, in the order the UI Editor lists them.",
-  "order": ["sampler"]
+  "order": [
+    "front-door",
+    "dev-overview",
+    "bar-menu",
+    "sampler"
+  ]
 }
