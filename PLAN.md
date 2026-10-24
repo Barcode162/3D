@@ -55,14 +55,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**J1 · Freeze and the Charter** (the tools). Freeze and the Charter: R6 closed, features frozen, the restructure written down, the Charter (what's allowed, what's realistic, word for word your rules) and the glossary · N2 N5
-- [x] **J1.1** Close R6, freeze, write the restructure down: R6 sealed with its build, your new rules, J1–J8 on the plan, the full spec in docs/plan/restructure.md, every problem found so far in docs/records/known-issues.md, the stray note from the last session brought home *Check:* Open Dev → Plan: Now is J1 · Freeze and the Charter with three pieces; Up next lists J2 to J8
-- [x] **J1.2** The Charter (docs/charter/charter.md): what the project is, your North star and rules word for word with what each means in practice, what's realistic, and the permission list (allowed / ask first / never; anything not listed: ask) *Check:* Read the Charter on GitHub and tell me yes or what to change
-- [x] **J1.3** The glossary (docs/charter/glossary.md): every word we use, one meaning each *Check:* Open the glossary on GitHub: words like job, piece, build, ship, live, store each have one plain meaning
+**J2 · Honest checks** (the tools). Honest checks: the browser tests run on GitHub again (a light test-only drawing mode), every test counts, both deploys report their real state · N2 N5
+- [ ] **J2.1** The browser tests run on GitHub again: one shared test switch opens the bar with the classic light on GitHub's machines only, so the smoke test stops timing out and the 12 skipped suites run *Check:* Nothing changes on your phone: the bar keeps the new light; Dev → Overview shows the game deploy's tests passed, or names the one that failed
+- [ ] **J2.2** Every test counts: each allowed-to-fail suite (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race) made blocking once it passes on GitHub, or listed as a known issue with a job; none deleted or weakened *Check:* Nothing to see on the phone; Dev → Overview names any failing test
+- [ ] **J2.3** Both deploys report their real state to Dev (running, live, tests passed, which failed) with their age; the stale deploy notes fixed *Check:* Dev → Overview: two deploy rows (the game and the site), each with its state and how long ago
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J2 → J3 → J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J3 → J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -122,7 +122,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J2** Honest checks: the browser tests run on GitHub again (a light test-only drawing mode), every test counts, both deploys report their real state · N2 N5
 - [ ] **J3** The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
 - [ ] **J4** Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
 - [ ] **J5** Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
@@ -166,6 +165,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
 - `87bd110` R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
 - `ebca03a` R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
 - `ad87523` R4.1, R4.2, R4.3, R4.4, R4.5, R4.6, R4.7: Dev, the control room: Overview, Projects, Plan, Publish, People; the old hub, portal and Toolbelt lead there → 03c3fe4^..f247b0b
