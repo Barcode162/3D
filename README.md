@@ -6,6 +6,16 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.5 Theme editing in the UI Editor: every token in 6 groups (colour, surfaces, shape, depth, type, lights) with colour pickers that keep see-through, sliders, font and choice menus and the exact text; name, about, light or dark, copy as a new theme, back to as loaded; undo and redo (one step per slider drag); deep links (?mode=theme&group=shape)
+
+`f138572` · 2026-10-24 03:57 · 5 files, +511 −51 · tests: quick, toolbelt
+
+Phone check: in the UI Editor tap Theme, then Shape: drag key-r and every key in the preview rounds; Colour: pick a new accent, the preview changes; the undo arrow takes it back
+
+![R1.5 page-toolbelt-ui-editor-index-mode-theme-group-shape.jpg](R1.5/page-toolbelt-ui-editor-index-mode-theme-group-shape.jpg)
+
+![R1.5 page-toolbelt-ui-editor-index-mode-theme-group-colour.jpg](R1.5/page-toolbelt-ui-editor-index-mode-theme-group-colour.jpg)
+
 ## R1.4 The UI Editor (toolbelt/ui-editor/): live preview on top (phone, computer, in game; any theme), the parts list and the inspector below, side by side on a computer; a tap in the preview or the list selects the part in both; its own test
 
 `98da435` · 2026-10-24 03:52 · 9 files, +340 −6 · tests: quick, toolbelt
