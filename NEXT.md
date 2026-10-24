@@ -8,6 +8,13 @@ Alive plan, replanned 2026-10-22: tracks L M T R A W, wow and foundation
 take turns, every visual piece has an off switch and before/after pictures,
 every piece writes its page in `docs/manual/`).
 
+## PAUSED (user, 2026-10-24): everything below waits for the rework
+The user paused all engine work (L1.8, P1, P2 and every later step) until the
+rework is done: one world site, the Dev area, a UI Editor in the engine's
+Toolbelt, one house theme, a remade plan system. The plan is being agreed in
+`docs/UI_PLAN.md` (steps R1-R6). **On "go": nothing from below.** Until the
+user agrees the plan, answer the open questions there; after, R1 goes here.
+
 ## Where we are (2026-10-22)
 - The engine plan E1-E9 is built and live (`22e9b28`).
 - The user is phone-checking it (the list in the chat). Any "broke <piece>"
