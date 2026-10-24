@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.7 Fix for J6's red site deploy: the plan test no longer depends on the real plan's Up next line (its copy sets its own); the ship always runs the plan, workflows and workshop checks on the final state, even when the rest is skipped; incident recorded
+
+`88258dc` · 2026-10-24 17:24 · 5 files, +40 −4 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J6.6 The old notes sorted: the room protocol and the manual moved into the Handbook (docs/handbook/protocol.md, manual/); the driving rework plan is its future job's spec (docs/plan/jobs/W20.md); DECISIONS, STUDIO, ENGINE, REFERENCE, AUTOMATION and the audits archived with a banner; their still-true facts in new Handbook pages (README index, build-and-test, phone, traps); the decisions still in force recorded (0002-0010); every doc path in the repo rewritten to where the docs are now (comments, and the plan through its new relink command), and the Handbook check now refuses a path to a missing doc and reads the files as they are on disk (in every quick check); the stores' copies keep their old paths until their next publish (KI-31); duplicate pictures kept on purpose (decision 0010); KI-1, KI-2, KI-13, KI-14, KI-16, KI-19, KI-21, KI-23 closed. Code changes are comments only (checked line by line): checked by the build, the shaders, the native tests, syntax checks of every touched file, and the store, edits, protocol, hub, site, toolbelt and server tests; the game's browser tests aren't run for comments
 
 `820a1f2` · 2026-10-24 17:10 · 193 files, +563 −221 · tests: plan, workflows, workshop, build, native, uikit, hub, server, site, toolbelt, labels
