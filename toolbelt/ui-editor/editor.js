@@ -18,7 +18,9 @@
   };
   var FONTS = ['"Archivo", "Helvetica Neue", Arial, sans-serif', '"Limelight", "Didot", Georgia, serif', '"Unbounded", "Archivo", Arial, sans-serif',
     '"Righteous", "Archivo", Arial, sans-serif', '"Martian Mono", ui-monospace, monospace', '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif',
-    'Georgia, "Times New Roman", serif'];
+    'Georgia, "Times New Roman", serif',
+    '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    'ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif'];
 
   // ---- Loading ----
   function getJson(path) { return fetch(SYS + path, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(path + ': ' + r.status); return r.json(); }); }
@@ -362,7 +364,7 @@
     } else if (t.kind === 'font') {
       box = h('div', 'ed-stackin'); var fs = h('select', 'ed-in'); fs.setAttribute('aria-label', t.id + ' font');
       var list = FONTS.indexOf(v) >= 0 ? FONTS : [v].concat(FONTS);
-      list.forEach(function (f) { var o = h('option', null, f.split(',')[0].replace(/"/g, '')); o.value = f; fs.appendChild(o); }); fs.value = v;
+      list.forEach(function (f) { var o = h('option', null, f.split(',')[0].replace(/"/g, '').replace(/^-apple-system$/, 'System (SF)').replace(/^ui-rounded$/, 'System rounded (SF Rounded)')); o.value = f; fs.appendChild(o); }); fs.value = v;
       fs.addEventListener('change', function () { text.value = fs.value; setToken(t.id, fs.value); });
       box.appendChild(fs);
     } else if (t.kind === 'choice') {

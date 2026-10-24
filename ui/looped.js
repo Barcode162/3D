@@ -17,7 +17,13 @@
     faceplate: { name: "Faceplate", about: "The drum machine: glossy keys, keycap lights.", click: [2600,0.025,"square"] },
     backbar: { name: "Back Bar", about: "Lacquered wood, brass, Edison bulbs.", click: [900,0.04,"triangle"] },
     obsidian: { name: "Obsidian", about: "Deepest black, frosted glass, ice light.", click: [4200,0.05,"sine"] },
-    jukebox: { name: "Jukebox", about: "Chrome, candy jelly keys, bubble tubes.", click: [520,0.06,"square"] }
+    jukebox: { name: "Jukebox", about: "Chrome, candy jelly keys, bubble tubes.", click: [520,0.06,"square"] },
+    clean: { name: "Clean", about: "Calm and clear, like the phone itself: system type, soft cards, one blue.", click: [3000,0.012,"sine"] },
+    warm: { name: "Warm", about: "The bar at night: amber light on dark wood, soft and round, words as typed.", click: [1200,0.03,"triangle"] },
+    bold: { name: "Bold", about: "Loud and certain: black frames, hard shadows, square corners, one yellow.", click: [700,0.03,"square"] },
+    glass: { name: "Glass", about: "Frosted glass over deep colour: see-through panels, pill keys, a violet-to-cyan glow.", click: [4400,0.02,"sine"] },
+    neon: { name: "Neon", about: "The bar's signs come alive: deep night, hot pink and cyan tubes that glow.", click: [1800,0.04,"sawtooth"] },
+    soft: { name: "Soft", about: "Friendly and light: very round, pastel, gentle shadows, rounded type.", click: [2200,0.02,"sine"] }
     // end LOOKS
   };
   var root = document.documentElement;
