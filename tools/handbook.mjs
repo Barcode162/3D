@@ -5,7 +5,9 @@
 //   node tools/handbook.mjs check     the generated pages are current, every folder is
 //                                     described (docs/handbook/folders.json), every link in the
 //                                     Handbook leads to a file (exit 1 if not)
-// Pages: map.md (every folder: what, files, languages, who uploads it and where).
+// Pages: map.md (every folder: what, files, languages, who uploads it and where),
+// systems.md (every system page under docs/handbook/systems/, by chapter, with its status),
+// commands.md (the front door's commands, from tools/lib/commands.mjs).
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, join, extname } from 'node:path';
@@ -53,7 +55,38 @@ function mapPage() {
     '| Folder | What it is | Files | Languages | Uploaded by → to |\n|---|---|---|---|---|\n' + rows.join('\n') + '\n';
 }
 
-const PAGES = { 'map.md': mapPage };
+// The system pages (J6.2): one template, ten parts, in this order.
+const PARTS = ['What it is', 'Status', 'What you can do with it', 'How it works', 'Data', 'Commands', 'Limits', 'Checks', 'Known traps', 'History'];
+const CHAPTERS = ['engine', 'world', 'site', 'tools', 'backbone'];
+function systemPages() {
+  return tracked().concat(untracked()).filter((f) => /^docs\/handbook\/systems\/[a-z]+\/[a-z0-9-]+\.md$/.test(f)).sort();
+}
+const untracked = () => execSync('git ls-files -o --exclude-standard docs/handbook', { encoding: 'utf8' }).split('\n').filter(Boolean);
+function systemInfo(f) {
+  const text = readFileSync(f, 'utf8');
+  const title = (text.match(/^# (.*)$/m) || [, f])[1];
+  const status = ((text.split('## Status')[1] || '').trim().match(/^\*\*(Live|Partial|Planned)/) || [, '?'])[1];
+  const what = ((text.split('## What it is')[1] || '').trim().split('\n')[0] || '');
+  return { title, status, what, parts: [...text.matchAll(/^## (.*)$/gm)].map((m) => m[1]) };
+}
+function systemsPage() {
+  const pages = systemPages();
+  let out = BANNER('docs/handbook/systems/') + '# The systems\n\nEvery system of J Production, one page each, by chapter (the five chapters of the plan). Each page has the same ten parts: ' + PARTS.join(' · ') + '.\n';
+  for (const ch of CHAPTERS) {
+    const mine = pages.filter((f) => f.split('/')[3] === ch);
+    out += `\n## The ${ch}\n\n| System | Status | What it is |\n|---|---|---|\n`;
+    for (const f of mine) { const s = systemInfo(f); out += `| [${cell(s.title)}](../systems/${ch}/${f.split('/').pop()}) | ${s.status} | ${cell(s.what)} |\n`; }
+  }
+  return out;
+}
+// Every command of the front door (tools/lib/commands.mjs), with its usage.
+async function commandsPageAsync() {
+  const { COMMANDS } = await import('./lib/commands.mjs');
+  return BANNER('tools/lib/commands.mjs') + '# The commands\n\nEvery tool runs through one front door: `node tools/project.mjs <command>` (Claude runs them; the Playbook says when). `node tools/project.mjs help` prints the same list.\n\n| Command | What it does | Usage | Runs |\n|---|---|---|---|\n' +
+    COMMANDS.map((c) => `| \`${c.name}\` | ${cell(c.summary)} | \`node tools/project.mjs ${cell(c.usage)}\` | ${c.own ? 'project.mjs itself' : '`' + c.run.join(' ') + '`'} |`).join('\n') + '\n';
+}
+const COMMANDS_PAGE = await commandsPageAsync();
+const PAGES = { 'map.md': mapPage, 'systems.md': systemsPage, 'commands.md': () => COMMANDS_PAGE };
 
 function problems() {
   const out = [], files = tracked(), described = json('docs/handbook/folders.json').folders;
@@ -63,8 +96,14 @@ function problems() {
     const file = join(OUT, name);
     if (!existsSync(file) || readFileSync(file, 'utf8') !== make()) out.push(`${file} is not current (node tools/handbook.mjs write)`);
   }
+  for (const f of systemPages()) {
+    const s = systemInfo(f);
+    if (!CHAPTERS.includes(f.split('/')[3])) out.push(`${f}: not in one of the five chapters`);
+    if (s.parts.join('|') !== PARTS.join('|')) out.push(`${f}: its parts must be exactly ${PARTS.join(', ')}`);
+    if (s.status === '?') out.push(`${f}: its Status must start with **Live**, **Partial** or **Planned**`);
+  }
   // Every relative link in the Handbook leads to a file.
-  for (const f of files.filter((x) => x.startsWith('docs/handbook/') && x.endsWith('.md'))) {
+  for (const f of files.concat(untracked()).filter((x) => x.startsWith('docs/handbook/') && x.endsWith('.md'))) {
     for (const [, link] of readFileSync(f, 'utf8').matchAll(/\]\(([^)#\s]+)(?:#[^)]*)?\)/g)) {
       if (!/^(https?:|mailto:)/.test(link) && !existsSync(join(dirname(f), link))) out.push(`${f}: the link ${link} leads nowhere`);
     }

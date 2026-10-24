@@ -55,7 +55,7 @@
     "id": "J6.2",
     "text": "One page per system (about 40, one template: what it is, status, what you can do, how it works, data, commands, limits, checks, traps, history)",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J6.3",

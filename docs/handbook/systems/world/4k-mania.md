@@ -1,0 +1,43 @@
+# 4K Mania
+
+*System page · chapter: world* · [all systems](../../generated/systems.md)
+
+## What it is
+
+The 4-key rhythm game on the "4K MANIA" cabinet, made to look and play like osu!mania.
+
+## Status
+
+**Live.**
+
+## What you can do with it
+
+Song select (a scrolling wheel, four difficulties with star ratings, your best grade per song), then notes and hold notes falling to four keys, judgements, a timing bar, health and a results screen.
+
+## How it works
+
+`bar/projects/mania/rhythm.*`; every song is analysed into a chart by listening to it (`rhythm_chart.*`: onsets in four bands by FFT, tempo and beat phase, notes snapped to the beat, lanes following pitch, ringing sounds become holds). Plays with exact timing (`engine::Track`).
+
+## Data
+
+`assets/music/rhythm/` (its own songs, with credits) plus the jukebox's (and songs loaded from your phone); best grades on the phone.
+
+## Commands
+
+`?rhythm=song,difficulty`, `?autoplay`; `tools/rhythm_test.mjs` (needs ffmpeg).
+
+## Limits
+
+Charts are made by listening, not by hand.
+
+## Checks
+
+`rhythm` (GitHub).
+
+## Known traps
+
+The test uses a short copy of a song made with ffmpeg.
+
+## History
+
+2026-10-16; like osu!mania 2026-10-19; round 2 2026-10-19.
