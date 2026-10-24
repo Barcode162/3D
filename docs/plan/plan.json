@@ -55,7 +55,7 @@
     "id": "J4.2",
     "text": "One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J4.3",

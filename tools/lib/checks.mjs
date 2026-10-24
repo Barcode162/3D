@@ -45,7 +45,7 @@ export const CHECKS = {
 export const RULES = [
   [/^PLAN\.md$|^tools\/plan/, ['plan']],
   [/^\.github\/workflows\/|^tools\/workflows_test|^tools\/lib\/checks/, ['workflows']],
-  [/^tools\/(check|piece|step|ci_status|dev|studio|hub)\.mjs$|^tools\/lib\/(checks|gallery)\.mjs$/, ['workflows']],  // the workshop's own tools: not the game
+  [/^tools\/(check|piece|step|ci_status|dev|studio|hub|project|ship|records)\.mjs$|^tools\/lib\/(checks|gallery|commands)\.mjs$/, ['workflows']],  // the workshop's own tools: not the game
   [/^docs\/charter\/|^docs\/plan\/|^CLAUDE\.md$|^tools\/lib\/plandata/, ['plan']],                       // the Charter's copy of the rules
   [/^docs\/records\/known-issues\.md$/, ['workflows']],  // allowed-to-fail tests name open issues
   [/\.md$|^docs\//, []],

@@ -26,6 +26,7 @@
     {"id": "gallery", "project": "bar3d", "group": "tune", "name": "Gallery", "icon": "history", "href": "https://github.com/Barcode162/3D/tree/gallery", "what": "Before and after pictures of every piece."},
     {"id": "classic", "project": "bar3d", "group": "tune", "name": "Bar3D classic", "icon": "box", "href": "/classic/", "what": "The old public build, kept as it was."},
     {"id": "flags", "project": "looped", "group": "tune", "name": "Engine flags", "icon": "gear", "status": "soon", "what": "Switch engine features on and off, like ?light=classic or ?bounce=0."},
+    {"id": "project", "project": "workshop", "group": "claude", "name": "Front door", "icon": "check", "run": "node tools/project.mjs status", "what": "Every tool through one command; status shows the whole truth on one screen."},
     {"id": "piece", "project": "workshop", "group": "claude", "name": "Piece runner", "icon": "play", "run": "node tools/piece.mjs <TAG> \"<title>\"", "what": "One piece: build, check, pictures, commit, push."},
     {"id": "step", "project": "workshop", "group": "claude", "name": "Step finisher", "icon": "publish", "run": "node tools/step.mjs finish <STEP> \"<what>\"", "what": "The end of a step: full check, deploy, build log."},
     {"id": "plan", "project": "workshop", "group": "claude", "name": "Plan keeper", "icon": "rule", "run": "node tools/plan.mjs check", "what": "Keeps PLAN.md in its eight parts and five chapters; ticks pieces, writes Done."},
