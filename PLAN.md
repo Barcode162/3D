@@ -56,17 +56,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J4 · Tools and locks** (the tools). Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
-- [x] **J4.1** The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data *Check:* Dev → Plan looks the same, nothing missing
-- [x] **J4.2** One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age *Check:* Nothing on the phone
-- [x] **J4.3** The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal *Check:* Nothing on the phone
-- [x] **J4.4** Records tools: requests word for word, incidents, decisions, the session line *Check:* Nothing on the phone
-- [x] **J4.5** Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session *Check:* Nothing on the phone
-- [x] **J4.6** The Playbook and the tools agree: every command the Playbook names exists; the (J4) marks removed *Check:* Nothing on the phone
+**J5 · Data flows and Dev** (the tools). Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
+- [ ] **J5.1** The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17) *Check:* Nothing on the phone
+- [ ] **J5.2** The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago' *Check:* Dev → Plan: the job in Now with 'as of …' under it
+- [ ] **J5.3** Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site *Check:* Nothing on the phone
+- [ ] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
+- [ ] **J5.5** One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it *Check:* joshuavelasco.com → Projects: the same list as Dev
+- [ ] **J5.6** Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done *Check:* Dev → Overview: J5's next piece and both deploy rows
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J6 → J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,7 +126,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J5** Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
 - [ ] **J6** The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
 - [ ] **J7** The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
 - [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
@@ -168,7 +167,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86
+- (this push) J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765
+- `d00bd4c` J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86
 - `8793265` J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
 - `546c7d4` J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
 - `87bd110` R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923

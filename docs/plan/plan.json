@@ -36,55 +36,55 @@
   }
  ],
  "now": {
-  "id": "J4",
-  "title": "Tools and locks",
+  "id": "J5",
+  "title": "Data flows and Dev",
   "chapter": "the tools",
-  "about": "Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps",
+  "about": "Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth",
   "serves": [
    "N2",
    "N5"
   ],
   "pieces": [
    {
-    "id": "J4.1",
-    "text": "The plan as data: docs/plan/plan.json with one writer (the plan tool) and one schema; the readable plan generated from it; every item converted without loss; Dev reads the data",
-    "check": "Dev → Plan looks the same, nothing missing",
-    "done": true
+    "id": "J5.1",
+    "text": "The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17)",
+    "check": "Nothing on the phone",
+    "done": false
    },
    {
-    "id": "J4.2",
-    "text": "One front door for every tool (node tools/project.mjs help) and a status screen showing the whole truth with its age",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J5.2",
+    "text": "The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago'",
+    "check": "Dev → Plan: the job in Now with 'as of …' under it",
+    "done": false
    },
    {
-    "id": "J4.3",
-    "text": "The ship command: checks before, the push, the live check after, the Done record and the reply; or a clear refusal",
+    "id": "J5.3",
+    "text": "Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site",
     "check": "Nothing on the phone",
-    "done": true
+    "done": false
    },
    {
-    "id": "J4.4",
-    "text": "Records tools: requests word for word, incidents, decisions, the session line",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J5.4",
+    "text": "The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay",
+    "check": "Dev → Publish: news still there",
+    "done": false
    },
    {
-    "id": "J4.5",
-    "text": "Locks: git hooks and Claude Code hooks stop skipped steps (no push to main except ship, no hand edits of generated parts, no secrets); the status loads by itself at the start of every session",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J5.5",
+    "text": "One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it",
+    "check": "joshuavelasco.com → Projects: the same list as Dev",
+    "done": false
    },
    {
-    "id": "J4.6",
-    "text": "The Playbook and the tools agree: every command the Playbook names exists; the (J4) marks removed",
-    "check": "Nothing on the phone",
-    "done": true
+    "id": "J5.6",
+    "text": "Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done",
+    "check": "Dev → Overview: J5's next piece and both deploy rows",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*",
- "upNext": "J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)",
+ "upNext": "J6 → J7 → J8 (the restructure; then the road as J7 orders it)",
  "road": {
   "world": [
    {
@@ -505,15 +505,6 @@
     "done": false
    },
    {
-    "id": "J5",
-    "text": "Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth",
-    "serves": [
-     "N2",
-     "N5"
-    ],
-    "done": false
-   },
-   {
     "id": "J6",
     "text": "The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted",
     "serves": [
@@ -623,6 +614,10 @@
  "done": [
   {
    "build": null,
+   "text": "J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765"
+  },
+  {
+   "build": "d00bd4c",
    "text": "J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86"
   },
   {
