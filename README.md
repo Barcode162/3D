@@ -6,6 +6,16 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.3 Screen files and the web renderer: a screen is a tree of parts (ui/system/parts.json lists the 20 kinds and their options), Looped.screen() draws one (ui/screen.js), /ui/screen.html?s=sampler shows every part; uikit checks every screen
+
+`a6d79dd` · 2026-10-24 03:47 · 7 files, +309 −2 · tests: quick
+
+Phone check: open joshuavelasco.com/ui/screen.html?s=sampler: keys, choices, knob, fader, meter, save lamps, icons and a see-through panel, all working; add &look=jukebox to see it in another theme
+
+![R1.3 page-ui-screen-s-sampler.jpg](R1.3/page-ui-screen-s-sampler.jpg)
+
+![R1.3 page-ui-screen-s-sampler-look-backbar.jpg](R1.3/page-ui-screen-s-sampler-look-backbar.jpg)
+
 ## R1.2 The theme files: every token described once (ui/system/tokens.json: group, kind, what it does), the 4 themes as files (ui/system/themes/), ui/themes.css and looped.js's theme list written from them by tools/uikit.mjs, a check that they agree (quick check and CI); every token's value is unchanged
 
 `a21442c` · 2026-10-24 03:43 · 14 files, +580 −73 · tests: quick
