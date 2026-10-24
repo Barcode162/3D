@@ -1,0 +1,59 @@
+# The plan reaches Dev on its own, within about a minute (restructure J5.2):
+# the plan's data, the user's rules and the incidents index go into Dev's
+# store (private/dev/ on IONOS), with the build they came from. No browser
+# tests: only the plan's own shape check, so a broken plan is never uploaded.
+# The site (hub.yml) no longer carries the plan.
+name: Plan
+
+on:
+  push:
+    branches: [main]
+    paths: ['PLAN.md', 'docs/plan/**', 'docs/charter/**', 'docs/records/**', '.github/workflows/plan.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push carries the newer plan: it replaces a running one.
+concurrency:
+  group: plan
+  cancel-in-progress: true
+
+env:
+  IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+  IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "The plan keeps its shape and its files agree (tools/plan.mjs check)"
+        run: node tools/plan.mjs check
+
+      - name: The incidents index and the build the plan came from
+        run: |
+          mkdir -p build/plan
+          node tools/records.mjs index > build/plan/incidents.json
+          printf '{"sha":"%s","at":%s}\n' "$(git rev-parse --short=7 HEAD)" "$(date +%s)" > build/plan/plan-meta.json
+
+      - name: Upload the plan to Dev's store
+        if: env.IONOS_SFTP_HOST != ''
+        env:
+          LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          sudo apt-get install -y lftp >/dev/null
+          lftp --env-password -u "$IONOS_SFTP_USER" "sftp://$IONOS_SFTP_HOST" <<EOF
+          set cmd:fail-exit yes
+          set sftp:auto-confirm yes
+          set net:max-retries 3
+          set net:timeout 30
+          mkdir -p -f private/dev
+          put $GITHUB_WORKSPACE/docs/plan/plan.json -o private/dev/plan.json
+          put $GITHUB_WORKSPACE/docs/charter/rules.json -o private/dev/rules.json
+          put $GITHUB_WORKSPACE/build/plan/incidents.json -o private/dev/incidents.json
+          put $GITHUB_WORKSPACE/build/plan/plan-meta.json -o private/dev/plan-meta.json
+          bye
+          EOF

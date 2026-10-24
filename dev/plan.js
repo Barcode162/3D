@@ -1,7 +1,8 @@
 // The plan in the browser (Dev's Overview and Plan tabs): its data, the same
 // files tools/plan.mjs writes (docs/plan/plan.json, docs/charter/rules.json),
 // never PLAN.md's text. Dev.plan() fetches it once per visit (dev/api.php →
-// private/dev/, put there by the site deploy).
+// private/dev/, put there by .github/workflows/plan.yml within about a minute
+// of a push), with the build it came from (asOf: {sha, at}) and the incidents.
 (function () {
   'use strict';
   var D = window.Dev;
@@ -30,7 +31,13 @@
     if (cached) return cached;
     cached = (D.demo ? Promise.all([D.get('/docs/plan/plan.json'), D.get('/docs/charter/rules.json')]).then(function (a) { return { data: { plan: a[0], rules: a[1] } }; })
                      : D.post('/dev/api.php', { a: 'plan' }))
-      .then(function (j) { if (!j.data || !j.data.plan || !j.data.rules) throw new Error(j.error || 'No plan yet'); return D.planFromData(j.data.plan, j.data.rules); })
+      .then(function (j) {
+        if (!j.data || !j.data.plan || !j.data.rules) throw new Error(j.error || 'No plan yet');
+        var plan = D.planFromData(j.data.plan, j.data.rules);
+        plan.asOf = { sha: j.sha || '', at: j.at || 0 };
+        plan.incidents = j.incidents || [];
+        return plan;
+      })
       .catch(function (e) { cached = null; throw e; });
     return cached;
   };

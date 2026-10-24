@@ -22,6 +22,7 @@ writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'ab
 mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
 copyFileSync('docs/plan/plan.json', join(ws.root, 'private/dev/plan.json'));
 copyFileSync('docs/charter/rules.json', join(ws.root, 'private/dev/rules.json'));
+writeFileSync(join(ws.root, 'private/dev/plan-meta.json'), JSON.stringify({ sha: 'fed4321', at: Math.floor(Date.now() / 1000) - 120 }));  // plan.yml (J5.2)
 const browser = await launchBrowser();
 process.on('uncaughtException', (e) => { console.log('FAIL ' + e.message); ws.close(); process.exit(1); });
 const year = new Date().getFullYear();
@@ -79,6 +80,7 @@ await page.click('#tabs [data-tab="plan"]');
 await page.waitForSelector('#view [data-chapter="The engine"]');
 check(await ed(() => ['The world', 'The site', 'The engine', 'The tools', 'The backbone'].every((c) => document.querySelector(`#view [data-chapter="${c}"]`))), 'Plan shows the five chapters');
 check(await ed((t) => document.querySelector('#view [data-id="plan-now"]').textContent.includes(t + '.1'), NOW[1]), `Now lists ${NOW[1]}'s pieces`);
+check(await ed(() => /As of build fed4321, 2 min ago/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Plan says which build it came from and how long ago (J5.2)');
 await page.click('#view [data-id="note-kind"] button:nth-child(2)');
 await page.fill('#view [data-id="note"]', 'A rooftop terrace');
 await page.click('#view [data-id="note-send"]');

@@ -55,7 +55,7 @@
     "id": "J5.2",
     "text": "The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago'",
     "check": "Dev → Plan: the job in Now with 'as of …' under it",
-    "done": false
+    "done": true
    },
    {
     "id": "J5.3",

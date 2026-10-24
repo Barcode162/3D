@@ -54,6 +54,7 @@
         var n = plan.now;
         nowEl.appendChild(D.part({ type: 'label', text: 'Now · ' + n.chapter }));
         nowEl.appendChild(D.part({ type: 'title', text: n.tag + ' · ' + n.title, size: 's' }));
+        if (plan.asOf && plan.asOf.at) nowEl.appendChild(D.part({ type: 'label', text: 'As of ' + (plan.asOf.sha ? 'build ' + plan.asOf.sha + ', ' : '') + D.ago(plan.asOf.at) }));
         nowEl.appendChild(wrapRows(n.pieces.map(function (p) {
           return D.part({ type: 'listrow', icon: p.done ? 'check' : 'loop', text: p.tag + ' · ' + short(p.text)[0], detail: p.check ? 'Check: ' + p.check : short(p.text)[1], value: p.done ? 'Done' : 'Next', tone: p.done ? 'ok' : 'warn' });
         })));

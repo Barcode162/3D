@@ -2,13 +2,15 @@
 // Dev's store (PLAN.md R4): what Dev shows that no other server keeps.
 // On IONOS at joshuavelasco.com/dev/api.php; data outside the web root in
 // private/dev/ (DEV_DATA overrides, for tests). CI puts the plan's data there
-// (plan.json and rules.json: docs/plan/plan.json, docs/charter/rules.json) and each deploy's real state: ci-game.json and ci-site.json
+// (plan.yml: plan.json, rules.json, incidents.json, plan-meta.json) and each deploy's real state: ci-game.json and ci-site.json
 // (tools/ci_status.mjs; ci.json was the old, game-only report).
 //
 // Public (no login):
 //   GET ?site                   the site's words for the front door (R5): {"ok":1,"site":{..}}
 // Owner and admins (the bar's login token), or Claude (the hub's key, X-Hub-Key):
-//   POST {"a":"plan"}           -> {"ok":1,"data":{"plan":{..},"rules":{..}}|null,"at":unix} the plan's data (tools/plan.mjs)
+//   POST {"a":"plan"}           -> {"ok":1,"data":{"plan":{..},"rules":{..}}|null,"at":unix,"sha":"..","incidents":[..]}
+//                                  the plan's data (tools/plan.mjs), the build it came from and when,
+//                                  and the incidents index (tools/records.mjs index), all put there by plan.yml
 //   POST {"a":"ci"}             -> {"ok":1,"ci":{"game":R|null,"site":R|null}}, each deploy's state:
 //        R = {workflow, build, live, tests: running|passed|failed|cancelled, failed:[ids], allowed:[ids], at, url}
 //   POST {"a":"notes"}          -> {"ok":1,"notes":[{id,kind,text,by,at,read}]} newest first
@@ -111,7 +113,10 @@ $me = who($in);
 if ($a === 'plan') {
   $plan = read_json("$data/plan.json");
   $rules = read_json("$data/rules.json");
-  reply(['ok' => 1, 'data' => $plan && $rules ? ['plan' => $plan, 'rules' => $rules] : null, 'at' => $plan ? filemtime("$data/plan.json") : 0]);
+  $meta = read_json("$data/plan-meta.json");  // {sha, at}: the build the plan came from (.github/workflows/plan.yml)
+  reply(['ok' => 1, 'data' => $plan && $rules ? ['plan' => $plan, 'rules' => $rules] : null,
+         'at' => $meta['at'] ?? ($plan ? filemtime("$data/plan.json") : 0), 'sha' => $meta['sha'] ?? '',
+         'incidents' => read_json("$data/incidents.json") ?? []]);
 }
 if ($a === 'ci') {
   $game = read_json("$data/ci-game.json");

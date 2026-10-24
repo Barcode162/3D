@@ -8,6 +8,9 @@
 //        → docs/records/decisions/<NNNN>-<slug>.md with its parts to fill
 //   node tools/records.mjs session --asked "<request ids>" --done "<pieces>" --shipped "<builds>" [--errors "<incident files>"]
 //        → one line in docs/records/sessions/<YYYY-MM>.md (the session's own link)
+//   node tools/records.mjs index
+//        → prints the incidents as JSON [{file, date, title, status, errors}], newest first
+//          (the plan workflow puts it in Dev's store for Dev's "errors this week")
 // Nothing here is ever reworded later; a correction is a new entry.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, appendFileSync } from 'node:fs';
 
@@ -54,6 +57,14 @@ if (cmd === 'request') {
   const errCell = errors.length ? `${errors.length}: ${errors.map((f) => `[${f.replace(/\.md$/, '')}](../incidents/${f})`).join(', ')}` : '0';
   appendFileSync(file, `| ${day} | ${sessionLink} | ${opt('asked') || '—'} | ${opt('done') || '—'} | ${opt('shipped') || '—'} | ${errCell} |\n`);
   console.log(`session line added to ${file}`);
+} else if (cmd === 'index') {
+  const dir = 'docs/records/incidents';
+  const list = (existsSync(dir) ? readdirSync(dir) : []).filter((f) => /^\d{4}-\d\d-\d\d-.*\.md$/.test(f)).sort().reverse().map((f) => {
+    const text = readFileSync(`${dir}/${f}`, 'utf8');
+    const field = (name) => ((text.match(new RegExp(`^\\*\\*${name}:\\*\\* *(.*)$`, 'm')) || [])[1] || '').trim();
+    return { file: f, date: f.slice(0, 10), title: (text.match(/^# Incident [\d-]+: (.*)$/m) || [, f])[1].trim(), status: field('Status') || 'open', errors: +field('Errors counted') || 1 };
+  });
+  console.log(JSON.stringify(list));
 } else {
-  console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 12).join('\n')); process.exit(2);
+  console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(1, 15).join('\n')); process.exit(2);
 }

@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J5 · Data flows and Dev** (the tools). Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
 - [x] **J5.1** The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17) *Check:* Nothing on the phone
-- [ ] **J5.2** The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago' *Check:* Dev → Plan: the job in Now with 'as of …' under it
+- [x] **J5.2** The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago' *Check:* Dev → Plan: the job in Now with 'as of …' under it
 - [ ] **J5.3** Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site *Check:* Nothing on the phone
 - [ ] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
 - [ ] **J5.5** One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it *Check:* joshuavelasco.com → Projects: the same list as Dev
