@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R5.1 The site in Ember: every page keeps its layout, boxes and reveal animations, now on the house theme's tokens: a three-colour glow drifting behind the page, frosted see-through boxes (cards, tiles, steps, news, sign-in), the amber main buttons, a light passing through the big titles (off when the phone asks for less motion); the plan test no longer depends on what's in Now
+
+`29cf0ac` · 2026-10-24 07:28 · 4 files, +53 −13 · tests: quick, site
+
+Phone check: open joshuavelasco.com: the same site; the boxes are frosted over a slow warm glow, and 'We built a world' has a light sweeping through it every few seconds
+
 ## R4.7 The old doors lead to Dev: /hub and /toolbelt open Dev (the old board kept as hub/board.html, unlinked; hub.php stays for news and Claude's key), /portal sends staff to Dev, the site's staff tab and sign-in say Dev, Dials, World notes and the UI Editor go back to Dev, the Studio gets a back key to Dev
 
 `f247b0b` · 2026-10-24 06:39 · 15 files, +836 −896 · tests: quick, dev, toolbelt, hub, site
