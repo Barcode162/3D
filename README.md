@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J2.1 The browser tests open the bar with the classic light on GitHub (TEST_LIGHT=classic in deploy.yml; tools/lib/browser.mjs adds ?light=classic to the bar's page, before its scripts run, in every page, context and frame, unless the address names a light); unset locally, so the pictures keep the new light; checked on 17 cases with static pages
+
+`a8e1dd9` · 2026-10-24 11:36 · 4 files, +28 −3 · tests: quick
+
+Phone check: Nothing changes on your phone: the bar keeps the new light. Dev → Overview shows the game deploy's tests passed, or names the one that failed (after J2 ships)
+
 ## J1.3 The glossary (docs/charter/glossary.md): the words the user can say, then 82 terms A to Z with one plain meaning each; the clashes settled (a piece is always a piece of work, a loop's channel is a lane, a rule is always the user's or a thing's)
 
 `34ad18c` · 2026-10-24 11:19 · 2 files, +167 −1 · tests: quick
