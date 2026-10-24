@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R5.2 Highlights in Dev → Publish: make one (a short title, one or two friendly lines, where a tap goes, one of the bar's pictures or your own photo, shrunk on the phone), see it as the front page will, Push to the front page (one at a time) or take it down, change, delete; public for the front page (dev/api.php?highlight); the step finisher's news post takes plain friendly words (--news)
+
+`333967a` · 2026-10-24 07:33 · 8 files, +234 −14 · tests: quick, dev
+
+Phone check: Dev → Publish → Highlights: Make a highlight, type a title and a line, tap a picture: the preview shows it; Save, then Push to the front page
+
+![R5.2 page-dev-index-demo-publish.jpg](R5.2/page-dev-index-demo-publish.jpg)
+
 ## R5.1 The site in Ember: every page keeps its layout, boxes and reveal animations, now on the house theme's tokens: a three-colour glow drifting behind the page, frosted see-through boxes (cards, tiles, steps, news, sign-in), the amber main buttons, a light passing through the big titles (off when the phone asks for less motion); the plan test no longer depends on what's in Now
 
 `29cf0ac` · 2026-10-24 07:28 · 4 files, +53 −13 · tests: quick, site
