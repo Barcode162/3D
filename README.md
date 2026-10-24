@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J4.3 The ship command (node tools/project.mjs ship "<what>"): refuses unless on the job's branch, nothing unsaved, every commit belongs to the job, every piece ticked, the plan's files agree; runs the checks for everything the job changed; finishes (merge, Done line, push main once); then waits up to 12 min for Dev's reports to show the build live and says exactly what is and isn't confirmed; commit attribution from the session itself (tools/lib/attribution.mjs); KI-3 and KI-15 closed
+
+`b88a817` · 2026-10-24 12:28 · 8 files, +84 −9 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J4.2 One front door: node tools/project.mjs help lists every command (tools/lib/commands.mjs, one list) and runs each; status shows the whole truth on one screen in about a second (the work here, the job in Now, the freeze, the live build, both deploys, the user's notes and news drafts, the stores, open problems and today's incidents, whether the plan's files agree), each part with its age, every network question cut off after 5 s; the Toolbelt lists it
 
 `136ddae` · 2026-10-24 12:26 · 6 files, +109 −3 · tests: changed
