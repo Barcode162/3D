@@ -18,7 +18,8 @@
 //   node tools/plan.mjs done --sha <sha> --what "<pieces: what>" --range <a..b>
 //                                                a Done line on top (step.mjs does it)
 //   node tools/plan.mjs charter [--check]        the Charter's North star and rules block, copied word for word
-//                                                from parts 1-2 (--check: exit 1 if docs/charter/charter.md is stale)
+//                                                from parts 1-2, and CLAUDE.md's "Never" list from the Charter
+//                                                (--check: exit 1 if either is stale)
 //   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
 //                                                (once its deploy is live; step.mjs does it at the next finish)
 // Chapters: world, site, engine, tools, backbone.
@@ -103,6 +104,18 @@ const MARK_B = '<!-- end generated -->';
 export function charterBlock(text) {
   const items = (n) => part(text, n).body.split('\n').reduce((out, l) => { if (l.startsWith('- ')) out.push(l); else if (/^  \S/.test(l) && out.length) out[out.length - 1] += '\n' + l; return out; }, []);
   return `${MARK_A}\n### North star\n${items(0).join('\n')}\n\n### Your rules (newest first)\n${items(1).join('\n')}\n${MARK_B}`;
+}
+// CLAUDE.md (read first by every session) shows the Charter's "Never" list
+// word for word between two markers; the Charter is its source.
+export const ENTRY = 'CLAUDE.md';
+const NEVER_A = '<!-- generated: node tools/plan.mjs charter (the Charter §5 "Never" list, word for word; never edit by hand) -->';
+export function withNever(entry, charterDoc) {
+  const a = charterDoc.indexOf('**Never:**'), b = charterDoc.indexOf('**Anything not listed');
+  if (a < 0 || b < a) throw new Error(`${CHARTER} has no "Never:" list`);
+  const list = charterDoc.slice(a + '**Never:**'.length, b).trim();
+  const x = entry.indexOf(NEVER_A), y = entry.indexOf(MARK_B, x);
+  if (x < 0 || y < x) throw new Error(`${ENTRY} has no generated "Never" block (the two markers)`);
+  return entry.slice(0, x) + `${NEVER_A}\n${list}\n` + entry.slice(y);
 }
 export function withCharter(doc, text) {
   const a = doc.indexOf(MARK_A), b = doc.indexOf(MARK_B);
@@ -200,12 +213,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (!/\*\*Up next, in order:\*\*/.test(p.body)) throw new Error('the road has no "Up next" line');
       save(text.slice(0, p.from) + p.body.replace(/\*\*Up next, in order:\*\*.*/, `**Up next, in order:** ${pos[0]}`) + text.slice(p.to)); console.log('Up next set');
     } else if (cmd === 'charter') {
-      const doc = read(CHARTER), want = withCharter(doc, text);
+      const doc = read(CHARTER), want = withCharter(doc, text), entry = read(ENTRY), wantEntry = withNever(entry, want);
+      const ok = doc === want && entry === wantEntry;
       if (rest.includes('--check')) {
-        console.log(doc === want ? 'ok  charter: the North star and rules block matches PLAN.md' : `${CHARTER} is stale: run node tools/plan.mjs charter`);
-        process.exit(doc === want ? 0 : 1);
+        console.log(ok ? 'ok  charter: its rules block matches PLAN.md, and CLAUDE.md\'s "Never" list matches the Charter' : `${doc !== want ? CHARTER : ENTRY} is stale: run node tools/plan.mjs charter`);
+        process.exit(ok ? 0 : 1);
       }
-      writeFileSync(CHARTER, want); console.log(doc === want ? 'charter already current' : 'charter block written');
+      writeFileSync(CHARTER, want); writeFileSync(ENTRY, wantEntry); console.log(ok ? 'charter already current' : 'charter blocks written');
     } else if (cmd === 'seal') {
       if (!/^[0-9a-f]{7}$/.test(pos[0] || '')) throw new Error('seal <sha>: the 7-letter build code');
       const p = part(text, 6);

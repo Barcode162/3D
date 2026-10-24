@@ -3,7 +3,7 @@
 //   node tools/piece.mjs <TAG> "<title>" [options]
 // builds, runs the piece's own tests, takes pictures of the standard spots,
 // keeps a before/after of every spot that changed (and of the feature's own
-// switch) in the gallery branch, commits "<TAG> <title>", pushes work-go and
+// switch) in the gallery branch, commits "<TAG> <title>", pushes the job branch and
 // records the piece's numbers (files, lines, tests, headless frame time,
 // brightness) in the gallery's pieces.jsonl.
 // Options:
@@ -19,7 +19,8 @@
 //                     toolbelt/index.html or "ui/screen.html?s=sampler"), at phone width,
 //                     before/after against the last picture of the same page
 //   --no-shots        skip pictures (code that changes nothing on screen)
-//   --branch b        push to this branch (default work-go; also PIECE_BRANCH)
+//   --branch b        push to this branch (default: the branch you're on, which must be
+//                     a job branch job/J<n>; also PIECE_BRANCH; docs/playbook/job.md)
 //   --no-build        skip the build
 //   --no-push         commit only
 //   --dry             do everything but commit and push
@@ -139,7 +140,8 @@ if (tag === 'baseline') {
 
 if (!title) { console.log('usage: node tools/piece.mjs <TAG> "<title>" [--test ...] [--check "..."] [--compare "x=0"]'); process.exit(2); }
 const branch = sh('git rev-parse --abbrev-ref HEAD');
-const target = opt('branch') ?? process.env.PIECE_BRANCH ?? 'work-go';
+const target = opt('branch') ?? process.env.PIECE_BRANCH ?? branch;
+if (!/^job\/J\d+$/.test(target) && !has('dry')) { console.log(`✗ ${tag}: pieces are saved on a job branch (job/J<n>), not "${target}" (docs/playbook/job.md)`); process.exit(1); }
 if (branch !== target && !has('dry')) console.log(`(note: on ${branch}, pushing HEAD to ${target})`);
 // Build only when the change needs it (code or world files), or for pictures of the bar.
 const touched = JSON.parse(sh('node tools/check.mjs changed --list') || '[]');

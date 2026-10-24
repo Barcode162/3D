@@ -1,4 +1,6 @@
 // Claude's side of the project hub (joshuavelasco.com/hub, hub/hub.php).
+// Only `post` and `posts` (the news) are in use: the board commands below
+// (inbox, queue, cards, places…) belong to the retired board and leave in J5.4.
 // Needs the Claude key in the environment as HUB_KEY (the owner makes it in
 // the hub: Account → Make a new Claude key).
 //   node tools/hub.mjs projects              every project (the hub holds one board per project)

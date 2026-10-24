@@ -1,5 +1,9 @@
 # Looped 2: the whole engine, rebuilt around loops (planned 2026-10-21)
 
+> **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
+> book that gives instructions). This file was Looped 2's plan (E1–E9, built)
+> and explains the engine's world model; it moves into the Handbook in J6.
+
 **Top priority** (user, 2026-10-21, ahead of everything else, after Looped A-C).
 The user: "full engine from top to bottom", "the logic is the main thing",
 "if it exists, it has a full loop already live at all times", "cut it up into

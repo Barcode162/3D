@@ -2,10 +2,11 @@
 // The end of a step, done the same way every time (docs/AUTOMATION.md):
 //   node tools/step.mjs status [STEP]          the step's pieces so far (from the gallery)
 //   node tools/step.mjs finish <STEP> "<what>" [--news "<a few friendly lines for the news post>"] [--no-news] [--skip-check] [--full-check] [--bench] [--no-main]
-// finish: the quick check (--full-check: every test, an hour+ here with no
+// finish: the checks for everything the job changed since main (the user,
+// 2026-10-24: test only what the change touches; --full-check: every test, an hour+ here with no
 // graphics card; CI runs them all at deploy anyway), merges origin/main,
-// pushes work-go and main once (CI deploys), writes the Build log line in
-// NEXT.md (the previous "(this push)" gets its real sha), runs the benchmark
+// pushes the job branch and main once (CI deploys), writes the Done line in
+// PLAN.md (the previous "(this push)" gets its real sha), runs the benchmark
 // (--bench), posts to the hub (if HUB_KEY is set) and prints the reply for
 // the user: one line per piece with its phone check.
 import { FILE as PLAN_FILE, read as readPlan, addDone } from './plan.mjs';
@@ -37,12 +38,14 @@ if (cmd === 'status' || !cmd) {
 }
 if (cmd !== 'finish' || !stepName) { console.log('usage: node tools/step.mjs finish <STEP> "<what it was>" [--skip-check] [--bench]'); process.exit(2); }
 
+const target = process.env.PIECE_BRANCH ?? sh('git rev-parse --abbrev-ref HEAD');  // the job branch (docs/playbook/job.md)
+if (!/^job\/J\d+$/.test(target)) { console.log(`✗ finish runs on a job branch (job/J<n>), not "${target}"`); process.exit(1); }
 const pieces = piecesOf(null);
 if (!pieces.length) { console.log('No pieces since the last finished step.'); process.exit(1); }
 if (!has('skip-check')) {
   const full = has('full-check');
-  console.log(full ? '▶ full check' : '▶ quick check (the browser tests run on CI)');
-  if (!run(`node tools/check.mjs ${full ? 'all' : 'quick'}`)) { console.log('✗ the full check failed: fix, then finish again'); process.exit(1); }
+  console.log(full ? '▶ full check' : '▶ the checks for what this job changed since main');
+  if (!run(`node tools/check.mjs ${full ? 'all' : ''}`)) { console.log('✗ a check failed: fix, then finish again'); process.exit(1); }
 }
 console.log('▶ merge origin/main');
 run('git fetch -q origin main');
@@ -56,7 +59,6 @@ writeFileSync('build/step-msg.txt', `Notes: ${stepName} built (${tags.join(', ')
 sh(`git add ${PLAN_FILE}`);
 try { sh('git commit -q -F build/step-msg.txt'); } catch {}
 const mainSha = sh('git rev-parse --short HEAD');
-const target = process.env.PIECE_BRANCH ?? 'work-go';  // the work branch (tools/piece.mjs --branch)
 for (let i = 0; i < 4 && !run(`git push -q -u origin HEAD:${target}`); i++) execSync(`sleep ${2 ** (i + 1)}`);
 if (!has('no-main')) {
   console.log('▶ push main (CI deploys in ~6 min)');

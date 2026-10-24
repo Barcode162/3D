@@ -1,5 +1,10 @@
 # The Studio, the Dials, and the new look (plan, 2026-10-21)
 
+> **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
+> book that gives instructions). This file was the Studio's plan (S1–S10, all
+> built) and its design; the plan now lives in `PLAN.md`. Its facts move into
+> the Handbook in J6.
+
 The user's request (chat, 2026-10-21): "I created an engine, I want a real way
 to use it." A **Studio** at joshuavelasco.com/studio where the user builds and
 changes the world themselves, by touch, on the iPhone. **No AI inside it** for

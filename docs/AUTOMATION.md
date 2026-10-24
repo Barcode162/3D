@@ -1,5 +1,9 @@
 # Automation: the tools that do the work (user, 2026-10-22)
 
+> **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
+> book that gives instructions). This file lists the tools; how and when to
+> run them is in `docs/playbook/job.md`. It moves into the Handbook in J6.
+
 **The rule:** anything done twice becomes a tool. Claude doesn't do steps
 by hand; Claude builds and improves the tools that do them, then runs the
 tools. The tools are reused and grow as the project grows. When a tool is
@@ -8,7 +12,7 @@ missing or clumsy, fixing the tool is part of the piece.
 ## The everyday tools
 | Tool | What it does |
 |---|---|
-| `node tools/piece.mjs <TAG> "<title>" --test <systems> --check "<phone check>" [--compare "x=0"]` | one piece, end to end: build → its tests → pictures of every spot → before/after of every spot that changed (and of the feature's switch) → commit `<TAG> <title>` → push work-go → numbers in the gallery |
+| `node tools/piece.mjs <TAG> "<title>" --check "<phone check>" [--test <systems>] [--compare "x=0"]` | one piece, end to end: build if needed → the checks for what it changed → pictures of every spot → before/after of every spot that changed (and of the feature's switch) → commit `<TAG> <title>` → push the job branch → numbers in the gallery |
 | `node tools/step.mjs status` | the pieces of the step so far, with their phone checks |
 | `node tools/step.mjs finish <STEP> "<what>" [--bench]` | the end of a step: full check → merge main → push main once → Done line in PLAN.md → benchmark → hub post → the reply for the user |
 | `node tools/bench.mjs [native]` | benchmarks (native C++ and wasm benches `tools/native/bench_*.cpp`, the bar at every spot), saved forever, each number shown against the last run |

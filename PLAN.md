@@ -63,7 +63,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J3.4** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
 - [x] **J3.5** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
 - [x] **J3.6** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
-- [ ] **J3.7** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* On GitHub CLAUDE.md is short and points to the Playbook
+- [x] **J3.7** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* On GitHub CLAUDE.md is short and points to the Playbook
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*

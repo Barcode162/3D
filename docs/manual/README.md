@@ -1,7 +1,7 @@
 # The Bar3D manual
 
 Plain-words pages for everything in the bar and the Studio: what it is,
-where to find it, and its dials. Each piece of the plan (`docs/PLAN.md`)
+where to find it, and its dials. Each piece of the plan (`PLAN.md`)
 writes its section here when it's built.
 
 - [Light](light.md): How light works in the bar: where it comes from, how it spreads, and every dial for it in the Studio.

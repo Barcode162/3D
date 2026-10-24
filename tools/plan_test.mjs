@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { problems, CHARTER, withCharter } from './plan.mjs';
+import { problems, CHARTER, withCharter, ENTRY, withNever } from './plan.mjs';
 import { existsSync } from 'node:fs';
 
 let failed = 0;
@@ -15,6 +15,7 @@ check(problems(real).length === 0, 'PLAN.md keeps its shape' + (problems(real).l
 
 // The Charter's copy of the North star and rules matches PLAN.md (restructure D3).
 if (existsSync(CHARTER)) check(readFileSync(CHARTER, 'utf8') === withCharter(readFileSync(CHARTER, 'utf8'), real), 'the Charter shows PLAN.md\'s North star and rules word for word (else: node tools/plan.mjs charter)');
+if (existsSync(CHARTER) && existsSync(ENTRY)) check(readFileSync(ENTRY, 'utf8') === withNever(readFileSync(ENTRY, 'utf8'), readFileSync(CHARTER, 'utf8')), 'CLAUDE.md shows the Charter\'s "Never" list word for word (else: node tools/plan.mjs charter)');
 const dir = mkdtempSync(join(tmpdir(), 'plan-')), tool = resolve('tools/plan.mjs');
 // The copy gets a known Now (one open piece), so the test doesn't depend on the real step.
 writeFileSync(join(dir, 'PLAN.md'), real.replace(/(## 4\. Now\n)[\s\S]*?(\n## 5\.)/, '$1**X1 · A test step** (the tools). For the test.\n- [ ] **X1.1** The only piece.\n$2'));

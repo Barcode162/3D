@@ -1,5 +1,10 @@
 # Decisions and lessons learned
 
+> **Not instructions (2026-10-24).** How to work is in `docs/playbook/` (the only
+> book that gives instructions). This file is the history of decisions and lessons, in the order they were
+> made; where an old entry describes a way of working, the Playbook has
+> replaced it. Its still-true facts move into the Handbook in J6.
+
 The record of what was chosen, why, and what was tried and failed, so no
 future session re-litigates or repeats it.
 
