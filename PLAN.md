@@ -55,14 +55,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS.
 
 ## 4. Now
-**J2 · Honest checks** (the tools). Honest checks: the browser tests run on GitHub again (a light test-only drawing mode), every test counts, both deploys report their real state · N2 N5
-- [x] **J2.1** The browser tests run on GitHub again: one shared test switch opens the bar with the classic light on GitHub's machines only, so the smoke test stops timing out and the 12 skipped suites run *Check:* Nothing changes on your phone: the bar keeps the new light; Dev → Overview shows the game deploy's tests passed, or names the one that failed
-- [x] **J2.2** Every test counts: each allowed-to-fail suite (Meridian, multiplayer, 4K Mania, chess, avatar, arcade, two-player race) made blocking once it passes on GitHub, or listed as a known issue with a job; none deleted or weakened *Check:* Nothing to see on the phone; Dev → Overview names any failing test
-- [x] **J2.3** Both deploys report their real state to Dev (running, live, tests passed, which failed) with their age; the stale deploy notes fixed *Check:* Dev → Overview: two deploy rows (the game and the site), each with its state and how long ago
+**J3 · The Playbook** (the tools). The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
+- [ ] **J3.1** Session start and end (docs/playbook/session.md): what every session checks first and what it must leave behind (everything saved, records written, the session line with its error count) *Check:* Nothing on the phone; the Playbook's first page is on GitHub
+- [ ] **J3.2** Intake (docs/playbook/intake.md): every kind of message you send → its procedure; your words kept exactly; the possibility check with its six verdicts and the capability check; the job spec template *Check:* Nothing on the phone
+- [ ] **J3.3** The life of a job and how I reply (docs/playbook/job.md, reply.md) *Check:* Nothing on the phone
+- [ ] **J3.4** When something goes wrong (incident.md, failures.md, revert.md): the zero-error loop, every failure scenario, the unexpected, "broke" and "undo" *Check:* Nothing on the phone
+- [ ] **J3.5** Ways of working and changing the structure (ways.md, change.md) *Check:* Nothing on the phone
+- [ ] **J3.6** One voice: CLAUDE.md rewritten as the short entry; the old instruction files retired or marked as history *Check:* Nothing on the phone; on GitHub CLAUDE.md is short and points to the Playbook
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J3 → J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J4 → J5 → J6 → J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -122,7 +125,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J3** The Playbook: a procedure for every situation (session start and end, intake and the possibility check, the job lifecycle, when things go wrong, ways of working), one voice for instructions · N2 N5
 - [ ] **J4** Tools and locks: the plan as data with one writer, one front door for every tool and a status screen, the ship command, records, locks that stop skipped steps · N2 N5
 - [ ] **J5** Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
 - [ ] **J6** The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
@@ -165,7 +167,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
+- (this push) J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
+- `546c7d4` J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
 - `87bd110` R6.1, R6.2, R6.3, R6.4, R6.5, R6.6: Ember on everything that's left: the bar's menus and loading screen, the door page, the Studio, Dials, World notes, News, the UI Editor, Compare, Screens, the style page; the old hub boards removed → 14936f8^..197d923
 - `ebca03a` R5.1, R5.2, R5.3, R5.4: J Production's front page: the site in Ember, highlights, the front page rearranged, Projects → 29cf0ac^..c2ffbfe
 - `ad87523` R4.1, R4.2, R4.3, R4.4, R4.5, R4.6, R4.7: Dev, the control room: Overview, Projects, Plan, Publish, People; the old hub, portal and Toolbelt lead there → 03c3fe4^..f247b0b
