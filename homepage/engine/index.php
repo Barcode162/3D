@@ -113,7 +113,7 @@ site_head('engine', 'Looped, the engine', 'Looped is the engine behind the bar: 
       <div class="hero-cta">
         <a class="btn btn-go btn-lg" href="/bar/">See the result <span class="arr">→</span></a>
 <?php if (site_is_staff()): ?>
-        <a class="btn btn-ghost btn-lg" href="/portal/">Open the portal</a>
+        <a class="btn btn-ghost btn-lg" href="/dev/">Open Dev</a>
 <?php endif; ?>
       </div>
     </div>

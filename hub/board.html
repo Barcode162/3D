@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en" data-look="faceplate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hub</title>
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<style>
+  /* The hub v3 (docs/LOOPED.md C): Home = what needs you + the news feed;
+     Explore = the bar as a map (the engine under the floor, the tools beside
+     it). No cards: things live on places. hub.php is the server; the old
+     board is list.html ("Everything"). */
+  /* S4.1: the Faceplate look (ui/themes.css gives the fonts and the theme's
+     own tokens; these names are the hub's, mapped onto them). */
+  :root {
+    --bg2: #131210; --ink: var(--text); --dim: var(--text-2); --faint: rgba(255,255,255,.06);
+    --edge: #2C2926; --glass: linear-gradient(180deg, #1C1A18, #141311);
+    --pink: #F28C2C; --gold: #F2C744; --cyan: #7FC8E8; --mint: #56CF86; --violet: #C9A27A; --red: #FF6A64;
+    --tabs: calc(66px + env(safe-area-inset-bottom));
+  }
+  .sky { display: none; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg) var(--bg-glow) no-repeat; color: var(--ink);
+    font: 16px/1.45 var(--text-font, -apple-system, system-ui, sans-serif); }
+  body { min-height: 100svh; overflow-x: hidden; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  a { color: var(--cyan); }
+
+  /* Drifting colour behind everything. */
+  .sky { position: fixed; inset: -25%; z-index: 0; filter: blur(70px); opacity: .55; pointer-events: none; }
+  .sky i { position: absolute; width: 50vmax; height: 50vmax; border-radius: 50%; mix-blend-mode: screen;
+    animation: drift 22s ease-in-out infinite alternate; }
+  .sky i:nth-child(1) { background: var(--pink); left: -5%; top: 5%; }
+  .sky i:nth-child(2) { background: var(--violet); right: -5%; top: -5%; animation-duration: 27s; animation-delay: -8s; }
+  .sky i:nth-child(3) { background: var(--cyan); left: 20%; bottom: -10%; animation-duration: 31s; animation-delay: -14s; opacity: .6; }
+  @keyframes drift { to { transform: translate(7vmax, -5vmax) scale(1.18) rotate(30deg); } }
+
+  #app { position: relative; z-index: 1; max-width: 640px; margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 10px) 16px calc(var(--tabs) + 24px); }
+
+  /* Header: the wavy project name and the live build. */
+  header { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+  .wave { font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s); letter-spacing: var(--display-ls); font-size: 30px; line-height: 1; white-space: nowrap; }
+  .wave span { display: inline-block; color: var(--text); }
+  .wave span:last-child { color: var(--pink); }
+  @keyframes wave { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-6px) rotate(-3deg); }
+    50% { transform: translateY(0); } 75% { transform: translateY(2px) rotate(2deg); } }
+  header .grow { flex: 1; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 13px;
+    background: rgba(0,0,0,.3); border: 1px solid var(--edge); white-space: nowrap; }
+  .pill.mono { font-family: ui-monospace, Menlo, monospace; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint);
+    animation: breathe 2s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: .35; transform: scale(.75); } }
+  .projBtn { padding: 6px 10px; border-radius: 12px; background: var(--glass); border: 1px solid var(--edge); font-size: 14px; }
+
+  h2 { font-size: 13px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--dim); margin: 26px 2px 10px;
+    font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  h2 .count { background: var(--pink); color: #1a0b22; border-radius: 999px; padding: 1px 8px; font-size: 12px; letter-spacing: 0; }
+  .rise { animation: rise .55s cubic-bezier(.2,.9,.3,1.15) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px) scale(.97); } }
+  .quiet .rise { animation: none; }
+
+  .hello { font-size: 26px; font-weight: 800; margin: 6px 2px 2px; }
+  .hello .hand { display: inline-block; transform-origin: 70% 70%; animation: hand 2.4s ease-in-out infinite; }
+  @keyframes hand { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(16deg); } 20%, 40% { transform: rotate(-8deg); } }
+  .summary { color: var(--dim); margin: 0 2px; }
+
+  /* Needs you: speech bubbles from Claude with one-tap answers. */
+  .bubble { position: relative; display: flex; gap: 12px; margin-top: 12px; }
+  .orb { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 19px;
+    background: radial-gradient(circle at 35% 30%, #fff8, transparent 45%), linear-gradient(135deg, var(--pink), var(--violet));
+    box-shadow: 0 0 18px rgba(255,90,180,.5); animation: orb 3s ease-in-out infinite; }
+  @keyframes orb { 50% { transform: translateY(-3px); box-shadow: 0 0 28px rgba(255,90,180,.75); } }
+  .say { flex: 1; min-width: 0; background: var(--glass); border: 1px solid var(--edge); border-radius: 4px 20px 20px 20px;
+    padding: 12px 14px 12px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .say .where { font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .say .q { white-space: pre-wrap; word-wrap: break-word; }
+  .say .more { color: var(--cyan); font-size: 14px; padding: 4px 0 0; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { padding: 9px 15px; border-radius: 999px; font-weight: 700; font-size: 15px; color: #1a0b22;
+    background: linear-gradient(90deg, var(--pink), var(--gold)); box-shadow: 0 6px 18px rgba(255,90,180,.28);
+    transition: transform .15s; }
+  .chip.soft { background: rgba(255,255,255,.12); color: var(--ink); box-shadow: none; }
+  .chip.mint { background: var(--mint); color: #062b0b; box-shadow: 0 6px 18px rgba(125,255,138,.25); }
+  .chip:active { transform: scale(.92); }
+  .bubble.gone { animation: gone .5s ease forwards; }
+  @keyframes gone { to { opacity: 0; transform: translateX(40px) scale(.9); height: 0; margin: 0; } }
+  textarea, input[type=text], input[type=password], input:not([type]) { width: 100%; font: inherit; color: var(--ink);
+    background: rgba(0,0,0,.3); border: 1px solid var(--edge); border-radius: 14px; padding: 11px 13px; outline: none;
+    transition: border-color .2s, box-shadow .2s; }
+  textarea:focus, input:focus { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(255,90,180,.16); }
+  textarea { min-height: 76px; resize: vertical; margin-top: 10px; }
+
+  .working { display: flex; gap: 8px; flex-wrap: wrap; }
+  .work { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 14px; background: var(--glass);
+    border: 1px solid var(--edge); font-size: 15px; }
+  .work .dot { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+  .work.next .dot { background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: none; }
+
+  /* The news feed. */
+  .post { margin-top: 14px; border-radius: 22px; overflow: hidden; background: var(--glass); border: 1px solid var(--edge);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+  .shots { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: #000; }
+  .shots::-webkit-scrollbar { display: none; }
+  .shots img { flex: none; width: 100%; aspect-ratio: 430 / 600; object-fit: cover; scroll-snap-align: center; display: block; }
+  .shots.wide img { aspect-ratio: 16 / 10; }
+  .dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 0; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.25); transition: all .25s; }
+  .dots i.on { background: var(--pink); width: 18px; border-radius: 3px; }
+  .post .body { padding: 12px 16px 16px; }
+  .post .meta { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 13px; }
+  .post h3 { margin: 8px 0 6px; font-size: 21px; line-height: 1.2;
+    background: linear-gradient(90deg, #fff, var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .post p { margin: 0; white-space: pre-wrap; word-wrap: break-word; color: #e6dcff; }
+  .switch { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); }
+  .switch b { position: relative; width: 44px; height: 26px; border-radius: 13px; background: rgba(255,255,255,.16); transition: background .25s; }
+  .switch b::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  .switch.on b { background: var(--mint); box-shadow: 0 0 14px rgba(125,255,138,.5); }
+  .switch.on b::after { transform: translateX(18px); }
+  .switch.on { color: var(--mint); }
+  .empty { text-align: center; color: var(--dim); padding: 26px 10px; border: 1px dashed var(--edge); border-radius: 20px; margin-top: 12px; }
+  .empty .big { font-size: 38px; display: block; margin-bottom: 6px; animation: orb 3s ease-in-out infinite; }
+
+  /* Explore: the layers. */
+  .layers { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(0,0,0,.3);
+    border: 1px solid var(--edge); border-radius: 16px; padding: 4px; margin-top: 4px; }
+  .layers button { position: relative; z-index: 1; padding: 9px 4px; font-weight: 700; font-size: 14px; color: var(--dim); transition: color .25s; }
+  .layers button.on { color: #1a0b22; }
+  .layers .knob { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); border-radius: 12px;
+    background: linear-gradient(90deg, var(--pink), var(--gold)); transition: transform .4s cubic-bezier(.3,1.3,.5,1); }
+  .stage { perspective: 1200px; margin-top: 14px; }
+  .plane { transform-origin: 50% 100%; animation: tiltIn .6s cubic-bezier(.2,.9,.3,1.1) backwards; }
+  @keyframes tiltIn { from { opacity: 0; transform: rotateX(55deg) translateY(30px) scale(.92); } }
+  .plane.down { animation-name: sinkIn; }
+  @keyframes sinkIn { from { opacity: 0; transform: translateY(-40px) scale(1.06); filter: blur(6px); } }
+  .mapWrap { position: relative; border-radius: 22px; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #1d1236, #0c0818);
+    border: 1px solid var(--edge); box-shadow: inset 0 0 60px rgba(179,139,255,.12), 0 20px 50px rgba(0,0,0,.35); }
+  svg.map { display: block; width: 100%; height: auto; touch-action: manipulation; }
+  .roomShape { fill: url(#floor); stroke: rgba(179,139,255,.55); stroke-width: .12; }
+  .roomShape.glow { filter: url(#soft); }
+  .furn { fill: rgba(255,255,255,.07); stroke: rgba(255,255,255,.08); stroke-width: .04; }
+  .roomName { fill: rgba(246,240,255,.35); font-size: .9px; font-weight: 800; letter-spacing: .12px; text-anchor: middle; }
+  .spot { cursor: pointer; }
+  .spot .ring { fill: none; stroke-width: .1; transform-box: fill-box; transform-origin: center; animation: ring 2.6s ease-out infinite; }
+  @keyframes ring { from { transform: scale(.7); opacity: .9; } to { transform: scale(2.2); opacity: 0; } }
+  .spot .ball { transform-box: fill-box; transform-origin: center; transition: transform .2s; }
+  .spot:active .ball { transform: scale(.85); }
+  .spot .icon { text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .spot .label { font-weight: 750; text-anchor: middle; fill: #f6f0ff; paint-order: stroke; stroke: #0b0716;
+    pointer-events: none; }
+  .spot .badge { font-weight: 800; text-anchor: middle; dominant-baseline: central; fill: #1a0b22; pointer-events: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 10px 4px 0; font-size: 13px; color: var(--dim); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; }
+  .beyond { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 18px;
+    background: var(--glass); border: 1px solid var(--edge); font-size: 13px; font-weight: 700; text-align: center; transition: transform .15s; }
+  .tile:active { transform: scale(.94); }
+  .tile .ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; position: relative; }
+  .tile .n { position: absolute; top: -4px; right: -6px; background: var(--pink); color: #1a0b22; border-radius: 999px; font-size: 11px;
+    padding: 1px 6px; font-weight: 800; }
+  .circuit { padding: 10px 4px 4px; }
+  .flow { fill: none; stroke: rgba(90,209,255,.45); stroke-width: 2; stroke-dasharray: 6 8; animation: flow 1.4s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -28; } }
+
+  /* A place's sheet. */
+  .veil { position: fixed; inset: 0; z-index: 20; background: rgba(5,3,12,.55); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .veil.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; z-index: 21; left: 0; right: 0; bottom: 0; max-height: 88svh; overflow-y: auto; overscroll-behavior: contain;
+    max-width: 640px; margin: 0 auto; background: linear-gradient(180deg, #1c1233, #120b22); border: 1px solid var(--edge); border-bottom: 0;
+    border-radius: 26px 26px 0 0; padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(105%); transition: transform .45s cubic-bezier(.2,.95,.3,1.05); box-shadow: 0 -20px 60px rgba(0,0,0,.5); }
+  .sheet.on { transform: none; }
+  .grab { width: 44px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.25); margin: 0 auto 10px; }
+  .sheetHead { display: flex; align-items: center; gap: 12px; }
+  .sheetHead .ic { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; flex: none;
+    animation: orb 3s ease-in-out infinite; }
+  .sheetHead h3 { margin: 0; font-size: 24px; }
+  .sheetHead .x { margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: var(--faint); font-size: 18px; }
+  .about { color: #e6dcff; margin: 12px 2px 4px; }
+  .item { border-radius: 16px; margin-top: 8px; background: rgba(255,255,255,.045); border: 1px solid transparent; transition: border-color .2s, background .2s; }
+  .item.open { border-color: var(--edge); background: rgba(255,255,255,.07); }
+  .item > button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; text-align: left; }
+  .item .st { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .item .t { flex: 1; min-width: 0; }
+  .item .tag { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .item .more { padding: 0 14px 14px; font-size: 15px; }
+  .item .more h4 { margin: 10px 0 4px; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--dim); }
+  .item .more p { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+  .fold { color: var(--dim); font-size: 14px; padding: 10px 2px; }
+  .row { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; }
+  .row textarea, .row input { margin: 0; }
+  .send { flex: none; padding: 11px 16px; border-radius: 14px; font-weight: 800; color: #1a0b22; background: linear-gradient(90deg, var(--pink), var(--gold)); }
+  .send:active { transform: scale(.94); }
+  .talk { margin-top: 8px; }
+  .msg { margin-top: 8px; padding: 9px 12px; border-radius: 14px; max-width: 88%; white-space: pre-wrap; word-wrap: break-word; font-size: 15px; }
+  .msg.claude { background: rgba(179,139,255,.16); border-radius: 4px 14px 14px 14px; }
+  .msg.owner { background: rgba(255,90,180,.18); margin-left: auto; border-radius: 14px 4px 14px 14px; }
+  .msg small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
+
+  /* Bottom tabs. */
+  nav { position: fixed; z-index: 15; left: 0; right: 0; bottom: 0; height: var(--tabs); padding: 8px 18px env(safe-area-inset-bottom);
+    display: flex; justify-content: center; gap: 8px; background: linear-gradient(180deg, rgba(11,7,22,0), rgba(11,7,22,.92) 35%);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  nav a, nav button { flex: 1; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0;
+    border-radius: 16px; color: var(--dim); text-decoration: none; font-size: 12px; font-weight: 700; transition: color .2s, background .25s; }
+  nav .e { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  nav .on .e { color: var(--pink); }
+  nav .on { color: var(--ink); background: rgba(255,255,255,.08); }
+  nav .on .e { transform: translateY(-3px) scale(1.15); }
+  nav .badge { position: absolute; margin: -4px 0 0 30px; background: var(--pink); color: #1a0b22; font-size: 11px; border-radius: 999px; padding: 0 6px; }
+
+  /* Sign in. */
+  .signin { margin-top: 12vh; text-align: center; }
+  .signin .wave { font-size: 52px; }
+  .signin form { margin: 24px auto 0; max-width: 360px; display: grid; gap: 10px; text-align: left; }
+  .signin .send { width: 100%; padding: 14px; font-size: 17px; margin-top: 6px; }
+  .toast { position: fixed; z-index: 40; left: 50%; bottom: calc(var(--tabs) + 14px); transform: translate(-50%, 30px); opacity: 0;
+    background: #2a1b46; border: 1px solid var(--edge); padding: 10px 16px; border-radius: 14px; transition: all .3s; pointer-events: none;
+    max-width: 90vw; text-align: center; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .burst { position: fixed; z-index: 30; pointer-events: none; width: 8px; height: 8px; border-radius: 2px; animation: burst .8s ease-out forwards; }
+  @keyframes burst { to { transform: translate(var(--dx), var(--dy)) rotate(260deg); opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="sky"><i></i><i></i><i></i></div>
+<div id="app"></div>
+<nav id="tabs" hidden>
+  <button data-tab="home"><svg class="e"><use href="/ui/icons.svg#i-note-claude"/></svg>Needs you<span class="badge" id="homeBadge" hidden></span></button>
+  <a id="dialsTab" href="dials.html"><svg class="e"><use href="/ui/icons.svg#i-dial"/></svg>Dials</a>
+  <button data-tab="explore"><svg class="e"><use href="/ui/icons.svg#i-place"/></svg>Board</button>
+  <button data-tab="news"><svg class="e"><use href="/ui/icons.svg#i-news"/></svg>News</button>
+</nav>
+<div class="veil" id="veil"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+'use strict';
+const API = 'hub.php', ACCOUNTS = '../bar/account.php';
+const STAGE_COLOR = { idea: 'var(--violet)', review: 'var(--pink)', ready: 'var(--gold)', doing: 'var(--cyan)', check: 'var(--pink)', done: 'var(--mint)' };
+const STAGE_WORD = { idea: 'idea', review: 'waits for you', ready: 'up next', doing: 'Claude is on it', check: 'check on your phone', done: 'done' };
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { if (v == null || v === '') localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} },
+};
+const S = { token: store.get('hubToken') || store.get('bar3dToken') || '', project: store.get('hubProject') || 'bar3d',
+            board: null, spots: null, rules: [], map: null, posts: [], projects: [], you: '', role: '', open: {}, sig: '' };
+
+// ---- helpers ----
+function el(tag, attrs, kids) {
+  const e = document.createElement(tag);
+  for (const k in attrs || {}) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'text') e.textContent = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e[k] = v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids || []) if (c != null && c !== false) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  return e;
+}
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, kids) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs || {}) {
+    if (k === 'text') e.textContent = attrs[k];
+    else if (k.startsWith('on')) e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const c of kids || []) if (c) e.appendChild(c);
+  return e;
+}
+function post(url, body) {
+  return fetch(url, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' }, cache: 'no-store', credentials: 'same-origin' })
+    .then((r) => r.json())
+    .then((r) => { if (!r || !r.ok) { const e = new Error((r && r.error) || 'Something went wrong.'); e.code = r; throw e; } return r; });
+}
+function api(body) { body.token = S.token; body.project = body.project || S.project; return post(API, body); }
+function toast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text; t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2000);
+}
+function ago(at) {
+  const s = Math.max(0, Date.now() / 1000 - at);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s / 60) + ' min ago';
+  if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+  if (s < 86400 * 7) return Math.floor(s / 86400) + ' days ago';
+  return new Date(at * 1000).toLocaleDateString();
+}
+function wave(text) {
+  const w = el('div', { class: 'wave', 'aria-label': text });
+  [...text].forEach((c, i) => { const s = el('span', { text: c === ' ' ? ' ' : c }); s.style.setProperty('--i', i); w.appendChild(s); });
+  return w;
+}
+function burst(x, y) {
+  const colors = ['#ff5ab4', '#ffb35a', '#5ad1ff', '#7dff8a', '#b38bff'];
+  for (let i = 0; i < 18; i++) {
+    const b = el('i', { class: 'burst' });
+    const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+    b.style.cssText = `left:${x}px;top:${y}px;background:${colors[i % 5]};--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d - 30}px`;
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 900);
+  }
+}
+// The plan's "WHAT:" line, if it has one (docs/HUB_MAP.md card format).
+function what(c) { const m = (c.plan || '').match(/^WHAT:\s*(.*)$/m); return m ? m[1].trim() : ''; }
+function short(t, n) { t = (t || '').trim(); return t.length > n ? t.slice(0, n).replace(/\s+\S*$/, '') + '…' : t; }
+
+// Which place a card lives on: its own spot, else the first rule that fits.
+function spotOf(c) {
+  if (c.spot && S.spots && S.spots.some((s) => s.id === c.spot)) return c.spot;
+  for (const r of S.rules) {
+    if (r.section && r.section !== c.section) continue;
+    if (r.title && !new RegExp(r.title, 'i').test(c.title)) continue;
+    return r.spot;
+  }
+  return 'ideas';
+}
+function cardsAt(id) { return (S.board ? S.board.cards : []).filter((c) => spotOf(c) === id); }
+function needsYou(c) { return !!c.question || c.stage === 'review' || c.stage === 'check'; }
+// A place's mood: needs you > Claude working > up next > done > idea.
+function mood(id) {
+  const cs = cardsAt(id);
+  const sp = S.spots.find((s) => s.id === id) || {};
+  if (cs.some(needsYou)) return { color: 'var(--pink)', hex: '#ff5ab4', n: cs.filter(needsYou).length, word: 'needs you' };
+  if (cs.some((c) => c.stage === 'doing') || sp.status === 'building') return { color: 'var(--cyan)', hex: '#5ad1ff', word: 'Claude is building' };
+  if (cs.some((c) => c.stage === 'ready')) return { color: 'var(--gold)', hex: '#ffb35a', word: 'up next' };
+  if (cs.some((c) => c.stage === 'done') || sp.status === 'live') return { color: 'var(--mint)', hex: '#7dff8a', word: 'live' };
+  return { color: 'var(--violet)', hex: '#b38bff', word: sp.status === 'planned' ? 'planned' : 'idea' };
+}
+
+// ---- sign in ----
+function signIn(msg) {
+  document.getElementById('tabs').hidden = true;
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const user = el('input', { placeholder: 'Username', autocomplete: 'username', autocapitalize: 'none', autocorrect: 'off' });
+  const pass = el('input', { type: 'password', placeholder: 'Password', autocomplete: 'current-password' });
+  const err = el('div', { class: 'summary', text: msg || '' });
+  app.appendChild(el('div', { class: 'signin rise' }, [wave('Hub'), el('p', { class: 'summary', text: 'Your project, at a glance. Sign in with your bar account.' }),
+    el('form', { onsubmit: (e) => {
+      e.preventDefault();
+      post(ACCOUNTS, { a: 'login', user: user.value, pass: pass.value }).then((r) => {
+        S.token = r.token; store.set('hubToken', r.token); load(true);
+      }).catch((e2) => { err.textContent = e2.message; });
+    } }, [user, pass, el('button', { class: 'send', type: 'submit', text: 'Open the hub' }), err])]));
+}
+
+// ---- loading ----
+function load(first) {
+  return Promise.all([api({ a: 'board' }), api({ a: 'spots' }), api({ a: 'posts' }).catch(() => ({ posts: [] }))])
+    .then(([b, sp, ps]) => {
+      const sig = JSON.stringify([b.cards, sp.spots, ps.posts]);
+      const changed = sig !== S.sig;
+      S.sig = sig;
+      S.board = b; S.you = b.you; S.role = b.role;
+      S.spots = sp.spots; S.rules = sp.rules || []; S.map = sp.map;
+      S.posts = ps.posts || [];
+      if (first) post(ACCOUNTS, { a: 'me', token: S.token, cookie: 1 }).catch(() => {});  // the login cookie for screenshots
+      if (first || changed) route(!first);
+    })
+    .catch((e) => {
+      if (e.code && /log in|private/i.test(e.message)) { S.token = ''; store.set('hubToken', ''); signIn(/private/i.test(e.message) ? e.message : ''); }
+      else if (first) signIn(e.message);
+      else toast(e.message);
+    });
+}
+
+// ---- routes: #/home, #/explore/<layer>, #/spot/<id> ----
+function route(quiet) {
+  if (!S.board) return;
+  const p = (location.hash || '#/home').replace(/^#\/?/, '').split('/');
+  const app = document.getElementById('app');
+  app.classList.toggle('quiet', !!quiet);
+  document.getElementById('tabs').hidden = false;
+  const tab = p[0] === 'explore' || p[0] === 'spot' ? 'explore' : p[0] === 'news' ? 'news' : 'home';
+  document.querySelectorAll('nav [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  const n = S.board.cards.filter(needsYou).length;
+  const badge = document.getElementById('homeBadge');
+  badge.hidden = !n; badge.textContent = n;
+  document.title = (n ? '(' + n + ') ' : '') + 'Hub';
+  const y = window.scrollY;
+  app.innerHTML = '';
+  app.appendChild(head());
+  if (tab === 'home') home(app);
+  else if (tab === 'news') news(app);
+  else explore(app, p[0] === 'explore' ? (p[1] || 'world') : layerOf(p[1]));
+  if (quiet) window.scrollTo(0, y);
+  if (p[0] === 'spot') openSpot(p[1], quiet); else closeSheet(true);
+}
+function layerOf(id) { const s = S.spots.find((x) => x.id === id); return s ? (s.layer === 'beyond' ? 'world' : s.layer) : 'world'; }
+window.addEventListener('hashchange', () => route(false));
+document.querySelectorAll('nav [data-tab]').forEach((b) => { b.onclick = () => { location.hash = '#/' + b.dataset.tab; }; });
+
+function head() {
+  const proj = (S.board && S.board.project) || S.project;
+  const name = { bar3d: 'Bar3D' }[proj] || proj;
+  const live = el('span', { class: 'pill mono' }, [el('span', { class: 'dot' }), 'live …']);
+  fetch('../bar/version.txt?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.ok ? r.text() : '').then((t) => {
+    t = (t || '').trim();
+    live.lastChild.textContent = t ? 'live ' + t.slice(0, 7) : 'live';
+  }).catch(() => {});
+  return el('header', {}, [wave(name), el('span', { class: 'grow' }), live,
+    el('button', { class: 'projBtn', text: '⋯', title: 'Projects and account', onclick: projectsSheet })]);
+}
+
+// ---- Home ----
+function home(app) {
+  const cards = S.board.cards;
+  const need = cards.filter(needsYou);
+  const doing = cards.filter((c) => c.stage === 'doing');
+  const ready = cards.filter((c) => c.stage === 'ready');
+  const first = (S.you || '').split(' ')[0];
+  app.appendChild(el('div', { class: 'hello rise' }, ['Hey ' + first + ' ', el('span', { class: 'hand', text: '👋' })]));
+  const bits = [];
+  bits.push(need.length ? need.length + (need.length === 1 ? ' thing needs you' : ' things need you') : 'nothing needs you right now');
+  if (doing.length) bits.push('Claude is on ' + doing.length);
+  if (ready.length) bits.push(ready.length + ' up next');
+  app.appendChild(el('p', { class: 'summary rise', style: '--i:1', text: bits.join(' · ') + '.' }));
+
+  if (need.length) {
+    app.appendChild(el('h2', {}, ['Needs you', el('span', { class: 'count', text: String(need.length) })]));
+    need.sort((a, b) => (b.question ? 1 : 0) - (a.question ? 1 : 0)).forEach((c, i) => app.appendChild(bubble(c, i)));
+  }
+  if (doing.length || ready.length) {
+    app.appendChild(el('h2', { text: 'Claude' }));
+    const w = el('div', { class: 'working rise' });
+    doing.forEach((c) => w.appendChild(el('button', { class: 'work', onclick: () => openSpotOf(c) }, [el('span', { class: 'dot' }), short(c.title, 40)])));
+    ready.slice(0, 4).forEach((c) => w.appendChild(el('button', { class: 'work next', onclick: () => openSpotOf(c) }, [el('span', { class: 'dot' }), 'next: ' + short(c.title, 34)])));
+    app.appendChild(w);
+  }
+  if (!need.length) app.appendChild(el('div', { class: 'empty rise' }, [el('span', { class: 'big', text: '✓' }), 'Nothing waits on you. Claude asks here when it does.']));
+  app.appendChild(el('h2', { text: 'More' }));
+  app.appendChild(el('div', { class: 'working rise' }, [
+    el('a', { class: 'work', href: '/studio/', text: 'Open the Studio' }),
+    el('a', { class: 'work', href: 'list.html#/p/' + S.project, text: 'Everything (the full board)' }),
+    el('a', { class: 'work', href: 'world.html', text: 'What each thing does' })]));
+}
+// ---- News: every update, with screenshots ----
+function news(app) {
+  app.appendChild(el('h2', { text: 'News' }));
+  if (!S.posts.length) {
+    app.appendChild(el('div', { class: 'empty rise' }, [el('span', { class: 'big', text: '📰' }),
+      'Every update shows up here with screenshots: what changed, in plain words.']));
+  }
+  S.posts.forEach((p, i) => app.appendChild(postView(p, i)));
+}
+function openSpotOf(c) { location.hash = '#/spot/' + spotOf(c); }
+
+// One thing that needs you, as a bubble from Claude with one-tap answers.
+function bubble(c, i) {
+  const sp = S.spots.find((s) => s.id === spotOf(c)) || { icon: '💡', name: '' };
+  const b = el('div', { class: 'bubble rise', style: '--i:' + (i + 2) });
+  const box = el('div', { class: 'say' });
+  let text, choices;
+  const done = (e, msg) => {
+    burst(e.clientX || innerWidth / 2, e.clientY || innerHeight / 2);
+    b.classList.add('gone');
+    toast(msg);
+    setTimeout(() => load(false), 450);
+  };
+  const answer = (e, words, stage) => {
+    const card = { id: c.id, answer: words };
+    if (stage) card.stage = stage;
+    api({ a: 'save', card }).then(() => done(e, 'Sent to Claude.')).catch((x) => toast(x.message));
+  };
+  const change = (label, then) => el('button', { class: 'chip soft', text: label, onclick: () => {
+    if (box.querySelector('textarea')) return;
+    const t = el('textarea', { placeholder: 'Tell Claude…' });
+    box.appendChild(t);
+    box.appendChild(el('div', { class: 'choices' }, [el('button', { class: 'chip', text: 'Send', onclick: (e) => {
+      if (!t.value.trim()) return;
+      then(e, t.value.trim());
+    } })]));
+    t.focus();
+  } });
+  if (c.question) {
+    text = c.question;
+    choices = (c.choices && c.choices.length ? c.choices : ['Yes', 'Not now']).map((w, k) =>
+      el('button', { class: 'chip' + (k ? ' soft' : ''), text: w, onclick: (e) => answer(e, w) }));
+    choices.push(change('✏️ Something else', (e, t) => answer(e, t)));
+  } else if (c.stage === 'review') {
+    text = 'I planned this: ' + c.title + (what(c) ? '\n' + what(c) : '') + '\nShall I build it?';
+    choices = [el('button', { class: 'chip', text: 'Go ahead', onclick: (e) => api({ a: 'save', card: { id: c.id, stage: 'ready' } }).then(() => done(e, 'Up next for Claude.')) }),
+               el('button', { class: 'chip soft', text: 'Not now', onclick: (e) => api({ a: 'save', card: { id: c.id, stage: 'idea' } }).then(() => done(e, 'Kept as an idea.')) }),
+               change('✏️ Change it', (e, t) => api({ a: 'say', id: c.id, text: t }).then(() => done(e, 'Sent to Claude.')))];
+  } else {
+    text = 'Check it on your phone: ' + c.title + (c.build ? '  (build ' + c.build + ')' : '') + (c.report ? '\n\n' + c.report : '');
+    choices = [el('button', { class: 'chip mint', text: 'It works ✓', onclick: (e) => api({ a: 'save', card: { id: c.id, stage: 'done' } }).then(() => done(e, 'Done! 🎉')) }),
+               change('Something\'s off', (e, t) => api({ a: 'say', id: c.id, text: t }).then(() => api({ a: 'save', card: { id: c.id, stage: 'ready' } })).then(() => done(e, 'Claude will fix it.')))];
+  }
+  const long = text.length > 260;
+  const q = el('div', { class: 'q', text: long ? short(text, 240) : text });
+  box.appendChild(el('div', { class: 'where', text: sp.icon + ' ' + sp.name }));
+  box.appendChild(q);
+  if (long) box.appendChild(el('button', { class: 'more', text: 'Read all', onclick: function () { q.textContent = text; this.remove(); } }));
+  box.appendChild(el('div', { class: 'choices' }, choices));
+  b.appendChild(el('div', { class: 'orb', text: '✦' }));
+  b.appendChild(box);
+  return b;
+}
+
+function postView(p, i) {
+  const card = el('article', { class: 'post rise', style: '--i:' + Math.min(i + 3, 8) });
+  if (p.shots && p.shots.length) {
+    const strip = el('div', { class: 'shots' });
+    const dots = el('div', { class: 'dots' });
+    p.shots.forEach((s, k) => {
+      const img = el('img', { src: s.url, alt: s.name, loading: 'lazy' });
+      img.onload = () => { if (img.naturalWidth > img.naturalHeight) strip.classList.add('wide'); };
+      strip.appendChild(img);
+      dots.appendChild(el('i', { class: k ? '' : 'on' }));
+    });
+    strip.addEventListener('scroll', () => {
+      const k = Math.round(strip.scrollLeft / strip.clientWidth);
+      [...dots.children].forEach((d, j) => d.classList.toggle('on', j === k));
+    }, { passive: true });
+    card.appendChild(strip);
+    if (p.shots.length > 1) card.appendChild(dots);
+  }
+  const sw = el('button', { class: 'switch' + (p.published ? ' on' : ''), title: 'Show it on the public news board' }, [p.published ? 'Public' : 'Private', el('b')]);
+  sw.onclick = (e) => {
+    if (S.role !== 'owner') return toast('Only the owner publishes.');
+    const on = !sw.classList.contains('on');
+    sw.classList.toggle('on', on); sw.firstChild.textContent = on ? 'Public' : 'Private';
+    api({ a: 'publish', id: p.id, on: on ? 1 : 0 }).then(() => { p.published = on; if (on) { burst(e.clientX, e.clientY); toast('On joshuavelasco.com/news'); } })
+      .catch((x) => { toast(x.message); sw.classList.toggle('on', !on); });
+  };
+  card.appendChild(el('div', { class: 'body' }, [
+    el('div', { class: 'meta' }, [p.build ? el('span', { class: 'pill mono', text: p.build }) : null, el('span', { text: ago(p.at) }), sw]),
+    el('h3', { text: p.title }), el('p', { text: p.text }),
+    // See it for yourself (S10.3): the Studio, or the bar it describes.
+    el('div', { class: 'working', style: 'margin-top:10px' }, [el('a', { class: 'work', href: '/studio/', text: 'See it in the Studio' }), el('a', { class: 'work', href: '/bar/', text: 'Open the bar' })])]));
+  return card;
+}
+
+// ---- Explore ----
+const LAYERS = [['world', 'The bar'], ['engine', 'Under the floor'], ['tools', 'Tools']];
+function explore(app, layer) {
+  const k = Math.max(0, LAYERS.findIndex((l) => l[0] === layer));
+  const seg = el('div', { class: 'layers' });
+  const knob = el('i', { class: 'knob' });
+  knob.style.transform = 'translateX(' + k * 100 + '%)';
+  seg.appendChild(knob);
+  LAYERS.forEach(([id, label], j) => seg.appendChild(el('button', { class: j === k ? 'on' : '', text: label, onclick: () => { location.hash = '#/explore/' + id; } })));
+  app.appendChild(seg);
+  const stage = el('div', { class: 'stage' });
+  const plane = el('div', { class: 'plane' + (layer === 'world' ? '' : ' down') });
+  stage.appendChild(plane);
+  app.appendChild(stage);
+  if (layer === 'world') worldMap(plane); else board(plane, layer);
+  app.appendChild(el('div', { class: 'legend' }, [['var(--pink)', 'needs you'], ['var(--cyan)', 'Claude building'], ['var(--gold)', 'up next'],
+    ['var(--mint)', 'live'], ['var(--violet)', 'idea']].map(([c, t]) => el('span', {}, [el('i', { style: { background: c, boxShadow: '0 0 8px ' + c } }), t]))));
+}
+
+function spotNode(sp, x, y, r, labelScale = .72) {
+  const m = mood(sp.id);
+  const g = sv('g', { class: 'spot', tabindex: '0', role: 'button', 'aria-label': sp.name, onclick: () => { location.hash = '#/spot/' + sp.id; } });
+  g.appendChild(sv('circle', { class: 'ring', cx: x, cy: y, r: r, stroke: m.hex, style: 'animation-delay:' + (-(x * 7 + y * 3) % 26) / 10 + 's' }));
+  g.appendChild(sv('circle', { class: 'ball', cx: x, cy: y, r: r, fill: 'url(#ball-' + m.hex.slice(1) + ')', stroke: m.hex, 'stroke-width': r * .12 }));
+  g.appendChild(sv('text', { class: 'icon', x: x, y: y + r * .04, style: 'font-size:' + r * 1.15 + 'px', text: sp.icon }));
+  g.appendChild(sv('text', { class: 'label', x: x, y: y + r * 1.95, style: 'font-size:' + r * labelScale + 'px;stroke-width:' + r * labelScale * .32 + 'px', text: sp.name }));
+  if (m.n) {
+    g.appendChild(sv('circle', { cx: x + r * .8, cy: y - r * .8, r: r * .42, fill: '#ff5ab4' }));
+    g.appendChild(sv('text', { class: 'badge', x: x + r * .8, y: y - r * .78, style: 'font-size:' + r * .55 + 'px', text: String(m.n) }));
+  }
+  return g;
+}
+function defs(r) {
+  const d = sv('defs');
+  const floor = sv('linearGradient', { id: 'floor', x1: 0, y1: 0, x2: 0, y2: 1 });
+  floor.appendChild(sv('stop', { offset: 0, 'stop-color': '#2a1b4a' }));
+  floor.appendChild(sv('stop', { offset: 1, 'stop-color': '#1a1030' }));
+  d.appendChild(floor);
+  const soft = sv('filter', { id: 'soft', x: '-20%', y: '-20%', width: '140%', height: '140%' });
+  soft.appendChild(sv('feDropShadow', { dx: 0, dy: 0, stdDeviation: r * .5, 'flood-color': '#b38bff', 'flood-opacity': .5 }));
+  d.appendChild(soft);
+  for (const hex of ['#ff5ab4', '#5ad1ff', '#ffb35a', '#7dff8a', '#b38bff']) {
+    const g = sv('radialGradient', { id: 'ball-' + hex.slice(1), cx: '35%', cy: '30%', r: '75%' });
+    g.appendChild(sv('stop', { offset: 0, 'stop-color': '#ffffff', 'stop-opacity': .55 }));
+    g.appendChild(sv('stop', { offset: .35, 'stop-color': hex, 'stop-opacity': .9 }));
+    g.appendChild(sv('stop', { offset: 1, 'stop-color': '#1a0b22', 'stop-opacity': .95 }));
+    d.appendChild(g);
+  }
+  return d;
+}
+function worldMap(plane) {
+  const map = S.map || {};
+  const rooms = map.rooms || [];
+  let x0 = -13, x1 = 11, z0 = -17, z1 = 10;
+  rooms.forEach((r) => { x0 = Math.min(x0, r[0] - 1); z0 = Math.min(z0, r[1] - 1); x1 = Math.max(x1, r[2] + 1); z1 = Math.max(z1, r[3] + 2.2); });
+  const svg = sv('svg', { class: 'map', viewBox: [x0, z0, x1 - x0, z1 - z0].join(' '), role: 'img', 'aria-label': 'Map of the bar' });
+  svg.appendChild(defs(1));
+  const names = ['The bar', 'Arcade', 'Room 3'];
+  rooms.forEach((r, i) => {
+    svg.appendChild(sv('rect', { class: 'roomShape glow', x: r[0], y: r[1], width: r[2] - r[0], height: r[3] - r[1], rx: .8 }));
+  });
+  (map.blockers || []).forEach((b) => {
+    const w = b[2] - b[0], h = b[3] - b[1];
+    if (w > 12 || h > 12 || w * h < .08) return;  // walls are the rooms' edges already
+    const cx = (b[0] + b[2]) / 2, cz = (b[1] + b[3]) / 2;
+    if (!rooms.some((r) => cx > r[0] + .3 && cx < r[2] - .3 && cz > r[1] + .3 && cz < r[3] - .3)) return;  // outside the walls
+    svg.appendChild(sv('rect', { class: 'furn', x: b[0], y: b[1], width: w, height: h, rx: Math.min(w, h) * .3 }));
+  });
+  rooms.forEach((r, i) => {
+    const label = (names[i] || 'Room ' + (i + 1)).toUpperCase();
+    const size = Math.min(.9, (r[2] - r[0] - .6) / (label.length * .68));
+    svg.appendChild(sv('text', { class: 'roomName', x: (r[0] + r[2]) / 2, y: r[1] + .5 + size, 'font-size': size, text: label }));
+  });
+  // The door: a glowing gap at the front.
+  const door = S.spots.find((s) => s.id === 'door');
+  if (door) svg.appendChild(sv('rect', { x: door.x - .8, y: (rooms[0] ? rooms[0][3] : door.z) - .12, width: 1.6, height: .24, rx: .12, fill: '#ffb35a', opacity: .8 }));
+  S.spots.filter((s) => s.layer === 'world').forEach((s) => svg.appendChild(spotNode(s, s.x, s.z, .72)));
+  plane.appendChild(el('div', { class: 'mapWrap' }, [svg]));
+  const beyond = S.spots.filter((s) => s.layer === 'beyond');
+  if (beyond.length) {
+    plane.appendChild(el('h2', { text: 'Beyond the walls' }));
+    plane.appendChild(el('div', { class: 'beyond' }, beyond.map((s) => tile(s))));
+  }
+}
+function tile(s) {
+  const m = mood(s.id);
+  return el('button', { class: 'tile', onclick: () => { location.hash = '#/spot/' + s.id; } }, [
+    el('span', { class: 'ic', style: { background: 'radial-gradient(circle at 35% 30%, #fff8, transparent 45%), ' + m.hex + '55', boxShadow: '0 0 16px ' + m.hex + '88', border: '2px solid ' + m.hex } },
+      [s.icon, m.n ? el('span', { class: 'n', text: String(m.n) }) : null]),
+    s.name]);
+}
+// Under the floor (Looped) and the tools: nodes on a little circuit board.
+function board(plane, layer) {
+  const nodes = S.spots.filter((s) => s.layer === layer);
+  const cols = Math.max(1, ...nodes.map((n) => (n.col || 0) + 1)), rows = Math.max(1, ...nodes.map((n) => (n.row || 0) + 1));
+  const W = 300, cell = W / 3, top = 70, H = top + rows * 110 + 10;
+  const svg = sv('svg', { class: 'map circuit', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': layer });
+  svg.appendChild(defs(10));
+  const hubX = W / 2, hubY = 26;
+  svg.appendChild(sv('text', { x: hubX, y: hubY + 6, 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 850, fill: '#f6f0ff',
+    text: layer === 'engine' ? '⚙️ LOOPED' : '🛠️ HOW WE WORK' }));
+  const pos = (n) => [(W - cols * cell) / 2 + cell * ((n.col || 0) + .5), top + 110 * (n.row || 0) + 40];
+  nodes.forEach((n) => {
+    const [x, y] = pos(n);
+    svg.appendChild(sv('path', { class: 'flow', d: `M${hubX},${hubY + 14} C${hubX},${(hubY + y) / 2} ${x},${(hubY + y) / 2} ${x},${y - 22}` }));
+  });
+  nodes.forEach((n) => { const [x, y] = pos(n); svg.appendChild(spotNode(n, x, y, 21, .52)); });
+  plane.appendChild(el('div', { class: 'mapWrap' }, [svg]));
+  plane.appendChild(el('p', { class: 'summary', style: 'margin-top:12px', text: layer === 'engine'
+    ? 'Looped is the engine under everything: upgrade a piece here and every place built on it gets better.'
+    : 'How you and Claude work: this hub, the tests, the deploys.' }));
+}
+
+// ---- A place ----
+function closeSheet(silent) {
+  document.getElementById('sheet').classList.remove('on');
+  document.getElementById('veil').classList.remove('on');
+  const m = location.hash.match(/^#\/spot\/(.+)$/);
+  if (!silent && m) location.hash = '#/explore/' + layerOf(m[1]);
+}
+document.getElementById('veil').onclick = () => closeSheet();
+function openSpot(id, quiet) {
+  const sp = S.spots.find((s) => s.id === id);
+  if (!sp) return;
+  const sheet = document.getElementById('sheet');
+  const keepScroll = quiet ? sheet.scrollTop : 0;
+  const m = mood(id);
+  const cs = cardsAt(id);
+  sheet.innerHTML = '';
+  sheet.appendChild(el('div', { class: 'grab' }));
+  sheet.appendChild(el('div', { class: 'sheetHead' }, [
+    el('span', { class: 'ic', style: { background: 'radial-gradient(circle at 35% 30%, #fff8, transparent 45%), ' + m.hex + '55', boxShadow: '0 0 22px ' + m.hex, border: '2px solid ' + m.hex }, text: sp.icon }),
+    el('div', {}, [el('h3', { text: sp.name }), el('span', { class: 'pill', style: { color: m.hex, borderColor: m.hex + '88' }, text: m.word })]),
+    el('button', { class: 'x', text: '✕', 'aria-label': 'Close', onclick: () => closeSheet() })]));
+  if (sp.about) sheet.appendChild(el('p', { class: 'about', text: sp.about }));
+  const groups = [['Needs you', cs.filter(needsYou)], ['Coming up', cs.filter((c) => !needsYou(c) && (c.stage === 'ready' || c.stage === 'doing'))],
+                  ['Ideas', cs.filter((c) => !needsYou(c) && c.stage === 'idea')], ['Done', cs.filter((c) => !needsYou(c) && c.stage === 'done')]];
+  groups.forEach(([title, list]) => {
+    if (!list.length) return;
+    sheet.appendChild(el('h2', {}, [title, title === 'Needs you' ? el('span', { class: 'count', text: String(list.length) }) : null]));
+    if (title === 'Done' && !S.open['done:' + id] && list.length > 2) {
+      sheet.appendChild(el('button', { class: 'fold', text: '✓ ' + list.length + ' done here (show)', onclick: () => { S.open['done:' + id] = 1; openSpot(id, true); } }));
+      return;
+    }
+    list.forEach((c) => sheet.appendChild(item(c, id)));
+  });
+  if (!cs.length) sheet.appendChild(el('p', { class: 'summary', text: 'Nothing planned here yet.' }));
+  // A new idea for this place.
+  sheet.appendChild(el('h2', { text: 'New idea here' }));
+  const idea = el('input', { placeholder: 'e.g. neon sign over the ' + sp.name.toLowerCase() });
+  sheet.appendChild(el('div', { class: 'row' }, [idea, el('button', { class: 'send', text: 'Add', onclick: (e) => {
+    const t = idea.value.trim();
+    if (!t) return;
+    const rule = S.rules.find((r) => r.spot === id && r.section);
+    api({ a: 'save', card: { title: t, stage: 'idea', spot: id, section: rule ? rule.section : 'ideas' } })
+      .then(() => { burst(e.clientX, e.clientY); toast('Added. Claude sees it.'); idea.value = ''; load(false); }).catch((x) => toast(x.message));
+  } })]));
+  // Talk about this place.
+  sheet.appendChild(el('h2', { text: 'Talk about ' + sp.name }));
+  const talk = el('div', { class: 'talk' });
+  (sp.thread || []).slice(-8).forEach((t) => talk.appendChild(el('div', { class: 'msg ' + (t.role === 'claude' ? 'claude' : 'owner') }, [t.text, el('small', { text: t.who + ' · ' + ago(t.at) })])));
+  sheet.appendChild(talk);
+  const msg = el('textarea', { placeholder: 'Anything about ' + sp.name + '… Claude reads it on the next "go".' });
+  sheet.appendChild(msg);
+  sheet.appendChild(el('div', { class: 'row', style: 'justify-content:flex-end' }, [el('button', { class: 'send', text: 'Send', onclick: () => {
+    const t = msg.value.trim();
+    if (!t) return;
+    api({ a: 'spotsay', id, text: t }).then(() => { toast('Sent to Claude.'); msg.value = ''; load(false); }).catch((x) => toast(x.message));
+  } })]));
+  document.getElementById('veil').classList.add('on');
+  sheet.classList.add('on');
+  sheet.scrollTop = keepScroll;
+}
+function item(c, spot) {
+  const open = !!S.open[c.id];
+  const wrap = el('div', { class: 'item' + (open ? ' open' : '') });
+  wrap.appendChild(el('button', { onclick: () => { S.open[c.id] = !open; openSpot(spot, true); } }, [
+    el('span', { class: 'st', style: { background: STAGE_COLOR[c.stage], boxShadow: '0 0 8px ' + STAGE_COLOR[c.stage] } }),
+    el('span', { class: 't', text: c.title }), el('span', { class: 'tag', text: c.question ? 'question' : STAGE_WORD[c.stage] })]));
+  if (!open) return wrap;
+  const more = el('div', { class: 'more' });
+  if (c.notes) more.appendChild(el('div', {}, [el('h4', { text: 'What you want' }), el('p', { text: c.notes })]));
+  if (what(c)) more.appendChild(el('div', {}, [el('h4', { text: 'The plan' }), el('p', { text: what(c) })]));
+  if (c.question) more.appendChild(el('div', {}, [el('h4', { text: 'Claude asks' }), el('p', { text: c.question })]));
+  else if (c.report) more.appendChild(el('div', {}, [el('h4', { text: 'Claude\'s latest' + (c.build ? ' (build ' + c.build + ')' : '') }), el('p', { text: c.report })]));
+  const t = el('textarea', { placeholder: c.question ? 'Your answer…' : 'Tell Claude about this…' });
+  const acts = [el('button', { class: 'send', text: 'Send', onclick: () => {
+    if (!t.value.trim()) return;
+    api({ a: 'say', id: c.id, text: t.value.trim() }).then(() => { toast('Sent to Claude.'); load(false); }).catch((x) => toast(x.message));
+  } })];
+  if (S.role === 'owner' && c.stage === 'idea') acts.unshift(el('button', { class: 'chip soft', text: 'Build this next', onclick: (e) =>
+    api({ a: 'save', card: { id: c.id, stage: 'ready' } }).then(() => { burst(e.clientX, e.clientY); toast('Up next for Claude.'); load(false); }) }));
+  more.appendChild(t);
+  more.appendChild(el('div', { class: 'row', style: 'justify-content:flex-end' }, acts));
+  wrap.appendChild(more);
+  return wrap;
+}
+
+// ---- Projects and account ----
+function projectsSheet() {
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = '';
+  sheet.appendChild(el('div', { class: 'grab' }));
+  sheet.appendChild(el('div', { class: 'sheetHead' }, [el('h3', { text: 'Projects' }), el('button', { class: 'x', text: '✕', onclick: () => closeSheet(true) })]));
+  const list = el('div', {});
+  sheet.appendChild(list);
+  api({ a: 'projects' }).then((r) => {
+    r.projects.forEach((p) => list.appendChild(el('div', { class: 'item' }, [el('button', { onclick: () => {
+      S.project = p.id; store.set('hubProject', p.id); closeSheet(true); S.sig = ''; location.hash = '#/home'; load(false);
+    } }, [el('span', { class: 'st', style: { background: p.id === S.project ? 'var(--mint)' : 'var(--violet)' } }), el('span', { class: 't', text: p.name }),
+      el('span', { class: 'tag', text: (p.questions ? p.questions + ' questions · ' : '') + ago(p.updated) })])])));
+  }).catch((x) => toast(x.message));
+  sheet.appendChild(el('h2', { text: 'More' }));
+  sheet.appendChild(el('div', { class: 'choices' }, [
+    el('a', { class: 'chip soft', href: 'list.html', text: '📋 Everything (old board)', style: 'text-decoration:none' }),
+    el('a', { class: 'chip soft', href: '../bar/gate.php?people', text: '👥 Who may play', style: 'text-decoration:none' }),
+    el('a', { class: 'chip soft', href: '../news/', text: '📰 Public news', style: 'text-decoration:none' }),
+    el('button', { class: 'chip soft', text: 'Sign out', onclick: () => { store.set('hubToken', ''); S.token = ''; closeSheet(true); signIn(); } })]));
+  document.getElementById('veil').classList.add('on');
+  sheet.classList.add('on');
+}
+
+// ---- start ----
+if (S.token) load(true); else signIn();
+setInterval(() => { if (S.token && S.board && !document.hidden && !document.activeElement.matches('textarea, input')) load(false); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.token && S.board) load(false); });
+</script>
+</body>
+</html>

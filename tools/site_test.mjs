@@ -96,7 +96,7 @@ for (const [name, path] of [['home', '/'], ['play', '/play/'], ['engine', '/engi
   await ctx.close();
 }
 
-// The portal: a 404 for guests and players, the real thing for staff.
+// The portal: a 404 for guests and players; staff are sent to Dev.
 {
   const g = await open('/portal/');
   check(g.status === 404, `portal: a guest gets 404 (${g.status})`);
@@ -106,22 +106,17 @@ for (const [name, path] of [['home', '/'], ['play', '/play/'], ['engine', '/engi
   check(m.status === 404, `portal: a player gets 404 (${m.status})`);
   await m.ctx.close();
   const p = await open('/', { token: people.mia[1] });
-  check(!(await tabsOf(p.page)).includes('Portal'), 'a player has no Portal tab');
+  check(!(await tabsOf(p.page)).includes('Dev'), 'a player has no Dev tab');
   check((await p.page.textContent('.who')).includes('Mia'), 'a player sees their name in the header');
   await p.ctx.close();
 
-  const s = await open('/portal/', { token: people.boss[1] });
-  check(s.status === 200, `portal: staff get in (${s.status})`);
-  check((await tabsOf(s.page)).includes('Portal'), 'staff have the Portal tab');
-  check((await s.page.textContent('h1')).includes('The Boss'), 'portal: greets by name');
-  check(await s.page.isVisible('a.tile[href="/studio/"]'), 'portal: the Studio tile');
-  check(await s.page.isVisible('a.tile[href="/hub/"]'), 'portal: the owner sees the hub');
-  check(s.errors.length === 0, 'portal: no errors' + (s.errors.length ? ': ' + s.errors.join(' | ') : ''));
-  check(await s.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'portal: fits the phone');
-  if (!(await s.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1))) console.log('  too wide:', await s.page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth, [...document.querySelectorAll('body *')].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 8).map((e) => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))]));
-  await s.page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo({ top: y, behavior: 'instant' }); await new Promise((r) => setTimeout(r, 60)); } window.scrollTo({ top: 0, behavior: 'instant' }); });
-  await s.page.waitForTimeout(1100);
-  await s.page.screenshot({ path: 'build/site-portal.png', fullPage: true });
+  // Staff: the portal is now Dev (PLAN.md R4.7): /portal/ sends them to /dev/, the tab says Dev.
+  const r = await fetch(base + '/portal/', { redirect: 'manual', headers: { cookie: `bar_t=${people.boss[1]}` } });
+  check(r.status === 302 && r.headers.get('location') === '/dev/', `portal: staff are sent to Dev (${r.status} ${r.headers.get('location')})`);
+  const s = await open('/', { token: people.boss[1] });
+  check((await tabsOf(s.page)).includes('Dev'), 'staff have the Dev tab');
+  check((await s.page.$$('a[href="/dev/"]')).length > 0, 'the Dev tab opens /dev/');
+  check(s.errors.length === 0, 'home as staff: no errors' + (s.errors.length ? ': ' + s.errors.join(' | ') : ''));
   await s.ctx.close();
 }
 

@@ -6,6 +6,9 @@
 require __DIR__ . '/../site/layout.php';
 header('X-Robots-Tag: noindex, nofollow');
 if (!site_is_staff()) site_404();
+// The portal became Dev (PLAN.md R4.7): staff are sent there.
+header('Location: /dev/', true, 302);
+exit;
 $v = site_viewer();
 $owner = $v['role'] === 'owner';
 $hour = (int)date('G');

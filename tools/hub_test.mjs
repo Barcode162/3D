@@ -3,7 +3,7 @@
 // (<root>/home/bar, <root>/home/hub, <root>/private). The owner logs in on the
 // page, adds a card, makes a Claude key; "Claude" reads the queue and reports;
 // someone else is kept out; passwords change and a recovery code resets one.
-// The old board is list.html; the hub v3 (index.html, docs/LOOPED.md C):
+// The old board is list.html; the hub v3 (board.html since Dev took /hub, PLAN.md R4.7):
 // Home answers a question in one tap, the news feed shows a post with its
 // screenshot, Publish puts it on the public news board (news/), Explore's
 // map opens a place with its things, a new idea and a message land there.
@@ -28,7 +28,7 @@ const root = mkdtempSync(join(tmpdir(), 'bar3d-hub-'));
 mkdirSync(join(root, 'home/bar'), { recursive: true });
 mkdirSync(join(root, 'home/hub'), { recursive: true });
 copyFileSync('server/account.php', join(root, 'home/bar/account.php'));
-for (const f of ['index.html', 'list.html', 'world.html', 'hub.php', 'seed.json']) copyFileSync(join('hub', f), join(root, 'home/hub', f));
+for (const f of ['index.html', 'board.html', 'list.html', 'world.html', 'hub.php', 'seed.json']) copyFileSync(join('hub', f), join(root, 'home/hub', f));
 mkdirSync(join(root, 'home/hub/projects'));
 for (const f of ['bar3d.jpg', 'bar3d-spots.json', 'bar3d-map.json']) copyFileSync(join('hub/projects', f), join(root, 'home/hub/projects', f));
 for (const d of ['kinds', 'places']) {  // the World page reads the bar's files
@@ -210,7 +210,7 @@ try {
   check((await status(base + '/hub/hub.php?shot=bar3d/abc1234-door.jpg')) === 403, 'a screenshot needs a login');
 
   // Home: the question as a bubble; one tap answers it.
-  await page.goto(base + '/hub/');
+  await page.goto(base + '/hub/board.html');
   await page.waitForSelector('.bubble:has-text("Pool table in the arcade")', { timeout: 10000 });
   await wait(1200);
   await page.screenshot({ path: 'build/hub3-home.png' });
@@ -265,7 +265,7 @@ try {
   check(spotInbox.some((x) => x.id === 'jukebox' && x.thread.at(-1).text === 'Make it louder at night'), 'a message about a place reaches Claude\'s inbox');
   const reply = await post('/hub/hub.php', { a: 'spotsay', id: 'jukebox', text: 'Noted: louder after 9 pm.' }, { 'X-Hub-Key': key });
   check(reply.ok === 1 && !reply.spot.unread, 'Claude answers on the place');
-  await page.goto(base + '/hub/#/explore/engine');
+  await page.goto(base + '/hub/board.html#/explore/engine');
   await page.waitForSelector('svg.circuit .spot', { timeout: 5000 });
   const engine = await page.$$eval('svg.circuit .spot', (g) => g.map((x) => x.getAttribute('aria-label')));
   check(engine.includes('Loops') && engine.includes('Light & drawing'), `under the floor: Looped's parts (${engine.join(', ')})`);

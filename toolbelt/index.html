@@ -1,96 +1,14 @@
 <!doctype html>
-<html lang="en" data-look="ember" data-look-pin>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0E0906">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Toolbelt</title>
-<!-- The Toolbelt (docs/UI_PLAN.md R1.1): every tool of the Looped engine,
-     drawn from tools.json. Each tool checks the login itself; this page only
-     gathers them. It becomes Dev's Toolbelt tab in R4. -->
-<link rel="stylesheet" href="/ui/themes.css">
-<link rel="stylesheet" href="/ui/looped.css">
-<style>
-  [hidden] { display: none !important; }
-  main { max-width: 860px; margin: 0 auto; padding-block: calc(env(safe-area-inset-top, 0px) + 18px) calc(env(safe-area-inset-bottom, 0px) + 40px); display: grid; gap: 22px; }
-  header { display: grid; gap: 6px; }
-  header h1 { font-size: clamp(36px, 9vw, 56px); }
-  #search { font-size: 16px; }
-  #groups { display: grid; gap: 26px; }
-  section { display: grid; gap: 10px; }
-  section > h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); font-family: var(--text-font); font-stretch: 75%; font-weight: 700; }
-  .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
-  .tool { display: grid; grid-template-columns: 40px 1fr; gap: 4px 12px; padding: 12px 14px; color: var(--text); text-decoration: none; align-items: start; min-width: 0; }
-  a.tool:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .tool .ic { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--key-r); background: var(--key-bg); box-shadow: var(--key-shadow); display: grid; place-items: center; color: var(--accent); }
-  .tool .ic svg { width: 20px; height: 20px; }
-  .tool b { font-size: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .tool p { font-size: 13.5px; color: var(--text-2); }
-  .tool code { grid-column: 2; font-family: var(--mono); font-size: 11px; color: var(--text-3); overflow-wrap: anywhere; }
-  .tool.soon { opacity: .55; }
-  .tool form { grid-column: 2; display: flex; gap: 6px; margin-top: 4px; }
-  .tool form input { flex: 1; min-width: 0; font-family: var(--mono); text-transform: uppercase; padding: 6px 10px; }
-  .empty { color: var(--text-2); }
-</style>
+<title>Dev</title>
+<!-- The Toolbelt became Dev → Projects (PLAN.md R4.7). tools.json stays (the list),
+     and so does the UI Editor (ui-editor/). -->
+<meta http-equiv="refresh" content="0; url=/dev/#projects">
+<script>location.replace('/dev/#projects');</script>
 </head>
-<body class="lp">
-<main class="gutter">
-  <header>
-    <span class="label">Looped · the engine's tools</span>
-    <h1>Toolbelt</h1>
-    <input class="field" id="search" type="search" placeholder="Find a tool" aria-label="Find a tool" autocomplete="off">
-  </header>
-  <div id="groups"></div>
-  <p class="empty" id="empty" hidden>No tool matches.</p>
-</main>
-<script src="/ui/looped.js"></script>
-<script>
-(function () {
-  'use strict';
-  var groupsEl = document.getElementById('groups'), search = document.getElementById('search'), empty = document.getElementById('empty');
-  var data = null;
-  function h(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function icon(name) {
-    var ns = 'http://www.w3.org/2000/svg', s = document.createElementNS(ns, 'svg'), u = document.createElementNS(ns, 'use');
-    s.setAttribute('class', 'ico'); s.setAttribute('aria-hidden', 'true'); u.setAttribute('href', '/ui/icons.svg#i-' + (name || 'box')); s.appendChild(u); return s;
-  }
-  function card(t) {
-    var soon = t.status === 'soon', link = t.href && !soon && !t.ask;
-    var el = h(link ? 'a' : 'div', 'tool panel' + (soon ? ' soon' : ''));
-    el.dataset.id = t.id;
-    if (link) { el.href = t.href; if (/^https?:/.test(t.href)) { el.target = '_blank'; el.rel = 'noopener'; } }
-    var ic = h('span', 'ic'); ic.appendChild(icon(t.icon)); el.appendChild(ic);
-    var b = h('b', null, t.name); if (soon) b.appendChild(h('span', 'chip', 'soon')); el.appendChild(b);
-    el.appendChild(h('p', null, t.what));
-    if (t.run) el.appendChild(h('code', null, t.run));
-    if (t.ask && !soon) {
-      var f = h('form'), i = h('input', 'field'), go = h('button', 'key small go', 'Open');
-      i.maxLength = 6; i.placeholder = 'K7Q2XD'; i.setAttribute('aria-label', t.ask); i.autocapitalize = 'characters'; i.spellcheck = false; go.type = 'submit';
-      f.appendChild(i); f.appendChild(go);
-      f.addEventListener('submit', function (e) { e.preventDefault(); var c = i.value.trim().toUpperCase(); if (/^[A-Z0-9]{6}$/.test(c)) location.href = t.href + c; else Looped.toast('A code is six letters or numbers.'); });
-      el.appendChild(f);
-    }
-    return el;
-  }
-  function draw() {
-    var q = search.value.trim().toLowerCase(), shown = 0;
-    groupsEl.textContent = '';
-    data.groups.forEach(function (g) {
-      var list = data.tools.filter(function (t) { return t.group === g.id && (!q || (t.name + ' ' + t.what).toLowerCase().indexOf(q) >= 0); });
-      if (!list.length) return;
-      var sec = h('section'), grid = h('div', 'tools');
-      sec.dataset.group = g.id;
-      sec.appendChild(h('h2', null, g.name));
-      list.forEach(function (t) { grid.appendChild(card(t)); shown++; });
-      sec.appendChild(grid); groupsEl.appendChild(sec);
-    });
-    empty.hidden = shown > 0;
-  }
-  search.addEventListener('input', function () { if (data) draw(); });
-  fetch('tools.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) { data = d; draw(); })
-    .catch(function () { empty.textContent = 'The tool list did not load. Pull to refresh.'; empty.hidden = false; });
-})();
-</script>
-</body>
+<body style="background:#0E0906;color:#F6EBDD;font:16px -apple-system,sans-serif;padding:24px"><a href="/dev/" style="color:#F4A64A">Dev</a></body>
 </html>

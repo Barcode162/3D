@@ -115,6 +115,15 @@ await page.reload();
 await page.waitForSelector('#tabs:not([hidden]) button');
 check(await ed(() => location.hash === '#people' && document.querySelector('#tabs [aria-current="page"]').dataset.tab === 'people'), 'a reload stays logged in, on the same tab');
 
+// R4.7: the old doors lead to Dev
+await page.goto(ws.url + 'hub/');
+await page.waitForURL(/\/dev\/#?/);
+check(true, '/hub/ opens Dev');
+await page.goto(ws.url + 'toolbelt/');
+await page.waitForURL(/\/dev\/#projects/);
+await page.waitForSelector('#view [data-project="looped"]');
+check(true, '/toolbelt/ opens Dev → Projects');
+
 check(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 await browser.close(); ws.close();
 console.log(failed ? `DEV TEST: ${failed} FAILED` : 'DEV TEST PASSED');

@@ -1,7 +1,7 @@
 <?php
 // joshuavelasco.com/signin: sign in or make an account, with the bar's own
 // accounts (bar/account.php, which also sets the login cookie the whole site
-// reads). Staff go on to the portal; everyone else back where they came from.
+// reads). Staff go on to Dev; everyone else back where they came from.
 require __DIR__ . '/../site/layout.php';
 $v = site_viewer();
 site_head('signin', 'Sign in', 'Sign in to Bar3D, or make an account in a few seconds.');
@@ -18,7 +18,7 @@ site_head('signin', 'Sign in', 'Sign in to Bar3D, or make an account in a few se
       <div class="panel">
         <a class="btn btn-go btn-lg" href="/bar/">Enter the bar <span class="arr">→</span></a>
 <?php if ($v['role'] !== 'member'): ?>
-        <a class="btn btn-ghost btn-lg" href="/portal/">Open the staff portal</a>
+        <a class="btn btn-ghost btn-lg" href="/dev/">Open Dev</a>
 <?php endif; ?>
         <button class="btn btn-ghost" type="button" data-signout>Sign out</button>
       </div>
@@ -83,8 +83,8 @@ site_head('signin', 'Sign in', 'Sign in to Bar3D, or make an account in a few se
         if (!j.ok) throw new Error(j.error || 'Something went wrong. Try again.');
         try { localStorage.setItem('bar3dToken', j.token); localStorage.setItem('bar3dProfile', JSON.stringify(j.me)); } catch (err) {}
         msg.className = 'form-msg ok';
-        msg.textContent = j.me && j.me.admin ? 'Welcome in. Opening the portal…' : 'You\'re in.';
-        setTimeout(function () { location.href = next || (j.me && j.me.admin ? '/portal/' : '/'); }, 450);
+        msg.textContent = j.me && j.me.admin ? 'Welcome in. Opening Dev…' : 'You\'re in.';
+        setTimeout(function () { location.href = next || (j.me && j.me.admin ? '/dev/' : '/'); }, 450);
       })
       .catch(function (err) {
         go.disabled = false;

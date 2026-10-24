@@ -10,7 +10,7 @@
 // Who is looking: the bar's own login (account.php sets the cookie bar_t).
 // Staff are the bar's owner and admins (accounts/admins.json, else the first
 // account made), the same people the Studio lets in. Only staff see the
-// Portal tab, and portal/ answers everyone else with a plain 404.
+// Dev tab (the portal became Dev, PLAN.md R4.7), and portal/ answers everyone else with a plain 404.
 if (!defined('SITE')) define('SITE', 1);
 
 function site_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
@@ -57,7 +57,7 @@ function site_tabs() {
     'vision' => ['/vision/', 'Vision'],
     'news'   => ['/news/', 'News'],
   ];
-  if (site_is_staff()) $tabs['portal'] = ['/portal/', 'Portal'];
+  if (site_is_staff()) $tabs['portal'] = ['/dev/', 'Dev'];
   return $tabs;
 }
 
@@ -105,7 +105,7 @@ function site_head($active, $title, $description, $opts = []) {
     </nav>
     <div class="top-act">
 <?php if ($v): ?>
-      <a class="who" href="<?= $v['role'] === 'member' ? '/bar/' : '/portal/' ?>" title="Signed in as @<?= site_h($v['user']) ?>"><span class="dot" aria-hidden="true"><?= site_h(mb_strtoupper(mb_substr($v['name'], 0, 1))) ?></span><span class="who-n"><?= site_h($v['name']) ?></span></a>
+      <a class="who" href="<?= $v['role'] === 'member' ? '/bar/' : '/dev/' ?>" title="Signed in as @<?= site_h($v['user']) ?>"><span class="dot" aria-hidden="true"><?= site_h(mb_strtoupper(mb_substr($v['name'], 0, 1))) ?></span><span class="who-n"><?= site_h($v['name']) ?></span></a>
 <?php else: ?>
       <a class="link-quiet signin-link" href="/signin/">Sign in</a>
 <?php endif; ?>
@@ -162,7 +162,7 @@ function site_foot() {
 <?php if ($v): ?>
       <span class="foot-me">@<?= site_h($v['user']) ?></span>
 <?php if ($v['role'] !== 'member'): ?>
-      <a href="/portal/">Staff portal</a>
+      <a href="/dev/">Dev</a>
 <?php endif; ?>
       <button type="button" class="link-btn" data-signout>Sign out</button>
 <?php else: ?>
@@ -220,7 +220,7 @@ function site_icon($name) {
 // The other projects on the site: each folder with a project.json, except
 // the ones the site already has pages for.
 function site_projects() {
-  $skip = ['bar', 'studio', 'news', 'hub', 'site', 'ui', 'portal', 'play', 'engine', 'vision', 'signin'];
+  $skip = ['bar', 'studio', 'news', 'hub', 'site', 'ui', 'portal', 'dev', 'toolbelt', 'play', 'engine', 'vision', 'signin'];
   $out = [];
   foreach (glob(dirname(__DIR__) . '/*/project.json') ?: [] as $file) {
     $dir = basename(dirname($file));
