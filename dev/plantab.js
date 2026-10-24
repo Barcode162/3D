@@ -1,5 +1,6 @@
-// Dev → Plan (PLAN.md R4.4): the plan on the phone (Now with its ticks, the
-// road by chapter, Parked, Done, the North star and your rules) and the box
+// Dev → Plan (PLAN.md R4.4, J5.6): the plan on the phone (Now with its ticks,
+// the road by chapter, Parked, Done, the North star and your rules; tap a job
+// that has a spec, in Now or on the road, to read it) and the box
 // to tell Claude something: a note, or an idea to park. Claude reads them at
 // the start of every go (node tools/dev.mjs notes).
 (function () {
@@ -29,6 +30,22 @@
     }));
     el.replaceWith(list); list.setAttribute('data-id', 'notes');
   }
+  // A job's spec, folded under its row: tap to open, tap again to close.
+  function withSpec(rowEl, spec) {
+    if (!spec) return rowEl;
+    var box = D.part({ type: 'stack', gap: 0 }), btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'dev-row-btn'; btn.setAttribute('aria-expanded', 'false'); btn.appendChild(rowEl);
+    var body = null;
+    btn.addEventListener('click', function () {
+      if (body) { body.remove(); body = null; btn.setAttribute('aria-expanded', 'false'); return; }
+      body = D.part({ type: 'panel', gap: 6 });
+      body.dataset.spec = '1';
+      spec.split(/\n{2,}/).forEach(function (para) { body.appendChild(D.part({ type: 'text', text: D.plain(para.replace(/^#+ /, '').replace(/\s*\n\s*/g, ' ')), tone: 'dim' })); });
+      box.appendChild(body); btn.setAttribute('aria-expanded', 'true');
+    });
+    box.appendChild(btn);
+    return box;
+  }
   D.tabs.plan.fill = function () {
     var kind = 'note';
     var seg = D.slot('note-kind', true);
@@ -53,7 +70,9 @@
       if (nowEl && plan.now) {
         var n = plan.now;
         nowEl.appendChild(D.part({ type: 'label', text: 'Now · ' + n.chapter }));
-        nowEl.appendChild(D.part({ type: 'title', text: n.tag + ' · ' + n.title, size: 's' }));
+        var specs = plan.specs || {};
+        nowEl.appendChild(specs[n.tag] ? withSpec(D.part({ type: 'listrow', icon: 'note', text: n.tag + ' · ' + n.title, detail: 'Tap for its spec', chevron: true }), specs[n.tag])
+                                       : D.part({ type: 'title', text: n.tag + ' · ' + n.title, size: 's' }));
         if (plan.asOf && plan.asOf.at) nowEl.appendChild(D.part({ type: 'label', text: 'As of ' + (plan.asOf.sha ? 'build ' + plan.asOf.sha + ', ' : '') + D.ago(plan.asOf.at) }));
         nowEl.appendChild(wrapRows(n.pieces.map(function (p) {
           return D.part({ type: 'listrow', icon: p.done ? 'check' : 'loop', text: p.tag + ' · ' + short(p.text)[0], detail: p.check ? 'Check: ' + p.check : short(p.text)[1], value: p.done ? 'Done' : 'Next', tone: p.done ? 'ok' : 'warn' });
@@ -69,7 +88,7 @@
           { type: 'text', text: c.now || c.what, tone: 'dim' },
         ] });
         card.dataset.chapter = c.name;
-        if (items.length) card.appendChild(folded(items.map(function (it) { return itemRow(it.tag, it.text); }), 4));
+        if (items.length) card.appendChild(folded(items.map(function (it) { var s = (plan.specs || {})[it.tag]; return withSpec(itemRow(it.tag, it.text, s ? { chevron: true } : null), s); }), 4));
         var parked = plan.parked[c.name] || [];
         if (parked.length) card.appendChild(folded(parked.map(function (t) { return itemRow('', t, { icon: 'place', detail: 'Parked' }); }), 2));
         ch.appendChild(card);

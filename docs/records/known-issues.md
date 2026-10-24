@@ -24,6 +24,7 @@ spec: `docs/plan/restructure.md`.
 | KI-25 | Three browser tests have never run on GitHub: touching things, travel between places, voice chat. Added in J2.2 and allowed to fail until their first GitHub results are in. | J2 follow-up (the first J2 run) |
 | KI-27 | `tools/account_test.mjs` was built for the old multiplayer relay (`server/relay.php`, retired 2026-10-18); no list runs it (`tools/lib/checks.mjs` → `NOT_LISTED`). Sign-up and profiles have no browser test on GitHub (`hub_test` and `gate_test` cover `account.php`'s API). | J7.1 (a job to rewrite it for the room server) |
 | KI-28 | GitHub's tests use the tests' own light (`?light=test`, J2.1 / request #6), so the new light is covered only by the shaders' compile check (`wgsl`), the piece pictures (taken here with the new light) and the phone. A GitHub machine with a graphics card would cover it, at a cost: the user's call. | J7.1 (verdict; the user decides) |
+| KI-30 | The Studio test (`tools/studio_test.mjs`) run here with the tests' own light (2026-10-24, J5.4): S7.2 "the reflections are taken again after the light changed" cannot pass under it (that light turns reflections off), and S6.4 "the bar's menu → Places lists rooftop" failed (S3.4, KI-24's check, passed). With the normal light this machine times out on the test's screenshots, so neither could be settled here; GitHub runs it with the normal light (`hub.yml` sets no `TEST_LIGHT`). | J2 follow-up, with KI-24 |
 
 ## Closed
 

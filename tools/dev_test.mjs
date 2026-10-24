@@ -16,13 +16,18 @@ import { readFileSync } from 'node:fs';
 const PLAN = JSON.parse(readFileSync('docs/plan/plan.json', 'utf8'));
 const NOW = [null, PLAN.now.id, PLAN.now.title];
 const NOW_PIECES = PLAN.now.pieces.length;
-const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub', site: 'homepage/site' }, files: { 'bar/account.php': 'server/account.php' } });
+const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub', studio: 'studio', site: 'homepage/site' }, files: { 'bar/account.php': 'server/account.php' } });
 // What CI and the deploy put there: the game's config, the plan, no deploy report yet.
 writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
 mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
 copyFileSync('docs/plan/plan.json', join(ws.root, 'private/dev/plan.json'));
 copyFileSync('docs/charter/rules.json', join(ws.root, 'private/dev/rules.json'));
 writeFileSync(join(ws.root, 'private/dev/plan-meta.json'), JSON.stringify({ sha: 'fed4321', at: Math.floor(Date.now() / 1000) - 120 }));  // plan.yml (J5.2)
+// plan.yml's other files (J5.6): an incident today, a question only the user can settle, the job's spec.
+const today = new Date().toISOString().slice(0, 10);
+writeFileSync(join(ws.root, 'private/dev/incidents.json'), JSON.stringify([{ file: `${today}-x.md`, date: today, title: 'A test incident', status: 'closed', errors: 2 }]));
+writeFileSync(join(ws.root, 'private/dev/questions.json'), JSON.stringify([{ id: 'KI-99', text: 'Pick a colour for the test.' }]));
+writeFileSync(join(ws.root, 'private/dev/specs.json'), JSON.stringify({ [PLAN.now.id]: `### ${PLAN.now.id} · ${PLAN.now.title}\n\nThe test spec's words.` }));
 const browser = await launchBrowser();
 process.on('uncaughtException', (e) => { console.log('FAIL ' + e.message); ws.close(); process.exit(1); });
 const year = new Date().getFullYear();
@@ -35,6 +40,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('response', (r) => { if (r.status() >= 400 && !(r.status() === 401 && /\.php/.test(r.url()))) errors.push(r.status() + ' ' + r.url()); });
 const ed = (fn, arg) => page.evaluate(fn, arg);
+mkdirSync('build', { recursive: true });  // the pictures: build/dev-overview.png, build/dev-plan.png
 
 // R4.1: the door and the tabs
 await page.goto(ws.url + 'dev/');
@@ -62,6 +68,11 @@ await page.waitForFunction((t) => document.querySelector('#view [data-id="now"]'
 check(await ed((n) => document.querySelector('#view [data-id="now"]').textContent.includes(` of ${n}`), NOW_PIECES), `Now shows ${NOW[1]} and how many of its ${NOW_PIECES} pieces are done`);
 await page.waitForFunction(() => /Nothing waiting|to publish/.test(document.querySelector('#view [data-id="needs"]').textContent));
 check(true, 'Needs you answers (news drafts)');
+await page.waitForFunction(() => /Your call: KI-99/.test(document.querySelector('#view [data-id="needs"]').textContent));
+check(await ed(() => /Pick a colour for the test/.test(document.querySelector('#view [data-id="needs"]').textContent)), 'Needs you lists the questions only you can settle (J5.6)');
+await page.waitForFunction(() => /Errors this week/.test(document.querySelector('#view [data-id="status"]').textContent) && /A test incident/.test(document.querySelector('#view [data-id="status"]').textContent));
+check(await ed(() => /Errors this week\s*Latest: A test incident \(closed\)\s*2/.test(document.querySelector('#view [data-id="status"]').textContent)), 'Overview counts this week\'s errors from the incidents (J5.6)');
+await page.screenshot({ path: 'build/dev-overview.png', fullPage: true });
 const ci = await ws.post('dev/api.php', { a: 'ci', token: owner.token });
 check(ci.ok === 1 && ci.ci && ci.ci.game === null && ci.ci.site === null, 'the store answers the owner (no deploy reports yet)');
 check((await ws.post('dev/api.php', { a: 'ci', token: player.token })).status === 403, 'the store keeps a player out');
@@ -81,6 +92,10 @@ await page.waitForSelector('#view [data-chapter="The engine"]');
 check(await ed(() => ['The world', 'The site', 'The engine', 'The tools', 'The backbone'].every((c) => document.querySelector(`#view [data-chapter="${c}"]`))), 'Plan shows the five chapters');
 check(await ed((t) => document.querySelector('#view [data-id="plan-now"]').textContent.includes(t + '.1'), NOW[1]), `Now lists ${NOW[1]}'s pieces`);
 check(await ed(() => /As of build fed4321, 2 min ago/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Plan says which build it came from and how long ago (J5.2)');
+await page.click('#view [data-id="plan-now"] .dev-row-btn');
+await page.waitForSelector('#view [data-id="plan-now"] [data-spec]');
+check(await ed(() => /The test spec's words/.test(document.querySelector('#view [data-id="plan-now"] [data-spec]').textContent)), 'tapping the job in Now opens its spec (J5.6)');
+await page.screenshot({ path: 'build/dev-plan.png' });
 await page.click('#view [data-id="note-kind"] button:nth-child(2)');
 await page.fill('#view [data-id="note"]', 'A rooftop terrace');
 await page.click('#view [data-id="note-send"]');

@@ -1,7 +1,9 @@
-// Dev → Overview (PLAN.md R4.3): is everything up (the bar's live build, the
-// room server, each deploy's real state: the game's and the site's, J2.3),
-// what needs you (news to publish), and the step in Now. Each row shows
-// "Checking…" until its answer comes.
+// Dev → Overview (PLAN.md R4.3, J5.6): is everything up (the bar's live
+// build, the room server, each deploy's real state: the game's and the
+// site's, J2.3; Claude's errors this week, from the incidents), what needs you
+// (news to publish, world proposals to look at, questions only you can
+// settle), and the job in Now with its next piece. Each row shows "Checking…"
+// until its answer comes.
 (function () {
   'use strict';
   var D = window.Dev;
@@ -49,6 +51,7 @@
       row(status, 'room', { text: 'Room server', icon: 'people', detail: 'Checking…' });
       row(status, 'ci-game', { text: 'Game deploy', icon: 'check', detail: 'Checking…' });
       row(status, 'ci-site', { text: 'Site deploy', icon: 'check', detail: 'Checking…' });
+      row(status, 'errors', { text: 'Errors this week', icon: 'check', detail: 'Checking…' });
       (D.demo ? Promise.resolve({ build: 'demo', ws: '' }) : D.get('/bar/config.json')).then(function (c) {
         row(status, 'bar', { text: 'The bar', icon: 'bar', detail: 'build ' + c.build, value: 'Up', tone: 'ok' });
         if (!c.ws) return row(status, 'room', { text: 'Room server', icon: 'people', detail: 'Not set up', value: '?', tone: 'warn' });
@@ -67,6 +70,12 @@
       });
     }
     if (needs) {
+      row(needs, 'news', { text: 'News', icon: 'news', detail: 'Checking…' });
+      // World proposals (Claude's, from the Studio's store) waiting for your look.
+      (D.demo ? Promise.resolve({ ok: 1, proposals: [] }) : D.post('/studio/api.php', { a: 'proposals' })).then(function (j) {
+        var list = (j && j.ok && j.proposals) || [];
+        if (list.length) linkRow(needs, 'proposals', { text: list.length === 1 ? 'A world change to look at' : list.length + ' world changes to look at', icon: 'place', detail: D.plain(list[0].note || ''), value: 'Proposed', tone: 'warn', chevron: true }, '/studio/');
+      }).catch(function () {});
       (D.demo ? Promise.resolve({ ok: 1, posts: [] }) : D.post('/hub/hub.php', { a: 'posts' })).then(function (j) {
         if (!j.ok) return row(needs, 'news', { text: 'News', icon: 'news', detail: j.status === 403 || j.status === 401 ? 'Only the owner publishes news.' : 'Did not answer.', value: '?', tone: 'warn' });
         var drafts = j.posts.filter(function (p) { return !p.published; });
@@ -74,6 +83,16 @@
         linkRow(needs, 'news', { text: drafts.length === 1 ? 'A news post to publish' : drafts.length + ' news posts to publish', icon: 'news', detail: D.plain(drafts[0].title), value: 'Draft', tone: 'warn', chevron: true }, '#publish');
       });
     }
+    D.plan().then(function (plan) {
+      // Claude's errors in the last 7 days (docs/records/incidents/, sent by plan.yml).
+      var week = Date.now() - 7 * 86400000, errs = 0, last = null;
+      plan.incidents.forEach(function (x) { if (Date.parse(x.date) >= week - 86400000) { errs += x.errors || 1; last = last || x; } });
+      if (status) row(status, 'errors', { text: 'Errors this week', icon: 'check', detail: errs ? 'Latest: ' + D.plain(last.title) + ' (' + last.status + ')' : 'None: every session went to plan.', value: String(errs), tone: errs ? 'warn' : 'ok' });
+      // Questions only you can settle (open known issues that wait for your call).
+      if (needs) plan.questions.forEach(function (q) {
+        row(needs, 'q-' + q.id, { text: 'Your call: ' + q.id, icon: 'note', detail: D.plain(q.text), value: 'Question', tone: 'warn' });
+      });
+    }).catch(function () { if (status) row(status, 'errors', { text: 'Errors this week', icon: 'check', detail: 'The plan did not load.', value: '?', tone: 'warn' }); });
     if (now) {
       D.plan().then(function (plan) {
         var n = plan.now; now.textContent = '';

@@ -2,7 +2,8 @@
 // files tools/plan.mjs writes (docs/plan/plan.json, docs/charter/rules.json),
 // never PLAN.md's text. Dev.plan() fetches it once per visit (dev/api.php →
 // private/dev/, put there by .github/workflows/plan.yml within about a minute
-// of a push), with the build it came from (asOf: {sha, at}) and the incidents.
+// of a push), with the build it came from (asOf: {sha, at}), the incidents,
+// the questions only the user can settle and the jobs' specs.
 (function () {
   'use strict';
   var D = window.Dev;
@@ -36,6 +37,8 @@
         var plan = D.planFromData(j.data.plan, j.data.rules);
         plan.asOf = { sha: j.sha || '', at: j.at || 0 };
         plan.incidents = j.incidents || [];
+        plan.questions = j.questions || [];
+        plan.specs = j.specs || {};
         return plan;
       })
       .catch(function (e) { cached = null; throw e; });

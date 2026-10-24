@@ -1,7 +1,8 @@
 # The plan reaches Dev on its own, within about a minute (restructure J5.2):
-# the plan's data, the user's rules and the incidents index go into Dev's
-# store (private/dev/ on IONOS), with the build they came from. No browser
-# tests: only the plan's own shape check, so a broken plan is never uploaded.
+# the plan's data, the user's rules, the jobs' specs, the incidents index and
+# the open questions only the user can settle go into Dev's store
+# (private/dev/ on IONOS), with the build they came from. No browser tests:
+# only the plan's own shape check, so a broken plan is never uploaded.
 # The site (hub.yml) no longer carries the plan.
 name: Plan
 
@@ -33,10 +34,12 @@ jobs:
       - name: "The plan keeps its shape and its files agree (tools/plan.mjs check)"
         run: node tools/plan.mjs check
 
-      - name: The incidents index and the build the plan came from
+      - name: The specs, the incidents index, the user's questions and the build the plan came from
         run: |
           mkdir -p build/plan
+          node tools/plan.mjs specs > build/plan/specs.json
           node tools/records.mjs index > build/plan/incidents.json
+          node tools/records.mjs questions > build/plan/questions.json
           printf '{"sha":"%s","at":%s}\n' "$(git rev-parse --short=7 HEAD)" "$(date +%s)" > build/plan/plan-meta.json
 
       - name: Upload the plan to Dev's store
@@ -53,7 +56,9 @@ jobs:
           mkdir -p -f private/dev
           put $GITHUB_WORKSPACE/docs/plan/plan.json -o private/dev/plan.json
           put $GITHUB_WORKSPACE/docs/charter/rules.json -o private/dev/rules.json
+          put $GITHUB_WORKSPACE/build/plan/specs.json -o private/dev/specs.json
           put $GITHUB_WORKSPACE/build/plan/incidents.json -o private/dev/incidents.json
+          put $GITHUB_WORKSPACE/build/plan/questions.json -o private/dev/questions.json
           put $GITHUB_WORKSPACE/build/plan/plan-meta.json -o private/dev/plan-meta.json
           bye
           EOF

@@ -2,7 +2,7 @@
 // Dev's store (PLAN.md R4): what Dev shows that no other server keeps.
 // On IONOS at joshuavelasco.com/dev/api.php; data outside the web root in
 // private/dev/ (DEV_DATA overrides, for tests). CI puts the plan's data there
-// (plan.yml: plan.json, rules.json, incidents.json, plan-meta.json) and each deploy's real state: ci-game.json and ci-site.json
+// (plan.yml: plan.json, rules.json, specs.json, incidents.json, questions.json, plan-meta.json) and each deploy's real state: ci-game.json and ci-site.json
 // (tools/ci_status.mjs; ci.json was the old, game-only report).
 //
 // Public (no login):
@@ -10,7 +10,9 @@
 // Owner and admins (the bar's login token), or Claude (the hub's key, X-Hub-Key):
 //   POST {"a":"plan"}           -> {"ok":1,"data":{"plan":{..},"rules":{..}}|null,"at":unix,"sha":"..","incidents":[..]}
 //                                  the plan's data (tools/plan.mjs), the build it came from and when,
-//                                  and the incidents index (tools/records.mjs index), all put there by plan.yml
+//                                  the incidents index (tools/records.mjs index), the questions only the user
+//                                  can settle (records.mjs questions) and the jobs' specs (plan.mjs specs),
+//                                  all put there by plan.yml
 //   POST {"a":"ci"}             -> {"ok":1,"ci":{"game":R|null,"site":R|null}}, each deploy's state:
 //        R = {workflow, build, live, tests: running|passed|failed|cancelled, failed:[ids], allowed:[ids], at, url}
 //   POST {"a":"notes"}          -> {"ok":1,"notes":[{id,kind,text,by,at,read}]} newest first
@@ -116,7 +118,8 @@ if ($a === 'plan') {
   $meta = read_json("$data/plan-meta.json");  // {sha, at}: the build the plan came from (.github/workflows/plan.yml)
   reply(['ok' => 1, 'data' => $plan && $rules ? ['plan' => $plan, 'rules' => $rules] : null,
          'at' => $meta['at'] ?? ($plan ? filemtime("$data/plan.json") : 0), 'sha' => $meta['sha'] ?? '',
-         'incidents' => read_json("$data/incidents.json") ?? []]);
+         'incidents' => read_json("$data/incidents.json") ?? [], 'questions' => read_json("$data/questions.json") ?? [],
+         'specs' => read_json("$data/specs.json") ?? new stdClass()]);
 }
 if ($a === 'ci') {
   $game = read_json("$data/ci-game.json");

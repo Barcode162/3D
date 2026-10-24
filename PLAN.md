@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J5.3** Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site *Check:* Nothing on the phone
 - [x] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
 - [x] **J5.5** One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it *Check:* joshuavelasco.com → Projects: the same list as Dev
-- [ ] **J5.6** Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done *Check:* Dev → Overview: J5's next piece and both deploy rows
+- [x] **J5.6** Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done *Check:* Dev → Overview: J5's next piece and both deploy rows
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*

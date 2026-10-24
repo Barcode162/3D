@@ -24,8 +24,10 @@
 //   node tools/plan.mjs seal <sha>               the Done line still marked "(this push)" gets its build code
 //   node tools/plan.mjs chapter <chapter> "<now line>"   a chapter's "Now:" line (where it stands today)
 //   node tools/plan.mjs render [--check]         write PLAN.md and the blocks from the data (--check: only compare)
+//   node tools/plan.mjs specs                    every job's spec as JSON {id: text} (docs/plan/jobs/<ID>.md, and
+//                                                J1–J8's sections of docs/plan/restructure.md); plan.yml sends it to Dev
 // Chapters: world, site, engine, tools, backbone.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { load, write, render, PARTS, CHAPTERS, PLAN_MD } from './lib/plandata.mjs';
 export { PARTS, CHAPTERS };
 
@@ -224,6 +226,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       d.build = pos[0]; save(data); console.log(`sealed with ${pos[0]}`);
     } else if (cmd === 'chapter') {
       plan.chapters.find((c) => c.id === chapterId(pos[0])).now = pos[1]; save(data); console.log(`${CHAPTERS[chapterId(pos[0])]}: Now line set`);
+    } else if (cmd === 'specs') {
+      const specs = {}, dir = 'docs/plan/jobs';
+      const restructure = read('docs/plan/restructure.md');
+      for (const m of restructure.matchAll(/^### (J\d+) · [^\n]*\n[\s\S]*?(?=^#{2,3} |(?![\s\S]))/gm)) specs[m[1]] = m[0].trim();
+      for (const f of readdirSync(dir).filter((x) => /^[A-Z]+\d+(\.\d+)?\.md$/.test(x))) specs[f.slice(0, -3)] = read(`${dir}/${f}`).trim();
+      console.log(JSON.stringify(specs));
     } else if (cmd === 'charter') {
       const bad = stale(data);
       if (rest.includes('--check')) { console.log(bad.length ? bad.join('\n') : 'ok  charter: its rules block matches docs/charter/rules.json, and CLAUDE.md\'s "Never" list matches the Charter'); process.exit(bad.length ? 1 : 0); }

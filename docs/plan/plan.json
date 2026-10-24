@@ -79,7 +79,7 @@
     "id": "J5.6",
     "text": "Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done",
     "check": "Dev → Overview: J5's next piece and both deploy rows",
-    "done": false
+    "done": true
    }
   ]
  },
