@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J6.3 The data reference written from the files (docs/handbook/generated/): every field of the world's files with its type, unit, range and whether the Studio changes it live (data-world.md, from the schema); every theme token and screen part, and the screens and themes there are (data-ui.md); the projects, the tools and the game's config fields (data-lists.md); the room protocol's messages read from its codec (data-protocol.md); and the world inventory (inventory.md): every thing in every place, what it sits on, the model that holds it, room-sized models and things with no model flagged, kinds no place uses; the piece tool rewrites these pages in every commit so they follow their files
+
+`f3d86ac` · 2026-10-24 16:39 · 12 files, +928 −8 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J6.2 One page per system: 51 pages under docs/handbook/systems/ (engine 17, world 13, site 5, tools 9, backbone 7), each with the same ten parts (what it is, status, what you can do, how it works, data, commands, limits, checks, known traps, history), from the code and the old notes; the Handbook tool writes the index (generated/systems.md, with each status) and the command list (generated/commands.md, from the front door), and its check refuses a page that breaks the template
 
 `9334698` · 2026-10-24 16:37 · 57 files, +2456 −9 · tests: changed
