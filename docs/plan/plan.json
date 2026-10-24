@@ -20,7 +20,7 @@
    "id": "engine",
    "name": "The engine",
    "what": "Looped, the script language, speed.",
-   "now": "Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is planned; paused until J8."
+   "now": "Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is scoped (J43, J78-J81: small, safe, errors with a line and a fix hint); paused until J8."
   },
   {
    "id": "tools",
@@ -61,7 +61,7 @@
     "id": "J7.3",
     "text": "The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs",
     "check": "Dev → Plan: the script language's first jobs",
-    "done": false
+    "done": true
    },
    {
     "id": "J7.4",
@@ -641,7 +641,7 @@
    {
     "id": "J43",
     "formerly": "T1",
-    "text": "The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts.",
+    "text": "The script language, step 1, its design on paper: our own small, safe language for what things do (states, events, timers, loops, remembered values, messages between things), readable by you and by AIs, every error with its line and a fix hint; the grammar on one page, 20 scripts for things that exist today, every error's words; nothing built. Its scope and jobs: docs/plan/jobs/J43.md.",
     "serves": [
      "N2",
      "N3"
@@ -649,7 +649,7 @@
     "done": false,
     "verdict": {
      "kind": "now",
-     "why": "Our own small language on top of the world model; J7.3 sets its realistic scope and first jobs"
+     "why": "A small language inside our own engine, from scratch in C++ (rule: no outside engines); the scope is kept small on purpose, and this step is paper only"
     }
    },
    {
@@ -742,7 +742,7 @@
     "done": false,
     "verdict": {
      "kind": "after",
-     "after": "J43",
+     "after": "J81",
      "why": "Cues and light that follows the music are written as scripts"
     }
    },
@@ -798,6 +798,61 @@
      "kind": "now",
      "why": "Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing"
     }
+   },
+   {
+    "id": "J78",
+    "text": "The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them.",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J43",
+     "why": "Needs the grammar settled first; plain C++ with native tests, no graphics card needed"
+    }
+   },
+   {
+    "id": "J79",
+    "text": "The script language, step 3, the tiny safe runner: events, states, timers, loops, remembered values, messages; a step budget per frame and a memory limit, a script touching only its own thing; a kind's states, rules and loops turned into a script and back without losing anything.",
+    "serves": [
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J78",
+     "why": "Runs inside the world model each frame; the budget keeps the phone smooth, and scripts sleep until their events"
+    }
+   },
+   {
+    "id": "J80",
+    "text": "The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone.",
+    "serves": [
+     "N2",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J79",
+     "why": "The Studio's live editing exists; your phone judges how it is to write"
+    }
+   },
+   {
+    "id": "J81",
+    "text": "The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it.",
+    "serves": [
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J80",
+     "why": "Proves the language on real things without changing what you see"
+    }
    }
   ],
   "tools": [
@@ -837,8 +892,8 @@
     "done": false,
     "verdict": {
      "kind": "after",
-     "after": "J43",
-     "why": "The timeline's events are the script language's events, on the shared clock that exists"
+     "after": "J79",
+     "why": "The timeline's events are the scripts' events, on the shared clock that exists"
     }
    },
    {

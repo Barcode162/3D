@@ -51,7 +51,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 *The fixed list. Every road and parked item sits under one of these.*
 - **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; frozen until J8, then remade item by item: the world remake J35, J70-J77 (every thing its own model, placed, lit and heard).
 - **The site:** the front door, the showcase, the news. *Now:* J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); frozen until J8.
-- **The engine:** Looped, the script language, speed. *Now:* Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is planned; paused until J8.
+- **The engine:** Looped, the script language, speed. *Now:* Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is scoped (J43, J78-J81: small, safe, errors with a line and a fix hint); paused until J8.
 - **The tools:** the Toolbelt and Dev. *Now:* Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8).
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
@@ -59,7 +59,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 **J7 · The plan rebuilt with a reality check** (the tools). The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
 - [x] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
 - [x] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
-- [ ] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
+- [x] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
 - [ ] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
 
 ## 5. The road
@@ -155,8 +155,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* M1 · *Verdict:* Doable at a cost — Phone speed and memory: textures that never repeat, and wear, cost texture memory in a browser tab; built within the budget
 - [ ] **J42** Shadows and shaped light: every light casts shadows, real lamp patterns (IES), lampshades that glow, fire that moves its shadows, contact shade. · N3
   *Formerly* L2 · *Verdict:* Doable at a cost — Phone speed: a shadow from every light costs a lot on a phone; done light by light against the frame budget (J37's report)
-- [ ] **J43** The bar script language: parser, a tiny safe runner, errors with line numbers in the Studio; five behaviours rewritten as scripts. · N2 N3
-  *Formerly* T1 · *Verdict:* Doable now — Our own small language on top of the world model; J7.3 sets its realistic scope and first jobs
+- [ ] **J43** The script language, step 1, its design on paper: our own small, safe language for what things do (states, events, timers, loops, remembered values, messages between things), readable by you and by AIs, every error with its line and a fix hint; the grammar on one page, 20 scripts for things that exist today, every error's words; nothing built. Its scope and jobs: docs/plan/jobs/J43.md. · N2 N3
+  *Formerly* T1 · *Verdict:* Doable now — A small language inside our own engine, from scratch in C++ (rule: no outside engines); the scope is kept small on purpose, and this step is paper only
 - [ ] **J44** Eyes and camera: smooth edges (TAA), white balance like the eye, seeing in the dark, glare and starbursts, film grain in the dark, focus. · N3
   *Formerly* L3 · *Verdict:* Doable at a cost — Phone speed: smooth edges, glare and grain are extra full-screen passes; each gets an off switch
 - [ ] **J45** Layers: varnish over wood, velvet and fabric sheen, brushed metal, wet surfaces. · N3
@@ -170,7 +170,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **J49** Light through things and real depth: subsurface (wax, skin, lampshades), glass with thickness, parallax depth; every model at real size. · N3
   *Formerly* M3 · *Verdict:* Doable at a cost — Phone speed: light through wax and skin, and thick glass, are expensive; every model at real size costs nothing
 - [ ] **J50** Light show: theatre-style cues and light that is the music, as scripts; real bulb colours; a dying bulb. · N3
-  *Formerly* L6 · *Verdict:* Doable after J43 — Cues and light that follows the music are written as scripts
+  *Formerly* L6 · *Verdict:* Doable after J81 — Cues and light that follows the music are written as scripts
 - [ ] **J51** Living light: a real sky through the windows (your time and weather), players carry light, neon afterglow. · N3
   *Formerly* L7 · *Verdict:* Doable at a cost — Your local time is free; real weather needs an outside weather service (Charter: ask first), and a sky through the windows costs phone speed
 - [ ] **J52** Scan it: bring real things in with the iPhone camera. · N3 N5
@@ -179,6 +179,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* L8 · *Verdict:* Needs an experiment — Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable
 - [ ] **J54** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
   *Formerly* EN4 · *Verdict:* Doable now — Our own tests and workflows (KI-5): the tests' own light (J2.1) was step one; pictures still time out on GitHub's software drawing
+- [ ] **J78** The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them. · N2
+  *Verdict:* Doable after J43 — Needs the grammar settled first; plain C++ with native tests, no graphics card needed
+- [ ] **J79** The script language, step 3, the tiny safe runner: events, states, timers, loops, remembered values, messages; a step budget per frame and a memory limit, a script touching only its own thing; a kind's states, rules and loops turned into a script and back without losing anything. · N2 N3
+  *Verdict:* Doable after J78 — Runs inside the world model each frame; the budget keeps the phone smooth, and scripts sleep until their events
+- [ ] **J80** The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone. · N2 N5
+  *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
+- [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
+  *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -186,7 +194,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
   *Formerly* TL1 · *Verdict:* Doable now — A list of switches in the Toolbelt; no engine change
 - [ ] **J57** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
-  *Formerly* T2 · *Verdict:* Doable after J43 — The timeline's events are the script language's events, on the shared clock that exists
+  *Formerly* T2 · *Verdict:* Doable after J79 — The timeline's events are the scripts' events, on the shared clock that exists
 - [ ] **J58** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
   *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
 - [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
