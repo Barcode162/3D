@@ -171,6 +171,7 @@ Spec and build order: `docs/DRIVING_REWORK.md`.
   (the spec's table).
 
 ### Parked (not now; the user promotes items at "start")
+- A real 3D scene (drawn by the engine) as the website's background; after the site rebuild (docs/UI_PLAN.md, U4).
 - Kids edition: a separate, simpler game in the same universe (under 13).
 - New name for the world and its currency (Bar3D is a working name).
 - The street and city outside.
