@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J5.1 The data map (docs/handbook/data-map.md): every store (the repo, the world store, the UI store, Dev's store, the hub, accounts, phone reports, the room, the ledger, the gallery and gh-pages branches, the phone's saves): who writes and reads it, how it flows, what wins on a conflict, how staleness shows; the world's rule written once (the store's live version is the live world, the repo's copy is the built-in fallback); decision 0001 gives each of the user's channels one role; KI-17 and KI-22 closed
+
+`7258356` · 2026-10-24 13:17 · 5 files, +132 −4 · tests: changed
+
+Phone check: Nothing on the phone
+
 ## J4.6 The Playbook names only what exists: tools/playbook_test.mjs (every tool, front-door command, tool command and link it names is real; no 'arrives with J<n>' marker left) and tools/locks_test.mjs (the locks refuse what they should, let the rest through), both in every quick check and in the new 'workshop' system; the Playbook now uses the real commands (status, request, incident, session, ship); ship commits the next job and the session line with the finish; the guard reads only real git commands, not text that mentions git; a changed test runs only its own system
 
 `4a3e765` · 2026-10-24 12:54 · 14 files, +127 −31 · tests: changed
