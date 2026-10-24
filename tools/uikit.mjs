@@ -11,6 +11,8 @@
 // The published version the repo matches: ui/system/live-version.json (commit it).
 // UI_URL overrides the store (toolbelt/ui-editor/api.php).
 // Files:
+//   ui/system/themes/index.json  {order, default (what a page wears when it names none: the bar's menus),
+//                                house (the project's own theme, R2: the Toolbelt, the editor, Compare)}
 //   ui/system/tokens.json        every token once: its group, kind and what it does
 //   ui/system/themes/<id>.json   {format, id, name, about, scheme, click, tokens:{"bg": "#0A0908", ...},
 //                                other?: {scheme, tokens:{...}}}  the theme's other half (light for a dark
@@ -156,6 +158,7 @@ export function problems() {
     if (!t.what) out.push(`tokens.json: "${t.id}" says nothing about what it does`);
   }
   if (!index.order.includes(index.default)) out.push('themes/index.json: the default theme is not in the order');
+  if (index.house && !index.order.includes(index.house)) out.push('themes/index.json: the house theme is not in the order');
   for (const th of themes) out.push(...themeProblems(tokens, th));
   const parts = loadParts(), types = new Set();
   for (const p of parts.parts) {

@@ -41,7 +41,7 @@
       return liveVersion();
     }).then(function () {
       S.base = JSON.parse(JSON.stringify(S.themes)); S.baseScreens = JSON.parse(JSON.stringify(S.screens));
-      S.themeId = S.index.default; S.screenId = Object.keys(S.screens)[0];
+      S.themeId = S.index.house || S.index.default; S.screenId = Object.keys(S.screens)[0];
       restoreDraft();
     });
   }

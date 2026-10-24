@@ -44,6 +44,7 @@
   'use strict';
   var q = {}; location.search.replace(/[?&]([a-z]+)=([a-z0-9-]+)/g, function (_, k, v) { q[k] = v; });
   var OLD = ['faceplate', 'backbar', 'obsidian', 'jukebox'];
+  var house = '';
   var state = { screen: q.s || 'front-door', scheme: q.scheme || 'light', old: q.old === '1' }, themes = [], screens = [];
   function get(p) { return fetch('system/' + p, { cache: 'no-cache' }).then(function (r) { return r.json(); }); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -62,7 +63,7 @@
         fr.src = src; fr.loading = 'lazy'; fr.title = t.name + ' ' + sc; fr.tabIndex = -1;
         a.href = src; a.setAttribute('aria-label', 'Open ' + t.name + ' (' + sc + ') full size');
         ph.appendChild(fr); ph.appendChild(a); f.appendChild(ph);
-        var cap = el('figcaption'); cap.appendChild(el('b', null, t.name + (halves.length > 1 || !has ? ' · ' + sc + (has ? '' : ' (no ' + sc + ' half)') : '')));
+        var cap = el('figcaption'); cap.appendChild(el('b', null, (t.id === house ? 'House · ' : '') + t.name + (halves.length > 1 || !has ? ' · ' + sc + (has ? '' : ' (no ' + sc + ' half)') : '')));
         cap.appendChild(el('span', null, t.about)); f.appendChild(cap);
         grid.appendChild(f);
       });
@@ -76,7 +77,7 @@
   document.getElementById('old').addEventListener('change', function () { state.old = this.checked; draw(); });
   window.addEventListener('resize', fit);
   Promise.all([get('themes/index.json'), get('screens/index.json')]).then(function (a) {
-    screens = a[1].order;
+    screens = a[1].order; house = a[0].house || '';
     return Promise.all([Promise.all(a[0].order.map(function (id) { return get('themes/' + id + '.json'); })), Promise.all(screens.map(function (id) { return get('screens/' + id + '.json'); }))]);
   }).then(function (b) {
     themes = b[0];

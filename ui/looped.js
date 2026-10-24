@@ -14,6 +14,7 @@
   'use strict';
   var LOOKS = {
     // LOOKS: written by tools/uikit.mjs from ui/system/themes/
+    ember: { name: "Ember", about: "Warm amber, frosted glass you can see the glow through, titles with a light passing through them.", click: [1500,0.025,"triangle"] },
     faceplate: { name: "Faceplate", about: "The drum machine: glossy keys, keycap lights.", click: [2600,0.025,"square"] },
     backbar: { name: "Back Bar", about: "Lacquered wood, brass, Edison bulbs.", click: [900,0.04,"triangle"] },
     obsidian: { name: "Obsidian", about: "Deepest black, frosted glass, ice light.", click: [4200,0.05,"sine"] },
@@ -39,11 +40,13 @@
     if (!LOOKS[name]) name = DEFAULT_LOOK;
     look = name;
     root.setAttribute('data-look', name);
-    save('loopedLook', name);
+    if (!root.hasAttribute('data-look-pin')) save('loopedLook', name);
     try { document.dispatchEvent(new CustomEvent('looped:look', { detail: name })); } catch (e) {}
   }
   var asked = (location.search.match(/[?&]look=([a-z0-9-]+)/) || [])[1];
-  setLook(asked || load('loopedLook', 'faceplate'));
+  // A page can pin its theme (<html data-look="ember" data-look-pin>): the Toolbelt wears the house theme.
+  var pinned = root.hasAttribute('data-look-pin') && root.getAttribute('data-look');
+  setLook(asked || pinned || load('loopedLook', 'faceplate'));
   // Light or dark: 'auto' follows the phone (a theme with both halves switches
   // by itself); 'light' or 'dark' pins it.
   var scheme = 'auto';

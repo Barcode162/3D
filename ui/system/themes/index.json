@@ -2,6 +2,7 @@
   "format": 1,
   "default": "faceplate",
   "order": [
+    "ember",
     "faceplate",
     "backbar",
     "obsidian",
@@ -12,5 +13,6 @@
     "glass",
     "neon",
     "soft"
-  ]
+  ],
+  "house": "ember"
 }
