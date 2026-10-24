@@ -6,6 +6,18 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R2.1 Real screens to judge a theme on: the front door (a bar picture behind the words), Dev's Overview (status rows, what needs you, a tab bar) and the bar's jukebox menu; new parts: backdrop, list row, tab bar; pictures in ui/system/img/
+
+`0bdee82` · 2026-10-24 04:19 · 10 files, +922 −45 · tests: quick, toolbelt
+
+Phone check: in the UI Editor's screen menu (top), open Front door, Dev · Overview and Bar · Jukebox; each looks like a real page
+
+![R2.1 page-ui-screen-s-front-door.jpg](R2.1/page-ui-screen-s-front-door.jpg)
+
+![R2.1 page-ui-screen-s-dev-overview.jpg](R2.1/page-ui-screen-s-dev-overview.jpg)
+
+![R2.1 page-ui-screen-s-bar-menu.jpg](R2.1/page-ui-screen-s-bar-menu.jpg)
+
 ## R1.7 Save and publish in the UI Editor: undo history, a draft kept on the phone (back after a reload), Publish keeps every version (toolbelt/ui-editor/api.php, the Studio's login, Claude's key), History, the editor starts from the newest published version; node tools/uikit.mjs pull/push/status bring it into the repo (ui/system/live-version.json), pulled at the start of every go; the engine reads theme files (looped/ui_theme.*, with a native test)
 
 `b394ba3` · 2026-10-24 04:09 · 18 files, +951 −81 · tests: quick, toolbelt
