@@ -41,6 +41,12 @@
 | **Not possible** | the limits forbid it | say why, and the closest thing that is possible |
 | **Against a rule** | one of the user's rules says no | name the rule; the user may change it |
 
+   **What the user already said** (part of the verdict): for anything already
+   on the road or in Parked, read its spec (`docs/plan/jobs/<ID or its old
+   tag>.md`; `node tools/plan.mjs verdict` names it) and the user's words about
+   it (`grep -rn -i "<a key word>" docs/records/requests docs/archive/hub-board-bar3d.md`)
+   first. A verdict never asks again what the user already decided.
+
    **The capability check** (part of the verdict): if the work needs anything
    outside the repo (a new kind of push, a deletion, a publish, an outside
    service, a paid plan), confirm first that this environment allows it, by

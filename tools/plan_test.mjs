@@ -48,6 +48,9 @@ try {
   check(plan('verdict', 'J90', 'cost', 'A test cost').status === 0 && /\*Verdict:\* Doable at a cost — A test cost/.test(text()), 'verdict changes a road item\'s verdict');
   check(plan('park', 'site', 'A parked test idea').status === 0 && /### The site\n(- .*\n(  .*\n)?)*- A parked test idea\n/.test(text().split('## 6. Parked')[1]), 'park adds a line under its chapter in Parked');
   check(plan('verdict', 'A parked test', 'rule', 'A test rule says no').status === 0 && /- A parked test idea\n  \*Verdict:\* Against a rule — A test rule says no\n/.test(text()) && plan('check').status === 0, 'verdict gives a parked line its verdict, and the plan reads back');
+  check(plan('add', 'tools', 'J89', 'Put off', '--serves', 'N1', '--verdict', 'cost', '--why', 'x').status === 0 && plan('park', 'tools', 'J89 · Put off (the user can\'t pay)', '--from', 'J89', '--verdict', 'cost', '--why', 'Paid').status === 0
+    && !json().road.tools.some((r) => r.id === 'J89') && json().parked.tools.some((t) => t.text?.startsWith('J89 · Put off')), 'park --from moves a road item into Parked');
+  check(plan('park', 'tools', 'x', '--from', 'J88').status === 1, 'park --from refuses an item not on the road');
   check(problems(text().replace(/\n  \*Formerly\* W90 · \*Verdict:\*[^\n]*/, '')).some((p) => /J90 has no verdict/.test(p)), 'a road item without its verdict line is caught');
   check(plan('start', 'W99', '--piece', 'W99.1|One|look').status === 1, 'start is refused while Now has open pieces');
   check(plan('drop', 'X1.9').status === 1, 'drop refuses a piece that is not in Now');

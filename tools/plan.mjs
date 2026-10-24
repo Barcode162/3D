@@ -11,7 +11,8 @@
 //   node tools/plan.mjs tick <PIECE>             tick a piece in Now (piece.mjs does it)
 //   node tools/plan.mjs add <chapter> <ID> "<what>" --serves N3[,N4] --verdict <kind> --why "<one line>" [--after "J9, J12"] [--formerly <old tag>]
 //                                                a road item, with its verdict (intake.md step 3)
-//   node tools/plan.mjs park <chapter> "<idea>" [--verdict <kind> --why "<one line>" [--after …]]   a line in Parked (the user's "park:")
+//   node tools/plan.mjs park <chapter> "<idea>" [--verdict <kind> --why "<one line>" [--after …]] [--from <ID>]
+//                                                a line in Parked (the user's "park:"; --from: a road item the user put off)
 //   node tools/plan.mjs verdict <ID | start of a parked line> <kind> "<why>" [--after "J9, J12"]   give or change an item's verdict
 //   node tools/plan.mjs nextid                   the next free job number (J<n>: never reused)
 //   node tools/plan.mjs rule "<rule>" [--replaces "<bold name>"]   a dated rule (only on the user's word, with
@@ -197,9 +198,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       plan.road[chapterId(chapter)].push({ id, ...(formerly ? { formerly } : {}), text: what, serves, done: false, verdict });
       save(data); console.log(`added ${id} to ${CHAPTERS[chapterId(chapter)]}`);
     } else if (cmd === 'park') {
-      const kind = flags('verdict')[0];
+      const kind = flags('verdict')[0], from = flags('from')[0];
+      if (from) {  // a road item the user put off: it leaves the road (and Up next) for Parked
+        const ch = Object.keys(plan.road).find((c) => plan.road[c].some((r) => r.id === from && !r.done));
+        if (!ch) throw new Error(`--from ${from}: not an open road item`);
+        plan.road[ch] = plan.road[ch].filter((r) => r.id !== from);
+        if (new RegExp(`\\b${from}\\b`).test(plan.upNext)) throw new Error(`--from ${from}: it's in Up next; take it out of the order first (next "…")`);
+      }
       plan.parked[chapterId(pos[0])].push(kind ? { text: pos[1], verdict: verdictFrom(kind, flags('why')[0], flags('after')[0]) } : pos[1]);
-      save(data); console.log(`parked under ${CHAPTERS[chapterId(pos[0])]}`);
+      save(data); console.log(`parked under ${CHAPTERS[chapterId(pos[0])]}${from ? ` (${from} off the road)` : ''}`);
     } else if (cmd === 'verdict') {
       const [which, kind, why] = pos, verdict = verdictFrom(kind, why, flags('after')[0]);
       const item = roadItems(plan).find((r) => r.id === which && !r.done);
@@ -210,6 +217,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         hits[0].list[hits[0].i] = { text: hits[0].text, verdict };
       }
       save(data); console.log(`${which}: ${VERDICTS[kind]}`);
+      // A verdict must agree with what the user already decided (incident 2026-10-24-verdict-without-spec).
+      const spec = [which, item?.formerly].filter(Boolean).map((t) => `docs/plan/jobs/${t}.md`).find((f) => { try { readFileSync(f); return true; } catch { return false; } });
+      if (spec) console.log(`  its spec: ${spec}: the verdict must agree with its decisions`);
     } else if (cmd === 'nextid') {
       console.log(nextId(plan));
     } else if (cmd === 'rule') {

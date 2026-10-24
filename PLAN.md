@@ -60,11 +60,11 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J7.1** Every job on the road and in Parked gets a verdict (possible now, needs a step first, needs the user, too big, not possible, against a rule) with a one-line reason tied to the Charter's limits *Check:* Dev → Plan: each road item shows its verdict
 - [x] **J7.2** The world remake as proposed jobs: every object a real, separate model (many are baked into room-sized models today), placement, light, sound, in a sensible order *Check:* Dev → Plan: the world remake's jobs on the road
 - [x] **J7.3** The script language's realistic scope (small, safe, for what things in the world do; every error with a line number and a fix hint) and its first jobs *Check:* Dev → Plan: the script language's first jobs
-- [ ] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
+- [x] **J7.4** The order: Claude's recommendation with reasons; you approve or change it (one question) *Check:* Dev → Plan: Up next in the order you approved
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J8 → J66 → J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -95,8 +95,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W10 · *Verdict:* Doable after J18 — Delivery and install go to your home; buying uses earned credits through the ledger, which exists
 - [ ] **J22** The casino: 18+, earned credits only, never bought or cashed out. · N4
   *Formerly* W11 · *Verdict:* Doable after J20, J65 — 18+ enforced on the server and the safety tools in place first (Charter: the 18+ casino, earned credits only)
-- [ ] **J23** VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown). · N4
-  *Formerly* W12 · *Verdict:* Doable at a cost — Real money needs a payment provider, tax handling and terms (Charter: law and money): your decision, with J64 first
 - [ ] **J24** Small interactions done properly: bell, guitar, books, TV, door, taps. · N3
   *Formerly* W13 · *Verdict:* Doable after J70, J71 — Books, the TV and the taps become their own things in the world remake
 - [ ] **J25** Physics props: knock bottles off, glasses break and stack, pour drinks. · N3
@@ -111,8 +109,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W18 · *Verdict:* Doable at a cost — Phone speed: every live screen draws a second picture each frame; the fair queue itself is room logic and cheap
 - [ ] **J30** More arcade games; bots in two-player races. · N4
   *Formerly* W19 · *Verdict:* Doable now — Our own game code, like the arcade today; race bots reuse the race's AI
-- [ ] **J31** Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md). · N3
-  *Formerly* W20 · *Verdict:* Doable at a cost — The physics stages are doable; the four real cars need their makers' permission or made-up cars in their spirit (Charter: licences, never pretend to be a real company), and the rigs' look waits on your answer
+- [ ] **J31** Racing, your plan (docs/plan/jobs/W20.md): the driving rework's stages on our own made-up makes (Vance Ridgeback GS, Kaito Sora 24, Hoshi R13 Twin, Hoshi Kaze 2.0: shapes close to the real cars, real specs, no real names or badges; your decision 2026-10-19); the rigs' screens show the driver's race so anyone in the bar can watch; and the race's visual upgrade (a real track instead of the glitchy terrain, light through the leaves, soft sun reflections, water) done together with the track rebuild in stage 14 (your answer: combine them so nothing is done twice). · N3
+  *Formerly* W20 · *Verdict:* Doable now — Your plan is complete and fits the limits: made-up makes keep it legal (a lawyer checks before anything is sold), the physics is ours; the light through leaves and water cost phone speed, so they ship within the frame budget (J37's report)
 - [ ] **J32** Bodies that move right: stepping when turning on the spot, sit-down and stand-up motions, hands that really hold things, a face that moves when you talk. · N3
   *Formerly* W21 · *Verdict:* Doable after J9 — Builds on the alive avatars' motion
 - [ ] **J33** Your own character builder (face, details); outfits and gadgets to show off (shop items). · N4
@@ -207,20 +205,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own test; sign-up and profiles have no browser test on GitHub today
 - [ ] **J68** The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29). · N2
   *Verdict:* Doable now — Nothing reads them since S4.2; the hub test covers what stays
-- [ ] **J69** The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28). · N5
-  *Verdict:* Doable at a cost — GitHub's machines with a graphics card are paid (Charter: money): your decision; today the shader check, the pictures here and your phone cover the new light
 
 ### The backbone
 - [ ] **J60** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
-  *Formerly* B1 · *Verdict:* Doable now — Touches accounts, so it starts only on your yes (Charter §5); the ledger's side on Cloudflare can hold the logins
+  *Formerly* B1 · *Verdict:* Doable now — You already said yes (old board: "get everything out of IONOS besides the things that would be security benefits, do your thing"); the ledger's side on Cloudflare can hold the logins
 - [ ] **J61** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
   *Formerly* B2 · *Verdict:* Doable now — Touches credits, so it starts only on your yes (Charter §5); the room already runs the games' shared state
 - [ ] **J62** The room decides every shared thing (Phase 5). · N4
   *Formerly* B3 · *Verdict:* Doable now — The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits
-- [ ] **J63** Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies. · N4
-  *Formerly* B4 · *Verdict:* Doable at a cost — A relay for strict networks and a voice server cost money per use (Charter: money): your decision
-- [ ] **J64** Payments (Stripe) for the VIP store. · N4
-  *Formerly* B5 · *Verdict:* Doable at a cost — A payment provider, tax handling and terms (Charter: law and money): your decision
 - [ ] **J65** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
   *Formerly* B6 · *Verdict:* Doable now — Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it
 
@@ -240,6 +232,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Needs an experiment — The same research as J11 (a face from photos)
 - The street front: the bar seen from the street at night (front wall, lit door, people moving behind the windows, a street lamp), a new place in the world (was R5.5)
   *Verdict:* Doable after J77 — A new place, after the world remake
+- J23 · VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (request 2026-10-24 #7: no paid services for now)
+  *Verdict:* Doable after J64 — Needs payments (J64, parked)
 
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
@@ -260,10 +254,16 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable at a cost — The AI part needs a paid API (your decision); each imported model needs a licence; mesh editing and editing together are big time costs
 - A design for the Studio more like a 3D modelling room (the hub card "Design idea").
   *Verdict:* Doable now — A new look for the Studio's frame in Ember; your phone judges it
+- J69 · The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28; request 2026-10-24 #7: no paid services for now)
+  *Verdict:* Doable at a cost — GitHub's machines with a graphics card are paid; the shader check, the pictures here and your phone cover the new light meanwhile
 
 ### The backbone
 - The site on Cloudflare Pages (unlocks threads in the game).
   *Verdict:* Doable at a cost — A hosting change is your decision (Charter §5: hosting); Cloudflare Pages is free and can send the headers threads need, IONOS can't
+- J63 · Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies (request 2026-10-24 #7: no paid services for now)
+  *Verdict:* Doable at a cost — Relays cost money per use, and there's no budget for paid services now; voice works without them on most networks
+- J64 · Payments (Stripe) for the VIP store (request 2026-10-24 #7: no paid services for now)
+  *Verdict:* Doable at a cost — A payment provider, tax handling and terms; a provider like Stripe takes a cut of each sale rather than a monthly fee, so it can come back once there is something to sell
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*

@@ -67,12 +67,12 @@
     "id": "J7.4",
     "text": "The order: Claude's recommendation with reasons; you approve or change it (one question)",
     "check": "Dev → Plan: Up next in the order you approved",
-    "done": false
+    "done": true
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J8 (the restructure; then the road as J7 orders it)",
+ "upNext": "J8 → J66 → J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)",
  "road": {
   "world": [
    {
@@ -268,19 +268,6 @@
     }
    },
    {
-    "id": "J23",
-    "formerly": "W12",
-    "text": "VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (tradeable items only, a server-checked window and cooldown).",
-    "serves": [
-     "N4"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "Real money needs a payment provider, tax handling and terms (Charter: law and money): your decision, with J64 first"
-    }
-   },
-   {
     "id": "J24",
     "formerly": "W13",
     "text": "Small interactions done properly: bell, guitar, books, TV, door, taps.",
@@ -376,14 +363,14 @@
    {
     "id": "J31",
     "formerly": "W20",
-    "text": "Racing: the rigs' visual upgrade on the rebuilt track (waiting on your answer), then the driving rework stages (docs/plan/jobs/W20.md).",
+    "text": "Racing, your plan (docs/plan/jobs/W20.md): the driving rework's stages on our own made-up makes (Vance Ridgeback GS, Kaito Sora 24, Hoshi R13 Twin, Hoshi Kaze 2.0: shapes close to the real cars, real specs, no real names or badges; your decision 2026-10-19); the rigs' screens show the driver's race so anyone in the bar can watch; and the race's visual upgrade (a real track instead of the glitchy terrain, light through the leaves, soft sun reflections, water) done together with the track rebuild in stage 14 (your answer: combine them so nothing is done twice).",
     "serves": [
      "N3"
     ],
     "done": false,
     "verdict": {
-     "kind": "cost",
-     "why": "The physics stages are doable; the four real cars need their makers' permission or made-up cars in their spirit (Charter: licences, never pretend to be a real company), and the rigs' look waits on your answer"
+     "kind": "now",
+     "why": "Your plan is complete and fits the limits: made-up makes keep it legal (a lawyer checks before anything is sold), the physics is ours; the light through leaves and water cost phone speed, so they ship within the frame budget (J37's report)"
     }
    },
    {
@@ -971,18 +958,6 @@
      "kind": "now",
      "why": "Nothing reads them since S4.2; the hub test covers what stays"
     }
-   },
-   {
-    "id": "J69",
-    "text": "The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28).",
-    "serves": [
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "GitHub's machines with a graphics card are paid (Charter: money): your decision; today the shader check, the pictures here and your phone cover the new light"
-    }
    }
   ],
   "backbone": [
@@ -996,7 +971,7 @@
     "done": false,
     "verdict": {
      "kind": "now",
-     "why": "Touches accounts, so it starts only on your yes (Charter §5); the ledger's side on Cloudflare can hold the logins"
+     "why": "You already said yes (old board: \"get everything out of IONOS besides the things that would be security benefits, do your thing\"); the ledger's side on Cloudflare can hold the logins"
     }
    },
    {
@@ -1023,32 +998,6 @@
     "verdict": {
      "kind": "now",
      "why": "The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits"
-    }
-   },
-   {
-    "id": "J63",
-    "formerly": "B4",
-    "text": "Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies.",
-    "serves": [
-     "N4"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "A relay for strict networks and a voice server cost money per use (Charter: money): your decision"
-    }
-   },
-   {
-    "id": "J64",
-    "formerly": "B5",
-    "text": "Payments (Stripe) for the VIP store.",
-    "serves": [
-     "N4"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "A payment provider, tax handling and terms (Charter: law and money): your decision"
     }
    },
    {
@@ -1112,6 +1061,14 @@
      "after": "J77",
      "why": "A new place, after the world remake"
     }
+   },
+   {
+    "text": "J23 · VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (request 2026-10-24 #7: no paid services for now)",
+    "verdict": {
+     "kind": "after",
+     "after": "J64",
+     "why": "Needs payments (J64, parked)"
+    }
    }
   ],
   "site": [
@@ -1167,6 +1124,13 @@
      "kind": "now",
      "why": "A new look for the Studio's frame in Ember; your phone judges it"
     }
+   },
+   {
+    "text": "J69 · The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28; request 2026-10-24 #7: no paid services for now)",
+    "verdict": {
+     "kind": "cost",
+     "why": "GitHub's machines with a graphics card are paid; the shader check, the pictures here and your phone cover the new light meanwhile"
+    }
    }
   ],
   "backbone": [
@@ -1175,6 +1139,20 @@
     "verdict": {
      "kind": "cost",
      "why": "A hosting change is your decision (Charter §5: hosting); Cloudflare Pages is free and can send the headers threads need, IONOS can't"
+    }
+   },
+   {
+    "text": "J63 · Voice relays: TURN for strict networks, then a voice server (SFU) for big lobbies (request 2026-10-24 #7: no paid services for now)",
+    "verdict": {
+     "kind": "cost",
+     "why": "Relays cost money per use, and there's no budget for paid services now; voice works without them on most networks"
+    }
+   },
+   {
+    "text": "J64 · Payments (Stripe) for the VIP store (request 2026-10-24 #7: no paid services for now)",
+    "verdict": {
+     "kind": "cost",
+     "why": "A payment provider, tax handling and terms; a provider like Stripe takes a cut of each sale rather than a monthly fee, so it can come back once there is something to sell"
     }
    }
   ]
