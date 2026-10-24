@@ -56,21 +56,21 @@ $e = fn($s) => htmlspecialchars($s, ENT_QUOTES);
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0A0908">
+<meta name="theme-color" content="#0E0906">
 <title>News</title>
 <link rel="stylesheet" href="/ui/themes.css">
 <link rel="stylesheet" href="/ui/looped.css">
 <script src="/ui/looped.js" defer></script>
 <style>
-  /* The Faceplate look (docs/STUDIO.md §4.F, S4.4). */
+  /* Ember, the house look (/ui/themes.css, looped.css). */
   main { max-width: 640px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 28px) 16px 48px; }
   .top { display: flex; align-items: center; gap: 12px; }
   h1 { margin: 0; font-size: 48px; line-height: 1; }
   .sub { color: var(--text-2); margin: 8px 0 18px; }
-  article { margin-top: 18px; border-radius: 18px; overflow: hidden; background: var(--panel); box-shadow: var(--panel-edge);
+  article { margin-top: 18px; border-radius: var(--panel-r); overflow: hidden; background: var(--panel); box-shadow: var(--panel-edge);
     animation: rise .5s cubic-bezier(.2,.9,.3,1.1) backwards; animation-delay: calc(var(--i) * 70ms); }
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
-  .shots { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: #000; }
+  .shots { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: var(--bg); }
   .shots::-webkit-scrollbar { display: none; }
   .shots img { flex: none; width: 100%; aspect-ratio: 430 / 600; object-fit: cover; scroll-snap-align: center; display: block; }
   .body { padding: 14px 16px 18px; }
@@ -78,7 +78,7 @@ $e = fn($s) => htmlspecialchars($s, ENT_QUOTES);
   .pill { padding: 3px 8px; border-radius: 6px; background: var(--field); box-shadow: var(--field-edge); font-family: var(--mono); letter-spacing: 0; text-transform: none; color: var(--accent); }
   h2 { margin: 10px 0 6px; font-size: 24px; line-height: 1.15; }
   p { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
-  .empty { text-align: center; color: var(--text-2); padding: 40px 10px; border-radius: 18px; background: var(--field); box-shadow: var(--field-edge); }
+  .empty { text-align: center; color: var(--text-2); padding: 40px 10px; border-radius: var(--panel-r); background: var(--field); box-shadow: var(--field-edge); }
   a { color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
@@ -86,7 +86,7 @@ $e = fn($s) => htmlspecialchars($s, ENT_QUOTES);
 <body class="lp">
 <main>
   <div class="top"><span class="steps big" data-period="2" aria-hidden="true"><i></i><i></i><i></i><i></i></span><h1>News</h1></div>
-  <p class="sub">What's new in Joshua's worlds. <a href="/">joshuavelasco.com</a></p>
+  <p class="sub">What's new at J Production. <a href="/">joshuavelasco.com</a></p>
 <?php if (!$posts): ?>
   <div class="empty">No news yet. Check back soon.</div>
 <?php endif; foreach ($posts as $i => $p): ?>

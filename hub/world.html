@@ -1,52 +1,50 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-look="ember">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>World · Bar3D hub</title>
+<meta name="theme-color" content="#0E0906">
+<title>World notes · Dev</title>
+<link rel="stylesheet" href="/ui/themes.css">
+<link rel="stylesheet" href="/ui/looped.css">
+<script src="/ui/looped.js" defer></script>
 <!-- The hub's World page (docs/ENGINE.md E8): every kind of thing in the bar,
      what it does in plain words (its states and rules), how many there are.
      Its numbers are changed in the Dials (dials.html, S4.1): the old live
      tuning became real loop lengths in the world (S4.2). -->
 <style>
-  :root {
-    --bg: #0b0716; --bg2: #140c26; --ink: #f6f0ff; --dim: #b4a7d4; --faint: rgba(255,255,255,.08);
-    --edge: rgba(255,255,255,.14); --glass: rgba(255,255,255,.06);
-    --pink: #ff5ab4; --gold: #ffb35a; --cyan: #5ad1ff; --mint: #7dff8a; --violet: #b38bff;
-  }
+  /* Ember, the house look (/ui/themes.css): only the page's own layout here. */
+  :root { --ink: var(--text); --dim: var(--text-2); --edge: var(--rule); }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif; }
-  a { color: var(--cyan); }
+  a { color: var(--accent); }
   main { max-width: 760px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 14px) 16px 60px; }
-  h1 { font-size: 30px; margin: 4px 0 2px; background: linear-gradient(180deg, #fff, var(--pink) 65%, var(--violet));
-    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h1 { font-size: 34px; margin: 10px 0 4px; }
   .sub { color: var(--dim); margin: 0 0 14px; }
   .bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
-  .chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass); color: var(--ink);
-    font: inherit; font-size: 14px; text-decoration: none; }
-  .chip.on { border-color: var(--pink); background: rgba(255,90,180,.18); }
-  .kind { border: 1px solid var(--edge); background: var(--glass); border-radius: 16px; padding: 12px 14px; margin: 0 0 10px; }
-  .kind h2 { font-size: 17px; margin: 0; display: flex; justify-content: space-between; gap: 8px; }
+  .chip { display: inline-block; padding: 7px 12px; border-radius: 999px; border: 0; background: var(--key-gloss), var(--key-bg);
+    box-shadow: var(--key-shadow); color: var(--key-text); font: inherit; font-size: 14px; text-decoration: none; }
+  .chip.on { color: var(--go-text); background: var(--go-bg); box-shadow: var(--go-glow); }
+  .kind { background: var(--panel); box-shadow: var(--panel-edge); border-radius: var(--panel-r); padding: 14px 16px; margin: 0 0 12px; }
+  .kind h2 { font: 700 17px var(--text-font); margin: 0; animation: none; background: none; -webkit-text-fill-color: currentColor; display: flex; justify-content: space-between; gap: 8px; }
   .kind h2 small { color: var(--dim); font-weight: 500; }
   .about { color: var(--dim); font-size: 14px; margin: 4px 0 6px; }
   .states { font-size: 14px; margin: 6px 0 0; padding: 0; list-style: none; }
   .states li { margin: 2px 0; }
-  .states b { color: var(--gold); font-weight: 650; }
-  .still { color: var(--violet); font-size: 13px; }
-  .opens { color: var(--mint); font-size: 13px; font-weight: 600; }
+  .states b { color: var(--accent); font-weight: 650; }
+  .still { color: var(--text-3); font-size: 13px; }
+  .opens { color: var(--ok); font-size: 13px; font-weight: 600; }
   .tune { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; flex-wrap: wrap; }
-  .tune input[type=range] { flex: 1; min-width: 140px; accent-color: var(--pink); }
+  .tune input[type=range] { flex: 1; min-width: 140px; accent-color: var(--accent); }
   .tune .v { width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
   .tune label { display: flex; align-items: center; gap: 6px; }
   .dials { display: inline-block; margin-top: 8px; }
   .note { color: var(--dim); font-size: 13px; }
   .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 16px); transform: translateX(-50%);
-    background: #2a1f33; border: 1px solid var(--edge); padding: 8px 14px; border-radius: 12px; opacity: 0; transition: opacity .2s; }
+    background: var(--over); box-shadow: var(--panel-edge); padding: 8px 14px; border-radius: 12px; opacity: 0; transition: opacity .2s; }
   .toast.on { opacity: 1; }
 </style>
 </head>
-<body>
+<body class="lp">
 <main>
   <a class="chip" href="/dev/#projects">← Dev</a>
   <h1>The world</h1>
