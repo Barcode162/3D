@@ -66,6 +66,10 @@
     if (why) $('loginWhy').textContent = why;
   }
   function start() {
+    // Pictures and tests on this computer only: ?demo skips the login (no PHP behind the page).
+    if (/^(localhost|127\.)/.test(location.hostname) && /[?&]demo/.test(location.search)) {
+      D.me = { user: 'demo', name: 'Demo', admin: 1 }; D.demo = true; $('login').hidden = true; drawTabs(); return D.show((location.hash || '').slice(1));
+    }
     D.token = store('hubToken') || '';
     if (!D.token) return showLogin();
     D.post(ACCOUNT, { a: 'me' }).then(function (j) {
@@ -83,7 +87,6 @@
     });
   });
   window.addEventListener('hashchange', function () { var t = location.hash.slice(1); if (t && t !== current && D.me) D.show(t); });
-  // The tab modules (dev-*.js) register before this runs.
-  document.addEventListener('DOMContentLoaded', start);
-  if (document.readyState !== 'loading') setTimeout(start, 0);
+  // The tab modules (projects.js, ...) load after this file and register their fill() before start runs.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
 })();

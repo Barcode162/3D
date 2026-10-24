@@ -9,6 +9,9 @@ const check = (ok, what) => { if (!ok) { console.log(`FAIL ${what}`); failed++; 
 const data = JSON.parse(readFileSync('toolbelt/tools.json', 'utf8'));
 const icons = new Set([...readFileSync('ui/icons.svg', 'utf8').matchAll(/id="i-([a-z-]+)"/g)].map((m) => m[1]));
 const groups = new Set(data.groups.map((g) => g.id));
+const projects = new Set((data.projects || []).map((p) => p.id));
+check(projects.size > 0 && projects.size === data.projects.length, 'projects listed once each');
+for (const p of data.projects || []) check(!!p.name && !!p.about && !!p.status, `project "${p.id}": a name, a line and a status`);
 const ids = new Set();
 // Where a site path lives in this repo (the rest, like /bar/ and /classic/, is built or kept elsewhere).
 const LOCAL = [['/toolbelt/', 'toolbelt/'], ['/studio/', 'studio/'], ['/hub/', 'hub/'], ['/ui/', 'ui/']];
@@ -18,6 +21,7 @@ for (const t of data.tools) {
   check(/^[a-z][a-z0-9-]*$/.test(t.id || ''), `${at}: id is lower-case words`);
   check(!ids.has(t.id), `${at}: id is used once`); ids.add(t.id);
   check(groups.has(t.group), `${at}: group "${t.group}" exists`);
+  check(projects.has(t.project), `${at}: project "${t.project}" exists`);
   check(typeof t.name === 'string' && t.name.length > 0 && t.name.length <= 24, `${at}: a short name`);
   check(typeof t.what === 'string' && t.what.length > 0 && t.what.length <= 110, `${at}: one line of what it does`);
   check(icons.has(t.icon), `${at}: icon "${t.icon}" is in ui/icons.svg`);

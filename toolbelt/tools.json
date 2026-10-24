@@ -1,32 +1,38 @@
 {
   "format": 1,
-  "about": "The Toolbelt: every tool of the Looped engine in one list (docs/UI_PLAN.md R1.1). The page /toolbelt/ draws it; tools/toolbelt_test.mjs checks it. A new tool: one entry here.",
+  "about": "The Toolbelt: every tool, one entry each, grouped by project (Dev → Projects) and by kind (the /toolbelt page). tools/toolbelt_test.mjs checks it. A new tool: one entry here; a new project: one entry in projects.",
+  "projects": [
+    {"id": "bar3d", "name": "Bar3D", "status": "Live", "about": "The hangout bar: the game, its world and the tools that build it.", "href": "/bar/"},
+    {"id": "looped", "name": "Looped", "status": "In progress", "about": "Our engine, from scratch: C++ to WebAssembly to WebGPU. Its tools build the looks and screens every project uses."},
+    {"id": "script", "name": "The script language", "status": "Planned", "about": "Our own small, safe language for things that live in the world (T1 on the road)."},
+    {"id": "workshop", "name": "The workshop", "status": "Tools", "about": "How Claude builds, checks, pictures and ships every piece."}
+  ],
   "groups": [
-    { "id": "make", "name": "Make" },
-    { "id": "tune", "name": "Tune and check" },
-    { "id": "claude", "name": "Run by Claude" }
+    {"id": "make", "name": "Make"},
+    {"id": "tune", "name": "Tune and check"},
+    {"id": "claude", "name": "Run by Claude"}
   ],
   "tools": [
-    { "id": "studio", "group": "make", "name": "Studio", "icon": "studio", "href": "/studio/", "what": "Build, move and light anything in the world. Every version kept." },
-    { "id": "ui-editor", "group": "make", "name": "UI Editor", "icon": "layers", "href": "/toolbelt/ui-editor/", "what": "Themes and screens for the site, Dev, the bar's menus and the engine." },
-    { "id": "screens", "group": "make", "name": "Screens", "icon": "eye", "href": "/ui/screen.html", "what": "See any screen file drawn in the current theme." },
-    { "id": "compare", "group": "make", "name": "Compare themes", "icon": "layers", "href": "/ui/compare.html", "what": "One screen in every theme side by side, light and dark." },
-    { "id": "style", "group": "make", "name": "Style page", "icon": "kind", "href": "/ui/", "what": "Every control in every theme." },
-    { "id": "dials", "group": "tune", "name": "Dials", "icon": "dial", "href": "/hub/dials.html", "what": "Every number in the world as a dial: light, sound, feel." },
-    { "id": "world", "group": "tune", "name": "World notes", "icon": "note", "href": "/hub/world.html", "what": "What each thing in the world does, its states and rules." },
-    { "id": "bar", "group": "tune", "name": "The live bar", "icon": "bar", "href": "/bar/", "what": "Walk the floor. Add ?perf=1 for the frame meter and Send report." },
-    { "id": "perf", "group": "tune", "name": "Perf report", "icon": "target", "href": "/bar/report.php?code=", "ask": "Report code", "what": "Open a phone report by its six-letter code." },
-    { "id": "tests", "group": "tune", "name": "Tests and deploys", "icon": "check", "href": "https://github.com/Barcode162/3D/actions", "what": "Every test run and deploy on GitHub." },
-    { "id": "gallery", "group": "tune", "name": "Gallery", "icon": "history", "href": "https://github.com/Barcode162/3D/tree/gallery", "what": "Before and after pictures of every piece." },
-    { "id": "classic", "group": "tune", "name": "Bar3D classic", "icon": "box", "href": "/classic/", "what": "The old public build, kept as it was." },
-    { "id": "flags", "group": "tune", "name": "Engine flags", "icon": "gear", "status": "soon", "what": "Switch engine features on and off, like ?light=classic or ?bounce=0." },
-    { "id": "piece", "group": "claude", "name": "Piece runner", "icon": "play", "run": "node tools/piece.mjs <TAG> \"<title>\"", "what": "One piece: build, check, pictures, commit, push." },
-    { "id": "step", "group": "claude", "name": "Step finisher", "icon": "publish", "run": "node tools/step.mjs finish <STEP> \"<what>\"", "what": "The end of a step: full check, deploy, build log." },
-    { "id": "plan", "group": "claude", "name": "Plan keeper", "icon": "rule", "run": "node tools/plan.mjs check", "what": "Keeps PLAN.md in its eight parts and five chapters; ticks pieces, writes Done." },
-    { "id": "check", "group": "claude", "name": "Checks", "icon": "check", "run": "node tools/check.mjs quick", "what": "PASS or FAIL per system, with the first error lines." },
-    { "id": "studio-cli", "group": "claude", "name": "World sync", "icon": "loop", "run": "node tools/studio.mjs pull", "what": "Brings the world you published into the repo, and back." },
-    { "id": "uikit", "group": "claude", "name": "UI kit", "icon": "layers", "run": "node tools/uikit.mjs pull", "what": "Brings what you publish in the UI Editor into the site; writes the theme CSS." },
-    { "id": "bench", "group": "claude", "name": "Benchmarks", "icon": "target", "run": "node tools/bench.mjs", "what": "Engine speed numbers, each against the last run." },
-    { "id": "light", "group": "claude", "name": "Light tool", "icon": "light", "run": "node tools/light.mjs", "what": "Checks and bakes the world's light." }
+    {"id": "studio", "project": "bar3d", "group": "make", "name": "Studio", "icon": "studio", "href": "/studio/", "what": "Build, move and light anything in the world. Every version kept."},
+    {"id": "ui-editor", "project": "looped", "group": "make", "name": "UI Editor", "icon": "layers", "href": "/toolbelt/ui-editor/", "what": "Themes and screens for the site, Dev, the bar's menus and the engine."},
+    {"id": "screens", "project": "looped", "group": "make", "name": "Screens", "icon": "eye", "href": "/ui/screen.html", "what": "See any screen file drawn in the current theme."},
+    {"id": "compare", "project": "looped", "group": "make", "name": "Compare themes", "icon": "layers", "href": "/ui/compare.html", "what": "One screen in every theme side by side, light and dark."},
+    {"id": "style", "project": "looped", "group": "make", "name": "Style page", "icon": "kind", "href": "/ui/", "what": "Every control in every theme."},
+    {"id": "dials", "project": "bar3d", "group": "tune", "name": "Dials", "icon": "dial", "href": "/hub/dials.html", "what": "Every number in the world as a dial: light, sound, feel."},
+    {"id": "world", "project": "bar3d", "group": "tune", "name": "World notes", "icon": "note", "href": "/hub/world.html", "what": "What each thing in the world does, its states and rules."},
+    {"id": "bar", "project": "bar3d", "group": "tune", "name": "The live bar", "icon": "bar", "href": "/bar/", "what": "Walk the floor. Add ?perf=1 for the frame meter and Send report."},
+    {"id": "perf", "project": "bar3d", "group": "tune", "name": "Perf report", "icon": "target", "href": "/bar/report.php?code=", "ask": "Report code", "what": "Open a phone report by its six-letter code."},
+    {"id": "tests", "project": "workshop", "group": "tune", "name": "Tests and deploys", "icon": "check", "href": "https://github.com/Barcode162/3D/actions", "what": "Every test run and deploy on GitHub."},
+    {"id": "gallery", "project": "bar3d", "group": "tune", "name": "Gallery", "icon": "history", "href": "https://github.com/Barcode162/3D/tree/gallery", "what": "Before and after pictures of every piece."},
+    {"id": "classic", "project": "bar3d", "group": "tune", "name": "Bar3D classic", "icon": "box", "href": "/classic/", "what": "The old public build, kept as it was."},
+    {"id": "flags", "project": "looped", "group": "tune", "name": "Engine flags", "icon": "gear", "status": "soon", "what": "Switch engine features on and off, like ?light=classic or ?bounce=0."},
+    {"id": "piece", "project": "workshop", "group": "claude", "name": "Piece runner", "icon": "play", "run": "node tools/piece.mjs <TAG> \"<title>\"", "what": "One piece: build, check, pictures, commit, push."},
+    {"id": "step", "project": "workshop", "group": "claude", "name": "Step finisher", "icon": "publish", "run": "node tools/step.mjs finish <STEP> \"<what>\"", "what": "The end of a step: full check, deploy, build log."},
+    {"id": "plan", "project": "workshop", "group": "claude", "name": "Plan keeper", "icon": "rule", "run": "node tools/plan.mjs check", "what": "Keeps PLAN.md in its eight parts and five chapters; ticks pieces, writes Done."},
+    {"id": "check", "project": "workshop", "group": "claude", "name": "Checks", "icon": "check", "run": "node tools/check.mjs quick", "what": "PASS or FAIL per system, with the first error lines."},
+    {"id": "studio-cli", "project": "bar3d", "group": "claude", "name": "World sync", "icon": "loop", "run": "node tools/studio.mjs pull", "what": "Brings the world you published into the repo, and back."},
+    {"id": "uikit", "project": "looped", "group": "claude", "name": "UI kit", "icon": "layers", "run": "node tools/uikit.mjs pull", "what": "Brings what you publish in the UI Editor into the site; writes the theme CSS."},
+    {"id": "bench", "project": "looped", "group": "claude", "name": "Benchmarks", "icon": "target", "run": "node tools/bench.mjs", "what": "Engine speed numbers, each against the last run."},
+    {"id": "light", "project": "looped", "group": "claude", "name": "Light tool", "icon": "light", "run": "node tools/light.mjs", "what": "Checks and bakes the world's light."}
   ]
 }

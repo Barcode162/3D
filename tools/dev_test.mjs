@@ -38,6 +38,15 @@ for (const tab of ['overview', 'projects', 'plan', 'publish', 'people']) {
   await page.waitForFunction((t) => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === t && document.querySelector('#view h2'), tab);
   check(await ed(() => document.querySelectorAll('#view [data-id]').length > 0 && document.documentElement.scrollWidth <= 390), `${tab}: its screen file draws, slots marked, nothing wider than the phone`);
 }
+// R4.2: Projects
+await page.click('#tabs [data-tab="projects"]');
+await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');
+check(await ed(() => ['bar3d', 'looped', 'script', 'workshop'].every((p) => document.querySelector(`#view [data-project="${p}"]`))), 'Projects lists Bar3D, Looped, the script language and the workshop');
+check(await ed(() => !!document.querySelector('#view [data-project="looped"] a[href="/toolbelt/ui-editor/"]')), 'the UI Editor sits under Looped');
+check(await ed(() => !!document.querySelector('#view [data-project="bar3d"] .dev-ask input')), 'the perf report asks for its code');
+await page.click('#tabs [data-tab="people"]');
+await page.waitForFunction(() => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === 'people');
+
 await page.reload();
 await page.waitForSelector('#tabs:not([hidden]) button');
 check(await ed(() => location.hash === '#people' && document.querySelector('#tabs [aria-current="page"]').dataset.tab === 'people'), 'a reload stays logged in, on the same tab');
