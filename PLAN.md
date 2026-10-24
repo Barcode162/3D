@@ -53,7 +53,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **R4.2** Projects: every project with its own tools: Bar3D (the Studio, Dials, World notes, the live bar, perf reports, the gallery, classic), Looped the engine (UI Editor, Screens, Compare, Style page, tests, benchmarks), the script language (planned); new projects are one line *Check:* Projects → Bar3D → Studio opens the Studio
 - [x] **R4.3** Overview: the bar, the room and the site up or down, the live build, the last deploy's tests (CI writes a status file), the step in Now and its phone checks, news waiting for you *Check:* Overview shows the live build code and green dots
 - [x] **R4.4** Plan: PLAN.md on your phone (Now with ticks, the five chapters, the road, Parked, Done) and a box to leave Claude a note or park an idea, read at the start of every go *Check:* Plan shows R4; leave a test note
-- [ ] **R4.5** Publish: the news posts Claude writes after each step, publish or unpublish in one tap; the site's words (headline, news highlight) kept for R5 *Check:* Publish lists the R3 post; publish it, it shows on /news
+- [x] **R4.5** Publish: the news posts Claude writes after each step, publish or unpublish in one tap; the site's words (headline, news highlight) kept for R5 *Check:* Publish lists the R3 post; publish it, it shows on /news
 - [ ] **R4.6** People: everyone with an account, invite or remove players, choose admins (the bar's gate page moved into Dev) *Check:* People lists you as owner
 - [ ] **R4.7** The old doors lead to Dev: /hub, /portal and /toolbelt open Dev; the site's staff tab says Dev; the Studio has a way back to Dev *Check:* open joshuavelasco.com/hub: Dev opens
 

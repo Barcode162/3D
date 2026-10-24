@@ -10,6 +10,7 @@ let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) failed++; };
 import { mkdirSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 const ws = await webspace({ dirs: { ui: 'ui', dev: 'dev', toolbelt: 'toolbelt', hub: 'hub' }, files: { 'bar/account.php': 'server/account.php' } });
 // What CI and the deploy put there: the game's config, the plan, no deploy report yet.
 writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'abc1234', ws: '' }));
@@ -70,6 +71,25 @@ await page.waitForFunction(() => /A rooftop terrace/.test(document.querySelector
 const notes = await ws.post('dev/api.php', { a: 'notes', token: owner.token });
 check(notes.ok && notes.notes[0].kind === 'park' && notes.notes[0].text === 'A rooftop terrace' && notes.notes[0].read === 0, 'Park an idea sends it to Claude, waiting');
 check((await ws.post('dev/api.php', { a: 'read', ids: [notes.notes[0].id], token: owner.token })).status === 403, 'only Claude marks notes as read');
+
+// R4.5: Publish
+const hubKey = 'c'.repeat(48);
+mkdirSync(join(ws.root, 'private/hub'), { recursive: true });
+writeFileSync(join(ws.root, 'private/hub/key.json'), JSON.stringify({ hash: createHash('sha256').update(hubKey).digest('hex') }));
+const made = await ws.post('hub/hub.php', { a: 'post', post: { build: 'abc1234', title: 'R4: Dev', text: 'The control room is open.' } }, { 'X-Hub-Key': hubKey });
+check(made.ok === 1, 'Claude writes a news post (the hub key)');
+await page.click('#tabs [data-tab="publish"]');
+await page.waitForSelector(`#view [data-post="${made.post.id}"] [data-act="publish"]`);
+await page.click(`#view [data-post="${made.post.id}"] [data-act="publish"]`);
+await page.waitForFunction((id) => /Unpublish/.test(document.querySelector(`#view [data-post="${id}"] [data-act="publish"]`)?.textContent || ''), made.post.id);
+check((await ws.post('hub/hub.php', { a: 'posts', token: owner.token })).posts[0].published === true, 'Publish puts it on the public news');
+await page.click('#view [data-id="pub-tab"] button:nth-child(2)');
+await page.waitForSelector('#view [data-field="headline"]');
+await page.fill('#view [data-field="headline"]', 'The lights are on.');
+await page.click('#view >> text=Save the words');
+await page.waitForFunction(() => /Saved just now/.test(document.querySelector('#view [data-id="posts"]').textContent));
+const site = await (await fetch(ws.url + 'dev/api.php?site')).json();
+check(site.site.headline === 'The lights are on.' && site.site.by === 'Josh', 'the site\'s words are saved, and public for the front page');
 
 // R4.2: Projects
 await page.click('#tabs [data-tab="projects"]');

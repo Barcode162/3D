@@ -22,3 +22,4 @@ body.lp { min-height: 100vh; min-height: 100dvh; }
 .lp .dev-ask { display: flex; gap: 6px; margin-top: 6px; }
 .lp .dev-ask .field { font-size: 15px; padding: 6px 10px; text-transform: uppercase; }
 .lp [data-id="chapters"] .ls-lr-main, .lp [data-id="plan-now"] .ls-lr-main, .lp [data-id="notes"] .ls-lr-main { white-space: normal; }
+.lp .dev-post-text { white-space: pre-line; max-height: 9.5em; overflow: hidden; }
