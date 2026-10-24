@@ -91,6 +91,17 @@ await page.waitForFunction(() => /Saved just now/.test(document.querySelector('#
 const site = await (await fetch(ws.url + 'dev/api.php?site')).json();
 check(site.site.headline === 'The lights are on.' && site.site.by === 'Josh', 'the site\'s words are saved, and public for the front page');
 
+// R4.6: People
+await page.click('#tabs [data-tab="people"]');
+await page.waitForSelector('#view [data-user="mia"]');
+check(await ed(() => /Owner/.test(document.querySelector('#view [data-user="josh"]').textContent) && /Waiting/.test(document.querySelector('#view [data-user="mia"]').textContent)), 'People lists the owner and a waiting player');
+await page.click('#view [data-user="mia"] >> text=Let in');
+await page.waitForFunction(() => /Player/.test(document.querySelector('#view [data-user="mia"]')?.textContent || ''));
+await page.click('#view [data-user="mia"] >> text=Make admin');
+await page.waitForFunction(() => /Admin/.test(document.querySelector('#view [data-user="mia"]')?.textContent || ''));
+const people = await ws.post('bar/account.php', { a: 'people', token: owner.token });
+check(people.people.find((p) => p.user === 'mia').status === 'admin', 'Let in, then Make admin: Mia is an admin');
+
 // R4.2: Projects
 await page.click('#tabs [data-tab="projects"]');
 await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');
