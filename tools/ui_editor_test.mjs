@@ -92,6 +92,18 @@ check(await ed(() => document.querySelector('#insp [aria-label="Delete"]').disab
 await page.selectOption('#pick', '+new');
 check(await ed(() => UIEditor.state.screenId === 'screen-1' && document.querySelectorAll('#tree button').length === 2), 'New screen starts with a title');
 
+// R2.2: light and dark in one theme
+await page.selectOption('#themePick', 'obsidian');
+await page.click('#schemeSeg [data-scheme="light"]');
+const lightBg = await ed(() => ({ bg: getComputedStyle(document.getElementById('frame')).getPropertyValue('--bg').trim(), other: UIEditor.state.themes.obsidian.other?.scheme }));
+check(lightBg.other === 'light' && lightBg.bg === '#F4F4F2', `Light on a dark-only theme starts its light half (${lightBg.bg})`);
+await page.click('[data-mode="theme"]'); await page.click('#tree [data-group="colour"]');
+await page.$eval('#insp [data-token="accent"] input[type=color]', (c) => { c.value = '#112233'; c.dispatchEvent(new Event('input', { bubbles: true })); });
+check(await ed(() => UIEditor.state.themes.obsidian.other.tokens.accent === '#112233' && UIEditor.state.themes.obsidian.tokens.accent === '#8BE9FF'), 'an edit in the light half leaves the dark half alone');
+await page.click('#schemeSeg [data-scheme="dark"]');
+check(await ed(() => getComputedStyle(document.getElementById('frame')).getPropertyValue('--accent').trim() === '#8BE9FF'), 'Dark shows the dark half again');
+await page.click('[data-mode="screen"]');
+
 // R1.7: the draft on the phone, login, publish, history
 check(await ed(() => /unpublished/.test(document.getElementById('status').textContent) && /Publish \d/.test(document.getElementById('pubOpen').textContent)), 'the top bar counts what is unpublished');
 await page.goto(url + 'toolbelt/ui-editor/index.html?screen=sampler');

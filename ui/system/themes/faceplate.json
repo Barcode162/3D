@@ -50,6 +50,12 @@
     "display-w": "800",
     "display-s": "125%",
     "display-ls": "-.02em",
+    "text-font": "\"Archivo\", -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+    "key-case": "uppercase",
+    "key-size": "12px",
+    "key-weight": "700",
+    "key-ls": ".1em",
+    "key-stretch": "75%",
     "knob": "radial-gradient(circle at 50% 35%, rgba(255,255,255,.18), transparent 55%), repeating-conic-gradient(#2E2B28 0 6deg, #1C1A18 6deg 12deg)",
     "step-shape": "key"
   }

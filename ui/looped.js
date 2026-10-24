@@ -21,6 +21,7 @@
     // end LOOKS
   };
   var root = document.documentElement;
+  var DEFAULT_LOOK = 'faceplate';
   function load(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   var reduce = false;
@@ -29,14 +30,23 @@
   // ---- Themes ----
   var look = 'faceplate';
   function setLook(name) {
-    if (!LOOKS[name]) name = 'faceplate';
+    if (!LOOKS[name]) name = DEFAULT_LOOK;
     look = name;
     root.setAttribute('data-look', name);
     save('loopedLook', name);
     try { document.dispatchEvent(new CustomEvent('looped:look', { detail: name })); } catch (e) {}
   }
-  var asked = (location.search.match(/[?&]look=([a-z]+)/) || [])[1];
+  var asked = (location.search.match(/[?&]look=([a-z0-9-]+)/) || [])[1];
   setLook(asked || load('loopedLook', 'faceplate'));
+  // Light or dark: 'auto' follows the phone (a theme with both halves switches
+  // by itself); 'light' or 'dark' pins it.
+  var scheme = 'auto';
+  function setScheme(s) {
+    scheme = s === 'light' || s === 'dark' ? s : 'auto';
+    if (scheme === 'auto') root.removeAttribute('data-scheme'); else root.setAttribute('data-scheme', scheme);
+    save('loopedScheme', scheme);
+  }
+  setScheme((location.search.match(/[?&]scheme=([a-z]+)/) || [])[1] || load('loopedScheme', 'auto'));
 
   // ---- Key sounds ----
   var actx = null, clicksOn = load('loopedClicks', '0') === '1';
@@ -189,6 +199,7 @@
 
   window.Looped = {
     LOOKS: LOOKS, look: function () { return look; }, setLook: setLook,
+    scheme: function () { return scheme; }, setScheme: setScheme,
     lamps: lamps, roll: roll, toast: toast, click: click, scan: scan,
     clicks: function (on) { if (on === undefined) return clicksOn; clicksOn = !!on; save('loopedClicks', on ? '1' : '0'); if (on) click(true); }
   };

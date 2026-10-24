@@ -50,6 +50,12 @@
     "display-w": "400",
     "display-s": "100%",
     "display-ls": ".01em",
+    "text-font": "\"Archivo\", -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+    "key-case": "uppercase",
+    "key-size": "12px",
+    "key-weight": "700",
+    "key-ls": ".1em",
+    "key-stretch": "75%",
     "knob": "radial-gradient(circle at 40% 30%, rgba(255,250,230,.75), transparent 35%), conic-gradient(from 20deg, #F6DCA0, #9C7230, #E9C77E, #6E4A1C, #F6DCA0, #A57A35, #F6DCA0)",
     "step-shape": "bulb"
   }

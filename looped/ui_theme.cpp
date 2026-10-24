@@ -86,6 +86,20 @@ float Theme::length(std::string_view id, float fallback) const {
   return t && leadingNumber(*t, v) ? v : fallback;
 }
 
+Theme Theme::half(bool wantDark) const {
+  if (!hasOther || wantDark == dark) return *this;
+  Theme t = *this;
+  t.dark = wantDark;
+  t.hasOther = false;
+  t.otherTokens.clear();
+  for (const auto& [key, value] : otherTokens) {
+    bool found = false;
+    for (auto& tok : t.tokens) if (tok.first == key) { tok.second = value; found = true; }
+    if (!found) t.tokens.emplace_back(key, value);
+  }
+  return t;
+}
+
 bool parseTheme(std::string_view json, Theme& out, std::string* error) {
   std::string parseError;
   Json j = Json::parse(json, &parseError);
@@ -100,6 +114,11 @@ bool parseTheme(std::string_view json, Theme& out, std::string* error) {
   t.about = j["about"].string();
   t.dark = j["scheme"].string() != "light";
   for (const auto& [key, value] : j["tokens"].members()) if (value.isString()) t.tokens.emplace_back(key, value.string());
+  const Json& other = j["other"];
+  if (other.isObject() && other["tokens"].isObject()) {
+    t.hasOther = true;
+    for (const auto& [key, value] : other["tokens"].members()) if (value.isString()) t.otherTokens.emplace_back(key, value.string());
+  }
   out = std::move(t);
   return true;
 }

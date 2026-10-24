@@ -61,6 +61,16 @@ int main() {
   CHECK(face.colour("panel", {9, 9, 9, 9}).x == 9);                 // a gradient: the fallback
   CHECK(face.token("nope") == nullptr);
 
+  // A theme with both halves: the light half lays its tokens over the dark ones.
+  Theme both;
+  CHECK(engine::ui::parseTheme(R"({"format":1,"id":"x","scheme":"dark","tokens":{"bg":"#000000","accent":"#FF0000"},
+    "other":{"scheme":"light","tokens":{"bg":"#FFFFFF"}}})", both));
+  CHECK(both.hasOther && both.dark);
+  Theme light = both.half(false);
+  CHECK(!light.dark && light.colour("bg").x == 1 && light.colour("accent").x == 1 && light.colour("accent").y == 0);
+  CHECK(both.half(true).colour("bg").x == 0);
+  CHECK(face.half(false).dark);                                   // no light half: stays as it is
+
   Theme t;
   std::string err;
   CHECK(!engine::ui::parseTheme("{", t, &err) && !err.empty());

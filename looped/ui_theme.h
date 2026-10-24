@@ -18,6 +18,14 @@ struct Theme {
   std::string id, name, about;
   bool dark = true;
   std::vector<std::pair<std::string, std::string>> tokens;  // in file order, e.g. {"accent", "#F28C2C"}
+  // The theme's other half (light for a dark theme, or dark), if it has one:
+  // only the tokens that differ.
+  bool hasOther = false;
+  std::vector<std::pair<std::string, std::string>> otherTokens;
+
+  // The half to use for a dark or light screen: the other half's tokens laid
+  // over the main ones when `dark` asks for it and the theme has it.
+  Theme half(bool dark) const;
 
   // The token's text, or nullptr if the theme doesn't have it.
   const std::string* token(std::string_view id) const;

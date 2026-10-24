@@ -12,7 +12,8 @@
     themes: {}, themeId: null,      // id → theme file (edited copies)
     screens: {}, screenId: null,    // id → screen file (edited copies)
     sel: null,                      // selected part's path ('' = root, '0.2' ...)
-    group: 'theme',                 // theme mode: the token group shown ('theme' = name, scheme, copy)
+    group: 'theme',
+    scheme: null,                   // the half of the theme shown: its scheme, or its other's ('dark' | 'light')                 // theme mode: the token group shown ('theme' = name, scheme, copy)
     undo: [], redo: [], lastKey: '', lastAt: 0,
   };
   var FONTS = ['"Archivo", "Helvetica Neue", Arial, sans-serif', '"Limelight", "Didot", Georgia, serif', '"Unbounded", "Archivo", Arial, sans-serif',
@@ -80,11 +81,41 @@
     return '';
   }
 
+  // ---- Light and dark ----
+  // A theme's main half is its scheme; theme.other holds the other half's
+  // differences. S.scheme says which half the preview shows and edits change.
+  function shown() { var th = theme(); return S.scheme === th.scheme || !th.other ? 'main' : 'other'; }
+  function tok(id, th) { th = th || theme(); var o = shown() === 'other' && th.other && th.other.tokens; return o && id in o ? o[id] : th.tokens[id]; }
+  var STARTER = {
+    light: { bg: '#F4F4F2', 'bg-glow': 'none', text: '#1A1A1A', 'text-2': '#5A5A5A', 'text-3': '#8C8C8C', rule: 'rgba(0,0,0,.12)', panel: '#FFFFFF', over: 'rgba(255,255,255,.86)',
+      field: '#ECECEA', 'key-bg': '#FFFFFF', 'key-text': '#1A1A1A', 'key-gloss': 'none', off: '#DCDCDA', 'panel-edge': '0 1px 3px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06)',
+      'field-edge': 'inset 0 0 0 1px rgba(0,0,0,.06)', 'key-shadow': '0 1px 2px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.08)', 'key-shadow-down': '0 0 0 1px rgba(0,0,0,.1)' },
+    dark: { bg: '#0E0E10', 'bg-glow': 'none', text: '#F2F2F4', 'text-2': '#A0A0A8', 'text-3': '#6A6A72', rule: 'rgba(255,255,255,.1)', panel: '#1A1A1E', over: 'rgba(20,20,24,.86)',
+      field: '#111114', 'key-bg': '#26262B', 'key-text': '#F2F2F4', 'key-gloss': 'none', off: '#2A2A30', 'panel-edge': '0 0 0 1px rgba(255,255,255,.07)',
+      'field-edge': 'inset 0 0 0 1px rgba(255,255,255,.07)', 'key-shadow': '0 0 0 1px rgba(255,255,255,.08)', 'key-shadow-down': 'none' },
+  };
+  function setScheme(sc) {
+    var th = theme();
+    if (sc !== th.scheme && !th.other) {
+      change('', function () { theme().other = { scheme: sc, tokens: JSON.parse(JSON.stringify(STARTER[sc])) }; S.scheme = sc; });
+      toast('A ' + sc + ' half for ' + th.name + ': a plain start, change it in Theme');
+      return;
+    }
+    S.scheme = sc; drawAll();
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-scheme]'); if (b && b.closest('#schemeSeg')) setScheme(b.dataset.scheme); });
+
   // ---- Drawing ----
   function applyTheme() {
     var th = theme(), f = $('frame');
+    if (S.scheme !== 'dark' && S.scheme !== 'light') S.scheme = th.scheme;
+    if (S.scheme !== th.scheme && !th.other) S.scheme = th.scheme;
     document.documentElement.setAttribute('data-look', S.index.order.indexOf(th.id) >= 0 ? th.id : (th.look || S.index.default));
-    S.tokens.tokens.forEach(function (t) { f.style.setProperty('--' + t.id, th.tokens[t.id]); });
+    document.documentElement.setAttribute('data-scheme', S.scheme);
+    S.tokens.tokens.forEach(function (t) { f.style.setProperty('--' + t.id, tok(t.id)); });
+    f.style.colorScheme = S.scheme;
+    pressed('#schemeSeg [data-scheme]', 'scheme', S.scheme);
+    [].forEach.call(document.querySelectorAll('#schemeSeg [data-scheme]'), function (b) { b.textContent = (b.dataset.scheme === 'dark' ? 'Dark' : 'Light') + (b.dataset.scheme !== th.scheme && !th.other ? ' +' : ''); });
   }
   function drawPreview() {
     var f = $('frame');
@@ -298,23 +329,29 @@
     return 'rgba(' + n.r + ',' + n.g + ',' + n.b + ',' + (+c.a.toFixed(3)) + ')';
   }
   function setToken(id, v, key) {
-    change('tok:' + id + (key || ''), function () { theme().tokens[id] = v; }, function () { applyTheme(); drawInspectorRowState(); });
+    var half = shown();
+    change('tok:' + half + id + (key || ''), function () {
+      var th = theme();
+      if (half === 'main') th.tokens[id] = v;
+      else if (v === th.tokens[id]) delete th.other.tokens[id];
+      else th.other.tokens[id] = v;
+    }, function () { applyTheme(); drawInspectorRowState(); });
   }
   function drawInspectorRowState() {
-    var base = S.base[S.themeId];
+    var base = S.base && S.base[S.themeId];
     [].forEach.call(document.querySelectorAll('#insp [data-token]'), function (row) {
-      var id = row.dataset.token; row.classList.toggle('ed-changed', !!base && base.tokens[id] !== theme().tokens[id]);
+      var id = row.dataset.token; row.classList.toggle('ed-changed', !!base && tok(id, base) !== tok(id));
     });
   }
   function tokenRow(t) {
-    var v = theme().tokens[t.id], row = h('div', 'ed-row'), lab = h('label', null, t.id), box;
+    var v = tok(t.id), row = h('div', 'ed-row'), lab = h('label', null, t.id), box;
     row.dataset.token = t.id; lab.title = t.what; row.appendChild(lab);
     var text = h(t.kind === 'paint' ? 'textarea' : 'input', 'ed-in'); text.value = v; text.setAttribute('aria-label', t.id); text.spellcheck = false;
     if (t.kind === 'paint') text.rows = 2;
-    text.addEventListener('change', function () { var nv = text.value.trim(); if (nv && nv !== theme().tokens[t.id]) setToken(t.id, nv); });
+    text.addEventListener('change', function () { var nv = text.value.trim(); if (nv && nv !== tok(t.id)) setToken(t.id, nv); });
     if (t.kind === 'color') {
       box = h('div', 'ed-pair'); var sw = h('input', 'ed-swatch'); sw.type = 'color'; var c = parseColor(v); if (c) sw.value = toHex(c); sw.setAttribute('aria-label', t.id + ' colour');
-      sw.addEventListener('input', function () { var nv = withPick(theme().tokens[t.id], sw.value); text.value = nv; setToken(t.id, nv, ':pick'); });
+      sw.addEventListener('input', function () { var nv = withPick(tok(t.id), sw.value); text.value = nv; setToken(t.id, nv, ':pick'); });
       box.appendChild(sw); box.appendChild(text);
     } else if ((t.kind === 'length' || t.kind === 'number') && t.min !== undefined) {
       box = h('div', 'ed-pair ed-wide'); var rg = h('input', 'ed-range'); rg.type = 'range'; rg.min = t.min; rg.max = t.max; rg.step = t.step; rg.setAttribute('aria-label', t.id);
@@ -346,8 +383,9 @@
     ab.addEventListener('change', function () { change('about', function () { theme().about = ab.value.trim(); }); });
     row = h('div', 'ed-row'); row.appendChild(h('label', null, 'about')); row.appendChild(ab); box.appendChild(row);
     var sc = h('select', 'ed-in'); ['dark', 'light'].forEach(function (k) { var o = h('option', null, k); o.value = k; sc.appendChild(o); }); sc.value = th.scheme; sc.setAttribute('aria-label', 'Light or dark');
-    sc.addEventListener('change', function () { change('scheme', function () { theme().scheme = sc.value; }); });
-    row = h('div', 'ed-row'); row.appendChild(h('label', null, 'light or dark')); row.appendChild(sc); box.appendChild(row);
+    sc.addEventListener('change', function () { change('scheme', function () { theme().scheme = sc.value; S.scheme = sc.value; }); });
+    if (th.other) { sc.disabled = true; sc.title = 'This theme has both halves; switch them with Dark / Light above the preview.'; }
+    row = h('div', 'ed-row'); row.appendChild(h('label', null, th.other ? 'main half' : 'light or dark')); row.appendChild(sc); box.appendChild(row);
     var acts = h('div', 'ed-actions'), cp = h('button', 'ed-btn', 'Copy as a new theme');
     cp.type = 'button'; cp.addEventListener('click', copyTheme); acts.appendChild(cp);
     var rs = h('button', 'ed-btn', 'Back to as loaded'); rs.type = 'button';
@@ -381,7 +419,7 @@
     var box = $('insp'); box.textContent = '';
     var g = S.tokens.groups.filter(function (x) { return x.id === S.group; })[0];
     $('inspTitle').textContent = g ? g.name : theme().name;
-    $('inspWhat').textContent = g ? 'Every change shows in the preview at once.' : 'Its name, light or dark, and copies.';
+    $('inspWhat').textContent = g ? 'Editing the ' + S.scheme + ' half. Every change shows in the preview at once.' : 'Its name, light or dark, and copies.';
     if (!g) { themeMeta(box); return; }
     S.tokens.tokens.forEach(function (t) { if (t.group === g.id) box.appendChild(tokenRow(t)); });
     drawInspectorRowState();
@@ -507,7 +545,7 @@
     if (this.value === '+new') { newScreen(); return; }
     S.screenId = this.value; S.sel = null; drawAll();
   });
-  $('themePick').addEventListener('change', function () { S.themeId = this.value; drawAll(); });
+  $('themePick').addEventListener('change', function () { S.themeId = this.value; S.scheme = null; drawAll(); });
 
   // Deep links: ?mode=theme&group=shape&theme=jukebox&screen=sampler&device=computer&sel=1.0.1.0
   function fromAddress() {
@@ -515,6 +553,7 @@
     if (q.mode === 'theme' || q.mode === 'screen') S.mode = q.mode;
     if (q.group) S.group = q.group;
     if (q.theme && S.themes[q.theme]) S.themeId = q.theme;
+    if (q.scheme === 'light' || q.scheme === 'dark') S.scheme = q.scheme;
     if (q.screen && S.screens[q.screen]) S.screenId = q.screen;
     if (/^(phone|computer|game)$/.test(q.device || '')) S.device = q.device;
     if (q.sel && partAt(q.sel)) S.sel = q.sel;

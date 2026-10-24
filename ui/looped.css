@@ -47,7 +47,8 @@ body.lp {
 /* ---- Keys ---- */
 .lp .key {
   position: relative; isolation: isolate;
-  font-family: var(--text-font); font-stretch: 75%; font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  font-family: var(--text-font); font-stretch: var(--key-stretch, 75%); font-weight: var(--key-weight, 700); font-size: var(--key-size, 12px);
+  letter-spacing: var(--key-ls, .1em); text-transform: var(--key-case, uppercase);
   color: var(--key-text); min-height: 44px; min-width: 44px; padding: 0 14px; margin: 0;
   border: var(--key-bw) solid transparent; border-radius: var(--key-r); background: var(--key-bg); box-shadow: var(--key-shadow);
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; text-decoration: none;
@@ -60,8 +61,8 @@ body.lp {
 .lp .key.go { background: var(--go-bg); color: var(--go-text); box-shadow: var(--key-shadow), var(--go-glow); }
 .lp .key.go:active, .lp .key.go.down { box-shadow: var(--key-shadow-down), var(--go-glow); }
 .lp .key.lit { color: var(--accent); }
-.lp .key.small { min-height: 34px; padding: 0 10px; font-size: 11px; }
-.lp .key.tile { flex-direction: column; min-height: 78px; font-size: 10px; gap: 7px; padding: 8px 4px; }
+.lp .key.small { min-height: 34px; padding: 0 10px; font-size: calc(var(--key-size, 12px) - 1px); }
+.lp .key.tile { flex-direction: column; min-height: 78px; font-size: calc(var(--key-size, 12px) - 2px); gap: 7px; padding: 8px 4px; }
 .lp .key svg { width: 20px; height: 20px; flex: none; }
 .lp .key.tile svg { width: 24px; height: 24px; }
 :root[data-look="jukebox"] .lp .key.tile { border-radius: 22px; }
@@ -78,11 +79,11 @@ body.lp {
 .lp .led { width: 8px; height: 8px; border-radius: 50%; background: var(--led); box-shadow: 0 0 8px var(--led); display: inline-block; flex: none; }
 
 /* ---- Chips, segmented, tabs ---- */
-.lp .chip { font-size: 11px; font-stretch: 75%; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; background: var(--field); box-shadow: var(--field-edge); display: inline-flex; gap: 7px; align-items: center; color: var(--text-2); }
+.lp .chip { font-size: calc(var(--key-size, 12px) - 1px); font-stretch: var(--key-stretch, 75%); font-weight: var(--key-weight, 700); letter-spacing: calc(var(--key-ls, .1em) * .8); text-transform: var(--key-case, uppercase); padding: 4px 9px; border-radius: 6px; background: var(--field); box-shadow: var(--field-edge); display: inline-flex; gap: 7px; align-items: center; color: var(--text-2); }
 .lp .chip.on { color: var(--text); box-shadow: var(--field-edge), inset 0 0 0 1px var(--accent); }
 :root[data-look="jukebox"] .lp .chip { border-radius: 999px; }
 .lp .seg { display: inline-flex; padding: 3px; gap: 2px; }
-.lp .seg > button { flex: 1; min-height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); font: 700 10px var(--text-font); font-stretch: 75%; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding: 0 8px; }
+.lp .seg > button { flex: 1; min-height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); font: var(--key-weight, 700) calc(var(--key-size, 12px) - 2px) var(--text-font); font-stretch: var(--key-stretch, 75%); letter-spacing: var(--key-ls, .1em); text-transform: var(--key-case, uppercase); cursor: pointer; padding: 0 8px; }
 :root[data-look="jukebox"] .lp .seg > button { border-radius: 999px; }
 .lp .seg > button.on, .lp .seg > button[aria-pressed="true"] { background: var(--key-bg); color: var(--accent); box-shadow: var(--key-shadow); }
 

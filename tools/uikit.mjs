@@ -12,7 +12,10 @@
 // UI_URL overrides the store (toolbelt/ui-editor/api.php).
 // Files:
 //   ui/system/tokens.json        every token once: its group, kind and what it does
-//   ui/system/themes/<id>.json   {format, id, name, about, scheme, click, tokens:{"bg": "#0A0908", ...}}
+//   ui/system/themes/<id>.json   {format, id, name, about, scheme, click, tokens:{"bg": "#0A0908", ...},
+//                                other?: {scheme, tokens:{...}}}  the theme's other half (light for a dark
+//                                theme, or dark): only the tokens that differ; the page follows the
+//                                phone's setting unless <html data-scheme="light|dark"> says otherwise
 //   ui/system/screens/<id>.json  {format, id, name, about, root: <part>} (R1.3)
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -55,6 +58,16 @@ export function themeProblems(tokens, theme) {
     if (!ok) out.push(`${at}: token "${t.id}" = "${v}" is not a ${t.kind}`);
   }
   for (const k of Object.keys(theme.tokens || {})) if (!tokens.tokens.some((t) => t.id === k)) out.push(`${at}: unknown token "${k}" (add it to tokens.json)`);
+  if (theme.other !== undefined) {
+    const o = theme.other;
+    if (!o || !['dark', 'light'].includes(o.scheme) || o.scheme === theme.scheme) out.push(`${at}: other.scheme must be the opposite of scheme`);
+    for (const [k, v] of Object.entries(o?.tokens || {})) {
+      const t = tokens.tokens.find((x) => x.id === k);
+      if (!t) { out.push(`${at}: other has an unknown token "${k}"`); continue; }
+      const ok = typeof v === 'string' && (t.kind === 'choice' ? t.choices.includes(v) : KIND[t.kind]?.(v.trim()));
+      if (!ok) out.push(`${at}: other token "${k}" = "${v}" is not a ${t.kind}`);
+    }
+  }
   return out;
 }
 
@@ -76,6 +89,13 @@ export function themesCss(tokens, index, themes) {
       lines.push(`  --${t.id}: ${th.tokens[t.id]};`);
     }
     lines.push('}');
+    if (th.other && Object.keys(th.other.tokens || {}).length) {
+      // The other half: when the page asks for it, or the phone is set to it and the page doesn't say.
+      const body = [`  color-scheme: ${th.other.scheme};`, ...tokens.tokens.filter((t) => t.id in th.other.tokens).map((t) => `  --${t.id}: ${th.other.tokens[t.id]};`)];
+      const base = th.id === index.default ? [':root:not([data-look])', `:root[data-look="${th.id}"]`] : [`:root[data-look="${th.id}"]`];
+      lines.push(`${base.map((b) => `${b}[data-scheme="${th.other.scheme}"]`).join(', ')} {`, ...body, '}');
+      lines.push(`@media (prefers-color-scheme: ${th.other.scheme}) {`, `  ${base.map((b) => `${b}:not([data-scheme])`).join(', ')} {`, ...body.map((l) => '  ' + l), '  }', '}');
+    }
   }
   return lines.join('\n') + '\n';
 }
