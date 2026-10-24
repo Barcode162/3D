@@ -56,17 +56,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J5 · Data flows and Dev** (the tools). Data flows and Dev: the data map, the plan on Dev within a minute, one deploy per folder, the retired board's leftovers out, one list of projects, Dev shows the truth · N2 N5
-- [x] **J5.1** The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17) *Check:* Nothing on the phone
-- [x] **J5.2** The plan reaches Dev within about a minute (its own workflow, plan.yml); Dev shows 'as of <build>, N min ago' *Check:* Dev → Plan: the job in Now with 'as of …' under it
-- [x] **J5.3** Exactly one deployer per folder (docs/handbook/deploy-map.json and its check); the game's deploy stops uploading the site *Check:* Nothing on the phone
-- [x] **J5.4** The retired board out of the hub (cards, sections, boards, places); news, screenshots, the key and the Dials stay *Check:* Dev → Publish: news still there
-- [x] **J5.5** One list of projects (toolbelt/tools.json → projects); Dev and the site's projects page both read it *Check:* joshuavelasco.com → Projects: the same list as Dev
-- [x] **J5.6** Dev shows the truth: Overview = the job in Now and its next piece, both deploys, questions for the user, news drafts, errors this week; Plan = jobs, parked, done *Check:* Dev → Overview: J5's next piece and both deploy rows
+**J6 · The Handbook** (the tools). The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
+- [ ] **J6.1** The map of every folder (what it is, its language, who deploys it, its address) and of every language and outside tool *Check:* Nothing on the phone
+- [ ] **J6.2** One page per system (about 40, one template: what it is, status, what you can do, how it works, data, commands, limits, checks, traps, history) *Check:* Nothing on the phone
+- [ ] **J6.3** The data reference written from the files (the world's schema, theme tokens, screen parts, tools, the room protocol) and the world inventory (every thing, its model, what isn't placed) *Check:* Nothing on the phone
+- [ ] **J6.4** Every page and control, by its exact label; a check that compares the pages' labels with the Handbook; the command list written from the front door *Check:* Nothing on the phone
+- [ ] **J6.5** How-to recipes (about 25): each common request mapped to its exact steps *Check:* Nothing on the phone
+- [ ] **J6.6** The old notes sorted (into the Handbook or the archive), decisions still in force recorded, duplicate pictures resolved, a docs check in the quick check *Check:* Nothing on the phone
 
 ## 5. The road
 *Next and later, by chapter. Every item: a tag, what it is, the North star line it serves.*
-**Up next, in order:** J6 → J7 → J8 (the restructure; then the road as J7 orders it)
+**Up next, in order:** J7 → J8 (the restructure; then the road as J7 orders it)
 
 ### The world
 - [ ] **A1** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,7 +126,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **T2** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
 - [ ] **T3** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
 - [ ] **RC2** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
-- [ ] **J6** The Handbook: project and technology maps, every system, every data field, every page and button, every command, how-to recipes; the old notes sorted · N2 N5
 - [ ] **J7** The plan rebuilt with a reality check: a verdict on every item, the world remake laid out, the script language's realistic scope, the order · N2 N5
 - [ ] **J8** Proof, then unfreeze: cold-start drills with fresh AI sessions, a final audit, the first real job through the new system · N2 N5
 
@@ -167,7 +166,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765
+- (this push) J5.1, J5.2, J5.3, J5.4, J5.5, J5.6: J5: data flows and Dev: the data map, the plan on Dev within a minute, one deployer per folder, the retired board out, one list of projects, Dev shows the truth → 7258356^..5cc1f57
+- `c215278` J4.1, J4.2, J4.3, J4.4, J4.5, J4.6: J4: tools and locks: one front door (project.mjs: status, ship, records), the plan as data, checks for only what changed, the locks on main and on generated files, the Playbook tested against the tools → a867cf9^..4a3e765
 - `d00bd4c` J3.1, J3.2, J3.3, J3.4, J3.5, J3.6, J3.7, J2.4: The Playbook: a procedure for every situation (session, intake, a job, replies, incidents, failures, broke and undo, ways of working, changing the structure), one voice (CLAUDE.md the short entry), test only what changed and push only what the user wants; and the tests' own lighting (J2.4) → 00d6601^..959ba86
 - `8793265` J2.1, J2.2, J2.3: Honest checks: GitHub's browser tests use the classic light, every check is listed once and runs in exactly one workflow, every test runs after any failure with a time limit, allowed-to-fail only with a known issue, both deploys report their real state to Dev → a8e1dd9^..1c9c7ef
 - `546c7d4` J1.1, J1.2, J1.3: Freeze and the Charter: R6 closed, the freeze and the user's new rules, the restructure's spec, known issues, the Charter (the user's words, what's realistic, the permission list) and the glossary → b8bcf57^..34ad18c
