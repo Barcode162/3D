@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R2.5 Motion as theme tokens: moving titles (a light passing through the letters, a breathing glow, both, or a gentle float; their paint, colour, glow and speed) and a background glow that slowly drifts; a Motion group in the UI Editor; off when the phone asks for less motion; every theme so far keeps still
+
+`393d12e` · 2026-10-24 04:57 · 17 files, +231 −14 · tests: quick, toolbelt
+
+Phone check: nothing moves yet on the bar, Studio or the hub; in the UI Editor, Theme → Motion → title-motion: float, the title starts to bob
+
+![R2.5 page-ui-screen-s-front-door.jpg](R2.5/page-ui-screen-s-front-door.jpg)
+
 ## R2.4 Compare and mix: /ui/compare.html shows one screen in every theme side by side (light, dark or both; tap one for full size; in the Toolbelt); the UI Editor takes a whole group (colour, shape, type...) from another theme into this one, both halves, one undo; the editor and store tests use a free port and always stop their server
 
 `8b9d289` · 2026-10-24 04:38 · 5 files, +135 −2 · tests: quick, toolbelt
