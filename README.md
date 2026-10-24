@@ -6,6 +6,20 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R2.6 Ember, the house theme (the user's mix): Warm's amber and type, Glass's frosted see-through panels, a three-colour background glow that slowly drifts, titles with a light passing through them and a soft glow; light and dark halves; the Toolbelt wears it (pinned), the UI Editor and Compare start on it; the other ten themes stay as options
+
+`b4f2fea` · 2026-10-24 05:03 · 9 files, +249 −9 · tests: quick, toolbelt
+
+Phone check: open the Toolbelt: amber glow behind frosted cards, the title 'Toolbelt' has a light passing through it every few seconds; the UI Editor opens on Ember; Compare themes shows 'House · Ember' first
+
+![R2.6 page-toolbelt.jpg](R2.6/page-toolbelt.jpg)
+
+![R2.6 page-ui-screen-s-front-door-look-ember.jpg](R2.6/page-ui-screen-s-front-door-look-ember.jpg)
+
+![R2.6 page-ui-screen-s-dev-overview-look-ember-scheme-dark.jpg](R2.6/page-ui-screen-s-dev-overview-look-ember-scheme-dark.jpg)
+
+![R2.6 page-ui-screen-s-dev-overview-look-ember-scheme-light.jpg](R2.6/page-ui-screen-s-dev-overview-look-ember-scheme-light.jpg)
+
 ## R2.5 Motion as theme tokens: moving titles (a light passing through the letters, a breathing glow, both, or a gentle float; their paint, colour, glow and speed) and a background glow that slowly drifts; a Motion group in the UI Editor; off when the phone asks for less motion; every theme so far keeps still
 
 `393d12e` · 2026-10-24 04:57 · 17 files, +231 −14 · tests: quick, toolbelt
