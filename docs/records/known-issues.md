@@ -18,11 +18,9 @@ spec: `docs/plan/restructure.md`.
 | KI-13 | The docs say the repo is public (`docs/DECISIONS.md` → Hosting; `docs/REFERENCE.md` → "this public repo"); it is private (GitHub API, 2026-10-24). | J6.6 |
 | KI-14 | The last session (R3–R6) worked on its own branch (`claude/hub-consolidation-ui-plan-bi2jz8`), not `work-go`; one of its notes (a `docs/DECISIONS.md` line) never reached `main` (brought home in J1.1). Nothing stops a session from using any branch. | J4.3, J4.5 |
 | KI-16 | Stale pointers: `tools/step.mjs`'s header says it writes `NEXT.md`; `NEXT.md` is a stub; `docs/manual/README.md` points to `docs/PLAN.md`. | J3.6, J6.6 |
-| KI-17 | Three channels are pulled at every "go" but have never carried anything from the user: the Studio store (world v1–v3 all published by Claude), the UI Editor store (v0), Dev notes (none). Their role is undecided. | J5.1 |
 | KI-19 | Duplicate pictures: `homepage/site/img/jukebox.jpg` = `ui/system/img/jukebox.jpg`, `homepage/site/img/counter.jpg` = `ui/system/img/door.jpg`. | J6.6 |
 | KI-20 | The roadmap has no feasibility verdicts; tag `L1.8` is used twice (Done `8722f75` and a road item). | J4.1, J7.1 |
 | KI-21 | `docs/audit/*.json` (seven large audits of old paths like `app/main.cpp`, `engine/`): status unknown, probably history. | J6.6 |
-| KI-22 | The world's two copies (the Studio store read live by the game and the room; the repo's built-in fallback) are not documented anywhere as one rule. | J5.1 |
 | KI-23 | `tools/piece.mjs` and `tools/step.mjs` push to `work-go` by default; `work-go` has been stale since 2026-10-23. | J4.3 |
 | KI-24 | The Studio test failed on GitHub on 2026-10-22 (run 179, before the new light) at one check, "S3.4 reopening the Studio: your draft is still there (undefined vs -2)", after a 4-minute wait; every run since stopped before it (KI-5), so its state today is unknown. It may be a real bug (a draft lost when the Studio reopens) or slow-machine timing. Allowed to fail on GitHub until settled. | J2 follow-up (the first J2 run), then a fix |
 | KI-25 | Three browser tests have never run on GitHub: touching things, travel between places, voice chat. Added in J2.2 and allowed to fail until their first GitHub results are in. | J2 follow-up (the first J2 run) |
@@ -33,6 +31,8 @@ spec: `docs/plan/restructure.md`.
 
 | Id | Problem | Closed by |
 |---|---|---|
+| KI-17 | Three channels are pulled at every "go" but have never carried anything from the user: the Studio store, the UI Editor store, Dev notes. Their role is undecided. | J5.1: decision 0001 (`docs/records/decisions/0001-user-channels.md`): each channel has one role; `docs/handbook/data-map.md` → The user's channels. |
+| KI-22 | The world's two copies (the Studio store read live by the game and the room; the repo's built-in fallback) are not documented anywhere as one rule. | J5.1: `docs/handbook/data-map.md` → The world: the store's live version is the live world; the repo's `assets/world/` is the built-in fallback and Claude's working copy. |
 | KI-15 | `tools/piece.mjs` and `tools/step.mjs` hard-code an old session's attribution lines (overridable with `PIECE_ATTRIBUTION`). | J4.3: `tools/lib/attribution.mjs`: the session's own lines (`PIECE_ATTRIBUTION`), else built from this session's id; piece and step share it. |
 | KI-4 | `PLAN.md` → 3. The chapters: the "Now" lines are stale ("R5 replaces them", "Dev (R4) next"); the plan tool has no command to update them. | J4.1: `node tools/plan.mjs chapter <chapter> "<now line>"`; the five lines brought up to date. |
 | KI-7 | Dev's "Last deploy" only reports the game workflow, and it is always red (KI-5), so it says nothing; the hub workflow reports nothing. | J2.3: both workflows report their real state (`tools/ci_status.mjs` → `private/dev/ci-game.json`, `ci-site.json`): started, live, then every failed test by name and the ones allowed to fail; Dev → Overview shows two rows with their age. |

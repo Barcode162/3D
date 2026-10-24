@@ -49,7 +49,7 @@
     "id": "J5.1",
     "text": "The data map (docs/handbook/data-map.md): every store, who writes and reads it, how it syncs, what wins on a conflict, how staleness shows; each of the user's channels gets one role (KI-17)",
     "check": "Nothing on the phone",
-    "done": false
+    "done": true
    },
    {
     "id": "J5.2",
