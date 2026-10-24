@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J8.3 Unfreeze: your Freeze rule taken out on your word (request 2026-10-24 #7, go finish J8) by the plan tool's new retire command (it takes a rule out only on a recorded request and writes nothing in its place; the plan test covers it); the freeze's lock turns itself off with the rule; the Charter's in-practice lines, CLAUDE.md, the Playbook's intake and the chapters' Now lines say the freeze is lifted; the first real job's spec written (docs/plan/jobs/J66.md: the tests in their own job after the deploy, the room test's grace check made steady); checked by the plan, Playbook, locks and Handbook tests
+
+`e3e310e` · 2026-10-24 19:54 · 11 files, +101 −25 · tests: changed
+
+Phone check: Dev → Plan: no Freeze line in your rules; J66 in Now
+
 ## J8.2 Final audit: the docs check green; every flow in the data map checked live (the bar's config.json and version.txt, gh-pages' Site build and Dev's two deploy rows all say 450fb52; the world store v3 and the UI store v0 match the repo; Dev's copy of the plan and the rules equals main's, from build 450fb52, with every job's spec; the room's /health answers, accounts and phone reports answer, the site and Dev load; no unread notes); no instruction outside the Playbook (the root README still called PLAN.md the one doc and told sessions to read it: now it points to CLAUDE.md and the five books); no open drift; the restructure's spec archived to docs/archive/restructure.md with a history banner, every path to it moved (the plan's relink now reaches a path inside a rule too, never the words), CLAUDE.md and the Playbook say it's history; tools/lib/docmoves.mjs mapped to its own checks (it ran the game's whole test set as an unknown file); checked by the plan, workflows, Playbook, locks and Handbook tests
 
 `b2b3f42` · 2026-10-24 19:51 · 19 files, +47 −38 · tests: changed
