@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R1.7 Save and publish in the UI Editor: undo history, a draft kept on the phone (back after a reload), Publish keeps every version (toolbelt/ui-editor/api.php, the Studio's login, Claude's key), History, the editor starts from the newest published version; node tools/uikit.mjs pull/push/status bring it into the repo (ui/system/live-version.json), pulled at the start of every go; the engine reads theme files (looped/ui_theme.*, with a native test)
+
+`b394ba3` · 2026-10-24 04:09 · 18 files, +951 −81 · tests: quick, toolbelt
+
+Phone check: in the UI Editor change a colour, then tap Publish (top right): log in with your bar account, write a note, Publish; open Publish again: History shows v1 with your note; reload the page: your colour is still there
+
+![R1.7 page-toolbelt-ui-editor-index-sel-1-0-1-0.jpg](R1.7/page-toolbelt-ui-editor-index-sel-1-0-1-0.jpg)
+
 ## R1.6 Screen editing in the UI Editor: every option of the selected part (words, numbers, on/off, choices, icons, lists), move up and down, duplicate, delete, add a part after it or inside it, a new screen, the screen's name; deep link to a part (&sel=1.0.1.0); fix: the theme notes no longer overlap, the top bar fits a phone
 
 `0b6722f` · 2026-10-24 04:02 · 4 files, +148 −11 · tests: quick, toolbelt
