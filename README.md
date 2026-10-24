@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## R6.2 The bar's menus and loading screen in Ember: the menu panels are warm near-solid (no blur over the 3D, no extra cost), their titles move and shimmer, keys, tiles, toggles, inputs, the toast, the card and the HUD keys all take the theme's corners, fonts and amber; the loading screen glows like the site, its bar fills amber
+
+`be21a32` · 2026-10-24 09:01 · 2 files, +50 −24 · tests: quick
+
+Phone check: enter the bar: the loading screen glows warm, the bar fills amber; open Menu: warm panels with a moving title, amber keys with round corners
+
 ## R6.1 Ember is the default theme: every page on the Looped look (the bar's menus, the Studio, Dials, News, the style page, Screens, the UI Editor) opens in Ember; a theme picked on purpose (the style page) is still remembered, an old automatic save no longer counts; ?look= and ?scheme= in an address don't stick; the bar and the Studio keep Ember's dark half (pinned), other pages follow the phone; the other ten themes stay options; plan keeper: start also clears 'R6,' from Up next
 
 `14936f8` · 2026-10-24 08:55 · 13 files, +42 −34 · tests: quick, toolbelt
