@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J83.1 Dev → People: Claude's key, owner only. Make a new Claude key asks first, then shows the key once in a field with Copy and says where it goes (the environment's HUB_KEY, never the chat); the hub's button was lost when the hub became Dev. The Dev test makes a key from the page and checks the hub takes it; KI-34 noted (the old key refused)
+
+`19dbbcd` · 2026-10-25 01:37 · 9 files, +125 −29 · tests: changed
+
+Phone check: Dev → People, scroll down: Claude's key with Make a new Claude key; tap it, say yes: the key shows with Copy
+
 ## J82.1 The showroom: a new place (Menu → Places) with five stations that show what Looped does: a coin that turns and flips with sparks around it, four lamps from 1800 K to 6500 K, all 13 materials under a tube light, the jukebox with lights on the beat and neon in a wave, a table with a candle, glasses and stools, a chalkboard, a light switch. Build, native and game checks passed on these world files; the Studio test left out on the user's word (2026-10-25 #2)
 
 `3f56ddb` · 2026-10-25 01:08 · 8 files, +378 −28 · tests: plan, workshop
