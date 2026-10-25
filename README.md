@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J94.1 The place viewer draws: the renderer gets a plain surface layer when a program has no textures of its own, and the viewer's scene starts in its own task; the incident
+
+`6a7dd81` · 2026-10-25 21:06 · 6 files, +79 −18 · tests: none
+
+Phone check: joshuavelasco.com/bar/looped/ shows the showroom with its lights and floating sparks; drag to look around
+
 ## J93.1 The phone versions of the models carry the engine's texture label again (tools/assets/astc_pack.py writes image/x-looped-astc, the label J86.1 gave the engine), so their textures load; the incident
 
 `28767be` · 2026-10-25 20:49 · 5 files, +67 −20 · tests: none
