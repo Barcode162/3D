@@ -36,31 +36,37 @@
   }
  ],
  "now": {
-  "id": "J88",
-  "title": "A real engine, step 3",
+  "id": "J91",
+  "title": "A real engine, step 4",
   "chapter": "the engine",
-  "about": "A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md.",
+  "about": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
   "serves": [
    "N3",
    "N5"
   ],
   "pieces": [
    {
-    "id": "J88.1",
-    "text": "Up to 255 lamps; bounced light and walls blocking light for the first 127",
-    "check": "The bar looks as before",
-    "done": true
+    "id": "J91.1",
+    "text": "The prepass and ambient occlusion, its blur and its switch",
+    "check": "By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone",
+    "done": false
    },
    {
-    "id": "J88.3",
-    "text": "Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed",
-    "check": "?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls",
-    "done": true
+    "id": "J91.2",
+    "text": "The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by walls (bounced light's probes), its switch",
+    "check": "Stand at the stage door: soft beams under the stage lights; Light beams off: gone",
+    "done": false
+   },
+   {
+    "id": "J91.3",
+    "text": "Tuned on the phone: the defaults from a ?perf=1 report by the fire",
+    "check": "The bar stays smooth with both on",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -828,19 +834,6 @@
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
     }
-   },
-   {
-    "id": "J91",
-    "text": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
-    "serves": [
-     "N3",
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
-    }
    }
   ],
   "tools": [
@@ -1159,6 +1152,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2"
+  },
   {
    "build": "7521b64",
    "text": "J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1"
