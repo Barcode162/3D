@@ -7,7 +7,7 @@ the phone), with all its mipmaps made here. Run by the build (CMakeLists.txt):
 
 For each model it writes <site>/models/<name>.astc.glb.gz, where each image's
 bytes are only a reference ("BA3R" + a 16-letter key, mimeType
-"image/x-bar3d-astc"); the texture itself is <site>/tex/<key>.ba3c.gz, shared
+"image/x-looped-astc"); the texture itself is <site>/tex/<key>.ba3c.gz, shared
 by every model that uses the same image, so it downloads once. The key is a
 hash of the source image and how it's used, so unchanged images are never
 re-encoded (the cache dir keeps them between builds).
@@ -41,7 +41,7 @@ from PIL import Image
 # the image still looks the same, else 4x4 (8 bits per pixel).
 FINE, COARSE = 4, 8
 MIN_PSNR = 40.0  # dB, measured on the full-size level: near visually lossless
-MIME = 'image/x-bar3d-astc'
+MIME = 'image/x-looped-astc'  # the engine checks it (looped/model.cpp kAstcMime)
 VERSION = b'2'  # bump to re-encode everything
 
 
