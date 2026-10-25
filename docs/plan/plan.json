@@ -49,7 +49,7 @@
     "id": "J90.1",
     "text": "Motion and life in Dev: a glow that drifts behind everything, pages that come in piece by piece and slide (deeper from the right, back from the left), rows and tiles that press, ripple and tilt under your finger, breathing lights, numbers that count; Calm (the dot at the top right) stops it all, and iPhone's Reduce Motion is respected",
     "check": "Open Dev: the glow drifts behind the cards; tap a row: it presses in and ripples from your finger; tap the dot at the top right: everything holds still",
-    "done": false
+    "done": true
    },
    {
     "id": "J90.2",
@@ -1194,7 +1194,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "4c06da4",
    "text": "J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d"
   },
   {
