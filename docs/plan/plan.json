@@ -36,24 +36,25 @@
   }
  ],
  "now": {
-  "id": "J93",
-  "title": "Urgent fix",
+  "id": "J87",
+  "title": "A real engine, step 2",
   "chapter": "the engine",
-  "about": "Urgent fix: the models' textures load again on the phone (the phone versions' label, renamed in J86.1, matched again by the tool that makes them).",
+  "about": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
   "serves": [
-   "N5"
+   "N5",
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J93.1",
-    "text": "The phone versions of the models carry the engine's new texture label again (tools/assets/astc_pack.py), so their textures load",
-    "check": "The bar looks as before: wood, brick, the bottles' labels all have their textures (not flat colours)",
-    "done": true
+    "id": "J87.1",
+    "text": "Copies drawn together (instancing): every copy of a model part in one draw from one buffer, in the main view, the mirrors and the reflection capture; the smoke test prints the draw count",
+    "check": "The bar looks exactly as before; ?perf=1 shows fewer draws",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -847,19 +848,6 @@
      "kind": "cost",
      "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
     }
-   },
-   {
-    "id": "J87",
-    "text": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
-    "serves": [
-     "N5",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The renderer's own code; the world remake multiplies the things to draw, so this comes before it"
-    }
    }
   ],
   "tools": [
@@ -1170,6 +1158,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J93.1: J93: urgent fix: the models' textures load again on the phone → 28767be^..28767be"
+  },
   {
    "build": "673494d",
    "text": "J86.1, J86.2: J86: Looped is its own engine: its own library, one host object for the page, its own place loader and player, limits given at start, and a second program (the place viewer at /bar/looped/) built from it alone → d7b2ce2^..550e9d1"
