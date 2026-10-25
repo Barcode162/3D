@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J93.1 The phone versions of the models carry the engine's texture label again (tools/assets/astc_pack.py writes image/x-looped-astc, the label J86.1 gave the engine), so their textures load; the incident
+
+`28767be` · 2026-10-25 20:49 · 5 files, +67 −20 · tests: none
+
+Phone check: The bar looks as before: wood, brick, the bottles' labels all have their textures (not flat colours)
+
 ## J86.2 The engine lays places out and plays them by itself (looped/world/place_layout.*, looped/place_player.*; the bar builds on both), the renderer's limits are given at start, and the place viewer: a second program from the engine alone at /bar/looped/ (?place=showroom), drag to look around, pinch to come closer
 
 `550e9d1` · 2026-10-25 20:40 · 25 files, +776 −182 · tests: none
