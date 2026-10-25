@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J84 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (after J54: the fixes from Claude's review and the Loop Maker on the user's word, 2026-10-25 #5: safety first, the Loop Maker, the engine made real, accounts, then safety's next steps J65 and J20 before the world grows; the rest as approved 2026-10-24 #7)
+**Up next, in order:** J84 → J90 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (after J54: the fixes from Claude's review and the Loop Maker, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, after J84, which was built first; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -205,6 +205,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own test; sign-up and profiles have no browser test on GitHub today
 - [ ] **J68** The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29). · N2
   *Verdict:* Doable now — Nothing reads them since S4.2; the hub test covers what stays
+- [ ] **J90** Dev remade: nested pages (drill into a project, a chapter, a job and back, a trail at the top, Find), constant smooth Ember motion (a living background, cards that answer your finger, sliding pages, a Calm switch) and the Live panel on Home (the bar, who's in it, the deploys, the job in Now, Claude's latest; updating by itself, animating what changed, one-tap reactions to Claude). Its plan: docs/plan/jobs/J90.md. · N5 N1
+  *Verdict:* Doable now — Dev is our own pages; the motion moves and fades only, pauses in the background and with Reduce Motion, and has an off switch
 
 ### The backbone
 - [ ] **J60** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
