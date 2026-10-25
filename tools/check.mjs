@@ -72,11 +72,15 @@ for (const s of systems) {
     }
     process.stdout.write(`… ${s}/${name}\r`);
     const t0 = Date.now();
-    const p = spawnSync('bash', ['-c', cmd], { encoding: 'utf8', maxBuffer: 1 << 28 });
-    writeFileSync(log, (p.stdout || '') + (p.stderr || ''));
+    // Every check has a time limit (J54.3): a browser test ends itself after
+    // TEST_LIMIT_MIN (tools/lib/browser.mjs); this is the backstop for any check.
+    const limitMin = Number(process.env.CHECK_LIMIT_MIN) || 45;
+    const p = spawnSync('bash', ['-c', cmd], { encoding: 'utf8', maxBuffer: 1 << 28, timeout: limitMin * 60000, killSignal: 'SIGKILL' });
+    const over = p.error && p.error.code === 'ETIMEDOUT';
+    writeFileSync(log, (p.stdout || '') + (p.stderr || '') + (over ? `\nFAIL: stopped after its ${limitMin}-minute limit (CHECK_LIMIT_MIN)\n` : ''));
     const ok = p.status === 0;
     if (!ok && name === 'build') buildFailed = true;
-    rows.push({ s, name, r: ok ? 'PASS' : 'FAIL', t: (Date.now() - t0) / 1000, log });
+    rows.push({ s, name, r: ok ? 'PASS' : 'FAIL', t: (Date.now() - t0) / 1000, log, why: over ? `over its ${limitMin}-minute limit: ${log}` : '' });
   }
 }
 console.log('\n=== check ===');

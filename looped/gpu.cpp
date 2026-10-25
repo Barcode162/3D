@@ -180,6 +180,31 @@ void Gpu::configureSurface() {
   depthView = device.CreateTexture(&depthDesc).CreateView();
 }
 
+bool Gpu::mayDraw(double nowMs) {
+  if (maxFps > 0 && nowMs - lastDrawMs_ < 1000.0 / maxFps - 1.0) return false;
+  if (inFlight_ >= kMaxFramesInFlight && !noWait_) {
+    // A slow GPU (software drawing, a big upload) is waited for, however
+    // long. Only a GPU that has never once said "done" in 20 s is taken for
+    // one whose answers don't come, and then drawing stops waiting for good,
+    // so the picture can never freeze.
+    if (doneCount_ > 0 || nowMs - lastDoneMs_ < 20000) return false;
+    LOG_INFO("GPU: no frame has ever said it finished (20 s); drawing without waiting for the GPU.");
+    noWait_ = true;
+  }
+  lastDrawMs_ = nowMs;
+  return true;
+}
+
+void Gpu::endFrame() {
+  if (inFlight_ == 0) lastDoneMs_ = emscripten_get_now();  // the wait starts now
+  ++inFlight_;
+  queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous, [this](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
+    if (inFlight_ > 0) --inFlight_;
+    ++doneCount_;
+    lastDoneMs_ = emscripten_get_now();
+  });
+}
+
 wgpu::TextureView Gpu::beginFrame() {
   wgpu::SurfaceTexture surfaceTexture;
   surface_.GetCurrentTexture(&surfaceTexture);

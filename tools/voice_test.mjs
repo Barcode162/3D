@@ -10,10 +10,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { startRoom, probe } from './lib/room.mjs';
 import { extname, join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { launchBrowser } from './lib/browser.mjs';
 
-const require = createRequire(import.meta.url);
-const playwright = require('playwright');
 const siteDir = resolve('build/site');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm' };
 const site = createServer(async (req, res) => {
@@ -31,13 +29,19 @@ const port = site.address().port;
 const roomServer = await startRoom(8794, { CONNECT_LIMIT_PER_MIN: 1000 });
 const ROOM = 'voice' + Math.floor(Math.random() * 1e6);
 
-const browser = await playwright.chromium.launch({
-  args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
-         '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist',
-         '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'],
-});
-const context = await browser.newContext({ viewport: { width: 430, height: 932 }, permissions: ['microphone'] });
+const browser = await launchBrowser(['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required']);  // the tests' light and frame cap on GitHub (KI-5)
+// Each player signed in as an adult with the room's test login (J84: voice
+// joins only signed-in people of the same age group; guests are refused, as
+// tools/room_test.mjs checks). Each needs its own browser context: the login
+// is kept in the page's storage.
 async function open(name, extra) {
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 }, permissions: ['microphone'] });
+  await context.addInitScript(([acct, nm]) => {
+    try {
+      localStorage.setItem('bar3dToken', 'test:' + acct);
+      localStorage.setItem('bar3dProfile', JSON.stringify({ id: acct, user: acct, name: nm, band: 'adult', badges: [] }));
+    } catch (e) {}
+  }, [name, name]);  // the room's test login names you by it
   const page = await context.newPage();
   await page.goto(`http://localhost:${port}/?skipintro&room=${ROOM}&name=${name}&cloud=${encodeURIComponent(roomServer.ws)}&${extra}`);
   return page;

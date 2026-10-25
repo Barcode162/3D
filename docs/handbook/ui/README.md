@@ -2,11 +2,17 @@
 
 One page per screen, with every control by its exact label (the first column) and what it does. The pages a test can open are compared with their live labels by `tools/ui_labels_test.mjs`; the Studio and the bar's menus are listed from their code, and the piece tool refuses a change to them without their page.
 
-- [Dev: the tab bar](dev-frame.md)
+- [Dev: the top bar and the tab bar](dev-frame.md)
+- [Dev → Find](dev-find.md)
 - [Dev → Overview](dev-overview.md)
+- [Dev → Overview → a Live tile](dev-live-tile.md)
 - [Dev → People](dev-people.md)
 - [Dev → Plan](dev-plan.md)
+- [Dev → Plan → a chapter](dev-chapter.md)
+- [Dev → Plan → a job](dev-job.md)
+- [Dev → Plan → Done](dev-plan-done.md)
 - [Dev → Projects](dev-projects.md)
+- [Dev → Projects → a project](dev-project.md)
 - [Dev → Publish (News)](dev-publish.md)
 - [Dev → Publish → Highlights](dev-publish-highlights.md)
 - [Dev → Publish → The site](dev-publish-site.md)

@@ -122,7 +122,7 @@ props that changed since the previous TICK.
 | `J` | JOIN | player |
 | `L` | LEAVE | `{slot, why?: str ≤64}` |
 | `F` | PROFILE | `{slot, name: str 1..24, acct?: str ≤32, av?: int, badges?: [str ≤16], role?: str ≤16}` |
-| `G` | SIGNAL | `{from: slot, data: any}` |
+| `G` | SIGNAL | `{from: slot, data: any}`; or the room's refusal to the sender, `{from: <the target's slot>, data: {refused: "guest" \| "birth" \| "apart"}}`: only two signed-in people of the same age group may talk (J84) |
 | `P` | PONG | `{c: number (echo), s: number (server ms)}` |
 
 - *player* = `{slot, name: str 1..24, look: int 0..255, acct?: str ≤32, av?: int, away?: 0 or 1}`

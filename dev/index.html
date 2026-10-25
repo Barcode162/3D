@@ -6,16 +6,26 @@
 <meta name="theme-color" content="#0E0906">
 <meta name="robots" content="noindex, nofollow">
 <title>Dev · J Production</title>
-<!-- Dev (PLAN.md R4): the control room for everything but the main page and
-     the games. Owner and admins only (the bar's login). Each tab is a screen
-     file (ui/system/screens/dev-*.json, editable in the UI Editor); dev.js
-     fills its slots (parts with an "id") with live data. -->
+<!-- Dev (PLAN.md R4, J90): the control room for everything but the main page
+     and the games. Owner and admins only (the bar's login). Each tab is a
+     screen file (ui/system/screens/dev-*.json, editable in the UI Editor);
+     dev.js fills its slots (parts with an "id") with live data and draws the
+     nested pages under the tabs (a project, a chapter, a job…). The top bar
+     holds the trail (where you are; each step a way back), Back, Find and
+     Calm (the motion off). The glow behind it all drifts (dev.css). -->
 <link rel="stylesheet" href="/ui/themes.css">
 <link rel="stylesheet" href="/ui/looped.css">
 <link rel="stylesheet" href="/ui/screen.css">
 <link rel="stylesheet" href="dev.css">
 </head>
-<body class="lp">
+<body class="lp dev">
+<div class="dev-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<header id="bar" class="dev-bar" hidden>
+  <button id="back" class="dev-icon-btn" type="button" aria-label="Back" hidden><svg class="ico" aria-hidden="true"><use href="/ui/icons.svg#i-back"/></svg></button>
+  <nav id="trail" class="dev-trail" aria-label="Where you are"></nav>
+  <button id="find" class="dev-icon-btn" type="button" aria-label="Find"><svg class="ico" aria-hidden="true"><use href="/ui/icons.svg#i-search"/></svg></button>
+  <button id="calm" class="dev-icon-btn dev-calm" type="button" aria-label="Calm" aria-pressed="false"><span class="dev-calm-dot" aria-hidden="true"></span></button>
+</header>
 <main id="view" class="dev-view" aria-live="polite"></main>
 <form id="login" class="dev-login panel" hidden>
   <span class="label">J Production · Dev</span>
@@ -30,10 +40,12 @@
 <script src="/ui/looped.js"></script>
 <script src="/ui/screen.js"></script>
 <script src="dev.js"></script>
+<script src="motion.js"></script>
 <script src="plan.js"></script>
 <script src="overview.js"></script>
 <script src="projects.js"></script>
 <script src="plantab.js"></script>
+<script src="find.js"></script>
 <script src="publish.js"></script>
 <script src="people.js"></script>
 </body>

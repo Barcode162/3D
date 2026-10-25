@@ -26,7 +26,7 @@
    "id": "tools",
    "name": "The tools",
    "what": "the Toolbelt and Dev.",
-   "now": "Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8)."
+   "now": "Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the five books and their checks are done (J1-J8); next: Dev remade (J90) and the Studio's Loop Maker (J57)."
   },
   {
    "id": "backbone",
@@ -36,36 +36,37 @@
   }
  ],
  "now": {
-  "id": "J54",
-  "title": "CI's browser tests",
+  "id": "J85",
+  "title": "The Loop Maker, step 1, the engine",
   "chapter": "the engine",
-  "about": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again; and no browser test can hang on this machine (the Studio test sat idle 19 min on 2026-10-25)",
+  "about": "The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md.",
   "serves": [
-   "N5"
+   "N2",
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J54.1",
-    "text": "Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5",
-    "check": "Dev → Plan: J54.1 ticked; the known issue names the cause",
+    "id": "J85.1",
+    "text": "The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), \"@name\" wherever a loop goes, a missing or broken pattern named with where it's used; native tests",
+    "check": "Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before",
     "done": false
    },
    {
-    "id": "J54.2",
-    "text": "The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened)",
-    "check": "Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue",
+    "id": "J85.2",
+    "text": "Timelines in the world model, like a music app's arrangement: tracks over things, clips that play a loop from a beat for a length, fades, a spread that runs a wave along a row, layered on each thing's own loop, swapped live; worked out from the shared clock alone, so every phone and the room agree; native tests",
+    "check": "Nothing changes in the bar yet",
     "done": false
    },
    {
-    "id": "J54.3",
-    "text": "No browser test can hang on this machine either: a slow picture is noted and the test goes on, and every test has a time limit (the Studio test sat idle 19 min on 2026-10-25, request #2)",
-    "check": "Ask for a small world change: it saves in minutes, with no test left waiting",
+    "id": "J85.3",
+    "text": "The showroom's stage plays a 16-beat show (the lamps swell one after another, the coin hops, the stools turn, the neon wave), the room's copy runs it too, and the store accepts the loops file",
+    "check": "joshuavelasco.com/bar/?place=showroom: the lamps swell one after another, the coin hops on beats 9-12, the stools turn on 13-16, and it loops; on two phones at once, both show the same beat",
     "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the showroom went first on the user's word, 2026-10-25 #1; the world remake and the script language take turns; then the rest of the road)",
+ "upNext": "J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, next; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -820,6 +821,44 @@
      "after": "J80",
      "why": "Proves the language on real things without changing what you see"
     }
+   },
+   {
+    "id": "J86",
+    "text": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone"
+    }
+   },
+   {
+    "id": "J87",
+    "text": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
+    "serves": [
+     "N5",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The renderer's own code; the world remake multiplies the things to draw, so this comes before it"
+    }
+   },
+   {
+    "id": "J88",
+    "text": "A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md.",
+    "serves": [
+     "N3",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost"
+    }
    }
   ],
   "tools": [
@@ -852,15 +891,16 @@
    {
     "id": "J57",
     "formerly": "T2",
-    "text": "The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone.",
+    "text": "The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md.",
     "serves": [
+     "N2",
      "N3"
     ],
     "done": false,
     "verdict": {
      "kind": "after",
-     "after": "J79",
-     "why": "The timeline's events are the scripts' events, on the shared clock that exists"
+     "after": "J85",
+     "why": "The engine plays patterns and timelines first (J85); clips need no script language, only events on the timeline wait for J79"
     }
    },
    {
@@ -966,6 +1006,18 @@
     "verdict": {
      "kind": "now",
      "why": "Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it"
+    }
+   },
+   {
+    "id": "J89",
+    "text": "Accounts hardened: logins expire when unused for 90 days, password guessing is limited (10 tries in 15 minutes), a profile's save is locked against a second one. Its plan: docs/plan/jobs/J89.md.",
+    "serves": [
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "account.php's own code; no data is moved or deleted"
     }
    }
   ]
@@ -1130,6 +1182,18 @@
  "done": [
   {
    "build": null,
+   "text": "J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282"
+  },
+  {
+   "build": "4c06da4",
+   "text": "J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d"
+  },
+  {
+   "build": "109fe1c",
+   "text": "J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce"
+  },
+  {
+   "build": "2eb56b4",
    "text": "J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd"
   },
   {

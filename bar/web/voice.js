@@ -15,6 +15,10 @@ window.bar3dVoice = (function () {
   var S = window.bar3dSettings;
   var ICE = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
   var peers = {};         // id -> peer
+  // The room refuses a call the rule forbids (J84: only signed-in people of
+  // the same age group talk): id -> why ("guest", "birth" or "apart"); no
+  // retries until your login changes.
+  var refused = {};
   var mic = null;         // {stream, source, gain, analyser, gate, dest, track}
   var talking = false;    // push to talk held
   var quietTicks = 99, gateIsOpen = false, lastDb = -100;
@@ -276,6 +280,13 @@ window.bar3dVoice = (function () {
   }
 
   function onSignal(from, data) {
+    if (data.refused) {
+      if (!refused[from]) info('Voice: no call with ' + nameOf(from) + ' (' + (data.refused === 'guest' ? 'voice is for signed-in players'
+        : data.refused === 'birth' ? 'add your birth date to talk' : 'voice joins people of your own age group') + ').');
+      refused[from] = String(data.refused);
+      drop(from);
+      return;
+    }
     if (data.t === 'offer') {
       if (peers[from]) drop(from);  // they restarted: start over
       var p = makePeer(from, false);
@@ -292,6 +303,15 @@ window.bar3dVoice = (function () {
         q.pc.setRemoteDescription({ type: 'answer', sdp: data.sdp }).catch(function (e) { info('Voice: ' + e); });
       }
     }
+  }
+
+  // Why you can't talk at all, or '' (J84; the room enforces it, this only
+  // saves asking): "guest" (not signed in) or "birth" (an account made before
+  // birth dates were asked).
+  function cantTalk() {
+    var A = window.bar3dAccount;
+    if (!A || !A.loggedIn || !A.loggedIn()) return 'guest';
+    return A.band && !A.band() ? 'birth' : '';
   }
 
   // Keeps a connection to everyone in the room: the player with the lower
@@ -313,7 +333,7 @@ window.bar3dVoice = (function () {
       present[id] = true;
       var p = peers[id];
       if (p && p.state !== 'connected' && performance.now() - p.created > 20000 && p.initiator) { drop(id); p = null; }
-      if (!p && me < id && !made) { makePeer(id, true); made = true; }
+      if (!p && me < id && !made && !refused[id] && !cantTalk()) { makePeer(id, true); made = true; }
     });
     for (var id in peers) if (!present[id]) drop(id);
   }
@@ -354,10 +374,18 @@ window.bar3dVoice = (function () {
     setMonitor: setMonitor,
     monitoring: function () { return !!monitorNode; },
     statusText: function () {
+      var why = cantTalk();
+      if (why === 'guest') return 'Voice chat is for signed-in players: log in or sign up (Menu → Profile) to talk.';
+      if (why === 'birth') return 'Add your birth date to talk (below): voice chat joins people of your own age group.';
       var ids = Object.keys(peers), on = ids.filter(function (id) { return peers[id].state === 'connected'; });
-      if (!net() || !net().peers().length) return 'Nobody else is here yet.';
-      return 'Connected to ' + on.length + ' of ' + net().peers().length + ' player(s)' + (mic ? '' : ' (your mic is off: you can hear them)');
+      var others = net() ? net().peers().filter(function (id) { return !refused[id]; }) : [];
+      if (!others.length) return net() && net().peers().length ? 'Nobody here you can talk to yet (voice joins signed-in people of your own age group).' : 'Nobody else is here yet.';
+      return 'Connected to ' + on.length + ' of ' + others.length + ' player(s)' + (mic ? '' : ' (your mic is off: you can hear them)');
     },
+    // "guest", "birth" or "" (J84): why you can't talk at all.
+    cantTalk: cantTalk,
+    // Your login changed (signed in or out, a birth date added): try everyone again.
+    loginChanged: function () { refused = {}; for (var id in peers) drop(id); },
     // From C++: where a player's head is (by player index), and if they're on the stage mic.
     place: function (index, x, y, z, boost) {
       var n = net();

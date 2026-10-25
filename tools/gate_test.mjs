@@ -8,7 +8,7 @@
 // Then the sign-in page itself in Chromium: log in → the bar loads.
 // Usage: NODE_PATH=$(npm root -g) node tools/gate_test.mjs
 import { spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -102,6 +102,32 @@ try {
   r = await mia.get('');
   body = await r.text();
   check(r.status === 200 && body.includes('THE BAR'), 'the bar is open: a new account gets in (user, 2026-10-21)');
+  // An account made before birth dates were asked adds its own, once (J84):
+  // voice chat needs its age group. Ola signs up, then her file loses its
+  // birth date (as the oldest accounts are).
+  {
+    const ola = person();
+    j = await ola.api({ a: 'signup', user: 'ola', pass: 'secret3', name: 'Ola', birth: '1999-05-06' });
+    const file = join(site, 'accounts', 'users', `${j.me.id}.json`);
+    const u = JSON.parse(readFileSync(file, 'utf8'));
+    delete u.birth;
+    writeFileSync(file, JSON.stringify(u));
+    j = await ola.api({ a: 'me' });
+    check(j.ok && j.me.band === '', 'an account without a birth date has no age group');
+    const ymd = (yearsAgo) => { const d = new Date(); d.setFullYear(d.getFullYear() - yearsAgo); return d.toISOString().slice(0, 10); };
+    j = await ola.api({ a: 'birth', birth: ymd(10) });
+    check(!j.ok && /13 and up/.test(j.error), 'adding a birth date under 13 is refused');
+    j = await ola.api({ a: 'birth', birth: '2001-02-30' });
+    check(!j.ok, 'a date that doesn\'t exist is refused');
+    j = await ola.api({ a: 'birth', birth: ymd(15) });
+    check(j.ok && j.me.band === 'teen', 'a 15-year-old\'s birth date makes a teen');
+    j = await ola.api({ a: 'birth', birth: '1999-05-06' });
+    check(!j.ok && /already/.test(j.error), 'and it can\'t be changed after');
+    j = await mia.api({ a: 'birth', birth: '1990-01-01' });
+    check(!j.ok && /already/.test(j.error), 'an account with a birth date can\'t set another');
+    j = await ola.api({ a: 'profile', id: j.me ? j.me.id : (await ola.api({ a: 'me' })).me.id });
+    check(j.ok && !('band' in j.profile) && !('birth' in j.profile), 'nobody else sees the age group or the date');
+  }
   r = await person().get('', { Cookie: 'bar_guest=1' });
   check(r.status === 200 && (await r.text()).includes('THE BAR'), 'a guest gets in');
   j = await mia.api({ a: 'people' });

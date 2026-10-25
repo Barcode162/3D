@@ -26,18 +26,18 @@
     return {
       north: r.north.map(function (s) { return { id: s.id, title: s.title, text: plain(s.text).replace(/\s*\n\s*/g, ' ') }; }),  // whole lines (the old reader cut them at the first line break)
       rules: r.rules.map(function (x) { return plain('(' + x.date + ') ' + x.text); }),
-      chapters: p.chapters.map(function (c) { return { name: c.name, what: plain(c.what), now: plain(c.now) }; }),
+      chapters: p.chapters.map(function (c) { return { id: c.id, name: c.name, what: plain(c.what), now: plain(c.now) }; }),
       now: n ? { tag: n.id, title: n.title, chapter: n.chapter, about: plain(n.about),
         pieces: n.pieces.map(function (x) { return { tag: x.id, done: x.done, text: plain(x.text), check: plain(x.check) }; }) } : null,
-      road: byName(p.road, function (x) { return { tag: x.id, formerly: x.formerly || '', done: x.done, text: plain(x.text), serves: x.serves, verdict: verdictOf(x.verdict) }; }),
+      road: byName(p.road, function (x) { return { tag: x.id, formerly: x.formerly || '', done: x.done, text: plain(x.text), serves: x.serves, verdict: verdictOf(x.verdict), after: (x.verdict && x.verdict.after) || '' }; }),
       upNext: plain(p.upNext),
       parked: byName(p.parked, function (x) { return typeof x === 'string' ? { text: plain(x), verdict: null } : { text: plain(x.text), verdict: verdictOf(x.verdict) }; }),
       done: p.done.map(function (d) { return { sha: d.build || 'this push', text: plain(d.text) }; }),
     };
   };
   var cached = null;
-  D.plan = function () {
-    if (cached) return cached;
+  D.plan = function (fresh) {
+    if (cached && !fresh) return cached;
     cached = (D.demo ? Promise.all([D.get('/docs/plan/plan.json'), D.get('/docs/charter/rules.json')]).then(function (a) { return { data: { plan: a[0], rules: a[1] } }; })
                      : D.post('/dev/api.php', { a: 'plan' }))
       .then(function (j) {
