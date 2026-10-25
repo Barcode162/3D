@@ -48,7 +48,7 @@
     "id": "J54.1",
     "text": "Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5",
     "check": "Dev → Plan: J54.1 ticked; the known issue names the cause",
-    "done": false
+    "done": true
    },
    {
     "id": "J54.2",
@@ -1129,7 +1129,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "2eb56b4",
    "text": "J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd"
   },
   {

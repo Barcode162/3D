@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J54 · CI's browser tests** (the engine). CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again; and no browser test can hang on this machine (the Studio test sat idle 19 min on 2026-10-25) · N5
-- [ ] **J54.1** Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5 *Check:* Dev → Plan: J54.1 ticked; the known issue names the cause
+- [x] **J54.1** Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5 *Check:* Dev → Plan: J54.1 ticked; the known issue names the cause
 - [ ] **J54.2** The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened) *Check:* Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue
 - [ ] **J54.3** No browser test can hang on this machine either: a slow picture is noted and the test goes on, and every test has a time limit (the Studio test sat idle 19 min on 2026-10-25, request #2) *Check:* Ask for a small world change: it saves in minutes, with no test left waiting
 
@@ -263,7 +263,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd
+- `2eb56b4` J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd
 - `4944bcc` J82.1: J82 the showroom: a new place (Menu → Places) with five stations that show what Looped does → 3f56ddb^..3f56ddb
 - `1c830fd` J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116
 - `a29204e` J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
