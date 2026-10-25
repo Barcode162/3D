@@ -181,7 +181,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
-- [ ] **J88** A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace, smooth edges (4x MSAA); each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
+- [ ] **J88** A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md. · N3 N5
   *Verdict:* Doable now — The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
@@ -242,6 +242,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Needs an experiment — Sound from the physics, heat, and day and night are within reach; smell can only show through what you see and hear (a phone makes no smells)
 - The engine checks itself: it notices when something isn't right (a thing out of place, a missing model, a broken loop) and helps say what and where (request 2026-10-24 #5)
   *Verdict:* Doable now — Checks on the world's data and in the engine (a thing out of place, a missing model, a broken loop); the Handbook's inventory already flags some
+- Smooth edges (4x MSAA, or a cheaper smoothing pass): out of J88 on the user's word, for later when we optimize; MSAA smooths jagged edges but costs phone speed and ~75 MB (request 2026-10-25 #13; research in docs/plan/jobs/J88.md)
+  *Verdict:* Doable at a cost — Phone speed and memory: Filament rates 4x MSAA high cost on mobile
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.
