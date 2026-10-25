@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J95.1 GitHub's long browser tests only on request (Run workflow, tests ticked); deploys keep their build and quick checks; Dev shows "browser tests on request"; the Handbook says how
+
+`6f66cb1` · 2026-10-25 21:48 · 4 files, +36 −29 · tests: none
+
+Phone check: Dev → Overview: the game's deploy tile says live, browser tests on request; the bar is the new build
+
 ## J87.1 Copies drawn together: per-copy data (matrix, tint and glow, highlight) in an instance buffer, every copy of a model part in one draw, in the main view, the mirrors and the reflection capture; each pass at its own place in the buffer; up to 4096 models
 
 `eb42d32` · 2026-10-25 21:34 · 6 files, +160 −93 · tests: none
