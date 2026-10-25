@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J86.2 The engine lays places out and plays them by itself (looped/world/place_layout.*, looped/place_player.*; the bar builds on both), the renderer's limits are given at start, and the place viewer: a second program from the engine alone at /bar/looped/ (?place=showroom), drag to look around, pinch to come closer
+
+`550e9d1` · 2026-10-25 20:40 · 25 files, +776 −182 · tests: none
+
+Phone check: joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it; drag to look around, pinch to come closer. The bar itself looks and works as before
+
 ## J86.1 Looped built as its own library (the looped target the bar links); every call the engine makes to the page goes through window.loopedHost (looped/host.*), which the bar's page fills with its own parts; tools/lint_engine.mjs in the quick check keeps bar names and bar files out of the engine
 
 `d7b2ce2` · 2026-10-25 20:32 · 21 files, +183 −77 · tests: none
