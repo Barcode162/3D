@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J84 · Safety on the server, step 1** (the backbone). Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md. · N4
-- [ ] **J84.1** The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case *Check:* Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest
+- [x] **J84.1** The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case *Check:* Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest
 - [ ] **J84.2** The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field) *Check:* Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults
 
 ## 5. The road
@@ -274,7 +274,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce
+- `109fe1c` J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce
 - `2eb56b4` J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd
 - `4944bcc` J82.1: J82 the showroom: a new place (Menu → Places) with five stations that show what Looped does → 3f56ddb^..3f56ddb
 - `1c830fd` J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116

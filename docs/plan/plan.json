@@ -48,7 +48,7 @@
     "id": "J84.1",
     "text": "The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case",
     "check": "Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest",
-    "done": false
+    "done": true
    },
    {
     "id": "J84.2",
@@ -1200,7 +1200,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "109fe1c",
    "text": "J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce"
   },
   {
