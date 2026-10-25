@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the showroom went first on the user's word, 2026-10-25 #1; the world remake and the script language take turns; then the rest of the road)
+**Up next, in order:** J84 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (after J54: the fixes from Claude's review and the Loop Maker on the user's word, 2026-10-25 #5: safety first, the Loop Maker, the engine made real, accounts, then safety's next steps J65 and J20 before the world grows; the rest as approved 2026-10-24 #7)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -181,14 +181,22 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
+- [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
+  *Verdict:* Doable now — The world model already works every loop out from the shared clock; patterns and clips are the same maths, so phones and the room still agree without talking
+- [ ] **J86** A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
+  *Verdict:* Doable now — Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone
+- [ ] **J87** A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md. · N5 N3
+  *Verdict:* Doable now — The renderer's own code; the world remake multiplies the things to draw, so this comes before it
+- [ ] **J88** A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
+  *Verdict:* Doable now — The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
   *Formerly* P2 · *Verdict:* Doable now — Needs your phone: every "broke S…" you report, and a ?perf=1 report with the Monitor open
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
   *Formerly* TL1 · *Verdict:* Doable now — A list of switches in the Toolbelt; no engine change
-- [ ] **J57** The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone. · N3
-  *Formerly* T2 · *Verdict:* Doable after J79 — The timeline's events are the scripts' events, on the shared clock that exists
+- [ ] **J57** The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md. · N2 N3
+  *Formerly* T2 · *Verdict:* Doable after J85 — The engine plays patterns and timelines first (J85); clips need no script language, only events on the timeline wait for J79
 - [ ] **J58** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
   *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
 - [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
@@ -207,6 +215,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* B3 · *Verdict:* Doable now — The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits
 - [ ] **J65** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
   *Formerly* B6 · *Verdict:* Doable now — Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it
+- [ ] **J84** Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md. · N4
+  *Verdict:* Doable now — The room already checks every login and carries every voice handshake, so it can refuse the ones the 13+ rule forbids; only the age group travels
+- [ ] **J89** Accounts hardened: logins expire when unused for 90 days, password guessing is limited (10 tries in 15 minutes), a profile's save is locked against a second one. Its plan: docs/plan/jobs/J89.md. · N4
+  *Verdict:* Doable now — account.php's own code; no data is moved or deleted
 
 ## 6. Parked
 *Not on the road yet, by chapter. The user promotes them.*

@@ -65,7 +65,7 @@
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the showroom went first on the user's word, 2026-10-25 #1; the world remake and the script language take turns; then the rest of the road)",
+ "upNext": "J84 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (after J54: the fixes from Claude's review and the Loop Maker on the user's word, 2026-10-25 #5: safety first, the Loop Maker, the engine made real, accounts, then safety's next steps J65 and J20 before the world grows; the rest as approved 2026-10-24 #7)",
  "road": {
   "world": [
    {
@@ -820,6 +820,57 @@
      "after": "J80",
      "why": "Proves the language on real things without changing what you see"
     }
+   },
+   {
+    "id": "J85",
+    "text": "The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md.",
+    "serves": [
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The world model already works every loop out from the shared clock; patterns and clips are the same maths, so phones and the room still agree without talking"
+    }
+   },
+   {
+    "id": "J86",
+    "text": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone"
+    }
+   },
+   {
+    "id": "J87",
+    "text": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
+    "serves": [
+     "N5",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The renderer's own code; the world remake multiplies the things to draw, so this comes before it"
+    }
+   },
+   {
+    "id": "J88",
+    "text": "A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md.",
+    "serves": [
+     "N3",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost"
+    }
    }
   ],
   "tools": [
@@ -852,15 +903,16 @@
    {
     "id": "J57",
     "formerly": "T2",
-    "text": "The timeline: the Studio's centre strip (bar time, a track per thing, drag events on, loop them, scrub to preview), playing for everyone.",
+    "text": "The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md.",
     "serves": [
+     "N2",
      "N3"
     ],
     "done": false,
     "verdict": {
      "kind": "after",
-     "after": "J79",
-     "why": "The timeline's events are the scripts' events, on the shared clock that exists"
+     "after": "J85",
+     "why": "The engine plays patterns and timelines first (J85); clips need no script language, only events on the timeline wait for J79"
     }
    },
    {
@@ -966,6 +1018,30 @@
     "verdict": {
      "kind": "now",
      "why": "Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it"
+    }
+   },
+   {
+    "id": "J84",
+    "text": "Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md.",
+    "serves": [
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The room already checks every login and carries every voice handshake, so it can refuse the ones the 13+ rule forbids; only the age group travels"
+    }
+   },
+   {
+    "id": "J89",
+    "text": "Accounts hardened: logins expire when unused for 90 days, password guessing is limited (10 tries in 15 minutes), a profile's save is locked against a second one. Its plan: docs/plan/jobs/J89.md.",
+    "serves": [
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "account.php's own code; no data is moved or deleted"
     }
    }
   ]
