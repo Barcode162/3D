@@ -32,12 +32,12 @@
  "rulesIntro": "*Decisions that always hold, newest first. Only the user adds or changes them.*",
  "rules": [
   {
-   "date": "2026-10-24",
-   "text": "**Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job."
+   "date": "2026-10-25",
+   "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). GitHub's tests still run after each deploy and never block it. Replaces \"Test only what the change touches\" (request 2026-10-25 #11)."
   },
   {
    "date": "2026-10-24",
-   "text": "**Test only what the change touches:** a check runs because it covers what changed, any kind of test included (browser tests too, on this machine or on GitHub); nothing unrelated runs. Replaces \"Speed over tests\", which the user never said (request 2026-10-24 #5)."
+   "text": "**Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job."
   },
   {
    "date": "2026-10-24",

@@ -22,7 +22,7 @@ see it:
   of a room's darkness stays visible (`eyeKeep`, 0.6 = 60%).
 - **The curve (AgX):** very bright colours fade toward white like on film
   (a red neon's core turns pink-white) instead of clipping to flat colour.
-- **Glow:** only light brighter than white glows, softly.
+- **No glow:** nothing is painted around bright things (the bloom was taken out in J92, the user's word: "get rid of the artificial glow"); a lamp is bright itself and lights what's around it, nothing more.
 
 | Dial | Page option | Default | What it does |
 |---|---|---|---|
@@ -30,7 +30,6 @@ see it:
 | Darkness kept | `?eyekeep=0.6` | 0.6 | 0 = every room looks equally bright, 1 = eyes never adapt |
 | Reference | `?eyeref=-1.5` | -1.5 | the room brightness (log2) that shows as "normal" |
 | Darkest / brightest adapted | `?eyemin=-9` `?eyemax=6` | | eyes don't adapt beyond these |
-| Glow | `?glow=` `?glowth=` | the place's mood | glow strength and where it starts |
 | Eyes off | `?eyes=0` | | a fixed exposure (for comparing) |
 
 ### Real units (L1.2)
@@ -175,7 +174,7 @@ before) and bright light keeps 65% of its colour (`?hicolour=0` as before,
 ### Calmer light (L1.10)
 Seen on the phone: too bright, too much glow. The eyes aim a third of a
 stop darker (exposure -1.3, `?exposure=-1` as before) and the glow is two
-thirds as strong (`?glow=` sets it; the bar's mood has 0.7).
+thirds as strong (the glow itself was taken out in J92).
 
 ## L2 Shadows and shaped light
 

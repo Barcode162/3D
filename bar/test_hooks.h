@@ -14,10 +14,9 @@
 //   ?pad                  with ?sit= on a racing rig: the skid pad (new physics)
 //   ?telemetry=1          the race's telemetry overlay
 //   ?coin                 the credit coin pops out once (screenshots)
-//   ?post=0|1             glow and mood after the scene off / on (looped/post.h)
 //   ?light=classic        the old lighting (docs/handbook/manual/light.md); New is the default
 //   ?light=test           the tests' lighting: classic, a flat light instead of the lamps,
-//                         no reflections, no glow and mood, simple mirrors (quick in software)
+//                         no reflections, simple mirrors (quick in software)
 //   ?fps=N                draw at most N frames a second (the logic runs every frame;
 //                         GitHub's tests, whose software drawing can't keep up: KI-5);
 //                         bar3dBridge.command('fps', N) changes it later (a test
@@ -42,7 +41,6 @@ struct TestHooks {
   int mirrorQ = -1;     // ?mirrorq=0|1: Settings → Graphics → Mirror forced (full, simple)
   int quality = -1;     // ?quality=auto|high|medium|low: Settings → Graphics forced (-1: the setting)
   bool coin = false;    // ?coin: the credit coin pops once after you enter
-  int post = -1;        // ?post=0|1: glow and mood forced off / on (-1: by quality)
   bool chess = false;   // ?chess: sit down at the chessboard  // with ?sit= on a racing rig: the garage instead of straight into a race
   int sit = -1, emote = -1, pianoSong = -1;
   int rhythmSong = -1, rhythmDifficulty = 1;

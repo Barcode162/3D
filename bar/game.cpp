@@ -1272,7 +1272,7 @@ void phaseRender(FrameIn& f) {
 }
 
 // Tuning the look by hand from the page's address (docs/handbook/manual/light.md):
-// ?exposure= ?eyekeep= ?eyeref= ?eyemin= ?eyemax= ?glow= ?glowth= override the
+// ?exposure= ?eyekeep= ?eyeref= ?eyemin= ?eyemax= ?whitek= ?white= override the
 // place's mood, so numbers can be tried on the phone without a build.
 void tuneMoodFromPage() {
   engine::Mood m = g_app.renderer.mood();
@@ -1282,8 +1282,6 @@ void tuneMoodFromPage() {
   m.eyeReference = h.number("eyeref", m.eyeReference);
   m.eyeDarkest = h.number("eyemin", m.eyeDarkest);
   m.eyeBrightest = h.number("eyemax", m.eyeBrightest);
-  m.glow = h.number("glow", m.glow);
-  m.glowThreshold = h.number("glowth", m.glowThreshold);
   m.whiteKelvin = h.number("whitek", m.whiteKelvin);
   m.whiteAmount = h.number("white", m.whiteAmount);
   m.highlightRoom = h.number("hiroom", m.highlightRoom);
@@ -1297,17 +1295,10 @@ void tuneMoodFromPage() {
 void applyQuality(const char* why) {
   static const char* kNames[] = {"High", "Medium", "Low"};
   const double cap = g_app.quality.pixelRatioCap();
-  // Glow and mood cost about one more full-screen pass: off at Low.
-  const bool post = g_app.hooks.post >= 0 ? g_app.hooks.post == 1
-                                          : g_app.quality.tier() < engine::QualityController::kTiers - 1;
   // Lights per pixel: 12 at High, 8 at Medium, 5 at Low (lamps reach less
   // far at lower quality, so nothing is cut off in squares).
   static const int kLightsPerPixel[] = {12, 8, 5};
   g_app.renderer.setLightsPerPixel(kLightsPerPixel[g_app.quality.tier()]);
-  if (post != g_app.renderer.postEffects()) {
-    g_app.renderer.setPostEffects(post);
-    LOG_INFO("Glow and mood: %s.", post ? "on" : "off");
-  }
   if (cap == g_app.gpu.resolutionCap) return;
   g_app.gpu.resolutionCap = cap;
   if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[g_app.quality.tier()], cap, why);

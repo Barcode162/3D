@@ -27,10 +27,10 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 ## A piece
 
 1. Make the change, inside the job's scope and the freeze (`docs/archive/restructure.md` §7).
-2. Run **only the checks covering what changed** and save it, with one
-   command:
+2. Save it **without tests or pictures** (the user tests on the phone:
+   rule "The user tests"), with one command:
    ```
-   PIECE_BRANCH=job/J<n> node tools/piece.mjs J<n>.<k> "<what changed, in words>" --check "<phone check>" [--no-shots | --pages <page> | --compare "x=0"]
+   PIECE_BRANCH=job/J<n> node tools/piece.mjs J<n>.<k> "<what changed, in words>" --check "<phone check>" --test none --no-shots
    ```
    It finds the checks for the changed files (`node tools/check.mjs changed`,
    browser tests included when they cover the change), builds only if the
@@ -55,7 +55,7 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 2. The session line ([session.md](session.md) → End), committed with the
    finish.
 3. ```
-   node tools/project.mjs ship "<what the job did>" [--news "<friendly lines>"]
+   node tools/project.mjs ship "<what the job did>" --skip-check "the user tests" [--news "<friendly lines>"]
    ```
    It refuses unless: on the job's branch, nothing else unsaved, every commit
    belongs to the job, every piece ticked, the plan's files agree. Then it

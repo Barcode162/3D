@@ -79,9 +79,6 @@ class SceneRenderer {
   // reflection that leaves out small things farther away (avatars and
   // everything near the glass stay). Auto quality at Low uses simple too.
   void setMirrorDetail(int detail) { mirrorDetail_ = detail; }
-  // The glow after the scene (looped/post.h). Off at Low quality, or ?post=0
-  // (the eyes and the mood stay).
-  void setPostEffects(bool on) { postOn_ = on; }
   // The lighting before L1 (docs/handbook/manual/light.md): Settings → Graphics →
   // Lighting, or ?light=classic.
   void setClassicLighting(bool classic);
@@ -93,7 +90,6 @@ class SceneRenderer {
   void setEyes(bool on) { eyes_ = on; }
   // After a teleport or travel: the eyes jump to the new place instead of easing.
   void resetEyes() { post_.resetEyes(); }
-  bool postEffects() const { return postOn_; }
   void setMood(const Mood& mood) { post_.setMood(mood); }
   const Mood& mood() const { return post_.mood(); }
   int mirrorDetail() const { return mirrorDetail_; }
@@ -320,7 +316,6 @@ class SceneRenderer {
 
   engine::Gpu* gpu_ = nullptr;
   PostEffects post_;
-  bool postOn_ = true;
   bool classic_ = false, eyes_ = true, testLight_ = false;
   size_t mirrorCount_ = 0;
   int mirrorDetail_ = 0;

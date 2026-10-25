@@ -104,7 +104,7 @@ struct RenderScene {
   std::function<std::vector<MaterialImages>()> makeTextures;
   // How often the textures repeat on the avatars, per metre.
   float avatarTextureScale = 1;
-  // Glow and mood after the scene (looped/mood.h, drawn by looped/post.h).
+  // Eyes and mood after the scene (looped/mood.h, drawn by looped/post.h).
   Mood mood;
 };
 

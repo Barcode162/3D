@@ -1,20 +1,18 @@
-// After the scene (looped/post.cpp): eyes, glow and mood.
+// After the scene (looped/post.cpp): eyes, the curve and mood.
 // New lighting (L1.1): the scene arrives as linear light (rgba16float, any
 // brightness). Like eyes, the picture is metered (the average brightness,
-// weighted to the middle), the exposure follows it over about a second, the
-// bright parts glow (bloom), and a filmic curve (AgX) turns light into
-// display colours without clipping. Then the mood (grade) as before.
+// weighted to the middle), the exposure follows it over about a second, and
+// a filmic curve (AgX) turns light into display colours without clipping.
+// Then the mood (grade) as before. Nothing is painted over bright things
+// (no bloom since J92, the user's word): only real light.
 // Classic lighting: the scene arrives already tone mapped (display colours),
-// as before L1; the glow is worked out in linear light (about color^2.2).
-// - Glow (bloom): the bright parts are picked out at a quarter of the screen
-//   size, blurred down to 1/8 and 1/16 and back up, and added over the
-//   picture, so light bleeds softly like in a camera.
+// as before L1.
 // - Mood (color grading): a warm or cool tint, saturation, contrast, a
 //   gentle darkening toward the corners (vignette).
 
 struct Post {
   texel: vec4f,   // xy = 1 / source size (the texture sampled), z = how much highlights keep their colour, w = the eyes' reference light (log2)
-  params: vec4f,  // x = glow threshold (linear), y = soft knee, z = glow strength, w = vignette
+  params: vec4f,  // x, y, z = unused, w = vignette
   grade: vec4f,   // rgb = tint (1 = none), a = saturation (1 = none)
   grade2: vec4f,  // x = contrast (1 = none), y = lift (raises the darks), z = 1 = classic lighting, w = seconds since last frame
   eye: vec4f,     // x = exposure compensation (EV), y = darkest adaptation (log2 luminance), z = brightest, w = 1 = reset (no easing)
@@ -24,7 +22,7 @@ struct Post {
 
 @group(0) @binding(0) var<uniform> post: Post;
 @group(0) @binding(1) var texA: texture_2d<f32>;  // the source
-@group(0) @binding(2) var texB: texture_2d<f32>;  // composite: the glow; adapt: last frame's eye
+@group(0) @binding(2) var texB: texture_2d<f32>;  // adapt: last frame's eye (unused elsewhere)
 @group(0) @binding(3) var samp: sampler;
 @group(0) @binding(4) var eyeTex: texture_2d<f32>;  // 1 x 1: r = adapted log2 luminance
 
@@ -56,7 +54,7 @@ fn exposure() -> f32 {
   return exp2(post.eye.x + shown - e);
 }
 
-// The scene as linear light ready for the glow and the curve.
+// The scene as linear light ready for the curve.
 fn sceneLight(uv: vec2f) -> vec3f {
   let c = textureSampleLevel(texA, samp, uv, 0.0).rgb;
   if (classic()) { return lin(c); }
@@ -119,59 +117,6 @@ fn fs_fixed(in: VsOut) -> @location(0) vec4f {
   return vec4f(log2(0.18) - post.eye2.z, 0.0, 0.0, 1.0);
 }
 
-// ---- Glow ----
-
-// The average of a 4 x 4 block of source texels: four bilinear taps.
-fn box4(uv: vec2f) -> vec3f {
-  let t = post.texel.xy;
-  let a = textureSampleLevel(texA, samp, uv + t * vec2f(-1.0, -1.0), 0.0).rgb;
-  let b = textureSampleLevel(texA, samp, uv + t * vec2f(1.0, -1.0), 0.0).rgb;
-  let c = textureSampleLevel(texA, samp, uv + t * vec2f(-1.0, 1.0), 0.0).rgb;
-  let d = textureSampleLevel(texA, samp, uv + t * vec2f(1.0, 1.0), 0.0).rgb;
-  return (a + b + c + d) * 0.25;
-}
-
-// Full picture → a quarter: keep only what's brighter than the threshold,
-// fading in softly over the knee (no hard edge where the glow starts).
-@fragment
-fn fs_prefilter(in: VsOut) -> @location(0) vec4f {
-  let t = post.texel.xy;
-  var c = vec3f(0.0);
-  c += sceneLight(in.uv + t * vec2f(-1.0, -1.0));
-  c += sceneLight(in.uv + t * vec2f(1.0, -1.0));
-  c += sceneLight(in.uv + t * vec2f(-1.0, 1.0));
-  c += sceneLight(in.uv + t * vec2f(1.0, 1.0));
-  c *= 0.25;
-  // Very bright single pixels (a bulb's core) would flicker as you move:
-  // their weight is softened (Karis average).
-  c = min(c, vec3f(64.0));
-  let l = max(c.r, max(c.g, c.b));
-  let th = post.params.x;
-  let knee = max(post.params.y, 1e-4);
-  var soft = clamp(l - th + knee, 0.0, 2.0 * knee);
-  soft = soft * soft / (4.0 * knee);
-  let w = max(soft, l - th) / max(l, 1e-4);
-  return vec4f(c * w, 1.0);
-}
-
-// One level down (half the size), averaged.
-@fragment
-fn fs_down(in: VsOut) -> @location(0) vec4f {
-  return vec4f(box4(in.uv), 1.0);
-}
-
-// One level up: a 3 x 3 tent over the smaller level, added onto this one.
-@fragment
-fn fs_up(in: VsOut) -> @location(0) vec4f {
-  let t = post.texel.xy;
-  var c = textureSampleLevel(texA, samp, in.uv, 0.0).rgb * 4.0;
-  c += (textureSampleLevel(texA, samp, in.uv + vec2f(t.x, 0.0), 0.0).rgb + textureSampleLevel(texA, samp, in.uv - vec2f(t.x, 0.0), 0.0).rgb +
-        textureSampleLevel(texA, samp, in.uv + vec2f(0.0, t.y), 0.0).rgb + textureSampleLevel(texA, samp, in.uv - vec2f(0.0, t.y), 0.0).rgb) * 2.0;
-  c += textureSampleLevel(texA, samp, in.uv + t, 0.0).rgb + textureSampleLevel(texA, samp, in.uv - t, 0.0).rgb +
-       textureSampleLevel(texA, samp, in.uv + vec2f(t.x, -t.y), 0.0).rgb + textureSampleLevel(texA, samp, in.uv + vec2f(-t.x, t.y), 0.0).rgb;
-  return vec4f(c / 16.0, 1.0);
-}
-
 // ---- The curve: AgX (Troy Sobotka; the polynomial fit by Benjamin Wrensch) ----
 // Bright colours fade toward white the way film and eyes see them (a red
 // neon's core goes pink-white, not flat red), nothing clips.
@@ -203,18 +148,17 @@ fn agx(c: vec3f, room: f32) -> vec3f {
   return clamp(x, vec3f(0.0), vec3f(1.0));  // display-encoded (≈ gamma 2.2)
 }
 
-// The picture + its glow, then the mood.
+// The picture through the curve, then the mood.
 @fragment
 fn fs_composite(in: VsOut) -> @location(0) vec4f {
-  let glow = textureSampleLevel(texB, samp, in.uv, 0.0).rgb;
   var c: vec3f;
   if (classic()) {
-    var lit = sceneLight(in.uv) + glow * post.params.z;
-    // Bright glow rolls off instead of clipping to flat white.
+    var lit = sceneLight(in.uv);
+    // Bright light rolls off instead of clipping to flat white.
     lit = lit / (1.0 + max(lit - vec3f(0.85), vec3f(0.0)));
     c = pow(lit, vec3f(1.0 / 2.2));
   } else {
-    let lit = sceneLight(in.uv) + glow * post.params.z;
+    let lit = sceneLight(in.uv);
     c = agx(lit, post.white.w);
     // Bright light keeps its colour (a lamp-lit wall stays amber instead of
     // going white): the curve on the brightness alone, times the colour.

@@ -130,7 +130,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   const wgpu::Device& device = gpu.device;
   mirrorCount_ = scene.mirrorCount;
   if (!createScenePipelines() || !createGlassPipeline()) return false;
-  if (!post_.init(gpu)) LOG_ERROR("Glow and mood: post.wgsl is missing.");
+  if (!post_.init(gpu)) LOG_ERROR("Eyes and mood: post.wgsl is missing.");
   post_.setMood(scene.mood);
   engine::profiler().stage("pipelines");
 
@@ -1514,7 +1514,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   }
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
-  // The scene draws offscreen as linear light; eyes, glow and mood follow
+  // The scene draws offscreen as linear light; eyes and mood follow
   // (looped/post.h). Its depth is kept for the name pictures on top.
   if (!post_.ready()) {  // the first frames, while the post pipelines compile: nothing to show yet
     wgpu::CommandBuffer commands = encoder.Finish();
@@ -1574,11 +1574,11 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   shadows_.upload(queue);
   shadows_.draw(pass);  // soft shadows under the avatars
   pass.End();
-  // Name pictures and text go on top after the glow (they shouldn't glow).
+  // Name pictures and text go on top, after the eyes and the mood.
   post_.apply(encoder, target, [&](const wgpu::RenderPassEncoder& p) {
     pictures.draw(p);
     text.draw(p);
-  }, postOn_, classic_, eyes_);
+  }, classic_, eyes_);
   wgpu::CommandBuffer commands = encoder.Finish();
   queue.Submit(1, &commands);
 }

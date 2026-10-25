@@ -36,7 +36,7 @@ Read once at start-up (`bar/test_hooks.h`); the page's own: `?skipintro`, `?serv
 | `?quality=auto\|high\|medium\|low` | Settings → Graphics forced |
 | `?mirrorq=0\|1` | mirrors full or simple |
 | `?light=classic` / `?light=test` | the old lighting / the tests' lighting |
-| `?post=0\|1`, `?reflect=0`, `?bounce=0`, `?exposure=`, `?eyekeep=` | light and post switches ([the manual](manual/light.md)) |
+| `?reflect=0`, `?bounce=0`, `?exposure=`, `?eyekeep=` | light switches ([the manual](manual/light.md)) |
 | `?sit=N`, `?emote=N`, `?pianosong=N`, `?rhythm=song,difficulty`, `?autoplay` | start in a seat, an emote, a piano song, 4K Mania |
 | `?shift`, `?darts`, `?chess`, `?garage`, `?pad`, `?telemetry=1`, `?coin` | a bartending shift, darts, chess, a rig's garage, the skid pad, the race overlay, the coin |
 | `?studio=1` | studio mode (the Studio frames the bar with it) |
