@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J85.1 The loop library: named patterns in assets/world/loops.json (19: swell, spin, hop, sway, pulse and more), used as "@name" wherever a loop goes (a kind, a thing, a clip); a missing pattern or a broken one is named with where it's used; the store, the Studio's draft and the tools carry the file. Built in 4c9ea11; the native world tests cover the library (a pattern applied, a name that isn't there, a broken pattern)
+
+`78c76a4` · 2026-10-25 18:23 · 5 files, +11 −9 · tests: native, game
+
+Phone check: Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before
+
 ## J90.3 The Live panel on Overview: a tile for the bar (its build), who's in it now (a heartbeat that beats faster with more people), each deploy (green, red with the failed tests, stripes while running), Claude's errors this week and Claude's latest job; it checks again every 15 s and a tile whose answer changed glows and counts to it; tap a tile: its details, Open, and Looks good / Broke it / Note, which go to Claude's notes naming the tile. Built in f6099ec; checked in J90.1's run (the Dev test: six tiles, red and green by the deploys, a tile's sheet, Broke it with your words reaching the notes, an empty Note sending nothing; the labels test: the tiles and the sheet)
 
 `c831282` · 2026-10-25 12:10 · 2 files, +2 −2 · tests: none
