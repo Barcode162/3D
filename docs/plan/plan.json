@@ -36,37 +36,37 @@
   }
  ],
  "now": {
-  "id": "J90",
-  "title": "Dev remade",
-  "chapter": "the tools",
-  "about": "Dev remade: nested pages (drill into a project, a chapter, a job and back, a trail at the top, Find), constant smooth Ember motion (a living background, cards that answer your finger, sliding pages, a Calm switch) and the Live panel on Home (the bar, who's in it, the deploys, the job in Now, Claude's latest; updating by itself, animating what changed, one-tap reactions to Claude). Its plan: docs/plan/jobs/J90.md.",
+  "id": "J85",
+  "title": "The Loop Maker, step 1, the engine",
+  "chapter": "the engine",
+  "about": "The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md.",
   "serves": [
-   "N5",
-   "N1"
+   "N2",
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J90.1",
-    "text": "Motion and life in Dev: a glow that drifts behind everything, pages that come in piece by piece and slide (deeper from the right, back from the left), rows and tiles that press, ripple and tilt under your finger, breathing lights, numbers that count; Calm (the dot at the top right) stops it all, and iPhone's Reduce Motion is respected",
-    "check": "Open Dev: the glow drifts behind the cards; tap a row: it presses in and ripples from your finger; tap the dot at the top right: everything holds still",
-    "done": true
+    "id": "J85.1",
+    "text": "The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), \"@name\" wherever a loop goes, a missing or broken pattern named with where it's used; native tests",
+    "check": "Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before",
+    "done": false
    },
    {
-    "id": "J90.2",
-    "text": "Nested pages: every page has its own address, the trail at the top (each step a way back) and Back; a page per project (its tools by group), per chapter (all its jobs), per job (its words, verdict, place in line, what it waits for, its plan), Done and Parked; Up next as chips; Find, one field over every page, tool and job",
-    "check": "Plan → The engine → a job: its page opens; the trail at the top takes you back; the magnifier, type studio: the Studio is first",
-    "done": true
+    "id": "J85.2",
+    "text": "Timelines in the world model, like a music app's arrangement: tracks over things, clips that play a loop from a beat for a length, fades, a spread that runs a wave along a row, layered on each thing's own loop, swapped live; worked out from the shared clock alone, so every phone and the room agree; native tests",
+    "check": "Nothing changes in the bar yet",
+    "done": false
    },
    {
-    "id": "J90.3",
-    "text": "The Live panel on Overview: tiles for the bar, who's in it (a heartbeat), each deploy, Claude's errors this week and Claude's latest job; it checks again every 15 s and a changed tile glows and counts; tap a tile: Looks good, Broke it or a note goes to Claude",
-    "check": "Overview: the Live tiles show the bar's build and the deploys; tap The bar → Looks good: Plan → Tell Claude shows the note waiting",
-    "done": true
+    "id": "J85.3",
+    "text": "The showroom's stage plays a 16-beat show (the lamps swell one after another, the coin hops, the stools turn, the neon wave), the room's copy runs it too, and the store accepts the loops file",
+    "check": "joshuavelasco.com/bar/?place=showroom: the lamps swell one after another, the coin hops on beats 9-12, the stools turn on 13-16, and it loops; on two phones at once, both show the same beat",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, next; then the rest as approved)",
+ "upNext": "J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, next; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -823,19 +823,6 @@
     }
    },
    {
-    "id": "J85",
-    "text": "The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md.",
-    "serves": [
-     "N2",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The world model already works every loop out from the shared clock; patterns and clips are the same maths, so phones and the room still agree without talking"
-    }
-   },
-   {
     "id": "J86",
     "text": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
     "serves": [
@@ -1193,6 +1180,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282"
+  },
   {
    "build": "4c06da4",
    "text": "J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d"
