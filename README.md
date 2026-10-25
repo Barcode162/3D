@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J84.2 The bar says why in words: Voice chat tells a guest that voice is for signed-in players, and an account made before birth dates were asked gets 'Add my birth date' (once: 13 and up, never changed after; account.php's new action, with the same checks as sign-up); a refused call isn't tried again until your login changes; the voice test's players sign in as test adults. Built in d3f9c65 (bar/web, server/account.php, the gate and voice tests, the Handbook's menus, voice and protocol pages); its game, menu-after-games, voice, accounts, Handbook and labels checks passed on it (14 of 15), and the menu test, whose 3x screen starved behind the first page still drawing (KI-5), now lets that page draw one frame every 5 s
+
+`05e186d` · 2026-10-25 11:24 · 3 files, +6 −3 · tests: menu
+
+Phone check: Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults
+
 ## J84.1 The room keeps each login's age group (teen or adult, from the accounts server; never sent to anyone) and passes a voice handshake only between two signed-in people of the same group; otherwise the one who called hears why: 'guest' (sign in), 'birth' (add your birth date) or 'apart' (which never says anything about the other person). Built in d3f9c65 (cloud/room.js); the room test covers a guest refused, two adults and two teens connecting, adult with teen refused, to a guest and to or from an account without a birth date refused, and nobody told anyone's group
 
 `41f3e66` · 2026-10-25 10:58 · 2 files, +4 −4 · tests: native, room
