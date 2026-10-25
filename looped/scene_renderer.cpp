@@ -701,6 +701,13 @@ void SceneRenderer::createMaterials(const RenderScene& scene, wgpu::TextureView&
     colors.push_back(std::move(m.color));
     bumps.push_back(std::move(m.bump));
   }
+  if (colors.empty()) {  // a program with no surface textures (the place viewer): one plain layer
+    engine::Image plain(4), flat(4);
+    for (engine::Image::Pixel& p : plain.pixels) p = {1, 1, 1, 1};
+    for (engine::Image::Pixel& p : flat.pixels) p = {0.5f, 0.5f, 1, 1};
+    colors.push_back(std::move(plain));
+    bumps.push_back(std::move(flat));
+  }
   wgpu::TextureViewDescriptor viewDesc;
   viewDesc.dimension = wgpu::TextureViewDimension::e2DArray;
   colorMaps = engine::createTextureArray(gpu_->device, colors, true, "material colors").CreateView(&viewDesc);

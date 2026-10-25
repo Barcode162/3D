@@ -226,12 +226,20 @@ void frame(double rafMs) {
   g.gpu.endFrame();
 }
 
+void start(void*);
+
 void onGpuReady(bool ok) {
   if (!ok) {
     LOG_FATAL("Viewer: no GPU (WebGPU) here.");
     return;
   }
   engine::prepareMipmaps(g.gpu.device);
+  // The scene starts in a task of its own, after the GPU's callback has
+  // returned (as the bar's does): pipelines made inside it fail.
+  emscripten_async_call(start, nullptr, 0);
+}
+
+void start(void*) {
   loadMaterials();
   if (!loadPlace(queryPlace())) return;
   engine::RenderScene scene = engine::world::renderSceneOf(g.layout, materialById);
