@@ -55,14 +55,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J54 · CI's browser tests** (the engine). CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again; and no browser test can hang on this machine (the Studio test sat idle 19 min on 2026-10-25) · N5
-- [x] **J54.1** Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5 *Check:* Dev → Plan: J54.1 ticked; the known issue names the cause
-- [x] **J54.2** The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened) *Check:* Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue
-- [x] **J54.3** No browser test can hang on this machine either: a slow picture is noted and the test goes on, and every test has a time limit (the Studio test sat idle 19 min on 2026-10-25, request #2) *Check:* Ask for a small world change: it saves in minutes, with no test left waiting
+**J84 · Safety on the server, step 1** (the backbone). Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md. · N4
+- [ ] **J84.1** The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case *Check:* Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest
+- [ ] **J84.2** The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field) *Check:* Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J84 → J90 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (after J54: the fixes from Claude's review and the Loop Maker, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, after J84, which was built first; then the rest as approved)
+**Up next, in order:** J90 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, after J84, which was built first; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -217,8 +216,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* B3 · *Verdict:* Doable now — The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits
 - [ ] **J65** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
   *Formerly* B6 · *Verdict:* Doable now — Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it
-- [ ] **J84** Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md. · N4
-  *Verdict:* Doable now — The room already checks every login and carries every voice handshake, so it can refuse the ones the 13+ rule forbids; only the age group travels
 - [ ] **J89** Accounts hardened: logins expire when unused for 90 days, password guessing is limited (10 tries in 15 minutes), a profile's save is locked against a second one. Its plan: docs/plan/jobs/J89.md. · N4
   *Verdict:* Doable now — account.php's own code; no data is moved or deleted
 
@@ -277,6 +274,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce
 - `2eb56b4` J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd
 - `4944bcc` J82.1: J82 the showroom: a new place (Menu → Places) with five stations that show what Looped does → 3f56ddb^..3f56ddb
 - `1c830fd` J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116
