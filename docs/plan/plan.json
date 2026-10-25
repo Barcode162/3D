@@ -36,24 +36,37 @@
   }
  ],
  "now": {
-  "id": "J95",
-  "title": "Deploys cheaper",
-  "chapter": "the backbone",
-  "about": "Deploys cheaper: GitHub's long browser tests only on request (Run workflow, tests ticked), Dev shows it; the release that puts J87 live after the minutes ran out (KI-44).",
+  "id": "J88",
+  "title": "A real engine, step 3",
+  "chapter": "the engine",
+  "about": "A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md.",
   "serves": [
+   "N3",
    "N5"
   ],
   "pieces": [
    {
-    "id": "J95.1",
-    "text": "GitHub's long browser tests only on request (Actions → Build and deploy → Run workflow, tests ticked); every deploy keeps its build and quick checks; Dev shows \"browser tests on request\"; the Handbook says how",
-    "check": "Dev → Overview: the game's deploy tile says live, browser tests on request; the bar is the new build",
-    "done": true
+    "id": "J88.1",
+    "text": "Up to 255 lamps; bounced light and walls blocking light for the first 127",
+    "check": "The bar looks as before",
+    "done": false
+   },
+   {
+    "id": "J88.2",
+    "text": "Lamps sorted in 3D cells, every lamp at its real reach",
+    "check": "By the fire and at the bar the light looks as before or softer at its edges, never in squares",
+    "done": false
+   },
+   {
+    "id": "J88.3",
+    "text": "Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed",
+    "check": "?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -834,19 +847,6 @@
      "kind": "cost",
      "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
     }
-   },
-   {
-    "id": "J88",
-    "text": "A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md.",
-    "serves": [
-     "N3",
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The renderer's own code; the world remake needs the lamps first"
-    }
    }
   ],
   "tools": [
@@ -1164,6 +1164,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1"
+  },
   {
    "build": "1889278",
    "text": "J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32"
