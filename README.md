@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J86.1 Looped built as its own library (the looped target the bar links); every call the engine makes to the page goes through window.loopedHost (looped/host.*), which the bar's page fills with its own parts; tools/lint_engine.mjs in the quick check keeps bar names and bar files out of the engine
+
+`d7b2ce2` · 2026-10-25 20:32 · 21 files, +183 −77 · tests: none
+
+Phone check: The bar works as before (menus, voice, multiplayer, sounds)
+
 ## J92.1 The glow (bloom) taken out of the engine: its three shaders, five passes and three textures; the moods' glow settings, ?glow=, ?glowth= and ?post=; J44's glare and starbursts off the road; the rule: the user tests
 
 `f28d037` · 2026-10-25 20:17 · 23 files, +167 −254 · tests: none
