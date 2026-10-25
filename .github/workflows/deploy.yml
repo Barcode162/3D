@@ -37,6 +37,11 @@ env:
   # mirrors), quick on GitHub's machines that draw in software (KI-5). The
   # phone and the piece pictures cover the real light.
   TEST_LIGHT: test
+  # ... and draws at most 4 frames a second there (?fps=4, J54.2): a software
+  # GPU that never catches up made every picture wait behind a pile of frames
+  # and a second page never finish loading (KI-5's cause, J54.1). The game's
+  # logic still runs every frame.
+  TEST_FPS: 4
 
 jobs:
   # Did anything in the game change since the live build? Files that never

@@ -647,6 +647,12 @@ void handleCommands() {
       LOG_INFO("Meridian: open (the bar pauses drawing).");
     } else if (c.name == "meridianClosed") {
       g_app.meridianOpen = false;
+    } else if (c.name == "fps") {
+      // Draw at most N frames a second from now on (0: as many as it can), as
+      // ?fps=N does from the start: a test quiets a page that's only waiting,
+      // so the other page has the machine (GitHub's software drawing, KI-5).
+      g_app.gpu.maxFps = std::max(0.0, c.a);
+      LOG_INFO("Drawing at most %g frames a second (fps command).", g_app.gpu.maxFps);
     }
   }
   const int v = engine::settings::version();
@@ -1185,18 +1191,9 @@ void phaseNetOut(FrameIn& f) {
 }
 
 // Drawing: the race, the text layer alone (loading, 4K Mania), or the bar.
-void phaseRender(FrameIn& f) {
+// One frame's drawing into `target` (the bar, the race, or only the text).
+void drawFrame(const wgpu::TextureView& target, double nowMs) {
   using engine::Phase;
-  const double nowMs = f.nowMs;
-  // Meridian has the screen: the bar keeps its connection but doesn't draw.
-  if (g_app.meridianOpen) return;
-
-  wgpu::TextureView target;
-  {
-    PROFILE(Phase::kAcquire);
-    target = g_app.gpu.beginFrame();
-  }
-  if (!target) return;
   if (g_app.race.open()) {  // you dove into the race: it's the whole screen
     PROFILE(Phase::kRace);
     queueText(nowMs, Mat4{});
@@ -1252,6 +1249,26 @@ void phaseRender(FrameIn& f) {
     g_app.gpu.queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
                                         [](wgpu::QueueWorkDoneStatus, wgpu::StringView) { g_app.warmGpuDone = true; });
   }
+}
+
+void phaseRender(FrameIn& f) {
+  // Meridian has the screen: the bar keeps its connection but doesn't draw.
+  if (g_app.meridianOpen) return;
+  // The page is hidden (another app, another tab): nothing to show, so
+  // nothing drawn; the logic and the connection go on. (A phone stops the
+  // frames then anyway; a test's hidden page keeps them, KI-5.)
+  if (engine::bridge::frame().hidden) return;
+  // The GPU still busy with the frames before (or ?fps= says not yet): the
+  // logic above ran; this frame draws nothing (looped/gpu.h mayDraw).
+  if (!g_app.gpu.mayDraw(f.nowMs)) return;
+  wgpu::TextureView target;
+  {
+    PROFILE(engine::Phase::kAcquire);
+    target = g_app.gpu.beginFrame();
+  }
+  if (!target) return;
+  drawFrame(target, f.nowMs);
+  g_app.gpu.endFrame();
 }
 
 // Tuning the look by hand from the page's address (docs/handbook/manual/light.md):
@@ -1330,7 +1347,14 @@ void frame(double rafMs) {
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.input.poll();  // what the player did since last frame (read-only from here on)
   ProfiledFrame profiled(engine::clockMs());
-  if (ft.resumed && ft.gapMs > 1000) LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
+  // Back from another app (a long gap between frames). A slow machine has
+  // long gaps all the time (software drawing: about one a second), so at most
+  // one line every 30 s: it must not push everything else out of the log.
+  static double lastBackLogMs = -1e9;
+  if (ft.resumed && ft.gapMs > 1000 && ft.nowMs - lastBackLogMs > 30000) {
+    LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
+    lastBackLogMs = ft.nowMs;
+  }
   updateLoadingScreen();
   watchQuality(ft.nowMs);
   g_app.gpu.resizeIfNeeded();
@@ -1417,6 +1441,10 @@ void onGpuReady(bool ok) {
   }
   engine::profiler().stage("gpu");
   g_app.hooks = app::TestHooks::parse();
+  // ?fps=N: draw at most N frames a second (GitHub's tests, which draw in
+  // software: the GPU stays free for their pictures and a second page).
+  g_app.gpu.maxFps = g_app.hooks.number("fps", 0);
+  if (g_app.gpu.maxFps > 0) LOG_INFO("Drawing at most %.0f frames a second (?fps).", g_app.gpu.maxFps);
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   // The world the Studio published (asked for in main()), then the rest.
   app::whenLiveWorld(startScene, 5000);

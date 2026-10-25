@@ -4,7 +4,7 @@
 // both, each must see the other's car, and Alice driving off must show up on
 // Bob's screen. Saves build/race-mp-bob.png (Bob's view after Alice drove).
 // Usage: NODE_PATH=$(npm root -g) node tools/race_mp_test.mjs
-import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
+import { launchBrowser, logText, logErrors, openBar, drawLess, drawAgain } from './lib/browser.mjs';
 import { serveSite } from './lib/site.mjs';
 import { startRoom } from './lib/room.mjs';
 
@@ -27,8 +27,10 @@ const waitLog = (page, re, ms = 30000) => page.waitForFunction((src) => new RegE
 
 try {
   const alice = await player('Alice', 30);
+  await drawLess(alice);  // she waits in the garage while Bob loads (KI-5)
   const bob = await player('Bob', 31);
   check(await waitLog(bob, /Alice joined/), 'Bob sees Alice in the room');
+  await drawAgain(alice);
   await bob.waitForTimeout(2500);  // both claim their rig and join the garage
   // READY (bottom right of the garage, bar/projects/racing/game.cpp garageButtons).
   const u = Math.min(W, H) / 400;
