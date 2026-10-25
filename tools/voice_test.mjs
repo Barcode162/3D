@@ -36,8 +36,18 @@ const browser = await playwright.chromium.launch({
          '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist',
          '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'],
 });
-const context = await browser.newContext({ viewport: { width: 430, height: 932 }, permissions: ['microphone'] });
+// Each player signed in as an adult with the room's test login (J84: voice
+// joins only signed-in people of the same age group; guests are refused, as
+// tools/room_test.mjs checks). Each needs its own browser context: the login
+// is kept in the page's storage.
 async function open(name, extra) {
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 }, permissions: ['microphone'] });
+  await context.addInitScript(([acct, nm]) => {
+    try {
+      localStorage.setItem('bar3dToken', 'test:' + acct);
+      localStorage.setItem('bar3dProfile', JSON.stringify({ id: acct, user: acct, name: nm, band: 'adult', badges: [] }));
+    } catch (e) {}
+  }, [name, name]);  // the room's test login names you by it
   const page = await context.newPage();
   await page.goto(`http://localhost:${port}/?skipintro&room=${ROOM}&name=${name}&cloud=${encodeURIComponent(roomServer.ws)}&${extra}`);
   return page;

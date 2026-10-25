@@ -481,7 +481,7 @@ window.bar3dNet = (function () {
       closed(1006, 'dead');
       return;
     }
-    // Logged in or out since connecting: tell the room.
+    // Logged in or out since connecting (or the login changed: relogin()): tell the room.
     var tok = ticket();
     if (tok !== helloTok) { helloTok = tok; sendText('R', { ticket: tok || 'guest' }); }
     if (state && !away && now - lastStateAt >= 1000 / stateHz - 5) {
@@ -558,6 +558,8 @@ window.bar3dNet = (function () {
     },
     status: function () { return status; },
     statusReason: function () { return why; },
+    // The same login changed (a birth date added, J84): the room checks it again.
+    relogin: function () { helloTok = null; },
     room: function () { return room; },
     // Your latest state (C++ sends it every frame; the room gets it when it
     // changed, at most 20 times a second).

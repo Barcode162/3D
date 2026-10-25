@@ -161,6 +161,7 @@ window.bar3dUi = (function () {
       '.mRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;}',
       '.mRow label{flex:1;}',
       '.mRow input[type=range]{flex:1.3;}',
+      '.mField{display:block;width:100%;box-sizing:border-box;margin:8px 0;padding:8px 10px;border-radius:8px;border:1px solid #f5d9a855;background:#0008;color:inherit;font:inherit;}',
       '.mRow .val{width:52px;text-align:right;color:#cbb8d6;font-size:13px;}',
       '.mToggle{width:50px;height:30px;border-radius:15px;background:#3a2f44;border:0;position:relative;flex:none;}',
       '.mToggle::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;',
@@ -506,8 +507,21 @@ window.bar3dUi = (function () {
     };
     var monitor = el('button', { class: 'mToggle' + (V.monitoring() ? ' on' : '') });
     monitor.onclick = function () { V.setMonitor(!V.monitoring()); monitor.classList.toggle('on', V.monitoring()); };
+    // An older account adds its birth date here, once (J84).
+    var birthBox = null;
+    if (V.cantTalk && V.cantTalk() === 'birth' && window.bar3dAccount && bar3dAccount.setBirth) {
+      var birth = el('input', { type: 'date', class: 'mField', 'aria-label': 'Your birth date' });
+      var addBirth = el('button', { class: 'mBtn', text: 'Add my birth date' });
+      addBirth.onclick = function () {
+        if (!birth.value) { toast('Pick your birth date first.'); return; }
+        addBirth.disabled = true;
+        bar3dAccount.setBirth(birth.value).then(function () { toast('Thanks: voice chat is on for you.'); voicePanel(); },
+          function (e) { addBirth.disabled = false; toast(e.message || String(e)); });
+      };
+      birthBox = el('div', {}, [el('div', { class: 'mSmall', text: 'Your birth date stays private: only your age group (teen or adult) is used, so teens talk with teens and adults with adults. It can\'t be changed after.' }), birth, addBirth]);
+    }
     show('Voice chat', [
-      joinBtn, status,
+      joinBtn, status, birthBox,
       el('h3', { text: 'Microphone level' }), meter,
       el('div', { class: 'mSmall', text: 'Your voice is only sent when the bar passes the pink line (the threshold). Move the slider so the line sits just above the noise when you are quiet.' }),
       slider('Threshold', 'micGate', -80, -10, 1, function (v) { return v + ' dB'; }),
