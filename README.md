@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J92.1 The glow (bloom) taken out of the engine: its three shaders, five passes and three textures; the moods' glow settings, ?glow=, ?glowth= and ?post=; J44's glare and starbursts off the road; the rule: the user tests
+
+`f28d037` · 2026-10-25 20:17 · 23 files, +167 −254 · tests: none
+
+Phone check: By the neon signs, the lamps and the fire: no haze of light around them anymore, the bulbs and neon still bright and the room still lit
+
 ## J85.2 Timelines in the world model, like a music app's arrangement: tracks over things (#id or kind:id), clips that play a loop from a beat for a length, fades in and out, a spread that runs a wave along a row, layered on each thing's own loop and swapped live; worked out from the shared clock alone (the music's beat, or 120 bpm), so every phone and the room agree without talking. Built in 4c9ea11 (looped/world/timeline.*); checked in J85.1's run (the native world tests: the same pose on two worlds at the same clock, a clip at its start, middle and fade, a wrap past the end, the music's beat)
 
 `2aafaf3` · 2026-10-25 18:23 · 2 files, +2 −2 · tests: none
