@@ -18,6 +18,8 @@
 //   ?light=classic        the old lighting (docs/handbook/manual/light.md); New is the default
 //   ?light=test           the tests' lighting: classic, a flat light instead of the lamps,
 //                         no reflections, no glow and mood, simple mirrors (quick in software)
+//   ?fps=N                draw at most N frames a second (the logic runs every frame;
+//                         GitHub's tests, whose software drawing can't keep up: KI-5)
 //   ?<feature>=0          one feature of the Alive plan off, e.g. ?bounce=0
 //                         (every feature's switch: docs/handbook/manual/)
 // (?skipintro, ?server=, ?cloud=, ?room=, ?name=, ?testerror are read by

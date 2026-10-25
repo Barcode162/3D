@@ -11,11 +11,9 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { launchBrowser } from './lib/browser.mjs';
 import { startRoom, probe } from './lib/room.mjs';
 
-const require = createRequire(import.meta.url);
-const playwright = require('playwright');
 const siteDir = resolve('build/site');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 
@@ -34,10 +32,7 @@ const roomServer = await startRoom(8792, { CONNECT_LIMIT_PER_MIN: 1000 });
 const CLOUD = roomServer.ws;
 const ROOM = 'mp' + Math.floor(Math.random() * 1e6);
 
-const browser = await playwright.chromium.launch({
-  args: ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader',
-         '--use-webgpu-adapter=swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
-});
+const browser = await launchBrowser();  // the tests' light and frame cap on GitHub (KI-5)
 async function open(name, cam, extra = '') {
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 1 });
   await page.goto(`http://localhost:${port}/?skipintro&room=${ROOM}&name=${name}&cloud=${encodeURIComponent(CLOUD)}` +

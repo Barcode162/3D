@@ -1185,18 +1185,9 @@ void phaseNetOut(FrameIn& f) {
 }
 
 // Drawing: the race, the text layer alone (loading, 4K Mania), or the bar.
-void phaseRender(FrameIn& f) {
+// One frame's drawing into `target` (the bar, the race, or only the text).
+void drawFrame(const wgpu::TextureView& target, double nowMs) {
   using engine::Phase;
-  const double nowMs = f.nowMs;
-  // Meridian has the screen: the bar keeps its connection but doesn't draw.
-  if (g_app.meridianOpen) return;
-
-  wgpu::TextureView target;
-  {
-    PROFILE(Phase::kAcquire);
-    target = g_app.gpu.beginFrame();
-  }
-  if (!target) return;
   if (g_app.race.open()) {  // you dove into the race: it's the whole screen
     PROFILE(Phase::kRace);
     queueText(nowMs, Mat4{});
@@ -1252,6 +1243,22 @@ void phaseRender(FrameIn& f) {
     g_app.gpu.queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
                                         [](wgpu::QueueWorkDoneStatus, wgpu::StringView) { g_app.warmGpuDone = true; });
   }
+}
+
+void phaseRender(FrameIn& f) {
+  // Meridian has the screen: the bar keeps its connection but doesn't draw.
+  if (g_app.meridianOpen) return;
+  // The GPU still busy with the frames before (or ?fps= says not yet): the
+  // logic above ran; this frame draws nothing (looped/gpu.h mayDraw).
+  if (!g_app.gpu.mayDraw(f.nowMs)) return;
+  wgpu::TextureView target;
+  {
+    PROFILE(engine::Phase::kAcquire);
+    target = g_app.gpu.beginFrame();
+  }
+  if (!target) return;
+  drawFrame(target, f.nowMs);
+  g_app.gpu.endFrame();
 }
 
 // Tuning the look by hand from the page's address (docs/handbook/manual/light.md):
@@ -1417,6 +1424,10 @@ void onGpuReady(bool ok) {
   }
   engine::profiler().stage("gpu");
   g_app.hooks = app::TestHooks::parse();
+  // ?fps=N: draw at most N frames a second (GitHub's tests, which draw in
+  // software: the GPU stays free for their pictures and a second page).
+  g_app.gpu.maxFps = g_app.hooks.number("fps", 0);
+  if (g_app.gpu.maxFps > 0) LOG_INFO("Drawing at most %.0f frames a second (?fps).", g_app.gpu.maxFps);
   engine::prepareMipmaps(g_app.gpu.device);  // texture jobs wait for these
   // The world the Studio published (asked for in main()), then the rest.
   app::whenLiveWorld(startScene, 5000);

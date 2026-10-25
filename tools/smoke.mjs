@@ -21,7 +21,7 @@ await page.waitForTimeout(1500);
 const log = await logText(page);
 const errors = await logErrors(page);
 const status = await page.$eval('#status', (el) => el.textContent);
-await page.screenshot({ path: shotPath, timeout: 90000 });  // software WebGPU on a busy runner is slow
+await page.screenshot({ path: shotPath, timeout: 90000, strict: true });  // a check (not blank): it fails if it can't be taken
 const spread = brightnessSpread(readPng(shotPath));
 // Frame profiler numbers (looped/profiler.cpp). Headless runs at 1-2 fps,
 // so judge phase costs and counts here, never the frame rate.

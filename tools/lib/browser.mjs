@@ -16,16 +16,59 @@ export const GPU_ARGS = ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '
 // TEST_LIGHT=test (deploy.yml sets it; or classic): GitHub's machines draw
 // in software, too slowly for the real light (docs/records/known-issues.md
 // KI-5), so there the bar's page opens with ?light=test, the tests' own
-// lighting (bar/test_hooks.h). Only the bar's
-// own page gets it (the site root or /bar/, with or without index.html), and
-// only when its address names no light itself; it's added before the page's
-// scripts run. Unset (here, and for the pictures): the new light.
-export function testLightScript(light) {
+// lighting (bar/test_hooks.h). TEST_FPS=N (deploy.yml too) adds ?fps=N: the
+// game draws at most N frames a second, so the software GPU is free for the
+// test's pictures and for a second page (KI-5's cause, J54.1). Only the bar's
+// own page gets them (the site root or /bar/, with or without index.html),
+// and only what its address doesn't name itself; they're added before the
+// page's scripts run. Unset (here, and for the pictures): the new light.
+export function testPageScript(params) {
   return `(() => { try {
-    if (!/^https?:$/.test(location.protocol) || /[?&]light=/.test(location.search)) return;
+    if (!/^https?:$/.test(location.protocol)) return;
     if (!/^\\/(bar\\/)?(index\\.html)?$/.test(location.pathname)) return;
-    history.replaceState(history.state, '', location.pathname + (location.search ? location.search + '&' : '?') + 'light=' + ${JSON.stringify(light)} + location.hash);
+    const add = Object.entries(${JSON.stringify(params)}).filter(([k, v]) => v && !new RegExp('[?&]' + k + '=').test(location.search));
+    if (!add.length) return;
+    const extra = add.map(([k, v]) => k + '=' + v).join('&');
+    history.replaceState(history.state, '', location.pathname + (location.search ? location.search + '&' : '?') + extra + location.hash);
   } catch (e) {} })();`;
+}
+export function testLightScript(light) { return testPageScript({ light }); }
+// What GitHub's tests add to the bar's address (empty here).
+export function testParams() {
+  return { light: process.env.TEST_LIGHT || '', fps: process.env.TEST_FPS || '' };
+}
+
+// A test's pictures are for looking at, not checks (KI-5, J54.3): one that
+// isn't taken within PICTURE_MS prints a note and the test goes on. A picture
+// that *is* a check (the smoke test's "not a blank screen") passes
+// `strict: true` and fails as before.
+const PICTURE_MS = process.env.CI ? 90000 : 45000;
+function notePictures(page) {
+  const take = page.screenshot.bind(page);
+  page.screenshot = async (opts = {}) => {
+    const { strict, ...rest } = opts;
+    try {
+      return await take({ timeout: PICTURE_MS, ...rest });
+    } catch (e) {
+      if (strict) throw e;
+      console.log(`note: no picture ${rest.path || ''} (${String(e.message).split('\n')[0]}); the test goes on`);
+      return null;
+    }
+  };
+  return page;
+}
+
+// Every test that opens a browser ends within TEST_LIMIT_MIN minutes (30 by
+// default): past it, it says so, closes the browser and fails, instead of
+// sitting idle (the Studio test sat 19 min on 2026-10-25, J54.3).
+function timeLimit(browser) {
+  const min = Number(process.env.TEST_LIMIT_MIN) || 30;
+  const name = (process.argv[1] || 'the test').split('/').pop();
+  setTimeout(async () => {
+    console.log(`TEST FAILED: ${name} ran over its ${min}-minute limit (TEST_LIMIT_MIN)`);
+    await Promise.race([browser.close().catch(() => {}), new Promise((r) => setTimeout(r, 5000))]);
+    process.exit(1);
+  }, min * 60000).unref();
 }
 
 // GitHub's runners are sometimes slow (software WebGPU at 1-2 frames a
@@ -33,18 +76,26 @@ export function testLightScript(light) {
 // (30 s locally), so a busy runner doesn't fail a test that's fine.
 export async function launchBrowser(extraArgs = []) {
   const browser = await loadPlaywright().chromium.launch({ args: [...GPU_ARGS, ...extraArgs] });
+  timeLimit(browser);
   const wait = process.env.CI ? 90000 : 30000;
-  const light = process.env.TEST_LIGHT || '';
+  const params = testParams();
+  const any = Object.values(params).some(Boolean);
   const newPage = browser.newPage.bind(browser), newContext = browser.newContext.bind(browser);
   browser.newPage = async (...args) => {
     const page = await newPage(...args);
     page.setDefaultTimeout(wait);
-    if (light) await page.addInitScript(testLightScript(light));
-    return page;
+    if (any) await page.addInitScript(testPageScript(params));
+    return notePictures(page);
   };
   browser.newContext = async (...args) => {
     const context = await newContext(...args);
-    if (light) await context.addInitScript(testLightScript(light));
+    if (any) await context.addInitScript(testPageScript(params));
+    const contextPage = context.newPage.bind(context);
+    context.newPage = async (...a) => {
+      const page = await contextPage(...a);
+      page.setDefaultTimeout(wait);
+      return notePictures(page);
+    };
     return context;
   };
   return browser;
