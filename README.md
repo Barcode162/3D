@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J85.2 Timelines in the world model, like a music app's arrangement: tracks over things (#id or kind:id), clips that play a loop from a beat for a length, fades in and out, a spread that runs a wave along a row, layered on each thing's own loop and swapped live; worked out from the shared clock alone (the music's beat, or 120 bpm), so every phone and the room agree without talking. Built in 4c9ea11 (looped/world/timeline.*); checked in J85.1's run (the native world tests: the same pose on two worlds at the same clock, a clip at its start, middle and fade, a wrap past the end, the music's beat)
+
+`2aafaf3` · 2026-10-25 18:23 · 2 files, +2 −2 · tests: none
+
+Phone check: Nothing changes in the bar yet
+
 ## J85.1 The loop library: named patterns in assets/world/loops.json (19: swell, spin, hop, sway, pulse and more), used as "@name" wherever a loop goes (a kind, a thing, a clip); a missing pattern or a broken one is named with where it's used; the store, the Studio's draft and the tools carry the file. Built in 4c9ea11; the native world tests cover the library (a pattern applied, a name that isn't there, a broken pattern)
 
 `78c76a4` · 2026-10-25 18:23 · 5 files, +11 −9 · tests: native, game
