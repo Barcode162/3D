@@ -36,30 +36,25 @@
   }
  ],
  "now": {
-  "id": "J86",
-  "title": "A real engine, step 1",
+  "id": "J87",
+  "title": "A real engine, step 2",
   "chapter": "the engine",
-  "about": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
+  "about": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
   "serves": [
-   "N2"
+   "N5",
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J86.1",
-    "text": "The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check",
-    "check": "The bar works as before (menus, voice, multiplayer, sounds)",
-    "done": true
-   },
-   {
-    "id": "J86.2",
-    "text": "Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone",
-    "check": "joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it",
-    "done": true
+    "id": "J87.1",
+    "text": "Copies drawn together (instancing): every copy of a model part in one draw from one buffer, in the main view, the mirrors and the reflection capture; the smoke test prints the draw count",
+    "check": "The bar looks exactly as before; ?perf=1 shows fewer draws",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -816,19 +811,6 @@
     }
    },
    {
-    "id": "J87",
-    "text": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
-    "serves": [
-     "N5",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The renderer's own code; the world remake multiplies the things to draw, so this comes before it"
-    }
-   },
-   {
     "id": "J88",
     "text": "A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md.",
     "serves": [
@@ -1176,6 +1158,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J86.1, J86.2: J86: Looped is its own engine: its own library, one host object for the page, its own place loader and player, limits given at start, and a second program (the place viewer at /bar/looped/) built from it alone → d7b2ce2^..550e9d1"
+  },
   {
    "build": "c49cd10",
    "text": "J92.1: J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on → f28d037^..f28d037"
