@@ -36,30 +36,37 @@
   }
  ],
  "now": {
-  "id": "J84",
-  "title": "Safety on the server, step 1",
-  "chapter": "the backbone",
-  "about": "Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md.",
+  "id": "J90",
+  "title": "Dev remade",
+  "chapter": "the tools",
+  "about": "Dev remade: nested pages (drill into a project, a chapter, a job and back, a trail at the top, Find), constant smooth Ember motion (a living background, cards that answer your finger, sliding pages, a Calm switch) and the Live panel on Home (the bar, who's in it, the deploys, the job in Now, Claude's latest; updating by itself, animating what changed, one-tap reactions to Claude). Its plan: docs/plan/jobs/J90.md.",
   "serves": [
-   "N4"
+   "N5",
+   "N1"
   ],
   "pieces": [
    {
-    "id": "J84.1",
-    "text": "The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case",
-    "check": "Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest",
-    "done": true
+    "id": "J90.1",
+    "text": "Motion and life in Dev: a glow that drifts behind everything, pages that come in piece by piece and slide (deeper from the right, back from the left), rows and tiles that press, ripple and tilt under your finger, breathing lights, numbers that count; Calm (the dot at the top right) stops it all, and iPhone's Reduce Motion is respected",
+    "check": "Open Dev: the glow drifts behind the cards; tap a row: it presses in and ripples from your finger; tap the dot at the top right: everything holds still",
+    "done": false
    },
    {
-    "id": "J84.2",
-    "text": "The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field)",
-    "check": "Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults",
-    "done": true
+    "id": "J90.2",
+    "text": "Nested pages: every page has its own address, the trail at the top (each step a way back) and Back; a page per project (its tools by group), per chapter (all its jobs), per job (its words, verdict, place in line, what it waits for, its plan), Done and Parked; Up next as chips; Find, one field over every page, tool and job",
+    "check": "Plan → The engine → a job: its page opens; the trail at the top takes you back; the magnifier, type studio: the Studio is first",
+    "done": false
+   },
+   {
+    "id": "J90.3",
+    "text": "The Live panel on Overview: tiles for the bar, who's in it (a heartbeat), each deploy, Claude's errors this week and Claude's latest job; it checks again every 15 s and a changed tile glows and counts; tap a tile: Looks good, Broke it or a note goes to Claude",
+    "check": "Overview: the Live tiles show the bar's build and the deploys; tap The bar → Looks good: Plan → Tell Claude shows the note waiting",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J90 → J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, after J84, which was built first; then the rest as approved)",
+ "upNext": "J85 → J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, next; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -959,19 +966,6 @@
      "kind": "now",
      "why": "Nothing reads them since S4.2; the hub test covers what stays"
     }
-   },
-   {
-    "id": "J90",
-    "text": "Dev remade: nested pages (drill into a project, a chapter, a job and back, a trail at the top, Find), constant smooth Ember motion (a living background, cards that answer your finger, sliding pages, a Calm switch) and the Live panel on Home (the bar, who's in it, the deploys, the job in Now, Claude's latest; updating by itself, animating what changed, one-tap reactions to Claude). Its plan: docs/plan/jobs/J90.md.",
-    "serves": [
-     "N5",
-     "N1"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "Dev is our own pages; the motion moves and fades only, pauses in the background and with Reduce Motion, and has an off switch"
-    }
    }
   ],
   "backbone": [
@@ -1199,6 +1193,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d"
+  },
   {
    "build": "109fe1c",
    "text": "J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce"
