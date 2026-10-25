@@ -61,7 +61,7 @@
     "id": "J90.3",
     "text": "The Live panel on Overview: tiles for the bar, who's in it (a heartbeat), each deploy, Claude's errors this week and Claude's latest job; it checks again every 15 s and a changed tile glows and counts; tap a tile: Looks good, Broke it or a note goes to Claude",
     "check": "Overview: the Live tiles show the bar's build and the deploys; tap The bar → Looks good: Plan → Tell Claude shows the note waiting",
-    "done": false
+    "done": true
    }
   ]
  },
