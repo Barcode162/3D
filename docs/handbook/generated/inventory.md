@@ -196,6 +196,65 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `jukebox-glow` | `light-jukebox` |  |  | no model |
 | `neon` | `light-neon` |  |  | no model |
 
+## showroom (54 things)
+
+| Thing | Kind | Sits on | Model | Note |
+|---|---|---|---|---|
+| `room` | `showroom-room` |  |  | no model |
+| `coin` | `showroom-coin` |  | `credit_coin.glb` |  |
+| `spark-1` | `showroom-spark` |  |  | no model |
+| `spark-2` | `showroom-spark` |  |  | no model |
+| `spark-3` | `showroom-spark` |  |  | no model |
+| `spark-4` | `showroom-spark` |  |  | no model |
+| `spark-5` | `showroom-spark` |  |  | no model |
+| `spark-6` | `showroom-spark` |  |  | no model |
+| `spark-7` | `showroom-spark` |  |  | no model |
+| `spark-8` | `showroom-spark` |  |  | no model |
+| `sign-motion` | `spot` |  |  | no model |
+| `lamp-1` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `lamp-light-1` | `light-bulb` |  |  | no model |
+| `lamp-2` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `lamp-light-2` | `light-bulb` |  |  | no model |
+| `lamp-3` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `lamp-light-3` | `light-bulb` |  |  | no model |
+| `lamp-4` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `lamp-light-4` | `light-bulb` |  |  | no model |
+| `sign-colour` | `spot` |  |  | no model |
+| `sample-oak-floor` | `showroom-sample` |  |  | no model |
+| `sample-dark-wood` | `showroom-sample` |  |  | no model |
+| `sample-varnished-wood` | `showroom-sample` |  |  | no model |
+| `sample-door-wood` | `showroom-sample` |  |  | no model |
+| `sample-brick` | `showroom-sample` |  |  | no model |
+| `sample-plaster` | `showroom-sample` |  |  | no model |
+| `sample-leather` | `showroom-sample` |  |  | no model |
+| `sample-chrome` | `showroom-sample` |  |  | no model |
+| `sample-brass` | `showroom-sample` |  |  | no model |
+| `sample-black-steel` | `showroom-sample` |  |  | no model |
+| `sample-bottle-glass` | `showroom-sample` |  |  | no model |
+| `sample-lacquer` | `showroom-sample` |  |  | no model |
+| `sample-glow-glass` | `showroom-sample` |  |  | no model |
+| `shelf-light` | `light-bulb` |  |  | no model |
+| `sign-materials` | `spot` |  |  | no model |
+| `jukebox` | `jukebox` |  | `jukebox.glb` |  |
+| `jukebox-glow` | `light-jukebox` |  |  | no model |
+| `ceiling-light-1` | `light-groove` |  |  | no model |
+| `ceiling-light-2` | `light-groove` |  |  | no model |
+| `ceiling-light-3` | `light-groove` |  |  | no model |
+| `neon-1` | `light-neon-wave` |  |  | no model |
+| `neon-2` | `light-neon-wave` |  |  | no model |
+| `neon-3` | `light-neon-wave` |  |  | no model |
+| `sign-music` | `spot` |  |  | no model |
+| `table` | `round_table` |  | `round_table.glb` |  |
+| `candle` | `candle` |  | `candle.glb` |  |
+| `pint_glass-1` | `pint_glass` |  | `pint_glass.glb` |  |
+| `pint_glass-2` | `pint_glass` |  | `pint_glass.glb` |  |
+| `rocks_glass-1` | `rocks_glass` |  | `rocks_glass.glb` |  |
+| `stool-1` | `table_stool` |  | `table_stool.glb` |  |
+| `stool-2` | `table_stool` |  | `table_stool.glb` |  |
+| `chalkboard` | `chalkboard` |  | `chalkboard.glb` |  |
+| `sign-touch` | `spot` |  |  | no model |
+| `light-switch` | `light-switch` |  |  | no model |
+
 ## Kinds not placed anywhere
 
 Kinds that no place uses (they can be added from the Studio's Library): `smoke`.

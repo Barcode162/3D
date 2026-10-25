@@ -1,0 +1,91 @@
+{
+  "id": "showroom",
+  "about": "The Looped showroom (J82): one room that shows what the engine does, a station for each: motion on the shared clock, colour temperature, every material, music on the beat, touch and physics.",
+  "kinds": ["kinds/bar.json", "kinds/showroom.json"],
+  "air": {
+    "ambient": [0.05, 0.045, 0.045],
+    "fog": [0.015, 0.012, 0.012],
+    "fogDensity": 0.008
+  },
+  "spawn": {
+    "at": [0, 1.65, 4.2],
+    "yaw": 0
+  },
+  "lightGrid": {
+    "min": [-5.5, 0, -5.5],
+    "max": [5.5, 0, 5.5]
+  },
+  "rooms": [
+    {
+      "id": "showroom",
+      "min": [-5.25, -0.2, -5.25],
+      "max": [5.25, 3.6, 5.25]
+    }
+  ],
+  "doorways": [],
+  "areas": {
+    "arcade": {
+      "min": [0, 0, 0],
+      "max": [0, 0, 0]
+    }
+  },
+  "points": {
+    "arcade-door": [0, 0, 0]
+  },
+  "things": [
+    {"id": "room", "kind": "showroom-room", "at": [0,0,0]},
+    {"id": "coin", "kind": "showroom-coin", "at": [0,1.3,0], "scale": 3},
+    {"id": "spark-1", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0, "seed": 101, "parts": {"glowbox": {"size": 0.025, "color": [1,0.8,0.4], "glow": 4}}},
+    {"id": "spark-2", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.125, "seed": 102, "parts": {"glowbox": {"size": 0.025, "color": [1,0.45,0.2], "glow": 4}}},
+    {"id": "spark-3", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.25, "seed": 103, "parts": {"glowbox": {"size": 0.025, "color": [0.5,0.8,1], "glow": 4}}},
+    {"id": "spark-4", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.375, "seed": 104, "parts": {"glowbox": {"size": 0.025, "color": [1,0.4,0.8], "glow": 4}}},
+    {"id": "spark-5", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.5, "seed": 105, "parts": {"glowbox": {"size": 0.025, "color": [0.6,1,0.6], "glow": 4}}},
+    {"id": "spark-6", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.625, "seed": 106, "parts": {"glowbox": {"size": 0.025, "color": [1,0.95,0.7], "glow": 4}}},
+    {"id": "spark-7", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.75, "seed": 107, "parts": {"glowbox": {"size": 0.025, "color": [0.7,0.6,1], "glow": 4}}},
+    {"id": "spark-8", "kind": "showroom-spark", "at": [0,1.3,0], "phase": 0.875, "seed": 108, "parts": {"glowbox": {"size": 0.025, "color": [1,0.6,0.3], "glow": 4}}},
+    {"id": "sign-motion", "kind": "spot", "at": [0,0,0], "parts": {"uses": [{"name": "MOTION", "prompt": "One shared clock moves everything here\nTap the coin: it flips", "action": "none", "tag": [0,2.15,0], "box": [[-0.45,0,-0.45],[0.45,0.9,0.45]]}]}},
+    {"id": "lamp-1", "kind": "pendant_lamp", "at": [-4.6,3.4,-2.7], "phase": 0},
+    {"id": "lamp-light-1", "kind": "light-bulb", "at": [-4.6,2.45,-2.7], "parts": {"light": {"color": [1,1,1], "intensity": 1.6, "range": 5, "radius": 0.08, "dims": true, "lumens": 380, "kelvin": 1800}}},
+    {"id": "lamp-2", "kind": "pendant_lamp", "at": [-4.6,3.4,-0.9], "phase": 0.23},
+    {"id": "lamp-light-2", "kind": "light-bulb", "at": [-4.6,2.45,-0.9], "parts": {"light": {"color": [1,1,1], "intensity": 1.6, "range": 5, "radius": 0.08, "dims": true, "lumens": 380, "kelvin": 2700}}},
+    {"id": "lamp-3", "kind": "pendant_lamp", "at": [-4.6,3.4,0.9], "phase": 0.46},
+    {"id": "lamp-light-3", "kind": "light-bulb", "at": [-4.6,2.45,0.9], "parts": {"light": {"color": [1,1,1], "intensity": 1.6, "range": 5, "radius": 0.08, "dims": true, "lumens": 380, "kelvin": 4000}}},
+    {"id": "lamp-4", "kind": "pendant_lamp", "at": [-4.6,3.4,2.7], "phase": 0.69},
+    {"id": "lamp-light-4", "kind": "light-bulb", "at": [-4.6,2.45,2.7], "parts": {"light": {"color": [1,1,1], "intensity": 1.6, "range": 5, "radius": 0.08, "dims": true, "lumens": 380, "kelvin": 6500}}},
+    {"id": "sign-colour", "kind": "spot", "at": [-4.3,0,0], "parts": {"uses": [{"name": "COLOUR TEMPERATURE", "prompt": "Real light units: the same bulb at four temperatures\n1800 K candle · 2700 K warm · 4000 K neutral · 6500 K daylight\nTap a lamp: it swings", "action": "none", "tag": [0,1.9,0], "box": [[-0.35,0,-0.35],[0.35,1.2,0.35]]}]}},
+    {"id": "sample-oak-floor", "kind": "showroom-sample", "at": [-4.08,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "oak-floor"}], "uses": [{"prompt": "Oak floor\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-dark-wood", "kind": "showroom-sample", "at": [-3.4,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "dark-wood"}], "uses": [{"prompt": "Dark wood\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-varnished-wood", "kind": "showroom-sample", "at": [-2.72,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "varnished-wood"}], "uses": [{"prompt": "Varnished wood\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-door-wood", "kind": "showroom-sample", "at": [-2.04,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "door-wood"}], "uses": [{"prompt": "Door wood\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-brick", "kind": "showroom-sample", "at": [-1.36,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "brick"}], "uses": [{"prompt": "Brick\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-plaster", "kind": "showroom-sample", "at": [-0.68,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "plaster"}], "uses": [{"prompt": "Plaster\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-leather", "kind": "showroom-sample", "at": [0,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "leather"}], "uses": [{"prompt": "Leather\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-chrome", "kind": "showroom-sample", "at": [0.68,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "chrome"}], "uses": [{"prompt": "Chrome\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-brass", "kind": "showroom-sample", "at": [1.36,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "brass"}], "uses": [{"prompt": "Brass\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-black-steel", "kind": "showroom-sample", "at": [2.04,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "black-steel"}], "uses": [{"prompt": "Black steel\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-bottle-glass", "kind": "showroom-sample", "at": [2.72,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "bottle-glass"}], "uses": [{"prompt": "Bottle glass\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-lacquer", "kind": "showroom-sample", "at": [3.4,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "lacquer"}], "uses": [{"prompt": "Lacquer\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "sample-glow-glass", "kind": "showroom-sample", "at": [4.08,0.8,-4.55], "parts": {"boxes": [{"at": [0,0.24,0], "size": [0.48,0.48,0.48], "material": "glow-glass"}], "uses": [{"prompt": "Glow glass\nOne of the 13 materials: its own look, feel and sound", "action": "none", "tag": [0,0.7,0], "box": [[-0.3,0,-0.3],[0.3,0.55,0.3]]}]}},
+    {"id": "shelf-light", "kind": "light-bulb", "at": [0,3.3,-3.1], "parts": {"light": {"color": [1,1,1], "intensity": 2, "range": 6, "radius": 0.05, "dims": true, "lumens": 1600, "kelvin": 3500, "shape": "tube", "center": [0,0,0], "axis": [1,0,0], "length": 8.8}}},
+    {"id": "sign-materials", "kind": "spot", "at": [0,0,-4.55], "parts": {"uses": [{"name": "MATERIALS", "prompt": "Every material the engine knows, side by side\nLook at a cube to read its name", "action": "none", "tag": [0,1.75,0], "box": [[-0.4,0,-0.4],[0.4,0.8,0.4]]}]}},
+    {"id": "jukebox", "kind": "jukebox", "at": [4.55,0,-0.4], "turn": -90, "parts": {"blocks": [[-0.35,-0.5,0.35,0.5]], "uses": [{"name": "JUKEBOX", "prompt": "Jukebox", "action": "jukebox", "tag": [0,2.1,0], "box": [[-0.35,0,-0.5],[0.35,1.9,0.5]], "lights": true}]}},
+    {"id": "jukebox-glow", "kind": "light-jukebox", "at": [4.15,1.2,-0.4], "parts": {"light": {"color": [1,0.45,0.25], "intensity": 0.9, "range": 3, "radius": 0.3, "lumens": 162, "shape": "panel", "center": [0,-0.325,0], "axis": [0,1,0], "length": 1.29, "axis2": [0,0,1], "width": 0.82}}},
+    {"id": "ceiling-light-1", "kind": "light-groove", "at": [-1.5,3.3,-1.5], "parts": {"light": {"color": [1,1,1], "intensity": 1.5, "range": 6, "radius": 0.2, "dims": true, "lumens": 300, "kelvin": 2700}}},
+    {"id": "ceiling-light-2", "kind": "light-groove", "at": [1.5,3.3,-1.5], "parts": {"light": {"color": [1,1,1], "intensity": 1.5, "range": 6, "radius": 0.2, "dims": true, "lumens": 300, "kelvin": 2700}}},
+    {"id": "ceiling-light-3", "kind": "light-groove", "at": [0,3.3,1.8], "parts": {"light": {"color": [1,1,1], "intensity": 1.5, "range": 6, "radius": 0.2, "dims": true, "lumens": 300, "kelvin": 2700}}},
+    {"id": "neon-1", "kind": "light-neon-wave", "at": [4.9,2,-3.4], "phase": 0, "parts": {"light": {"color": [1,0.3,0.75], "intensity": 1.2, "range": 4, "radius": 0.1, "lumens": 200, "shape": "tube", "center": [0,0,0], "axis": [0,1,0], "length": 1.3}}},
+    {"id": "neon-2", "kind": "light-neon-wave", "at": [4.9,2,-2.6], "phase": 0.333, "parts": {"light": {"color": [0.3,0.85,1], "intensity": 1.2, "range": 4, "radius": 0.1, "lumens": 200, "shape": "tube", "center": [0,0,0], "axis": [0,1,0], "length": 1.3}}},
+    {"id": "neon-3", "kind": "light-neon-wave", "at": [4.9,2,-1.8], "phase": 0.667, "parts": {"light": {"color": [1,0.65,0.2], "intensity": 1.2, "range": 4, "radius": 0.1, "lumens": 200, "shape": "tube", "center": [0,0,0], "axis": [0,1,0], "length": 1.3}}},
+    {"id": "sign-music", "kind": "spot", "at": [4.3,0,1], "parts": {"uses": [{"name": "MUSIC", "prompt": "Play a song: the lights pulse on its beat\nTap the jukebox to pick one", "action": "none", "tag": [0,2,0], "box": [[-0.3,0,-0.3],[0.3,1.2,0.3]]}]}},
+    {"id": "table", "kind": "round_table", "at": [-2.2,0,2.6]},
+    {"id": "candle", "kind": "candle", "at": [-2.2,0.785,2.6]},
+    {"id": "pint_glass-1", "kind": "pint_glass", "at": [-1.95,0.785,2.45]},
+    {"id": "pint_glass-2", "kind": "pint_glass", "at": [-2.4,0.785,2.8]},
+    {"id": "rocks_glass-1", "kind": "rocks_glass", "at": [-2.1,0.785,2.9]},
+    {"id": "stool-1", "kind": "table_stool", "at": [-1.42,0,2.6], "turn": 90},
+    {"id": "stool-2", "kind": "table_stool", "at": [-2.98,0,2.6], "turn": -90},
+    {"id": "chalkboard", "kind": "chalkboard", "at": [4.97,1.6,2.8], "turn": -90},
+    {"id": "sign-touch", "kind": "spot", "at": [-2.2,0,1.75], "parts": {"uses": [{"name": "TOUCH & PHYSICS", "prompt": "Tap the candle, the table or the chalkboard\nPick up a glass and throw it", "action": "none", "tag": [0,1.75,0], "box": [[-0.3,0,-0.2],[0.3,0.7,0.2]]}]}},
+    {"id": "light-switch", "kind": "light-switch", "at": [0.9,1.2,4.97], "parts": {"uses": [{"name": "LIGHTS", "prompt": "Light switch\nTap: dim the lights", "action": "light-switch", "tag": [0,0.45,0], "box": [[-0.1,0,-0.12],[0.1,0.2,0.05]], "direct": true}]}}
+  ]
+}

@@ -9,13 +9,13 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 79 | 3D models, audio, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 81 | 3D models, audio, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
 | `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 43 | 3D models, JSON, Markdown | deploy.yml → home/bar |
 | `assets/music/` | The jukebox's songs, with their licences and credits. | 17 | audio, Markdown | deploy.yml → home/bar |
-| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 8 | JSON | deploy.yml → home/bar |
-| `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 2 | JSON | deploy.yml → home/bar |
-| `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 2 | JSON | deploy.yml → home/bar |
+| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
+| `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
+| `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 3 | JSON | deploy.yml → home/bar |
 | `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 144 | C++, pictures, JavaScript | deploy.yml → home/bar |
 | `bar/projects/` | The bar's projects, each with its project.json (web: copied to the site; native: built into the game). | 48 | C++, JavaScript, JSON | deploy.yml → home/bar |
 | `bar/projects/chess/` | The lounge's chessboard and its computer player (C++). | 5 | C++, JSON | deploy.yml → home/bar |
@@ -30,7 +30,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 10 | JavaScript, PHP, CSS | hub.yml → home/dev |
-| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 171 | Markdown, JSON | plan.yml → private/dev |
+| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 172 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans, instructions and notes (DECISIONS, STUDIO, ENGINE, REFERENCE, AUTOMATION, the audits...). Never instructions. | 29 | Markdown, JSON | not uploaded |
 | `docs/charter/` | The Charter: what the project is, the user's rules (rules.json, word for word), the glossary. | 3 | Markdown, JSON | plan.yml → private/dev |
 | `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 98 | Markdown, JSON | not uploaded |
@@ -38,8 +38,8 @@ What each folder is, how many files it holds, its main languages, and which work
 | `docs/handbook/manual/` | The manual: how light, materials, the world, avatars, recipes and the timeline work, with every dial (and the road ahead for each). | 7 | Markdown | not uploaded |
 | `docs/handbook/systems/` | One page per system, by chapter (engine, world, site, tools, backbone), one template. | 51 | Markdown | not uploaded |
 | `docs/handbook/ui/` | Every page and its controls, by exact label (checked against the live pages by tools/ui_labels_test.mjs). | 22 | Markdown | not uploaded |
-| `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 7 | Markdown, JSON | plan.yml → private/dev |
-| `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 6 | Markdown | plan.yml → private/dev |
+| `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 8 | Markdown, JSON | plan.yml → private/dev |
+| `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 7 | Markdown | plan.yml → private/dev |
 | `docs/playbook/` | The Playbook: the only instructions, one procedure per situation. | 10 | Markdown | not uploaded |
 | `docs/records/` | The Records: known issues, and the folders below. | 24 | Markdown | plan.yml → private/dev |
 | `docs/records/decisions/` | Decisions in force, numbered (tools/records.mjs decision). | 10 | Markdown | plan.yml → private/dev |

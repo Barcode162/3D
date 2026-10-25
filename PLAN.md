@@ -55,13 +55,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J54 · CI's browser tests** (the engine). CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
-- [ ] **J54.1** Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5 *Check:* Dev → Plan: J54.1 ticked; the known issue names the cause
-- [ ] **J54.2** The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened) *Check:* Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue
+**J82 · The showroom** (the world). The showroom: a test room (Menu → Places) with five stations that show what Looped does: motion on the shared clock, colour temperature, every material, music on the beat, touch and physics · N2 N3 N5
+- [x] **J82.1** The showroom: the place and its kinds, five stations with signs *Check:* Menu → Places → showroom: the coin turns over the pedestal with sparks around it; the four lamps on the left go from orange to blue; the back shelf shows 13 different cubes; play a song and the ceiling lights pulse; tap the candle, the table, a lamp, the coin; the LIGHTS switch behind you dims the room
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; the world remake and the script language take turns; then the rest of the road)
+**Up next, in order:** J54 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 → J65 → J20 (approved 2026-10-24 #7; J82 the showroom went first on the user's word, 2026-10-25 #1; the world remake and the script language take turns; then the rest of the road)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -180,6 +179,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
+- [ ] **J54** CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again · N5
+  *Verdict:* Doable now — Our own tests and workflows; no cost (a paid machine with a graphics card is parked: J69)
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -247,6 +248,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — A new look for the Studio's frame in Ember; your phone judges it
 - J69 · The tests on a GitHub machine with a graphics card, so the new light is tested too (KI-28; request 2026-10-24 #7: no paid services for now)
   *Verdict:* Doable at a cost — GitHub's machines with a graphics card are paid; the shader check, the pictures here and your phone cover the new light meanwhile
+- Claude gets better from how the user works with it: what worked, what the user liked or corrected, kept as lessons in the books and read at every session start, so the engine, the Studio and modelling get easier each time (2026-10-25 #2)
+  *Verdict:* Doable now — Claude can't be retrained, but the books can learn: lessons written from each session and read at the next (the Playbook and the records already do part of this)
+- Claude gets better from how the user works with it: what worked, what the user liked or corrected, kept as lessons in the books and read at every session start, so the engine, the Studio and modelling get easier each time (2026-10-25 #2)
+  *Verdict:* Doable now — Claude can't be retrained, but the books can learn: lessons written from each session and read at the next (the Playbook and the records already do part of this)
 
 ### The backbone
 - The site on Cloudflare Pages (unlocks threads in the game).
@@ -258,7 +263,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116
+- `1c830fd` J66.1, J66.2: J66: deploys never wait for, or get stopped by, the tests: the game's tests run in their own job and queue after the deploy, every step has a time limit, and the room test's grace check is steady → c3980dd^..6715116
 - `a29204e` J8.1, J8.2, J8.3: J8: proof, then unfreeze: 22 cold-start drills with fresh AI sessions all passed and the five gaps they found are fixed; the final audit checked every data flow live; the restructure's spec is history; your Freeze rule is out and the first real job (J66) is in Now → 903e814^..e3e310e
 - `450fb52` J7.1, J7.2, J7.3, J7.4: J7: the plan rebuilt with a reality check: every road and parked item has a job number and a verdict tied to the Charter's limits, shown in Dev; the world remake laid out as nine jobs; the script language's realistic scope and its first five jobs; the order you approved; the paid items parked; the freeze is a lock → 2334b6b^..fc947b6
 - `666d414` J6.7: J6.7: the fix for J6's red site deploy → 88258dc^..88258dc
