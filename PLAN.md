@@ -56,14 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J88 · A real engine, step 3** (the engine). A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md. · N3 N5
-- [ ] **J88.1** Up to 256 lamps: the light list and bounced light's lamp masks *Check:* The bar looks as before
-- [ ] **J88.2** Lamps sorted in 3D cells, every lamp at its real reach *Check:* By the fire and at the bar the light looks as before or softer at its edges, never in squares
-- [ ] **J88.3** Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed *Check:* ?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls
+**J95 · Deploys cheaper** (the backbone). Deploys cheaper: GitHub's long browser tests only on request (Run workflow, tests ticked), Dev shows it; the release that puts J87 live after the minutes ran out (KI-44). · N5
+- [x] **J95.1** GitHub's long browser tests only on request (Actions → Build and deploy → Run workflow, tests ticked); every deploy keeps its build and quick checks; Dev shows "browser tests on request"; the Handbook says how *Check:* Dev → Overview: the game's deploy tile says live, browser tests on request; the bar is the new build
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -186,6 +184,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 - [ ] **J91** A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
   *Verdict:* Doable at a cost — Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality
+- [ ] **J88** A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md. · N3 N5
+  *Verdict:* Doable now — The renderer's own code; the world remake needs the lamps first
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -272,7 +272,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32
+- `1889278` J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32
 - `018725f` J94.1: J94: the place viewer draws → 6a7dd81^..6a7dd81
 - `13e33e6` J93.1: J93: urgent fix: the models' textures load again on the phone → 28767be^..28767be
 - `673494d` J86.1, J86.2: J86: Looped is its own engine: its own library, one host object for the page, its own place loader and player, limits given at start, and a second program (the place viewer at /bar/looped/) built from it alone → d7b2ce2^..550e9d1

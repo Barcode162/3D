@@ -19,6 +19,7 @@ Blender (`tools/assets/`, recipe 10); compressed textures at build time
 - `node tools/project.mjs check` — the checks covering everything changed since `main`; `check changed` only what isn't committed; `check all` everything; `check <systems…>` by name (the list: `tools/lib/checks.mjs`).
 - Each check's log: `build/check/<name>.log`.
 - Native (no browser): `bash tools/native/run.sh` — maths, JSON, physics, cars, races, the world, light, chess, the protocol.
+- **On GitHub, the long browser tests run only when asked** (the user, request 2026-10-25 #15: they test on the phone): Actions → Build and deploy → Run workflow → tick "tests". Every deploy still builds, runs the quick checks and the room's tests, and goes live; Dev → Overview then shows "browser tests on request".
 - Browser tests open the pages in headless Chromium with software WebGPU (SwiftShader): right for looks, never for speed. With `TEST_LIGHT=test` the bar opens with the tests' lighting.
 - Pictures: the piece tool takes before/after pictures of the bar's spots (`tools/lib/spots.mjs`) into the gallery; `OUT=build/before node tools/shots.mjs spots` and `node tools/imgdiff.mjs build/before build/after` compare by hand.
 - After a deploy: `EXPECT_SHA=<sha> node tools/check_live.mjs` (`node tools/project.mjs live`) opens the live bar headless (out of the real room unless `NET=1`).
