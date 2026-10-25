@@ -27,3 +27,4 @@
 {"step":"J93","what":"J93: urgent fix: the models' textures load again on the phone","mainSha":"13e33e6","lastPiece":"28767be","pieces":["J93.1"],"date":"2026-10-25 20:50"}
 {"step":"J94","what":"J94: the place viewer draws","mainSha":"018725f","lastPiece":"6a7dd81","pieces":["J94.1"],"date":"2026-10-25 21:06"}
 {"step":"J87","what":"J87: copies drawn together: every copy of a model in one draw, up to 4096 models","mainSha":"1889278","lastPiece":"eb42d32","pieces":["J87.1"],"date":"2026-10-25 21:34"}
+{"step":"J95","what":"J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live","mainSha":"7521b64","lastPiece":"6f66cb1","pieces":["J95.1"],"date":"2026-10-25 21:48"}
