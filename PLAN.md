@@ -55,14 +55,16 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J85 · The Loop Maker, step 1, the engine** (the engine). The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
-- [ ] **J85.1** The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), "@name" wherever a loop goes, a missing or broken pattern named with where it's used; native tests *Check:* Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before
-- [ ] **J85.2** Timelines in the world model, like a music app's arrangement: tracks over things, clips that play a loop from a beat for a length, fades, a spread that runs a wave along a row, layered on each thing's own loop, swapped live; worked out from the shared clock alone, so every phone and the room agree; native tests *Check:* Nothing changes in the bar yet
-- [ ] **J85.3** The showroom's stage plays a 16-beat show (the lamps swell one after another, the coin hops, the stools turn, the neon wave), the room's copy runs it too, and the store accepts the loops file *Check:* joshuavelasco.com/bar/?place=showroom: the lamps swell one after another, the coin hops on beats 9-12, the stools turn on 13-16, and it loops; on two phones at once, both show the same beat
+**J60 · Everything off IONOS** (the backbone). Everything off IONOS: accounts (stronger hashes, moved on first login, logins that expire, guessing limited), every store, the site's pages and the bar's files move to Cloudflare beside the room and the ledger; then joshuavelasco.com is switched over and IONOS emptied on your yes. Its plan: docs/plan/jobs/J60.md. · N4 N1
+- [ ] **J60.1** Accounts on Cloudflare: sign up, log in, profiles, pictures, badges, invites, admins, recovery codes at the same address with the same replies; old hashes moved to strong ones on first login; logins unused for 90 days expire; 10 wrong tries in 15 minutes lock for 15 minutes *Check:* Nothing changes on the phone yet (tested on GitHub against the copy)
+- [ ] **J60.2** The stores on Cloudflare: the world (every version, drafts, proposals), the UI, Dev's data and notes, news and its pictures, Claude's key, phone reports; the tools point to them *Check:* Nothing changes on the phone yet
+- [ ] **J60.3** The site and the bar served by Cloudflare: the pages, the bar's files, the door, /classic/, the deploys uploading there instead of IONOS *Check:* bar3d.joshuavelasco60.workers.dev on the phone: the front page, sign in with your password, the bar, Dev, News
+- [ ] **J60.4** The final copy and the switch: every store copied, then your two changes (steps written out), joshuavelasco.com served by Cloudflare *Check:* joshuavelasco.com: sign in, the bar, Dev, the Studio, News, all as before
+- [ ] **J60.5** IONOS emptied on your yes after a week: a private backup on Cloudflare (never in the repo), the IONOS deploy steps and secrets taken out *Check:* Dev's deploys show only Cloudflare
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J57 → J86 → J87 → J88 → J89 → J65 → J20 → J68 → J37 → J39 → J35 → J43 → J70 → J78 → J71 → J79 → J72 → J80 → J73 → J81 → J74 → J75 → J76 → J77 → J24 → J25 → J13 → J9 (the fixes from Claude's review and the Loop Maker first, 2026-10-25 #5; Dev remade on the user's word, 2026-10-25 #6, next; then the rest as approved)
+**Up next, in order:** J87 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J86 → J88 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (everything off IONOS first, then the bar rebuilt as soon as possible, 2026-10-25 #7: copies drawn together and the world remake before the Loop Maker; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -187,6 +189,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — The renderer's own code; the world remake multiplies the things to draw, so this comes before it
 - [ ] **J88** A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
   *Verdict:* Doable now — The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost
+- [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
+  *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -205,16 +209,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Nothing reads them since S4.2; the hub test covers what stays
 
 ### The backbone
-- [ ] **J60** Accounts off IONOS: logins move to the ledger's side, stronger password hashes, moved on first login. · N4
-  *Formerly* B1 · *Verdict:* Doable now — You already said yes (old board: "get everything out of IONOS besides the things that would be security benefits, do your thing"); the ledger's side on Cloudflare can hold the logins
 - [ ] **J61** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
   *Formerly* B2 · *Verdict:* Doable now — Touches credits, so it starts only on your yes (Charter §5); the room already runs the games' shared state
 - [ ] **J62** The room decides every shared thing (Phase 5). · N4
   *Formerly* B3 · *Verdict:* Doable now — The room (Cloudflare Durable Objects) already holds shared state; moving every shared thing there is big but within its limits
 - [ ] **J65** Safety on the server: age bands enforced, reports kept, blocks remembered. · N4
   *Formerly* B6 · *Verdict:* Doable now — Touches accounts and ages, so it starts only on your yes (Charter §5); the room and the ledger can enforce it
-- [ ] **J89** Accounts hardened: logins expire when unused for 90 days, password guessing is limited (10 tries in 15 minutes), a profile's save is locked against a second one. Its plan: docs/plan/jobs/J89.md. · N4
-  *Verdict:* Doable now — account.php's own code; no data is moved or deleted
 
 ## 6. Parked
 *Not on the road yet, by chapter. The user promotes them.*
@@ -268,6 +268,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable at a cost — Relays cost money per use, and there's no budget for paid services now; voice works without them on most networks
 - J64 · Payments (Stripe) for the VIP store (request 2026-10-24 #7: no paid services for now)
   *Verdict:* Doable at a cost — A payment provider, tax handling and terms; a provider like Stripe takes a cut of each sale rather than a monthly fee, so it can come back once there is something to sell
+- J89 (accounts hardened) is built inside J60: the new logins on Cloudflare get its expiry, guessing limit and one-at-a-time saves (request 2026-10-25 #7)
+  *Verdict:* Doable now — Folded into J60
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
