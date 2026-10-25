@@ -53,7 +53,7 @@ bool hasBadge(const std::string& badge) {
   const auto it = cache.find(badge);
   if (it != cache.end() && now - it->second.atMs < 1000) return it->second.has;
   const bool has = EM_ASM_INT({
-    var a = window['bar3dAccount'];
+    var a = window['loopedHost']['account'];
     if (a && a['hasBadge'] && a['hasBadge'](UTF8ToString($0))) return 1;
     var local = /^localhost$|^127[.]/.test(location.hostname);
     return local && new RegExp('[?&]badge=' + UTF8ToString($0)).test(location.search) ? 1 : 0;
@@ -63,7 +63,7 @@ bool hasBadge(const std::string& badge) {
 }
 
 void entered() {
-  EM_ASM({ if (window['bar3dVoice'] && window['bar3dVoice']['entered']) window['bar3dVoice']['entered'](); });
+  EM_ASM({ if (window['loopedHost']['voice'] && window['loopedHost']['voice']['entered']) window['loopedHost']['voice']['entered'](); });
 }
 
 void loadingProgress(int done, int total, float progress) {
@@ -104,12 +104,12 @@ namespace engine::settings {
 
 int version() {
   if (bridge::frame().pulledMs > 0) return bridge::frame().settingsVersion;  // from the mailbox
-  return EM_ASM_INT({ var s = window['bar3dSettings']; return s ? s['version']() : 0; });
+  return EM_ASM_INT({ var s = window['loopedHost']['settings']; return s ? s['version']() : 0; });
 }
 
 double number(const char* key, double fallback) {
   return EM_ASM_DOUBLE({
-    var s = window['bar3dSettings'];
+    var s = window['loopedHost']['settings'];
     var v = s ? s['get'](UTF8ToString($0)) : undefined;
     return typeof v === 'number' ? v : (v === true ? 1 : v === false ? 0 : $1);
   }, key, fallback);
@@ -117,14 +117,14 @@ double number(const char* key, double fallback) {
 
 void remember(const char* key, double value) {
   EM_ASM({
-    try { window['localStorage']['setItem']('bar3d.game.' + UTF8ToString($0), String($1)); } catch (e) {}
+    try { window['localStorage']['setItem']((window['loopedHost']['storagePrefix'] || 'looped.') + UTF8ToString($0), String($1)); } catch (e) {}
   }, key, value);
 }
 
 double remembered(const char* key, double fallback) {
   return EM_ASM_DOUBLE({
     try {
-      var v = window['localStorage']['getItem']('bar3d.game.' + UTF8ToString($0));
+      var v = window['localStorage']['getItem']((window['loopedHost']['storagePrefix'] || 'looped.') + UTF8ToString($0));
       if (v !== null && isFinite(+v)) return +v;
     } catch (e) {}
     return $1;

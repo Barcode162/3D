@@ -309,7 +309,7 @@ uint64_t imageKey(const std::vector<uint8_t>& bytes, bool srgb, bool linear, int
          (static_cast<uint64_t>(maxSize) << 3);
 }
 
-constexpr const char* kAstcMime = "image/x-bar3d-astc";
+constexpr const char* kAstcMime = "image/x-looped-astc";
 
 static void afterParse(const std::shared_ptr<Loading>& l) {
   // Which images are colors and which are data (both is possible).

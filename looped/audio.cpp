@@ -15,7 +15,7 @@ namespace audio {
 
 bool ready() {
   if (bridge::frame().pulledMs > 0) return bridge::frame().audioRunning;  // from the page mailbox
-  return EM_ASM_INT({ return window['bar3dAudio']['ready']() ? 1 : 0; });
+  return EM_ASM_INT({ return window['loopedHost']['audio']['ready']() ? 1 : 0; });
 }
 
 // Where your ears are: sent with the frame's mailbox flush.
@@ -27,19 +27,19 @@ void setListener(Vec3 p, Vec3 f, Vec3 u) {
 }
 
 void setSongPickerRect(float x, float y, float w, float h) {
-  EM_ASM({ window['bar3dAudio']['setSongPickerRect']($0, $1, $2, $3); }, x, y, w, h);
+  EM_ASM({ window['loopedHost']['audio']['setSongPickerRect']($0, $1, $2, $3); }, x, y, w, h);
 }
 
 int userSongCount() {
   if (bridge::frame().pulledMs > 0) return bridge::frame().userSongCount;  // from the page mailbox
-  return EM_ASM_INT({ return window['bar3dAudio']['userSongCount'](); });
+  return EM_ASM_INT({ return window['loopedHost']['audio']['userSongCount'](); });
 }
 
 namespace {
 std::string userSongString(int index, bool url) {
   char buffer[1024];
   EM_ASM({
-    var a = window['bar3dAudio'];
+    var a = window['loopedHost']['audio'];
     stringToUTF8($1 ? a['userSongUrl']($0) : a['userSongName']($0), $2, $3);
   }, index, url, buffer, sizeof(buffer));
   return buffer;
@@ -49,26 +49,26 @@ std::string userSongString(int index, bool url) {
 std::string userSongName(int index) { return userSongString(index, false); }
 std::string userSongUrl(int index) { return userSongString(index, true); }
 
-void setMusicGain(float gain) { EM_ASM({ window['bar3dAudio']['setMusicGain']($0); }, gain); }
+void setMusicGain(float gain) { EM_ASM({ window['loopedHost']['audio']['setMusicGain']($0); }, gain); }
 
 // The sound clock: read once per frame by the page mailbox, plus the time
 // since then (so it's one call per frame however often it's asked).
 double now() {
   const bridge::Frame& f = bridge::frame();
-  if (f.pulledMs <= 0) return EM_ASM_DOUBLE({ return window['bar3dAudio']['now'](); });
+  if (f.pulledMs <= 0) return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['now'](); });
   if (f.audioTime <= 0) return 0;  // not unlocked yet
   return f.audioTime + (emscripten_get_now() - f.pulledMs) / 1000.0;  // (engine code: measures elapsed time)
 }
 
 void previewPlay(const std::string& url, double offsetSeconds) {
-  EM_ASM({ window['bar3dAudio']['previewPlay'](UTF8ToString($0), $1); }, url.c_str(), offsetSeconds);
+  EM_ASM({ window['loopedHost']['audio']['previewPlay'](UTF8ToString($0), $1); }, url.c_str(), offsetSeconds);
 }
 
-void previewStop() { EM_ASM({ window['bar3dAudio']['previewStop'](); }); }
+void previewStop() { EM_ASM({ window['loopedHost']['audio']['previewStop'](); }); }
 }  // namespace audio
 
 void Sound::create(const std::vector<float>& samples, float rate) {
-  id_ = EM_ASM_INT({ return window['bar3dAudio']['soundCreate'](HEAPF32, $0 >> 2, $1, $2); }, samples.data(),
+  id_ = EM_ASM_INT({ return window['loopedHost']['audio']['soundCreate'](HEAPF32, $0 >> 2, $1, $2); }, samples.data(),
                    static_cast<int>(samples.size()), rate);
 }
 
@@ -125,20 +125,20 @@ int createEmitter(Vec3 p, bool pianoBus) {
 }  // namespace audio
 
 void Track::load(const std::string& url) {
-  EM_ASM({ window['bar3dAudio']['trackLoad'](UTF8ToString($0)); }, url.c_str());
+  EM_ASM({ window['loopedHost']['audio']['trackLoad'](UTF8ToString($0)); }, url.c_str());
 }
 
 Track::State Track::state() {
-  return static_cast<State>(EM_ASM_INT({ return window['bar3dAudio']['trackState'](); }));
+  return static_cast<State>(EM_ASM_INT({ return window['loopedHost']['audio']['trackState'](); }));
 }
 
 std::vector<float> Track::takeSamples(float& rate) {
-  const int n = EM_ASM_INT({ return window['bar3dAudio']['trackLength'](); });
-  rate = static_cast<float>(EM_ASM_DOUBLE({ return window['bar3dAudio']['trackRate'](); }));
+  const int n = EM_ASM_INT({ return window['loopedHost']['audio']['trackLength'](); });
+  rate = static_cast<float>(EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackRate'](); }));
   std::vector<float> samples(static_cast<size_t>(std::max(n, 0)));
   if (n > 0) {
     EM_ASM({
-      var m = window['bar3dAudio']['trackTakeMono']();
+      var m = window['loopedHost']['audio']['trackTakeMono']();
       if (m) HEAPF32.set(m, $0 >> 2);
     }, samples.data());
   }
@@ -146,31 +146,31 @@ std::vector<float> Track::takeSamples(float& rate) {
 }
 
 bool Track::play(double delaySeconds) {
-  return EM_ASM_INT({ return window['bar3dAudio']['trackPlay']($0) ? 1 : 0; }, delaySeconds) != 0;
+  return EM_ASM_INT({ return window['loopedHost']['audio']['trackPlay']($0) ? 1 : 0; }, delaySeconds) != 0;
 }
 
-double Track::time() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['trackTime'](); }); }
-double Track::duration() { return EM_ASM_DOUBLE({ return window['bar3dAudio']['trackDuration'](); }); }
-void Track::stop() { EM_ASM({ window['bar3dAudio']['trackStop'](); }); }
+double Track::time() { return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackTime'](); }); }
+double Track::duration() { return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackDuration'](); }); }
+void Track::stop() { EM_ASM({ window['loopedHost']['audio']['trackStop'](); }); }
 
 void MusicSource::init(float refDistance) {
-  id_ = EM_ASM_INT({ return window['bar3dAudio']['createSource']($0); }, refDistance);
+  id_ = EM_ASM_INT({ return window['loopedHost']['audio']['createSource']($0); }, refDistance);
 }
 
 void MusicSource::play(const std::string& url, double offsetSeconds) {
-  EM_ASM({ window['bar3dAudio']['play']($0, UTF8ToString($1), $2); }, id_, url.c_str(), offsetSeconds);
+  EM_ASM({ window['loopedHost']['audio']['play']($0, UTF8ToString($1), $2); }, id_, url.c_str(), offsetSeconds);
 }
 
-void MusicSource::pause() { EM_ASM({ window['bar3dAudio']['pause']($0); }, id_); }
+void MusicSource::pause() { EM_ASM({ window['loopedHost']['audio']['pause']($0); }, id_); }
 
-void MusicSource::resume() { EM_ASM({ window['bar3dAudio']['resume']($0); }, id_); }
+void MusicSource::resume() { EM_ASM({ window['loopedHost']['audio']['resume']($0); }, id_); }
 
 bool MusicSource::playing() const {
-  return EM_ASM_INT({ return window['bar3dAudio']['playing']($0) ? 1 : 0; }, id_);
+  return EM_ASM_INT({ return window['loopedHost']['audio']['playing']($0) ? 1 : 0; }, id_);
 }
 
 bool MusicSource::finished() const {
-  return EM_ASM_INT({ return window['bar3dAudio']['finished']($0) ? 1 : 0; }, id_);
+  return EM_ASM_INT({ return window['loopedHost']['audio']['finished']($0) ? 1 : 0; }, id_);
 }
 
 double MusicSource::time() const {
@@ -178,7 +178,7 @@ double MusicSource::time() const {
 }
 
 void MusicSource::setPosition(Vec3 p) {
-  EM_ASM({ window['bar3dAudio']['setPosition']($0, $1, $2, $3); }, id_, p.x, p.y, p.z);
+  EM_ASM({ window['loopedHost']['audio']['setPosition']($0, $1, $2, $3); }, id_, p.x, p.y, p.z);
 }
 
 }  // namespace engine

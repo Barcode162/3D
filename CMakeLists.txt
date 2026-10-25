@@ -14,11 +14,20 @@ endif()
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS looped/*.cpp)
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS bar/*.cpp)
 
-add_executable(app ${ENGINE_SOURCES} ${APP_SOURCES})
-target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR})
-target_compile_options(app PRIVATE --use-port=emdawnwebgpu -Wall -Wextra)
+# Looped, the engine, is its own library (J86): it never includes bar/ and
+# talks to its page only through window.loopedHost (looped/host.h;
+# tools/lint_engine.mjs keeps it so). An object library, so every engine file
+# is linked whole (functions only the page calls stay in).
+add_library(looped OBJECT ${ENGINE_SOURCES})
+target_include_directories(looped PUBLIC ${CMAKE_SOURCE_DIR})
 # The engine builds without warnings; keep it that way.
-set_source_files_properties(${ENGINE_SOURCES} PROPERTIES COMPILE_OPTIONS "-Werror")
+target_compile_options(looped PRIVATE -Wall -Wextra -Werror)
+target_compile_options(looped PUBLIC --use-port=emdawnwebgpu)
+
+# The bar: its own code on top of the engine.
+add_executable(app ${APP_SOURCES})
+target_link_libraries(app PRIVATE looped)
+target_compile_options(app PRIVATE -Wall -Wextra)
 
 target_link_options(app PRIVATE
   --use-port=emdawnwebgpu

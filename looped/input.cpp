@@ -290,7 +290,7 @@ bool onMouse(int type, const EmscriptenMouseEvent* e, void* user) {
   // After a tap the phone also sends pretend mouse events (the touch
   // listeners are passive, so they can't cancel them): ignore those.
   if (type != EMSCRIPTEN_EVENT_MOUSEMOVE &&
-      start - EM_ASM_DOUBLE({ var b = window['bar3dBridge']; return b ? b['lastTouch']() : -1e9; }) < 1000) {
+      start - EM_ASM_DOUBLE({ var b = window['loopedHost']['bridge']; return b ? b['lastTouch']() : -1e9; }) < 1000) {
     return false;
   }
   if (type != EMSCRIPTEN_EVENT_MOUSEMOVE) profiler().touch();

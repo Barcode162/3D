@@ -2,7 +2,7 @@
 // Frame profiler: how long each part of a frame takes, how many things were
 // drawn, hitches, and how long start-up took. Shown by the performance
 // overlay (Settings → Performance overlay, or ?perf=1) and readable as
-// window.bar3dPerf (gathered only when read; tests print it, reports will
+// window.loopedPerf (gathered only when read; tests print it, reports will
 // send it).
 //
 // Per frame:  beginFrame()  →  PROFILE(Phase::kX) scopes ...  →  endFrame()
@@ -114,7 +114,7 @@ class Profiler {
   Stats stats(int count) const;
   const Frame& frame(int back) const;  // 0 = the newest complete frame
   int frameCount() const { return count_; }
-  // Everything window.bar3dPerf shows, as JSON.
+  // Everything window.loopedPerf shows, as JSON.
   std::string json() const;
 
   // Overlay on/off (settings "perf" or ?perf=1).

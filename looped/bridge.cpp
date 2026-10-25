@@ -30,7 +30,7 @@ bool g_attached = false;
 
 void attach(const char* canvasSelector) {
   g_attached = EM_ASM_INT({
-    var b = window['bar3dBridge'];
+    var b = window['loopedHost']['bridge'];
     if (!b) return 0;
     b['attach'](UTF8ToString($0));
     return 1;
@@ -40,7 +40,7 @@ void attach(const char* canvasSelector) {
 void pull() {
   if (!g_attached) return;
   const int ok = EM_ASM_INT({
-    var b = window['bar3dBridge'];
+    var b = window['loopedHost']['bridge'];
     return b ? b['pull'](HEAPF64, $0 >> 3, HEAPU8, $1, $2) : 0;
   }, g_in, g_text, kTextCap);
   if (!ok) return;
@@ -133,7 +133,7 @@ void flush() {
   const std::string json = "[" + g_out + "]";
   g_out.clear();
   EM_ASM({
-    var b = window['bar3dBridge'];
+    var b = window['loopedHost']['bridge'];
     if (b) b['flush'](UTF8ToString($0));
   }, json.c_str());
 }

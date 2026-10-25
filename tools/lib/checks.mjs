@@ -13,7 +13,7 @@ export const CHECKS = {
              ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
              ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
              ['toolbelt', 'node tools/toolbelt_test.mjs'], ['uikit', 'node tools/uikit.mjs check'], ['plan', 'node tools/plan_test.mjs'],
-             ['workflows', 'node tools/workflows_test.mjs'], ['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs'], ['handbook', 'node tools/handbook.mjs check']],
+             ['workflows', 'node tools/workflows_test.mjs'], ['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs'], ['handbook', 'node tools/handbook.mjs check'], ['engine', 'node tools/lint_engine.mjs']],
   plan:     [['plan', 'node tools/plan_test.mjs']],
   workflows: [['workflows', 'node tools/workflows_test.mjs']],
   workshop: [['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs'], ['handbook', 'node tools/handbook.mjs check']],

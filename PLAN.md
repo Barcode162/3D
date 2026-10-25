@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J86 · A real engine, step 1** (the engine). A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
-- [ ] **J86.1** The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check *Check:* The bar works as before (menus, voice, multiplayer, sounds)
+- [x] **J86.1** The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check *Check:* The bar works as before (menus, voice, multiplayer, sounds)
 - [ ] **J86.2** Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone *Check:* joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it
 
 ## 5. The road

@@ -169,11 +169,11 @@ void Profiler::entered(double nowMs) {
   stage("entered");
 }
 
-// window.bar3dPerf is a getter: the numbers are only gathered when a test
+// window.loopedPerf is a getter: the numbers are only gathered when a test
 // or report reads it, so playing costs nothing.
 void Profiler::publish() {
   EM_ASM({
-    Object.defineProperty(window, 'bar3dPerf', {
+    Object.defineProperty(window, 'loopedPerf', {
       configurable: true,
       get: function () { try { return JSON.parse(UTF8ToString(Module['_engine_perf_json']())); } catch (e) { return null; } },
     });

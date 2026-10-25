@@ -29,7 +29,8 @@ void logLine(LogLevel level, const char* format, ...) {
   }
   EM_ASM({
     var t = UTF8ToString($1);
-    if (window['bar3dLog']) window['bar3dLog']['add'](['info', 'warn', 'error', 'fatal'][$0], t);
+    var h = window['loopedHost'];
+    if (h && (h['has'] ? h['has']('log') : h['log'])) h['log']['add'](['info', 'warn', 'error', 'fatal'][$0], t);
     else console.log(t);
   }, static_cast<int>(level), text);
 }

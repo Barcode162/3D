@@ -48,7 +48,7 @@
     "id": "J86.1",
     "text": "The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check",
     "check": "The bar works as before (menus, voice, multiplayer, sounds)",
-    "done": false
+    "done": true
    },
    {
     "id": "J86.2",

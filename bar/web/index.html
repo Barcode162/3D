@@ -161,6 +161,24 @@
 <div id="fatal"><div class="big">Something broke - tap to rejoin</div>
   <div class="small" id="fatalText"></div><div id="fatalCode"></div></div>
 <script>
+  // The engine's way into this page (looped/host.h, J86): Looped calls only
+  // window.loopedHost; the bar gives it its own parts, looked up when used
+  // (the scripts below make them).
+  window.loopedHost = {
+    storagePrefix: 'bar3d.game.',  // remembered settings keep their old keys
+    get net() { return window.bar3dNet; },
+    get audio() { return window.bar3dAudio; },
+    get voice() { return window.bar3dVoice; },
+    get bridge() { return window.bar3dBridge; },
+    get log() { return window.bar3dLog; },
+    get account() { return window.bar3dAccount; },
+    get settings() { return window.bar3dSettings; },
+  };
+  // The engine's numbers (window.loopedPerf) under the bar's old name too:
+  // the tests and the phone reports read bar3dPerf.
+  Object.defineProperty(window, 'bar3dPerf', { configurable: true, get: function () { return window.loopedPerf; } });
+</script>
+<script>
   // The log: everything C++ and the bridges print (looped/log.h), plus any
   // JavaScript/WebAssembly errors. A ring of the last 300 lines, drawn into
   // the panel once per animation frame. Errors count on a red badge; only a

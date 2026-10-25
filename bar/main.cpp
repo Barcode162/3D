@@ -6,6 +6,7 @@
 #include <emscripten/emscripten.h>
 
 #include "bar/app_state.h"
+#include "looped/host.h"
 #include "bar/world_live.h"
 
 using namespace barapp;
@@ -33,6 +34,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void app_enter() {
 }
 
 int main() {
+  engine::host::install();  // the page's parts (window.loopedHost, set by bar/web/index.html)
   LOG_INFO("Bar3D starting (C++ / WebAssembly).");
   app::fetchLiveWorld();  // while the GPU starts (docs/archive/STUDIO.md 7.6)
   g_app.gpu.init("#canvas", onGpuReady);

@@ -1,5 +1,5 @@
 #pragma once
-// Logging. Every line goes to the page's log (bar/web/index.html → bar3dLog):
+// Logging. Every line goes to the page's log (window.loopedHost.log, looped/host.h):
 // a ring of the last 300 lines with times and levels, shown in the log
 // panel and sent along with reports (Menu → Settings → Send report).
 // - info: normal events.
