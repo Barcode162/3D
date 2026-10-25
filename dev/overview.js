@@ -32,14 +32,15 @@
     if (!c) return { detail: 'No report yet (the next deploy writes one)', value: '?', tone: 'warn' };
     var list = function (a) { return (a || []).join(', '); };
     var tests = c.tests === 'running' ? 'tests running…'
+      : c.tests === 'off' ? 'browser tests on request (you test on the phone)'
       : c.tests === 'passed' ? 'every test passed'
       : c.tests === 'cancelled' ? 'stopped (a newer deploy took over)'
       : (c.failed && c.failed.length ? c.failed.length + ' failed: ' + list(c.failed) : 'a step failed');
     var allowed = c.allowed && c.allowed.length ? ' · allowed to fail: ' + list(c.allowed) : '';
     return {
       detail: 'build ' + c.build + ' · ' + (c.live ? 'live' : 'not live') + ' · ' + tests + allowed + ' · ' + ago(c.at),
-      value: { running: 'Running', passed: 'Green', cancelled: 'Stopped' }[c.tests] || 'Red',
-      tone: c.tests === 'passed' ? 'ok' : c.tests === 'failed' ? 'bad' : 'warn',
+      value: { running: 'Running', passed: 'Green', cancelled: 'Stopped', off: c.live ? 'Live' : 'Not live' }[c.tests] || 'Red',
+      tone: c.tests === 'passed' || (c.tests === 'off' && c.live) ? 'ok' : c.tests === 'failed' ? 'bad' : 'warn',
       running: c.tests === 'running',
     };
   }

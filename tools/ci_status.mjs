@@ -25,6 +25,9 @@ const report = {
   at: Math.floor(Date.now() / 1000),
   url: env.GITHUB_RUN_ID ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` : '',
 };
+// The long browser tests run only when asked for (deploy.yml, run by hand
+// with "tests" ticked; request 2026-10-25 #15): otherwise "off".
+if (phase === 'live' && env.TESTS_ON !== undefined && env.TESTS_ON !== 'true') report.tests = 'off';
 if (phase === 'end') {
   let steps = {};
   try { steps = JSON.parse(env.STEPS_JSON || '{}'); } catch { console.log('WARNING: STEPS_JSON is not JSON'); }

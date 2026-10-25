@@ -10,7 +10,16 @@ name: Build and deploy
 on:
   push:
     branches: [main]
+  # Run by hand (Actions → Build and deploy → Run workflow): a full deploy,
+  # and the long browser tests only when "tests" is ticked. A push never runs
+  # them (the user, request 2026-10-25 #15: they test on the phone; GitHub's
+  # minutes ran out, KI-44).
   workflow_dispatch:
+    inputs:
+      tests:
+        description: Also run the long browser tests (about 20 minutes)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -283,6 +292,7 @@ jobs:
         timeout-minutes: 5
         env:
           LFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          TESTS_ON: ${{ github.event_name == 'workflow_dispatch' && inputs.tests }}
         run: node tools/ci_status.mjs game live
 
       # The game is private now (docs/archive/LOOPED.md A1): gh-pages keeps only a
@@ -328,7 +338,7 @@ jobs:
   # config.json as the live one.
   tests:
     needs: build-and-publish
-    if: needs.build-and-publish.result == 'success'
+    if: needs.build-and-publish.result == 'success' && github.event_name == 'workflow_dispatch' && inputs.tests
     runs-on: ubuntu-latest
     concurrency:
       group: game-tests

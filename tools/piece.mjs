@@ -11,7 +11,7 @@
 //                     "changed": only the checks covering the files this piece changes,
 //                     whatever kind (the user, 2026-10-24: test only what the change
 //                     touches); "quick" for the old quick set; "none" for none.
-//                     GitHub runs the full set at every deploy.
+//                     GitHub's long browser tests run only on request (deploy.yml, request 2026-10-25 #15).
 //   --check "..."     the phone check: where to stand, what to see (kept for the reply)
 //   --compare "x=0"   also pictures with this page option vs without (the feature's switch)
 //   --spots a,b       only these spots (default: all of tools/lib/spots.mjs)

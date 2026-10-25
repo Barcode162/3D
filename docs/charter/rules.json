@@ -33,11 +33,11 @@
  "rules": [
   {
    "date": "2026-10-25",
-   "text": "**Research, then build:** before any of a job's code changes, Claude researches what the job touches and writes the findings into the job's plan; the user sees them first (\"We need to research to see what we are doing before we continue … 1 mistake is worse than making sure you are doing the right thing\", request 2026-10-25 #12)."
+   "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). GitHub's long browser tests run only when the user asks (\"Only when I ask\", request 2026-10-25 #15); the build's quick checks still run with every deploy. Replaces the earlier wording of this rule (request 2026-10-25 #11)."
   },
   {
    "date": "2026-10-25",
-   "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). GitHub's tests still run after each deploy and never block it. Replaces \"Test only what the change touches\" (request 2026-10-25 #11)."
+   "text": "**Research, then build:** before any of a job's code changes, Claude researches what the job touches and writes the findings into the job's plan; the user sees them first (\"We need to research to see what we are doing before we continue … 1 mistake is worse than making sure you are doing the right thing\", request 2026-10-25 #12)."
   },
   {
    "date": "2026-10-24",
