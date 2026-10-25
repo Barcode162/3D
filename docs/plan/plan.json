@@ -47,15 +47,9 @@
   "pieces": [
    {
     "id": "J87.1",
-    "text": "Model drawing in its own file, unchanged (the same draws as today, now in looped/model_batch.*)",
-    "check": "The bar looks and works exactly as before",
-    "done": false
-   },
-   {
-    "id": "J87.2",
-    "text": "The instance path: per-copy data in an instance buffer, copies grouped into one draw, in the main view, the mirrors and the reflection capture; up to 4096 models",
+    "text": "Copies drawn together: per-copy data in an instance buffer, every copy of a model part in one draw, in the main view, the mirrors and the reflection capture; up to 4096 models",
     "check": "The bar looks exactly as before (highlights, the loops' glow, the glasses); ?perf=1 shows fewer draws",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1172,7 +1166,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "018725f",
    "text": "J94.1: J94: the place viewer draws → 6a7dd81^..6a7dd81"
   },
   {

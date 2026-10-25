@@ -189,16 +189,16 @@ class SceneRenderer {
   void setRoughFix(bool on) { roughFix_ = on; }
   void setGiView(int view) { giView_ = view; }  // ?giview= (debug views, scene.wgsl)
   const GiGpu& gi() const { return gi_; }
-  Limits limits_;
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:
+  Limits limits_;
   static constexpr uint32_t kMaxLights = 32;       // matches looped/shaders/scene.wgsl
   static constexpr uint32_t kLightsPerCell = 16;   // brightest first (4 x 4 bytes, 0xff ends the list)
   static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
   static constexpr uint32_t kMaxGridCells = 256;
   static constexpr uint32_t kMaxBones = 32;
-  static constexpr size_t kMaxModels = 512;
+  static constexpr size_t kMaxModels = 4096;
   struct GpuLight {
     float position[4];  // xyz, range
     float color[4];     // rgb, intensity
@@ -254,7 +254,6 @@ class SceneRenderer {
   // A placed .glb model; `gpu` stays empty until it has finished loading.
   struct ModelDraw {
     std::shared_ptr<engine::GpuModel> gpu;
-    uint32_t uniformOffset;
     engine::Vec3 position;  // for sorting see-through models back to front
     float scale = 1;
     engine::Mat4 world;     // position, rotation and scale (for culling)
@@ -316,7 +315,7 @@ class SceneRenderer {
                   float minSize = 0) const;
   std::vector<engine::Aabb> rooms_;
   std::vector<Doorway> doorways_;
-  void loadModels(const RenderScene& scene, std::vector<uint8_t>& objectData);
+  void loadModels(const RenderScene& scene);
   void drawAvatar(const wgpu::RenderPassEncoder& pass, const wgpu::BindGroup& bones) const;
   void drawOthers(const wgpu::RenderPassEncoder& pass, const RoomView& view) const;  // the ones the view can see
   wgpu::BindGroup makeBonesBindGroup(wgpu::Buffer& buffer, const char* label);
@@ -371,15 +370,19 @@ class SceneRenderer {
   void captureEnvironment(const wgpu::CommandEncoder& encoder);
   std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
-  uint32_t firstModelOffset_ = 0;
-  size_t modelsDirtyFrom_ = SIZE_MAX, modelsDirtyTo_ = 0;
   std::vector<engine::Vec3> roomsCheckedAt_;  // where each model was when its rooms were worked out
   uint8_t* modelSlot(size_t i) { return modelData_.data() + i * kObjectStrideBytes; }
-  void markModel(size_t i) {
-    modelsDirtyFrom_ = std::min(modelsDirtyFrom_, i);
-    modelsDirtyTo_ = std::max(modelsDirtyTo_, i + 1);
-  }
-  void flushModels();
+  const uint8_t* modelSlot(size_t i) const { return modelData_.data() + i * kObjectStrideBytes; }
+  // Copies drawn together (J87): each model's per-copy data (the first
+  // kCopyBytes of its slot: matrix, tint and own glow, highlight) goes into
+  // the instance buffer for every pass that draws it; each pass appends at a
+  // fresh place (all of a frame's passes share one command buffer).
+  static constexpr size_t kCopyBytes = 96;
+  mutable wgpu::Buffer instanceBuffer_;
+  mutable size_t instanceCapacity_ = 0, instanceCursor_ = 0;  // in copies
+  mutable std::vector<uint8_t> instanceStaging_;
+  // Room for `copies` more this frame: the offset (bytes) they start at.
+  size_t reserveCopies(size_t copies) const;
   // Real material brightness (L1.4): assets/models/albedo.json, applied to
   // each model as it (or the table) arrives.
   engine::AlbedoTable albedo_;

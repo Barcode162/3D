@@ -57,8 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J87 · A real engine, step 2** (the engine). A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md. · N5 N3
-- [ ] **J87.1** Model drawing in its own file, unchanged (the same draws as today, now in looped/model_batch.*) *Check:* The bar looks and works exactly as before
-- [ ] **J87.2** The instance path: per-copy data in an instance buffer, copies grouped into one draw, in the main view, the mirrors and the reflection capture; up to 4096 models *Check:* The bar looks exactly as before (highlights, the loops' glow, the glasses); ?perf=1 shows fewer draws
+- [x] **J87.1** Copies drawn together: per-copy data in an instance buffer, every copy of a model part in one draw, in the main view, the mirrors and the reflection capture; up to 4096 models *Check:* The bar looks exactly as before (highlights, the loops' glow, the glasses); ?perf=1 shows fewer draws
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -273,7 +272,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J94.1: J94: the place viewer draws → 6a7dd81^..6a7dd81
+- `018725f` J94.1: J94: the place viewer draws → 6a7dd81^..6a7dd81
 - `13e33e6` J93.1: J93: urgent fix: the models' textures load again on the phone → 28767be^..28767be
 - `673494d` J86.1, J86.2: J86: Looped is its own engine: its own library, one host object for the page, its own place loader and player, limits given at start, and a second program (the place viewer at /bar/looped/) built from it alone → d7b2ce2^..550e9d1
 - `c49cd10` J92.1: J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on → f28d037^..f28d037

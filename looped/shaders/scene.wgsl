@@ -242,23 +242,39 @@ struct ModelIn {
   @location(3) tangent: vec4f,
 };
 
+// One copy of a model (J87: copies are drawn together, one entry each in
+// the instance buffer; looped/scene_renderer.cpp drawModels).
+struct CopyIn {
+  @location(4) m0: vec4f,  // the model matrix, column by column
+  @location(5) m1: vec4f,
+  @location(6) m2: vec4f,
+  @location(7) m3: vec4f,
+  @location(8) color: vec4f,     // rgb tints the colour, a scales its own glow
+  @location(9) material: vec4f,  // x = highlight glow (you stand at it)
+};
+
 struct ModelOut {
   @builtin(position) clip: vec4f,
   @location(0) worldPos: vec3f,
   @location(1) normal: vec3f,
   @location(2) uv: vec2f,
   @location(3) tangent: vec4f,
+  @location(4) @interpolate(flat) tint: vec4f,
+  @location(5) @interpolate(flat) highlight: f32,
 };
 
 @vertex
-fn vs_model(in: ModelIn) -> ModelOut {
-  let world = object.model * vec4f(in.position, 1.0);
+fn vs_model(in: ModelIn, copy: CopyIn) -> ModelOut {
+  let model = mat4x4f(copy.m0, copy.m1, copy.m2, copy.m3);
+  let world = model * vec4f(in.position, 1.0);
   var out: ModelOut;
   out.clip = frame.viewProj * world;
   out.worldPos = world.xyz;
-  out.normal = (object.model * vec4f(in.normal, 0.0)).xyz;
+  out.normal = (model * vec4f(in.normal, 0.0)).xyz;
   out.uv = in.uv;
-  out.tangent = vec4f((object.model * vec4f(in.tangent.xyz, 0.0)).xyz, in.tangent.w);
+  out.tangent = vec4f((model * vec4f(in.tangent.xyz, 0.0)).xyz, in.tangent.w);
+  out.tint = copy.color;
+  out.highlight = copy.material.x;
   return out;
 }
 
@@ -273,9 +289,9 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let glowPattern = textureSample(emissiveMap, modelSampler, in.uv).rgb;
 
   let alpha = baseSample.a * m.baseColor.a;
-  // object.color: rgb tints the colour, a scales the model's own glow (its
+  // in.tint: rgb tints the colour, a scales the model's own glow (its
   // loop, looped/world; 1 and 1 = as made).
-  var base = baseSample.rgb * m.baseColor.rgb * object.color.rgb;
+  var base = baseSample.rgb * m.baseColor.rgb * in.tint.rgb;
   // Real material brightness (L1.4): the new lighting lifts materials darker
   // (or lowers ones brighter) than anything real into real ranges.
   if (!classicLight()) { base = base * m.emissive.w; }
@@ -290,8 +306,8 @@ fn litModel(in: ModelOut, seeThrough: bool) -> vec4f {
   let b = cross(n0, t) * in.tangent.w;
   let n = normalize(t * (nt.x * m.params.z) + b * (nt.y * m.params.z) + n0 * nt.z);
   let ao = mix(1.0, occlusion, m.params.w);
-  // object.material.x = highlight glow when you stand at something.
-  var emission = m.emissive.rgb * glowPattern * object.color.a + base * object.material.x;
+  // in.highlight = highlight glow when you stand at something.
+  var emission = m.emissive.rgb * glowPattern * in.tint.a + base * in.highlight;
   // See-through glow (flames) only shines where the image is opaque.
   if (seeThrough) {
     emission = emission * alpha;

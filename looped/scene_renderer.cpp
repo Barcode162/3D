@@ -3,6 +3,7 @@
 #include <emscripten/emscripten.h>
 
 #include <algorithm>
+#include <unordered_map>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -138,9 +139,9 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
 
   // Object uniforms: the scene objects (written once) followed by the avatar
   // (its position is rewritten every frame as you move), the other players'
-  // avatars and the models.
+  // avatars and the boxes. Models carry theirs in the instance buffer (J87).
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + 1 + limits_.others + kMaxModels + limits_.boxes;
+  const size_t total = objects.size() + 1 + limits_.others + limits_.boxes;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -191,7 +192,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
       others_.push_back(slot);
     }
   }
-  loadModels(scene, objectData);
+  loadModels(scene);
   engine::fetchFile("assets/models/albedo.json", [this](bool ok, std::vector<uint8_t> bytes) {
     std::string error;
     if (!ok || !albedo_.parse(std::string(bytes.begin(), bytes.end()), &error)) {
@@ -214,7 +215,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   // The capture's own views: they can't read the cube they draw into.
   for (View& v : captureViews_) v = makeView(envDummyView_, "capture frame uniforms");
 
-  boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + limits_.others + kMaxModels) * kObjectStride);
+  boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + limits_.others) * kObjectStride);
   boxMesh_ = engine::Mesh::upload(device, engine::makeBox({1, 1, 1}));
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
@@ -610,11 +611,24 @@ bool SceneRenderer::createScenePipelines() {
   modelLayout_ = engine::GpuModel::createLayout(device);
   wgpu::BindGroupLayout modelLayouts[] = {frameLayout_, objectLayout_, modelLayout_};
   layoutDesc.bindGroupLayouts = modelLayouts;
-  const wgpu::VertexBufferLayout modelVertexLayout = engine::GpuModel::vertexLayout();
+  // Two buffers: the model's vertices, and its copies (J87: one entry per
+  // copy, stepped per instance; looped/shaders/scene.wgsl CopyIn).
+  wgpu::VertexBufferLayout modelVertexLayouts[2] = {engine::GpuModel::vertexLayout(), {}};
+  wgpu::VertexAttribute copyAttributes[6];
+  for (uint32_t i = 0; i < 6; ++i) {
+    copyAttributes[i].format = wgpu::VertexFormat::Float32x4;
+    copyAttributes[i].offset = 16 * i;
+    copyAttributes[i].shaderLocation = 4 + i;
+  }
+  modelVertexLayouts[1].stepMode = wgpu::VertexStepMode::Instance;
+  modelVertexLayouts[1].arrayStride = kCopyBytes;
+  modelVertexLayouts[1].attributeCount = 6;
+  modelVertexLayouts[1].attributes = copyAttributes;
   desc.label = "model";
   desc.layout = device.CreatePipelineLayout(&layoutDesc);
   desc.vertex.entryPoint = "vs_model";
-  desc.vertex.buffers = &modelVertexLayout;
+  desc.vertex.bufferCount = 2;
+  desc.vertex.buffers = modelVertexLayouts;
   fragment.entryPoint = "fs_model";
   engine::pipelines::create(device, desc, &modelPipeline_);
   desc.label = "model (mirrored)";
@@ -787,7 +801,6 @@ void SceneRenderer::setModelBaseGlow(size_t model, float glow) {
 void SceneRenderer::writeModelGlow(size_t i) {
   const float material[4] = {modelBaseGlow_[i] + modelHighlight_[i], 0, 0, 0};
   std::memcpy(modelSlot(i) + offsetof(ObjectUniforms, material), material, sizeof(material));
-  markModel(i);
 }
 
 void SceneRenderer::setModelLook(size_t i, float glow, Vec3 tint) {
@@ -797,15 +810,27 @@ void SceneRenderer::setModelLook(size_t i, float glow, Vec3 tint) {
   float* now = reinterpret_cast<float*>(modelSlot(i) + offsetof(ObjectUniforms, color));
   if (std::memcmp(now, color, sizeof(color)) == 0) return;
   std::memcpy(now, color, sizeof(color));
-  markModel(i);
 }
 
-void SceneRenderer::flushModels() {
-  if (modelsDirtyFrom_ >= modelsDirtyTo_) return;
-  const size_t from = modelsDirtyFrom_ * kObjectStride, to = modelsDirtyTo_ * kObjectStride;
-  gpu_->queue.WriteBuffer(objectBuffer_, firstModelOffset_ + from, modelData_.data() + from, to - from);
-  modelsDirtyFrom_ = SIZE_MAX;
-  modelsDirtyTo_ = 0;
+size_t SceneRenderer::reserveCopies(size_t copies) const {
+  if (instanceCursor_ + copies > instanceCapacity_) {
+    // Too small for this frame: a bigger buffer for the rest of it (passes
+    // already recorded keep the old one alive until they've run).
+    size_t capacity = std::max<size_t>(1024, instanceCapacity_);
+    while (capacity < copies * 2) capacity *= 2;
+    if (instanceCapacity_ > 0) capacity = std::max(capacity, instanceCapacity_ * 2);
+    wgpu::BufferDescriptor d;
+    d.label = "model copies";
+    d.size = capacity * kCopyBytes;
+    d.usage = wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst;
+    instanceBuffer_ = gpu_->device.CreateBuffer(&d);
+    instanceCapacity_ = capacity;
+    instanceCursor_ = 0;
+    LOG_INFO("Model copies: room for %zu per frame.", capacity);
+  }
+  const size_t at = instanceCursor_ * kCopyBytes;
+  instanceCursor_ += copies;
+  return at;
 }
 
 // Reflection textures match the screen, so the glass can read them 1:1.
@@ -877,20 +902,19 @@ static std::string modelUrl(const std::string& file, bool astc) {
 // Each placement gets an object slot (its position/rotation/scale) right
 // away; the model itself streams in and is drawn once it's ready. Each file
 // is downloaded once, however many times it's placed.
-void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& objectData) {
-  const size_t firstSlot = scene.objects.size() + 1 + limits_.others;  // after the objects and the avatars
+void SceneRenderer::loadModels(const RenderScene& scene) {
+  modelData_.assign(std::min(scene.models.size(), kMaxModels) * kObjectStride, 0);
   std::vector<std::string> files;
   std::vector<std::vector<size_t>> users;
   for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
     const PlacedModel& p = scene.models[i];
-    const auto offset = static_cast<uint32_t>((firstSlot + i) * kObjectStride);
     ObjectUniforms u = {};
     u.model = modelMatrix(p.position, p.rotation, p.scale);
-    models_.push_back({nullptr, offset, p.position, p.scale, u.model, -1, {}});
+    models_.push_back({nullptr, p.position, p.scale, u.model, -1, {}});
     modelFile_.push_back(p.file);
     modelStill_.push_back(p.still);
     setVec4(u.color, {1, 1, 1}, 1);  // models: rgb tints the colour, a scales their own glow
-    std::memcpy(objectData.data() + offset, &u, sizeof(u));
+    std::memcpy(modelSlot(i), &u, sizeof(u));
     const auto it = std::find(files.begin(), files.end(), p.file);
     if (it == files.end()) {
       files.push_back(p.file);
@@ -902,9 +926,6 @@ void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& o
   if (scene.models.size() > kMaxModels) LOG_ERROR("Too many models; only %zu used", kMaxModels);
   modelBaseGlow_.assign(models_.size(), 0.0f);
   modelHighlight_.assign(models_.size(), 0.0f);
-  firstModelOffset_ = static_cast<uint32_t>(firstSlot * kObjectStride);
-  modelData_.assign(objectData.begin() + firstModelOffset_,
-                    objectData.begin() + firstModelOffset_ + static_cast<long>(models_.size() * kObjectStride));
   roomsCheckedAt_.clear();
   for (const ModelDraw& m : models_) roomsCheckedAt_.push_back(m.position);
   fileNames_ = files;
@@ -1086,9 +1107,9 @@ void SceneRenderer::setModelPose(size_t index, const Mat4& world) {
     assignRooms(m);
     roomsCheckedAt_[index] = m.position;
   }
-  // Only the matrix (the start of ObjectUniforms) changes.
+  // Only the matrix (the start of ObjectUniforms) changes; it reaches the
+  // GPU with the copy's next draw (J87).
   std::memcpy(modelSlot(index), &world, sizeof(Mat4));
-  markModel(index);
 }
 
 int SceneRenderer::roomAt(Vec3 p) const {
@@ -1169,6 +1190,7 @@ SceneRenderer::RoomView SceneRenderer::roomView(const Mat4& viewProj, int eyeRoo
 // drawn; neighbouring visible chunks go out as one draw.
 void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye, const RoomView& view,
                                float minSize) const {
+  static_assert(offsetof(ObjectUniforms, material) + 16 == kCopyBytes, "a copy = matrix, colour, material");
   std::vector<const ModelDraw*> order;
   for (const ModelDraw& m : models_) {
     if (!m.gpu || (blend && !m.gpu->hasBlend)) continue;
@@ -1181,54 +1203,88 @@ void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, 
     }
     order.push_back(&m);
   }
+  if (order.empty()) return;
   if (blend) {
     std::sort(order.begin(), order.end(), [eye](const ModelDraw* a, const ModelDraw* b) {
       const Vec3 da = a->position - eye, db = b->position - eye;
       return engine::dot(da, da) > engine::dot(db, db);
     });
   }
+  // What to draw, in order: a part of a model with its copies (one draw), or
+  // runs of a chunked part's visible chunks (one copy). See-through parts go
+  // one copy at a time, back to front.
+  struct Run {
+    uint32_t first, count;
+  };
+  struct Draw {
+    const engine::GpuModel* gpu;
+    size_t part;
+    std::vector<size_t> copies;  // model indices
+    std::vector<Run> runs;       // empty = the whole part
+  };
+  std::vector<Draw> draws;
+  std::unordered_map<const engine::GpuModel::Part*, size_t> grouped;  // whole parts drawn together
   for (const ModelDraw* m : order) {
-    bool boundObject = false;
+    const size_t index = static_cast<size_t>(m - models_.data());
     for (size_t pi = 0; pi < m->gpu->parts.size(); ++pi) {
       const engine::GpuModel::Part& part = m->gpu->parts[pi];
       if (part.blend != blend) continue;
       if (part.clusters.size() > 1 && !view.all.visible(engine::transformAabb(m->world, part.bounds))) continue;
       const std::vector<int8_t>* rooms = pi < m->clusterRoom.size() ? &m->clusterRoom[pi] : nullptr;
-      // Runs of visible chunks.
-      uint32_t runFirst = 0, runCount = 0;
-      bool partBound = false;
-      const auto flush = [&] {
-        if (runCount == 0) return;
-        if (!boundObject) {
-          pass.SetBindGroup(1, objectBindGroup_, 1, &m->uniformOffset);
-          boundObject = true;
+      if (part.clusters.size() == 1) {  // one chunk: the whole part, maybe together with other copies
+        const engine::GpuModel::Cluster& c = part.clusters[0];
+        const int room = rooms && !rooms->empty() ? (*rooms)[0] : -1;
+        if (room != m->room && !seen(view, engine::transformAabb(m->world, c.bounds), room)) continue;
+        const auto it = blend ? grouped.end() : grouped.find(&part);
+        if (it != grouped.end()) {
+          draws[it->second].copies.push_back(index);
+        } else {
+          if (!blend) grouped[&part] = draws.size();
+          draws.push_back({m->gpu.get(), pi, {index}, {{c.firstIndex, c.indexCount}}});
         }
-        if (!partBound) {
-          pass.SetBindGroup(2, m->gpu->bindGroups[part.material]);
-          pass.SetVertexBuffer(0, part.vertexBuffer);
-          pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
-          partBound = true;
-        }
-        pass.DrawIndexed(runCount, 1, runFirst);
-        engine::prof::draw(runCount);
-        runCount = 0;
-      };
+        continue;
+      }
+      // Chunked (the room shells): runs of visible chunks, this copy only.
+      Draw d{m->gpu.get(), pi, {index}, {}};
       for (size_t ci = 0; ci < part.clusters.size(); ++ci) {
         const engine::GpuModel::Cluster& c = part.clusters[ci];
         const int room = rooms && ci < rooms->size() ? (*rooms)[ci] : -1;
-        const bool visible = (part.clusters.size() == 1 && room == m->room) ||
-                             seen(view, engine::transformAabb(m->world, c.bounds), room);
-        if (!visible) {
-          flush();
-          continue;
-        }
-        if (runCount == 0) runFirst = c.firstIndex;
-        runCount += c.indexCount;
+        if (!seen(view, engine::transformAabb(m->world, c.bounds), room)) continue;
+        if (!d.runs.empty() && d.runs.back().first + d.runs.back().count == c.firstIndex) d.runs.back().count += c.indexCount;
+        else d.runs.push_back({c.firstIndex, c.indexCount});
       }
-      flush();
+      if (!d.runs.empty()) draws.push_back(std::move(d));
     }
   }
+  if (draws.empty()) return;
+  // Every copy's data, in draw order, in one write at a fresh place.
+  size_t copies = 0;
+  for (const Draw& d : draws) copies += d.copies.size();
+  const size_t base = reserveCopies(copies);
+  instanceStaging_.resize(copies * kCopyBytes);
+  size_t k = 0;
+  for (const Draw& d : draws)
+    for (size_t i : d.copies) std::memcpy(instanceStaging_.data() + kCopyBytes * k++, modelSlot(i), kCopyBytes);
+  gpu_->queue.WriteBuffer(instanceBuffer_, base, instanceStaging_.data(), instanceStaging_.size());
+  // The model pipelines keep the object group in their layout; nothing in it is read.
+  const uint32_t noOffset = 0;
+  pass.SetBindGroup(1, objectBindGroup_, 1, &noOffset);
+  size_t at = base;
+  for (const Draw& d : draws) {
+    const engine::GpuModel::Part& part = d.gpu->parts[d.part];
+    const auto count = static_cast<uint32_t>(d.copies.size());
+    pass.SetBindGroup(2, d.gpu->bindGroups[part.material]);
+    pass.SetVertexBuffer(0, part.vertexBuffer);
+    pass.SetVertexBuffer(1, instanceBuffer_, at, count * kCopyBytes);
+    pass.SetIndexBuffer(part.indexBuffer, wgpu::IndexFormat::Uint32);
+    for (const Run& r : d.runs) {
+      pass.DrawIndexed(r.count, count, r.first);
+      engine::prof::draw(r.count * count);
+    }
+    at += count * kCopyBytes;
+  }
 }
+
 void SceneRenderer::drawSkinned(const wgpu::RenderPassEncoder& pass, const engine::SkinnedMesh& mesh) const {
   pass.SetVertexBuffer(0, mesh.vertexBuffer);
   pass.SetIndexBuffer(mesh.indexBuffer, wgpu::IndexFormat::Uint32);
@@ -1463,7 +1519,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   const wgpu::Queue& queue = gpu_->queue;
   resizeMirrorTargets();
   flushLights();
-  flushModels();
+  instanceCursor_ = 0;  // this frame's model copies start again at the front
 
   // The avatar follows you. Only its model matrix changes (it comes first in
   // ObjectUniforms), plus the bone matrices for its pose.
