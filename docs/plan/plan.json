@@ -52,16 +52,10 @@
     "done": true
    },
    {
-    "id": "J88.2",
-    "text": "Lamps sorted in 3D cells, every lamp at its real reach",
-    "check": "By the fire and at the bar the light looks as before or softer at its edges, never in squares",
-    "done": false
-   },
-   {
     "id": "J88.3",
     "text": "Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed",
     "check": "?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1078,7 +1072,8 @@
      "kind": "cost",
      "why": "Phone speed and memory: Filament rates 4x MSAA high cost on mobile"
     }
-   }
+   },
+   "Lamps sorted in 3D cells: left out after research (no gain in the bar: every lamp reaches every cell; the per-pixel cap shortens lamps, not the cells; docs/plan/jobs/J88.md)"
   ],
   "tools": [
    {

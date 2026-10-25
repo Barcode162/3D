@@ -309,7 +309,8 @@ void GiGpu::relight(const std::vector<GiLight>& lamps) {
   }
 }
 
-void GiGpu::encode(const wgpu::CommandEncoder& encoder, double nowMs, float emissiveNits, float bounceStrength) {
+void GiGpu::encode(const wgpu::CommandEncoder& encoder, double nowMs, float emissiveNits, float bounceStrength,
+                   bool lightsChanged) {
   if (!tracePatches_ || !traceLamps_ || !traceProbes_ || !probeLamps_ || !bounce_ || !probes_) return;
   // Building (a new layout, or the current one re-lit): one slice of rays per frame.
   Set* building = next_ ? next_.get() : (cur_ && cur_->stage != Stage::kDone ? cur_.get() : nullptr);
@@ -360,6 +361,7 @@ void GiGpu::encode(const wgpu::CommandEncoder& encoder, double nowMs, float emis
             cur_ = next_;
             next_ = nullptr;
             changed_ = true;
+            settle_ = kSettleSteps;  // the new layout's light settles
             if (firstReadyMs_ < 0) firstReadyMs_ = nowMs;
           }
         }
@@ -382,6 +384,14 @@ void GiGpu::encode(const wgpu::CommandEncoder& encoder, double nowMs, float emis
   p.grid2[0] = s.n[0], p.grid2[1] = s.n[1], p.grid2[2] = s.n[2];
   // The first time: light spreads over about a second (the bounce grows from 0).
   fill_ = static_cast<float>(std::clamp((nowMs - firstReadyMs_) / 1200.0, 0.0, 1.0));
+  // At its own pace (J88.3): only while the light changes, at most every kStepMs.
+  if (lightsChanged || fill_ < 1 || s.relit || emissiveNits != lastEmissive_ || bounceStrength != lastStrength_)
+    settle_ = kSettleSteps;
+  lastEmissive_ = emissiveNits;
+  lastStrength_ = bounceStrength;
+  if (settle_ <= 0 || nowMs - lastStepMs_ < kStepMs) return;
+  lastStepMs_ = nowMs;
+  --settle_;
   p.misc[2] = emissiveNits;
   p.misc[3] = bounceStrength * fill_;
   gpu_->queue.WriteBuffer(s.frameParams, 0, &p, sizeof(p));

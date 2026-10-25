@@ -58,8 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J88 · A real engine, step 3** (the engine). A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md. · N3 N5
 - [x] **J88.1** Up to 255 lamps; bounced light and walls blocking light for the first 127 *Check:* The bar looks as before
-- [ ] **J88.2** Lamps sorted in 3D cells, every lamp at its real reach *Check:* By the fire and at the bar the light looks as before or softer at its edges, never in squares
-- [ ] **J88.3** Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed *Check:* ?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls
+- [x] **J88.3** Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed *Check:* ?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -243,6 +242,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Checks on the world's data and in the engine (a thing out of place, a missing model, a broken loop); the Handbook's inventory already flags some
 - Smooth edges (4x MSAA, or a cheaper smoothing pass): out of J88 on the user's word, for later when we optimize; MSAA smooths jagged edges but costs phone speed and ~75 MB (request 2026-10-25 #13; research in docs/plan/jobs/J88.md)
   *Verdict:* Doable at a cost — Phone speed and memory: Filament rates 4x MSAA high cost on mobile
+- Lamps sorted in 3D cells: left out after research (no gain in the bar: every lamp reaches every cell; the per-pixel cap shortens lamps, not the cells; docs/plan/jobs/J88.md)
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.
