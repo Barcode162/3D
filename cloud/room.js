@@ -91,6 +91,18 @@ function bytesToHex(b) { return Array.from(b, (x) => x.toString(16).padStart(2, 
 
 function today() { return new Date().toISOString().slice(0, 10); }
 
+// Why two players may not talk, or '' when they may (J84): about the sender,
+// "guest" (no login) or "birth" (an account made before birth dates were
+// asked: no known age group), which they can fix; about the other person,
+// only "apart" (a guest, no birth date, or the other age group), so nobody
+// learns anyone else's age group from a refusal.
+export function voiceRefusal(from, to) {
+  if (!from || !from.acct) return 'guest';
+  if (!from.band) return 'birth';
+  if (!to || !to.acct || !to.band || to.band !== from.band) return 'apart';
+  return '';
+}
+
 export class Room {
   constructor(ctx, env) {
     this.ctx = ctx;
@@ -466,9 +478,19 @@ export class Room {
     this.startTicker();
   }
 
+  // A voice handshake (WebRTC) goes to the other player only when the rule
+  // allows the two to talk (J84; Charter: 13+, teens and adults kept apart):
+  // both signed in, both with a known age group, the same one. Otherwise the
+  // sender hears why, as {refused}, and nothing reaches the other side.
   onSignal(slot, body) {
     const to = this.players.get(body.to);
     if (!to || !to.ws || body.to === slot) return;
+    const why = voiceRefusal(this.players.get(slot), to);
+    if (why) {
+      this.count('voiceRefused');
+      this.sendTo(slot, text('G', { from: body.to, data: { refused: why } }));
+      return;
+    }
     this.send(to.ws, text('G', { from: slot, data: body.data }));
   }
 
@@ -698,12 +720,13 @@ export class Room {
   }
 
   async onReauth(ws, slot, ticket) {
+    this.tokens.delete(ticket);  // always a fresh check: a birth date just added changes the age group (J84)
     const who = await this.checkToken(ticket);
     const p = this.players.get(slot);
     if (!p || p.ws !== ws) return;
     if (PRIVATE_ROOMS.has(this.name) && (!who || !who.play)) { this.close(ws, 4006, 'invite only'); return; }
-    if (who) Object.assign(p, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [] });
-    else Object.assign(p, { acct: '', av: 0, badges: [] });
+    if (who) Object.assign(p, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [], band: who.band || '' });
+    else Object.assign(p, { acct: '', av: 0, badges: [], band: '' });
     this.saveAttachment(slot);
     const f = { slot, name: p.name };
     if (p.acct) { f.acct = p.acct; f.av = p.av; }
@@ -750,7 +773,7 @@ export class Room {
     const p = { slot, name: h.name, look: h.look, acct: '', av: 0, resume: randomHex(16), proto: h.proto, graceUntil: 0, away: 0 };
     if (resumed) {  // keep what the login check already found
       const old = this.players.get(slot);
-      Object.assign(p, { acct: old.acct, av: old.av, badges: old.badges || [], name: old.acct ? old.name : h.name });
+      Object.assign(p, { acct: old.acct, av: old.av, badges: old.badges || [], band: old.band || '', name: old.acct ? old.name : h.name });
     } else {
       this.states.delete(slot);
       this.intentResults.delete(slot);
@@ -783,7 +806,7 @@ export class Room {
       const who = await this.checkToken(h.ticket);
       const cur = this.players.get(slot);
       if (who && cur && cur.ws === ws) {
-        Object.assign(cur, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [] });
+        Object.assign(cur, { acct: who.acct, name: who.name, av: who.av, badges: who.badges || [], band: who.band || '' });
         this.saveAttachment(slot);
         this.broadcast(text('F', { slot, name: cur.name, acct: cur.acct, av: cur.av }));
       }
@@ -792,7 +815,9 @@ export class Room {
 
   connectedCount() { return [...this.players.values()].filter((p) => p.ws).length; }
 
-  publicFields(p) { return { slot: p.slot, name: p.name, look: p.look, acct: p.acct, av: p.av, badges: p.badges || [] }; }
+  // What's kept for a player through hibernation and grace. The age group
+  // (`band`, J84) is kept too but never sent to anyone (player() leaves it out).
+  publicFields(p) { return { slot: p.slot, name: p.name, look: p.look, acct: p.acct, av: p.av, badges: p.badges || [], band: p.band || '' }; }
 
   // What survives hibernation for a connected player: their public fields,
   // resume token, last STATE and claims, in the socket's attachment.
@@ -1132,7 +1157,8 @@ export class Room {
     let who = null;
     if (this.dev && tok.startsWith('test:')) {
       const [acct, ...badges] = tok.slice(5).split(':');  // test:<acct>[:badge...]
-      who = { acct: clip(acct, 32), name: clip(acct, 24) || 'Tester', av: 1, badges, play: !badges.includes('noplay') };
+      who = { acct: clip(acct, 32), name: clip(acct, 24) || 'Tester', av: 1, badges, play: !badges.includes('noplay'),
+              band: badges.includes('teen') ? 'teen' : badges.includes('nobirth') ? '' : 'adult' };
     } else if (/^[0-9a-f]{48}$/.test(tok) && this.env.ACCOUNT_URL) {
       try {
         const r = await fetch(this.env.ACCOUNT_URL, {
@@ -1145,7 +1171,10 @@ export class Room {
         if (j && j.ok && j.me) {
           who = { acct: clip(String(j.me.id), 32), name: clip(String(j.me.name), 24) || 'Guest', av: Math.max(0, j.me.avatar | 0),
             badges: Array.isArray(j.me.badges) ? j.me.badges.filter((b) => typeof b === 'string').slice(0, 16).map((b) => clip(b, 16)) : [],
-            play: j.me.play === 1 };
+            play: j.me.play === 1,
+            // The age group from the private birth date (account.php: "teen" 13-17,
+            // "adult", "" for an account made before birth dates were asked).
+            band: j.me.band === 'teen' || j.me.band === 'adult' ? j.me.band : '' };
         }
       } catch (e) {}
     }

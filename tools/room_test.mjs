@@ -209,12 +209,54 @@ try {
   await wait(200);
   check(!ta.find('E'), 'the sender doesn\'t get her own events back');
 
-  // Signals reach only their target.
+  // Voice handshakes (SIGNAL) only between two signed-in people of the same
+  // age group (J84; Charter: 13+, teens and adults kept apart). Ann and Ben
+  // are guests: refused, and Ben hears nothing.
   ta.send('G', { to: sb, data: { t: 'offer', sdp: 'x' } });
-  const sig = await tb.until(() => tb.find('G'));
-  check(sig && sig.body.from === sa && sig.body.data.t === 'offer', 'a SIGNAL reaches its target with the sender\'s slot');
+  const nope = await ta.until(() => ta.find('G'));
+  check(nope && nope.body.from === sb && nope.body.data.refused === 'guest', 'a guest\'s SIGNAL is refused, and the guest is told why ("guest")');
   await wait(200);
-  check(!late.find('G'), 'and nobody else');
+  check(!tb.find('G') && !late.find('G'), 'and it reaches nobody');
+  {
+    const rv = room('voice');
+    // Ann, Ben and the two newcomers wait meanwhile: their keepalive, so the
+    // room doesn't close them as ghosts (GHOST_MS) before the claims below.
+    const keep = () => { for (const c of [ta, tb, late, late2]) if (c.ws.readyState === 1) c.ws.send('ping'); };
+    keep();
+    const [ad1, ad2, teen, teen2, old, guest] = await Promise.all([
+      joined(rv, { name: 'Ada', ticket: 'test:ada' }), joined(rv, { name: 'Abe', ticket: 'test:abe' }),
+      joined(rv, { name: 'Tia', ticket: 'test:tia:teen' }), joined(rv, { name: 'Tom', ticket: 'test:tom:teen' }),
+      joined(rv, { name: 'Ola', ticket: 'test:ola:nobirth' }), joined(rv, { name: 'Gus' })]);
+    // Logins are checked after the welcome: wait until every profile is in.
+    await ad1.until(() => ad1.all('F').length >= 5);
+    const roster = guest.find('W').body.roster.concat(guest.all('F').map((m) => m.body), guest.all('J').map((m) => m.body));
+    const slots = new Map([ad1, ad2, teen, teen2, old, guest].map((c) => [c, c.find('W').body.slot]));
+    const signal = async (from, to) => {
+      keep();
+      from.got.length = 0; to.got.length = 0;
+      from.send('G', { to: slots.get(to), data: { t: 'offer', sdp: 'x' } });
+      await wait(300);
+      const back = from.find('G'), there = to.find('G');
+      return { refused: back && back.body.data.refused, reached: !!(there && there.body.from === slots.get(from) && there.body.data.t === 'offer') };
+    };
+    let r = await signal(ad1, ad2);
+    check(r.reached && !r.refused, 'two signed-in adults: the SIGNAL reaches its target with the sender\'s slot');
+    r = await signal(teen, teen2);
+    check(r.reached && !r.refused, 'two signed-in teens: it reaches its target');
+    r = await signal(ad1, teen);
+    check(!r.reached && r.refused === 'apart', 'an adult to a teen: refused ("apart": nothing about the teen)');
+    r = await signal(teen, ad1);
+    check(!r.reached && r.refused === 'apart', 'a teen to an adult: refused ("apart")');
+    r = await signal(old, ad1);
+    check(!r.reached && r.refused === 'birth', 'an account without a birth date: refused ("birth")');
+    r = await signal(ad1, old);
+    check(!r.reached && r.refused === 'apart', 'to an account without a birth date: refused ("apart")');
+    r = await signal(ad1, guest);
+    check(!r.reached && r.refused === 'apart', 'to a guest: refused ("apart")');
+    check(roster.every((p) => !('band' in p)), 'nobody is ever told anyone\'s age group');
+    for (const c of [ad1, ad2, teen, teen2, old, guest]) c.ws.close();
+    keep();
+  }
 
   // Claims: the room decides; one owner; freed when they leave.
   ta.send('I', { i: 1, k: 'claim', key: 'seat.4' });

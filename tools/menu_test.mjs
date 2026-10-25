@@ -6,7 +6,7 @@
 // Usage: NODE_PATH=$(npm root -g) node tools/menu_test.mjs
 import { readFileSync } from 'node:fs';
 import { serveSite } from './lib/site.mjs';
-import { launchBrowser, logErrors, openBar } from './lib/browser.mjs';
+import { launchBrowser, logErrors, openBar, drawLess } from './lib/browser.mjs';
 import { SPOTS } from './lib/spots.mjs';
 
 const site = serveSite();
@@ -78,6 +78,9 @@ for (const [saved, expect] of [['{broken', { lookSpeed: 1, musicVol: 0.8 }],
 // Settings → Graphics: on a 3x phone screen High draws 2 pixels per point,
 // Low 1.3 (the canvas shrinks, the page stretches it); ?quality= forces one.
 {
+  // The first page is done (only its log is read at the end): it draws one
+  // frame every 5 s, so the 3x page (nine times the pixels) has the machine (KI-5).
+  await drawLess(page);
   const p3 = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3 });
   await openBar(p3, site.url, 'skipintro&server=off');
   // The HUD shows once the bar has warmed up (slow on a 3x software screen).

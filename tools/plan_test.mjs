@@ -42,16 +42,18 @@ try {
   check(plan('add', 'world', 'W95', 'No verdict', '--serves', 'N3').status === 1, 'an item without a verdict is refused (intake.md step 3)');
   check(plan('add', 'world', 'W94', 'After nothing', '--serves', 'N3', '--verdict', 'after', '--why', 'x').status === 1 && plan('add', 'world', 'W93', 'Bad kind', '--serves', 'N3', '--verdict', 'maybe', '--why', 'x').status === 1, 'a verdict "after" without its jobs, or an unknown kind, is refused');
   check(plan('add', 'world', 'W92', 'Waits', '--serves', 'N3', '--verdict', 'after', '--after', 'W99', '--why', 'x').status === 1, '--after takes job numbers only');
-  check(plan('add', 'world', 'J90', 'A later test item', '--serves', 'N3', '--verdict', 'after', '--after', 'J8', '--why', 'It needs J8 first', '--formerly', 'W90').status === 0
-    && /- \[ \] \*\*J90\*\* A later test item · N3\n  \*Formerly\* W90 · \*Verdict:\* Doable after J8 — It needs J8 first\n/.test(text()) && json().road.world.find((r) => r.id === 'J90').formerly === 'W90', 'add writes the verdict (and the old tag) under the item');
-  check(plan('nextid').stdout.trim() === 'J91', 'nextid gives the next free job number');
-  check(plan('verdict', 'J90', 'cost', 'A test cost').status === 0 && /\*Verdict:\* Doable at a cost — A test cost/.test(text()), 'verdict changes a road item\'s verdict');
+  // Job numbers no real job has (the plan's next free ones): A, then B and C after it.
+  const free = +plan('nextid').stdout.trim().slice(1), A = `J${free}`, B = `J${free + 1}`, C = `J${free + 2}`;
+  check(plan('add', 'world', A, 'A later test item', '--serves', 'N3', '--verdict', 'after', '--after', 'J8', '--why', 'It needs J8 first', '--formerly', 'W90').status === 0
+    && new RegExp(`- \\[ \\] \\*\\*${A}\\*\\* A later test item · N3\\n  \\*Formerly\\* W90 · \\*Verdict:\\* Doable after J8 — It needs J8 first\\n`).test(text()) && json().road.world.find((r) => r.id === A).formerly === 'W90', 'add writes the verdict (and the old tag) under the item');
+  check(plan('nextid').stdout.trim() === B, 'nextid gives the next free job number');
+  check(plan('verdict', A, 'cost', 'A test cost').status === 0 && /\*Verdict:\* Doable at a cost — A test cost/.test(text()), 'verdict changes a road item\'s verdict');
   check(plan('park', 'site', 'A parked test idea').status === 0 && /### The site\n(- .*\n(  .*\n)?)*- A parked test idea\n/.test(text().split('## 6. Parked')[1]), 'park adds a line under its chapter in Parked');
   check(plan('verdict', 'A parked test', 'rule', 'A test rule says no').status === 0 && /- A parked test idea\n  \*Verdict:\* Against a rule — A test rule says no\n/.test(text()) && plan('check').status === 0, 'verdict gives a parked line its verdict, and the plan reads back');
-  check(plan('add', 'tools', 'J89', 'Put off', '--serves', 'N1', '--verdict', 'cost', '--why', 'x').status === 0 && plan('park', 'tools', 'J89 · Put off (the user can\'t pay)', '--from', 'J89', '--verdict', 'cost', '--why', 'Paid').status === 0
-    && !json().road.tools.some((r) => r.id === 'J89') && json().parked.tools.some((t) => t.text?.startsWith('J89 · Put off')), 'park --from moves a road item into Parked');
-  check(plan('park', 'tools', 'x', '--from', 'J88').status === 1, 'park --from refuses an item not on the road');
-  check(problems(text().replace(/\n  \*Formerly\* W90 · \*Verdict:\*[^\n]*/, '')).some((p) => /J90 has no verdict/.test(p)), 'a road item without its verdict line is caught');
+  check(plan('add', 'tools', B, 'Put off', '--serves', 'N1', '--verdict', 'cost', '--why', 'x').status === 0 && plan('park', 'tools', `${B} · Put off (the user can't pay)`, '--from', B, '--verdict', 'cost', '--why', 'Paid').status === 0
+    && !json().road.tools.some((r) => r.id === B) && json().parked.tools.some((t) => t.text?.startsWith(`${B} · Put off`)), 'park --from moves a road item into Parked');
+  check(plan('park', 'tools', 'x', '--from', C).status === 1, 'park --from refuses an item not on the road');
+  check(problems(text().replace(/\n  \*Formerly\* W90 · \*Verdict:\*[^\n]*/, '')).some((p) => new RegExp(`${A} has no verdict`).test(p)), 'a road item without its verdict line is caught');
   check(plan('start', 'W99', '--piece', 'W99.1|One|look').status === 1, 'start is refused while Now has open pieces');
   check(plan('drop', 'X1.9').status === 1, 'drop refuses a piece that is not in Now');
   check(plan('tick', 'X1.1').status === 0 && /- \[x\] \*\*X1\.1\*\*/.test(text()), 'tick ticks a piece in Now');
@@ -76,7 +78,7 @@ try {
   check(plan('rule', '**A test rule:** one').status === 0, '(the test rule back for the checks below)');
   check(/\*\*A test rule:\*\* one/.test(readFileSync(join(dir, 'docs/charter/charter.md'), 'utf8')), 'a new rule reaches the Charter\'s block by itself');
   check(plan('chapter', 'site', 'A test now line.').status === 0 && /- \*\*The site:\*\* .* \*Now:\* A test now line\./.test(text()), 'chapter sets a chapter\'s Now line');
-  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1', '--verdict', 'now', '--why', 'A test reason').status === 0 && plan('next', 'X2 → J90').status === 0 && /Up next, in order:\*\* X2 → J90/.test(text()), 'next sets the Up next line');
+  check(plan('add', 'tools', 'X2', 'Next test', '--serves', 'N1', '--verdict', 'now', '--why', 'A test reason').status === 0 && plan('next', `X2 → ${A}`).status === 0 && new RegExp(`Up next, in order:\\*\\* X2 → ${A}`).test(text()), 'next sets the Up next line');
   check(plan('check').status === 0, 'after all that the copy still keeps its shape and its files agree');
   writeFileSync(join(dir, 'PLAN.md'), text().replace('A test road item', 'Edited by hand'));
   check(plan('check').status === 1, 'a hand edit of PLAN.md is caught');

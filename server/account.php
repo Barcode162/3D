@@ -18,6 +18,9 @@
 //     a new recovery code (shown once; the old one stops working)
 //   {"a":"reset","user":"josh","code":"XXXX-XXXX-XXXX","new":"..."} -> like login
 //     forgot your password: the recovery code sets a new one (and is used up)
+//   {"a":"birth","token":"..","birth":"2004-05-17"} -> {"ok":1,"me":profile}
+//     an account made before birth dates were asked adds its own, once (13
+//     and up; never changed after): voice chat needs it (J84)
 //   {"a":"profile","id":".."}                               -> {"ok":1,"profile":profile}
 //   {"a":"update", ..., "details":{"pronouns":..,"status":..,...}}  (DETAIL_FIELDS)
 //   {"a":"update", ..., "slots":["owner","", ...]}  badge slots on the card
@@ -126,6 +129,15 @@ function age_band($u) {
   $age = (new DateTime($b))->diff(new DateTime('today'))->y;
   return $age >= 18 ? 'adult' : 'teen';
 }
+// A birth date as sign-up takes it: a real date, not in the future, 13 to
+// 120 years ago. Returns the error for people, or '' when it's fine.
+function birth_problem($birth) {
+  if (!is_string($birth) || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birth, $bm) || !checkdate((int)$bm[2], (int)$bm[3], (int)$bm[1])) return 'Please enter your birth date.';
+  $age = (new DateTime($birth))->diff(new DateTime('today'))->y;
+  if ((new DateTime($birth)) > new DateTime('today') || $age > 120) return 'Please enter your real birth date.';
+  if ($age < 13) return 'Bar3D is for ages 13 and up.';
+  return '';
+}
 function own_profile($u) {
   return public_profile($u) + ['band' => age_band($u), 'hasRecovery' => !empty($u['recovery']) ? 1 : 0,
                                'play' => may_play($u) ? 1 : 0, 'admin' => is_owner($u) ? 1 : 0];
@@ -190,13 +202,8 @@ if ($a === 'signup' || $a === 'login') {
   if ($a === 'signup') {
     // 13 and up: the birth date is required and kept private.
     $birth = is_string($in['birth'] ?? null) ? $in['birth'] : '';
-    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $birth, $bm) || !checkdate((int)$bm[2], (int)$bm[3], (int)$bm[1])) {
-      flock($namesFile, LOCK_UN);
-      fail('Please enter your birth date.');
-    }
-    $age = (new DateTime($birth))->diff(new DateTime('today'))->y;
-    if ((new DateTime($birth)) > new DateTime('today') || $age > 120) { flock($namesFile, LOCK_UN); fail('Please enter your real birth date.'); }
-    if ($age < 13) { flock($namesFile, LOCK_UN); fail('Bar3D is for ages 13 and up.'); }
+    $problem = birth_problem($birth);
+    if ($problem !== '') { flock($namesFile, LOCK_UN); fail($problem); }
     if (isset($names[$user])) { flock($namesFile, LOCK_UN); fail('That username is taken.'); }
     $id = bin2hex(random_bytes(6));
     $display = clean($in['name'] ?? '', 20);
@@ -293,6 +300,18 @@ if ($a === 'recovery') {
   $u['recovery'] = password_hash($code, PASSWORD_DEFAULT);
   write_json(user_path($u['id']), $u);
   reply(['ok' => 1, 'code' => substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4)]);
+}
+
+// An account made before birth dates were asked adds its own, once (J84).
+// Only the age group it gives ever leaves this server.
+if ($a === 'birth') {
+  if (!empty($u['birth'])) fail('Your birth date is already set.');
+  $birth = is_string($in['birth'] ?? null) ? $in['birth'] : '';
+  $problem = birth_problem($birth);
+  if ($problem !== '') fail($problem);
+  $u['birth'] = $birth;
+  write_json(user_path($u['id']), $u);
+  reply(['ok' => 1, 'me' => own_profile($u)]);
 }
 
 if ($a === 'me') {

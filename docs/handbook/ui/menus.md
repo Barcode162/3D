@@ -6,6 +6,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 
 | Control | What it does |
 |---|---|
+| `Add my birth date` | Voice chat, on an account made before birth dates were asked: sets your birth date once (13 and up, never changed after); only your age group is used, so teens talk with teens and adults with adults (J84). |
 | `Avatar` | Presets, or customize your look. |
 | `Back to driving` | Back to the race. |
 | `Back to the bar` | From another place, back to the bar. |
@@ -28,4 +29,4 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 | `Stop the piano` | Stops the piano's song. |
 | `Test my mic (record 4 s, play back)` | Records 4 seconds and plays them back. |
 | `Visit the test home` | Go to the test home (its own room). |
-| `Voice chat` | Mic on/off, push to talk, the noise gate, mic boost, test your mic. |
+| `Voice chat` | Mic on/off, push to talk, the noise gate, mic boost, test your mic. Voice joins only signed-in people of your own age group (the room enforces it, J84): a guest is told to log in, an older account to add its birth date. |

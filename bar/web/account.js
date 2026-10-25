@@ -418,11 +418,13 @@ window.bar3dAccount = (function () {
   }
 
   function setSession(t, profile) {
+    var changed = t !== token;
     token = t;
     me = profile;
     store('bar3dToken', t);
     store('bar3dProfile', profile ? JSON.stringify(profile) : null);
     refreshBadges();
+    if (changed && window.bar3dVoice && bar3dVoice.loginChanged) bar3dVoice.loginChanged();
   }
 
   // The account line on the loading screen and the HUD "me" button.
@@ -493,5 +495,18 @@ window.bar3dAccount = (function () {
         .catch(function () { cardScreen({ name: name, user: '', color: 6 }, false); });
     },
     isOpen: function () { return !!root && root.classList.contains('open'); },
+    // Your age group ("teen" | "adult"), or "" (a guest, or an account made
+    // before birth dates were asked). Voice chat needs one (J84).
+    band: function () { return me && me.band ? me.band : ''; },
+    // Adds your birth date, once (an older account): the room checks your
+    // login again, and voice chat opens to your own age group.
+    setBirth: function (birth) {
+      return call({ a: 'birth', token: token, birth: birth }).then(function (r) {
+        setSession(token, r.me);
+        if (window.bar3dNet && bar3dNet.relogin) bar3dNet.relogin();
+        if (window.bar3dVoice && bar3dVoice.loginChanged) bar3dVoice.loginChanged();
+        return r.me;
+      });
+    },
   };
 })();

@@ -19,8 +19,21 @@ class Gpu {
   // frame; it only reconfigures when the size actually changed.
   void resizeIfNeeded();
 
+  // Whether to draw this frame at all. False while the GPU still has
+  // kMaxFramesInFlight frames to finish (work never piles up behind a slow
+  // GPU: a hot phone, or a test machine drawing in software, where a backlog
+  // made every screenshot wait minutes), or when `maxFps` says it's too soon.
+  // The game's logic runs every frame either way; only the drawing waits.
+  bool mayDraw(double nowMs);
   // Returns the texture to draw into this frame, or nullptr if unavailable.
   wgpu::TextureView beginFrame();
+  // After the frame's last submit: counts it until the GPU has finished it.
+  void endFrame();
+  static constexpr int kMaxFramesInFlight = 2;
+  int framesInFlight() const { return inFlight_; }
+  // At most this many drawn frames a second (0 = as many as the screen
+  // shows). The tests set it with ?fps= (bar/test_hooks.h).
+  double maxFps = 0;
 
   wgpu::Device device;
   wgpu::Queue queue;
@@ -52,6 +65,11 @@ class Gpu {
   void onDevice(wgpu::Device device);
   void configureSurface();
 
+  int inFlight_ = 0;
+  double lastDrawMs_ = -1e9;
+  double lastDoneMs_ = 0;  // when the GPU last finished a frame (or the first wait began)
+  bool noWait_ = false;  // the GPU never says "done": don't wait for it
+  uint64_t doneCount_ = 0;  // frames the GPU said it finished (its answers work)
   std::string canvasSelector_;
   std::function<void(bool)> onReady_;
   wgpu::Instance instance_;
