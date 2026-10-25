@@ -9,11 +9,11 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 81 | 3D models, audio, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 82 | 3D models, audio, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
 | `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 43 | 3D models, JSON, Markdown | deploy.yml → home/bar |
 | `assets/music/` | The jukebox's songs, with their licences and credits. | 17 | audio, Markdown | deploy.yml → home/bar |
-| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
+| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 11 | JSON | deploy.yml → home/bar |
 | `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
 | `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 3 | JSON | deploy.yml → home/bar |
 | `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 144 | C++, pictures, JavaScript | deploy.yml → home/bar |
@@ -60,10 +60,10 @@ What each folder is, how many files it holds, its main languages, and which work
 | `incoming/` | Source material before it becomes assets. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/` | Meridian's source material. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/blender/` | Blender scripts that made Meridian's models. | 7 | Python, shell | not uploaded |
-| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 113 | C++, WGSL | deploy.yml → home/bar |
+| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 115 | C++, WGSL | deploy.yml → home/bar |
 | `looped/drive/` | The new driving physics (docs/plan/jobs/W20.md). | 6 | C++ | deploy.yml → home/bar |
 | `looped/shaders/` | The WGSL shaders, built into the game. | 8 | WGSL | deploy.yml → home/bar |
-| `looped/world/` | The world core: things, kinds, places, states, rules, loops on the shared clock. | 8 | C++ | deploy.yml → home/bar |
+| `looped/world/` | The world core: things, kinds, places, states, rules, loops on the shared clock. | 10 | C++ | deploy.yml → home/bar |
 | `news/` | The public news page (joshuavelasco.com/news). | 1 | PHP | hub.yml → home/news |
 | `proto/` | The room protocol's test vectors (both codecs must pass them). | 1 | JSON | not uploaded |
 | `server/` | PHP next to the game on IONOS: accounts, the private bar's door, phone reports, the old relay. | 7 | PHP, other, HTML | deploy.yml → home/bar |

@@ -196,7 +196,7 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `jukebox-glow` | `light-jukebox` |  |  | no model |
 | `neon` | `light-neon` |  |  | no model |
 
-## showroom (54 things)
+## showroom (55 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -253,6 +253,7 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `stool-2` | `table_stool` |  | `table_stool.glb` |  |
 | `chalkboard` | `chalkboard` |  | `chalkboard.glb` |  |
 | `sign-touch` | `spot` |  |  | no model |
+| `sign-timeline` | `spot` |  |  | no model |
 | `light-switch` | `light-switch` |  |  | no model |
 
 ## Kinds not placed anywhere

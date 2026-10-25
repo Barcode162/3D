@@ -56,7 +56,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J85 · The Loop Maker, step 1, the engine** (the engine). The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
-- [ ] **J85.1** The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), "@name" wherever a loop goes, a missing or broken pattern named with where it's used; native tests *Check:* Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before
+- [x] **J85.1** The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), "@name" wherever a loop goes, a missing or broken pattern named with where it's used; native tests *Check:* Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before
 - [ ] **J85.2** Timelines in the world model, like a music app's arrangement: tracks over things, clips that play a loop from a beat for a length, fades, a spread that runs a wave along a row, layered on each thing's own loop, swapped live; worked out from the shared clock alone, so every phone and the room agree; native tests *Check:* Nothing changes in the bar yet
 - [ ] **J85.3** The showroom's stage plays a 16-beat show (the lamps swell one after another, the coin hops, the stools turn, the neon wave), the room's copy runs it too, and the store accepts the loops file *Check:* joshuavelasco.com/bar/?place=showroom: the lamps swell one after another, the coin hops on beats 9-12, the stools turn on 13-16, and it loops; on two phones at once, both show the same beat
 
@@ -271,7 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282
+- `85d8742` J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282
 - `4c06da4` J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d
 - `109fe1c` J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce
 - `2eb56b4` J83.1: J83 Claude's key, made from Dev → People → 19dbbcd^..19dbbcd

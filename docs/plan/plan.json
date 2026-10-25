@@ -49,7 +49,7 @@
     "id": "J85.1",
     "text": "The loop library: named patterns in assets/world/loops.json (swell, spin, hop, sway, pulse…), \"@name\" wherever a loop goes, a missing or broken pattern named with where it's used; native tests",
     "check": "Nothing changes in the bar (the patterns aren't used yet): walk the bar, everything moves as before",
-    "done": false
+    "done": true
    },
    {
     "id": "J85.2",
@@ -1181,7 +1181,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "85d8742",
    "text": "J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282"
   },
   {

@@ -13,6 +13,7 @@ A whole place: the bar, a home. Its things, where people appear, its air.
 |---|---|---|---|---|---|---|
 | `moods` | Moods | map |  |  |  | Named sets of lights (S7.3): by kind or by thing, their colour and brightness. |
 | `mood` | Mood now | text |  |  |  | Which of the moods the place uses. |
+| `timeline` | Timeline | timeline |  |  |  | The place's arrangement (J85), like a music app's tracks: clips of patterns played over things, on the music's beat. |
 | `id` | Name | id |  |  |  | The place's name in the files and the menu. |
 | `about` | About | text |  |  |  |  |
 | `kinds` | Kind files | list |  |  |  | Which kind files this place uses. |
