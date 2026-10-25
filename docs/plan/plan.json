@@ -1177,6 +1177,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J85.1, J85.2, J92.1: J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on → 78c76a4^..f28d037"
+  },
+  {
    "build": "85d8742",
    "text": "J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282"
   },
