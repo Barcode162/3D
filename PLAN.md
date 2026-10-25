@@ -55,16 +55,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J60 · Everything off IONOS** (the backbone). Everything off IONOS: accounts (stronger hashes, moved on first login, logins that expire, guessing limited), every store, the site's pages and the bar's files move to Cloudflare beside the room and the ledger; then joshuavelasco.com is switched over and IONOS emptied on your yes. Its plan: docs/plan/jobs/J60.md. · N4 N1
-- [ ] **J60.1** Accounts on Cloudflare: sign up, log in, profiles, pictures, badges, invites, admins, recovery codes at the same address with the same replies; old hashes moved to strong ones on first login; logins unused for 90 days expire; 10 wrong tries in 15 minutes lock for 15 minutes *Check:* Nothing changes on the phone yet (tested on GitHub against the copy)
-- [ ] **J60.2** The stores on Cloudflare: the world (every version, drafts, proposals), the UI, Dev's data and notes, news and its pictures, Claude's key, phone reports; the tools point to them *Check:* Nothing changes on the phone yet
-- [ ] **J60.3** The site and the bar served by Cloudflare: the pages, the bar's files, the door, /classic/, the deploys uploading there instead of IONOS *Check:* bar3d.joshuavelasco60.workers.dev on the phone: the front page, sign in with your password, the bar, Dev, News
-- [ ] **J60.4** The final copy and the switch: every store copied, then your two changes (steps written out), joshuavelasco.com served by Cloudflare *Check:* joshuavelasco.com: sign in, the bar, Dev, the Studio, News, all as before
-- [ ] **J60.5** IONOS emptied on your yes after a week: a private backup on Cloudflare (never in the repo), the IONOS deploy steps and secrets taken out *Check:* Dev's deploys show only Cloudflare
+**J86 · A real engine, step 1** (the engine). A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
+- [ ] **J86.1** The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check *Check:* The bar works as before (menus, voice, multiplayer, sounds)
+- [ ] **J86.2** Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone *Check:* joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J87 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J86 → J88 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (everything off IONOS first, then the bar rebuilt as soon as possible, 2026-10-25 #7: copies drawn together and the world remake before the Loop Maker; then the rest as approved)
+**Up next, in order:** J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the engine finished first, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -161,7 +158,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* M2 · *Verdict:* Doable after J41 — Layers sit on top of the real surfaces
 - [ ] **J46** Reflections and caustics: several reflection captures, screen reflections, light bounced off shiny things, caustics. · N3
   *Formerly* L4 · *Verdict:* Doable at a cost — Phone speed and memory: more reflection captures and screen reflections cost frame time
-- [ ] **J47** The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer. · N3
+- [ ] **J47** The air, the rest: dust in the light, smoke near the ceiling, heat shimmer (the haze and beams come in J91). · N3
   *Formerly* L5 · *Verdict:* Doable at a cost — Phone speed: haze and beams through the air are expensive; a cheap version first
 - [ ] **J48** Recipes: stool, chair, table, bottle, glass grown from recipes, every copy slightly different, dials in the Studio. · N2 N3
   *Formerly* RC1 · *Verdict:* Doable now — Models grown from recipes by script is how Claude makes 3D (Charter: Claude); the Studio's dials show them
@@ -183,14 +180,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
-- [ ] **J86** A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
-  *Verdict:* Doable now — Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone
 - [ ] **J87** A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md. · N5 N3
   *Verdict:* Doable now — The renderer's own code; the world remake multiplies the things to draw, so this comes before it
 - [ ] **J88** A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
   *Verdict:* Doable now — The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
+- [ ] **J91** A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
+  *Verdict:* Doable at a cost — Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -270,6 +267,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable at a cost — A payment provider, tax handling and terms; a provider like Stripe takes a cut of each sale rather than a monthly fee, so it can come back once there is something to sell
 - J89 (accounts hardened) is built inside J60: the new logins on Cloudflare get its expiry, guessing limit and one-at-a-time saves (request 2026-10-25 #7)
   *Verdict:* Doable now — Folded into J60
+- J60 · Everything off IONOS (accounts, every store, the site and the bar's files to Cloudflare, then the address switch): put off, IONOS works for now (request 2026-10-25 #9); its plan stays in docs/plan/jobs/J60.md
+  *Verdict:* Doable at a cost — On the free plan the password hashes are as strong as 10 ms per login allows; the switch needs your two changes
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*

@@ -36,49 +36,30 @@
   }
  ],
  "now": {
-  "id": "J60",
-  "title": "Everything off IONOS",
-  "chapter": "the backbone",
-  "about": "Everything off IONOS: accounts (stronger hashes, moved on first login, logins that expire, guessing limited), every store, the site's pages and the bar's files move to Cloudflare beside the room and the ledger; then joshuavelasco.com is switched over and IONOS emptied on your yes. Its plan: docs/plan/jobs/J60.md.",
+  "id": "J86",
+  "title": "A real engine, step 1",
+  "chapter": "the engine",
+  "about": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
   "serves": [
-   "N4",
-   "N1"
+   "N2"
   ],
   "pieces": [
    {
-    "id": "J60.1",
-    "text": "Accounts on Cloudflare: sign up, log in, profiles, pictures, badges, invites, admins, recovery codes at the same address with the same replies; old hashes moved to strong ones on first login; logins unused for 90 days expire; 10 wrong tries in 15 minutes lock for 15 minutes",
-    "check": "Nothing changes on the phone yet (tested on GitHub against the copy)",
+    "id": "J86.1",
+    "text": "The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check",
+    "check": "The bar works as before (menus, voice, multiplayer, sounds)",
     "done": false
    },
    {
-    "id": "J60.2",
-    "text": "The stores on Cloudflare: the world (every version, drafts, proposals), the UI, Dev's data and notes, news and its pictures, Claude's key, phone reports; the tools point to them",
-    "check": "Nothing changes on the phone yet",
-    "done": false
-   },
-   {
-    "id": "J60.3",
-    "text": "The site and the bar served by Cloudflare: the pages, the bar's files, the door, /classic/, the deploys uploading there instead of IONOS",
-    "check": "bar3d.joshuavelasco60.workers.dev on the phone: the front page, sign in with your password, the bar, Dev, News",
-    "done": false
-   },
-   {
-    "id": "J60.4",
-    "text": "The final copy and the switch: every store copied, then your two changes (steps written out), joshuavelasco.com served by Cloudflare",
-    "check": "joshuavelasco.com: sign in, the bar, Dev, the Studio, News, all as before",
-    "done": false
-   },
-   {
-    "id": "J60.5",
-    "text": "IONOS emptied on your yes after a week: a private backup on Cloudflare (never in the repo), the IONOS deploy steps and secrets taken out",
-    "check": "Dev's deploys show only Cloudflare",
+    "id": "J86.2",
+    "text": "Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone",
+    "check": "joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it",
     "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J87 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J86 → J88 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (everything off IONOS first, then the bar rebuilt as soon as possible, 2026-10-25 #7: copies drawn together and the world remake before the Loop Maker; then the rest as approved)",
+ "upNext": "J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the engine finished first, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -688,7 +669,7 @@
    {
     "id": "J47",
     "formerly": "L5",
-    "text": "The air: haze and beams, dust in the light, smoke near the ceiling, heat shimmer.",
+    "text": "The air, the rest: dust in the light, smoke near the ceiling, heat shimmer (the haze and beams come in J91).",
     "serves": [
      "N3"
     ],
@@ -835,18 +816,6 @@
     }
    },
    {
-    "id": "J86",
-    "text": "A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md.",
-    "serves": [
-     "N2"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone"
-    }
-   },
-   {
     "id": "J87",
     "text": "A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md.",
     "serves": [
@@ -883,6 +852,19 @@
     "verdict": {
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
+    }
+   },
+   {
+    "id": "J91",
+    "text": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
+    "serves": [
+     "N3",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
     }
    }
   ],
@@ -1181,6 +1163,13 @@
     "verdict": {
      "kind": "now",
      "why": "Folded into J60"
+    }
+   },
+   {
+    "text": "J60 · Everything off IONOS (accounts, every store, the site and the bar's files to Cloudflare, then the address switch): put off, IONOS works for now (request 2026-10-25 #9); its plan stays in docs/plan/jobs/J60.md",
+    "verdict": {
+     "kind": "cost",
+     "why": "On the free plan the password hashes are as strong as 10 ms per login allows; the switch needs your two changes"
     }
    }
   ]
