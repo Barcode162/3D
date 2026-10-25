@@ -25,3 +25,4 @@
 {"step":"J92","what":"J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on","mainSha":"c49cd10","lastPiece":"f28d037","pieces":["J85.1","J85.2","J92.1"],"date":"2026-10-25 20:20"}
 {"step":"J86","what":"J86: Looped is its own engine: its own library, one host object for the page, its own place loader and player, limits given at start, and a second program (the place viewer at /bar/looped/) built from it alone","mainSha":"673494d","lastPiece":"550e9d1","pieces":["J86.1","J86.2"],"date":"2026-10-25 20:40"}
 {"step":"J93","what":"J93: urgent fix: the models' textures load again on the phone","mainSha":"13e33e6","lastPiece":"28767be","pieces":["J93.1"],"date":"2026-10-25 20:50"}
+{"step":"J94","what":"J94: the place viewer draws","mainSha":"018725f","lastPiece":"6a7dd81","pieces":["J94.1"],"date":"2026-10-25 21:06"}
