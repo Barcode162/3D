@@ -9,6 +9,14 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
 
 ## Steps
 
+0. **Research first** (rule "Research, then build"): before the first code
+   change, add a **Research** section to the job's plan: everything the job
+   touches, found by searching the whole repo (engine, bar, tools, builds,
+   workflows, assets) for every name it will change; how it works now (read
+   the code); how established engines solve it; the risks and the earlier
+   incidents (`docs/records/incidents/`) that apply; the order of the work.
+   Commit it as `Notes: J<n> research`, tell the user in plain words, and
+   build on their go.
 1. **The branch.** `git fetch origin main && git checkout -B job/J<n>
    origin/main` (or, if `origin/job/J<n>` has pieces already, check it out and
    carry on from there).

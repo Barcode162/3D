@@ -23,6 +23,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-25) **Research, then build:** before any of a job's code changes, Claude researches what the job touches and writes the findings into the job's plan; the user sees them first ("We need to research to see what we are doing before we continue … 1 mistake is worse than making sure you are doing the right thing", request 2026-10-25 #12).
 - (2026-10-25) **The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone ("we need to be able to work without waiting for tests from you I can test everything"; "no more test … let me test it instead"). GitHub's tests still run after each deploy and never block it. Replaces "Test only what the change touches" (request 2026-10-25 #11).
 - (2026-10-24) **Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job.
 - (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
@@ -56,7 +57,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J87 · A real engine, step 2** (the engine). A real engine, step 2: copies drawn together (instancing): every copy of a model in one draw, from one buffer, in the main view, the mirrors and the reflections. Its plan: docs/plan/jobs/J87.md. · N5 N3
-- [ ] **J87.1** Copies drawn together (instancing): every copy of a model part in one draw from one buffer, in the main view, the mirrors and the reflection capture; the smoke test prints the draw count *Check:* The bar looks exactly as before; ?perf=1 shows fewer draws
+- [ ] **J87.1** Model drawing in its own file, unchanged (the same draws as today, now in looped/model_batch.*) *Check:* The bar looks and works exactly as before
+- [ ] **J87.2** The instance path: per-copy data in an instance buffer, copies grouped into one draw, in the main view, the mirrors and the reflection capture; up to 4096 models *Check:* The bar looks exactly as before (highlights, the loops' glow, the glasses); ?perf=1 shows fewer draws
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -179,7 +181,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
-- [ ] **J88** A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
+- [ ] **J88** A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace, smooth edges (4x MSAA); each with an off switch. Its plan: docs/plan/jobs/J88.md. · N3 N5
   *Verdict:* Doable now — The renderer's own code; each part has an off switch and the phone's report (J37) judges the cost
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has

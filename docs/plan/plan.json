@@ -47,8 +47,14 @@
   "pieces": [
    {
     "id": "J87.1",
-    "text": "Copies drawn together (instancing): every copy of a model part in one draw from one buffer, in the main view, the mirrors and the reflection capture; the smoke test prints the draw count",
-    "check": "The bar looks exactly as before; ?perf=1 shows fewer draws",
+    "text": "Model drawing in its own file, unchanged (the same draws as today, now in looped/model_batch.*)",
+    "check": "The bar looks and works exactly as before",
+    "done": false
+   },
+   {
+    "id": "J87.2",
+    "text": "The instance path: per-copy data in an instance buffer, copies grouped into one draw, in the main view, the mirrors and the reflection capture; up to 4096 models",
+    "check": "The bar looks exactly as before (highlights, the loops' glow, the glasses); ?perf=1 shows fewer draws",
     "done": false
    }
   ]
@@ -812,7 +818,7 @@
    },
    {
     "id": "J88",
-    "text": "A real engine, step 3: smooth edges (4x multisampling), lamps sorted in 3D cells at their real reach (no lamp cut short), bounced light only while lamps change; each with an off switch. Its plan: docs/plan/jobs/J88.md.",
+    "text": "A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace, smooth edges (4x MSAA); each with an off switch. Its plan: docs/plan/jobs/J88.md.",
     "serves": [
      "N3",
      "N5"
