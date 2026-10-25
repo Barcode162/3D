@@ -51,7 +51,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The world:** what players see and do: the bar, avatars, games, people. *Now:* the bar is built and alive (three rooms, darts, chess, piano, 4K Mania, racing, bartending, jukebox, voice, profiles); the new light is live; the freeze lifted (J8.3), now remade item by item: the world remake J35, J70-J77 (every thing its own model, placed, lit and heard).
 - **The site:** the front door, the showcase, the news. *Now:* J Production's front page (Home, Projects, News) in Ember, with highlights pushed from Dev (R5); open again since J8.3.
 - **The engine:** Looped, the script language, speed. *Now:* Looped: E1-E9 built (things with live loops, physics, sound, net), real light L1.1-L1.7 live, the tests' own lighting (J2.4); the script language is scoped (J43, J78-J81: small, safe, errors with a line and a fix hint); open again since J8.3.
-- **The tools:** the Toolbelt and Dev. *Now:* Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the restructure is giving the project its five books, honest checks and enforced procedures (J1-J8).
+- **The tools:** the Toolbelt and Dev. *Now:* Dev (R4), the Studio, Dials, the UI Editor, Ember everywhere (R6); the five books and their checks are done (J1-J8); next: Dev remade (J90) and the Studio's Loop Maker (J57).
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
