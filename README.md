@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J54.2 Two game pages on GitHub's 2-core machine no longer starve each other: the game draws nothing while its page is hidden (a phone stops then anyway), a page's frame cap can change while it runs (bar3dBridge.command('fps', N)), and the two-player tests let the player who only waits draw one frame every 5 s while the other loads; the two-player race and the multiplayer test pass on 2 cores (100 s and 10 min). With the earlier part (7d04923: at most 2 frames in flight, ?fps, the tests' light and frame cap for every test page) every browser suite runs to its last check. The 'Back after' line is written at most every 30 s (it pushed 'Alice joined' out of the log)
+
+`e7f8803` · 2026-10-25 10:12 · 9 files, +49 −10 · tests: changed
+
+Phone check: Dev's game row after the next deploy: every browser test reached its end; the two-player race and multiplayer tests green
+
 ## J54.1 Found why GitHub's browser tests stop: the game's own drawing keeps the software GPU busy, so a screenshot waits 40 s to minutes behind it, and a second game page never finishes loading while another one draws; the multiplayer and voice tests also used their own browser, without the tests' light. Written into KI-5.
 
 `2ae86dd` · 2026-10-25 03:22 · 4 files, +11 −5 · tests: changed
