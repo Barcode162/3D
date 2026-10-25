@@ -415,6 +415,137 @@ int main() {
     check(near(m2.ch[kMoveY], 0.5f), "keys come back down round the loop");
   }
 
+  // ---- The loop library (J85): patterns used by name ----
+  static const char* kLoops = R"({"loops": {
+    "bob": {"period": 2, "pieces": [{"ch": "move.y", "shape": "wave", "amp": 0.1}]},
+    "swell": {"period": 4, "beat": true, "pieces": [{"ch": "light", "shape": "keys", "keys": [[0, -1], [0.5, 1], [1, -1]], "ease": "linear"}]},
+    "spin": {"period": 1, "beat": true, "pieces": [{"ch": "turn.y", "shape": "spin", "amp": 1}]},
+    "loop": "@bob"}})";
+  {
+    Library lib;
+    lib.addLoops(kLoops, "loops");
+    lib.add(R"({"kinds": [
+      {"id": "buoy", "loops": {"idle": "@bob"}, "states": {"float": {"loop": "idle"}}},
+      {"id": "cork", "states": {"float": {"loop": "@bob"}}},
+      {"id": "ghost", "loops": {"idle": "@nothing"}, "states": {"float": {"loop": "idle"}}}]})", "patterns");
+    lib.resolve();
+    check(lib.patterns().size() == 3 && lib.pattern("bob") && lib.pattern("swell") && !lib.pattern("loop"),
+          "the library reads its patterns (and refuses one naming another)");
+    check(lib.errors().find("@nothing") != std::string::npos, "a kind naming a pattern that isn't there is a problem");
+    Place pl = parsePlace(R"({"id": "p", "things": [
+      {"id": "b", "kind": "buoy"}, {"id": "c", "kind": "cork"},
+      {"id": "d", "kind": "cork", "loops": {"idle": "@spin"}}]})", nullptr);
+    World w;
+    w.build(lib, pl, nullptr);
+    Clock t;
+    t.seconds = 0.5;  // a quarter of bob's 2 s
+    w.update(t);
+    const float yb = w.thing(w.find("b")).motion.ch[kMoveY], yc = w.thing(w.find("c")).motion.ch[kMoveY];
+    check(std::fabs(yb) > 0.01f, "a kind's loop named \"@bob\" plays the pattern");
+    check(std::fabs(yc) > 0.01f, "a state's loop \"@bob\" plays the pattern itself");
+    const Loop* own = w.loopOf(w.find("b"), 0);
+    check(own && own->name == "idle" && own->ref == "bob" && own->live(), "it keeps its own name and remembers its pattern");
+  }
+
+  // ---- Timelines (J85): tracks over things, clips of patterns ----
+  {
+    Library lib;
+    lib.addLoops(kLoops, "loops");
+    lib.add(R"({"kinds": [
+      {"id": "lamp", "loops": {"still": {"period": 5, "pieces": [{"ch": "glow", "shape": "hold", "value": 0}]}}, "states": {"on": {"loop": "still"}}},
+      {"id": "stool", "loops": {"creak": {"period": 7, "pieces": [{"ch": "turn.z", "shape": "wave", "amp": 1}]}}, "states": {"idle": {"loop": "creak"}}}]})", "tl-kinds");
+    lib.resolve();
+    std::string err;
+    Place pl = parsePlace(R"({"id": "stage", "things": [
+        {"id": "lamp", "kind": "lamp", "row": {"count": 4, "step": [1, 0, 0]}},
+        {"id": "stool", "kind": "stool", "row": {"count": 3, "step": [0, 0, 1]}}],
+      "timeline": {"length": 16, "beat": true, "tracks": [
+        {"name": "Lamps", "on": ["#lamp-1", "#lamp-2", "#lamp-3", "#lamp-4"], "spread": 0.25,
+         "clips": [{"loop": "@swell", "at": 0, "len": 8, "fade": 1}]},
+        {"name": "Stools", "on": "kind:stool", "clips": [{"loop": "@spin", "at": 14, "len": 4}]},
+        {"name": "Nobody", "on": "#no-such", "clips": [{"loop": "@gone", "at": 0, "len": 2}]}]}})", &err);
+    check(err.empty(), "a place's timeline reads (" + err + ")");
+    check(pl.timeline.tracks.size() == 3 && pl.timeline.tracks[0].clips.size() == 1 && pl.timeline.length == 16,
+          "three tracks, a 16-beat round");
+    World w;
+    std::string problems;
+    w.build(lib, pl, &problems);
+    check(w.trackThings(0).size() == 4 && w.trackThings(1).size() == 3, "tracks find their things (#ids, a whole kind)");
+    const auto issues = w.check();
+    bool named = false, noThing = false;
+    for (const std::string& s : issues) named |= s.find("@gone") != std::string::npos, noThing |= s.find("no-such") != std::string::npos;
+    check(named && noThing && problems.find("@gone") != std::string::npos, "the check names a missing pattern and a missing thing");
+    const int l1 = w.find("lamp-1"), l2 = w.find("lamp-2"), s1 = w.find("stool-1");
+    auto at = [&](double beats) {
+      Clock c;
+      c.seconds = beats * 0.5;  // no music: 120 bpm
+      w.update(c);
+    };
+    at(0);
+    check(near(w.thing(l1).motion.ch[kLight], 0), "at the clip's start its fade-in has it at nothing yet");
+    at(2);  // half of swell's 4 beats: its peak (+1)
+    check(near(w.thing(l1).motion.ch[kLight], 1, 1e-3f), "inside the clip the pattern plays from the clip's start (the peak at beat 2)");
+    const float second = w.thing(l2).motion.ch[kLight];
+    check(!near(second, 1, 0.05f), "spread: the next lamp is a quarter of a cycle later");
+    at(7.5);  // half a beat before the end: fading out
+    const float fading = std::fabs(w.thing(l1).motion.ch[kLight]);
+    at(9);
+    check(near(w.thing(l1).motion.ch[kLight], 0) && fading < 1, "it fades out at its end and is gone after");
+    at(15.25);  // the stools' clip runs 14..18: past the end, round to 2 (off the beat: a 1-beat spin is at 0 on it)
+    const float spun = w.thing(s1).motion.ch[kTurnY];
+    check(std::fabs(spun) > 1, "a clip near the end plays");
+    at(17.5);
+    check(std::fabs(w.thing(s1).motion.ch[kTurnY]) > 1, "and carries on past the end of the round (it wraps)");
+    at(16 * 3 + 2);
+    check(near(w.thing(l1).motion.ch[kLight], 1, 1e-3f), "every round is the same");
+    // Two worlds at the same clock agree (every phone, and the room).
+    World w2;
+    w2.build(lib, pl, nullptr);
+    Clock c;
+    c.seconds = 1234.567;
+    w.update(c);
+    w2.update(c);
+    bool same = true;
+    for (size_t i = 0; i < w.size(); ++i) same = same && sameMat(w.thing(int(i)).world, w2.thing(int(i)).world);
+    check(same, "two worlds at the same clock show the same poses");
+    // The music's beat: beats come from the song.
+    Clock m;
+    m.seconds = 999;
+    m.music = true;
+    m.beats = 2;
+    m.bpm = 90;
+    w.update(m);
+    check(near(w.thing(l1).motion.ch[kLight], 1, 1e-3f), "with music the timeline follows the song's beats");
+    // Layered on the thing's own loop.
+    Clock q;
+    q.seconds = 15.3 * 0.5;
+    World w3;
+    Place plain = pl;
+    plain.timeline = Timeline{};
+    w3.build(lib, plain, nullptr);
+    w.update(q);
+    w3.update(q);
+    check(near(w.thing(s1).motion.ch[kTurnZ], w3.thing(s1).motion.ch[kTurnZ]) &&
+              !near(w.thing(s1).motion.ch[kTurnY], w3.thing(s1).motion.ch[kTurnY]),
+          "a clip adds to the thing's own loop (its creak goes on under the spin)");
+    // Swapped live (the Studio): a muted track does nothing.
+    Timeline tl = w.timeline();
+    tl.tracks[1].mute = true;
+    w.setTimeline(tl);
+    w.update(q);
+    check(near(w.thing(s1).motion.ch[kTurnY], w3.thing(s1).motion.ch[kTurnY]), "a timeline swapped live; a muted track does nothing");
+    // A clip as long as the round never ends.
+    Clip forever;
+    forever.len = 16;
+    double into = -1;
+    check(clipWeight(forever, 15.9, 16, &into) == 1 && near(static_cast<float>(into), 15.9f), "a clip as long as the round plays all the way");
+    // Seconds timelines.
+    Timeline secs = parseTimeline(Json::parse(R"({"length": 10, "beat": false})"), nullptr);
+    Clock s10;
+    s10.seconds = 23;
+    check(!secs.beat && near(static_cast<float>(timelineTime(secs, s10)), 3), "a timeline in seconds: 23 s is 3 s into a 10 s round");
+  }
+
   // ---- How fast (a phone does this every frame) ----
   {
     Library lib;

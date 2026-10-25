@@ -47,6 +47,8 @@ BarScene buildBarScene(const std::string& placeName) {
   const std::string placeFile = "places/" + placeName + ".json";
   const Json placeJson = Json::parse(worldFile(placeFile), &problems, {64, 1 << 16});
   if (!placeJson.isObject()) problems += "no place \"" + placeName + "\"\n";
+  // The loop library first (J85): kinds, things and the timeline name its patterns.
+  if (const std::string loops = worldFile("loops.json"); !loops.empty()) kinds.addLoops(loops, "loops.json");
   for (const Json& f : placeJson["kinds"].items()) kinds.add(worldFile(f.string()), f.string());
   kinds.resolve();
   problems += kinds.errors();

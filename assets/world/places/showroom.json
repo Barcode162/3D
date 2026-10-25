@@ -32,6 +32,19 @@
   "points": {
     "arcade-door": [0, 0, 0]
   },
+  "timeline": {
+    "about": "The stage's show (J85): a 16-beat round on the shared clock, on the music's beat when a song plays, like a music app's tracks.",
+    "length": 16, "beat": true,
+    "tracks": [
+      {"name": "Lamp 1", "on": ["#lamp-light-1", "#lamp-1"], "clips": [{"loop": "@flare", "at": 0, "len": 4, "fade": 0.5}]},
+      {"name": "Lamp 2", "on": ["#lamp-light-2", "#lamp-2"], "clips": [{"loop": "@flare", "at": 2, "len": 4, "fade": 0.5}]},
+      {"name": "Lamp 3", "on": ["#lamp-light-3", "#lamp-3"], "clips": [{"loop": "@flare", "at": 4, "len": 4, "fade": 0.5}]},
+      {"name": "Lamp 4", "on": ["#lamp-light-4", "#lamp-4"], "clips": [{"loop": "@flare", "at": 6, "len": 4, "fade": 0.5}]},
+      {"name": "Coin", "on": ["#coin", "#spark-1", "#spark-2", "#spark-3", "#spark-4", "#spark-5", "#spark-6", "#spark-7", "#spark-8"], "clips": [{"loop": "@hop", "at": 8, "len": 4}]},
+      {"name": "Stools", "on": "kind:table_stool", "clips": [{"loop": "@spin", "at": 12, "len": 4}]},
+      {"name": "Neon", "on": ["#neon-1", "#neon-2", "#neon-3"], "spread": 0.333, "clips": [{"loop": "@pulse", "at": 0, "len": 16, "mix": 0.8}]}
+    ]
+  },
   "things": [
     {"id": "room", "kind": "showroom-room", "at": [0,0,0]},
     {"id": "coin", "kind": "showroom-coin", "at": [0,1.3,0], "scale": 3},
@@ -86,6 +99,7 @@
     {"id": "stool-2", "kind": "table_stool", "at": [-2.98,0,2.6], "turn": -90},
     {"id": "chalkboard", "kind": "chalkboard", "at": [4.97,1.6,2.8], "turn": -90},
     {"id": "sign-touch", "kind": "spot", "at": [-2.2,0,1.75], "parts": {"uses": [{"name": "TOUCH & PHYSICS", "prompt": "Tap the candle, the table or the chalkboard\nPick up a glass and throw it", "action": "none", "tag": [0,1.75,0], "box": [[-0.3,0,-0.2],[0.3,0.7,0.2]]}]}},
+    {"id": "sign-timeline", "kind": "spot", "at": [2.4, 0, 2.6], "parts": {"uses": [{"name": "THE TIMELINE", "prompt": "Looped plays a 16-beat show here, like tracks in a music app\nThe lamps flare in turn, the coin hops, the stools turn, the neon pulses\nPlay a song: the show follows its beat", "action": "none", "tag": [0, 1.9, 0], "box": [[-0.3, 0, -0.3], [0.3, 0.9, 0.3]]}]}},
     {"id": "light-switch", "kind": "light-switch", "at": [0.9,1.2,4.97], "parts": {"uses": [{"name": "LIGHTS", "prompt": "Light switch\nTap: dim the lights", "action": "light-switch", "tag": [0,0.45,0], "box": [[-0.1,0,-0.12],[0.1,0.2,0.05]], "direct": true}]}}
   ]
 }

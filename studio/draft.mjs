@@ -19,6 +19,7 @@ export async function loadWorld() {
   for (const k of files[pf].kinds || []) if (!files[k]) files[k] = await (await fetch(base + k)).json();
   if (!files['catalog.json']) { try { files['catalog.json'] = await (await fetch(base + 'catalog.json')).json(); } catch (e) {} }
   if (!files['materials.json']) { try { files['materials.json'] = await (await fetch(base + 'materials.json')).json(); } catch (e) {} }
+  if (!files['loops.json']) { try { files['loops.json'] = await (await fetch(base + 'loops.json')).json(); } catch (e) {} }  // the loop library (J85)
   // Your draft from last time (the server's, else this phone's copy), on top
   // of the world; nothing sees the draft until it's whole.
   const draft = clone(files);

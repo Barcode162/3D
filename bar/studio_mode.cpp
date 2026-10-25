@@ -1,6 +1,7 @@
 #include "bar/studio_mode.h"
 
 #include "bar/scene_names.h"
+#include "bar/world_files.h"
 #include "looped/profiler.h"
 
 #include <algorithm>
@@ -688,6 +689,7 @@ bool studioCommand(const engine::ui::Command& c) {
          std::to_string(g_app.scene.lights.size()) + ",\"maxLights\":" + std::to_string(app::SceneRenderer::maxLights()) + "}");
   } else if (c.name == "st.kind") {  // text: a kind as JSON, "is" already filled in (S8: loops and states live)
     engine::world::Library lib;
+    lib.addLoops(app::worldFile("loops.json"), "loops.json");  // the patterns it may name (J85)
     lib.add(c.text, "studio");
     lib.resolve();
     if (!lib.kinds().empty()) {

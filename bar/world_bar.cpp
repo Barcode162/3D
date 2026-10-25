@@ -147,6 +147,7 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
       if (t.file != file || t.bpm <= 0) continue;
       clock.music = true;
       clock.beats = (in.songSeconds - t.firstBeat) * t.bpm / 60.0;
+      clock.bpm = t.bpm;  // timelines in beats follow the song's tempo (J85)
     }
   }
   // The bar's events, to every thing (those with a rule for it follow it).

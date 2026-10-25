@@ -122,6 +122,8 @@ int World::make(const Library& lib, const ThingSpec& spec, int parent, const std
   t.seed = spec.seed ? spec.seed : (hash32(id) | 1u);
   t.parts = spec.parts;
   t.loops = spec.loops;
+  for (Loop& l : t.loops)  // "@breathe": the library's pattern (J85)
+    if (!lib.fill(l) && errors) *errors += id + " loop " + l.name + ": no pattern \"@" + l.ref + "\" in the loop library\n";
   const std::string& first = !spec.state.empty() ? spec.state : kind->start;
   const int s = first.empty() ? 0 : kind->state(first);
   if (s < 0 && errors) *errors += id + ": no state \"" + first + "\" in kind \"" + kind->id + "\"\n";
@@ -179,8 +181,80 @@ bool World::build(const Library& source, const Place& place, std::string* errors
     things_[static_cast<size_t>(p)].children.push_back(i);
   }
   orderDirty_ = true;
+  timeline_ = place.timeline;
+  resolveTimeline();
+  for (const std::string& p : timelineProblems_) err += p + "\n";
   if (errors) *errors += err;
   return err.empty();
+}
+
+void World::setTimeline(const Timeline& tl) {
+  timeline_ = tl;
+  resolveTimeline();
+}
+
+const std::vector<int>& World::trackThings(size_t k) const {
+  static const std::vector<int> none;
+  return k < trackThings_.size() ? trackThings_[k] : none;
+}
+
+// Each clip's pattern from the library, each track's things from its "on".
+void World::resolveTimeline() {
+  timelineProblems_.clear();
+  trackThings_.assign(timeline_.tracks.size(), {});
+  for (size_t k = 0; k < timeline_.tracks.size(); ++k) {
+    Track& tr = timeline_.tracks[k];
+    const std::string where = "timeline track " + std::to_string(k + 1) + (tr.name.empty() ? "" : " (" + tr.name + ")");
+    std::vector<int>& out = trackThings_[k];
+    for (const std::string& on : tr.on) {
+      if (on.empty()) continue;
+      const size_t before = out.size();
+      if (on.rfind("kind:", 0) == 0) {
+        const std::string kind = on.substr(5);
+        for (size_t i = 0; i < things_.size(); ++i)
+          if (things_[i].kind->id == kind) out.push_back(static_cast<int>(i));
+      } else {
+        const int i = find(on[0] == '#' ? std::string_view(on).substr(1) : std::string_view(on));
+        if (i >= 0) out.push_back(i);
+      }
+      if (out.size() == before) timelineProblems_.push_back(where + ": \"" + on + "\" is no thing here");
+    }
+    for (size_t c = 0; c < tr.clips.size(); ++c) {
+      Clip& clip = tr.clips[c];
+      if (clip.pattern.empty()) continue;
+      const Loop* p = library_ ? library_->pattern(clip.pattern) : nullptr;
+      if (!p) {
+        timelineProblems_.push_back(where + " clip " + std::to_string(c + 1) + ": no pattern \"@" + clip.pattern + "\" in the loop library");
+        clip.loop = Loop{};
+        continue;
+      }
+      clip.loop = *p;
+    }
+  }
+}
+
+// The clips playing now, added to each thing's motion (before the places
+// are worked out, so what sits on a thing goes along).
+void World::applyTimeline(const Clock& clock) {
+  const double t = timelineTime(timeline_, clock);
+  const double bpm = clock.music ? clock.bpm : 120.0;
+  for (size_t k = 0; k < timeline_.tracks.size(); ++k) {
+    const Track& tr = timeline_.tracks[k];
+    if (tr.mute) continue;
+    const std::vector<int>& on = trackThings_[k];
+    for (const Clip& c : tr.clips) {
+      if (!c.loop.live()) continue;
+      double into = 0;
+      const float w = clipWeight(c, t, timeline_.length, &into);
+      if (w == 0) continue;
+      const double cycles = clipCycles(c, into, timeline_.beat, bpm);
+      for (size_t j = 0; j < on.size(); ++j) {
+        Thing& th = things_[static_cast<size_t>(on[j])];
+        if (th.off) continue;
+        c.loop.add(cycles + tr.spread * static_cast<double>(j), th.seed, w, th.motion);
+      }
+    }
+  }
 }
 
 int World::find(std::string_view id) const {
@@ -206,6 +280,8 @@ const Loop* World::loopOf(int i, int state) const {
   const std::string& name = t.kind->states[static_cast<size_t>(state)].loop;
   for (const Loop& l : t.loops)
     if (l.name == name) return &l;
+  // "@breathe": the library's pattern itself (J85).
+  if (name.size() > 1 && name[0] == '@') return library_ ? library_->pattern(std::string_view(name).substr(1)) : nullptr;
   return t.kind->loop(name);
 }
 
@@ -444,6 +520,7 @@ void World::update(const Clock& clock) {
     }
     t.motion = m;
   }
+  if (!timeline_.empty()) applyTimeline(clock);
 
   // Places, parents first: each thing moves with what it sits on.
   if (orderDirty_) order();
@@ -468,6 +545,7 @@ int World::updateKind(const Kind& changed) {
   if (!found) return 0;
   Kind& k = const_cast<Kind&>(*found);  // the shared kinds: every copy of the world sees it
   k.loops = changed.loops;
+  for (Loop& l : k.loops) library_->fill(l);  // "@breathe": the library's pattern (J85)
   k.states = changed.states;
   k.on = changed.on;
   k.start = changed.start;
@@ -544,6 +622,7 @@ std::vector<std::string> World::check() const {
     for (const auto& [e, to] : k.on)
       if (k.state(to) < 0) say(who + " on " + e + ": no state \"" + to + "\"");
   }
+  for (const std::string& p : timelineProblems_) say(p);
   return out;
 }
 

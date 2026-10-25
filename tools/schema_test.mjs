@@ -14,6 +14,7 @@ const files = [
   ...readdirSync('assets/world/places').map((f) => ['place', `assets/world/places/${f}`]),
   ...readdirSync('assets/world/kinds').map((f) => ['kinds', `assets/world/kinds/${f}`]),
   ['catalog', 'assets/world/catalog.json'], ['songs', 'assets/world/songs.json'], ['materials', 'assets/world/materials.json'],
+  ['loops', 'assets/world/loops.json'],
 ];
 for (const [what, f] of files) {
   const p = problems(schema, what, read(f));

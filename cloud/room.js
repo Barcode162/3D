@@ -34,6 +34,11 @@ import barPlace from '../assets/world/places/bar.json';
 import barKinds from '../assets/world/kinds/bar.json';
 import homePlace from '../assets/world/places/home.json';
 import homeKinds from '../assets/world/kinds/home.json';
+// The showroom (J82), so its room (place-showroom) runs its things and timeline too (J85).
+import showroomPlace from '../assets/world/places/showroom.json';
+import showroomKinds from '../assets/world/kinds/showroom.json';
+// The loop library (J85): patterns kinds and timelines name ("@breathe").
+import loopsLib from '../assets/world/loops.json';
 
 const TICK_MS = 50;
 const IDLE_STOP_MS = 2000;       // the ticker stops after this long without changes
@@ -127,6 +132,8 @@ export class Room {
     this.simFiles = {
       'places/bar.json': JSON.stringify(barPlace), 'kinds/bar.json': JSON.stringify(barKinds),
       'places/home.json': JSON.stringify(homePlace), 'kinds/home.json': JSON.stringify(homeKinds),
+      'places/showroom.json': JSON.stringify(showroomPlace), 'kinds/showroom.json': JSON.stringify(showroomKinds),
+      'loops.json': JSON.stringify(loopsLib),
     };
     this.place = '';
     this.worldVersion = 0;       // the Studio's live world in use (0: built in)

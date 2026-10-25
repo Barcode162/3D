@@ -21,6 +21,7 @@
     "fields": {
       "moods": {"type": "map", "label": "Moods", "about": "Named sets of lights (S7.3): by kind or by thing, their colour and brightness.", "item": {"type": "object", "fields": {"lights": {"type": "map", "label": "Lights", "item": {"type": "object", "fields": {"color": {"type": "color", "label": "Colour", "live": true}, "intensity": {"type": "number", "min": 0, "max": 30, "step": 0.1, "label": "Brightness", "live": true}}}}}}},
       "mood": {"type": "text", "label": "Mood now", "about": "Which of the moods the place uses."},
+      "timeline": {"type": "timeline", "label": "Timeline", "about": "The place's arrangement (J85), like a music app's tracks: clips of patterns played over things, on the music's beat."},
       "id": {"type": "id", "label": "Name", "about": "The place's name in the files and the menu."},
       "about": {"type": "text", "label": "About"},
       "kinds": {"type": "list", "item": {"type": "text"}, "label": "Kind files", "about": "Which kind files this place uses."},
@@ -91,6 +92,44 @@
       "desync": {"type": "bool", "label": "Own timing", "about": "Each copy starts at its own point.", "live": true},
       "blend": {"type": "number", "unit": "s", "min": 0, "max": 3, "step": 0.05, "label": "Blend in", "live": true},
       "pieces": {"type": "list", "label": "Lanes", "item": {"type": "piece"}}
+    }
+  },
+
+  "timeline": {
+    "label": "Timeline", "about": "A place's arrangement (J85): tracks over things, each with clips of loops placed at a beat for a length; the whole round repeats forever on the shared clock.",
+    "fields": {
+      "about": {"type": "text", "label": "About"},
+      "length": {"type": "number", "unit": "beats", "min": 1, "max": 1024, "step": 1, "label": "Round", "about": "How long one round lasts: beats (or seconds when not on the beat).", "live": true},
+      "beat": {"type": "bool", "label": "On the beat", "about": "Counts in the music's beats (120 bpm when none plays).", "live": true},
+      "tracks": {"type": "list", "label": "Tracks", "item": {"type": "track"}}
+    }
+  },
+  "track": {
+    "label": "Track", "about": "A row of the timeline: the things it plays over and its clips.",
+    "fields": {
+      "name": {"type": "text", "label": "Name"},
+      "on": {"type": "targets", "label": "Plays over", "about": "\"#<thing>\" or \"kind:<kind>\", one or a list."},
+      "spread": {"type": "number", "min": -1, "max": 1, "step": 0.05, "label": "Spread", "about": "Each next thing plays this much of a cycle later (a wave along a row).", "live": true},
+      "mute": {"type": "bool", "label": "Muted", "live": true},
+      "clips": {"type": "list", "label": "Clips", "item": {"type": "clip"}}
+    }
+  },
+  "clip": {
+    "label": "Clip", "about": "A loop placed on a track: from a beat, for a length, eased in and out, added to what the things already do.",
+    "fields": {
+      "loop": {"type": "loop", "label": "Plays", "about": "A pattern from the loop library (\"@swell\"), or a loop of its own."},
+      "at": {"type": "number", "unit": "beats", "min": 0, "max": 1024, "step": 0.25, "label": "Starts at", "live": true},
+      "len": {"type": "number", "unit": "beats", "min": 0.25, "max": 1024, "step": 0.25, "label": "Length", "live": true},
+      "mix": {"type": "number", "min": 0, "max": 4, "step": 0.05, "label": "Amount", "live": true},
+      "fade": {"type": "number", "unit": "beats", "min": 0, "max": 64, "step": 0.25, "label": "Fade in and out", "live": true},
+      "speed": {"type": "number", "min": 0.05, "max": 16, "step": 0.05, "label": "Speed", "live": true}
+    }
+  },
+  "loops": {
+    "label": "Loop library", "about": "Patterns made once and used by name anywhere a loop goes (\"@breathe\"), like a music app's patterns (J85, assets/world/loops.json).",
+    "fields": {
+      "about": {"type": "text", "label": "About"},
+      "loops": {"type": "map", "label": "Patterns", "item": {"type": "loop"}}
     }
   },
 

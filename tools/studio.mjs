@@ -39,6 +39,7 @@ function repoFiles() {
     for (const f of readdirSync(WORLD + dir)) if (f.endsWith('.json')) files[`${dir}/${f}`] = JSON.parse(readFileSync(`${WORLD}${dir}/${f}`, 'utf8'));
   files['catalog.json'] = JSON.parse(readFileSync(WORLD + 'catalog.json', 'utf8'));
   files['materials.json'] = JSON.parse(readFileSync(WORLD + 'materials.json', 'utf8'));
+  files['loops.json'] = JSON.parse(readFileSync(WORLD + 'loops.json', 'utf8'));  // the loop library (J85)
   return files;
 }
 

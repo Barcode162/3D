@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p build/native
 RACE="bar/projects/racing/world.cpp bar/projects/racing/track.cpp bar/projects/racing/mesh.cpp bar/projects/racing/cars.cpp looped/vehicle.cpp looped/drive/car_spec.cpp looped/drive/tire.cpp looped/drive/vehicle_sim.cpp looped/json.cpp"
-WORLD="looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/world/catalog.cpp looped/json.cpp"
+WORLD="looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/world/timeline.cpp looped/world/catalog.cpp looped/json.cpp"
 SCENE="bar/bar_scene.cpp bar/scene_names.cpp bar/world_files.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp $WORLD"
 declare -A TESTS=(
   [vehicle_test]="tools/native/vehicle_test.cpp looped/vehicle.cpp"
@@ -25,7 +25,7 @@ declare -A TESTS=(
   [chess_test]="tools/native/chess_test.cpp bar/projects/chess/chess_rules.cpp"
   [activity_test]="tools/native/activity_test.cpp bar/activity.cpp"
   [interaction_test]="tools/native/interaction_test.cpp bar/interaction.cpp"
-  [world_test]="tools/native/world_test.cpp looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/json.cpp"
+  [world_test]="tools/native/world_test.cpp looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/world/timeline.cpp looped/json.cpp"
   [bar_world_test]="tools/native/bar_world_test.cpp $SCENE"
   [walk_test]="tools/native/walk_test.cpp $SCENE"
   [physics_test]="tools/native/physics_test.cpp looped/physics.cpp bar/props.cpp $SCENE"

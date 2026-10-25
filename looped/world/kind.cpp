@@ -162,9 +162,49 @@ void Library::add(std::string_view text, std::string_view file) {
   }
 }
 
+void Library::addLoops(std::string_view text, std::string_view file) {
+  std::string err;
+  const Json root = Json::parse(text, &err, {64, 1 << 16});
+  if (!root.isObject() || !root["loops"].isObject()) {
+    note(errors_, file, err.empty() ? "not a loops file ({\"loops\": {...}})" : err);
+    return;
+  }
+  for (const auto& [name, lj] : root["loops"].members()) {
+    Loop l = parseLoop(lj, std::string(file) + " loop " + name, &err);
+    l.name = name;
+    if (!l.ref.empty()) {
+      note(err, std::string(file) + " loop " + name, "a library pattern can't name another (\"@" + l.ref + "\")");
+      continue;
+    }
+    putLoop(patterns_, l);
+  }
+  errors_ += err;
+}
+
+const Loop* Library::pattern(std::string_view name) const {
+  for (const Loop& l : patterns_)
+    if (l.name == name) return &l;
+  return nullptr;
+}
+
+bool Library::fill(Loop& l) const {
+  if (l.ref.empty()) return true;
+  const Loop* p = pattern(l.ref);
+  if (!p) return false;
+  const std::string name = l.name, ref = l.ref;
+  l = *p;
+  l.name = name;
+  l.ref = ref;  // kept: the Studio shows which pattern it came from
+  return true;
+}
+
 void Library::resolve() {
   kinds_ = raw_;
   for (size_t i = 0; i < kinds_.size(); ++i) resolveOne(i, 0);
+  // The patterns a kind names ("@breathe" as one of its loops).
+  for (Kind& k : kinds_)
+    for (Loop& l : k.loops)
+      if (!fill(l)) note(errors_, "kind \"" + k.id + "\" loop " + l.name, "no pattern \"@" + l.ref + "\" in the loop library");
 }
 
 bool Library::resolveOne(size_t i, int depth) {
@@ -221,6 +261,7 @@ Place parsePlace(std::string_view text, std::string* error) {
   }
   p.id = root["id"].string();
   p.about = root["about"].string();
+  p.timeline = parseTimeline(root["timeline"], error);
   for (const Json& f : root["kinds"].items()) p.kindFiles.push_back(f.string());
   size_t n = 0;
   for (const Json& tj : root["things"].items()) {

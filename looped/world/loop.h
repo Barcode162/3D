@@ -23,6 +23,7 @@ struct Clock {
   double seconds = 0;
   double beats = 0;
   bool music = false;
+  double bpm = 120;  // the music's tempo while it plays (timelines in beats, J85)
 };
 
 // What a loop does to its thing this instant, as offsets from rest, one
@@ -90,6 +91,9 @@ struct Piece {
 
 struct Loop {
   std::string name;
+  // "@breathe" in a file: the library's pattern of that name (J85); its
+  // content is filled in when the world is built (the name stays this loop's).
+  std::string ref;
   float period = 4;     // seconds, or beats when `beat`
   bool beat = false;    // counts in the music's beats (falls back to 120 bpm)
   bool restart = false; // starts from 0 when its state begins (actions);
@@ -109,7 +113,8 @@ struct Loop {
 };
 
 // Reads {"period": 4, "beat": false, "pieces": [{"ch": "turn.y", "shape":
-// "wave", "amp": 3}, ...]}. Problems are appended to `error` ("where: what").
+// "wave", "amp": 3}, ...]}, or "@name": the library's pattern (Loop::ref).
+// Problems are appended to `error` ("where: what").
 Loop parseLoop(const Json& j, std::string_view name, std::string* error);
 
 // Small helpers shared by the world's files.

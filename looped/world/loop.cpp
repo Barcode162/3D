@@ -223,6 +223,12 @@ void Loop::add(double cycles, uint32_t seed, float weight, Motion& out) const {
 Loop parseLoop(const Json& j, std::string_view name, std::string* error) {
   Loop l;
   l.name = std::string(name);
+  if (j.isString()) {  // "@breathe": a pattern from the library (J85)
+    const std::string& s = j.string();
+    if (s.size() > 1 && s[0] == '@') l.ref = s.substr(1);
+    else note(error, name, "a loop is {...} or \"@<pattern>\"");
+    return l;
+  }
   l.period = static_cast<float>(j["period"].number(l.period));
   if (!(l.period > 0)) {
     note(error, name, "period must be above 0");

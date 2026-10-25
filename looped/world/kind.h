@@ -34,6 +34,7 @@
 #include "looped/json.h"
 #include "looped/math.h"
 #include "looped/world/loop.h"
+#include "looped/world/timeline.h"
 
 namespace engine::world {
 
@@ -100,16 +101,28 @@ class Library {
   // Reads a kind file: one kind {"id": ...} or {"kinds": [...]}. Problems
   // go to `errors()`; a kind with the same id replaces the older one.
   void add(std::string_view text, std::string_view file);
-  // Fills in "is" (after every file is added). Safe to call again.
+  // Reads a loop library file (J85, assets/world/loops.json): {"loops":
+  // {"breathe": {...}, ...}}, patterns any kind, thing or timeline clip
+  // uses by name ("@breathe"). A pattern with the same name replaces the older.
+  void addLoops(std::string_view text, std::string_view file);
+  // Fills in "is" and the patterns ("@name") (after every file is added).
+  // Safe to call again.
   void resolve();
   const Kind* find(std::string_view id) const;
   const std::vector<Kind>& kinds() const { return kinds_; }
+  // A library pattern by name (no "@"), or nullptr.
+  const Loop* pattern(std::string_view name) const;
+  const std::vector<Loop>& patterns() const { return patterns_; }
+  // A loop that names a pattern ("@breathe") takes its content, keeping its
+  // own name; false (and the loop left as it is) if there's no such pattern.
+  bool fill(Loop& l) const;
   const std::string& errors() const { return errors_; }
 
  private:
   bool resolveOne(size_t i, int depth);
   std::vector<Kind> kinds_;
   std::vector<Kind> raw_;  // as written, before "is"
+  std::vector<Loop> patterns_;
   std::string errors_;
 };
 
@@ -117,6 +130,7 @@ struct Place {
   std::string id, about;
   std::vector<std::string> kindFiles;  // paths, read by the caller
   std::vector<ThingSpec> things;       // rows already expanded
+  Timeline timeline;                   // its arrangement (J85; empty: none)
 };
 // Reads a place file. Problems are appended to `error`.
 Place parsePlace(std::string_view text, std::string* error);

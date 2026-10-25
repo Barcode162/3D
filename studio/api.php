@@ -20,7 +20,8 @@
 //                                           version live+1; refused if the live version isn't n anymore
 //   POST {"a":"history"}                    every version: number, when, who, note
 //   POST {"a":"restore","v":n,"note":".."}  version n again, as a new version
-// A bundle: {"format":1,"files":{"places/bar.json":{..},"kinds/bar.json":{..},"catalog.json":{..},"songs.json":{..}}}
+// A bundle: {"format":1,"files":{"places/bar.json":{..},"kinds/bar.json":{..},"catalog.json":{..},"songs.json":{..},"loops.json":{..}}}
+// (loops.json: the loop library, J85; a bundle without it keeps the one built in)
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Hub-Key');
@@ -71,7 +72,7 @@ function check_bundle($b) {
   $format = $b['format'] ?? 1;
   if (!is_int($format) || $format < 1 || $format > FORMAT_MAX) fail('This world needs a newer studio.');
   foreach ($b['files'] as $name => $content) {
-    if (!is_string($name) || !preg_match('#^((places|kinds)/[a-z0-9_-]{1,40}\.json|catalog\.json|songs\.json|schema\.json|materials\.json)$#', $name)) fail("Unknown file \"$name\".");
+    if (!is_string($name) || !preg_match('#^((places|kinds)/[a-z0-9_-]{1,40}\.json|catalog\.json|songs\.json|schema\.json|materials\.json|loops\.json)$#', $name)) fail("Unknown file \"$name\".");
     if (!is_array($content)) fail("$name isn't a world file.");
   }
   if (!isset($b['files']['places/bar.json'])) fail('The world needs the bar (places/bar.json).');

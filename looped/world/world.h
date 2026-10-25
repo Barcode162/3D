@@ -128,6 +128,15 @@ class World {
   void attach(int i, int parent);
   void attach(int i, int parent, Vec3 at, Quat rot);
 
+  // ---- The timeline (J85, looped/world/timeline.h) ----
+  // The place's arrangement: made with the world (Place::timeline), swapped
+  // live by the Studio (J57). Its clips play on top of every thing's own
+  // loop, from the clock alone. Patterns are filled in from the library.
+  void setTimeline(const Timeline& tl);
+  const Timeline& timeline() const { return timeline_; }
+  // The things track `k` plays over (in the place's order).
+  const std::vector<int>& trackThings(size_t k) const;
+
   // ---- Checks ----
   // Every rule's target exists, every state plays a loop with something in
   // it (or the kind says why it's "still").
@@ -156,6 +165,11 @@ class World {
   std::vector<int> order_;  // parents before children
   bool orderDirty_ = true;
   std::vector<Change> changes_;
+  void resolveTimeline();
+  void applyTimeline(const Clock& clock);
+  Timeline timeline_;
+  std::vector<std::vector<int>> trackThings_;  // per track, the things it plays over
+  std::vector<std::string> timelineProblems_;
 };
 
 }  // namespace engine::world

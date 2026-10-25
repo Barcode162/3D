@@ -2,7 +2,7 @@
 // says which fields it uses that the schema doesn't describe, and which
 // choices it uses that aren't in the lists. Shared by the Studio, the hub's
 // Dials and tools/schema_test.mjs (an ES module: browser and node).
-//   problems(schema, 'place' | 'kinds' | 'catalog' | 'songs' | 'materials', json, extra?) → ["where: what", ...]
+//   problems(schema, 'place' | 'kinds' | 'catalog' | 'songs' | 'materials' | 'loops', json, extra?) → ["where: what", ...]
 //   fieldAt(schema, owner, key)  → the field's description (for panels)
 
 // The description of a thing that holds fields: 'place', 'thing', 'kind', 'loop', ...
@@ -24,6 +24,13 @@ function checkValue(schema, field, v, where, out) {
     return;
   }
   if (t === 'parts') { checkParts(schema, v, where, out); return; }
+  // A loop may be the loop library's pattern by name ("@breathe", J85).
+  if (t === 'loop' && typeof v === 'string') { if (!/^@[A-Za-z0-9_-]+$/.test(v)) out.push(`${where}: a loop is {...} or "@<pattern>"`); return; }
+  if (t === 'targets') {
+    const ok = (x) => typeof x === 'string' && /^(#.+|kind:.+)$/.test(x);
+    if (!(ok(v) || (Array.isArray(v) && v.every(ok)))) out.push(`${where}: should be "#<thing>" or "kind:<kind>", or a list of them`);
+    return;
+  }
   if (holder(schema, t)) { checkFields(schema, holder(schema, t), v, where, out); return; }
   if (t === 'number' || t === 'int') { if (typeof v !== 'number') out.push(`${where}: should be a number`); return; }
   if (t === 'bool') { if (typeof v !== 'boolean') out.push(`${where}: should be true or false`); return; }
@@ -78,6 +85,7 @@ export function problems(schema, what, json, extra = null) {
       v.forEach((kind, i) => checkFields(schema, schema.kind.fields, kind, `kind ${kind.id || i}`, out));
     }
   } else if (what === 'catalog') checkFields(schema, schema.catalog.fields, json, 'catalog', out);
+  else if (what === 'loops') checkFields(schema, schema.loops.fields, json, 'loops', out);
   else if (what === 'materials') checkFields(schema, schema.materials.fields, json, 'materials', out);
   else if (what === 'songs') {
     for (const [k, v] of Object.entries(json)) if (k !== 'about') checkValue(schema, schema.songs.item, v, `songs.${k}`, out);

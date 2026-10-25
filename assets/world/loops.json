@@ -1,0 +1,24 @@
+{
+  "about": "The loop library (J85): patterns any kind, thing or timeline clip uses by name (\"@breathe\"), made once like a music app's patterns. Channels: move, turn (degrees), scale, glow, light (a lamp's brightness: -1 = off), tint (added colour). Beat patterns count in the music's beats (120 bpm when none plays).",
+  "loops": {
+    "sway": {"period": 6, "pieces": [{"ch": "turn.z", "shape": "wave", "amp": 3}, {"ch": "turn.x", "shape": "wave", "amp": 1.5, "phase": 0.25}]},
+    "breathe": {"period": 4, "pieces": [{"ch": "scale", "shape": "wave", "amp": 0.03}, {"ch": "glow", "shape": "wave", "amp": 0.2}]},
+    "bob": {"period": 2, "pieces": [{"ch": "move.y", "shape": "wave", "amp": 0.04}]},
+    "float": {"period": 6, "pieces": [{"ch": "move.y", "shape": "wave", "amp": 0.08}, {"ch": "turn.y", "shape": "wave", "amp": 6, "phase": 0.25}]},
+    "flicker": {"period": 1, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.4, "rate": 3}, {"ch": "glow", "shape": "noise", "amp": 0.2, "rate": 2}]},
+    "shimmer": {"period": 1, "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.5, "rate": 6}]},
+    "thump": {"period": 1, "beat": true, "pieces": [{"ch": "scale", "shape": "beat", "amp": 0.06, "decay": 8}]},
+    "pulse": {"period": 1, "beat": true, "pieces": [{"ch": "glow", "shape": "beat", "amp": 1.5, "decay": 6}, {"ch": "light", "shape": "beat", "amp": 0.6, "decay": 6}]},
+    "heartbeat": {"period": 2, "beat": true, "pieces": [{"ch": "scale", "shape": "keys", "keys": [[0, 0], [0.06, 0.08], [0.14, 0], [0.2, 0.05], [0.3, 0], [1, 0]], "ease": "linear"}]},
+    "flare": {"period": 4, "beat": true, "pieces": [{"ch": "light", "shape": "keys", "keys": [[0, 0], [0.5, 1.5], [1, 0]]}, {"ch": "glow", "shape": "keys", "keys": [[0, 0], [0.5, 1.2], [1, 0]]}]},
+    "swell": {"period": 8, "beat": true, "pieces": [{"ch": "light", "shape": "keys", "keys": [[0, -1], [0.5, 0.6], [1, -1]]}, {"ch": "glow", "shape": "keys", "keys": [[0, -0.8], [0.5, 1], [1, -0.8]]}]},
+    "fade-out": {"period": 8, "beat": true, "pieces": [{"ch": "light", "shape": "keys", "keys": [[0, 0], [0.999, -1]], "ease": "linear"}]},
+    "glow-up": {"period": 8, "beat": true, "pieces": [{"ch": "glow", "shape": "keys", "keys": [[0, 0], [0.999, 2]], "ease": "linear"}]},
+    "blink": {"period": 2, "beat": true, "pieces": [{"ch": "light", "shape": "steps", "values": [0, -1]}, {"ch": "glow", "shape": "steps", "values": [0.5, -0.8]}]},
+    "spin": {"period": 4, "beat": true, "pieces": [{"ch": "turn.y", "shape": "spin", "amp": 1}]},
+    "hop": {"period": 1, "beat": true, "pieces": [{"ch": "move.y", "shape": "keys", "keys": [[0, 0], [0.25, 0.12], [0.5, 0], [1, 0]]}]},
+    "nod": {"period": 2, "beat": true, "pieces": [{"ch": "turn.x", "shape": "keys", "keys": [[0, 0], [0.25, 8], [0.5, 0], [1, 0]]}]},
+    "wave": {"period": 4, "beat": true, "pieces": [{"ch": "move.y", "shape": "wave", "amp": 0.05}]},
+    "rainbow": {"period": 8, "beat": true, "pieces": [{"ch": "tint.r", "shape": "wave", "amp": 0.3}, {"ch": "tint.g", "shape": "wave", "amp": 0.3, "phase": 0.333}, {"ch": "tint.b", "shape": "wave", "amp": 0.3, "phase": 0.667}]}
+  }
+}
