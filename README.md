@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J54.1 Found why GitHub's browser tests stop: the game's own drawing keeps the software GPU busy, so a screenshot waits 40 s to minutes behind it, and a second game page never finishes loading while another one draws; the multiplayer and voice tests also used their own browser, without the tests' light. Written into KI-5.
+
+`2ae86dd` · 2026-10-25 03:22 · 4 files, +11 −5 · tests: changed
+
+Phone check: Dev → Plan: J54.1 ticked; the known issue names the cause
+
 ## J83.1 Dev → People: Claude's key, owner only. Make a new Claude key asks first, then shows the key once in a field with Copy and says where it goes (the environment's HUB_KEY, never the chat); the hub's button was lost when the hub became Dev. The Dev test makes a key from the page and checks the hub takes it; KI-34 noted (the old key refused)
 
 `19dbbcd` · 2026-10-25 01:37 · 9 files, +125 −29 · tests: changed
