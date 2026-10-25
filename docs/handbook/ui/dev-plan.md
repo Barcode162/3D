@@ -2,7 +2,7 @@
 
 *Page and controls* · joshuavelasco.com/dev/#plan · [all pages](README.md)
 
-The job in Now (tap it for its spec), the road by chapter (tap a job for its spec), Parked, Done, the North star, your rules, and the box to tell Claude something. Each job on the road and each parked idea shows its verdict on the right (Doable, After J…, At a cost, Try first, Not possible, Against a rule) and, under its words, why; a job renumbered in J7.1 also shows its old tag (Formerly A1).
+The job in Now with its pieces (tap it for the job's page), Up next as a row of jobs to scroll and tap, the road as one card per chapter (the first three jobs, and a key for all of them: [a chapter](dev-chapter.md)), then Done ([Done](dev-plan-done.md)), Parked, the North star and your rules, and the box to tell Claude something. Each job on the road shows its verdict on the right (Doable, After J…, At a cost, Try first, Not possible, Against a rule) and, under its words, why; a job renumbered in J7.1 also shows its old tag (Formerly A1). Tap any job for [its page](dev-job.md).
 
 | Control | What it does |
 |---|---|
@@ -10,4 +10,3 @@ The job in Now (tap it for its spec), the road by chapter (tap a job for its spe
 | `An idea, a change, an answer…` | Where you type the note or the idea. |
 | `Park an idea` | Your message is an idea to park: Claude adds it to Parked. |
 | `Send` | Sends it to Claude (it shows below as Waiting, then Read). |
-| `Show all N` | Unfolds a long list (the road's items, Done, your rules). |

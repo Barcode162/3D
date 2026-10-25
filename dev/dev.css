@@ -1,27 +1,80 @@
-/* Dev's layout around the screen files (the look itself is the theme: Ember). */
+/* Dev's layout and motion around the screen files (the look itself is the
+   theme: Ember). J90: the living background, the top bar with the trail,
+   tiles, the Live panel, sheets, pages that slide, touch that answers.
+   Motion moves transform and opacity only (the phone's GPU does it without
+   repainting); html.calm (the Calm switch) or iPhone's Reduce Motion stops it;
+   html.dev-paused (Dev in the background) pauses it. */
 [hidden] { display: none !important; }
 body.lp { min-height: 100vh; min-height: 100dvh; }
-.dev-view { max-width: 760px; margin: 0 auto; padding-top: env(safe-area-inset-top, 0px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
-  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-.dev-view > * { animation: dev-in .32s cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes dev-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ---- The living background: four Ember glows drifting on long loops ---- */
+/* The theme's own drifting background repaints the whole page every frame
+   (background-position); Dev holds it still and moves these layers instead,
+   in small steps (8 a second, each under a pixel: too small to see), so the
+   frosted panels over them redraw 8 times a second, not 60 (the battery). */
+body.lp.dev { animation: none; background-image: none; }
+.dev-sky { position: fixed; inset: -20vmax; z-index: -1; pointer-events: none; overflow: hidden; contain: strict; }
+.dev-sky i { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; will-change: transform; opacity: .9;
+  background: radial-gradient(circle at 50% 50%, var(--g) 0%, transparent 62%); }
+.dev-sky i:nth-child(1) { --g: rgba(242,140,44,.42); left: 0; top: 0; animation: dev-drift-a 34s steps(272) infinite alternate; }
+.dev-sky i:nth-child(2) { --g: rgba(232,76,96,.26); right: 0; top: 18vmax; animation: dev-drift-b 41s steps(328) infinite alternate; }
+.dev-sky i:nth-child(3) { --g: rgba(246,210,126,.22); left: 18vmax; bottom: 0; animation: dev-drift-c 47s steps(376) infinite alternate; }
+.dev-sky i:nth-child(4) { --g: rgba(236,127,52,.18); right: 10vmax; bottom: 10vmax; width: 50vmax; height: 50vmax; animation: dev-drift-d 29s steps(232) infinite alternate; }
+@keyframes dev-drift-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(18vmax, 12vmax, 0) scale(1.15); } }
+@keyframes dev-drift-b { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-16vmax, 20vmax, 0) scale(.9); } }
+@keyframes dev-drift-c { from { transform: translate3d(0, 0, 0) scale(.95); } to { transform: translate3d(14vmax, -18vmax, 0) scale(1.2); } }
+@keyframes dev-drift-d { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(-12vmax, -10vmax, 0) rotate(40deg); } }
+:root[data-scheme="light"] .dev-sky i { opacity: .55; }
+
+/* ---- The page ---- */
+.dev-view { max-width: 760px; margin: 0 auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); view-transition-name: dev-view; }
+.dev-wait { padding: 24px 16px; color: var(--text-2); }
+
+/* ---- The top bar: Back, the trail, Find, Calm ---- */
+.dev-bar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 6px; max-width: 760px; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 6px) max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px));
+  background: var(--over); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 -1px 0 var(--rule); view-transition-name: dev-bar; }
+.dev-trail { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; white-space: nowrap;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px); mask-image: linear-gradient(90deg, transparent 0, #000 14px); padding-left: 8px; }
+.dev-trail::-webkit-scrollbar { display: none; }
+.dev-crumb { font-size: 13px; font-weight: 600; color: var(--text-3); text-decoration: none; padding: 6px 8px; border-radius: 10px; flex: none; }
+a.dev-crumb:active { background: var(--field); }
+.dev-crumb.here { color: var(--text); background: var(--field); }
+.dev-sep { color: var(--text-3); font-size: 13px; flex: none; opacity: .7; }
+.dev-icon-btn { all: unset; flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; color: var(--text-2); cursor: pointer;
+  background: var(--field); box-shadow: var(--field-edge); }
+.dev-icon-btn .ico { width: 20px; height: 20px; }
+.dev-icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dev-calm-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent);
+  animation: dev-breathe 2.6s ease-in-out infinite; }
+:root.calm .dev-calm-dot { background: var(--text-3); box-shadow: none; }
+
+/* ---- The tab bar ---- */
 .dev-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr); max-width: 760px; margin: 0 auto;
   padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 8px) max(6px, env(safe-area-inset-left, 0px));
-  background: var(--over); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); box-shadow: inset 0 1px 0 var(--rule); }
-.dev-tabs button { all: unset; display: grid; justify-items: center; gap: 3px; padding: 6px 0 2px; font-size: 11px; font-weight: 600; color: var(--text-3); cursor: pointer; border-radius: 10px; }
-.dev-tabs button svg { width: 24px; height: 24px; }
+  background: var(--over); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); box-shadow: inset 0 1px 0 var(--rule); view-transition-name: dev-tabs; }
+.dev-tabs button { all: unset; position: relative; display: grid; justify-items: center; gap: 3px; padding: 6px 0 2px; font-size: 11px; font-weight: 600; color: var(--text-3); cursor: pointer; border-radius: 12px; overflow: hidden; transition: color .25s; }
+.dev-tabs button svg { width: 24px; height: 24px; transition: transform .35s cubic-bezier(.3, 1.6, .5, 1); }
 .dev-tabs button[aria-current="page"] { color: var(--accent); }
+.dev-tabs button[aria-current="page"] svg { transform: translateY(-2px) scale(1.12); }
+.dev-tabs button[aria-current="page"]::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: 0; height: 3px; border-radius: 3px; background: var(--accent);
+  box-shadow: 0 0 10px var(--accent); animation: dev-grow .4s cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes dev-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .dev-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.dev-login { max-width: 380px; margin: calc(env(safe-area-inset-top, 0px) + 12vh) auto 0; padding: 22px; display: grid; gap: 12px; }
+
+/* ---- Login ---- */
+.dev-login { max-width: 380px; margin: calc(env(safe-area-inset-top, 0px) + 12vh) auto 0; padding: 22px; display: grid; gap: 12px; animation: dev-rise .6s cubic-bezier(.2, .8, .2, 1) backwards; }
 .dev-login h1 { font-size: 44px; }
-.dev-wait { padding: 24px 16px; color: var(--text-2); }
-.lp .dev-row-btn { all: unset; display: block; cursor: pointer; }
+
+/* ---- Rows, links, the old pieces ---- */
+.lp .dev-row-btn { all: unset; display: block; cursor: pointer; border-radius: 12px; }
 .lp .dev-row-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 12px; }
-@media (prefers-reduced-motion: reduce) { .dev-view > * { animation: none; } }
 .lp .dev-cmd { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-3); white-space: normal; overflow-wrap: anywhere; }
 .lp .dev-ask { display: flex; gap: 6px; margin-top: 6px; }
-.lp .dev-ask .field { font-size: 15px; padding: 6px 10px; text-transform: uppercase; }
-.lp [data-id="chapters"] .ls-lr-main, .lp [data-id="plan-now"] .ls-lr-main, .lp [data-id="notes"] .ls-lr-main { white-space: normal; }
+.lp .dev-ask .field { font-size: 15px; padding: 6px 10px; text-transform: uppercase; min-width: 0; }
+.lp [data-id="plan-now"] .ls-lr-main, .lp [data-id="notes"] .ls-lr-main, .lp [data-chapter] .ls-lr-main { white-space: normal; }
 .lp .dev-post-text { white-space: pre-line; max-height: 9.5em; overflow: hidden; }
 .lp .dev-hl { position: relative; min-height: 190px; border-radius: var(--panel-r); padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 40%, #000), #000) center / cover; color: #fff; overflow: hidden; box-shadow: var(--panel-edge); }
@@ -31,3 +84,137 @@ body.lp { min-height: 100vh; min-height: 100dvh; }
 .lp .dev-pics button { all: unset; aspect-ratio: 1; border-radius: 10px; background: center / cover; cursor: pointer; box-shadow: inset 0 0 0 1px var(--rule); }
 .lp .dev-pics button.on { box-shadow: inset 0 0 0 3px var(--accent); }
 .lp .dev-up { aspect-ratio: 1; min-height: 0 !important; padding: 0 !important; font-size: 11px !important; cursor: pointer; }
+
+/* ---- Tiles (the Live panel, a project's tools) ---- */
+.dev-tiles, .lp .dev-live { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 560px) { .dev-tiles, .lp .dev-live { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lp .dev-live { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 0 !important; }
+.dev-tile { all: unset; box-sizing: border-box; position: relative; display: grid; align-content: start; gap: 2px; min-width: 0; min-height: 112px; padding: 14px; cursor: pointer;
+  border-radius: calc(var(--panel-r) * .8); background: var(--panel); box-shadow: var(--panel-edge); color: var(--text); text-decoration: none; overflow: hidden;
+  -webkit-backdrop-filter: var(--panel-blur); backdrop-filter: var(--panel-blur); isolation: isolate;
+  transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+/* The tilt only while a finger is on it (a tilted tile is a layer of its own). */
+.dev-tile.dev-tilting, .dev-tile.dev-pressed { transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--press, 1)); }
+.dev-tile.dev-tilting { transition: transform .08s linear; }
+.dev-tile.dev-pressed { --press: .965; }
+.dev-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dev-tile-icon { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--field); color: var(--accent); margin-bottom: 6px; }
+.dev-tile-icon .ico { width: 18px; height: 18px; }
+.dev-tile b, .dev-tile-label { font-weight: 700; font-size: 14.5px; line-height: 1.2; }
+.dev-tile > span:not(.dev-tile-icon), .dev-tile-detail { font-size: 12.5px; color: var(--text-2); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.dev-tool.soon { opacity: .55; }
+.dev-tool .dev-ask { margin-top: 8px; }
+/* The Live panel's tiles: the value big on top, then the label and the detail. */
+.dev-live-tile { grid-template-areas: "icon value" "label label" "detail detail"; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; }
+.dev-live-tile .dev-tile-icon { grid-area: icon; margin: 0; }
+.dev-live-tile .dev-tile-value { grid-area: value; justify-self: end; font-family: var(--display); font-weight: var(--display-w); font-stretch: var(--display-s);
+  font-size: 24px; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dev-live-tile .dev-tile-label { grid-area: label; margin-top: 8px; }
+.dev-live-tile .dev-tile-detail { grid-area: detail; }
+.dev-live-tile[data-tone="ok"] .dev-tile-value { color: var(--ok); }
+.dev-live-tile[data-tone="warn"] .dev-tile-value { color: var(--warn); }
+.dev-live-tile[data-tone="bad"] .dev-tile-value { color: var(--bad); }
+.dev-live-tile[data-tone="bad"] { box-shadow: var(--panel-edge), inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent); }
+/* A light that breathes in the corner of a tile that's up. */
+.dev-live-tile[data-tone="ok"]::before { content: ""; position: absolute; top: 12px; right: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--ok);
+  box-shadow: 0 0 10px var(--ok); animation: dev-breathe 2.4s ease-in-out infinite; }
+.dev-live-tile[data-tone="ok"] .dev-tile-value { margin-right: 14px; }
+/* A deploy running: stripes slide under it. */
+.dev-live-tile.dev-running::after { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background: repeating-linear-gradient(115deg, transparent 0 14px, color-mix(in srgb, var(--warn) 22%, transparent) 14px 28px);
+  width: calc(100% + 60px); animation: dev-stripes 1.2s linear infinite; }
+@keyframes dev-stripes { from { transform: translateX(-60px); } to { transform: translateX(0); } }
+/* The heartbeat: beats with the people in the bar (--beat: seconds per beat). */
+.dev-pulse { grid-column: 1 / -1; width: 100%; height: 28px; margin-top: 6px; overflow: hidden; }
+.dev-pulse i { display: block; width: calc(100% + 60px); height: 100%; background: var(--accent); will-change: transform;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='28'%3E%3Cpath d='M0 16H22L27 9L32 24L37 4L42 18L47 16H60' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 60px 28px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='28'%3E%3Cpath d='M0 16H22L27 9L32 24L37 4L42 18L47 16H60' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 60px 28px repeat-x;
+  animation: dev-ecg var(--beat, 2s) linear infinite; }
+.dev-pulse.flat i { background: var(--text-3); opacity: .6; animation: none; -webkit-mask-image: linear-gradient(#000, #000); mask-image: linear-gradient(#000, #000);
+  -webkit-mask-size: 100% 2px; mask-size: 100% 2px; -webkit-mask-position: 0 15px; mask-position: 0 15px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+@keyframes dev-ecg { from { transform: translateX(0); } to { transform: translateX(-60px); } }
+/* A tile whose answer just changed glows once. */
+.dev-flash { animation: dev-pop .6s cubic-bezier(.3, 1.6, .5, 1); }
+.dev-tile.dev-flash { box-shadow: var(--panel-edge), 0 0 0 2px var(--accent), 0 0 28px color-mix(in srgb, var(--accent) 55%, transparent); transition: box-shadow 1.4s ease-out; }
+@keyframes dev-pop { 0% { scale: 1; } 35% { scale: 1.05; } 100% { scale: 1; } }
+
+/* ---- Cards, chips, the ring, specs ---- */
+.lp .dev-card { position: relative; transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+.lp .dev-card.dev-tilting { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .08s linear; }
+.dev-chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.dev-chips::-webkit-scrollbar { display: none; }
+.dev-chip { position: relative; flex: none; display: grid; gap: 2px; width: 150px; padding: 10px 12px; border-radius: 16px; text-decoration: none; color: var(--text);
+  background: var(--panel); box-shadow: var(--panel-edge); scroll-snap-align: start; overflow: hidden;
+  animation: dev-rise .5s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 50ms); transition: transform .2s; }
+.dev-chip b { font-family: var(--display); font-weight: var(--display-w); font-size: 17px; color: var(--accent); }
+.dev-chip span { font-size: 12.5px; color: var(--text-2); line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dev-chip:first-child { box-shadow: var(--panel-edge), inset 0 0 0 1.5px var(--accent); }
+.dev-chip.dev-pressed, .lp .key.dev-pressed, .dev-react button.dev-pressed { transform: scale(.95); }
+@property --p { syntax: "<number>"; inherits: true; initial-value: 0; }
+.dev-ring { --p: 0; flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient(var(--accent) calc(var(--p) * 1turn), var(--off) 0); transition: --p 1.2s cubic-bezier(.2, .8, .2, 1);
+  animation: dev-ring-in 1.2s cubic-bezier(.2, .8, .2, 1) backwards; }
+.dev-ring::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 1px var(--rule); }
+.dev-ring b { position: relative; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+@keyframes dev-ring-in { from { --p: 0; } }
+.dev-spec .ls-t-m, .dev-spec .ls-t-s { margin-top: 6px; }
+.dev-bullets { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); font-size: 15px; }
+.dev-code { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--field); font-family: var(--mono); font-size: 11.5px; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- Sheets: a tile's details and reactions; Find ---- */
+.dev-sheet, .dev-find { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0); transition: background .25s; }
+.dev-find { align-items: flex-start; }
+.dev-sheet.open, .dev-find.open { background: rgba(0,0,0,.42); }
+.dev-sheet-card, .dev-find-card { width: min(100%, 560px); margin: 0 10px calc(env(safe-area-inset-bottom, 0px) + 10px); transform: translateY(110%);
+  transition: transform .42s cubic-bezier(.2, .9, .2, 1); max-height: 80vh; overflow: auto; }
+.dev-find-card { margin: calc(env(safe-area-inset-top, 0px) + 10px) 10px 0; transform: translateY(-110%); }
+.dev-sheet.open .dev-sheet-card, .dev-find.open .dev-find-card { transform: none; }
+.dev-find-list { max-height: 62vh; overflow: auto; }
+.dev-react { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dev-react button { all: unset; display: grid; justify-items: center; gap: 4px; padding: 12px 6px; border-radius: 16px; background: var(--key-bg); box-shadow: var(--key-shadow);
+  font-size: 13px; font-weight: 650; cursor: pointer; position: relative; overflow: hidden; transition: transform .2s; }
+.dev-react button .ico { width: 22px; height: 22px; color: var(--accent); }
+.dev-react button.sent { background: var(--go-bg); color: var(--go-text); }
+.dev-react button.sent .ico { color: var(--go-text); }
+
+/* ---- Touch: the ripple from your finger ---- */
+.dev-rippling { overflow: hidden; }
+.dev-ripple { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 70%);
+  transform: scale(0); opacity: 1; animation: dev-ripple .7s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes dev-ripple { to { transform: scale(1); opacity: 0; } }
+.lp .ls-listrow { transition: transform .18s, background-color .18s; }
+.lp .ls-listrow.dev-pressed { transform: scale(.985); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+
+/* ---- Pages come in piece by piece, and slide ---- */
+.dev-in { animation: dev-rise .55s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+.dev-tiles .dev-tile, .dev-live .dev-tile { animation: dev-rise .55s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 45ms + 80ms); }
+/* (translate and scale, not transform: a tile's tilt and press stay free) */
+@keyframes dev-rise { from { opacity: 0; translate: 0 14px; scale: .985; } to { opacity: 1; translate: none; scale: none; } }
+@keyframes dev-breathe { 0%, 100% { opacity: .55; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.1); } }
+/* Without the View Transitions API: the new page slides in by itself. */
+.dev-view.dev-push { animation: dev-from-right .42s cubic-bezier(.2, .85, .2, 1) backwards; }
+.dev-view.dev-pop { animation: dev-from-left .42s cubic-bezier(.2, .85, .2, 1) backwards; }
+.dev-view.dev-swap { animation: dev-fade .3s ease-out backwards; }
+@keyframes dev-from-right { from { opacity: 0; transform: translateX(28%); } to { opacity: 1; transform: none; } }
+@keyframes dev-from-left { from { opacity: 0; transform: translateX(-28%); } to { opacity: 1; transform: none; } }
+@keyframes dev-fade { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes dev-to-left { to { opacity: 0; transform: translateX(-22%); } }
+@keyframes dev-to-right { to { opacity: 0; transform: translateX(22%); } }
+/* With it (Safari 18 and up): the old page leaves as the new one comes. */
+::view-transition-old(dev-view), ::view-transition-new(dev-view) { animation-duration: .42s; animation-timing-function: cubic-bezier(.2, .85, .2, 1); }
+:root[data-dir="push"]::view-transition-old(dev-view) { animation-name: dev-to-left; }
+:root[data-dir="push"]::view-transition-new(dev-view) { animation-name: dev-from-right; }
+:root[data-dir="pop"]::view-transition-old(dev-view) { animation-name: dev-to-right; }
+:root[data-dir="pop"]::view-transition-new(dev-view) { animation-name: dev-from-left; }
+:root[data-dir="swap"]::view-transition-old(dev-view) { animation: dev-fade .2s reverse both; }
+:root[data-dir="swap"]::view-transition-new(dev-view) { animation-name: dev-fade; animation-duration: .3s; }
+
+/* ---- Calm (the switch, or iPhone's Reduce Motion) and the background pause ---- */
+:root.calm *, :root.calm *::before, :root.calm *::after { animation: none !important; transition: none !important; }
+:root.calm .dev-sky { display: none; }
+:root.calm body.lp.dev { background-image: var(--bg-glow); }
+:root.calm ::view-transition-old(dev-view), :root.calm ::view-transition-new(dev-view) { animation: none !important; }
+:root.dev-paused *, :root.dev-paused *::before, :root.dev-paused *::after { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) {
+  .dev-sky i, .dev-in, .dev-tile, .dev-chip, .dev-view, .dev-pulse i, .dev-calm-dot, .dev-ring { animation: none !important; }
+}

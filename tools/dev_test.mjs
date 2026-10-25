@@ -1,7 +1,9 @@
 // Dev (dev/, PLAN.md R4) at phone width on a throwaway webspace (PHP's server:
 // ui/, dev/, the bar's account.php): a stranger gets the login, a player is
 // told Dev is for admins, the owner gets the five tabs, every tab draws its
-// screen file. Later pieces add their checks below. No game: seconds.
+// screen file. Later pieces add their checks below (J90: the nested pages,
+// the trail and Back, the Live panel and its reactions, Find, Calm). No
+// game: seconds.
 // Usage: NODE_PATH=$(npm root -g) node tools/dev_test.mjs
 import { launchBrowser } from './lib/browser.mjs';
 import { webspace } from './lib/webspace.mjs';
@@ -22,7 +24,8 @@ writeFileSync(join(ws.root, 'home/bar/config.json'), JSON.stringify({ build: 'ab
 mkdirSync(join(ws.root, 'private/dev'), { recursive: true });
 copyFileSync('docs/plan/plan.json', join(ws.root, 'private/dev/plan.json'));
 copyFileSync('docs/charter/rules.json', join(ws.root, 'private/dev/rules.json'));
-writeFileSync(join(ws.root, 'private/dev/plan-meta.json'), JSON.stringify({ sha: 'fed4321', at: Math.floor(Date.now() / 1000) - 120 }));  // plan.yml (J5.2)
+const META_AT = Math.floor(Date.now() / 1000) - 120;  // the plan came two minutes ago
+writeFileSync(join(ws.root, 'private/dev/plan-meta.json'), JSON.stringify({ sha: 'fed4321', at: META_AT }));  // plan.yml (J5.2)
 // plan.yml's other files (J5.6): an incident today, a question only the user can settle, the job's spec.
 const today = new Date().toISOString().slice(0, 10);
 writeFileSync(join(ws.root, 'private/dev/incidents.json'), JSON.stringify([{ file: `${today}-x.md`, date: today, title: 'A test incident', status: 'closed', errors: 2 }]));
@@ -43,8 +46,17 @@ const ed = (fn, arg) => page.evaluate(fn, arg);
 mkdirSync('build', { recursive: true });  // the pictures: build/dev-overview.png, build/dev-plan.png
 // The pictures are for looking at, not checks: a slow one (GitHub's machines draw
 // in software) prints a note instead of failing the deploy (as in tools/site_test.mjs).
-const shot = (opts) => page.screenshot({ animations: 'disabled', timeout: 20000, ...opts })
-  .catch((e) => console.log(`note ${opts.path}: no picture (${String(e.message).split('\n')[0]})`));
+// The pictures hold the motion still and leave out the frosted glass (the
+// picture is of the layout), and get 45 s: GitHub's software drawing prepares
+// each new effect once, and the first picture pays for all of them (J90).
+const STILL = '*, *::before, *::after { animation: none !important; transition: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }';
+const shot = async (opts) => {
+  const still = await page.addStyleTag({ content: STILL });
+  await page.waitForTimeout(300);
+  await page.screenshot({ animations: 'disabled', timeout: 45000, ...opts })
+    .catch((e) => console.log(`note ${opts.path}: no picture (${String(e.message).split('\n')[0]})`));
+  await still.evaluate((el) => el.remove());
+};
 
 // R4.1: the door and the tabs
 await page.goto(ws.url + 'dev/');
@@ -89,6 +101,25 @@ await page.click('#tabs [data-tab="overview"]');
 await page.waitForFunction(() => /1 failed: smoke/.test(document.querySelector('#view [data-id="status"]')?.textContent || ''));
 check(await ed(() => { const t = document.querySelector('#view [data-id="status"]').textContent; return /Game deploy/.test(t) && /allowed to fail: studio/.test(t) && /Site deploy/.test(t) && /every test passed/.test(t); }),
   'Overview shows both deploys: the game\'s failed test and the one allowed to fail by name, the site green');
+// J90: the Live panel: a tile per answer, coloured by it; tap one for its details and the reactions that go to Claude.
+check(await ed(() => ['bar', 'room', 'ci-game', 'ci-site', 'errors', 'latest'].every((k) => document.querySelector(`#view [data-id="status"] [data-tile="${k}"]`))), 'the Live panel has its six tiles (J90)');
+check(await ed(() => document.querySelector('#view [data-tile="ci-game"]').dataset.tone === 'bad' && document.querySelector('#view [data-tile="ci-site"]').dataset.tone === 'ok'), 'the red deploy\'s tile is red, the green one green (J90)');
+await page.click('#view [data-tile="ci-game"]');
+await page.waitForSelector('.dev-sheet.open [data-react="Broke it"]');
+check(await ed(() => /Game deploy/.test(document.querySelector('.dev-sheet').textContent) && /1 failed: smoke/.test(document.querySelector('.dev-sheet').textContent)), 'tapping a tile opens its details (J90)');
+await page.fill('.dev-sheet input', 'the smoke test again');
+await page.click('.dev-sheet [data-react="Broke it"]');
+await page.waitForFunction(() => !document.querySelector('.dev-sheet'));
+const reacted = await ws.post('dev/api.php', { a: 'notes', token: owner.token });
+check(reacted.ok && reacted.notes.length === 1 && reacted.notes[0].kind === 'note' && /^Broke it: game deploy, build abc1234/.test(reacted.notes[0].text) && /the smoke test again/.test(reacted.notes[0].text) && reacted.notes[0].read === 0,
+  'Broke it sends Claude a note naming the tile, with your words, waiting (J90)');
+await page.click('#view [data-tile="bar"]');
+await page.waitForSelector('.dev-sheet.open [data-react="Note"]');
+await page.click('.dev-sheet [data-react="Note"]');
+await page.waitForTimeout(300);
+check((await ws.post('dev/api.php', { a: 'notes', token: owner.token })).notes.length === 1 && await ed(() => !!document.querySelector('.dev-sheet')), 'Note with nothing written sends nothing, and waits for the words (J90)');
+await page.click('.dev-sheet >> text=Close');
+await page.waitForFunction(() => !document.querySelector('.dev-sheet'));
 
 // R4.4: Plan
 await page.click('#tabs [data-tab="plan"]');
@@ -99,11 +130,43 @@ check(await ed((t) => document.querySelector('#view [data-id="plan-now"]').textC
 check(await ed(() => { const rows = [...document.querySelectorAll('#view [data-chapter] [data-tag]')]; return rows.length > 0 && rows.every((r) => r.dataset.verdict && r.querySelector('.ls-lr-value')?.textContent && / — |: /.test(r.querySelector('.ls-lr-detail')?.textContent || '')); }), 'each road item shows its verdict and why (J7.1)');
 check(await ed(() => [...document.querySelectorAll('#view [data-chapter] [data-formerly]')].some((r) => /Formerly /.test(r.textContent))), 'a road item shows its old tag (Formerly …)');
 check(await ed(() => [...document.querySelectorAll('#view [data-chapter] [data-parked]')].every((r) => r.dataset.verdict)), 'each parked idea on screen shows its verdict');
-check(await ed(() => /As of build fed4321, 2 min ago/.test(document.querySelector('#view [data-id="plan-now"]').textContent)), 'Plan says which build it came from and how long ago (J5.2)');
-await page.click('#view [data-id="plan-now"] .dev-row-btn');
-await page.waitForSelector('#view [data-id="plan-now"] [data-spec]');
-check(await ed(() => /The test spec's words/.test(document.querySelector('#view [data-id="plan-now"] [data-spec]').textContent)), 'tapping the job in Now opens its spec (J5.6)');
+// How long ago, in minutes, as it was when the tab was drawn (a few seconds back) or now: a slow machine reaches here later than two minutes.
+const agoNow = [0, 15].map((back) => Math.round((Date.now() / 1000 - back - META_AT) / 60) + ' min ago');
+check(await ed((ago) => ago.some((a) => document.querySelector('#view [data-id="plan-now"]').textContent.includes('As of build fed4321, ' + a)), agoNow), 'Plan says which build it came from and how long ago (J5.2)');
 await shot({ path: 'build/dev-plan.png' });
+// J90: the plan nests. The job in Now opens its own page (its spec, its pieces); the trail says where you are; Back comes back.
+await page.click('#view [data-id="plan-now"] .dev-row-btn');
+await page.waitForSelector('#view [data-spec]');
+check(await ed(() => /The test spec's words/.test(document.querySelector('#view [data-spec]').textContent)), 'tapping the job in Now opens its page, with its spec (J5.6, J90)');
+check(await ed((id) => { const t = document.getElementById('trail').textContent; return location.hash === '#plan/' + id && /Dev/.test(t) && /Plan/.test(t) && t.includes(id) && !document.getElementById('back').hidden; }, NOW[1]),
+  'the job has its own address; the trail says Dev, Plan, the job; Back shows (J90)');
+check(await ed((id) => document.getElementById('view').textContent.includes(id + '.1') && !!document.querySelector('#view .dev-ring'), NOW[1]), 'the job\'s page lists its pieces, with a ring of how many are done (J90)');
+await page.click('#back');
+await page.waitForSelector('#view [data-id="note-kind"]');
+check(await ed(() => location.hash === '#plan' && document.getElementById('back').hidden && document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === 'plan'), 'Back comes back to Plan (J90)');
+// A chapter's card shows a few of its jobs; its page shows all of them.
+const ENGINE_N = PLAN.road.engine.length;
+await page.click('#view [data-chapter="The engine"] [data-go="plan/engine"]');
+await page.waitForFunction((n) => location.hash === '#plan/engine' && document.getElementById('view').textContent.includes(n + ' on the road'), ENGINE_N);
+check(await ed((n) => document.querySelectorAll('#view [data-chapter="The engine"] [data-tag]').length === n && document.getElementById('view').textContent.includes(n + ' on the road'), ENGINE_N),
+  `the engine's page lists all ${ENGINE_N} of its jobs (J90)`);
+check(await ed(() => { const rows = [...document.querySelectorAll('#view [data-chapter] [data-tag]')]; return rows.length > 0 && rows.every((r) => r.dataset.verdict && r.querySelector('.ls-lr-value')?.textContent && / — |: /.test(r.querySelector('.ls-lr-detail')?.textContent || '')); }), 'there too, each job shows its verdict and why (J7.1)');
+// A job that waits for another says so, and the other is a tap away.
+const WAITS = Object.values(PLAN.road).flat().find((x) => x.verdict && x.verdict.kind === 'after' && /J\d+/.test(x.verdict.after || ''));
+if (WAITS) {
+  const first = WAITS.verdict.after.match(/J\d+/)[0];
+  await page.evaluate((id) => { location.hash = 'plan/' + id; }, WAITS.id);
+  await page.waitForFunction((id) => location.hash === '#plan/' + id && /Waits for/.test(document.getElementById('view').textContent), WAITS.id);
+  check(await ed((f) => !!document.querySelector(`#view .dev-chips [data-go="plan/${f}"]`), first), `${WAITS.id}'s page says it waits for ${first}, a tap away (J90)`);
+}
+const nested = await ed(() => location.hash);
+await page.reload();
+await page.waitForSelector('#tabs:not([hidden]) button');
+await page.waitForFunction(() => document.querySelector('#view .dev-card'));
+check(await ed((h) => location.hash === h && /^#plan\//.test(h) && document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === 'plan' && document.getElementById('trail').textContent.includes(h.split('/').pop() === 'engine' ? 'The engine' : h.split('/').pop()), nested),
+  'a reload stays on the nested page, its tab lit, its trail drawn (J90)');
+await page.click('#tabs [data-tab="plan"]');
+await page.waitForSelector('#view [data-id="note-kind"]');
 await page.click('#view [data-id="note-kind"] button:nth-child(2)');
 await page.fill('#view [data-id="note"]', 'A rooftop terrace');
 await page.click('#view [data-id="note-send"]');
@@ -178,12 +241,40 @@ await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');
 check(await ed(() => ['bar3d', 'looped', 'script', 'workshop'].every((p) => document.querySelector(`#view [data-project="${p}"]`))), 'Projects lists Bar3D, Looped, the script language and the workshop');
 check(await ed(() => !!document.querySelector('#view [data-project="looped"] a[href="/toolbelt/ui-editor/"]')), 'the UI Editor sits under Looped');
 check(await ed(() => !!document.querySelector('#view [data-project="bar3d"] .dev-ask input')), 'the perf report asks for its code');
+// J90: a project's own page: its tools by group; the trail and Back.
+await page.click('#view [data-project="looped"] .key[data-go="projects/looped"]');
+await page.waitForSelector('#view [data-group] a[href="/toolbelt/ui-editor/"]');
+check(await ed(() => location.hash === '#projects/looped' && /Looped/.test(document.getElementById('trail').textContent) && !document.getElementById('back').hidden), 'Open Looped: its own page, its tools by group, the trail says Projects, Looped (J90)');
+await page.click('#back');
+await page.waitForSelector('#view [data-project="looped"]');
+check(await ed(() => location.hash === '#projects'), 'Back comes back to Projects (J90)');
+// J90: Find: one field over every page, tool and job; Enter opens the first answer.
+await page.click('#find');
+await page.waitForSelector('.dev-find.open input');
+await page.fill('.dev-find input', 'ui editor');
+await page.waitForFunction(() => document.querySelector('.dev-find-list a')?.dataset.find === '/toolbelt/ui-editor/', null, { timeout: 10000 }).catch(() => {});
+check(await ed(() => document.querySelector('.dev-find-list a')?.dataset.find === '/toolbelt/ui-editor/'), 'Find: "ui editor" puts the UI Editor first (J90)');
+const JOB = PLAN.road.engine[0];
+await page.fill('.dev-find input', JOB.id.toLowerCase());
+await page.waitForFunction((id) => document.querySelector('.dev-find-list a')?.dataset.find === 'plan/' + id, JOB.id, { timeout: 10000 }).catch(() => {});
+check(await ed((id) => document.querySelector('.dev-find-list a')?.dataset.find === 'plan/' + id, JOB.id), `Find: "${JOB.id.toLowerCase()}" puts the job ${JOB.id} first (J90)`);
+await page.press('.dev-find input', 'Enter');
+await page.waitForFunction((id) => location.hash === '#plan/' + id && !document.querySelector('.dev-find'), JOB.id);
+check(await ed(() => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === 'plan' && !!document.querySelector('#view .dev-card')), `Enter opens ${JOB.id}'s page under Plan (J90)`);
+// J90: Calm stops the motion (and the drifting glow), and stays on after a reload.
+check(await ed(() => !document.documentElement.classList.contains('calm') && getComputedStyle(document.querySelector('.dev-sky i')).animationName !== 'none'), 'the motion is on at first (J90)');
+await page.click('#calm');
+check(await ed(() => document.documentElement.classList.contains('calm') && document.getElementById('calm').getAttribute('aria-pressed') === 'true' && getComputedStyle(document.querySelector('.dev-sky')).display === 'none' && getComputedStyle(document.querySelector('#view .dev-card')).animationName === 'none'),
+  'Calm turns the motion off (J90)');
 await page.click('#tabs [data-tab="people"]');
 await page.waitForFunction(() => document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === 'people');
 
 await page.reload();
 await page.waitForSelector('#tabs:not([hidden]) button');
 check(await ed(() => location.hash === '#people' && document.querySelector('#tabs [aria-current="page"]').dataset.tab === 'people'), 'a reload stays logged in, on the same tab');
+check(await ed(() => document.documentElement.classList.contains('calm')), 'Calm stays on after a reload (J90)');
+await page.click('#calm');
+check(await ed(() => !document.documentElement.classList.contains('calm') && getComputedStyle(document.querySelector('.dev-sky')).display !== 'none'), 'tapped again, the motion is back (J90)');
 
 // R4.7: the old doors lead to Dev
 await page.goto(ws.url + 'hub/');

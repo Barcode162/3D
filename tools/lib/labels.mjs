@@ -17,8 +17,10 @@ import { launchBrowser } from './browser.mjs';
 // the part of the page it lists (a frame shared by several pages is listed once),
 // and what to tap first to get there (a page's other sections).
 export const PAGES = {
-  'dev-frame': ['dev/?demo#overview', '#tabs'],
+  'dev-frame': ['dev/?demo#plan/engine', '#tabs, #bar'],  // a page one step down, so Back shows (J90)
   'dev-overview': ['dev/?demo#overview', '#view'], 'dev-projects': ['dev/?demo#projects', '#view'], 'dev-plan': ['dev/?demo#plan', '#view'],
+  'dev-live-tile': ['dev/?demo#overview', '.dev-sheet', '#view [data-tile="bar"]'], 'dev-find': ['dev/?demo#overview', '.dev-find', '#find'],
+  'dev-project': ['dev/?demo#projects/bar3d', '#view'], 'dev-chapter': ['dev/?demo#plan/engine', '#view'], 'dev-plan-done': ['dev/?demo#plan/done', '#view'],
   'dev-publish': ['dev/?demo#publish', '#view'],
   'dev-publish-highlights': ['dev/?demo#publish', '#view', '#view [data-id="pub-tab"] button:nth-child(2)'],
   'dev-publish-site': ['dev/?demo#publish', '#view', '#view [data-id="pub-tab"] button:nth-child(3)'],
@@ -29,14 +31,15 @@ export const PAGES = {
   'site-vision': ['vision/', '#main'], 'site-signin': ['signin/', '#main'], 'news': ['news/', 'main'],
 };
 
-// The labels in `scope` now (visible controls only), sorted, each once. Rows
-// drawn from data (Dev's list rows) and the UI Editor's preview aren't controls of the page.
+// The labels in `scope` now (visible controls only), sorted, each once. What's
+// drawn from data (Dev's list rows, its chips and tool tiles, a key named after
+// a project or a chapter: .dev-data) and the UI Editor's preview aren't controls of the page.
 const READ = (scope) => {
   const seen = new Set();
   const visible = (el) => { const r = el.getBoundingClientRect(), s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
   const sel = 'button, [role=button], [role=tab], [role=switch], input:not([type=hidden]), textarea, select, a[href]';
   for (const root of document.querySelectorAll(scope)) for (const el of root.querySelectorAll(sel)) {
-    if (!visible(el) || el.closest('.dev-row-btn, #frame, .ed-tree')) continue;  // data rows; the UI Editor's preview and parts list (the screen being edited)
+    if (!visible(el) || el.closest('.dev-row-btn, .dev-data, .dev-chips, #frame, .ed-tree')) continue;  // Dev's data; the UI Editor's preview and parts list (the screen being edited)
     let t = el.getAttribute('aria-label') || (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.placeholder : el.innerText) || el.placeholder || el.title || '';
     t = t.split('\n').map((x) => x.trim()).filter(Boolean)[0] || '';
     t = t.replace(/(?<![A-Za-z])\d+([.,:]\d+)*(?![A-Za-z])/g, 'N').replace(/\s+/g, ' ').trim();
