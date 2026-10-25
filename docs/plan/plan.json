@@ -60,7 +60,7 @@
     "id": "J54.3",
     "text": "No browser test can hang on this machine either: a slow picture is noted and the test goes on, and every test has a time limit (the Studio test sat idle 19 min on 2026-10-25, request #2)",
     "check": "Ask for a small world change: it saves in minutes, with no test left waiting",
-    "done": false
+    "done": true
    }
   ]
  },
