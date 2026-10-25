@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J54.3 No browser test can hang here or on GitHub: a picture that takes too long is noted and the test goes on (the smoke test's 'not a blank screen' picture still fails it), every browser test has a 30-minute limit and every check a 45-minute one (built in 7d04923; the game and native checks passed on it in J54.2's run; here the workflow checks and the voice test, which now opens its pages through the tests' browser)
+
+`593d6ce` · 2026-10-25 10:13 · 2 files, +2 −2 · tests: workflows, voice
+
+Phone check: Ask for a small world change: it saves in minutes, with no test left waiting
+
 ## J54.2 Two game pages on GitHub's 2-core machine no longer starve each other: the game draws nothing while its page is hidden (a phone stops then anyway), a page's frame cap can change while it runs (bar3dBridge.command('fps', N)), and the two-player tests let the player who only waits draw one frame every 5 s while the other loads; the two-player race and the multiplayer test pass on 2 cores (100 s and 10 min). With the earlier part (7d04923: at most 2 frames in flight, ?fps, the tests' light and frame cap for every test page) every browser suite runs to its last check. The 'Back after' line is written at most every 30 s (it pushed 'Alice joined' out of the log)
 
 `e7f8803` · 2026-10-25 10:12 · 9 files, +49 −10 · tests: changed
