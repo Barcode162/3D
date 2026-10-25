@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J90.3 The Live panel on Overview: a tile for the bar (its build), who's in it now (a heartbeat that beats faster with more people), each deploy (green, red with the failed tests, stripes while running), Claude's errors this week and Claude's latest job; it checks again every 15 s and a tile whose answer changed glows and counts to it; tap a tile: its details, Open, and Looks good / Broke it / Note, which go to Claude's notes naming the tile. Built in f6099ec; checked in J90.1's run (the Dev test: six tiles, red and green by the deploys, a tile's sheet, Broke it with your words reaching the notes, an empty Note sending nothing; the labels test: the tiles and the sheet)
+
+`c831282` · 2026-10-25 12:10 · 2 files, +2 −2 · tests: none
+
+Phone check: Overview: the Live tiles show the bar's build and the deploys; tap The bar → Looks good: Plan → Tell Claude shows the note waiting
+
 ## J90.2 Nested pages: every page has its own address (#plan/engine, #plan/J85, #projects/bar3d), so a reload, the back swipe and a saved link land on it; the trail at the top (each step a way back) and Back; a page per project (its tools by group), per chapter (all its jobs with their verdicts), per job (its words, verdict, place in line, what it waits for, its plan, its pieces and a ring when in Now), Done and Parked; Up next as chips; Find, one field over every page, project, tool, chapter and job. Built in f6099ec; checked in J90.1's run (the Dev test: the job page and its spec, the trail and Back, a chapter's page with all its jobs, what a job waits for, a reload on a nested page, a project's page, Find and Enter; the labels test: the new pages' controls)
 
 `6a303a8` · 2026-10-25 12:10 · 2 files, +2 −2 · tests: none
