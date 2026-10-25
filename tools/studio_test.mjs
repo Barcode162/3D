@@ -66,8 +66,9 @@ const view = async () => {
 const v0 = await view();
 check(Array.isArray(v0) && v0.length === 7, `S2.2 the camera says where it is (${v0 && v0.slice(0, 5).map((x) => x.toFixed(2)).join(', ')})`);
 await page.mouse.move(200, 400); await page.mouse.down(); await page.mouse.move(280, 380, { steps: 8 }); await page.mouse.up();
-await page.waitForTimeout(300);
-const v1 = await view();
+// The engine answers on its next frames (a software GPU draws a few a second): ask until it has turned, up to 5 s.
+let v1 = null;
+for (let t = 0; t < 5000; t += 250) { await page.waitForTimeout(250); v1 = await view(); if (v1 && Math.abs(v1[3] - v0[3]) > 0.3) break; }
 check(v1 && Math.abs(v1[3] - v0[3]) > 0.3, `S2.2 dragging one finger orbits (yaw ${v0 && v0[3].toFixed(2)} → ${v1 && v1[3].toFixed(2)})`);
 await page.click('#camModes [data-cam="2"]');
 await page.waitForTimeout(300);
