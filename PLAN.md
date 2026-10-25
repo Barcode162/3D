@@ -272,7 +272,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J85.1, J85.2, J92.1: J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on → 78c76a4^..f28d037
+- `c49cd10` J92.1: J92: no artificial glow: the bloom painted around every bright thing is gone, only real light is left; and the user tests from now on → f28d037^..f28d037
 - `85d8742` J90.1, J90.2, J90.3: Dev remade: every page nests (a project, a chapter, a job, Done, Parked) with its own address, a trail and Back; Find over everything; the Live panel on Overview with reactions for Claude; constant motion (a drifting glow, slides, ripples, tilt, counting) with Calm to stop it → 98ae472^..c831282
 - `4c06da4` J84.1, J84.2: Voice chat only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; a guest is told voice is for signed-in players, and an older account adds its birth date once → 41f3e66^..05e186d
 - `109fe1c` J54.1, J54.2, J54.3: GitHub's browser tests run to their end again: the game keeps at most 2 frames waiting on the GPU and draws nothing while hidden, the tests use their own light and a frame cap, a slow picture is noted instead of stopping a test, every test has a time limit, and the two-player tests take turns drawing on GitHub's small machine → 2ae86dd^..593d6ce

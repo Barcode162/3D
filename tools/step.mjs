@@ -30,6 +30,10 @@ function piecesOf(step) {
   const since = lastDone ? all.findIndex((p) => p.sha === lastDone.lastPiece) + 1 : 0;
   return all.slice(Math.max(0, since)).filter((p) => !step || p.tag.startsWith(step.replace(/\.$/, '')));
 }
+// Only pieces whose commit is in what's being shipped: a piece recorded by a
+// session whose branch never reached GitHub stays out of the Done line
+// (incident 2026-10-25-done-line-lost-pieces: J85.1, J85.2 listed in J92's).
+const inThisBranch = (p) => { try { execSync(`git merge-base --is-ancestor ${p.sha} HEAD`, { stdio: 'ignore' }); return true; } catch { return false; } };
 
 if (cmd === 'status' || !cmd) {
   const ps = piecesOf(stepName);
@@ -40,7 +44,8 @@ if (cmd !== 'finish' || !stepName) { console.log('usage: node tools/step.mjs fin
 
 const target = process.env.PIECE_BRANCH ?? sh('git rev-parse --abbrev-ref HEAD');  // the job branch (docs/playbook/job.md)
 if (!/^job\/J\d+$/.test(target)) { console.log(`✗ finish runs on a job branch (job/J<n>), not "${target}"`); process.exit(1); }
-const pieces = piecesOf(null);
+const recorded = piecesOf(null), pieces = recorded.filter(inThisBranch);
+for (const p of recorded) if (!pieces.includes(p)) console.log(`note: ${p.tag} (${p.sha}) was recorded but its commit isn't on this branch: left out`);
 if (!pieces.length) { console.log('No pieces since the last finished step.'); process.exit(1); }
 if (!has('skip-check')) {
   const full = has('full-check');
