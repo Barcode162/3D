@@ -6,6 +6,14 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J90.1 Motion and life in Dev: four Ember glows drift behind everything (in steps under a pixel, 8 a second, so the frosted panels over them stay cheap), each page comes in piece by piece and slides (deeper from the right, back from the left; the View Transitions API, a slide dropped after 1.5 s on a slow phone), rows, tiles and keys press and ripple from your finger, cards tilt toward it, lights breathe, numbers count to new values; only transform and opacity move; Calm (the dot at the top right) stops all of it and is remembered, iPhone's Reduce Motion turns it on by itself, and it all pauses while Dev is in the background. Built in f6099ec; the Dev test checks Calm on, kept after a reload, and off again
+
+`98ae472` · 2026-10-25 12:10 · 3 files, +8 −8 · tests: dev, labels, workshop
+
+Phone check: Open Dev: the glow drifts behind the cards; tap a row: it presses in and ripples from your finger; tap the dot at the top right: everything holds still
+
+![J90.1 page-dev-index-demo.jpg](J90.1/page-dev-index-demo.jpg)
+
 ## J84.2 The bar says why in words: Voice chat tells a guest that voice is for signed-in players, and an account made before birth dates were asked gets 'Add my birth date' (once: 13 and up, never changed after; account.php's new action, with the same checks as sign-up); a refused call isn't tried again until your login changes; the voice test's players sign in as test adults. Built in d3f9c65 (bar/web, server/account.php, the gate and voice tests, the Handbook's menus, voice and protocol pages); its game, menu-after-games, voice, accounts, Handbook and labels checks passed on it (14 of 15), and the menu test, whose 3x screen starved behind the first page still drawing (KI-5), now lets that page draw one frame every 5 s
 
 `05e186d` · 2026-10-25 11:24 · 3 files, +6 −3 · tests: menu
