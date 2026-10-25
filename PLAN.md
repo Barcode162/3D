@@ -55,12 +55,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J92 · No artificial glow** (the engine). No artificial glow: the bloom the engine paints around every bright thing taken out for good (its passes, the moods' glow settings, its dials), so only real light is left: lamps, bulbs and neon stay bright themselves and light what's around them. Its plan: docs/plan/jobs/J92.md. · N3 N5
-- [x] **J92.1** The glow (bloom) taken out of the engine: its passes, the moods' and the bar's glow settings; J44's glare and starbursts off the road *Check:* By the neon signs, the lamps and the fire: no haze of light around them anymore, the bulbs and neon still bright and the room still lit
+**J86 · A real engine, step 1** (the engine). A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
+- [ ] **J86.1** The library and the host: looped built on its own, every page call through loopedHost, the lint in the quick check *Check:* The bar works as before (menus, voice, multiplayer, sounds)
+- [ ] **J86.2** Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone *Check:* joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J86 → J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J87 → J88 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -187,8 +188,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 - [ ] **J91** A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
   *Verdict:* Doable at a cost — Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality
-- [ ] **J86** A real engine, step 1: Looped as its own library apart from the bar: its own build, one named host object for every call to the page (no bar names inside), limits given at start, the engine's own place loader, and a second small program (a place viewer: the showroom drawn by the engine alone). Its plan: docs/plan/jobs/J86.md. · N2
-  *Verdict:* Doable now — Our own code: the engine already never includes the bar's files; what's left is the build, its calls to the page by name and a place it can draw alone
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
