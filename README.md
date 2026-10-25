@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J96.1 The square of light on the floor gone (J88.3's paced bounced light undone); the captured room reflected only by glossy things (bar top, glass, chrome), not the floor: no blocky pools that slide with you or show lamps through things; the incident
+
+`a3c9f6f` · 2026-10-25 23:47 · 11 files, +82 −72 · tests: none
+
+Phone check: Walk the bar looking at the floor: no bright square, no pools of light that follow you; the bar top and the taps still shine
+
 ## J88.3 Bounced light at its own pace: at most 10 times a second, only while a lamp's light changes by more than 2 %, plus 8 steps to settle (before: two passes over 29,634 patches and 20,655 probes every frame); 3D light cells left out after research
 
 `db6eac2` · 2026-10-25 23:12 · 7 files, +54 −18 · tests: none
