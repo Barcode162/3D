@@ -420,10 +420,6 @@ class SceneRenderer {
   std::vector<GpuLight> gpuLights_;    // what the GPU has (setLightScale changes it, flushLights sends it)
   size_t lightsDirtyFrom_ = SIZE_MAX, lightsDirtyTo_ = 0;
   void flushLights();
-  // Bounced light follows the lamps (J88.3): set when a lamp's light changed by
-  // more than 2 % since bounced light last saw it.
-  std::vector<float> giSeen_;
-  bool giLightsChanged_ = true;
   void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;

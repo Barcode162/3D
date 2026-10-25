@@ -350,9 +350,6 @@ void SceneRenderer::buildLighting() {
   if (!lightingBuffer_) lightingBuffer_ = makeUniformBuffer(gpu_->device, sizeof(LightingUniforms), "lighting");
   gpu_->queue.WriteBuffer(lightingBuffer_, 0, l.get(), sizeof(LightingUniforms));
   gpuLights_.assign(l->lights, l->lights + kMaxLights);
-  giSeen_.assign(lightIntensity_.size(), 0.0f);
-  for (size_t i = 0; i < giSeen_.size(); ++i) giSeen_[i] = gpuLights_[i].color[3];
-  giLightsChanged_ = true;  // a new light list: bounced light follows
   lightsDirtyFrom_ = SIZE_MAX;
   lightsDirtyTo_ = 0;
   LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells, at most %u each; lamps reach down to %.2f lux%s.",
@@ -759,10 +756,6 @@ void SceneRenderer::setLightScale(size_t light, float scale) {
   // at the next render (flushLights).
   const float intensity = lightIntensity_[light] * scale;
   if (gpuLights_[light].color[3] == intensity) return;
-  if (light < giSeen_.size() && std::abs(intensity - giSeen_[light]) > 0.02f * std::max(giSeen_[light], 1e-3f)) {
-    giSeen_[light] = intensity;
-    giLightsChanged_ = true;
-  }
   gpuLights_[light].color[3] = intensity;
   lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
@@ -788,7 +781,6 @@ void SceneRenderer::setLight(size_t light, const PointLight& p) {
   gpuLights_[light] = g;
   lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
-  giLightsChanged_ = true;  // the Studio changed a lamp: bounced light follows
 }
 
 void SceneRenderer::flushLights() {
@@ -1573,8 +1565,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
     }
     // (A software GPU refreshes the bounced light every 8th frame: tests stay fast.)
     if (!gpu_->software || (++giFrame_ & 7) == 0 || gi_.building()) {
-      gi_.encode(encoder, engine::clockMs(), emissiveNits_, bounceStrength_, giLightsChanged_);
-      giLightsChanged_ = false;
+      gi_.encode(encoder, engine::clockMs(), emissiveNits_, bounceStrength_);
     }
     if (gi_.changed()) {
       remakeViews();

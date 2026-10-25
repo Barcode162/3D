@@ -36,37 +36,24 @@
   }
  ],
  "now": {
-  "id": "J91",
-  "title": "A real engine, step 4",
+  "id": "J96",
+  "title": "Fix",
   "chapter": "the engine",
-  "about": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
+  "about": "Fix: the floor's square of light and the reflections that followed you: bounced light every frame again (J88.3 undone), the room's reflection only on glossy things.",
   "serves": [
-   "N3",
-   "N5"
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J91.1",
-    "text": "The prepass and ambient occlusion, its blur and its switch",
-    "check": "By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone",
-    "done": false
-   },
-   {
-    "id": "J91.2",
-    "text": "The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by walls (bounced light's probes), its switch",
-    "check": "Stand at the stage door: soft beams under the stage lights; Light beams off: gone",
-    "done": false
-   },
-   {
-    "id": "J91.3",
-    "text": "Tuned on the phone: the defaults from a ?perf=1 report by the fire",
-    "check": "The bar stays smooth with both on",
-    "done": false
+    "id": "J96.1",
+    "text": "The square of light on the floor gone (J88.3's paced bounced light undone); the captured room reflected only by glossy things (bar top, glass, chrome), not the floor: no blocky pools that slide with you or show lamps through things",
+    "check": "Walk the bar looking at the floor: no bright square, no pools of light that follow you; the bar top and the taps still shine",
+    "done": true
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -834,6 +821,19 @@
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
     }
+   },
+   {
+    "id": "J91",
+    "text": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
+    "serves": [
+     "N3",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
+    }
    }
   ],
   "tools": [
@@ -1153,7 +1153,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "b3c6b97",
    "text": "J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2"
   },
   {

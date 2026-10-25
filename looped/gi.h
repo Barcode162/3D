@@ -27,15 +27,8 @@ class GiGpu {
   void build(std::shared_ptr<SceneGeometry> geo, const std::vector<GiLight>& lamps, const GiSettings& settings);
   // A lamp moved: which patches and probes see it, again.
   void relight(const std::vector<GiLight>& lamps);
-  // Every frame, before the scene is drawn: build slices, then (J88.3) the
-  // bounce and the probes at their own pace: at most every kStepMs, and only
-  // while the light is changing (`lightsChanged`: a lamp's light changed by
-  // more than 2 %, looped/scene_renderer.cpp) plus kSettleSteps after, so
-  // still light stops costing anything.
-  void encode(const wgpu::CommandEncoder& encoder, double nowMs, float emissiveNits, float bounceStrength,
-              bool lightsChanged);
-  static constexpr double kStepMs = 100;
-  static constexpr int kSettleSteps = 8;
+  // Every frame, before the scene is drawn: build slices, then bounce and probes.
+  void encode(const wgpu::CommandEncoder& encoder, double nowMs, float emissiveNits, float bounceStrength);
   bool ready() const { return cur_ != nullptr; }
   bool building() const { return next_ != nullptr; }
   // 0..1: the first time the light appears it spreads over about a second.
@@ -95,9 +88,6 @@ class GiGpu {
   wgpu::TextureView dummyView_, dummyMaskView_;
   float fill_ = 0;
   double firstReadyMs_ = -1, lastMs_ = 0;
-  double lastStepMs_ = -1e9;  // the last bounce (J88.3)
-  int settle_ = 0;            // bounces still to do before the light is still
-  float lastEmissive_ = -1, lastStrength_ = -1;
   bool changed_ = false;
 };
 

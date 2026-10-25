@@ -654,10 +654,16 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     color = (diffuseColor * diffuse + specular) * frame.units.z + emission * frame.units.x;
   }
   let r = reflect(-v, n);
+  // The captured room (one picture from one spot, 128 px a side) only on
+  // glossy things (the bar top, glass, chrome): on rough ones (the floor) it
+  // showed as blocky pools of lamp light that slid with you and showed lamps
+  // through things (the user, request 2026-10-25 #17); real rough wood
+  // doesn't mirror lamps, its highlights come from the lamps themselves.
+  let glossy = 1.0 - smoothstep(0.35, 0.6, roughness);
   if (frame.env.x < 0.5) {  // (no reflections of reflections while capturing)
-    color += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth);
+    color += environment(worldPos, r, roughness) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth) * glossy;
   } else {
-    color += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth);
+    color += roomGlow(r) * environmentBrdf(f0, roughness, nv) * ao * (1.0 - 0.75 * cloth) * glossy;
   }
 
   let dist = length(frame.cameraPos.xyz - worldPos);
