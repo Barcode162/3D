@@ -647,6 +647,12 @@ void handleCommands() {
       LOG_INFO("Meridian: open (the bar pauses drawing).");
     } else if (c.name == "meridianClosed") {
       g_app.meridianOpen = false;
+    } else if (c.name == "fps") {
+      // Draw at most N frames a second from now on (0: as many as it can), as
+      // ?fps=N does from the start: a test quiets a page that's only waiting,
+      // so the other page has the machine (GitHub's software drawing, KI-5).
+      g_app.gpu.maxFps = std::max(0.0, c.a);
+      LOG_INFO("Drawing at most %g frames a second (fps command).", g_app.gpu.maxFps);
     }
   }
   const int v = engine::settings::version();
@@ -1248,6 +1254,10 @@ void drawFrame(const wgpu::TextureView& target, double nowMs) {
 void phaseRender(FrameIn& f) {
   // Meridian has the screen: the bar keeps its connection but doesn't draw.
   if (g_app.meridianOpen) return;
+  // The page is hidden (another app, another tab): nothing to show, so
+  // nothing drawn; the logic and the connection go on. (A phone stops the
+  // frames then anyway; a test's hidden page keeps them, KI-5.)
+  if (engine::bridge::frame().hidden) return;
   // The GPU still busy with the frames before (or ?fps= says not yet): the
   // logic above ran; this frame draws nothing (looped/gpu.h mayDraw).
   if (!g_app.gpu.mayDraw(f.nowMs)) return;
@@ -1337,7 +1347,14 @@ void frame(double rafMs) {
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.input.poll();  // what the player did since last frame (read-only from here on)
   ProfiledFrame profiled(engine::clockMs());
-  if (ft.resumed && ft.gapMs > 1000) LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
+  // Back from another app (a long gap between frames). A slow machine has
+  // long gaps all the time (software drawing: about one a second), so at most
+  // one line every 30 s: it must not push everything else out of the log.
+  static double lastBackLogMs = -1e9;
+  if (ft.resumed && ft.gapMs > 1000 && ft.nowMs - lastBackLogMs > 30000) {
+    LOG_INFO("Back after %.1f s away.", ft.gapMs / 1000.0);
+    lastBackLogMs = ft.nowMs;
+  }
   updateLoadingScreen();
   watchQuality(ft.nowMs);
   g_app.gpu.resizeIfNeeded();

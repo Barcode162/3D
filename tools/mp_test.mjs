@@ -11,7 +11,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
-import { launchBrowser } from './lib/browser.mjs';
+import { launchBrowser, drawLess, drawAgain } from './lib/browser.mjs';
 import { startRoom, probe } from './lib/room.mjs';
 
 const siteDir = resolve('build/site');
@@ -69,6 +69,7 @@ const setHidden = (page, hidden) => page.evaluate((h) => {
   Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
   document.dispatchEvent(new Event('visibilitychange'));
 }, hidden);
+await drawLess(bob);  // the check is how fast the word comes, not Bob's drawing (KI-5)
 const hiddenAt = Date.now();
 await setHidden(alice, true);
 const awayOk = await bob.waitForFunction(() => /Alice is away/.test(document.getElementById('log').textContent), null,
@@ -77,12 +78,14 @@ const awayMs = Date.now() - hiddenAt;
 await setHidden(alice, false);
 const backOk = await bob.waitForFunction(() => /Alice is back/.test(document.getElementById('log').textContent), null,
                                          { timeout: 20000, polling: 250 }).then(() => true).catch(() => false);
+await drawAgain(bob);
 console.log(`Bob saw Alice away after ${awayMs} ms (headless Bob runs at a few fps)`);
 
 // Shared world. Carol stands at the bar looking down at glass 1 (x = -3.7),
 // picks it up (tap in the middle), puts it down to the right. Alice leaves
 // first so three software-rendered pages don't crawl.
 await alice.close();
+await drawLess(bob);  // Bob only watches while Carol loads and rejoins (KI-5)
 const waitLog = (page, re, ms = 60000) =>
   page.waitForFunction((src) => new RegExp(src).test(document.getElementById('log').textContent), re.source,
                        { timeout: ms, polling: 250 }).catch(() => console.log('timed out waiting for ' + re));
@@ -122,6 +125,7 @@ console.log('--- Carol again (all)\n' + carolLog2.split('\n').filter((l) => !/Mo
 await carol.screenshot({ path: 'build/mp-carol.png' });
 await carol.mouse.click(vw / 2, vh / 2);
 await carol.waitForTimeout(2500);
+await drawAgain(bob);
 await bob.bringToFront();
 await waitLog(bob, /big_mirror is avatars \(the room\)/, 20000);
 await waitLog(bob, /Everything loaded/, 180000);

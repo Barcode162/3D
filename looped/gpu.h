@@ -69,6 +69,7 @@ class Gpu {
   double lastDrawMs_ = -1e9;
   double lastDoneMs_ = 0;  // when the GPU last finished a frame (or the first wait began)
   bool noWait_ = false;  // the GPU never says "done": don't wait for it
+  uint64_t doneCount_ = 0;  // frames the GPU said it finished (its answers work)
   std::string canvasSelector_;
   std::function<void(bool)> onReady_;
   wgpu::Instance instance_;

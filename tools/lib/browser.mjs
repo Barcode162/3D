@@ -109,6 +109,16 @@ export function logErrors(page) {
   return page.$$eval('#log .err', (els) => els.map((e) => e.textContent));
 }
 
+// Two game pages on GitHub's machine (2 cores, drawing in software) starve
+// each other: a page that only waits draws one frame every 5 s (its logic and
+// its connection go on), and draws as before when it's its turn again (KI-5).
+export function drawLess(page) {
+  return page.evaluate(() => window.bar3dBridge && window.bar3dBridge.command('fps', 0.2));
+}
+export function drawAgain(page) {
+  return page.evaluate((n) => window.bar3dBridge && window.bar3dBridge.command('fps', n), Number(testParams().fps) || 0);
+}
+
 // Opens the bar with page options (query without "?") and waits until every
 // model is in (or startup failed). Returns true if everything loaded. With
 // `skipintro` it also waits until you're in the bar (past the warm-up, which

@@ -183,10 +183,12 @@ void Gpu::configureSurface() {
 bool Gpu::mayDraw(double nowMs) {
   if (maxFps > 0 && nowMs - lastDrawMs_ < 1000.0 / maxFps - 1.0) return false;
   if (inFlight_ >= kMaxFramesInFlight && !noWait_) {
-    // A GPU that hasn't said "done" for 20 s: its answers aren't coming, so
-    // stop waiting for them for good (the picture can never freeze).
-    if (nowMs - lastDoneMs_ < 20000) return false;
-    LOG_ERROR("GPU: no frame finished for 20 s; drawing without waiting for the GPU from now on.");
+    // A slow GPU (software drawing, a big upload) is waited for, however
+    // long. Only a GPU that has never once said "done" in 20 s is taken for
+    // one whose answers don't come, and then drawing stops waiting for good,
+    // so the picture can never freeze.
+    if (doneCount_ > 0 || nowMs - lastDoneMs_ < 20000) return false;
+    LOG_INFO("GPU: no frame has ever said it finished (20 s); drawing without waiting for the GPU.");
     noWait_ = true;
   }
   lastDrawMs_ = nowMs;
@@ -198,6 +200,7 @@ void Gpu::endFrame() {
   ++inFlight_;
   queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous, [this](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
     if (inFlight_ > 0) --inFlight_;
+    ++doneCount_;
     lastDoneMs_ = emscripten_get_now();
   });
 }

@@ -54,7 +54,7 @@
     "id": "J54.2",
     "text": "The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened)",
     "check": "Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue",
-    "done": false
+    "done": true
    },
    {
     "id": "J54.3",
