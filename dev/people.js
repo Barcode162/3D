@@ -32,7 +32,44 @@
         if (acts.children.length) row.querySelector('.ls-lr-text').appendChild(acts);
         slot.appendChild(row);
       });
+      if (meOwner) slot.appendChild(claudeKey());
     });
+  }
+
+  // Claude's key (J83): what Claude's sessions use to publish world changes
+  // and read Dev's reports. The hub makes it (hub/hub.php, owner only); a new
+  // one replaces the old. Shown once, never kept by this page.
+  function claudeKey() {
+    var box = document.createElement('div'); box.className = 'dev-claude-key'; box.style.marginTop = '18px';
+    box.appendChild(D.part({ type: 'listrow', icon: 'lock', text: 'Claude\'s key',
+      detail: 'Lets Claude\'s sessions publish world changes and read Dev\'s reports. A new key replaces the old one.' }));
+    var acts = document.createElement('div'); acts.className = 'dev-ask';
+    var make = D.part({ type: 'key', text: 'Make a new Claude key', style: 'go' });
+    acts.appendChild(make); box.appendChild(acts);
+    make.addEventListener('click', function () {
+      if (D.demo) { D.toast('Demo: no key is made here.'); return; }
+      if (!window.confirm('Make a new Claude key? The old key stops working: Claude can\'t publish until it has the new one.')) return;
+      make.disabled = true;
+      D.post('/hub/hub.php', { a: 'key' }).then(function (j) {
+        make.disabled = false;
+        if (!j.ok || !j.key) { D.toast(j.error || 'That didn\'t work.'); return; }
+        var old = box.querySelector('.dev-key-shown'); if (old) old.remove();
+        var shown = document.createElement('div'); shown.className = 'dev-key-shown'; shown.style.marginTop = '10px';
+        var field = D.part({ type: 'field', value: j.key, mono: true, placeholder: 'Claude\'s key' });
+        field.readOnly = true; field.style.width = '100%';
+        var copy = D.part({ type: 'key', text: 'Copy', style: 'small' });
+        copy.addEventListener('click', function () {
+          field.select();
+          var done = function () { D.toast('Copied.'); };
+          if (navigator.clipboard) navigator.clipboard.writeText(j.key).then(done, function () { document.execCommand('copy'); done(); });
+          else { document.execCommand('copy'); done(); }
+        });
+        var how = D.part({ type: 'text', text: 'Shown once. In the Claude app: the cloud environment menu → Edit → put it in HUB_KEY, then start a new session. Never paste it in the chat.' });
+        shown.appendChild(field); shown.appendChild(copy); shown.appendChild(how);
+        box.appendChild(shown);
+      });
+    });
+    return box;
   }
   D.tabs.people.fill = function () {
     var field = D.slot('invite-user', true), go = D.slot('invite', true);

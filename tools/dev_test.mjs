@@ -161,6 +161,17 @@ await page.waitForFunction(() => /Admin/.test(document.querySelector('#view [dat
 const people = await ws.post('bar/account.php', { a: 'people', token: owner.token });
 check(people.people.find((p) => p.user === 'mia').status === 'admin', 'Let in, then Make admin: Mia is an admin');
 
+// J83: Claude's key, made from People (owner only): it asks first, shows the
+// key once, and the hub takes that key.
+await page.waitForSelector('#view .dev-claude-key');
+page.once('dialog', (d) => d.accept());
+await page.click('#view .dev-claude-key >> text=Make a new Claude key');
+await page.waitForSelector('#view .dev-key-shown input');
+const madeKey = await ed(() => document.querySelector('#view .dev-key-shown input').value);
+check(/^[0-9a-f]{48}$/.test(madeKey), 'Make a new Claude key: the key shows once, after a yes');
+const withKey = await (await fetch(ws.url + 'hub/hub.php', { method: 'POST', headers: { 'Content-Type': 'text/plain', 'X-Hub-Key': madeKey }, body: JSON.stringify({ a: 'posts' }) })).json();
+check(withKey.ok === 1, 'the hub takes the new key');
+
 // R4.2: Projects
 await page.click('#tabs [data-tab="projects"]');
 await page.waitForSelector('#view [data-project="bar3d"] a[href="/studio/"]');

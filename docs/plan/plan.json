@@ -36,31 +36,19 @@
   }
  ],
  "now": {
-  "id": "J54",
-  "title": "CI's browser tests",
-  "chapter": "the engine",
-  "about": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again",
+  "id": "J83",
+  "title": "Claude's key, made from Dev",
+  "chapter": "the tools",
+  "about": "Claude's key, made from Dev: Dev → People → Make a new Claude key (owner only, shown once with Copy); the hub's button was lost when the hub became Dev",
   "serves": [
    "N5"
   ],
   "pieces": [
    {
-    "id": "J54.1",
-    "text": "Find where a picture's time goes on GitHub's machine: one run with a trace around a picture, and the same test here; the cause named in KI-5",
-    "check": "Dev → Plan: J54.1 ticked; the known issue names the cause",
-    "done": false
-   },
-   {
-    "id": "J54.2",
-    "text": "The fix the trace points to, so every browser suite on GitHub runs to its last check (no check skipped or weakened)",
-    "check": "Dev's game row after the next deploy: every browser test reached its end; any failure left is real and has its own known issue",
-    "done": false
-   },
-   {
-    "id": "J54.3",
-    "text": "No browser test can hang on this machine either: a slow picture is noted and the test goes on, and every test has a time limit (the Studio test sat idle 19 min on 2026-10-25, request #2)",
-    "check": "Ask for a small world change: it saves in minutes, with no test left waiting",
-    "done": false
+    "id": "J83.1",
+    "text": "Dev → People: Claude's key section, owner only (Make a new Claude key, shown once with Copy)",
+    "check": "Dev → People, scroll down: Claude's key with Make a new Claude key; tap it, say yes: the key shows with Copy",
+    "done": true
    }
   ]
  },
@@ -820,6 +808,18 @@
      "after": "J80",
      "why": "Proves the language on real things without changing what you see"
     }
+   },
+   {
+    "id": "J54",
+    "text": "CI's browser tests: since the new light (L1) the smoke test times out on GitHub's software GPU, so every test after it is skipped (the deploy itself still goes out); give CI a light-weight drawing mode and get every test running again; and no browser test can hang on this machine (the Studio test sat idle 19 min on 2026-10-25)",
+    "serves": [
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Our own tests and workflows; no cost (a paid machine with a graphics card is parked: J69)"
+    }
    }
   ],
   "tools": [
@@ -1129,7 +1129,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "4944bcc",
    "text": "J82.1: J82 the showroom: a new place (Menu → Places) with five stations that show what Looped does → 3f56ddb^..3f56ddb"
   },
   {
