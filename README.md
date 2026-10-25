@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J84.1 The room keeps each login's age group (teen or adult, from the accounts server; never sent to anyone) and passes a voice handshake only between two signed-in people of the same group; otherwise the one who called hears why: 'guest' (sign in), 'birth' (add your birth date) or 'apart' (which never says anything about the other person). Built in d3f9c65 (cloud/room.js); the room test covers a guest refused, two adults and two teens connecting, adult with teen refused, to a guest and to or from an account without a birth date refused, and nobody told anyone's group
+
+`41f3e66` · 2026-10-25 10:58 · 2 files, +4 −4 · tests: native, room
+
+Phone check: Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest
+
 ## J54.3 No browser test can hang here or on GitHub: a picture that takes too long is noted and the test goes on (the smoke test's 'not a blank screen' picture still fails it), every browser test has a 30-minute limit and every check a 45-minute one (built in 7d04923; the game and native checks passed on it in J54.2's run; here the workflow checks and the voice test, which now opens its pages through the tests' browser)
 
 `593d6ce` · 2026-10-25 10:13 · 2 files, +2 −2 · tests: workflows, voice
