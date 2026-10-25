@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J84 · Safety on the server, step 1** (the backbone). Safety on the server, step 1: voice only between signed-in people of the same age group (teens with teens, adults with adults), enforced by the room; guests and accounts without a birth date are told why; an older account adds its birth date once. Its plan: docs/plan/jobs/J84.md. · N4
 - [x] **J84.1** The room refuses voice handshakes the rule forbids (a guest, an account with no birth date, a teen with an adult) and tells the sender why, never the other person's age group; the room test covers each case *Check:* Two phones, one signed in and one a guest: the guest's Voice chat says voice is for signed-in players, and no one hears the guest
-- [ ] **J84.2** The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field) *Check:* Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults
+- [x] **J84.2** The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field) *Check:* Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

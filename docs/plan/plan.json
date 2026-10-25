@@ -54,7 +54,7 @@
     "id": "J84.2",
     "text": "The bar says why in words, and an older account adds its birth date once (account.php's new action, Voice chat's words and date field)",
     "check": "Menu → Voice chat, on an account made before birth dates: Add my birth date; after adding it, voice works with other adults",
-    "done": false
+    "done": true
    }
   ]
  },
