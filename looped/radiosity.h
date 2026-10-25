@@ -10,6 +10,7 @@
 // and fills the probes, which every pixel reads for its bounced light.
 // Plain C++ (no GPU): the native tools run it too.
 #include <cstdint>
+#include <array>
 #include <vector>
 
 #include "looped/bvh.h"
@@ -18,6 +19,11 @@
 #include "looped/scene_geometry.h"
 
 namespace engine {
+
+// The lamps bounced light keeps track of (which probes see them, the light
+// they bounce): 127 (J88.1; four 32-bit words per probe, one bit says the
+// probe is usable). Later lamps light directly but aren't blocked by walls.
+constexpr size_t kMaskLamps = 127;
 
 struct GiLight {
   Vec3 position;
@@ -71,7 +77,8 @@ class GiBuild {
   int nx = 0, ny = 0, nz = 0;         // probes along x, y, z
   std::vector<Vec3> probeDirs;        // the probes' ray directions (the same for all)
   std::vector<uint32_t> probeHits;    // probeRays per probe
-  std::vector<uint32_t> probeMask;    // per probe: bit k = lamp k visible; bit 31 = the probe is usable
+  std::vector<uint32_t> probeMask;    // per probe: bit k = lamp k visible (0-30); bit 31 = the probe is usable
+  std::vector<std::array<uint32_t, 3>> probeMaskMore;  // per probe: lamps 31-126, 32 per word (J88.1)
   size_t probeCount() const { return static_cast<size_t>(nx) * ny * nz; }
   // For the GPU (looped/gi.h): the ray tree, the patches' hash (bucket
   // starts, kBuckets + 1 of them, and the patches in order) and its cell size.

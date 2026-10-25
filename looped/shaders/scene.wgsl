@@ -6,7 +6,7 @@
 // "triplanar": along the object's own x, y and z axes, blended by which way
 // the surface faces. Boxes get one clean projection per side.
 
-const kMaxLights = 32u;
+const kMaxLights = 255u;  // looped/scene_renderer.h (one byte per light in a cell; 0xff ends a list)
 const kMaxGridCells = 256u;
 
 struct Light {
@@ -405,7 +405,7 @@ fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
 // little (so light doesn't leak through a wall from the other side).
 struct GiSample {
   irradiance: vec3f,
-  masks: array<u32, 8>,
+  masks: array<vec4u, 8>,  // which lamps each probe sees (looped/shaders/gi.wgsl probe_lamps)
   weights: array<f32, 8>,
   total: f32,
 };
@@ -427,13 +427,13 @@ fn giSample(p: vec3f, n: vec3f, v: vec3f) -> GiSample {
   for (var c = 0; c < 8; c++) {
     let o = vec3i(c & 1, (c >> 1) & 1, c >> 2);
     let cell = clamp(base + o, vec3i(0), dims - 1);
-    let mask = textureLoad(giMask, cell, 0).r;
+    let mask = textureLoad(giMask, cell, 0);
     let tri = mix(1.0 - f, f, vec3f(o));
     var w = tri.x * tri.y * tri.z;
     let probePos = frame.gi.xyz + vec3f(cell) * spacing;
     let toProbe = normalize(probePos - p + n * 1e-3);
     let facing = (dot(toProbe, n) + 1.0) * 0.5;
-    w = w * (facing * facing + 0.02) * f32(mask >> 31u);
+    w = w * (facing * facing + 0.02) * f32(mask.x >> 31u);
     out.masks[c] = mask;
     out.weights[c] = w;
     out.total += w;
@@ -454,11 +454,16 @@ fn giSample(p: vec3f, n: vec3f, v: vec3f) -> GiSample {
 }
 
 // How much lamp `k` is in view from here (0..1), from the probes around it.
+// Lamps 0-30 are bits of the masks' x (bit 31 = usable probe); 31-126 of
+// y, z, w; later lamps aren't tracked (always in view).
 fn giLampVisible(s: GiSample, k: u32) -> f32 {
-  if (s.total <= 1e-5 || k >= 31u) { return 1.0; }
+  if (s.total <= 1e-5 || k >= 127u) { return 1.0; }
+  var word = 0u;
+  var bit = k;
+  if (k >= 31u) { word = 1u + (k - 31u) / 32u; bit = (k - 31u) % 32u; }
   var seen = 0.0;
   for (var c = 0; c < 8; c++) {
-    seen += s.weights[c] * f32((s.masks[c] >> k) & 1u);
+    seen += s.weights[c] * f32((s.masks[c][word] >> bit) & 1u);
   }
   return seen / s.total;
 }

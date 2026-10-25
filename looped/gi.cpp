@@ -81,7 +81,7 @@ bool GiGpu::init(Gpu& gpu, const wgpu::Buffer& lighting, uint64_t lightingSize) 
   build0_ = makeLayout(d, {bufferEntry(0, T::Uniform), bufferEntry(1, T::ReadOnlyStorage), bufferEntry(2, T::ReadOnlyStorage),
                            bufferEntry(3, T::ReadOnlyStorage), bufferEntry(4, T::ReadOnlyStorage),
                            bufferEntry(5, T::ReadOnlyStorage), bufferEntry(6, T::Storage), bufferEntry(7, T::Storage),
-                           storageTextureEntry(8, wgpu::TextureFormat::R32Uint)});
+                           storageTextureEntry(8, wgpu::TextureFormat::RGBA32Uint)});
   frame0_ = makeLayout(d, {bufferEntry(0, T::Uniform), bufferEntry(3, T::ReadOnlyStorage)});
   lights1_ = makeLayout(d, {bufferEntry(0, T::Uniform)});
   bounce2_ = makeLayout(d, {bufferEntry(0, T::ReadOnlyStorage), bufferEntry(1, T::ReadOnlyStorage),
@@ -103,7 +103,7 @@ bool GiGpu::init(Gpu& gpu, const wgpu::Buffer& lighting, uint64_t lightingSize) 
   t.label = "bounced light (none yet)";
   dummy_ = d.CreateTexture(&t);
   dummyView_ = dummy_.CreateView();
-  t.format = wgpu::TextureFormat::R32Uint;
+  t.format = wgpu::TextureFormat::RGBA32Uint;  // four words of lamps per probe (J88.1)
   dummyMask_ = d.CreateTexture(&t);
   dummyMaskView_ = dummyMask_.CreateView();
 
@@ -152,7 +152,7 @@ void GiGpu::build(std::shared_ptr<SceneGeometry> geo, const std::vector<GiLight>
   auto s = std::make_shared<Set>();
   s->geo = std::move(geo);
   s->lamps = lamps;
-  if (s->lamps.size() > 31) s->lamps.resize(31);
+  if (s->lamps.size() > kMaskLamps) s->lamps.resize(kMaskLamps);
   s->cpu = std::make_shared<GiBuild>();
   GiSettings st = settings;
   st.cpuRays = false;  // the GPU casts them
@@ -230,7 +230,7 @@ void GiGpu::upload(Set& s) {
     s.shTex[k] = d.CreateTexture(&t);
     s.shView[k] = s.shTex[k].CreateView();
   }
-  t.format = wgpu::TextureFormat::R32Uint;
+  t.format = wgpu::TextureFormat::RGBA32Uint;
   t.label = "gi: probe lamps";
   s.maskTex = d.CreateTexture(&t);
   s.maskView = s.maskTex.CreateView();
@@ -300,7 +300,7 @@ void GiGpu::relight(const std::vector<GiLight>& lamps) {
   for (const auto& s : {cur_, next_}) {
     if (!s || s->stage == Stage::kCpu || s->stage == Stage::kUpload || s->stage == Stage::kTracePatches) continue;
     std::vector<GiLight> l = lamps;
-    if (l.size() > 31) l.resize(31);
+    if (l.size() > kMaskLamps) l.resize(kMaskLamps);
     if (l.size() != s->lampCount) continue;  // a lamp added or removed: the next layout build handles it
     s->lamps = l;
     s->stage = Stage::kTraceLamps;

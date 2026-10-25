@@ -32,7 +32,8 @@ struct Light {
   axis: vec4f,      // xyz = half a tube's length / a panel's first side; w = shape (0 ball, 1 tube, 2 panel)
   axis2: vec4f,     // xyz = half a panel's second side
 };
-const kMaxLights = 32u;
+const kMaxLights = 255u;  // looped/scene_renderer.h
+const kMaskLamps = 127u;  // lamps the probes keep track of (looped/gi.h kMaskLamps)
 const kMaxGridCells = 256u;
 struct Lighting {
   lightCount: vec4u,
@@ -59,7 +60,7 @@ struct Patch {
 @group(0) @binding(5) var<storage, read> bucketItems: array<u32>;
 @group(0) @binding(6) var<storage, read_write> hits: array<u32>;   // trace_patches / trace_probes output
 @group(0) @binding(7) var<storage, read_write> values: array<f32>; // trace_lamps: factors
-@group(0) @binding(8) var maskTex: texture_storage_3d<r32uint, write>;  // probe_lamps: which lamps each probe sees
+@group(0) @binding(8) var maskTex: texture_storage_3d<rgba32uint, write>;  // probe_lamps: which lamps each probe sees (giMaskBit)
 // Group 1: the scene's lamps (looped/scene_renderer.h LightingUniforms).
 @group(1) @binding(0) var<uniform> lighting: Lighting;
 
@@ -328,17 +329,22 @@ fn probe_lamps(@builtin(global_invocation_id) id: vec3u) {
     if (h == kBack) { back++; }
     if (h != kMiss) { hitCount++; }
   }
-  var mask = 0u;
+  // Four words (J88.1): x bit 31 = the probe is usable, x bits 0-30 =
+  // lamps 0-30, y, z, w = lamps 31-126 (32 each).
+  var mask = vec4u(0u);
   if (back * 4u < rays && hitCount * 2u > rays) {
-    mask = 0x80000000u;
+    mask.x = 0x80000000u;
     let p = probePosition(i);
-    for (var l = 0u; l < P.counts.z && l < 31u; l++) {
-      if (lampVisible(p, lighting.lights[l])) { mask |= 1u << l; }
+    for (var l = 0u; l < P.counts.z && l < kMaskLamps; l++) {
+      if (lampVisible(p, lighting.lights[l])) {
+        if (l < 31u) { mask.x |= 1u << l; }
+        else { mask[1u + (l - 31u) / 32u] |= 1u << ((l - 31u) % 32u); }
+      }
     }
   }
   let nx = P.grid2.x;
   let ny = P.grid2.y;
-  textureStore(maskTex, vec3u(i % nx, (i / nx) % ny, i / (nx * ny)), vec4u(mask, 0u, 0u, 0u));
+  textureStore(maskTex, vec3u(i % nx, (i / nx) % ny, i / (nx * ny)), mask);
 }
 
 // ---- Every frame ----

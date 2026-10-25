@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J88 · A real engine, step 3** (the engine). A real engine, step 3: up to 256 lamps (bounced light too), lamps sorted in 3D cells at their real reach, bounced light at its own pace (faster). Its plan: docs/plan/jobs/J88.md. · N3 N5
-- [ ] **J88.1** Up to 255 lamps; bounced light and walls blocking light for the first 127 *Check:* The bar looks as before
+- [x] **J88.1** Up to 255 lamps; bounced light and walls blocking light for the first 127 *Check:* The bar looks as before
 - [ ] **J88.2** Lamps sorted in 3D cells, every lamp at its real reach *Check:* By the fire and at the bar the light looks as before or softer at its edges, never in squares
 - [ ] **J88.3** Bounced light at its own pace: the slow bounce at most 10 times a second, only when the lamps' light really changed *Check:* ?perf=1 standing still in the lounge: GPU time lower than before; the fire still flickers on the walls
 
@@ -272,7 +272,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1
+- `7521b64` J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1
 - `1889278` J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32
 - `018725f` J94.1: J94: the place viewer draws → 6a7dd81^..6a7dd81
 - `13e33e6` J93.1: J93: urgent fix: the models' textures load again on the phone → 28767be^..28767be

@@ -49,7 +49,7 @@
     "id": "J88.1",
     "text": "Up to 255 lamps; bounced light and walls blocking light for the first 127",
     "check": "The bar looks as before",
-    "done": false
+    "done": true
    },
    {
     "id": "J88.2",
@@ -1165,7 +1165,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "7521b64",
    "text": "J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1"
   },
   {

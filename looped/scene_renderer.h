@@ -193,7 +193,9 @@ class SceneRenderer {
 
  private:
   Limits limits_;
-  static constexpr uint32_t kMaxLights = 32;       // matches looped/shaders/scene.wgsl
+  // A cell lists lights by one byte each (0xff ends the list): 255 at most
+  // (J88.1). Matches kMaxLights in looped/shaders/scene.wgsl and gi.wgsl.
+  static constexpr uint32_t kMaxLights = 255;
   static constexpr uint32_t kLightsPerCell = 16;   // brightest first (4 x 4 bytes, 0xff ends the list)
   static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
   static constexpr uint32_t kMaxGridCells = 256;

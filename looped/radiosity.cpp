@@ -50,7 +50,7 @@ uint32_t bucketOf(int x, int y, int z) {
 void GiBuild::begin(const SceneGeometry& geo, const std::vector<GiLight>& lights, const GiSettings& s) {
   geo_ = &geo;
   lights_ = lights;
-  if (lights_.size() > 31) lights_.resize(31);  // bit 31 of a probe's mask says "usable"
+  if (lights_.size() > kMaskLamps) lights_.resize(kMaskLamps);  // radiosity.h kMaskLamps
   settings = s;
   surfels.clear();
   surfelHits.clear();
@@ -58,6 +58,7 @@ void GiBuild::begin(const SceneGeometry& geo, const std::vector<GiLight>& lights
   directStart.clear();
   probeHits.clear();
   probeMask.clear();
+  probeMaskMore.clear();
   buckets_.assign(kBuckets, {});
   cell_ = std::max(0.2f, s.surfelSpacing);
   rays = 0;
@@ -284,6 +285,7 @@ bool GiBuild::step(double budgetMs) {
             phase_ = Phase::kProbeRays;
             probeHits.assign(probeCount() * static_cast<size_t>(settings.probeRays), kMiss);
             probeMask.assign(probeCount(), 0);
+            probeMaskMore.assign(probeCount(), {0, 0, 0});
           } else {
             phase_ = Phase::kProbeLights;  // (relight: the probes' rays still stand)
           }
@@ -327,13 +329,16 @@ bool GiBuild::step(double budgetMs) {
           if (timeUp(cursor_)) break;
           uint32_t& mask = probeMask[cursor_];
           mask &= 0x80000000u;
+          probeMaskMore[cursor_] = {0, 0, 0};
           if (!mask) continue;
           const auto i = static_cast<int>(cursor_);
           const int x = i % nx, y = (i / nx) % ny, z = i / (nx * ny);
           const Vec3 p = probeOrigin + Vec3{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)} * settings.probeSpacing;
           for (size_t l = 0; l < lights_.size(); ++l) {
             ++rays;
-            if (lampVisible(p, lights_[l])) mask |= 1u << l;
+            if (!lampVisible(p, lights_[l])) continue;
+            if (l < 31) mask |= 1u << l;
+            else probeMaskMore[cursor_][(l - 31) / 32] |= 1u << ((l - 31) % 32);
           }
         }
         if (cursor_ >= probeCount()) {
