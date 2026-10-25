@@ -273,6 +273,7 @@ jobs:
           mirror -R --verbose --no-perms --parallel=4 -x '^\.git/' . $IONOS_DIR
           cd $IONOS_DIR
           mput index.html version.txt app.wasm $(ls *.js *.json | tr '\n' ' ') relay.php account.php report.php gate.php gate.html .htaccess
+          mput -O looped looped/index.html looped/viewer.js looped/viewer.wasm
           cls -l
           bye
           EOF

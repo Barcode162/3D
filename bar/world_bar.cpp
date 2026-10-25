@@ -13,7 +13,6 @@
 namespace app {
 
 namespace {
-constexpr float kShyDistance = 1.2f;  // metres: closer than this, shy things dart away
 constexpr char kSongsFile[] = "assets/world/songs.json";
 }  // namespace
 
@@ -39,17 +38,7 @@ void BarWorld::build() {
   std::vector<int> modelOf(world_.size(), -1), lightOf(world_.size(), -1);
   for (size_t m = 0; m < scene_->modelThing.size(); ++m) modelOf[static_cast<size_t>(scene_->modelThing[m])] = static_cast<int>(m);
   for (size_t l = 0; l < scene_->lightThing.size(); ++l) lightOf[static_cast<size_t>(scene_->lightThing[l])] = static_cast<int>(l);
-  drawn_.clear();
-  for (size_t i = 0; i < world_.size(); ++i) {
-    const int t = static_cast<int>(i);
-    if (!world_.thing(t).kind->still.empty()) continue;  // nothing to play
-    Drawn d;
-    d.thing = t;
-    d.model = modelOf[i];
-    d.light = lightOf[i];
-    d.glowbox = world_.part(t, "glowbox").isObject();
-    if (d.model >= 0 || d.light >= 0 || d.glowbox) drawn_.push_back(d);
-  }
+  player_.build(world_, modelOf, lightOf);  // models, lights and glowing shapes (looped/place_player.h)
   // Things that make their own sounds (E6.1).
   voices_.clear();
   for (size_t i = 0; i < world_.size(); ++i) {
@@ -69,7 +58,7 @@ void BarWorld::build() {
   dims_.assign(scene_->lights.size(), false);
   for (int l : scene_->roomLights) dims_[static_cast<size_t>(l)] = true;
   built_ = true;
-  LOG_INFO("World: %zu things, %zu alive.", world_.size(), drawn_.size());
+  LOG_INFO("World: %zu things, %zu alive.", world_.size(), player_.alive());
 }
 
 bool BarWorld::touch(int i) {
@@ -208,40 +197,7 @@ void BarWorld::update(const Inputs& in, std::vector<SceneRenderer::Box>& boxes, 
   }
 
   auto base = [&](int l) { return dim && dims_[static_cast<size_t>(l)] ? 0.25f : 1.0f; };
-  for (Drawn& d : drawn_) {
-    const engine::world::Thing& t = world_.thing(d.thing);
-    const engine::world::Motion& m = t.motion;
-    if (d.model >= 0) {
-      if (!world_.stateOf(d.thing).free) renderer.setModelPose(static_cast<size_t>(d.model), t.world);
-      const engine::Vec3 tint = m.tint();
-      renderer.setModelLook(static_cast<size_t>(d.model), 1 + m.ch[engine::world::kGlow],
-                            {1 + tint.x, 1 + tint.y, 1 + tint.z});
-    }
-    if (d.light >= 0)
-      renderer.setLightScale(static_cast<size_t>(d.light), base(d.light) * std::max(0.0f, 1 + m.ch[engine::world::kLight]));
-    if (d.glowbox) {
-      const engine::Json& g = world_.part(d.thing, "glowbox");
-      const float size = static_cast<float>(g["size"].number(0.01)) * (1 + m.ch[engine::world::kScaleX]);
-      if (size <= 1e-4f) continue;
-      engine::Vec3 p{t.world.at(3, 0), t.world.at(3, 1), t.world.at(3, 2)};
-      // Shy: dart away from you, then drift back once you've gone.
-      const float shy = static_cast<float>(g["shy"].number(0));
-      engine::Vec3 target{};
-      if (shy > 0) {
-        const engine::Vec3 away = p - in.eye;
-        const float dist = engine::length(away);
-        if (dist < kShyDistance && dist > 1e-3f) target = away * (shy * (1.0f - dist / kShyDistance) / dist);
-      }
-      d.away = d.away + (target - d.away) * std::min(1.0f, dt * (engine::length(target) > engine::length(d.away) ? 8.0f : 1.5f));
-      SceneRenderer::Box b;
-      b.center = p + d.away;
-      b.size = {size, size, size};
-      b.color = engine::world::readVec3(g["color"], {1, 1, 1});
-      b.glow = static_cast<float>(g["glow"].number(1)) * std::max(0.0f, 1 + m.ch[engine::world::kGlow]);
-      b.roughness = 1;
-      if (boxes.size() < SceneRenderer::kMaxBoxes) boxes.push_back(b);
-    }
-  }
+  player_.draw(world_, in.eye, dt, boxes, renderer, base);
 }
 
 }  // namespace app

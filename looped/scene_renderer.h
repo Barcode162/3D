@@ -31,13 +31,23 @@
 
 namespace engine {
 
+// How much a program draws at most, given at start (J86): other players'
+// avatars, and simple boxes per frame (SceneRenderer::setBoxes).
+struct RendererLimits {
+  size_t others = 7;
+  size_t boxes = 256;
+};
+
 class SceneRenderer {
  public:
+  using Limits = RendererLimits;
   // `avatars` = one mesh per avatar look (players pick one).
-  bool init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars);
+  bool init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars,
+            Limits limits = {});
+  const Limits& limits() const { return limits_; }
 
   // Simple shapes that change every frame (piano key lights, darts, drinks,
-  // cars...): boxes with a color and glow. At most kMaxBoxes are drawn.
+  // cars...): boxes with a color and glow. At most limits().boxes are drawn.
   struct Box {
     engine::Vec3 center;
     engine::Vec3 size{0.1f, 0.1f, 0.1f};
@@ -47,7 +57,6 @@ class SceneRenderer {
     float roughness = 0.6f;
     float metallic = 0;
   };
-  static constexpr size_t kMaxBoxes = 720;  // the Studio's X-ray edges need room (bar/studio_mode.cpp)
   void setBoxes(const std::vector<Box>& boxes);
   // Turns one of the scene's lights up or down (1 = as built, 0 = off).
   void setLightScale(size_t light, float scale);
@@ -117,8 +126,7 @@ class SceneRenderer {
               const engine::TextRenderer& text, const engine::PictureBillboards& pictures);
 
   // Other players' avatars this frame (multiplayer): where each one stands
-  // (avatarTransform) and its full pose. At most kMaxOthers are drawn.
-  static constexpr size_t kMaxOthers = 7;
+  // (avatarTransform) and its full pose. At most limits().others are drawn.
   void setOthers(const std::vector<engine::Mat4>& transforms, const std::vector<std::vector<engine::Mat4>>& bones,
                  const std::vector<int>& looks);
 
@@ -181,6 +189,7 @@ class SceneRenderer {
   void setRoughFix(bool on) { roughFix_ = on; }
   void setGiView(int view) { giView_ = view; }  // ?giview= (debug views, scene.wgsl)
   const GiGpu& gi() const { return gi_; }
+  Limits limits_;
   static constexpr size_t kObjectStrideBytes = 256;  // one object's uniforms (kObjectStride in the .cpp)
 
  private:

@@ -124,7 +124,9 @@ void setVec4(float out[4], Vec3 v, float w) {
 
 }  // namespace
 
-bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars) {
+bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::vector<engine::SkinnedMeshData>& avatars,
+                         Limits limits) {
+  limits_ = limits;
   if (!shadows_.init(gpu.device, engine::Gpu::kSceneFormat, engine::Gpu::kDepthFormat)) LOG_ERROR("Floor shadows: no shader.");
   gpu_ = &gpu;
   const wgpu::Device& device = gpu.device;
@@ -138,7 +140,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   // (its position is rewritten every frame as you move), the other players'
   // avatars and the models.
   const auto& objects = scene.objects;
-  const size_t total = objects.size() + 1 + kMaxOthers + kMaxModels + kMaxBoxes;
+  const size_t total = objects.size() + 1 + limits_.others + kMaxModels + limits_.boxes;
   objectBuffer_ = makeUniformBuffer(device, total * kObjectStride, "object uniforms");
   {
     wgpu::BindGroupEntry entry;
@@ -182,7 +184,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
     avatarOffset_ = static_cast<uint32_t>(objects.size() * kObjectStride);
     std::memcpy(objectData.data() + avatarOffset_, &u, sizeof(u));
     for (const engine::SkinnedMeshData& a : avatars) avatarMeshes_.push_back(engine::SkinnedMesh::upload(device, a));
-    for (size_t i = 0; i < kMaxOthers; ++i) {
+    for (size_t i = 0; i < limits_.others; ++i) {
       OtherSlot slot;
       slot.offset = static_cast<uint32_t>((objects.size() + 1 + i) * kObjectStride);
       std::memcpy(objectData.data() + slot.offset, &u, sizeof(u));
@@ -212,7 +214,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   // The capture's own views: they can't read the cube they draw into.
   for (View& v : captureViews_) v = makeView(envDummyView_, "capture frame uniforms");
 
-  boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + kMaxOthers + kMaxModels) * kObjectStride);
+  boxOffset_ = static_cast<uint32_t>((objects.size() + 1 + limits_.others + kMaxModels) * kObjectStride);
   boxMesh_ = engine::Mesh::upload(device, engine::makeBox({1, 1, 1}));
   gpu.queue.WriteBuffer(objectBuffer_, 0, objectData.data(), objectData.size());
 
@@ -869,7 +871,7 @@ static std::string modelUrl(const std::string& file, bool astc) {
 // away; the model itself streams in and is drawn once it's ready. Each file
 // is downloaded once, however many times it's placed.
 void SceneRenderer::loadModels(const RenderScene& scene, std::vector<uint8_t>& objectData) {
-  const size_t firstSlot = scene.objects.size() + 1 + kMaxOthers;  // after the objects and the avatars
+  const size_t firstSlot = scene.objects.size() + 1 + limits_.others;  // after the objects and the avatars
   std::vector<std::string> files;
   std::vector<std::vector<size_t>> users;
   for (size_t i = 0; i < scene.models.size() && i < kMaxModels; ++i) {
@@ -1268,7 +1270,7 @@ void SceneRenderer::drawOthers(const wgpu::RenderPassEncoder& pass, const RoomVi
 }
 
 void SceneRenderer::setBoxes(const std::vector<Box>& boxes) {
-  boxCount_ = std::min(boxes.size(), kMaxBoxes);
+  boxCount_ = std::min(boxes.size(), limits_.boxes);
   if (!boxCount_) return;
   static std::vector<uint8_t> data;
   data.assign(boxCount_ * kObjectStride, 0);

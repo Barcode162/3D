@@ -10,7 +10,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import { statSync, existsSync, mkdirSync } from 'node:fs';
 
 const WORLD = 'looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/world/catalog.cpp looped/json.cpp';
-const SCENE = `bar/bar_scene.cpp bar/scene_names.cpp bar/world_files.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp ${WORLD}`;
+const SCENE = `bar/bar_scene.cpp bar/scene_names.cpp bar/world_files.cpp bar/materials.cpp looped/procedural.cpp looped/mesh_data.cpp looped/world/place_layout.cpp ${WORLD}`;
 export const LIGHT_SOURCES = `looped/radiosity.cpp looped/bvh.cpp looped/scene_geometry.cpp looped/gltf.cpp ${SCENE}`;
 const out = 'build/native/light_tool';
 const srcs = `tools/native/light_tool.cpp ${LIGHT_SOURCES}`.split(' ');

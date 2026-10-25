@@ -12,6 +12,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS looped/*.cpp)
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/apps/")  # programs built on the engine (below)
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS bar/*.cpp)
 
 # Looped, the engine, is its own library (J86): it never includes bar/ and
@@ -29,7 +30,9 @@ add_executable(app ${APP_SOURCES})
 target_link_libraries(app PRIVATE looped)
 target_compile_options(app PRIVATE -Wall -Wextra)
 
-target_link_options(app PRIVATE
+# Link options for a program on the engine (the bar's app, the viewer).
+function(looped_program target)
+target_link_options(${target} PRIVATE
   --use-port=emdawnwebgpu
   "--embed-file=${CMAKE_SOURCE_DIR}/looped/shaders@/shaders"
   # The world's kinds and places (bar/world_files.h reads assets/world/...).
@@ -47,10 +50,13 @@ target_link_options(app PRIVATE
   "-sEXPORTED_FUNCTIONS=_main,_malloc,_free"
 )
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  target_link_options(app PRIVATE -O3 --closure=1)
+  target_link_options(${target} PRIVATE -O3 --closure=1)
 else()
-  target_link_options(app PRIVATE -g -sASSERTIONS=2)
+  target_link_options(${target} PRIVATE -g -sASSERTIONS=2)
 endif()
+
+endfunction()
+looped_program(app)
 
 # Re-link when shaders change (they are embedded into the binary).
 file(GLOB SHADER_FILES CONFIGURE_DEPENDS looped/shaders/*.wgsl)
@@ -58,6 +64,14 @@ set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${SHADER_FILES})
 # ... and when the world's files change (kinds, places: embedded too).
 file(GLOB_RECURSE WORLD_FILES CONFIGURE_DEPENDS assets/world/*.json)
 set_property(TARGET app APPEND PROPERTY LINK_DEPENDS ${WORLD_FILES})
+
+# The place viewer (J86): a second program from the engine alone, served at
+# /bar/looped/ (?place=showroom). It proves the engine stands on its own.
+add_executable(viewer looped/apps/viewer/main.cpp)
+target_link_libraries(viewer PRIVATE looped)
+target_compile_options(viewer PRIVATE -Wall -Wextra -Werror)
+looped_program(viewer)
+set_property(TARGET viewer APPEND PROPERTY LINK_DEPENDS ${SHADER_FILES} ${WORLD_FILES})
 
 # The site folder (build/site): one staging step. Every file is its own
 # build rule, so only changed files are copied (and models re-gzipped).
@@ -143,4 +157,11 @@ add_custom_command(OUTPUT ${SITE}/app.js ${SITE}/app.wasm DEPENDS app
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:app>/app.js $<TARGET_FILE_DIR:app>/app.wasm ${SITE}
                    VERBATIM)
 list(APPEND SITE_OUTPUTS ${SITE}/app.js ${SITE}/app.wasm)
+add_custom_command(OUTPUT ${SITE}/looped/viewer.js ${SITE}/looped/viewer.wasm ${SITE}/looped/index.html
+                   DEPENDS viewer ${CMAKE_SOURCE_DIR}/looped/apps/viewer/index.html
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${SITE}/looped
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:viewer>/viewer.js $<TARGET_FILE_DIR:viewer>/viewer.wasm ${SITE}/looped
+                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/looped/apps/viewer/index.html ${SITE}/looped/index.html
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/looped/viewer.js ${SITE}/looped/viewer.wasm ${SITE}/looped/index.html)
 add_custom_target(site ALL DEPENDS ${SITE_OUTPUTS})

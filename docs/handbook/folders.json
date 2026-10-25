@@ -60,6 +60,8 @@
     "looped/drive": "The new driving physics (docs/plan/jobs/W20.md).",
     "looped/shaders": "The WGSL shaders, built into the game.",
     "looped/world": "The world core: things, kinds, places, states, rules, loops on the shared clock.",
+    "looped/apps": "Programs built on the engine alone (J86): the place viewer (looped/apps/viewer, served at /bar/looped/).",
+    "looped/apps/viewer": "The place viewer: any place from the world files, drawn and alive, with an orbit camera; no bar code.",
     "news": "The public news page (joshuavelasco.com/news).",
     "proto": "The room protocol's test vectors (both codecs must pass them).",
     "server": "PHP next to the game on IONOS: accounts, the private bar's door, phone reports, the old relay.",

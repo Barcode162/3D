@@ -14,6 +14,7 @@
 
 #include "bar/bar_scene.h"
 #include "bar/renderer.h"
+#include "looped/place_player.h"
 #include "looped/world/world.h"
 
 namespace app {
@@ -69,16 +70,10 @@ class BarWorld {
     std::string file;
     double bpm = 0, firstBeat = 0;
   };
-  struct Drawn {  // what a thing drives
-    int thing = -1;
-    int model = -1, light = -1;
-    bool glowbox = false;
-    engine::Vec3 away;  // a shy thing: how far it has darted from you
-  };
   const BarScene* scene_ = nullptr;
   engine::world::World world_;
   std::vector<Tempo> tempos_;
-  std::vector<Drawn> drawn_;
+  engine::PlacePlayer player_;  // the things on screen
   struct Voice {  // a thing that makes its own sound now and then
     int thing = -1, effect = 0;
     float minS = 1, maxS = 3, gain = 0.3f, near = 6;

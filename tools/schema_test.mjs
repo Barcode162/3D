@@ -41,7 +41,7 @@ check(same(shapes, schema.choices.shape), 'loop shapes match looped/world/loop.c
 
 // Every part the engine reads has a description.
 const parts = new Set();
-for (const f of ['bar/bar_scene.cpp', 'bar/world_bar.cpp']) for (const m of readFileSync(f, 'utf8').matchAll(/part\([^,]*,\s*"([a-zA-Z]+)"\)/g)) parts.add(m[1]);
+for (const f of ['bar/bar_scene.cpp', 'bar/world_bar.cpp', 'looped/world/place_layout.cpp']) for (const m of readFileSync(f, 'utf8').matchAll(/part\([^,]*,\s*"([a-zA-Z]+)"\)/g)) parts.add(m[1]);
 const missing = [...parts].filter((p) => !schema.parts[p]);
 check(missing.length === 0, `every part the game reads is described (${parts.size})` + (missing.length ? ': ' + missing.join(', ') : ''));
 

@@ -1455,7 +1455,8 @@ void startScene() {
   }
   engine::profiler().stage("avatars");
   if (g_app.hooks.walkcheck) LOG_INFO("%s", app::walkReport(g_app.avatars[0]).c_str());
-  if (!g_app.renderer.init(g_app.gpu, renderSceneOf(g_app.scene), meshes) ||
+  // The bar's limits: 7 others in the room; 720 boxes (the Studio's X-ray edges need room, bar/studio_mode.cpp).
+  if (!g_app.renderer.init(g_app.gpu, renderSceneOf(g_app.scene), meshes, {7, 720}) ||
       !g_app.text.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat) ||
       !g_app.pictures.init(g_app.gpu.device, g_app.gpu.surfaceFormat, engine::Gpu::kDepthFormat)) {
     engine::setStatus("Startup failed - see log");

@@ -54,7 +54,7 @@
     "id": "J86.2",
     "text": "Limits given at start, the place loader in the engine, and the viewer: the showroom drawn by the engine alone",
     "check": "joshuavelasco.com/bar/looped/?place=showroom shows the showroom, alive, with no bar around it",
-    "done": false
+    "done": true
    }
   ]
  },

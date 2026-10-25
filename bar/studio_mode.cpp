@@ -787,7 +787,7 @@ void xray(std::vector<app::SceneRenderer::Box>& boxes) {
   });
   const float t = 0.012f;  // edge thickness, metres
   for (const Region& r : regions) {
-    if (boxes.size() + 12 > app::SceneRenderer::kMaxBoxes) break;
+    if (boxes.size() + 12 > g_app.renderer.limits().boxes) break;
     const Vec3 h = r.half;
     // 4 edges along each axis.
     for (int axis = 0; axis < 3; ++axis)
@@ -842,7 +842,7 @@ void studioPresent(std::vector<app::SceneRenderer::Box>& boxes, double nowMs) {
         b.size = size;
         b.color = {0.95f, 0.55f, 0.17f};
         b.glow = glow * 1.6f;
-        if (boxes.size() < app::SceneRenderer::kMaxBoxes) boxes.push_back(b);
+        if (boxes.size() < g_app.renderer.limits().boxes) boxes.push_back(b);
       }
   }
   if (S.gizmo && S.selected >= 0) {

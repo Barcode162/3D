@@ -7,6 +7,7 @@
 #include "bar/scene_names.h"
 #include "bar/world_files.h"
 #include "looped/json.h"
+#include "looped/world/place_layout.h"
 
 using engine::Quat;
 using engine::Vec3;
@@ -19,23 +20,14 @@ using engine::world::readVec3;
 
 float yawOf(Quat r) { return 2 * std::atan2(r.y, r.w); }  // a turn about y
 
-// A thing's place in the world before any loop moves it: its rest on its
-// parent, all the way up.
-void restPose(const engine::world::World& w, int i, Vec3* pos, Quat* rot) {
-  std::vector<int> chain;
-  for (int k = i; k >= 0; k = w.thing(k).parent) chain.push_back(k);
-  Vec3 p;
-  Quat r;
-  for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
-    const engine::world::Thing& t = w.thing(*it);
-    p = p + r.rotate(t.at);
-    r = r * t.rot;
-  }
-  *pos = p;
-  *rot = engine::normalized(r);
-}
-
 engine::Aabb box(const Json& j) { return {readVec3(j["min"], {}), readVec3(j["max"], {})}; }
+
+// The bar's materials for the engine's place layout ("" = plaster, plain boxes' default).
+const engine::Material* materialById(const std::string& id) {
+  MaterialId m = kPlaster;
+  if (!id.empty() && !materialFromName(id, &m)) return nullptr;
+  return &app::material(m);
+}
 
 }  // namespace
 
@@ -54,68 +46,67 @@ BarScene buildBarScene(const std::string& placeName) {
   auto world = std::make_shared<engine::world::World>();
   world->build(kinds, place, &problems);
 
-  // The air, where you come in, the rooms and the doorways between them.
-  const Json& air = placeJson["air"];
-  scene.ambient = readVec3(air["ambient"], {});
-  scene.fogColor = readVec3(air["fog"], {});
-  scene.fogDensity = static_cast<float>(air["fogDensity"].number(0));
-  scene.spawnPosition = readVec3(placeJson["spawn"]["at"], {});
-  scene.spawnYaw = engine::radians(static_cast<float>(placeJson["spawn"]["yaw"].number(0)));
-  scene.lightGridMin = readVec3(placeJson["lightGrid"]["min"], {});
-  scene.lightGridMax = readVec3(placeJson["lightGrid"]["max"], {});
-  std::map<std::string, int> roomIndex;
-  for (const Json& r : placeJson["rooms"].items()) {
-    roomIndex[r["id"].string()] = static_cast<int>(scene.rooms.size());
-    scene.rooms.push_back(box(r));
+  // What any program draws (the engine's place layout, J86): the air, where
+  // you come in, the rooms and doorways, models, boxes, lights, mirrors.
+  engine::world::PlaceLayout lay = engine::world::layOut(*world, placeJson, materialById);
+  problems += lay.problems;
+  scene.ambient = lay.ambient;
+  scene.fogColor = lay.fogColor;
+  scene.fogDensity = lay.fogDensity;
+  scene.spawnPosition = lay.spawnPosition;
+  scene.spawnYaw = lay.spawnYaw;
+  scene.lightGridMin = lay.lightGridMin;
+  scene.lightGridMax = lay.lightGridMax;
+  scene.rooms = lay.rooms;
+  scene.doorways = lay.doorways;
+  scene.lights = lay.lights;
+  scene.lightThing = lay.lightThing;
+  for (size_t l = 0; l < lay.lights.size(); ++l) {
+    if (lay.lightDims[l]) scene.roomLights.push_back(static_cast<int>(l));
+    if (world->thing(lay.lightThing[l]).kind->id == "light-fire") scene.fireLight = static_cast<int>(l);
   }
-  for (const Json& d : placeJson["doorways"].items()) {
-    BarScene::Doorway door;
-    door.a = roomIndex[d["rooms"][0].string()];
-    door.b = roomIndex[d["rooms"][1].string()];
-    for (int k = 0; k < 4; ++k) door.corners[k] = readVec3(d["corners"][k], {});
-    scene.doorways.push_back(door);
-  }
+  scene.mirrors = lay.mirrors;
+  scene.mirrorThing = lay.mirrorThing;
   const engine::Aabb arcade = box(placeJson["areas"]["arcade"]);
   scene.arcadeMin = arcade.min;
   scene.arcadeMax = arcade.max;
   scene.arcadeDoor = readVec3(placeJson["points"]["arcade-door"], {});
 
   // Every thing, in the file's order: its parts become the scene's lists.
-  std::map<std::string, int> modelOf, mirrorOf;
+  std::map<std::string, int> mirrorOf;
+  for (size_t m = 0; m < lay.mirrorThing.size(); ++m) mirrorOf[world->thing(lay.mirrorThing[m]).id] = static_cast<int>(m);
   struct Pending {
     size_t use;
     std::string mirror;
   };
   std::vector<Pending> mirrorUses;
-  std::vector<std::pair<size_t, std::vector<std::string>>> mirrorButtons;
+  size_t nextBox = 0;
   for (size_t n = 0; n < world->size(); ++n) {
     const int i = static_cast<int>(n);
     const engine::world::Thing& t = world->thing(i);
     Vec3 pos;
     Quat rot;
-    restPose(*world, i, &pos, &rot);
+    engine::world::restPose(*world, i, &pos, &rot);
     auto at = [&](const Json& j) { return pos + rot.rotate(readVec3(j, {})); };
-    auto dir = [&](const Json& j) { return rot.rotate(readVec3(j, {})); };
     auto material = [&](const Json& j, MaterialId fallback) {
       MaterialId m = fallback;
       if (!j.isNull() && !materialFromName(j.string(), &m)) problems += t.id + ": no material \"" + j.string() + "\"\n";
       return m;
     };
-    int model = -1;
-    if (const Json& m = world->part(i, "model"); m.isObject()) {
+    const int model = lay.modelOfThing[n];
+    if (model >= 0) {
+      const engine::world::PlaceLayout::Model& lm = lay.models[static_cast<size_t>(model)];
       ModelPlacement p;
-      p.file = m["file"].string();
-      p.position = pos;
-      p.rotation = rot;
-      p.scale = static_cast<float>(m["scale"].number(1)) * t.scale.x;
-      p.material = material(m["material"], kDarkWood);
+      p.file = lm.placed.file;
+      p.position = lm.placed.position;
+      p.rotation = lm.placed.rotation;
+      p.scale = lm.placed.scale;
+      p.room = lm.placed.room;
+      p.material = material(world->part(i, "model")["material"], kDarkWood);
       if (const Json& pr = world->part(i, "prop"); pr.isString() && !propFromName(pr.string(), &p.prop))
         problems += t.id + ": no prop \"" + pr.string() + "\"\n";
-      if (const Json& r = world->part(i, "room"); r.isString()) p.room = roomIndex.count(r.string()) ? roomIndex[r.string()] : -1;
-      model = static_cast<int>(scene.models.size());
       scene.models.push_back(p);
       scene.modelThing.push_back(i);
-      modelOf[t.id] = model;
     }
     for (const Json& s : world->part(i, "solids").items()) {
       const float turn = static_cast<float>(s["turn"].number(0));
@@ -124,18 +115,15 @@ BarScene buildBarScene(const std::string& placeName) {
                                  material(s["material"], kDarkWood)});
       scene.colliderThing.push_back(i);
     }
-    // Plain boxes (E7.1): floors, walls, shelves a place is built from
-    // without a model of its own; solid unless "solid": false.
-    for (const Json& b : world->part(i, "boxes").items()) {
-      const Vec3 size = readVec3(b["size"], {1, 1, 1});
-      const Quat r = engine::normalized(rot * Quat::axisAngle({0, 1, 0}, engine::radians(static_cast<float>(b["turn"].number(0)))));
-      const MaterialId m = material(b["material"], kPlaster);
-      const engine::Material& look = app::material(m);
-      SceneObject o{engine::makeBox(size), at(b["at"]), r, m, readVec3(b["color"], look.color),
-                    static_cast<float>(b["glow"].number(look.emissive)), look.textureScale};
+    // Plain boxes (E7.1), laid out by the engine; solid unless "solid": false.
+    for (; nextBox < lay.boxes.size() && lay.boxes[nextBox].thing == i; ++nextBox) {
+      engine::world::PlaceLayout::Box& b = lay.boxes[nextBox];
+      MaterialId m = kPlaster;
+      if (!b.material.empty()) materialFromName(b.material, &m);
+      SceneObject o{std::move(b.mesh), b.position, b.rotation, m, b.color, b.glow, b.textureScale};
       scene.objects.push_back(std::move(o));
-      if (b["solid"].boolean(true)) {
-        scene.colliders.push_back({at(b["at"]), size * 0.5f, r, m});
+      if (b.solid) {
+        scene.colliders.push_back({b.position, b.size * 0.5f, b.rotation, m});
         scene.colliderThing.push_back(i);
       }
     }
@@ -177,40 +165,6 @@ BarScene buildBarScene(const std::string& placeName) {
       scene.interactables.push_back(it);
       scene.useThing.push_back(i);
     }
-    if (const Json& l = world->part(i, "light"); l.has("color")) {
-      if (l["dims"].boolean(false)) scene.roomLights.push_back(static_cast<int>(scene.lights.size()));
-      if (t.kind->id == "light-fire") scene.fireLight = static_cast<int>(scene.lights.size());
-      // The place's mood (S7.3): a named set of light colours and brightness,
-      // by thing id or by kind; the rest of the light as its part says.
-      const Json& mood = placeJson["moods"][placeJson["mood"].string()]["lights"];
-      const Json& mo = mood.has(t.id) ? mood[t.id] : mood[t.kind->id];
-      PointLight light{pos, readVec3(mo.has("color") ? mo["color"] : l["color"], {1, 1, 1}),
-                              static_cast<float>(mo.has("intensity") ? mo["intensity"].number(1) : l["intensity"].number(1)),
-                              static_cast<float>(l["range"].number(4)), static_cast<float>(l["radius"].number(0.1)),
-                              static_cast<float>(mo.has("lumens") ? mo["lumens"].number(0) : l["lumens"].number(0)),
-                              static_cast<float>(mo.has("kelvin") ? mo["kelvin"].number(0) : l["kelvin"].number(0))};
-      // Lights with size (L1.6): tube or panel, in the thing's own space.
-      const std::string shape = l["shape"].string();
-      light.shape = shape == "tube" ? 1 : shape == "panel" ? 2 : 0;
-      if (light.shape) {
-        light.position = pos + rot.rotate(readVec3(l["center"], {}));
-        light.axis = rot.rotate(readVec3(l["axis"], {1, 0, 0})) * static_cast<float>(l["length"].number(1) * 0.5);
-        if (light.shape == 2) light.axis2 = rot.rotate(readVec3(l["axis2"], {0, 0, 1})) * static_cast<float>(l["width"].number(1) * 0.5);
-      }
-      scene.lights.push_back(light);
-      scene.lightThing.push_back(i);
-    }
-    if (const Json& m = world->part(i, "mirror"); m.isObject()) {
-      Mirror mr{at(m["center"]), dir(m["normal"]), dir(m["right"]), dir(m["up"]),
-                static_cast<float>(m["halfWidth"].number(1)), static_cast<float>(m["halfHeight"].number(1)),
-                m["mode"].string() == "avatars" ? MirrorMode::kAvatarsOnly : MirrorMode::kFull};
-      std::vector<std::string> buttons;
-      for (const Json& b : m["buttons"].items()) buttons.push_back(b.string());
-      mirrorButtons.push_back({scene.mirrors.size(), buttons});
-      mirrorOf[t.id] = static_cast<int>(scene.mirrors.size());
-      scene.mirrors.push_back(mr);
-      scene.mirrorThing.push_back(i);
-    }
     // The bar's special spots.
     if (const Json& d = world->part(i, "dartboard"); d.isObject()) {
       scene.dartBoard = at(d["face"]);
@@ -246,12 +200,6 @@ BarScene buildBarScene(const std::string& placeName) {
     if (it == mirrorOf.end()) problems += "a use names mirror \"" + p.mirror + "\", which has none\n";
     else scene.interactables[p.use].mirror = it->second;
   }
-  for (const auto& [m, buttons] : mirrorButtons)
-    for (size_t b = 0; b < buttons.size() && b < 3; ++b) {
-      const auto it = modelOf.find(buttons[b]);
-      if (it == modelOf.end()) problems += "mirror button \"" + buttons[b] + "\" isn't a model\n";
-      else scene.mirrors[m].buttonModels[b] = it->second;
-    }
   scene.world = world;
   scene.problems = problems;
   return scene;

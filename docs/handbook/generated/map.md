@@ -60,10 +60,12 @@ What each folder is, how many files it holds, its main languages, and which work
 | `incoming/` | Source material before it becomes assets. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/` | Meridian's source material. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/blender/` | Blender scripts that made Meridian's models. | 7 | Python, shell | not uploaded |
-| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 115 | C++, WGSL | deploy.yml → home/bar |
+| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 121 | C++, WGSL, HTML | deploy.yml → home/bar |
+| `looped/apps/` | Programs built on the engine alone (J86): the place viewer (looped/apps/viewer, served at /bar/looped/). | 2 | HTML, C++ | deploy.yml → home/bar |
+| `looped/apps/viewer/` | The place viewer: any place from the world files, drawn and alive, with an orbit camera; no bar code. | 2 | HTML, C++ | deploy.yml → home/bar |
 | `looped/drive/` | The new driving physics (docs/plan/jobs/W20.md). | 6 | C++ | deploy.yml → home/bar |
 | `looped/shaders/` | The WGSL shaders, built into the game. | 8 | WGSL | deploy.yml → home/bar |
-| `looped/world/` | The world core: things, kinds, places, states, rules, loops on the shared clock. | 8 | C++ | deploy.yml → home/bar |
+| `looped/world/` | The world core: things, kinds, places, states, rules, loops on the shared clock. | 10 | C++ | deploy.yml → home/bar |
 | `news/` | The public news page (joshuavelasco.com/news). | 1 | PHP | hub.yml → home/news |
 | `proto/` | The room protocol's test vectors (both codecs must pass them). | 1 | JSON | not uploaded |
 | `server/` | PHP next to the game on IONOS: accounts, the private bar's door, phone reports, the old relay. | 7 | PHP, other, HTML | deploy.yml → home/bar |
