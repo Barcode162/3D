@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J82.1 The showroom: a new place (Menu → Places) with five stations that show what Looped does: a coin that turns and flips with sparks around it, four lamps from 1800 K to 6500 K, all 13 materials under a tube light, the jukebox with lights on the beat and neon in a wave, a table with a candle, glasses and stools, a chalkboard, a light switch. Build, native and game checks passed on these world files; the Studio test left out on the user's word (2026-10-25 #2)
+
+`3f56ddb` · 2026-10-25 01:08 · 8 files, +378 −28 · tests: plan, workshop
+
+Phone check: Menu → Places → showroom: the coin turns over the pedestal with sparks around it; the four lamps on the left go from orange to blue; the back shelf shows 13 different cubes; play a song and the ceiling lights pulse; tap the candle, the table, a lamp, the coin; the LIGHTS switch behind you dims the room
+
 ## J66.2 The room test's grace check made steady (KI-33): from run 214's times, the watching player was closed as away (the test's AFK_MS, 9 s after it joined) before the ghost's leave reached it on GitHub's slow machine; the test's away time is now 20 s, longer than a ghost's close, grace and leave take, so the check waits for the event instead of racing the away timer; the AFK check itself is unchanged (it still waits for the 4004 away); and a changed test now runs only itself, not every check of its system (the room test's change had started the two-player browser test too, which times out here: your rule, test only what the change touches); checked by the room test (passed here) and the workflows test
 
 `6715116` · 2026-10-24 20:16 · 5 files, +14 −9 · tests: changed
