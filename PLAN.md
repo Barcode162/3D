@@ -56,12 +56,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J96 · Fix** (the engine). Fix: the floor's square of light and the reflections that followed you: bounced light every frame again (J88.3 undone), the room's reflection only on glossy things. · N3
-- [x] **J96.1** The square of light on the floor gone (J88.3's paced bounced light undone); the captured room reflected only by glossy things (bar top, glass, chrome), not the floor: no blocky pools that slide with you or show lamps through things *Check:* Walk the bar looking at the floor: no bright square, no pools of light that follow you; the bar top and the taps still shine
+**J91 · A real engine, step 4** (the engine). A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
+- [ ] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
+- [ ] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by walls (bounced light's probes), its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
+- [ ] **J91.3** Tuned on the phone: the defaults from a ?perf=1 report by the fire *Check:* The bar stays smooth with both on
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -182,8 +184,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
-- [ ] **J91** A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
-  *Verdict:* Doable at a cost — Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -242,6 +242,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - Smooth edges (4x MSAA, or a cheaper smoothing pass): out of J88 on the user's word, for later when we optimize; MSAA smooths jagged edges but costs phone speed and ~75 MB (request 2026-10-25 #13; research in docs/plan/jobs/J88.md)
   *Verdict:* Doable at a cost — Phone speed and memory: Filament rates 4x MSAA high cost on mobile
 - Lamps sorted in 3D cells: left out after research (no gain in the bar: every lamp reaches every cell; the per-pixel cap shortens lamps, not the cells; docs/plan/jobs/J88.md)
+- Bounced light at its own pace (J88.3, undone by J96): redo once the cause of its square of light is found (incident 2026-10-25-square-of-light)
+  *Verdict:* Needs an experiment — Why pacing the bounce makes a square isn't known yet
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.
@@ -271,6 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f
 - `b3c6b97` J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2
 - `7521b64` J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1
 - `1889278` J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32
