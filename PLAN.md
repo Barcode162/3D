@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J101 · Chess full screen like chess.com, with themes** (the world). Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
-- [x] **J101.1** Chess full screen like chess.com, with themes: each theme a calm pair of square colours that always contrast, pieces drawn to match, a smooth matching background; pick one, it's kept *Check:* Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together
+**J100 · A real piano sound** (the world). A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
+- [ ] **J100.1** A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you *Check:* Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
+**Up next, in order:** J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,8 +126,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J75 — The light rule (light only from light sources) and the light engine exist; the lights move from helper spots onto their things
 - [ ] **J77** The world remake, step 9, sound with the things: every thing that makes a sound carries it (the fire crackles from the fireplace, music from the speakers, glasses clink where they are), from its material's sound. · N3
   *Verdict:* Doable after J75 — The sound engine and the materials' sounds exist; sources move onto their things; your phone judges how it sounds
-- [ ] **J100** A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
-  *Verdict:* Doable now — The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)
 - [ ] **J103** The cozy lounge grows: a bigger fireside room that breaks normal architecture (expanded beyond the old wall, its own nooks and levels) (request 2026-10-26 #8) · N3
   *Verdict:* Doable after J74 — It changes the room shell, so it comes with or after the shells' remake
 - [ ] **J104** A sunken seating nook by the big mirror: a few steps down, seats, a pair of speakers, its own chill music with its own player to pick and control tracks (request 2026-10-26 #8) · N3 N4
@@ -273,6 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7
 - `ae02b1c` J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed
 - `4887cd3` J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722
 - `e4a1905` J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13
