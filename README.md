@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J107.2 The GPU check: Settings → Help Claude fix lag → Check the GPU (20 s): the bar draws as it is, then with soft shade, light beams, lamp shadows, bounced light off one at a time, with 6 lamps a pixel and with 1x pixels, measures each, and puts the results in the next phone report, so the biggest costs show by name
+
+`be3b0ed` · 2026-10-26 21:27 · 10 files, +151 −5 · tests: none
+
+Phone check: Settings → Check the GPU, wait 20 s for the toast, then Send report and send me the code
+
 ## J107.1 Quality in four levels: Ultra (3x pixels, 16 lamps a pixel, beams 24 steps), High (2x, 12, 16), Medium (1.6x, 10, 10, simple mirror), Low (1.3x, 8, no soft shade or beams, simple mirror, lighter bounced light); lamp shadows stay on everywhere (without them the hanging lamps darken the floor: KI-46); Auto moves between Low and High; each feature's own switch can still turn it off
 
 `71d8b24` · 2026-10-26 21:23 · 11 files, +132 −56 · tests: none
