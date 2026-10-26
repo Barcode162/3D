@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J110.3 Ultra and Auto keep it smooth: both step by late frames (over 6 % of frames past 20 ms, or slow, while the CPU is idle), not by the GPU wait; Ultra keeps every feature and eases only its sharpness 3x to 2.5x to 2x while frames run late, back to 3x after 6 steady seconds; Auto can climb back up again
+
+`ee94e60` · 2026-10-26 23:09 · 5 files, +88 −37 · tests: native
+
+Phone check: On Ultra, walk around the bar: smooth; the log says when it eases (Quality: Ultra (2.5x), frames ran late)
+
 ## J110.2 Lighter lighting, the same picture: on rough surfaces a lamp adding under half a percent of the light already there is skipped (its shadow and visibility work too), and a lamp under a twentieth takes one shadow look instead of five; before/after pictures at three spots differ only where things move (the swaying pendant, candle flicker)
 
 `0b0cb64` · 2026-10-26 23:05 · 3 files, +20 −5 · tests: none
