@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J70 · The world remake, step 2, the lounge taken apart** (the world). The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
-- [x] **J70.1** The lounge taken apart: the fireplace, mantel clock, candlesticks, photos, books, vase, painting, fire tools, log basket, rug, coffee table with the chessboard, Chesterfield sofa, two armchairs, bookshelf, floor lamp and side table each their own thing where they stood (sofa, armchairs, clock, painting and vase from Poly Haven); lounge.glb gone; things that floated now sit *Check:* Stand by the fire: everything is where it was, the vase and books sit on the mantel; sit on the sofa and an armchair; chess still plays; in the Studio, tap the vase and move it
+**J71 · The world remake, step 3, the walls' props taken apart** (the world). The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
+- [ ] **J71.1** The walls' props taken apart: neon and tin signs, licence plates, photos, the clock, the TV, coats and umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates each their own thing where they hang or stand; decor_walls.glb keeps only what is truly wall *Check:* Walk around the walls: every sign, photo and plant is where it was, nothing floats; in the Studio, tap a sign and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -114,8 +114,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J71** The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
-  *Verdict:* Doable after J35 — Uses the kit; decor_walls.glb holds 63 baked parts today, the most of any model
 - [ ] **J72** The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
   *Verdict:* Doable after J35 — Uses the kit and the recipes' idea (J48); dozens of copies stay cheap only when drawn together (instancing, J35)
 - [ ] **J73** The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs. · N3
@@ -267,6 +265,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37
 - `35e68bb` J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
 - `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
