@@ -250,6 +250,7 @@ void handleQueuedTouches(State& in) {
     e.touches[0].targetX = e.touches[0].clientX = static_cast<int>(t.x);
     e.touches[0].targetY = e.touches[0].clientY = static_cast<int>(t.y);
     g_eventMs = t.timeMs;
+    profiler().input(t.timeMs);  // touch to screen (J110.5)
     if (type != EMSCRIPTEN_EVENT_TOUCHMOVE) profiler().touch();
     handleTouch(type, &e, &in);
   }

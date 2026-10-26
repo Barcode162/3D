@@ -20,7 +20,7 @@ class Gpu {
   void resizeIfNeeded();
 
   // Whether to draw this frame at all. False while the GPU still has
-  // kMaxFramesInFlight frames to finish (work never piles up behind a slow
+  // maxFramesInFlight frames to finish (work never piles up behind a slow
   // GPU: a hot phone, or a test machine drawing in software, where a backlog
   // made every screenshot wait minutes), or when `maxFps` says it's too soon.
   // The game's logic runs every frame either way; only the drawing waits.
@@ -29,7 +29,9 @@ class Gpu {
   wgpu::TextureView beginFrame();
   // After the frame's last submit: counts it until the GPU has finished it.
   void endFrame();
-  static constexpr int kMaxFramesInFlight = 2;
+  // How many drawn frames may wait for the GPU at once: more keeps the GPU
+  // busy, fewer shows a touch sooner (each waiting frame is ~17 ms later).
+  int maxFramesInFlight = 2;
   int framesInFlight() const { return inFlight_; }
   // At most this many drawn frames a second (0 = as many as the screen
   // shows). The tests set it with ?fps= (bar/test_hooks.h).

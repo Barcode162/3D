@@ -71,6 +71,7 @@ class Profiler {
     uint16_t moves = 0;   // touch / mouse move events since the previous frame
     float gpuMs = 0;      // newest submit-to-done time (see trackGpu)
     bool covered = false;  // a menu covered the bar (J110.4): left out of the numbers
+    bool drawn = false;    // a picture was drawn (false: the GPU was still busy, J110.5)
   };
   struct Stats {
     int frames = 0;
@@ -79,6 +80,7 @@ class Profiler {
     float gpuAvg = 0, gpuWorst = 0;
     float phaseAvg[static_cast<int>(Phase::kCount)] = {};
     int hitches = 0;
+    int drawn = 0;  // frames that drew a picture (the rest: the GPU was still busy)
   };
   struct Hitch {
     double atMs;
@@ -96,6 +98,21 @@ class Profiler {
   // This frame drew under a menu or panel that covers the bar: the page's
   // own drawing costs more then, and it isn't what playing feels like.
   void setCovered(bool covered) { current_.covered = covered; }
+  // This frame drew a picture (it may skip drawing while the GPU is busy:
+  // the clock still ticks at 60, the screen doesn't change).
+  void drew() { current_.drawn = true; }
+  // A touch or mouse event's own time (same clock as emscripten_get_now):
+  // the oldest one this frame read, for the touch-to-screen time (J110.5).
+  void input(double eventMs) {
+    if (eventMs > 0 && (inputMs_ <= 0 || eventMs < inputMs_)) inputMs_ = eventMs;
+  }
+  // Touch to screen (J110.5), the last kLagSamples touches: from the event
+  // to the frame that read it starting, to its drawing being handed to the
+  // GPU, to the GPU saying it's done (the picture shows on the next refresh).
+  struct Lag {
+    float toFrame = 0, toSubmit = 0, toDone = 0;
+  };
+  static constexpr int kLagSamples = 64;
   void add(Phase phase, double ms) { current_.phaseMs[static_cast<int>(phase)] += static_cast<float>(ms); }
   void jobs(int ran, size_t pending, double maxJobMs);
   // A touch or mouse event arrived (looped/input.cpp).
@@ -148,6 +165,9 @@ class Profiler {
   uint16_t pendingMoves_ = 0;
   double pendingEventsMs_ = 0;
   bool gpuInFlight_ = false;
+  double inputMs_ = 0;  // the oldest input event read this frame (0: none)
+  Lag lags_[kLagSamples];
+  int lagHead_ = 0, lagCount_ = 0;
   float lastGpuMs_ = 0;
   int pauses_ = 0;  // gaps over 1 s (app in the background): not counted as hitches
   std::vector<std::pair<std::string, double>> stages_;

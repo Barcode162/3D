@@ -182,7 +182,7 @@ void Gpu::configureSurface() {
 
 bool Gpu::mayDraw(double nowMs) {
   if (maxFps > 0 && nowMs - lastDrawMs_ < 1000.0 / maxFps - 1.0) return false;
-  if (inFlight_ >= kMaxFramesInFlight && !noWait_) {
+  if (inFlight_ >= maxFramesInFlight && !noWait_) {
     // A slow GPU (software drawing, a big upload) is waited for, however
     // long. Only a GPU that has never once said "done" in 20 s is taken for
     // one whose answers don't come, and then drawing stops waiting for good,

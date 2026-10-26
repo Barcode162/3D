@@ -491,9 +491,9 @@ window.bar3dUi = (function () {
       }).then(function () { btn.disabled = false; });
     } });
     var box = el('div', {});
-    // The GPU check (J107.2): 20 seconds with one feature off at a time, then
+    // The GPU check (J107.2): 25 seconds with one feature off at a time, then
     // send a report and its code tells Claude what costs the most here.
-    box.appendChild(el('button', { class: 'mBtn ghost', text: 'Check the GPU (20 s), then send a report', onclick: function () {
+    box.appendChild(el('button', { class: 'mBtn ghost', text: 'Check the GPU (25 s), then send a report', onclick: function () {
       cmd('gpuCheck');
       close();
     } }));

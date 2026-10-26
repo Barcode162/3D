@@ -49,4 +49,4 @@ The crosshair and its editor (`bar/web/crosshair.js`). A preview of the crosshai
 
 ## Settings → Help Claude fix lag (J107.2)
 
-`Check the GPU (20 s), then send a report` closes the menu and, for about 20 seconds, draws the bar as it is, then with one feature off at a time (soft shade, light beams, lamp shadows, bounced light, 6 lamps a pixel, 1x pixels), measuring each (`bar/gpu_check.cpp`); a toast says when it's done. `Send report` then carries the results (`perf.extra.gpuCheck`), so the code names what costs the most on that phone.
+`Check the GPU (25 s), then send a report` closes the menu and, for about 25 seconds, draws the bar as it is, then with one feature off at a time (soft shade, light beams, lamp shadows, bounced light, 6 lamps a pixel, 1x pixels, 1 frame queued instead of 2), measuring each step's frames, how many drew a picture, the late ones and the wait (`bar/gpu_check.cpp`); a toast says when it's done. `Send report` then carries the results (`perf.extra.gpuCheck`), so the code names what costs the most on that phone.

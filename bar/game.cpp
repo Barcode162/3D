@@ -1293,6 +1293,7 @@ void phaseRender(FrameIn& f) {
   if (!target) return;
   drawFrame(target, f.nowMs);
   g_app.gpu.endFrame();
+  engine::profiler().drew();
 }
 
 // Tuning the look by hand from the page's address (docs/handbook/manual/light.md):

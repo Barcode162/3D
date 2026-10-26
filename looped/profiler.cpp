@@ -118,6 +118,7 @@ Profiler::Stats Profiler::stats(int count) const {
   for (int i = 0; i < count_ && s.frames < count; ++i) {
     const Frame& f = frame(i);
     if (f.covered) continue;
+    if (f.drawn) ++s.drawn;
     s.cpuAvg += f.cpuMs;
     s.cpuWorst = std::max(s.cpuWorst, f.cpuMs);
     s.gpuAvg += f.gpuMs;
@@ -145,9 +146,24 @@ Profiler::Stats Profiler::stats(int count) const {
 }
 
 void Profiler::trackGpu(const wgpu::Queue& queue) {
+  const double start = emscripten_get_now();
+  // A frame that read a touch: timed from the touch to the GPU's "done"
+  // (each such frame, even while another measurement is in flight).
+  if (inputMs_ > 0) {
+    const double in = inputMs_, frameStart = frameStartMs_;
+    inputMs_ = 0;
+    queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
+                              [this, in, frameStart, start](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
+                                Lag& l = lags_[lagHead_];
+                                l.toFrame = static_cast<float>(frameStart - in);
+                                l.toSubmit = static_cast<float>(start - in);
+                                l.toDone = static_cast<float>(emscripten_get_now() - in);
+                                lagHead_ = (lagHead_ + 1) % kLagSamples;
+                                lagCount_ = std::min(lagCount_ + 1, kLagSamples);
+                              });
+  }
   if (gpuInFlight_) return;
   gpuInFlight_ = true;
-  const double start = emscripten_get_now();
   queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous,
                             [this, start](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
                               lastGpuMs_ = static_cast<float>(emscripten_get_now() - start);
@@ -212,7 +228,22 @@ std::string Profiler::json() const {
                   i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches, h.moves, h.eventsMs, h.gpuMs);
     j += b;
   }
-  j += "],\"extra\":" + extra + ",\"stages\":{";
+  j += "]";
+  // Touch to screen (J110.5): averages and the slowest of the last touches.
+  {
+    float f = 0, sub = 0, done = 0, worst = 0;
+    for (int i = 0; i < lagCount_; ++i) {
+      f += lags_[i].toFrame;
+      sub += lags_[i].toSubmit;
+      done += lags_[i].toDone;
+      worst = std::max(worst, lags_[i].toDone);
+    }
+    const float n = static_cast<float>(std::max(lagCount_, 1));
+    std::snprintf(b, sizeof(b), ",\"drawn\":%d,\"touchLag\":{\"n\":%d,\"toFrame\":%.1f,\"toSubmit\":%.1f,\"toDone\":%.1f,\"worst\":%.1f}",
+                  s.drawn, lagCount_, f / n, sub / n, done / n, worst);
+    j += b;
+  }
+  j += ",\"extra\":" + extra + ",\"stages\":{";
   for (size_t i = 0; i < stages_.size(); ++i) {
     std::snprintf(b, sizeof(b), "%s\"%s\":%.0f", i ? "," : "", stages_[i].first.c_str(), stages_[i].second);
     j += b;
