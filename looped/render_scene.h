@@ -101,6 +101,7 @@ struct RenderScene {
   Vec3 ambient;
   Vec3 fogColor;
   float fogDensity = 0;
+  float beamHaze = 0;  // light beams (J91.2): light the air catches per metre (the air's "beams")
   Vec3 spawnPosition;  // models of the room you start in load first
   // Makes the surface textures, one layer each (DrawObject::texture). Called
   // once the model downloads have started (making them takes a moment).

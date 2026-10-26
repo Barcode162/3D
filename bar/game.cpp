@@ -686,6 +686,9 @@ void handleCommands() {
     g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") && engine::settings::number("lampShadows", 0) == 0);
     // Soft shade (J91): Settings → Graphics → Soft shade, or ?ao=0.
     g_app.renderer.setSoftShade(g_app.hooks.feature("ao") && engine::settings::number("softShade", 0) == 0);
+    // Light beams (J91.2): Settings → Graphics → Light beams, or ?beams=0; ?haze= scales the place's haze.
+    g_app.renderer.setLightBeams(g_app.hooks.feature("beams") && engine::settings::number("lightBeams", 0) == 0);
+    g_app.renderer.setBeamStrength(g_app.hooks.number("haze", 1));
     g_app.renderer.setRoughFix(g_app.hooks.feature("roughfix"));
     g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
     g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);

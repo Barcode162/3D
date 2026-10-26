@@ -55,7 +55,7 @@
     "id": "J91.2",
     "text": "The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch",
     "check": "Stand at the stage door: soft beams under the stage lights; Light beams off: gone",
-    "done": false
+    "done": true
    },
    {
     "id": "J91.3",

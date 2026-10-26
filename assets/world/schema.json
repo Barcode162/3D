@@ -30,7 +30,8 @@
       "air": {"type": "object", "label": "Air", "about": "The room's ambient light and haze.", "fields": {
         "ambient": {"type": "color", "label": "Ambient light", "live": true},
         "fog": {"type": "color", "label": "Haze colour", "live": true},
-        "fogDensity": {"type": "number", "min": 0, "max": 0.2, "step": 0.002, "label": "Haze", "live": true}}},
+        "fogDensity": {"type": "number", "min": 0, "max": 0.2, "step": 0.002, "label": "Haze", "live": true},
+        "beams": {"type": "number", "min": 0, "max": 0.2, "step": 0.002, "label": "Light beams", "about": "How much lamp light the air catches per metre (J91.2): 0 = clear, 0.02 = a light haze, 0.08 = smoky."}}},
       "lightGrid": {"type": "object", "label": "Light grid", "about": "The box the baked light covers.", "fields": {
         "min": {"type": "vec3", "unit": "m", "label": "Low corner"}, "max": {"type": "vec3", "unit": "m", "label": "High corner"}}},
       "rooms": {"type": "list", "label": "Rooms", "about": "Boxes that stream their models in when you're near.", "item": {"type": "object", "fields": {

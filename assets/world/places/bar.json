@@ -2,7 +2,7 @@
   "id": "bar",
   "about": "The bar: every thing in it and where it sits. Parts are in the thing's own space (they turn with it), except floor rectangles (blocks, floors) and tap boxes, which keep the world's axes.",
   "kinds": ["kinds/bar.json"],
-  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.012},
+  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.012, "beams": 0.02},
   "spawn": {"at": [0.4, 1.65, 5.2], "yaw": 0},
   "lightGrid": {"min": [-12.5, 0, -16], "max": [9.5, 0, 8.5]},
   "rooms": [

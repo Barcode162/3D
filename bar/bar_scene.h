@@ -146,6 +146,7 @@ struct BarScene {
   engine::Vec3 ambient;
   engine::Vec3 fogColor;
   float fogDensity;
+  float beamHaze = 0;
   engine::Vec3 jukeboxSpeaker;  // where the music comes from
   engine::Vec3 arcadeSpeaker;   // the arcade's music (inside, by the machine)
   engine::Vec3 arcadeMin, arcadeMax;  // the arcade's floor (x, z): its music plays inside

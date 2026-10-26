@@ -28,6 +28,7 @@ engine::RenderScene renderSceneOf(const BarScene& scene) {
   r.ambient = scene.ambient;
   r.fogColor = scene.fogColor;
   r.fogDensity = scene.fogDensity;
+  r.beamHaze = scene.beamHaze;
   r.spawnPosition = scene.spawnPosition;
   r.makeTextures = buildBarTextures;
   r.avatarTextureScale = kAvatarTextureScale;

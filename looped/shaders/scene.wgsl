@@ -40,6 +40,11 @@ struct Frame {
   // gi2: probes along x, y, z, w = how much of it to use (0 = none yet).
   gi: vec4f,
   gi2: vec4f,
+  // Light beams (J91.2): the inverse of viewProj (a pixel's line of sight);
+  // x = how much light the haze catches per metre (0 = no beams), y = steps
+  // along each line, z = how far they go (m), w = frame number (the noise).
+  invViewProj: mat4x4f,
+  beams: vec4f,
 };
 
 fn classicLight() -> bool { return frame.env.w > 0.5; }
@@ -742,4 +747,78 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   // does the eyes and the curve); classic lighting leaves here tone mapped.
   if (frame.env.x > 0.5 || frame.env.w < 0.5) { return vec4f(color, 1.0); }
   return vec4f(pow(tonemap(color), vec3f(1.0 / 2.2)), 1.0);
+}
+
+// Light beams (J91.2, looped/beams.h): drawn at a quarter of the screen's
+// size into their own picture. Walks the pixel's line of sight from the eye
+// to the first solid thing (its distance from the soft shade's prepass,
+// aoTex.g, at twice this picture's size), and at each step adds the light of
+// the lamps that reach it and have a shadow map (blocked by what blocks
+// them); the haze catches `frame.beams.x` of it per metre, scattered evenly
+// all ways (1 / 4 pi). Lamps without a map add nothing (a glowing ball).
+// A noisy start per pixel turns steps into fine grain the add pass evens out.
+struct ScreenOut {
+  @builtin(position) pos: vec4f,
+};
+
+@vertex
+fn vs_screen(@builtin(vertex_index) i: u32) -> ScreenOut {
+  let p = vec2f(f32((i << 1u) & 2u), f32(i & 2u));
+  var o: ScreenOut;
+  o.pos = vec4f(p * 2.0 - 1.0, 0.0, 1.0);
+  return o;
+}
+
+fn beamNoise(px: vec2f) -> f32 {
+  return fract(52.9829189 * fract(dot(px, vec2f(0.06711056, 0.00583715))));
+}
+
+@fragment
+fn fs_beams(in: ScreenOut) -> @location(0) vec4f {
+  let sigma = frame.beams.x;
+  if (sigma <= 0.0) { return vec4f(0.0, 0.0, 0.0, 1.0); }
+  let aoSize = vec2i(textureDimensions(aoTex));
+  let px = min(vec2i(in.pos.xy) * 2, aoSize - 1);
+  let solid = textureLoad(aoTex, px, 0).g;  // 0: nothing there (the far reach)
+  let uv = (vec2f(px) + 1.0) / vec2f(aoSize);
+  let ndc = vec2f(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0);
+  let a = frame.invViewProj * vec4f(ndc, 0.0, 1.0);
+  let b = frame.invViewProj * vec4f(ndc, 0.5, 1.0);
+  let dir = normalize(b.xyz / b.w - a.xyz / a.w);
+  let eye = frame.cameraPos.xyz;
+  let reach = select(frame.beams.z, min(solid, frame.beams.z), solid > 0.0);
+  let steps = max(u32(frame.beams.y), 1u);
+  let ds = reach / f32(steps);
+  let jitter = fract(beamNoise(in.pos.xy) + frame.beams.w * 0.618034);
+  let g = lighting.grid;
+  var sum = vec3f(0.0);
+  for (var k = 0u; k < steps; k++) {
+    let t = (f32(k) + jitter) * ds;
+    let p = eye + dir * t;
+    let cx = u32(clamp(floor((p.x - g.x) * g.z), 0.0, f32(lighting.gridSize.x - 1u)));
+    let cz = u32(clamp(floor((p.z - g.y) * g.z), 0.0, f32(lighting.gridSize.y - 1u)));
+    let cell = lighting.cells[cz * lighting.gridSize.x + cx];
+    var here = vec3f(0.0);
+    for (var j = 0u; j < 16u; j++) {
+      let li = (cell[j / 4u] >> (8u * (j % 4u))) & 0xffu;
+      if (li == 0xffu) { break; }
+      let l = lighting.lights[li];
+      let slot = i32(l.params.y + 0.5) - 1;
+      if (slot < 0) { continue; }
+      let v = p - l.position.xyz;
+      let d2 = dot(v, v);
+      if (d2 >= l.position.w * l.position.w) { continue; }
+      let q = d2 / (l.position.w * l.position.w);
+      let window = clamp(1.0 - q * q, 0.0, 1.0);
+      // Not closer than 15 cm: no bright ball around the bulb.
+      let atten = window * window / max(d2, max(l.params.x * l.params.x, 0.0225));
+      let av = abs(v);
+      let major = max(av.x, max(av.y, av.z));
+      let depthRef = kShadowFar * (major - kShadowNear) / (major * (kShadowFar - kShadowNear));
+      let seen = textureSampleCompareLevel(shadowMaps, shadowSampler, v, slot, depthRef);
+      here += l.color.rgb * (l.color.w * atten * seen);
+    }
+    sum += here * exp(-sigma * t);
+  }
+  return vec4f(sum * (sigma * ds / (4.0 * kPi)), 1.0);
 }

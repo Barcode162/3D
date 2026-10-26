@@ -59,6 +59,8 @@ constexpr wgpu::Color kClearColor{0.02, 0.015, 0.015, 1.0};
 constexpr wgpu::Color kAvatarBackdrop{0.10, 0.10, 0.13, 1.0};
 constexpr float kSoftShadeRadius = 0.5f;    // metres around each point that can shade it (J91)
 constexpr float kSoftShadeStrength = 1.0f;
+constexpr uint32_t kBeamSteps = 16;  // light beams (J91.2): steps along each line of sight
+constexpr float kBeamReach = 20.0f;   // metres
 
 wgpu::ShaderModule loadShader(const wgpu::Device& device, const char* path) {
   auto source = engine::readTextFile(path);
@@ -184,6 +186,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   createEnvironment();
   createShadows();
   if (!ssao_.init(device)) LOG_ERROR("Soft shade: ssao.wgsl is missing.");
+  if (!beams_.init(device, engine::Gpu::kSceneFormat)) LOG_ERROR("Light beams: beams.wgsl is missing.");
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms", nullptr, false, i == 0));
   for (View& v : shadowViews_) v = makeView(envDummyView_, "lamp shadow frame uniforms", nullptr, true);
   // The capture's own views: they can't read the cube they draw into.
@@ -202,6 +205,7 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   const size_t lightCount = std::min<size_t>(scene.lights.size(), kMaxLights);
   setVec4(frame_.ambient, scene.ambient, 0);
   setVec4(frame_.fog, scene.fogColor, scene.fogDensity);
+  beamHaze_ = scene.beamHaze;
 
   mirrorTargets_.resize(mirrorCount_);
   for (MirrorTarget& m : mirrorTargets_) m.glassBuffer = makeUniformBuffer(device, sizeof(GlassUniforms), "glass");
@@ -696,6 +700,24 @@ bool SceneRenderer::createScenePipelines() {
     pd.vertex.bufferCount = 1;
     pd.vertex.buffers = &vertexLayout;
     engine::pipelines::create(device, pd, &aoObjectPipeline_);
+  }
+  // Light beams (J91.2): a full-screen pass with the frame's bindings.
+  {
+    wgpu::ColorTargetState beamTarget;
+    beamTarget.format = engine::LightBeams::kFormat;
+    wgpu::FragmentState beamFragment;
+    beamFragment.module = module;
+    beamFragment.entryPoint = "fs_beams";
+    beamFragment.targetCount = 1;
+    beamFragment.targets = &beamTarget;
+    wgpu::RenderPipelineDescriptor bd;
+    bd.label = "light beams";
+    bd.layout = engine::pipelines::pipelineLayout(device, frameLayout_);  // group 0 only
+    bd.vertex.module = module;
+    bd.vertex.entryPoint = "vs_screen";
+    bd.fragment = &beamFragment;
+    bd.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
+    engine::pipelines::create(device, bd, &beamsPipeline_);
   }
 
   wgpu::SamplerDescriptor samplerDesc;
@@ -1680,11 +1702,11 @@ void SceneRenderer::drawShadowFaces(const wgpu::CommandEncoder& encoder) {
 
 void SceneRenderer::setSoftShade(bool on) { aoOn_ = on; }  // render() rebinds views_[0]
 
-// Soft shade (J91): the solid things' depth and surface directions at half
+// Soft shade (J91; also what the light beams need): the solid things' depth and surface directions at half
 // size, then the shade from them (looped/ssao.h). A new size remakes the
 // main view's bindings (they hold the old textures).
 void SceneRenderer::drawSoftShade(const wgpu::CommandEncoder& encoder, const Mat4& viewProj, Vec3 eye,
-                                  const RoomView& cull) {
+                                  const RoomView& cull, float strength) {
   if (ssao_.resize(static_cast<uint32_t>(gpu_->width), static_cast<uint32_t>(gpu_->height)) && aoBound_)
     views_[0] = makeView(views_[0].env, "frame uniforms", views_[0].buffer, false, true);
   wgpu::RenderPassColorAttachment color;
@@ -1709,7 +1731,7 @@ void SceneRenderer::drawSoftShade(const wgpu::CommandEncoder& encoder, const Mat
   pass.SetPipeline(aoModelPipeline_);
   drawModels(pass, false, eye, cull);
   pass.End();
-  ssao_.encode(encoder, viewProj, eye, kSoftShadeRadius, kSoftShadeStrength);
+  ssao_.encode(encoder, viewProj, eye, kSoftShadeRadius, strength);
 }
 
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
@@ -1751,6 +1773,11 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   f.viewProj = viewProj;
   setVec4(f.cameraPos, eye, 1);
   setVec4(f.clipPlane, {0, 0, 0}, 1);  // keep everything
+  f.invViewProj = inverse(viewProj);
+  f.beams[0] = beamsOn_ ? beamHaze_ * beamScale_ : 0.0f;
+  f.beams[1] = static_cast<float>(kBeamSteps);
+  f.beams[2] = kBeamReach;
+  f.beams[3] = static_cast<float>(beamFrame_++ % 64);
   queue.WriteBuffer(views_[0].buffer, 0, &f, sizeof(f));
 
   wgpu::CommandEncoder encoder = gpu_->device.CreateCommandEncoder();
@@ -1793,13 +1820,34 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
   const RoomView cull = roomView(viewProj, roomAt(eye));
-  // Soft shade (J91): off with classic light and the tests' light.
-  const bool aoWanted = aoOn_ && !classic_ && !testLight_ && ssao_.ready() && aoModelPipeline_ && aoObjectPipeline_ &&
-                        post_.ready();
-  if (aoWanted) drawSoftShade(encoder, viewProj, eye, cull);
-  if (aoWanted != aoBound_) {
-    aoBound_ = aoWanted;
+  // Soft shade and light beams (J91): off with classic light and the tests'
+  // light. The beams need the prepass too (how far each pixel's first solid
+  // thing is); without the shade it runs at strength 0.
+  const bool lit = !classic_ && !testLight_ && post_.ready() && ssao_.ready() && aoModelPipeline_ && aoObjectPipeline_;
+  const bool beamsWanted = lit && beamsOn_ && beamHaze_ * beamScale_ > 0 && beams_.ready() && beamsPipeline_;
+  const bool prepass = lit && (aoOn_ || beamsWanted);
+  if (prepass) drawSoftShade(encoder, viewProj, eye, cull, aoOn_ ? kSoftShadeStrength : 0.0f);
+  if (prepass != aoBound_) {
+    aoBound_ = prepass;
     views_[0] = makeView(views_[0].env, "frame uniforms", views_[0].buffer, false, true);
+  }
+  if (beamsWanted) {
+    beams_.resize(ssao_.width(), ssao_.height());
+    wgpu::RenderPassColorAttachment beamColor;
+    beamColor.view = beams_.target();
+    beamColor.loadOp = wgpu::LoadOp::Clear;
+    beamColor.storeOp = wgpu::StoreOp::Store;
+    beamColor.clearValue = {0, 0, 0, 1};
+    wgpu::RenderPassDescriptor bd;
+    bd.label = "light beams";
+    bd.colorAttachmentCount = 1;
+    bd.colorAttachments = &beamColor;
+    wgpu::RenderPassEncoder beamPass = encoder.BeginRenderPass(&bd);
+    beamPass.SetPipeline(beamsPipeline_);
+    beamPass.SetBindGroup(0, views_[0].bindGroup);
+    beamPass.Draw(3);
+    engine::prof::draw(3);
+    beamPass.End();
   }
 
   // The scene draws offscreen as linear light; eyes and mood follow
@@ -1861,6 +1909,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   shadows_.upload(queue);
   shadows_.draw(pass);  // soft shadows under the avatars
   pass.End();
+  if (beamsWanted) beams_.composite(encoder, post_.sceneTarget());
   // Name pictures and text go on top, after the eyes and the mood.
   post_.apply(encoder, target, [&](const wgpu::RenderPassEncoder& p) {
     pictures.draw(p);

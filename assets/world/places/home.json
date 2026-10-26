@@ -2,7 +2,7 @@
   "id": "home",
   "about": "A small test home (E7.2): proof that a new place is a file. Built from plain boxes and the bar's furniture.",
   "kinds": ["kinds/bar.json", "kinds/home.json"],
-  "air": {"ambient": [0.08, 0.06, 0.05], "fog": [0.02, 0.015, 0.015], "fogDensity": 0.01},
+  "air": {"ambient": [0.08, 0.06, 0.05], "fog": [0.02, 0.015, 0.015], "fogDensity": 0.01, "beams": 0.01},
   "spawn": {"at": [0, 1.65, 2.2], "yaw": 0},
   "lightGrid": {"min": [-4, 0, -4], "max": [4, 0, 4]},
   "rooms": [{"id": "home", "min": [-3.25, -0.2, -3.25], "max": [3.25, 3.3, 3.25]}],

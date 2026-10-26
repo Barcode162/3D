@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J91 · A real engine, step 4** (the engine). A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
 - [x] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
-- [ ] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
+- [x] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
 - [ ] **J91.3** Tuned on the phone: the defaults from a ?perf=1 report by the fire *Check:* The bar stays smooth with both on
 
 ## 5. The road

@@ -24,7 +24,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 | `Reset all settings` | Every setting back to its default. |
 | `Reset to stock` | Car setup back to stock. |
 | `Send report` | Sends a report to help Claude fix lag and bugs; shows a code. |
-| `Settings` | Controls, Sound, Graphics, Screen, Switches; Send report; Reset all settings. Graphics: `Quality`, `Lighting`, `Lamp shadows` (On, Off: J97, the brightest lamps' shadows), `Soft shade` (On, Off: J91, ambient occlusion), `Mirror`, `Field of view`. |
+| `Settings` | Controls, Sound, Graphics, Screen, Switches; Send report; Reset all settings. Graphics: `Quality`, `Lighting`, `Lamp shadows` (On, Off: J97, the brightest lamps' shadows), `Soft shade` (On, Off: J91, ambient occlusion), `Light beams` (On, Off: J91.2, lamp light in the haze), `Mirror`, `Field of view`. |
 | `Stand up` | Get up from your seat (when seated). |
 | `Stop the piano` | Stops the piano's song. |
 | `Test my mic (record 4 s, play back)` | Records 4 seconds and plays them back. |

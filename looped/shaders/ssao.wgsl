@@ -55,6 +55,7 @@ fn fs_ao(in: VsOut) -> @location(0) vec4f {
   if (p.w < 0.5) { return vec4f(1.0, 0.0, 0.0, 1.0); }
   let n = normalize(textureLoad(normalTex, px, 0).xyz * 2.0 - 1.0);
   let dist = length(p.xyz - ao.eye.xyz);
+  if (ao.params.y <= 0.0) { return vec4f(1.0, dist, 0.0, 1.0); }  // beams only (soft shade off)
   let radius = ao.params.x;
   // The radius on screen, in pixels (at least 2, at most a quarter screen).
   let r = clamp(radius * ao.params.z / max(dist, 0.1), 2.0, ao.size.y * 0.25);

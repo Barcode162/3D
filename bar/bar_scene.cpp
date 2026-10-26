@@ -53,6 +53,7 @@ BarScene buildBarScene(const std::string& placeName) {
   scene.ambient = lay.ambient;
   scene.fogColor = lay.fogColor;
   scene.fogDensity = lay.fogDensity;
+  scene.beamHaze = lay.beamHaze;
   scene.spawnPosition = lay.spawnPosition;
   scene.spawnYaw = lay.spawnYaw;
   scene.lightGridMin = lay.lightGridMin;

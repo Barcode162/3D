@@ -182,6 +182,8 @@ thirds as strong (the glow itself was taken out in J92).
 
 **Soft shade (J91, 2026-10-26):** ambient occlusion in screen space (`looped/ssao.*`, `shaders/ssao.wgsl`). Before the main pass, the solid still things are drawn at half size into a depth and surface-direction prepass; for each pixel 12 samples in a spiral within 0.5 m say how much of the room nearby surfaces close in (Alchemy-style), a 4×4 blur follows the depth, and the main pass multiplies only the ambient and bounced light by it (never a lamp's direct light). The result also holds each pixel's distance: a surface the prepass didn't see (people, glass, moving things) gets no shade. Off with classic light and the tests' light. Settings → Graphics → Soft shade, `?ao=0`.
 
+**Light beams (J91.2, 2026-10-26):** volumetric light (`looped/beams.*`, `fs_beams` in `shaders/scene.wgsl`, `shaders/beams.wgsl`). At a quarter of the screen's size, each pixel's line of sight is walked in 16 steps (a noisy start per pixel, turned every frame) from the eye to the first solid thing (its distance comes from the soft shade's prepass, which then runs even with Soft shade off) or 20 m; at each step the lamps listed in that spot's light-grid cell that have a shadow map (J97) add their light, blocked by the map, never closer than 15 cm (no ball of light at the bulb); the air catches the place's `air.beams` per metre (bar 0.02, home 0.01, others 0), scattered evenly. Lamps without a map add nothing (an unblocked lamp in haze is a glowing ball: J92). An add pass softens it (4 taps) onto the scene before the eyes. Settings → Graphics → Light beams, `?beams=0`; `?haze=` scales the haze (try 0.5–3). Glass and people don't block beams yet.
+
 ## L3 Eyes and camera
 
 _Not built yet._

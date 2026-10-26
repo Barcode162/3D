@@ -29,6 +29,7 @@ struct PlaceLayout {
   // The air, where you come in, the rooms and the doorways.
   Vec3 ambient, fogColor;
   float fogDensity = 0;
+  float beamHaze = 0;  // the air's "beams" (J91.2)
   Vec3 spawnPosition;
   float spawnYaw = 0;  // radians
   Vec3 lightGridMin, lightGridMax;

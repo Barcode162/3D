@@ -32,6 +32,7 @@ PlaceLayout layOut(const World& world, const Json& place, const MaterialLookup& 
   out.ambient = readVec3(air["ambient"], {});
   out.fogColor = readVec3(air["fog"], {});
   out.fogDensity = static_cast<float>(air["fogDensity"].number(0));
+  out.beamHaze = static_cast<float>(air["beams"].number(0));
   out.spawnPosition = readVec3(place["spawn"]["at"], {});
   out.spawnYaw = radians(static_cast<float>(place["spawn"]["yaw"].number(0)));
   out.lightGridMin = readVec3(place["lightGrid"]["min"], {});
@@ -165,6 +166,7 @@ RenderScene renderSceneOf(const PlaceLayout& layout, const MaterialLookup& mater
   r.ambient = layout.ambient;
   r.fogColor = layout.fogColor;
   r.fogDensity = layout.fogDensity;
+  r.beamHaze = layout.beamHaze;
   r.spawnPosition = layout.spawnPosition;
   return r;
 }

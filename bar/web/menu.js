@@ -21,7 +21,7 @@ window.bar3dSettings = (function () {
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (looped/profiler)
     // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (looped/quality.h); fov: degrees, up/down.
-    quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1],
+    quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
   };
   function defaultOf(k) { var d = SCHEMA[k]; return Array.isArray(d) ? d[0] : d; }
   // The value if it fits the schema, else undefined.
@@ -469,6 +469,8 @@ window.bar3dUi = (function () {
       el('div', { class: 'mSmall', text: 'Stools, tables and the counter block the lamps\u2019 light and their shine on the floor.' }),
       choice('Soft shade', 'softShade', ['On', 'Off']),
       el('div', { class: 'mSmall', text: 'A soft shadow where things meet: under the stools, in corners, where a glass stands on the counter.' }),
+      choice('Light beams', 'lightBeams', ['On', 'Off']),
+      el('div', { class: 'mSmall', text: 'The lamps\u2019 light shows faintly in the air, cut where things block it.' }),
       choice('Mirror', 'mirrorQ', ['Full', 'Simple']),
       el('div', { class: 'mSmall', text: 'Simple: a softer reflection without small things far away (people and things near the glass stay).' }),
       slider('Field of view', 'fov', 50, 100, 1, function (v) { return Math.round(v) + '\u00b0'; }),
