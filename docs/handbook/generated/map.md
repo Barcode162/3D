@@ -17,7 +17,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
 | `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
 | `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 3 | JSON | deploy.yml → home/bar |
-| `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 155 | C++, pictures, JavaScript | deploy.yml → home/bar |
+| `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 157 | C++, pictures, JavaScript | deploy.yml → home/bar |
 | `bar/projects/` | The bar's projects, each with its project.json (web: copied to the site; native: built into the game). | 48 | C++, JavaScript, JSON | deploy.yml → home/bar |
 | `bar/projects/chess/` | The lounge's chessboard and its computer player (C++). | 5 | C++, JSON | deploy.yml → home/bar |
 | `bar/projects/mania/` | 4K Mania, the rhythm game (a web page inside the bar). | 5 | C++, JSON | deploy.yml → home/bar |

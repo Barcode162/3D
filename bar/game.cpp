@@ -27,6 +27,7 @@
 #include "bar/loader.h"
 #include "bar/renderer.h"
 #include "bar/test_hooks.h"
+#include "bar/gpu_check.h"
 #include "bar/projects/chess/chess.h"
 #include "bar/projects/mania/rhythm.h"
 #include "bar/shared_world.h"
@@ -613,6 +614,8 @@ void handleCommands() {
           st.v[k] = static_cast<int>(j[static_cast<size_t>(k)].number());
         applyStyle(st, true);
       }
+    } else if (c.name == "gpuCheck") {  // Settings → Help Claude fix lag → Check the GPU (J107.2)
+      app::startGpuCheck(engine::clockMs());
     } else if (c.name == "chessMove") {  // the full-screen board (J101, bar/web/chess.js): a = from * 64 + to
       g_app.chess.pageMove(static_cast<int>(c.a) / 64, static_cast<int>(c.a) % 64, engine::clockMs());
     } else if (c.name == "chessNew") {
@@ -1381,7 +1384,9 @@ void frame(double rafMs) {
     lastBackLogMs = ft.nowMs;
   }
   updateLoadingScreen();
-  watchQuality(ft.nowMs);
+  // The GPU check (J107.2) steps through its features; Auto waits meanwhile.
+  if (app::gpuCheckRunning()) app::updateGpuCheck(ft.nowMs);
+  else watchQuality(ft.nowMs);
   g_app.gpu.resizeIfNeeded();
   updateFps(ft.nowMs);
   FrameIn f{ft.nowMs, ft.dt, {}, {}};

@@ -119,6 +119,9 @@ class Profiler {
 
   // Overlay on/off (settings "perf" or ?perf=1).
   bool overlay = false;
+  // Extra numbers a game adds to the JSON (one JSON object, e.g. the bar's
+  // GPU check, J107.2): shown as "extra".
+  std::string extra = "null";
   // Queues the overlay into the text renderer (W, H in device pixels; px =
   // device pixels per CSS pixel). Call before text.upload().
   void drawOverlay(TextRenderer& text, float W, float H, float px);

@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J107 · Quality in four levels (Low, Medium, High, Ultra) for everything the engine draws** (the engine). Quality in four levels (Low, Medium, High, Ultra) for everything the engine draws: resolution, lamps per pixel, lamp shadows, soft shade, light beams, bounced light, reflections, the mirror, the fire; Auto moves between Low and High; then the GPU time of each pass in the phone report, and the fixes for the biggest costs (request 2026-10-26 #13, report YYXLV8) · N5
 - [x] **J107.1** Quality in four levels: Low, Medium, High, Ultra (and Auto between Low and High), each setting resolution, lamps per pixel, lamp shadows, soft shade, light beams, bounced light, reflections, the mirror and the fire together *Check:* Settings → Graphics → Quality: four levels and Auto; Low runs smooth; Ultra is the sharpest
-- [ ] **J107.2** The GPU time of each pass in the phone report and the performance overlay, so the biggest costs show by name *Check:* Send a report: it names what takes the GPU's time
+- [x] **J107.2** The GPU time of each pass in the phone report and the performance overlay, so the biggest costs show by name *Check:* Send a report: it names what takes the GPU's time
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

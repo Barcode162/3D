@@ -46,3 +46,7 @@ At the lounge chessboard, `FULL SCREEN` (between the game's two buttons) lays th
 ## Settings → Pointer (2026-10-26 #12)
 
 The crosshair and its editor (`bar/web/crosshair.js`). A preview of the crosshair on a dark disc stays docked at the top of the panel while you scroll through these settings and scrolls away after them. `Crosshair: tap anywhere to use what it points at` (on: drawn at the screen's centre; a tap anywhere uses what the centre points at), `Shape` (`Dot`, `Cross`, `Cross + dot`, `Circle`, `Circle + dot`), `Size`, `Thickness`, `Gap` (px), `Colour` (eight swatches), `Opacity`, `Dark outline`.
+
+## Settings → Help Claude fix lag (J107.2)
+
+`Check the GPU (20 s), then send a report` closes the menu and, for about 20 seconds, draws the bar as it is, then with one feature off at a time (soft shade, light beams, lamp shadows, bounced light, 6 lamps a pixel, 1x pixels), measuring each (`bar/gpu_check.cpp`); a toast says when it's done. `Send report` then carries the results (`perf.extra.gpuCheck`), so the code names what costs the most on that phone.

@@ -54,7 +54,7 @@
     "id": "J107.2",
     "text": "The GPU time of each pass in the phone report and the performance overlay, so the biggest costs show by name",
     "check": "Send a report: it names what takes the GPU's time",
-    "done": false
+    "done": true
    }
   ]
  },

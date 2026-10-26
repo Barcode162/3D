@@ -210,7 +210,7 @@ std::string Profiler::json() const {
                   i ? "," : "", h.atMs, h.intervalMs, h.cpuMs, phaseName(h.phase), h.phaseMs, h.touches, h.moves, h.eventsMs, h.gpuMs);
     j += b;
   }
-  j += "],\"stages\":{";
+  j += "],\"extra\":" + extra + ",\"stages\":{";
   for (size_t i = 0; i < stages_.size(); ++i) {
     std::snprintf(b, sizeof(b), "%s\"%s\":%.0f", i ? "," : "", stages_[i].first.c_str(), stages_[i].second);
     j += b;
