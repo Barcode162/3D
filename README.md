@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J100.1 A real piano: the Salamander Grand Piano's recorded notes (Alexander Holm, CC BY 3.0) replace the synth: 30 notes in 4 loudness layers (7.5 MB), loaded when someone plays, the synth until each arrives; the engine can play sounds from files; Help → Credits names it
+
+`b24a760` · 2026-10-26 09:39 · 135 files, +182 −16 · tests: none
+
+Phone check: Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same
+
 ## J101.1 Chess full screen: a FULL SCREEN button at the lounge board lays it flat over the game like the chess sites (status, board with the last move, move dots and the check glow, Leave, New game, 3D view), in six calm themes (Walnut, Sage, Dusk, Coral, Slate, Night) that set the squares, the pieces (classic or round, our own drawings) and the background together; the theme is kept
 
 `64e0cd7` · 2026-10-26 09:24 · 10 files, +328 −9 · tests: none
