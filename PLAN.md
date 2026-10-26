@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J106 · The world remake, step 6, the room shells remade** (the world). The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
-- [ ] **J106.1** The room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows things of their own *Check:* Walk the bar: walls, floor and ceiling meet cleanly, no gaps or flicker; the doors and windows are where they were
+**J74 · The world remake, step 6, the room shells remade** (the world). Lights, haze, highlight and the crosshair (request 2026-10-26 #12): the user's notes from the phone, before the room shells (now J106) · N3
+- [x] **J74.1** A little less haze in the light beams; the highlight on the thing you can tap softer; the string lights, the mirror's bulbs and the spotlights give real light at their small real lumens instead of invisible helper lamps; Settings → Pointer: a crosshair that taps what it points at, with an editor whose preview docks at the top *Check:* Look up at the string lights and the mirror: they light their surroundings; stand at something: its glow is gentle; Settings → Pointer: turn the crosshair on, tap anywhere: it uses what the centre points at
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes from the phone first, 2026-10-26 #12; then the shells and the new rooms)
+**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes from the phone first as J74, 2026-10-26 #12; then the shells and the new rooms)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,6 +126,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J74 — A change to the floor and walls (with the shells); music only with a licence that allows it, like the jukebox's CC-BY tracks
 - [ ] **J105** A holographic race broadcast in a wall recess above the sim rigs: the whole track as a spinning hologram, one camera on both drivers that splits smoothly into one per driver when they separate (one camera in solo play), the placing at the top, a minimap of the track with both cars in two colours at the bottom (request 2026-10-26 #8) · N3 N4
   *Verdict:* Doable after J73 — J73
+- [ ] **J106** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
+  *Verdict:* Doable now — The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)
 
 ### The site
 
