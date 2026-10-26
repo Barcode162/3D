@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J97.1 Lamp shadows: the 16 brightest lamps keep cube shadow maps of the still things (drawn once, 12 faces a frame, again when rooms load or the Studio moves things; a lamp's own model left out); their light and highlights blocked by stools, tables, the counter, no more probe squares; Settings → Graphics → Lamp shadows, ?shadows=0
+
+`1cd9231` · 2026-10-26 02:43 · 12 files, +269 −19 · tests: none
+
+Phone check: Stand by the bar stools: under each stool the floor is darker and the lamps' reflections stop where stools and tables are; no squares of light on the walls; Settings → Graphics → Lamp shadows off brings back the old look
+
 ## J98.2 Tables softer (roughness 0.32 → 0.42), the floor a little shinier (0.75 → 0.62), brushed steel calmer (0.38 → 0.45), the whole bar a third of a stop darker; the squares' cause confirmed and moved into J97 (lamp shadows)
 
 `1be7df8` · 2026-10-26 01:56 · 9 files, +49 −51 · tests: none
