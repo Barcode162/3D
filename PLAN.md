@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J102 · A real fire** (the world). A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8) · N3
-- [x] **J102.1** The fire drawn by a shader: flames from moving noise (shape, heat colour from deep red to yellow-white, flicker, rising embers) in place of the moving pictures; out: embers glow *Check:* Stand by the fire: the flames move and change like a real fire, no flat pictures; tap it: the fire goes out to glowing embers
+**J99 · Real books to read** (the world). Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8) · N3
+- [ ] **J99.1** Real books: tap the lounge bookshelf to pick one of several public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity, and more) and read it in a reader with pages to turn, your place kept *Check:* Tap the bookshelf: pick Crime and Punishment, read, turn pages, close it; open it again: you're on the same page
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J99 → J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
+**Up next, in order:** J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -126,8 +126,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J75 — The light rule (light only from light sources) and the light engine exist; the lights move from helper spots onto their things
 - [ ] **J77** The world remake, step 9, sound with the things: every thing that makes a sound carries it (the fire crackles from the fireplace, music from the speakers, glasses clink where they are), from its material's sound. · N3
   *Verdict:* Doable after J75 — The sound engine and the materials' sounds exist; sources move onto their things; your phone judges how it sounds
-- [ ] **J99** Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8) · N3
-  *Verdict:* Doable now — Public-domain texts from Project Gutenberg (Charter: assets need a licence that allows them, public domain does)
 - [ ] **J100** A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
   *Verdict:* Doable now — The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)
 - [ ] **J101** Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
@@ -277,6 +275,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722
 - `e4a1905` J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13
 - `0d40f55` J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37
 - `35e68bb` J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
