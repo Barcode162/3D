@@ -541,7 +541,7 @@
     }
     // The bridges C++ talks to, in order, then the app itself.
     versionChecked.then(function () {
-      ['bridge.js', 'audio.js', 'proto.js', 'net.js', 'menu.js', 'voice.js', 'account.js', 'live.js', 'reader.js', 'chess.js'].forEach(function (name) {
+      ['bridge.js', 'audio.js', 'proto.js', 'net.js', 'menu.js', 'crosshair.js', 'voice.js', 'account.js', 'live.js', 'reader.js', 'chess.js'].forEach(function (name) {
         var s = document.createElement('script');
         s.src = name + '?v=' + build;
         s.async = false;

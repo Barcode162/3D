@@ -2,7 +2,7 @@
   "id": "bar",
   "about": "The bar: every thing in it and where it sits. Parts are in the thing's own space (they turn with it), except floor rectangles (blocks, floors) and tap boxes, which keep the world's axes.",
   "kinds": ["kinds/bar.json"],
-  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.012, "beams": 0.02},
+  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.012, "beams": 0.014},
   "spawn": {"at": [0.4, 1.65, 5.2], "yaw": 0},
   "lightGrid": {"min": [-12.5, 0, -16], "max": [9.5, 0, 8.5]},
   "rooms": [
@@ -3060,35 +3060,303 @@
       }
     },
     {
-      "id": "light-groove-1",
+      "id": "string-light-1-1",
       "kind": "light-groove",
-      "at": [-1.8, 3.2, 0.4],
-      "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 1.7, "range": 6.5, "radius": 0.8, "dims": true, "lumens": 306, "kelvin": 2400}
-      }
-    },
-    {
-      "id": "light-groove-2",
-      "kind": "light-groove",
-      "at": [2.8, 3.2, 2.2],
+      "at": [-6.25, 3.275, -1.65],
       "parts": {
         "light": {
           "color": [1, 1, 1],
-          "intensity": 1.6,
-          "range": 6.5,
-          "radius": 0.04,
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
           "dims": true,
-          "lumens": 288,
-          "kelvin": 2400
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.816, -0.069, 0.573],
+          "length": 5.757
         }
       }
     },
     {
-      "id": "light-groove-3",
+      "id": "string-light-1-2",
       "kind": "light-groove",
-      "at": [-3, 3.2, 4.6],
+      "at": [-1.55, 3.075, 1.65],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 1.2, "range": 5, "radius": 0.8, "dims": true, "lumens": 216, "kelvin": 2400}
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.818, 0.0, 0.575],
+          "length": 5.743
+        }
+      }
+    },
+    {
+      "id": "string-light-1-3",
+      "kind": "light-groove",
+      "at": [3.15, 3.275, 4.95],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.816, 0.069, 0.573],
+          "length": 5.757
+        }
+      }
+    },
+    {
+      "id": "string-light-2-1",
+      "kind": "light-groove",
+      "at": [-6.25, 3.275, 4.95],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.816, -0.069, -0.573],
+          "length": 5.757
+        }
+      }
+    },
+    {
+      "id": "string-light-2-2",
+      "kind": "light-groove",
+      "at": [-1.55, 3.075, 1.65],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.818, 0.0, -0.575],
+          "length": 5.743
+        }
+      }
+    },
+    {
+      "id": "string-light-2-3",
+      "kind": "light-groove",
+      "at": [3.15, 3.275, -1.65],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.816, 0.069, -0.573],
+          "length": 5.757
+        }
+      }
+    },
+    {
+      "id": "string-light-3-1",
+      "kind": "light-groove",
+      "at": [-1.9, 3.275, -1.75],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 233,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.802, -0.076, 0.592],
+          "length": 5.235
+        }
+      }
+    },
+    {
+      "id": "string-light-3-2",
+      "kind": "light-groove",
+      "at": [2.3, 3.075, 1.35],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 233,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.805, 0.0, 0.594],
+          "length": 5.22
+        }
+      }
+    },
+    {
+      "id": "string-light-3-3",
+      "kind": "light-groove",
+      "at": [6.5, 3.275, 4.45],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 233,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.802, 0.076, 0.592],
+          "length": 5.235
+        }
+      }
+    },
+    {
+      "id": "string-light-4-1",
+      "kind": "light-groove",
+      "at": [-5.733, 3.275, 2.2],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.998, -0.07, 0.0],
+          "length": 5.747
+        }
+      }
+    },
+    {
+      "id": "string-light-4-2",
+      "kind": "light-groove",
+      "at": [-0.0, 3.075, 2.2],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [1.0, 0.0, 0.0],
+          "length": 5.733
+        }
+      }
+    },
+    {
+      "id": "string-light-4-3",
+      "kind": "light-groove",
+      "at": [5.733, 3.275, 2.2],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 3.5,
+          "radius": 0.03,
+          "dims": true,
+          "lumens": 258,
+          "kelvin": 2200,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0.998, 0.07, 0.0],
+          "length": 5.747
+        }
+      }
+    },
+    {
+      "id": "mirror-light",
+      "kind": "light-bulb",
+      "at": [8.85, 3.76, 3.6],
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 4.5,
+          "radius": 0.035,
+          "dims": true,
+          "lumens": 480,
+          "kelvin": 2400,
+          "shape": "tube",
+          "center": [0, 0, 0],
+          "axis": [0, 0, 1],
+          "length": 3.3
+        }
+      }
+    },
+    {
+      "id": "stage-spot-1",
+      "kind": "light-bulb",
+      "at": [-6.366, 3.316, 4.644],
+      "parts": {
+        "light": {"color": [1, 1, 1], "intensity": 1, "range": 5, "radius": 0.07, "dims": false, "lumens": 200, "kelvin": 3000}
+      }
+    },
+    {
+      "id": "stage-spot-2",
+      "kind": "light-bulb",
+      "at": [-6.392, 3.323, 5.414],
+      "parts": {
+        "light": {"color": [1, 1, 1], "intensity": 1, "range": 5, "radius": 0.07, "dims": false, "lumens": 200, "kelvin": 3000}
+      }
+    },
+    {
+      "id": "stage-spot-3",
+      "kind": "light-bulb",
+      "at": [-6.354, 3.308, 6.185],
+      "parts": {
+        "light": {"color": [1, 1, 1], "intensity": 1, "range": 5, "radius": 0.07, "dims": false, "lumens": 200, "kelvin": 3000}
+      }
+    },
+    {
+      "id": "dart-spot-1",
+      "kind": "light-bulb",
+      "at": [5.672, 3.718, 5.647],
+      "parts": {
+        "light": {"color": [1, 1, 1], "intensity": 1, "range": 4, "radius": 0.04, "dims": false, "lumens": 150, "kelvin": 3000}
+      }
+    },
+    {
+      "id": "dart-spot-2",
+      "kind": "light-bulb",
+      "at": [6.328, 3.718, 5.647],
+      "parts": {
+        "light": {"color": [1, 1, 1], "intensity": 1, "range": 4, "radius": 0.04, "dims": false, "lumens": 150, "kelvin": 3000}
       }
     },
     {
@@ -3105,22 +3373,10 @@
       "parts": {"light": {"color": [1, 1, 1], "intensity": 1.1, "range": 4, "radius": 0.04, "lumens": 198, "kelvin": 2400}}
     },
     {
-      "id": "light-bulb-9",
-      "kind": "light-bulb",
-      "at": [-6.4, 3.4, 4.6],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 3.2, "range": 5.5, "radius": 0.07, "lumens": 576, "kelvin": 2400}}
-    },
-    {
       "id": "light-neon-2",
       "kind": "light-neon",
       "at": [-7.8, 3.2, 6.4],
       "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.04, "lumens": 288, "kelvin": 3000}}
-    },
-    {
-      "id": "light-bulb-10",
-      "kind": "light-bulb",
-      "at": [6, 3, 5.6],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.5, "range": 4, "radius": 0.15, "lumens": 270, "kelvin": 2400}}
     },
     {
       "id": "light-neon-3",
@@ -3153,12 +3409,6 @@
       "parts": {"light": {"color": [1, 0.3, 0.7], "intensity": 0.8, "range": 3, "radius": 0.09, "lumens": 144}}
     },
     {"id": "light-jukebox", "kind": "light-jukebox", "at": [-3.8, 1.2, 5.85]},
-    {
-      "id": "light-bulb-11",
-      "kind": "light-bulb",
-      "at": [7.8, 3.6, 3.6],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 5.5, "radius": 0.6, "lumens": 288, "kelvin": 2400}}
-    },
     {
       "id": "light-neon-6",
       "kind": "light-neon",

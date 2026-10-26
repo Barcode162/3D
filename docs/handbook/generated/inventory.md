@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (569 things)
+## bar (581 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -468,20 +468,32 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `light-bulb-5` | `light-bulb` |  |  | no model |
 | `light-bulb-6` | `light-bulb` |  |  | no model |
 | `light-bulb-7` | `light-bulb` |  |  | no model |
-| `light-groove-1` | `light-groove` |  |  | no model |
-| `light-groove-2` | `light-groove` |  |  | no model |
-| `light-groove-3` | `light-groove` |  |  | no model |
+| `string-light-1-1` | `light-groove` |  |  | no model |
+| `string-light-1-2` | `light-groove` |  |  | no model |
+| `string-light-1-3` | `light-groove` |  |  | no model |
+| `string-light-2-1` | `light-groove` |  |  | no model |
+| `string-light-2-2` | `light-groove` |  |  | no model |
+| `string-light-2-3` | `light-groove` |  |  | no model |
+| `string-light-3-1` | `light-groove` |  |  | no model |
+| `string-light-3-2` | `light-groove` |  |  | no model |
+| `string-light-3-3` | `light-groove` |  |  | no model |
+| `string-light-4-1` | `light-groove` |  |  | no model |
+| `string-light-4-2` | `light-groove` |  |  | no model |
+| `string-light-4-3` | `light-groove` |  |  | no model |
+| `mirror-light` | `light-bulb` |  |  | no model |
+| `stage-spot-1` | `light-bulb` |  |  | no model |
+| `stage-spot-2` | `light-bulb` |  |  | no model |
+| `stage-spot-3` | `light-bulb` |  |  | no model |
+| `dart-spot-1` | `light-bulb` |  |  | no model |
+| `dart-spot-2` | `light-bulb` |  |  | no model |
 | `light-neon-1` | `light-neon` |  |  | no model |
 | `light-fire` | `light-fire` |  |  | no model |
 | `light-bulb-8` | `light-bulb` |  |  | no model |
-| `light-bulb-9` | `light-bulb` |  |  | no model |
 | `light-neon-2` | `light-neon` |  |  | no model |
-| `light-bulb-10` | `light-bulb` |  |  | no model |
 | `light-neon-3` | `light-neon` |  |  | no model |
 | `light-neon-4` | `light-neon` |  |  | no model |
 | `light-neon-5` | `light-neon` |  |  | no model |
 | `light-jukebox` | `light-jukebox` |  |  | no model |
-| `light-bulb-11` | `light-bulb` |  |  | no model |
 | `light-neon-6` | `light-neon` |  |  | no model |
 | `light-neon-wave-1` | `light-neon-wave` |  |  | no model |
 | `light-neon-wave-2` | `light-neon-wave` |  |  | no model |

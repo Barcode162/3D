@@ -22,6 +22,12 @@ window.bar3dSettings = (function () {
     perf: false,  // performance overlay (looped/profiler)
     // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (looped/quality.h); fov: degrees, up/down.
     quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
+    // The crosshair (the user, 2026-10-26 #12; bar/web/crosshair.js): on, a tap
+    // anywhere uses what the centre points at. Shape 0 dot, 1 cross, 2 cross
+    // and dot, 3 circle, 4 circle and dot; size, thickness, gap in CSS px;
+    // colour 0..7 (crosshair.js COLORS); opacity; an outline.
+    crosshair: false, chShape: [2, 0, 4], chSize: [10, 2, 40], chThick: [2, 1, 6], chGap: [3, 0, 16],
+    chColor: [0, 0, 7], chOpacity: [0.9, 0.2, 1], chOutline: true,
   };
   function defaultOf(k) { var d = SCHEMA[k]; return Array.isArray(d) ? d[0] : d; }
   // The value if it fits the schema, else undefined.
@@ -145,6 +151,9 @@ window.bar3dUi = (function () {
       '.avSwatch{width:38px;height:38px;border-radius:50%;border:3px solid #241a2b;box-shadow:inset 0 3px 0 #fff6,0 3px 0 #241a2b;}',
       '.avSwatch.on{outline:3px solid #ffe066;outline-offset:2px;}',
       '.avDot{display:block;width:34px;height:34px;border-radius:50%;margin:4px auto 6px;border:3px solid #241a2b;}',
+      '.chSection{position:relative;}',
+      '.chPreview{position:sticky;top:-16px;z-index:2;height:96px;margin:0 -16px 8px;display:flex;align-items:center;justify-content:center;',
+      '  background:radial-gradient(circle,#3a2d40 0%,#1a1220 75%);border-bottom:1px solid #ffffff14;}',
       '.mPanel{width:min(94vw,420px);max-height:78vh;overflow:auto;background:#1a1220f2;border-radius:20px;',
       'box-shadow:0 10px 40px #000a;padding:16px 16px 12px;-webkit-overflow-scrolling:touch;}',
       '.mPanel h2{margin:0 0 10px;font-size:20px;display:flex;justify-content:space-between;align-items:center;}',
@@ -233,6 +242,38 @@ window.bar3dUi = (function () {
       } }));
     });
     return el('div', {}, [el('label', { text: label }), row]);
+  }
+
+  // The crosshair's editor: its preview docks at the top of the panel while you
+  // scroll through these settings (CSS sticky inside this section), and
+  // scrolls away with the section once you're past it.
+  function crosshairEditor() {
+    var X = window.bar3dCrosshair;
+    var preview = el('div', { class: 'chPreview' });
+    var draw = function () { preview.innerHTML = X ? X.svg(true) : ''; };
+    draw();
+    S.onChange(function (k) { if (k === '*' || /^(crosshair|ch)/.test(k)) draw(); });
+    var swatches = el('div', { class: 'mChoice' });
+    (X ? X.COLORS : []).forEach(function (c, i) {
+      var b = el('button', { class: S.get('chColor') === i ? 'on' : '', 'aria-label': c.name, onclick: function () {
+        S.set('chColor', i);
+        [].forEach.call(swatches.children, function (s, j) { s.classList.toggle('on', j === i); });
+      } });
+      b.style.cssText = 'min-width:30px;height:30px;padding:0;background:' + c.hex;
+      swatches.appendChild(b);
+    });
+    var px = function (v) { return Math.round(v) + ' px'; };
+    return el('div', { class: 'chSection' }, [
+      preview,
+      toggle('Crosshair: tap anywhere to use what it points at', 'crosshair'),
+      choice('Shape', 'chShape', ['Dot', 'Cross', 'Cross + dot', 'Circle', 'Circle + dot']),
+      slider('Size', 'chSize', 2, 40, 1, px),
+      slider('Thickness', 'chThick', 1, 6, 1, px),
+      slider('Gap', 'chGap', 0, 16, 1, px),
+      el('div', {}, [el('label', { text: 'Colour' }), swatches]),
+      slider('Opacity', 'chOpacity', 0.2, 1, 0.05, pct),
+      toggle('Dark outline', 'chOutline'),
+    ]);
   }
 
   // ---- Panels ----
@@ -458,6 +499,8 @@ window.bar3dUi = (function () {
       el('h3', { text: 'Controls' }),
       slider('Look speed', 'lookSpeed', 0.3, 2.5, 0.1, function (v) { return v.toFixed(1) + 'x'; }),
       toggle('Invert look up/down', 'invertLook'),
+      el('h3', { text: 'Pointer' }),
+      crosshairEditor(),
       el('h3', { text: 'Screen' }),
       toggle('Show name tags', 'showNames'),
       toggle('Performance overlay', 'perf'),

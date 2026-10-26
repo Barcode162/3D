@@ -64,7 +64,7 @@ constexpr float kLabelShowDistance = 6.0f;   // name tags appear within this ran
 constexpr float kPromptDistance = 2.2f;      // ...and their prompt this close
 constexpr float kDirectReach = 2.6f;         // small things: looked at within this range
 constexpr float kTapReach = 4.0f;            // how far away a tap can use things
-constexpr float kHighlightGlow = 0.35f;      // extra glow on the thing you're at
+constexpr float kHighlightGlow = 0.12f;      // extra glow on the thing you're at (softer: the user, 2026-10-26 #12)
 constexpr double kBannerMs = 7000;           // "now playing" banner duration
 constexpr double kIntroMaxMs = 12000;        // title + controls hint on start...
 constexpr double kIntroAfterInputMs = 1500;  // ...until shortly after you first move
@@ -173,6 +173,7 @@ struct App {
   bool joined = false;      // in the multiplayer room
   float lookSpeed = 1, invertLook = 1;
   bool showNames = true;
+  bool crosshair = false;           // Settings → Pointer: taps use the screen's centre
 
   float eyeHeight = 1.65f;  // eyes above the floor you stand on
   int focused = -1;      // interactable you're standing at and facing

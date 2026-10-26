@@ -186,6 +186,8 @@ thirds as strong (the glow itself was taken out in J92).
 
 **The fire (J102, 2026-10-26):** the fireplace's flames are a flame volume, not pictures: `fire_flames.glb` is a box whose material has the glTF extras `looped_flame: 1` (its base colour = the box's half depth, height and half width). `fs_model_blend` (`shaders/scene.wgsl`, flameVolume) marches the line of sight through the box in the model's own space (24 steps): flames of different heights along the logs from rising noise (`frame.clock`, seconds), finer noise on their edges, colour from deep red to yellow by heat, see-through where thin. The kind's glow loop dims it (embers), scale.y shrinks it. Its light is still the flickering point light `light-fire`.
 
+**Lights from their own sources (2026-10-26 #12):** the three helper lamps under the ceiling (light-groove, with no visible source), the helper by the mirror and the single lamps standing in for the stage's PAR cans and the darts spotlights are gone. The string lights give their own light: each of the four strands is three tube lights along its sag (about 25 lm a bulb, 2200 K; they swell with the music); the mirror's vanity bar is one tube along its 12 globes (480 lm, 2400 K); each PAR can and dart spotlight has its own small lamp just in front of its lens (200 and 150 lm, 3000 K). The bar's haze for the light beams is 0.014 (was 0.02).
+
 ## L3 Eyes and camera
 
 _Not built yet._

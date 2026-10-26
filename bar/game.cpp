@@ -668,6 +668,8 @@ void handleCommands() {
     g_app.lookSpeed = static_cast<float>(engine::settings::number("lookSpeed", 1));
     g_app.invertLook = engine::settings::number("invertLook", 0) != 0 ? -1.0f : 1.0f;
     g_app.showNames = engine::settings::number("showNames", 1) != 0;
+    // The crosshair (Settings → Pointer, bar/web/crosshair.js): taps use the centre.
+    g_app.crosshair = engine::settings::number("crosshair", 0) != 0;
     engine::profiler().overlay = g_app.hooks.perf || engine::settings::number("perf", 0) != 0;
     const int quality = g_app.hooks.quality >= 0 ? g_app.hooks.quality
                                                  : static_cast<int>(engine::settings::number("quality", 0));
@@ -888,7 +890,8 @@ void updateInteraction(double nowMs, float dt) {
       continue;
     }
     if (g_app.bartender.tap(tap, W, H, nowMs, cam.position)) continue;
-    const Vec3 dir = screenRay(tap);
+    // With the crosshair on, a tap anywhere uses what the centre points at.
+    const Vec3 dir = screenRay(g_app.crosshair ? engine::Vec2{0.5f, 0.5f} : tap);
     if (g_app.darts.playing()) {
       g_app.darts.throwAt(cam.position, dir, nowMs);
       g_app.act.restart(nowMs);  // the throw animation

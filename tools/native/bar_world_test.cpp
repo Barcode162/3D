@@ -60,8 +60,10 @@ int main() {
     if (k == "light-sign") signs += engine::distance(p, scene.arcadeDoor) < 2.5f;
     if (k == "light-jukebox") jukes += engine::distance(p, scene.jukeboxSpeaker) < 1.5f;
   }
-  check(grooves == 3 && waves == 4 && signs == 1 && jukes == 1,
-        "three ceiling lights groove, four arcade lights wave, one buzzes by the sign, one is the jukebox's glow");
+  // The string lights groove (J74.4: their own light, four strands of three
+  // tubes, in place of three helper lamps under the ceiling).
+  check(grooves == 12 && waves == 4 && signs == 1 && jukes == 1,
+        "the string lights groove (12), four arcade lights wave, one buzzes by the sign, one is the jukebox's glow");
 
   // Moths sit on their lamp and sway with it.
   int moths = 0, onLamp = 0;

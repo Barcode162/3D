@@ -24,7 +24,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 | `Reset all settings` | Every setting back to its default. |
 | `Reset to stock` | Car setup back to stock. |
 | `Send report` | Sends a report to help Claude fix lag and bugs; shows a code. |
-| `Settings` | Controls, Sound, Graphics, Screen, Switches; Send report; Reset all settings. Graphics: `Quality`, `Lighting`, `Lamp shadows` (On, Off: J97, the brightest lamps' shadows), `Soft shade` (On, Off: J91, ambient occlusion), `Light beams` (On, Off: J91.2, lamp light in the haze), `Mirror`, `Field of view`. |
+| `Settings` | Controls, Pointer, Sound, Graphics, Screen, Switches; Send report; Reset all settings. Graphics: `Quality`, `Lighting`, `Lamp shadows` (On, Off: J97, the brightest lamps' shadows), `Soft shade` (On, Off: J91, ambient occlusion), `Light beams` (On, Off: J91.2, lamp light in the haze), `Mirror`, `Field of view`. |
 | `Stand up` | Get up from your seat (when seated). |
 | `Stop the piano` | Stops the piano's song. |
 | `Test my mic (record 4 s, play back)` | Records 4 seconds and plays them back. |
@@ -42,3 +42,7 @@ At the lounge chessboard, `FULL SCREEN` (between the game's two buttons) lays th
 ## Help → Credits (J100)
 
 `Help` ends with **Credits**: the piano's recorded notes (Salamander Grand Piano V3 by Alexander Holm, CC BY 3.0; the licence asks for this credit), the music (Kevin MacLeod, CC BY 4.0), the models (Poly Haven CC0 and our own), the books (public domain).
+
+## Settings → Pointer (2026-10-26 #12)
+
+The crosshair and its editor (`bar/web/crosshair.js`). A preview of the crosshair on a dark disc stays docked at the top of the panel while you scroll through these settings and scrolls away after them. `Crosshair: tap anywhere to use what it points at` (on: drawn at the screen's centre; a tap anywhere uses what the centre points at), `Shape` (`Dot`, `Cross`, `Cross + dot`, `Circle`, `Circle + dot`), `Size`, `Thickness`, `Gap` (px), `Colour` (eight swatches), `Opacity`, `Dark outline`.
