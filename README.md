@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J99.1 Real books: the lounge bookshelf opens a reader with six public-domain works (Crime and Punishment, The Brothers Karamazov and Notes from Underground in Constance Garnett's English, Einstein's Relativity, Moby-Dick, The Great Gatsby): pages to tap or swipe, contents, text size, light or dark paper, your place kept
+
+`f13aaed` · 2026-10-26 09:07 · 18 files, +433 −16 · tests: none
+
+Phone check: Tap the bookshelf: pick Crime and Punishment, read, turn pages, close it; open it again: you're on the same page
+
 ## J102.1 The fire drawn by a shader: a flame volume over the logs (rising noise, tongues of different heights, red to yellow by heat, see-through where thin) instead of four moving pictures; the engine gets a frame clock and a 'flame' material flag; the fire thing stands at the flames' base
 
 `83fb722` · 2026-10-26 08:50 · 17 files, +188 −45 · tests: none
