@@ -2,6 +2,9 @@
 # browser downloads), triangles, and GPU texture memory (with mipmaps), so
 # the room stays inside the phone's budget (docs/archive/BAR_REDESIGN.md).
 #   python3 tools/assets/glb_report.py [glb files...]
+#   python3 tools/assets/glb_report.py --budget   every model with a budget in
+#       assets/models/budget.json (the remake's kit, J35): fails when one is
+#       over its triangles or texture memory
 import glob
 import gzip
 import json
@@ -39,6 +42,18 @@ def report(path):
     tris = sum(j["accessors"][p["indices"]]["count"] // 3 for m in j["meshes"] for p in m["primitives"])
     return len(b), len(gzip.compress(b, 6)), tris, tex
 
+
+if "--budget" in sys.argv:
+    budget = json.load(open("assets/models/budget.json"))["models"]
+    over = []
+    for name, b in sorted(budget.items()):
+        r = report("assets/models/" + name)
+        if r[2] > b["tris"] or r[3] / 1e6 > b["texMB"]:
+            over.append(f"{name}: {r[2]} triangles (budget {b['tris']}), {r[3] / 1e6:.1f} MB of textures (budget {b['texMB']})")
+    for line in over:
+        print("OVER  " + line)
+    print(f"{'FAIL' if over else 'ok  '}  budget: {len(budget) - len(over)} of {len(budget)} models within their budget")
+    sys.exit(1 if over else 0)
 
 files = sys.argv[1:] or sorted(glob.glob("assets/models/*.glb"))
 tot = [0, 0, 0, 0]

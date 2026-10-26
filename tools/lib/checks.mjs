@@ -11,7 +11,7 @@ export const CHECKS = {
   // tests run on CI at deploy (user, 2026-10-23).
   quick:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['native', `${EMSDK} FAST=1 bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'],
-             ['albedo', 'node tools/albedo_test.mjs'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
+             ['albedo', 'node tools/albedo_test.mjs'], ['budget', 'python3 tools/assets/glb_report.py --budget'], ['wgsl', `${NP} node tools/wgsl_check.mjs`],
              ['toolbelt', 'node tools/toolbelt_test.mjs'], ['uikit', 'node tools/uikit.mjs check'], ['plan', 'node tools/plan_test.mjs'],
              ['workflows', 'node tools/workflows_test.mjs'], ['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs'], ['handbook', 'node tools/handbook.mjs check'], ['engine', 'node tools/lint_engine.mjs']],
   plan:     [['plan', 'node tools/plan_test.mjs']],
@@ -19,7 +19,7 @@ export const CHECKS = {
   workshop: [['playbook', 'node tools/playbook_test.mjs'], ['locks', 'node tools/locks_test.mjs'], ['handbook', 'node tools/handbook.mjs check']],
   build:    [['build', `${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja && cmake --build build`],
              ['lint_emasm', 'node tools/lint_emasm.mjs']],
-  native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs']],
+  native:   [['native', `${EMSDK} bash tools/native/run.sh`], ['schema', 'node tools/schema_test.mjs'], ['albedo', 'node tools/albedo_test.mjs'], ['budget', 'python3 tools/assets/glb_report.py --budget']],
   game:     [['wgsl', `${NP} node tools/wgsl_check.mjs`], ['smoke', `${NP} node tools/smoke.mjs`], ['live_world', `${NP} node tools/live_world_test.mjs`], ['touch', `${NP} node tools/touch_test.mjs`], ['travel', `${NP} node tools/travel_test.mjs`]],
   room:     [['proto', 'node tools/proto_test.mjs'], ['room', 'node tools/room_test.mjs'],
              ['ledger', 'node tools/ledger_test.mjs'], ['mp', `${NP} node tools/mp_test.mjs`]],

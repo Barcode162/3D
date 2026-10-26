@@ -57,12 +57,11 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J35 · The world remake, step 1, the kit** (the world). The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md. · N3
-- [ ] **J35.1** The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing *Check:* Nothing changes in the bar yet
+- [x] **J35.1** The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing *Check:* Nothing changes in the bar yet
 - [ ] **J35.2** The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height *Check:* Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it
 - [ ] **J35.3** The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker *Check:* Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker
 - [ ] **J35.4** The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands) *Check:* Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
 - [ ] **J35.5** The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs *Check:* Under the lamps over the counter: real metal shades, the light comes from the bulbs
-- [ ] **J35.6** Your look on the phone: changes from your notes until the corner is approved *Check:* You say the corner is approved
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -274,7 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
+- `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
 - `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8
 - `83dd678` J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f

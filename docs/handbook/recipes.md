@@ -60,6 +60,9 @@ today: [inventory.md](generated/inventory.md).
 ### 10. A new kind
 *"A pool table".* A model (`tools/assets/<name>.py`, run in headless Blender: `tools/assets/get_blender.sh`; output `assets/models/<name>.glb`, with its credit in `assets/models/CREDITS.md` if anything is from outside), then a kind in `assets/world/kinds/<place>.json` (`"is"` an existing base kind when it fits; parts: model, solids, seats, uses...). Schema check: `node tools/schema_test.mjs`. Then recipe 2.
 
+### 10b. A Poly Haven model (the remake's kit, J35)
+*"A real bar stool".* Find it at api.polyhaven.com (`?t=models`; every model is CC0). `bash tools/assets/polyhaven_fetch.sh <id> <scratch dir> 1k` downloads it; `/opt/blender/blender -b --factory-startup --python tools/assets/polyhaven.py -- <scratch dir>/<id> assets/models/<name>.glb --tris <budget> [--tex 1024] [--height m] [--turn deg]` slims it, stands it on its footprint's middle and writes it. Give it a budget in `assets/models/budget.json` (checked by `python3 tools/assets/glb_report.py --budget`), a line in `assets/models/CREDITS.md` (name, authors, page), its materials in `albedo.json` (`python3 tools/albedo_audit.py`), and a preview (`tools/assets/preview.py`). Then recipe 10's kind.
+
 ### 11. A new place
 *"A rooftop terrace".* One file `assets/world/places/<id>.json` (its `kinds`, `air`, `spawn`, `rooms`, `things`) with its kinds; Menu → Places lists it; `?place=<id>` opens it; it gets its own room. Check: `tools/travel_test.mjs`.
 

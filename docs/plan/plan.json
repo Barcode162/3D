@@ -48,7 +48,7 @@
     "id": "J35.1",
     "text": "The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing",
     "check": "Nothing changes in the bar yet",
-    "done": false
+    "done": true
    },
    {
     "id": "J35.2",
@@ -72,12 +72,6 @@
     "id": "J35.5",
     "text": "The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs",
     "check": "Under the lamps over the counter: real metal shades, the light comes from the bulbs",
-    "done": false
-   },
-   {
-    "id": "J35.6",
-    "text": "Your look on the phone: changes from your notes until the corner is approved",
-    "check": "You say the corner is approved",
     "done": false
    }
   ]
@@ -1164,7 +1158,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "b4821f4",
    "text": "J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a"
   },
   {

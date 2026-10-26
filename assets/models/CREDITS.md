@@ -27,4 +27,12 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `lounge.glb`, `fire_flames.glb` | `lounge.py` + `props_lib.py` | Marble 01, Dark Wood, Brick Wall 006, Leather Red 02, Velour Velvet, Wood Table 001 |
 | `decor_walls.glb` | `decor_walls.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood, Wood Table 001 |
 
+## Poly Haven models (the remake, J35)
+
+Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
+`tools/assets/polyhaven.py` (fewer triangles, 1k textures).
+
+| Model | Poly Haven model | Authors |
+|---|---|---|
+
 CC0 needs no credit, but we list sources anyway.
