@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (171 things)
+## bar (186 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -56,7 +56,25 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `table_stool-11` | `table_stool` |  | `table_stool.glb` |  |
 | `table_stool-12` | `table_stool` |  | `table_stool.glb` |  |
 | `decor_walls` | `decor_walls` |  | `decor_walls.glb` | room model |
-| `lounge` | `lounge` |  | `lounge.glb` | room model |
+| `fireplace` | `fireplace` |  | `fireplace.glb` |  |
+| `painting` | `painting` |  | `painting.glb` |  |
+| `mantel_clock` | `mantel_clock` |  | `mantel_clock.glb` |  |
+| `candlestick-1` | `candlestick` |  | `candlestick.glb` |  |
+| `candlestick-2` | `candlestick` |  | `candlestick.glb` |  |
+| `mantel_photo-1` | `mantel_photo_b` |  | `mantel_photo_b.glb` |  |
+| `mantel_photo-2` | `mantel_photo_a` |  | `mantel_photo_a.glb` |  |
+| `mantel_books` | `mantel_books` |  | `mantel_books.glb` |  |
+| `vase` | `vase` |  | `vase.glb` |  |
+| `fire_tools` | `fire_tools` |  | `fire_tools.glb` |  |
+| `log_basket` | `log_basket` |  | `log_basket.glb` |  |
+| `rug` | `rug` |  | `rug.glb` |  |
+| `coffee_table` | `coffee_table` |  | `coffee_table.glb` |  |
+| `chesterfield_sofa` | `chesterfield_sofa` |  | `chesterfield_sofa.glb` |  |
+| `armchair-1` | `armchair` |  | `armchair.glb` |  |
+| `armchair-2` | `armchair` |  | `armchair.glb` |  |
+| `bookshelf` | `bookshelf` |  | `bookshelf.glb` |  |
+| `floor_lamp` | `floor_lamp` |  | `floor_lamp.glb` |  |
+| `side_table` | `side_table` |  | `side_table.glb` |  |
 | `fire_flames` | `fire_flames` |  | `fire_flames.glb` |  |
 | `chess_rook_w-1` | `chess` |  | `chess_rook_w.glb` |  |
 | `chess_pawn_w-1` | `chess` |  | `chess_pawn_w.glb` |  |
@@ -124,9 +142,6 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `light-neon-8` | `light-neon` |  |  | no model |
 | `light-sign` | `light-sign` |  |  | no model |
 | `window-seat` | `seat-spot` |  |  | no model |
-| `sofa` | `seat-spot` |  |  | no model |
-| `armchair-1` | `seat-spot` |  |  | no model |
-| `armchair-2` | `seat-spot` |  |  | no model |
 | `piano` | `piano` |  | `piano.glb` |  |
 | `stage` | `stage` |  | `stage.glb` | room model |
 | `dartboard` | `dartboard` |  | `dartboard.glb` |  |

@@ -367,7 +367,7 @@ def ice_well(u, w):
         P.bottle(pos[0], pos[1], pos[2], rng.choice(["slim", "whiskey", "tequila", "stubby"]), yaw=facing(u + k, False))
         k += 0.095
     # An ice scoop.
-    pos = world(u + 0.15, S_MID, UNDER_Y + 0.01)
+    pos = world(u + 0.15, S_MID, UNDER_Y - 0.03)  # lying on the ice (J70: it floated once the ice went down)
     common.obox("Ice scoop", pos, (0.18, 0.05, 0.08), yaw_at(u) + 0.4, steel, 0.02)
 
 

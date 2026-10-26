@@ -57,10 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J70 · The world remake, step 2, the lounge taken apart** (the world). The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
-- [ ] **J70.1** The fireplace its own thing: firebox, marble surround, mantel, logs and embers, remade to real size and look *Check:* Stand by the fire: one real fireplace, the flames in the firebox, nothing floating
-- [ ] **J70.2** The seating its own things: the Chesterfield sofa, the wingback chair and the rug *Check:* By the fire: the sofa and the chair look real, you can sit on both, the rug lies flat
-- [ ] **J70.3** The bookshelf, its books, the vase, the lamp, the clock and the photos its own things *Check:* The bookshelf looks real, its books sit on the shelves, the lamp, clock and photos are where they were
-- [ ] **J70.4** The chess table and the plants its own things; the lounge model keeps only its walls and floor *Check:* The chess table still plays, the plants look real; in the Studio, tap the vase and move it
+- [x] **J70.1** The lounge taken apart: the fireplace, mantel clock, candlesticks, photos, books, vase, painting, fire tools, log basket, rug, coffee table with the chessboard, Chesterfield sofa, two armchairs, bookshelf, floor lamp and side table each their own thing where they stood (sofa, armchairs, clock, painting and vase from Poly Haven); lounge.glb gone; things that floated now sit *Check:* Stand by the fire: everything is where it was, the vase and books sit on the mantel; sit on the sofa and an armchair; chess still plays; in the Studio, tap the vase and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -270,7 +267,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
+- `35e68bb` J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
 - `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
 - `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8

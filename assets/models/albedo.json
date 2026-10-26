@@ -281,6 +281,16 @@
    "metal": 0.9
   }
  },
+ "armchair.glb": {
+  "GreenChair_01": {
+   "albedo": [
+    0.0312,
+    0.0282,
+    0.0198
+   ],
+   "metal": 0.005
+  }
+ },
  "back_bar_tall.glb": {
   "Back bar wood": {
    "albedo": [
@@ -1167,6 +1177,68 @@
    "metal": 0.0
   }
  },
+ "bookshelf.glb": {
+  "Book spines": {
+   "albedo": [
+    0.1694,
+    0.1038,
+    0.0646
+   ],
+   "metal": 0.0
+  },
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Pages": {
+   "albedo": [
+    0.85,
+    0.8,
+    0.68
+   ],
+   "fix": 0.935,
+   "metal": 0.0,
+   "rough": 0.85
+  },
+  "Shelf wood": {
+   "albedo": [
+    0.0136,
+    0.0027,
+    0.0008
+   ],
+   "fix": 10.246,
+   "metal": 0.009,
+   "rough": 0.45
+  },
+  "Soil": {
+   "albedo": [
+    0.06,
+    0.04,
+    0.03
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
  "candle.glb": {
   "Amber votive": {
    "albedo": [
@@ -1221,6 +1293,38 @@
     0.02,
     0.02,
     0.02
+   ],
+   "metal": 0.0
+  }
+ },
+ "candlestick.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Candle wax": {
+   "albedo": [
+    0.9,
+    0.85,
+    0.72
+   ],
+   "metal": 0.0
+  },
+  "Flame": {
+   "albedo": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "emissive": [
+    12.0,
+    6.6,
+    2.16
    ],
    "metal": 0.0
   }
@@ -1565,6 +1669,119 @@
     0.01
    ],
    "metal": 0.0
+  }
+ },
+ "chesterfield_sofa.glb": {
+  "sofa_02": {
+   "albedo": [
+    0.0128,
+    0.0052,
+    0.0024
+   ],
+   "fix": 3.024,
+   "metal": 0.004
+  }
+ },
+ "coffee_table.glb": {
+  "Book spines": {
+   "albedo": [
+    0.1694,
+    0.1038,
+    0.0646
+   ],
+   "metal": 0.0
+  },
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.4828,
+    0.3398,
+    0.26
+   ],
+   "metal": 0.0
+  },
+  "Candle wax": {
+   "albedo": [
+    0.9,
+    0.85,
+    0.72
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Chess board": {
+   "albedo": [
+    0.2165,
+    0.1168,
+    0.0317
+   ],
+   "metal": 0.0,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  },
+  "Flame": {
+   "albedo": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "emissive": [
+    12.0,
+    6.6,
+    2.16
+   ],
+   "metal": 0.0
+  },
+  "Glassware": {
+   "albedo": [
+    0.86,
+    0.93,
+    0.92
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Ice": {
+   "albedo": [
+    0.9,
+    0.95,
+    1.0
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Mantel wood": {
+   "albedo": [
+    0.0338,
+    0.0048,
+    0.0021
+   ],
+   "fix": 4.642,
+   "metal": 0.002,
+   "rough": 0.45
   }
  },
  "construction.glb": {
@@ -2588,6 +2805,133 @@
    "seeThrough": true
   }
  },
+ "fire_tools.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Cast iron": {
+   "albedo": [
+    0.04,
+    0.04,
+    0.045
+   ],
+   "metal": 0.7
+  }
+ },
+ "fireplace.glb": {
+  "Cast iron": {
+   "albedo": [
+    0.04,
+    0.04,
+    0.045
+   ],
+   "metal": 0.7
+  },
+  "Embers": {
+   "albedo": [
+    1.0,
+    0.35,
+    0.05
+   ],
+   "emissive": [
+    6.0,
+    1.68,
+    0.24
+   ],
+   "metal": 0.0
+  },
+  "Firebox brick": {
+   "albedo": [
+    0.0076,
+    0.0034,
+    0.0027
+   ],
+   "fix": 7.072,
+   "metal": 0.004,
+   "rough": 0.9
+  },
+  "Log bark": {
+   "albedo": [
+    0.0116,
+    0.0029,
+    0.0011
+   ],
+   "fix": 4.329,
+   "metal": 0.006
+  },
+  "Log end": {
+   "albedo": [
+    0.55,
+    0.38,
+    0.22
+   ],
+   "metal": 0.0
+  },
+  "Mantel wood": {
+   "albedo": [
+    0.0338,
+    0.0048,
+    0.0021
+   ],
+   "fix": 4.642,
+   "metal": 0.002,
+   "rough": 0.45
+  },
+  "Surround marble": {
+   "albedo": [
+    0.0698,
+    0.049,
+    0.0276
+   ],
+   "fix": 5.783,
+   "metal": 0.001,
+   "rough": 0.28
+  }
+ },
+ "floor_lamp.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Floor lamp bulb": {
+   "albedo": [
+    1.0,
+    0.9,
+    0.7
+   ],
+   "emissive": [
+    8.0,
+    6.0,
+    3.6
+   ],
+   "metal": 0.0
+  },
+  "Shade fabric": {
+   "albedo": [
+    0.85,
+    0.7,
+    0.5
+   ],
+   "emissive": [
+    0.8,
+    0.56,
+    0.32
+   ],
+   "metal": 0.0,
+   "rough": 0.95
+  }
+ },
  "hall.glb": {
   "Arch brick": {
    "albedo": [
@@ -2949,57 +3293,7 @@
    "rough": 0.4
   }
  },
- "lounge.glb": {
-  "Book spines": {
-   "albedo": [
-    0.1694,
-    0.1038,
-    0.0646
-   ],
-   "metal": 0.0
-  },
-  "Bottle glass": {
-   "albedo": [
-    0.1593,
-    0.1056,
-    0.0701
-   ],
-   "metal": 0.0
-  },
-  "Bottle labels": {
-   "albedo": [
-    0.3713,
-    0.2548,
-    0.1663
-   ],
-   "metal": 0.0
-  },
-  "Brass": {
-   "albedo": [
-    0.91,
-    0.7,
-    0.38
-   ],
-   "metal": 1.0,
-   "rough": 0.4
-  },
-  "Candle wax": {
-   "albedo": [
-    0.9,
-    0.85,
-    0.72
-   ],
-   "metal": 0.0
-  },
-  "Cap": {
-   "albedo": [
-    0.05,
-    0.04,
-    0.04
-   ],
-   "metal": 0.3,
-   "rough": 0.5
-  },
+ "log_basket.glb": {
   "Cast iron": {
    "albedo": [
     0.04,
@@ -3007,125 +3301,6 @@
     0.045
    ],
    "metal": 0.7
-  },
-  "Chess board": {
-   "albedo": [
-    0.2165,
-    0.1168,
-    0.0317
-   ],
-   "metal": 0.0,
-   "rough": 0.5
-  },
-  "Chesterfield leather": {
-   "albedo": [
-    0.0161,
-    0.0017,
-    0.0005
-   ],
-   "fix": 8.557,
-   "metal": 0.005,
-   "rough": 0.55
-  },
-  "Clock face": {
-   "albedo": [
-    0.3402,
-    0.2802,
-    0.1737
-   ],
-   "metal": 0.0,
-   "rough": 0.5
-  },
-  "Drinks": {
-   "albedo": [
-    0.4496,
-    0.3317,
-    0.235
-   ],
-   "metal": 0.0
-  },
-  "Embers": {
-   "albedo": [
-    1.0,
-    0.35,
-    0.05
-   ],
-   "emissive": [
-    6.0,
-    1.68,
-    0.24
-   ],
-   "metal": 0.0
-  },
-  "Firebox brick": {
-   "albedo": [
-    0.0076,
-    0.0034,
-    0.0027
-   ],
-   "fix": 7.072,
-   "metal": 0.004,
-   "rough": 0.9
-  },
-  "Flame": {
-   "albedo": [
-    1.0,
-    0.7,
-    0.3
-   ],
-   "emissive": [
-    12.0,
-    6.6,
-    2.16
-   ],
-   "metal": 0.0
-  },
-  "Floor lamp bulb": {
-   "albedo": [
-    1.0,
-    0.9,
-    0.7
-   ],
-   "emissive": [
-    8.0,
-    6.0,
-    3.6
-   ],
-   "metal": 0.0
-  },
-  "Glassware": {
-   "albedo": [
-    0.86,
-    0.93,
-    0.92
-   ],
-   "metal": 0.0,
-   "seeThrough": true
-  },
-  "Ice": {
-   "albedo": [
-    0.9,
-    0.95,
-    1.0
-   ],
-   "metal": 0.0,
-   "seeThrough": true
-  },
-  "Leaves": {
-   "albedo": [
-    0.06,
-    0.2,
-    0.05
-   ],
-   "metal": 0.0
-  },
-  "Leaves light": {
-   "albedo": [
-    0.12,
-    0.3,
-    0.06
-   ],
-   "metal": 0.0
   },
   "Log bark": {
    "albedo": [
@@ -3135,35 +3310,39 @@
    ],
    "fix": 4.329,
    "metal": 0.006
-  },
-  "Log end": {
+  }
+ },
+ "mantel_books.glb": {
+  "Book spines": {
    "albedo": [
-    0.55,
-    0.38,
-    0.22
+    0.1694,
+    0.1038,
+    0.0646
    ],
    "metal": 0.0
-  },
-  "Mantel wood": {
+  }
+ },
+ "mantel_clock.glb": {
+  "mantel_clock_01": {
    "albedo": [
-    0.0338,
-    0.0048,
-    0.0021
+    0.097,
+    0.072,
+    0.0562
    ],
-   "fix": 4.642,
-   "metal": 0.002,
+   "metal": 0.079,
    "rough": 0.45
   },
-  "Pages": {
+  "mantel_clock_01_glass": {
    "albedo": [
-    0.85,
-    0.8,
-    0.68
+    0.097,
+    0.072,
+    0.0562
    ],
-   "fix": 0.935,
    "metal": 0.0,
-   "rough": 0.85
-  },
+   "seeThrough": true
+  }
+ },
+ "mantel_photo_a.glb": {
   "Photos": {
    "albedo": [
     0.0986,
@@ -3181,85 +3360,26 @@
    ],
    "fix": 3.875,
    "metal": 0.006
-  },
-  "Rug": {
+  }
+ },
+ "mantel_photo_b.glb": {
+  "Photos": {
    "albedo": [
-    0.0483,
-    0.0157,
-    0.0035
-   ],
-   "fix": 1.379,
-   "metal": 0.0,
-   "rough": 1.0
-  },
-  "Shade fabric": {
-   "albedo": [
-    0.85,
-    0.7,
-    0.5
-   ],
-   "emissive": [
-    0.8,
-    0.56,
-    0.32
+    0.0986,
+    0.0385,
+    0.0605
    ],
    "metal": 0.0,
-   "rough": 0.95
+   "rough": 0.6
   },
-  "Shelf wood": {
+  "Prop dark wood": {
    "albedo": [
-    0.0136,
-    0.0027,
-    0.0008
+    0.0285,
+    0.0057,
+    0.0026
    ],
-   "fix": 10.246,
-   "metal": 0.009,
-   "rough": 0.45
-  },
-  "Soil": {
-   "albedo": [
-    0.06,
-    0.04,
-    0.03
-   ],
-   "metal": 0.0
-  },
-  "Surround marble": {
-   "albedo": [
-    0.0698,
-    0.049,
-    0.0276
-   ],
-   "fix": 5.783,
-   "metal": 0.001,
-   "rough": 0.28
-  },
-  "Terracotta": {
-   "albedo": [
-    0.55,
-    0.22,
-    0.12
-   ],
-   "metal": 0.0
-  },
-  "Vase glaze": {
-   "albedo": [
-    0.08,
-    0.2,
-    0.3
-   ],
-   "metal": 0.0,
-   "rough": 0.25
-  },
-  "Wingback velvet": {
-   "albedo": [
-    0.0056,
-    0.0034,
-    0.0034
-   ],
-   "fix": 5.171,
-   "metal": 0.011,
-   "rough": 0.95
+   "fix": 3.875,
+   "metal": 0.006
   }
  },
  "mirror_button.glb": {
@@ -3280,6 +3400,24 @@
    ],
    "metal": 1.0,
    "rough": 0.45
+  }
+ },
+ "painting.glb": {
+  "fancy_picture_frame_01": {
+   "albedo": [
+    0.209,
+    0.1268,
+    0.0517
+   ],
+   "metal": 0.0
+  },
+  "fancy_picture_frame_01_canvas": {
+   "albedo": [
+    0.3741,
+    0.3308,
+    0.2931
+   ],
+   "metal": 0.0
   }
  },
  "pendant_lamp.glb": {
@@ -3771,6 +3909,55 @@
    "rough": 0.42
   }
  },
+ "rug.glb": {
+  "Rug": {
+   "albedo": [
+    0.0483,
+    0.0157,
+    0.0035
+   ],
+   "fix": 1.379,
+   "metal": 0.0,
+   "rough": 1.0
+  }
+ },
+ "side_table.glb": {
+  "Book spines": {
+   "albedo": [
+    0.1694,
+    0.1038,
+    0.0646
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  },
+  "Glassware": {
+   "albedo": [
+    0.86,
+    0.93,
+    0.92
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Mantel wood": {
+   "albedo": [
+    0.0338,
+    0.0048,
+    0.0021
+   ],
+   "fix": 4.642,
+   "metal": 0.002,
+   "rough": 0.45
+  }
+ },
  "sim_rig.glb": {
   "Accent red": {
    "albedo": [
@@ -4099,6 +4286,16 @@
    ],
    "metal": 0.013,
    "rough": 0.55
+  }
+ },
+ "vase.glb": {
+  "ceramic_vase_02": {
+   "albedo": [
+    0.6125,
+    0.5493,
+    0.4639
+   ],
+   "metal": 0.0
   }
  }
 }

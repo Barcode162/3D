@@ -28,7 +28,7 @@ run construction.py "$tex" $out/construction.glb
 run sim_rig.py "$tex" $out/sim_rig.glb
 run rhythm.py "$tex" $out/rhythm.glb
 run darts_zone.py "$tex" $out/darts_zone.glb
-run lounge.py "$tex" $out
+run lounge.py "$tex" $out  # each lounge object its own model (J70)
 run decor_walls.py "$tex" $out/decor_walls.glb
 # Older scripts that still provide models in use (they also write a few
 # unused ones; delete those again: booth, posters, mirror frames, ...).
@@ -40,6 +40,13 @@ ph bar_chair_round_01 bar_stool.glb --tris 8000 --height 0.825 --turn 180
 # The pendant lamps over the counter (J35.5): 80% size, hanging from their
 # top (lighting.py's own pendant is no longer used).
 ph hanging_industrial_lamp pendant_lamp.glb --tris 8000 --height 1.07 --hang
+# The lounge's pieces from Poly Haven (J70): the Chesterfield sofa (1.1x), the
+# armchairs, the mantel clock, the painting above the mantel, the vase.
+ph sofa_02 chesterfield_sofa.glb --tris 6000 --height 0.78
+ph GreenChair_01 armchair.glb --tris 6000
+ph mantel_clock_01 mantel_clock.glb --tris 6000
+ph fancy_picture_frame_01 painting.glb --height 0.75
+ph ceramic_vase_02 vase.glb --height 0.27 --tris 3000 --tex 512
 run furniture.py "$tex" $out
 run lighting.py "$tex" $out
 run decor.py "$tex" $out

@@ -16,6 +16,38 @@
     "pendant_lamp.glb": {
       "tris": 8000,
       "texMB": 29
+    },
+    "chesterfield_sofa.glb": {
+      "tris": 6000,
+      "texMB": 17
+    },
+    "armchair.glb": {
+      "tris": 6000,
+      "texMB": 17
+    },
+    "mantel_clock.glb": {
+      "tris": 6000,
+      "texMB": 24
+    },
+    "painting.glb": {
+      "tris": 1500,
+      "texMB": 34
+    },
+    "vase.glb": {
+      "tris": 3000,
+      "texMB": 5
+    },
+    "fireplace.glb": {
+      "tris": 8000,
+      "texMB": 12
+    },
+    "bookshelf.glb": {
+      "tris": 24000,
+      "texMB": 12
+    },
+    "coffee_table.glb": {
+      "tris": 4000,
+      "texMB": 12
     }
   }
 }

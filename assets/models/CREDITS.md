@@ -24,7 +24,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `sim_rig.glb` | `sim_rig.py` | Fabric Leather 02 |
 | `rhythm.glb` | `rhythm.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood |
 | `darts_zone.glb` | `darts_zone.py` | Dark Wood |
-| `lounge.glb`, `fire_flames.glb` | `lounge.py` + `props_lib.py` | Marble 01, Dark Wood, Brick Wall 006, Leather Red 02, Velour Velvet, Wood Table 001 |
+| `fireplace.glb`, `candlestick.glb`, `mantel_photo_a.glb`, `mantel_photo_b.glb`, `mantel_books.glb`, `fire_tools.glb`, `log_basket.glb`, `rug.glb`, `coffee_table.glb`, `bookshelf.glb`, `floor_lamp.glb`, `side_table.glb`, `fire_flames.glb` (the lounge, one model each since J70) | `lounge.py` + `props_lib.py` | Marble 01, Dark Wood, Brick Wall 006, Wood Table 001 |
 | `decor_walls.glb` | `decor_walls.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood, Wood Table 001 |
 
 ## Poly Haven models (the remake, J35)
@@ -35,6 +35,11 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 | Model | Poly Haven model | Authors |
 |---|---|---|
 | `pendant_lamp.glb` | [Hanging Industrial Lamp](https://polyhaven.com/a/hanging_industrial_lamp) (80% size, its glass made see-through) | Kuutti Siitonen |
+| `chesterfield_sofa.glb` | [Sofa 02](https://polyhaven.com/a/sofa_02) (1.1x) | Kirill Sannikov |
+| `armchair.glb` | [Green Chair 01](https://polyhaven.com/a/GreenChair_01) | Kirill Sannikov |
+| `mantel_clock.glb` | [Mantel Clock 01](https://polyhaven.com/a/mantel_clock_01) | Yann Kervran, Rico Cilliers |
+| `painting.glb` | [Fancy Picture Frame 01](https://polyhaven.com/a/fancy_picture_frame_01) (0.75 m high) | Rob Tuytel, Rico Cilliers |
+| `vase.glb` | [Ceramic Vase 02](https://polyhaven.com/a/ceramic_vase_02) (0.27 m high) | James Ray Cock |
 | `bar_stool.glb` | [Bar Chair Round 01](https://polyhaven.com/a/bar_chair_round_01) (scaled to a 0.76 m seat) | Dairon Sanchez |
 
 Bottle labels (`tools/assets/labels.py`, J35.4): made-up brands set in DejaVu Serif and Sans (Bitstream Vera licence, public-domain changes) and Liberation Serif (SIL Open Font License); both allow text drawn into pictures.

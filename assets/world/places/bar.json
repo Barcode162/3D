@@ -69,7 +69,25 @@
     {"id": "table_stool-11", "kind": "table_stool", "at": [4.36442, 0, 2.36247], "turn": 12.169},
     {"id": "table_stool-12", "kind": "table_stool", "at": [4.03558, 0, 0.83753], "turn": -167.83099},
     {"id": "decor_walls", "kind": "decor_walls", "at": [0, 0, 0]},
-    {"id": "lounge", "kind": "lounge", "at": [0, 0, 0]},
+    {"id": "fireplace", "kind": "fireplace", "at": [-8.55, 0, 0.8], "turn": 90},
+    {"id": "painting", "kind": "painting", "at": [-8.535, 1.975, 0.8], "turn": 90},
+    {"id": "mantel_clock", "kind": "mantel_clock", "at": [-8.43, 1.23, 0.8], "turn": 90},
+    {"id": "candlestick-1", "kind": "candlestick", "at": [-8.43, 1.23, 0.25], "turn": 90},
+    {"id": "candlestick-2", "kind": "candlestick", "at": [-8.43, 1.23, 1.35], "turn": 90},
+    {"id": "mantel_photo-1", "kind": "mantel_photo_b", "at": [-8.49, 1.23, 0.45], "turn": 78.541},
+    {"id": "mantel_photo-2", "kind": "mantel_photo_a", "at": [-8.49, 1.23, 1.12], "turn": 107.189},
+    {"id": "mantel_books", "kind": "mantel_books", "at": [-8.42, 1.23, 1.52], "turn": 90},
+    {"id": "vase", "kind": "vase", "at": [-8.42, 1.23, 0.07], "turn": 90},
+    {"id": "fire_tools", "kind": "fire_tools", "at": [-8.2, 0, 1.84], "turn": 90},
+    {"id": "log_basket", "kind": "log_basket", "at": [-8.2, 0, -0.29], "turn": 90},
+    {"id": "rug", "kind": "rug", "at": [-7.12, 0, 0.8]},
+    {"id": "coffee_table", "kind": "coffee_table", "at": [-6.95, 0, 0.8]},
+    {"id": "chesterfield_sofa", "kind": "chesterfield_sofa", "at": [-5.75, 0, 0.8], "turn": -90},
+    {"id": "armchair-1", "kind": "armchair", "at": [-7.25, 0, -0.5], "turn": -51.566},
+    {"id": "armchair-2", "kind": "armchair", "at": [-7.25, 0, 2.1], "turn": -128.434},
+    {"id": "bookshelf", "kind": "bookshelf", "at": [-9.0, 0, 2.625], "turn": 90},
+    {"id": "floor_lamp", "kind": "floor_lamp", "at": [-6.3, 0, 2.75]},
+    {"id": "side_table", "kind": "side_table", "at": [-5.85, 0, 2.65]},
     {"id": "fire_flames", "kind": "fire_flames", "at": [0, 0, 0]},
     {
       "id": "chess_rook_w-1",
@@ -563,30 +581,6 @@
           {"name": "Window seat", "hip": [2.4, 0.56, 0], "facing": 0, "low": 0.6, "kind": "chair"}
         ]
       }
-    },
-    {
-      "id": "sofa",
-      "kind": "seat-spot",
-      "at": [-5.85, 0, 0.1],
-      "parts": {
-        "seats": [
-          {"name": "Sofa", "hip": [0, 0.55, 0], "facing": -90, "low": 1, "kind": "sofa"},
-          {"name": "Sofa", "hip": [0, 0.55, 0.7], "facing": -90, "low": 1, "kind": "sofa"},
-          {"name": "Sofa", "hip": [0, 0.55, 1.4], "facing": -90, "low": 1, "kind": "sofa"}
-        ]
-      }
-    },
-    {
-      "id": "armchair-1",
-      "kind": "seat-spot",
-      "at": [-7.25, 0, -0.5],
-      "parts": {"seats": [{"name": "Armchair", "hip": [0, 0.55, 0], "facing": 180, "low": 0.8, "kind": "chair"}]}
-    },
-    {
-      "id": "armchair-2",
-      "kind": "seat-spot",
-      "at": [-7.25, 0, 2.1],
-      "parts": {"seats": [{"name": "Armchair", "hip": [0, 0.55, 0], "facing": 0, "low": 0.8, "kind": "chair"}]}
     },
     {"id": "piano", "kind": "piano", "at": [-8, 0.3, 5.6], "turn": 104.897},
     {"id": "stage", "kind": "stage", "at": [0, 0, 0]},
