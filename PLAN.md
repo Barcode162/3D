@@ -273,6 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
 - `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8
 - `83dd678` J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f

@@ -1160,6 +1160,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a"
+  },
+  {
    "build": "fa1b9fe",
    "text": "J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231"
   },
