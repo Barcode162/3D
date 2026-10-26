@@ -9,7 +9,11 @@
 # see-through glass with the drink inside and printed labels of made-up
 # brands (props_lib, labels.py); light strips solid from post to post.
 #
-#   blender -b --factory-startup --python tools/assets/back_bar_tall.py -- <texture dir> <out.glb>
+#   blender -b --factory-startup --python tools/assets/back_bar_tall.py -- <texture dir> <out.glb> [<bottles.json>]
+#
+# The bottles are their own things since J72: this writes where each stands
+# (<bottles.json>, for the place file) and tools/assets/bottles.py makes
+# their models.
 #
 # Model space = world space.
 import math
@@ -25,9 +29,14 @@ import common  # noqa: E402
 import layout as L  # noqa: E402
 import props_lib  # noqa: E402
 
-tex_dir, out_path = sys.argv[sys.argv.index("--") + 1:][:2]
+import json  # noqa: E402
+
+args = sys.argv[sys.argv.index("--") + 1:]
+tex_dir, out_path = args[:2]
+bottles_path = args[2] if len(args) > 2 else None
+BOTTLES = []
 common.reset_scene()
-P = props_lib.Props(tex_dir, seed=33)
+P = props_lib.Props(tex_dir, seed=33, record=BOTTLES)
 rng = random.Random(8)
 
 X0, X1, ZB = L.BACK_BAR_X0, L.BACK_BAR_X1, L.Z0
@@ -155,8 +164,10 @@ for b in range(BAYS):
                 slat = common.box("Lattice", (-ln / 2, -0.008, 0), (ln / 2, 0.008, SHELF_D), wood, 0.002)
                 slat.data.transform(Matrix.Translation((mid[0], mid[1], ZB)) @
                                     Matrix.Rotation(sgn * math.pi / 4, 4, "Z"))
-        lay = Matrix.Rotation(-math.pi / 2, 4, "X")  # bottle lying down, neck toward +z
-        for row in range(7):
+        # Lying down, neck out toward +z (it was -pi/2: necks into the wall, so the
+        # rack looked empty; the user's screenshots, KI-45).
+        lay = Matrix.Rotation(math.pi / 2, 4, "X")
+        for row in range(30):  # the whole rack (only its bottom third had bottles)
             for col in range(5):
                 x = lx0 + 0.09 + col * step + (step / 2 if row % 2 else 0)
                 y = ly0 + 0.09 + row * step / 2 * 1.0
@@ -309,3 +320,7 @@ P.plant(-8.6, CEIL - 0.3, ZB + 0.15, size=0.7, leaves=10, seed=5, hanging=True)
 P.frame(-3.1, TOP + 0.13, cz - 0.15, 0.2, 0.26, 3)
 
 common.finish_and_export(out_path, uv_scale={"Back bar wood": 0.9, "Marble top": 0.6, "Ladder wood": 1.0})
+if bottles_path:
+    with open(bottles_path, "w") as f:
+        json.dump(BOTTLES, f)
+print("BOTTLES", len(BOTTLES))

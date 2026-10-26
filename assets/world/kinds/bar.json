@@ -1147,6 +1147,13 @@
       "start": "lit"
     },
     {
+      "id": "bottle",
+      "about": "A bottle on the back bar (J72): glass with a drink in it and its own label, one of the bottle recipes (tools/assets/bottles.py); it catches the light.",
+      "loops": {"glint": {"period": 5, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.05, "rate": 1.1}]}},
+      "states": {"rest": {"loop": "glint"}},
+      "start": "rest"
+    },
+    {
       "id": "glass",
       "about": "A glass: it catches the light. Physics or a hand moves it.",
       "loops": {"glint": {"period": 5, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.06, "rate": 1.2}]}},

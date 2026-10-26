@@ -41,10 +41,14 @@ _LIQ_KEYS = list(LIQUIDS)
 
 
 class Props:
-    def __init__(self, tex_dir, seed=11):
+    def __init__(self, tex_dir, seed=11, record=None):
         self.tex_dir = tex_dir
         self.rng = random.Random(seed)
         self._m = {}
+        # J72: a list here makes bottle() write down where each bottle stands
+        # (for the place file: each its own thing, tools/assets/bottles.py)
+        # instead of building it into the model.
+        self.record = record
 
     # ---- Materials (made on first use) ----
     def mat(self, key):
@@ -172,6 +176,13 @@ class Props:
         kind = kind or rng.choice(self.KINDS)
         color = rng.randrange(len(GLASS_COLORS)) if color is None else color
         label = rng.randrange(16) if label is None else label
+        if self.record is not None:
+            turn = [0.0, math.degrees(yaw), 0.0]
+            if tilt is not None:  # lying (the wine rack) or leaning (the ice bucket): its turn about x
+                e = tilt.to_euler("XYZ")
+                turn = [math.degrees(e.x), math.degrees(yaw), math.degrees(e.z)]
+            self.record.append({"kind": kind, "color": color, "label": label, "at": [x, y, z], "turn": turn})
+            return 0.25 if kind == "square" else self.SHAPES[kind][-1][1] + 0.008
         if kind == "square":
             return self._square_bottle(x, y, z, color, label, yaw)
         prof = self.SHAPES[kind]

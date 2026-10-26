@@ -20,7 +20,9 @@ run() { $B "tools/assets/$1" -- "${@:2}" 2>&1 | grep -E "EXPORTED|Error|Tracebac
 # world space (except the piano, sim rig and rhythm corner, placed by the app).
 run hall.py "$tex" $out/hall.glb
 run bar_counter_l.py "$tex" $out/bar_counter_l.glb
-run back_bar_tall.py "$tex" $out/back_bar_tall.glb
+run back_bar_tall.py "$tex" $out/back_bar_tall.glb "$scratch/bottles.json"
+# The back bar's bottles as things (J72): their recipe models and where each stands.
+run bottles.py "$tex" $out "$scratch/bottles.json" "$scratch/bottle_things.json"
 run piano.py "$tex" $out/piano.glb
 run stage.py "$tex" $out/stage.glb
 run big_mirror.py "$tex" $out

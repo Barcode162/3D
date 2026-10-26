@@ -41,6 +41,2206 @@
     {"id": "pendant_lamp-3", "kind": "pendant_lamp", "at": [-2, 3.04, -4.6]},
     {"id": "pendant_lamp-4", "kind": "pendant_lamp", "at": [0.2, 3.04, -4.6]},
     {"id": "back_bar_tall", "kind": "back_bar_tall", "at": [0, 0, 0]},
+    {
+      "id": "bottle-1",
+      "kind": "bottle",
+      "at": [-8.62, 1.13, -7.38],
+      "turn": [90.0, 2.26, 0.0],
+      "scale": [0.974, 0.974, 0.974],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-2",
+      "kind": "bottle",
+      "at": [-8.45, 1.13, -7.38],
+      "turn": [90.0, -3.74, 0.0],
+      "scale": [1.029, 1.029, 1.029],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-3",
+      "kind": "bottle",
+      "at": [-8.28, 1.13, -7.38],
+      "turn": [90.0, -3.02, 0.0],
+      "scale": [1.003, 1.003, 1.003],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-4",
+      "kind": "bottle",
+      "at": [-8.11, 1.13, -7.38],
+      "turn": [90.0, 4.45, 0.0],
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-5",
+      "kind": "bottle",
+      "at": [-7.94, 1.13, -7.38],
+      "turn": [90.0, 11.43, 0.0],
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-6",
+      "kind": "bottle",
+      "at": [-8.535, 1.215, -7.38],
+      "turn": [90.0, -3.77, 0.0],
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-7",
+      "kind": "bottle",
+      "at": [-8.365, 1.215, -7.38],
+      "turn": [90.0, 3.21, 0.0],
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-8",
+      "kind": "bottle",
+      "at": [-8.195, 1.215, -7.38],
+      "turn": [90.0, -6.67, 0.0],
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-9",
+      "kind": "bottle",
+      "at": [-8.025, 1.215, -7.38],
+      "turn": [90.0, -1.27, 0.0],
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-10",
+      "kind": "bottle",
+      "at": [-7.855, 1.215, -7.38],
+      "turn": [90.0, -9.81, 0.0],
+      "scale": [1.016, 1.016, 1.016],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-11",
+      "kind": "bottle",
+      "at": [-8.62, 1.3, -7.38],
+      "turn": [90.0, -11.57, 0.0],
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-12",
+      "kind": "bottle",
+      "at": [-8.45, 1.3, -7.38],
+      "turn": [90.0, -5.9, 0.0],
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-13",
+      "kind": "bottle",
+      "at": [-8.28, 1.3, -7.38],
+      "turn": [90.0, -6.7, 0.0],
+      "scale": [0.991, 0.991, 0.991],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-14",
+      "kind": "bottle",
+      "at": [-8.11, 1.3, -7.38],
+      "turn": [90.0, 3.24, 0.0],
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-15",
+      "kind": "bottle",
+      "at": [-7.94, 1.3, -7.38],
+      "turn": [90.0, -0.06, 0.0],
+      "scale": [0.991, 0.991, 0.991],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-16",
+      "kind": "bottle",
+      "at": [-8.535, 1.385, -7.38],
+      "turn": [90.0, 10.62, 0.0],
+      "scale": [0.981, 0.981, 0.981],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-17",
+      "kind": "bottle",
+      "at": [-8.365, 1.385, -7.38],
+      "turn": [90.0, 1.71, 0.0],
+      "scale": [1.024, 1.024, 1.024],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-18",
+      "kind": "bottle",
+      "at": [-8.195, 1.385, -7.38],
+      "turn": [90.0, 10.88, 0.0],
+      "scale": [0.979, 0.979, 0.979],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-19",
+      "kind": "bottle",
+      "at": [-8.025, 1.385, -7.38],
+      "turn": [90.0, -10.68, 0.0],
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-20",
+      "kind": "bottle",
+      "at": [-7.855, 1.385, -7.38],
+      "turn": [90.0, -2.94, 0.0],
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-21",
+      "kind": "bottle",
+      "at": [-8.62, 1.47, -7.38],
+      "turn": [90.0, -8.48, 0.0],
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-22",
+      "kind": "bottle",
+      "at": [-8.45, 1.47, -7.38],
+      "turn": [90.0, -1.4, 0.0],
+      "scale": [0.974, 0.974, 0.974],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-23",
+      "kind": "bottle",
+      "at": [-8.28, 1.47, -7.38],
+      "turn": [90.0, 3.91, 0.0],
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-24",
+      "kind": "bottle",
+      "at": [-8.11, 1.47, -7.38],
+      "turn": [90.0, 8.98, 0.0],
+      "scale": [0.999, 0.999, 0.999],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-25",
+      "kind": "bottle",
+      "at": [-7.94, 1.47, -7.38],
+      "turn": [90.0, -6.38, 0.0],
+      "scale": [1.026, 1.026, 1.026],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-26",
+      "kind": "bottle",
+      "at": [-8.535, 1.555, -7.38],
+      "turn": [90.0, -0.01, 0.0],
+      "scale": [1.017, 1.017, 1.017],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-27",
+      "kind": "bottle",
+      "at": [-8.365, 1.555, -7.38],
+      "turn": [90.0, -10.09, 0.0],
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-28",
+      "kind": "bottle",
+      "at": [-8.195, 1.555, -7.38],
+      "turn": [90.0, 11.53, 0.0],
+      "scale": [0.997, 0.997, 0.997],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-29",
+      "kind": "bottle",
+      "at": [-8.025, 1.555, -7.38],
+      "turn": [90.0, -4.69, 0.0],
+      "scale": [0.973, 0.973, 0.973],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-30",
+      "kind": "bottle",
+      "at": [-7.855, 1.555, -7.38],
+      "turn": [90.0, -3.32, 0.0],
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-31",
+      "kind": "bottle",
+      "at": [-8.62, 1.64, -7.38],
+      "turn": [90.0, -7.42, 0.0],
+      "scale": [1.03, 1.03, 1.03],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-32",
+      "kind": "bottle",
+      "at": [-8.45, 1.64, -7.38],
+      "turn": [90.0, -5.6, 0.0],
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-33",
+      "kind": "bottle",
+      "at": [-8.28, 1.64, -7.38],
+      "turn": [90.0, -8.48, 0.0],
+      "scale": [1.022, 1.022, 1.022],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-34",
+      "kind": "bottle",
+      "at": [-8.11, 1.64, -7.38],
+      "turn": [90.0, 11.67, 0.0],
+      "scale": [0.976, 0.976, 0.976],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-35",
+      "kind": "bottle",
+      "at": [-7.94, 1.64, -7.38],
+      "turn": [90.0, 3.41, 0.0],
+      "scale": [0.971, 0.971, 0.971],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-36",
+      "kind": "bottle",
+      "at": [-8.535, 1.725, -7.38],
+      "turn": [90.0, 1.89, 0.0],
+      "scale": [0.982, 0.982, 0.982],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-37",
+      "kind": "bottle",
+      "at": [-8.365, 1.725, -7.38],
+      "turn": [90.0, 2.98, 0.0],
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-38",
+      "kind": "bottle",
+      "at": [-8.195, 1.725, -7.38],
+      "turn": [90.0, 5.99, 0.0],
+      "scale": [1.011, 1.011, 1.011],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-39",
+      "kind": "bottle",
+      "at": [-8.025, 1.725, -7.38],
+      "turn": [90.0, 7.9, 0.0],
+      "scale": [0.977, 0.977, 0.977],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-40",
+      "kind": "bottle",
+      "at": [-7.855, 1.725, -7.38],
+      "turn": [90.0, 2.24, 0.0],
+      "scale": [0.984, 0.984, 0.984],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-41",
+      "kind": "bottle",
+      "at": [-8.62, 1.81, -7.38],
+      "turn": [90.0, 6.52, 0.0],
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-42",
+      "kind": "bottle",
+      "at": [-8.45, 1.81, -7.38],
+      "turn": [90.0, -0.06, 0.0],
+      "scale": [1.002, 1.002, 1.002],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-43",
+      "kind": "bottle",
+      "at": [-8.28, 1.81, -7.38],
+      "turn": [90.0, 9.11, 0.0],
+      "scale": [0.979, 0.979, 0.979],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-44",
+      "kind": "bottle",
+      "at": [-8.11, 1.81, -7.38],
+      "turn": [90.0, 6.52, 0.0],
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-45",
+      "kind": "bottle",
+      "at": [-7.94, 1.81, -7.38],
+      "turn": [90.0, 4.81, 0.0],
+      "scale": [1.028, 1.028, 1.028],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-46",
+      "kind": "bottle",
+      "at": [-8.535, 1.895, -7.38],
+      "turn": [90.0, -0.47, 0.0],
+      "scale": [0.988, 0.988, 0.988],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-47",
+      "kind": "bottle",
+      "at": [-8.365, 1.895, -7.38],
+      "turn": [90.0, -5.34, 0.0],
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-48",
+      "kind": "bottle",
+      "at": [-8.195, 1.895, -7.38],
+      "turn": [90.0, 4.04, 0.0],
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-49",
+      "kind": "bottle",
+      "at": [-8.025, 1.895, -7.38],
+      "turn": [90.0, 0.52, 0.0],
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-50",
+      "kind": "bottle",
+      "at": [-7.855, 1.895, -7.38],
+      "turn": [90.0, 7.59, 0.0],
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-51",
+      "kind": "bottle",
+      "at": [-8.62, 1.98, -7.38],
+      "turn": [90.0, -3.53, 0.0],
+      "scale": [1.02, 1.02, 1.02],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-52",
+      "kind": "bottle",
+      "at": [-8.45, 1.98, -7.38],
+      "turn": [90.0, -7.48, 0.0],
+      "scale": [0.975, 0.975, 0.975],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-53",
+      "kind": "bottle",
+      "at": [-8.28, 1.98, -7.38],
+      "turn": [90.0, -3.26, 0.0],
+      "scale": [1.004, 1.004, 1.004],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-54",
+      "kind": "bottle",
+      "at": [-8.11, 1.98, -7.38],
+      "turn": [90.0, 5.87, 0.0],
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-55",
+      "kind": "bottle",
+      "at": [-7.94, 1.98, -7.38],
+      "turn": [90.0, -4.17, 0.0],
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-56",
+      "kind": "bottle",
+      "at": [-8.535, 2.065, -7.38],
+      "turn": [90.0, -3.49, 0.0],
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-57",
+      "kind": "bottle",
+      "at": [-8.365, 2.065, -7.38],
+      "turn": [90.0, -10.48, 0.0],
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-58",
+      "kind": "bottle",
+      "at": [-8.195, 2.065, -7.38],
+      "turn": [90.0, -11.01, 0.0],
+      "scale": [0.976, 0.976, 0.976],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-59",
+      "kind": "bottle",
+      "at": [-8.025, 2.065, -7.38],
+      "turn": [90.0, 2.69, 0.0],
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-60",
+      "kind": "bottle",
+      "at": [-7.855, 2.065, -7.38],
+      "turn": [90.0, 3.32, 0.0],
+      "scale": [1.013, 1.013, 1.013],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-61",
+      "kind": "bottle",
+      "at": [-8.62, 2.15, -7.38],
+      "turn": [90.0, -3.49, 0.0],
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-62",
+      "kind": "bottle",
+      "at": [-8.45, 2.15, -7.38],
+      "turn": [90.0, 7.36, 0.0],
+      "scale": [0.971, 0.971, 0.971],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-63",
+      "kind": "bottle",
+      "at": [-8.28, 2.15, -7.38],
+      "turn": [90.0, -7.44, 0.0],
+      "scale": [1.002, 1.002, 1.002],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-64",
+      "kind": "bottle",
+      "at": [-8.11, 2.15, -7.38],
+      "turn": [90.0, -5.33, 0.0],
+      "scale": [0.977, 0.977, 0.977],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-65",
+      "kind": "bottle",
+      "at": [-7.94, 2.15, -7.38],
+      "turn": [90.0, 4.79, 0.0],
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-66",
+      "kind": "bottle",
+      "at": [-8.535, 2.235, -7.38],
+      "turn": [90.0, 6.67, 0.0],
+      "scale": [0.974, 0.974, 0.974],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-67",
+      "kind": "bottle",
+      "at": [-8.365, 2.235, -7.38],
+      "turn": [90.0, -8.3, 0.0],
+      "scale": [0.984, 0.984, 0.984],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-68",
+      "kind": "bottle",
+      "at": [-8.195, 2.235, -7.38],
+      "turn": [90.0, -8.45, 0.0],
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-69",
+      "kind": "bottle",
+      "at": [-8.025, 2.235, -7.38],
+      "turn": [90.0, 4.27, 0.0],
+      "scale": [1.029, 1.029, 1.029],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-70",
+      "kind": "bottle",
+      "at": [-7.855, 2.235, -7.38],
+      "turn": [90.0, 1.16, 0.0],
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-71",
+      "kind": "bottle",
+      "at": [-8.62, 2.32, -7.38],
+      "turn": [90.0, 8.48, 0.0],
+      "scale": [1.023, 1.023, 1.023],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-72",
+      "kind": "bottle",
+      "at": [-8.45, 2.32, -7.38],
+      "turn": [90.0, -8.58, 0.0],
+      "scale": [1.003, 1.003, 1.003],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-73",
+      "kind": "bottle",
+      "at": [-8.28, 2.32, -7.38],
+      "turn": [90.0, 11.87, 0.0],
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-74",
+      "kind": "bottle",
+      "at": [-8.11, 2.32, -7.38],
+      "turn": [90.0, 4.79, 0.0],
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-75",
+      "kind": "bottle",
+      "at": [-7.94, 2.32, -7.38],
+      "turn": [90.0, 7.8, 0.0],
+      "scale": [0.977, 0.977, 0.977],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-76",
+      "kind": "bottle",
+      "at": [-8.535, 2.405, -7.38],
+      "turn": [90.0, 1.46, 0.0],
+      "scale": [1.002, 1.002, 1.002],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-77",
+      "kind": "bottle",
+      "at": [-8.365, 2.405, -7.38],
+      "turn": [90.0, 0.64, 0.0],
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-78",
+      "kind": "bottle",
+      "at": [-8.195, 2.405, -7.38],
+      "turn": [90.0, 2.78, 0.0],
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-79",
+      "kind": "bottle",
+      "at": [-8.025, 2.405, -7.38],
+      "turn": [90.0, 8.86, 0.0],
+      "scale": [0.988, 0.988, 0.988],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-80",
+      "kind": "bottle",
+      "at": [-7.855, 2.405, -7.38],
+      "turn": [90.0, 5.87, 0.0],
+      "scale": [0.978, 0.978, 0.978],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-81",
+      "kind": "bottle",
+      "at": [-8.62, 2.49, -7.38],
+      "turn": [90.0, -9.56, 0.0],
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-82",
+      "kind": "bottle",
+      "at": [-8.45, 2.49, -7.38],
+      "turn": [90.0, -0.21, 0.0],
+      "scale": [0.987, 0.987, 0.987],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-83",
+      "kind": "bottle",
+      "at": [-8.28, 2.49, -7.38],
+      "turn": [90.0, 3.04, 0.0],
+      "scale": [0.978, 0.978, 0.978],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-84",
+      "kind": "bottle",
+      "at": [-8.11, 2.49, -7.38],
+      "turn": [90.0, 5.25, 0.0],
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-85",
+      "kind": "bottle",
+      "at": [-7.94, 2.49, -7.38],
+      "turn": [90.0, 2.25, 0.0],
+      "scale": [1.003, 1.003, 1.003],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-86",
+      "kind": "bottle",
+      "at": [-8.535, 2.575, -7.38],
+      "turn": [90.0, 6.37, 0.0],
+      "scale": [0.999, 0.999, 0.999],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-87",
+      "kind": "bottle",
+      "at": [-8.365, 2.575, -7.38],
+      "turn": [90.0, 0.22, 0.0],
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-88",
+      "kind": "bottle",
+      "at": [-8.195, 2.575, -7.38],
+      "turn": [90.0, 3.51, 0.0],
+      "scale": [1.015, 1.015, 1.015],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-89",
+      "kind": "bottle",
+      "at": [-8.025, 2.575, -7.38],
+      "turn": [90.0, -8.54, 0.0],
+      "scale": [0.974, 0.974, 0.974],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-90",
+      "kind": "bottle",
+      "at": [-7.855, 2.575, -7.38],
+      "turn": [90.0, -4.45, 0.0],
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-91",
+      "kind": "bottle",
+      "at": [-7.4175, 1.3375, -7.2389],
+      "turn": -9.9,
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-92",
+      "kind": "bottle",
+      "at": [-7.277, 1.3375, -7.2406],
+      "turn": -9.26,
+      "scale": [1.011, 1.011, 1.011],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-93",
+      "kind": "bottle",
+      "at": [-7.1535, 1.3375, -7.2593],
+      "turn": -13.42,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-94",
+      "kind": "bottle",
+      "at": [-7.0282, 1.3375, -7.2334],
+      "turn": -0.39,
+      "scale": [0.986, 0.986, 0.986],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-95",
+      "kind": "bottle",
+      "at": [-6.8613, 1.3375, -7.2225],
+      "turn": 22.49,
+      "scale": [0.99, 0.99, 0.99],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-96",
+      "kind": "bottle",
+      "at": [-6.7382, 1.3375, -7.2102],
+      "turn": -7.87,
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-97",
+      "kind": "bottle",
+      "at": [-6.5853, 1.3375, -7.2204],
+      "turn": 4.88,
+      "scale": [1.008, 1.008, 1.008],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-98",
+      "kind": "bottle",
+      "at": [-6.417, 1.3375, -7.2262],
+      "turn": 11.09,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-99",
+      "kind": "bottle",
+      "at": [-7.4175, 1.6975, -7.263],
+      "turn": 21.83,
+      "scale": [1.0, 1.0, 1.0],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-100",
+      "kind": "bottle",
+      "at": [-7.2595, 1.6975, -7.2547],
+      "turn": -5.32,
+      "scale": [1.015, 1.015, 1.015],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-101",
+      "kind": "bottle",
+      "at": [-7.118, 1.6975, -7.26],
+      "turn": 0.85,
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-102",
+      "kind": "bottle",
+      "at": [-6.9731, 1.6975, -7.2176],
+      "turn": -8.46,
+      "scale": [0.997, 0.997, 0.997],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-103",
+      "kind": "bottle",
+      "at": [-6.8477, 1.6975, -7.2378],
+      "turn": -2.38,
+      "scale": [0.978, 0.978, 0.978],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-104",
+      "kind": "bottle",
+      "at": [-6.7057, 1.6975, -7.2596],
+      "turn": 15.02,
+      "scale": [1.002, 1.002, 1.002],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-105",
+      "kind": "bottle",
+      "at": [-6.5575, 1.6975, -7.2377],
+      "turn": -20.76,
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-106",
+      "kind": "bottle",
+      "at": [-6.4351, 1.6975, -7.2585],
+      "turn": 10.79,
+      "scale": [0.976, 0.976, 0.976],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-107",
+      "kind": "bottle",
+      "at": [-7.4175, 2.0575, -7.2106],
+      "turn": -2.35,
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-108",
+      "kind": "bottle",
+      "at": [-7.256, 2.0575, -7.2594],
+      "turn": 13.42,
+      "scale": [1.0, 1.0, 1.0],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-109",
+      "kind": "bottle",
+      "at": [-7.0983, 2.0575, -7.2158],
+      "turn": 2.16,
+      "scale": [1.026, 1.026, 1.026],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-110",
+      "kind": "bottle",
+      "at": [-6.9532, 2.0575, -7.2335],
+      "turn": 15.06,
+      "scale": [1.026, 1.026, 1.026],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-111",
+      "kind": "bottle",
+      "at": [-6.8008, 2.0575, -7.2476],
+      "turn": -5.24,
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-112",
+      "kind": "bottle",
+      "at": [-6.6768, 2.0575, -7.2093],
+      "turn": 25.37,
+      "scale": [0.979, 0.979, 0.979],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-113",
+      "kind": "bottle",
+      "at": [-6.5456, 2.0575, -7.2602],
+      "turn": 4.76,
+      "scale": [0.979, 0.979, 0.979],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-114",
+      "kind": "bottle",
+      "at": [-7.4175, 2.4175, -7.214],
+      "turn": 9.66,
+      "scale": [1.028, 1.028, 1.028],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-115",
+      "kind": "bottle",
+      "at": [-7.2662, 2.4175, -7.218],
+      "turn": -0.18,
+      "scale": [1.022, 1.022, 1.022],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-116",
+      "kind": "bottle",
+      "at": [-7.104, 2.4175, -7.2359],
+      "turn": 2.46,
+      "scale": [0.999, 0.999, 0.999],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-117",
+      "kind": "bottle",
+      "at": [-6.9547, 2.4175, -7.2527],
+      "turn": -0.12,
+      "scale": [1.013, 1.013, 1.013],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-118",
+      "kind": "bottle",
+      "at": [-6.8155, 2.4175, -7.2336],
+      "turn": 9.5,
+      "scale": [0.999, 0.999, 0.999],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-119",
+      "kind": "bottle",
+      "at": [-6.6777, 2.4175, -7.2287],
+      "turn": -14.03,
+      "scale": [1.016, 1.016, 1.016],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-120",
+      "kind": "bottle",
+      "at": [-6.5364, 2.4175, -7.2156],
+      "turn": 10.29,
+      "scale": [1.009, 1.009, 1.009],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-121",
+      "kind": "bottle",
+      "at": [-6.205, 1.3375, -7.2609],
+      "turn": 19.93,
+      "scale": [0.975, 0.975, 0.975],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-122",
+      "kind": "bottle",
+      "at": [-6.0715, 1.3375, -7.2182],
+      "turn": 3.17,
+      "scale": [1.023, 1.023, 1.023],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-123",
+      "kind": "bottle",
+      "at": [-5.9102, 1.3375, -7.2486],
+      "turn": 9.24,
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-124",
+      "kind": "bottle",
+      "at": [-5.7768, 1.3375, -7.2403],
+      "turn": -8.86,
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-125",
+      "kind": "bottle",
+      "at": [-5.6085, 1.3375, -7.2202],
+      "turn": -18.82,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-126",
+      "kind": "bottle",
+      "at": [-5.4478, 1.3375, -7.2335],
+      "turn": -15.84,
+      "scale": [0.998, 0.998, 0.998],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-127",
+      "kind": "bottle",
+      "at": [-5.303, 1.3375, -7.2174],
+      "turn": 6.75,
+      "scale": [1.008, 1.008, 1.008],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-128",
+      "kind": "bottle",
+      "at": [-6.205, 1.6975, -7.2054],
+      "turn": 7.64,
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-129",
+      "kind": "bottle",
+      "at": [-6.0457, 1.6975, -7.2637],
+      "turn": -12.92,
+      "scale": [1.029, 1.029, 1.029],
+      "parts": {"model": {"file": "bottle_stubby_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-130",
+      "kind": "bottle",
+      "at": [-5.9125, 1.6975, -7.2372],
+      "turn": 22.08,
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-131",
+      "kind": "bottle",
+      "at": [-5.7472, 1.6975, -7.2594],
+      "turn": -4.46,
+      "scale": [0.988, 0.988, 0.988],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-132",
+      "kind": "bottle",
+      "at": [-5.5839, 1.6975, -7.261],
+      "turn": 18.92,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-133",
+      "kind": "bottle",
+      "at": [-5.4222, 1.6975, -7.2135],
+      "turn": 14.37,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-134",
+      "kind": "bottle",
+      "at": [-5.2838, 1.6975, -7.2161],
+      "turn": 0.53,
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-135",
+      "kind": "bottle",
+      "at": [-6.205, 2.0575, -7.2517],
+      "turn": 10.22,
+      "scale": [0.976, 0.976, 0.976],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-136",
+      "kind": "bottle",
+      "at": [-6.0366, 2.0575, -7.2338],
+      "turn": -20.48,
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-137",
+      "kind": "bottle",
+      "at": [-5.8806, 2.0575, -7.2389],
+      "turn": -16.57,
+      "scale": [0.97, 0.97, 0.97],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-138",
+      "kind": "bottle",
+      "at": [-5.7159, 2.0575, -7.2391],
+      "turn": -1.18,
+      "scale": [0.971, 0.971, 0.971],
+      "parts": {"model": {"file": "bottle_stubby_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-139",
+      "kind": "bottle",
+      "at": [-5.5909, 2.0575, -7.2601],
+      "turn": 14.81,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-140",
+      "kind": "bottle",
+      "at": [-5.4541, 2.0575, -7.2585],
+      "turn": -18.9,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-141",
+      "kind": "bottle",
+      "at": [-5.3063, 2.0575, -7.2543],
+      "turn": -10.54,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-142",
+      "kind": "bottle",
+      "at": [-6.205, 2.4175, -7.2121],
+      "turn": 5.82,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-143",
+      "kind": "bottle",
+      "at": [-6.0611, 2.4175, -7.2219],
+      "turn": -12.01,
+      "scale": [1.0, 1.0, 1.0],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-144",
+      "kind": "bottle",
+      "at": [-5.9342, 2.4175, -7.257],
+      "turn": -15.6,
+      "scale": [1.028, 1.028, 1.028],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-145",
+      "kind": "bottle",
+      "at": [-5.7938, 2.4175, -7.2569],
+      "turn": 5.26,
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-146",
+      "kind": "bottle",
+      "at": [-5.639, 2.4175, -7.2299],
+      "turn": 7.17,
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-147",
+      "kind": "bottle",
+      "at": [-5.4983, 2.4175, -7.2303],
+      "turn": 20.36,
+      "scale": [1.024, 1.024, 1.024],
+      "parts": {"model": {"file": "bottle_tequila_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-148",
+      "kind": "bottle",
+      "at": [-5.3322, 2.4175, -7.2312],
+      "turn": -2.71,
+      "scale": [1.017, 1.017, 1.017],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-149",
+      "kind": "bottle",
+      "at": [-6.205, 2.7775, -7.2144],
+      "turn": -7.38,
+      "scale": [0.984, 0.984, 0.984],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-150",
+      "kind": "bottle",
+      "at": [-6.0696, 2.7775, -7.2083],
+      "turn": 4.63,
+      "scale": [1.029, 1.029, 1.029],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-151",
+      "kind": "bottle",
+      "at": [-5.9076, 2.7775, -7.235],
+      "turn": 21.38,
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-152",
+      "kind": "bottle",
+      "at": [-5.7609, 2.7775, -7.2477],
+      "turn": -15.08,
+      "scale": [1.02, 1.02, 1.02],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-153",
+      "kind": "bottle",
+      "at": [-5.6146, 2.7775, -7.2155],
+      "turn": 1.2,
+      "scale": [1.024, 1.024, 1.024],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-154",
+      "kind": "bottle",
+      "at": [-5.4884, 2.7775, -7.2631],
+      "turn": 4.21,
+      "scale": [1.022, 1.022, 1.022],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-155",
+      "kind": "bottle",
+      "at": [-5.3431, 2.7775, -7.2442],
+      "turn": -4.31,
+      "scale": [1.025, 1.025, 1.025],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-156",
+      "kind": "bottle",
+      "at": [-4.9925, 1.3375, -7.2152],
+      "turn": -19.42,
+      "scale": [1.023, 1.023, 1.023],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-157",
+      "kind": "bottle",
+      "at": [-4.8311, 1.3375, -7.2302],
+      "turn": -5.51,
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-158",
+      "kind": "bottle",
+      "at": [-4.6629, 1.3375, -7.2312],
+      "turn": 12.18,
+      "scale": [1.026, 1.026, 1.026],
+      "parts": {"model": {"file": "bottle_tequila_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-159",
+      "kind": "bottle",
+      "at": [-4.499, 1.3375, -7.2051],
+      "turn": -25.39,
+      "scale": [1.018, 1.018, 1.018],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-160",
+      "kind": "bottle",
+      "at": [-4.349, 1.3375, -7.2429],
+      "turn": 14.71,
+      "scale": [1.028, 1.028, 1.028],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-161",
+      "kind": "bottle",
+      "at": [-4.2237, 1.3375, -7.226],
+      "turn": -6.37,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-162",
+      "kind": "bottle",
+      "at": [-4.0952, 1.3375, -7.2364],
+      "turn": 14.61,
+      "scale": [1.015, 1.015, 1.015],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-163",
+      "kind": "bottle",
+      "at": [-4.9925, 1.6975, -7.2425],
+      "turn": 14.04,
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_tequila_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-164",
+      "kind": "bottle",
+      "at": [-4.8706, 1.6975, -7.2093],
+      "turn": 6.41,
+      "scale": [1.003, 1.003, 1.003],
+      "parts": {"model": {"file": "bottle_stubby_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-165",
+      "kind": "bottle",
+      "at": [-4.718, 1.6975, -7.2631],
+      "turn": -3.31,
+      "scale": [0.973, 0.973, 0.973],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-166",
+      "kind": "bottle",
+      "at": [-4.58, 1.6975, -7.2364],
+      "turn": -22.27,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-167",
+      "kind": "bottle",
+      "at": [-4.453, 1.6975, -7.2178],
+      "turn": 10.71,
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-168",
+      "kind": "bottle",
+      "at": [-4.296, 1.6975, -7.2239],
+      "turn": 9.63,
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-169",
+      "kind": "bottle",
+      "at": [-4.1611, 1.6975, -7.2134],
+      "turn": -11.44,
+      "scale": [1.012, 1.012, 1.012],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-170",
+      "kind": "bottle",
+      "at": [-4.0097, 1.6975, -7.2111],
+      "turn": -10.61,
+      "scale": [1.029, 1.029, 1.029],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-171",
+      "kind": "bottle",
+      "at": [-4.9925, 2.0575, -7.2585],
+      "turn": -0.56,
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-172",
+      "kind": "bottle",
+      "at": [-4.8392, 2.0575, -7.2368],
+      "turn": 6.81,
+      "scale": [0.986, 0.986, 0.986],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-173",
+      "kind": "bottle",
+      "at": [-4.6918, 2.0575, -7.2296],
+      "turn": -1.96,
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-174",
+      "kind": "bottle",
+      "at": [-4.5466, 2.0575, -7.2597],
+      "turn": 13.55,
+      "scale": [1.018, 1.018, 1.018],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-175",
+      "kind": "bottle",
+      "at": [-4.3887, 2.0575, -7.2562],
+      "turn": -14.07,
+      "scale": [1.025, 1.025, 1.025],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-176",
+      "kind": "bottle",
+      "at": [-4.2213, 2.0575, -7.2076],
+      "turn": -28.04,
+      "scale": [0.999, 0.999, 0.999],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-177",
+      "kind": "bottle",
+      "at": [-4.0791, 2.0575, -7.246],
+      "turn": -22.26,
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-178",
+      "kind": "bottle",
+      "at": [-4.9925, 2.4175, -7.2207],
+      "turn": -0.16,
+      "scale": [1.03, 1.03, 1.03],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-179",
+      "kind": "bottle",
+      "at": [-4.8405, 2.4175, -7.2623],
+      "turn": 1.53,
+      "scale": [1.03, 1.03, 1.03],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-180",
+      "kind": "bottle",
+      "at": [-4.7046, 2.4175, -7.2401],
+      "turn": 5.81,
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-181",
+      "kind": "bottle",
+      "at": [-4.5846, 2.4175, -7.2592],
+      "turn": 9.0,
+      "scale": [1.03, 1.03, 1.03],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-182",
+      "kind": "bottle",
+      "at": [-4.4405, 2.4175, -7.2158],
+      "turn": 8.63,
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-183",
+      "kind": "bottle",
+      "at": [-4.3149, 2.4175, -7.2561],
+      "turn": -12.71,
+      "scale": [1.004, 1.004, 1.004],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-184",
+      "kind": "bottle",
+      "at": [-4.1595, 2.4175, -7.2227],
+      "turn": 12.22,
+      "scale": [1.02, 1.02, 1.02],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-185",
+      "kind": "bottle",
+      "at": [-4.0177, 2.4175, -7.2498],
+      "turn": -1.73,
+      "scale": [0.997, 0.997, 0.997],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-186",
+      "kind": "bottle",
+      "at": [-3.74, 1.606, -7.23],
+      "turn": -10.89,
+      "scale": [1.023, 1.023, 1.023],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-187",
+      "kind": "bottle",
+      "at": [-3.5194, 1.606, -7.23],
+      "turn": 0.6,
+      "scale": [0.989, 0.989, 0.989],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-188",
+      "kind": "bottle",
+      "at": [-3.2988, 1.606, -7.23],
+      "turn": -5.43,
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-189",
+      "kind": "bottle",
+      "at": [-3.0781, 1.606, -7.23],
+      "turn": 6.16,
+      "scale": [1.022, 1.022, 1.022],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-190",
+      "kind": "bottle",
+      "at": [-2.8575, 1.606, -7.23],
+      "turn": -0.06,
+      "scale": [0.982, 0.982, 0.982],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-191",
+      "kind": "bottle",
+      "at": [-3.74, 2.256, -7.23],
+      "turn": -0.85,
+      "scale": [1.015, 1.015, 1.015],
+      "parts": {"model": {"file": "bottle_magnum_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-192",
+      "kind": "bottle",
+      "at": [-3.5194, 2.256, -7.23],
+      "turn": -0.95,
+      "scale": [0.996, 0.996, 0.996],
+      "parts": {"model": {"file": "bottle_magnum_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-193",
+      "kind": "bottle",
+      "at": [-3.2988, 2.256, -7.23],
+      "turn": 4.63,
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-194",
+      "kind": "bottle",
+      "at": [-3.0781, 2.256, -7.23],
+      "turn": 5.38,
+      "scale": [1.001, 1.001, 1.001],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-195",
+      "kind": "bottle",
+      "at": [-2.8575, 2.256, -7.23],
+      "turn": 2.0,
+      "scale": [0.994, 0.994, 0.994],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-196",
+      "kind": "bottle",
+      "at": [-2.5675, 1.3375, -7.2465],
+      "turn": -19.17,
+      "scale": [1.018, 1.018, 1.018],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-197",
+      "kind": "bottle",
+      "at": [-2.4464, 1.3375, -7.2228],
+      "turn": 12.29,
+      "scale": [0.975, 0.975, 0.975],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-198",
+      "kind": "bottle",
+      "at": [-2.3159, 1.3375, -7.2166],
+      "turn": -3.53,
+      "scale": [0.988, 0.988, 0.988],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-199",
+      "kind": "bottle",
+      "at": [-2.1525, 1.3375, -7.2556],
+      "turn": 20.39,
+      "scale": [0.998, 0.998, 0.998],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-200",
+      "kind": "bottle",
+      "at": [-2.0206, 1.3375, -7.2389],
+      "turn": 24.45,
+      "scale": [0.973, 0.973, 0.973],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-201",
+      "kind": "bottle",
+      "at": [-1.8594, 1.3375, -7.224],
+      "turn": 11.01,
+      "scale": [1.009, 1.009, 1.009],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-202",
+      "kind": "bottle",
+      "at": [-1.6959, 1.3375, -7.2279],
+      "turn": -0.86,
+      "scale": [0.975, 0.975, 0.975],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-203",
+      "kind": "bottle",
+      "at": [-2.5675, 1.6975, -7.2339],
+      "turn": 3.25,
+      "scale": [0.99, 0.99, 0.99],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-204",
+      "kind": "bottle",
+      "at": [-2.4002, 1.6975, -7.2506],
+      "turn": -0.74,
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-205",
+      "kind": "bottle",
+      "at": [-2.2441, 1.6975, -7.2098],
+      "turn": -12.41,
+      "scale": [1.001, 1.001, 1.001],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-206",
+      "kind": "bottle",
+      "at": [-2.1176, 1.6975, -7.2607],
+      "turn": -14.96,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-207",
+      "kind": "bottle",
+      "at": [-1.9691, 1.6975, -7.2508],
+      "turn": -0.65,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-208",
+      "kind": "bottle",
+      "at": [-1.8071, 1.6975, -7.241],
+      "turn": 16.37,
+      "scale": [0.971, 0.971, 0.971],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-209",
+      "kind": "bottle",
+      "at": [-1.6812, 1.6975, -7.2243],
+      "turn": 17.23,
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_tequila_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-210",
+      "kind": "bottle",
+      "at": [-2.5675, 2.0575, -7.2291],
+      "turn": 9.72,
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-211",
+      "kind": "bottle",
+      "at": [-2.4201, 2.0575, -7.264],
+      "turn": -17.44,
+      "scale": [1.002, 1.002, 1.002],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-212",
+      "kind": "bottle",
+      "at": [-2.2649, 2.0575, -7.235],
+      "turn": 6.48,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-213",
+      "kind": "bottle",
+      "at": [-2.1207, 2.0575, -7.2588],
+      "turn": -21.82,
+      "scale": [1.011, 1.011, 1.011],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-214",
+      "kind": "bottle",
+      "at": [-1.9979, 2.0575, -7.2484],
+      "turn": 4.56,
+      "scale": [1.026, 1.026, 1.026],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-215",
+      "kind": "bottle",
+      "at": [-1.868, 2.0575, -7.2097],
+      "turn": -21.53,
+      "scale": [1.017, 1.017, 1.017],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-216",
+      "kind": "bottle",
+      "at": [-1.7308, 2.0575, -7.2462],
+      "turn": -1.29,
+      "scale": [0.991, 0.991, 0.991],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-217",
+      "kind": "bottle",
+      "at": [-1.6029, 2.0575, -7.2208],
+      "turn": -1.2,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-218",
+      "kind": "bottle",
+      "at": [-2.5675, 2.4175, -7.2363],
+      "turn": -0.23,
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-219",
+      "kind": "bottle",
+      "at": [-2.4094, 2.4175, -7.2061],
+      "turn": 15.23,
+      "scale": [1.019, 1.019, 1.019],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-220",
+      "kind": "bottle",
+      "at": [-2.2865, 2.4175, -7.226],
+      "turn": 26.56,
+      "scale": [0.972, 0.972, 0.972],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-221",
+      "kind": "bottle",
+      "at": [-2.1403, 2.4175, -7.2554],
+      "turn": -20.85,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-222",
+      "kind": "bottle",
+      "at": [-1.9742, 2.4175, -7.2165],
+      "turn": -3.39,
+      "scale": [0.991, 0.991, 0.991],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-223",
+      "kind": "bottle",
+      "at": [-1.8377, 2.4175, -7.231],
+      "turn": 24.02,
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-224",
+      "kind": "bottle",
+      "at": [-1.6865, 2.4175, -7.2317],
+      "turn": -3.85,
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-225",
+      "kind": "bottle",
+      "at": [-1.355, 1.3375, -7.2438],
+      "turn": -13.54,
+      "scale": [0.995, 0.995, 0.995],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-226",
+      "kind": "bottle",
+      "at": [-1.215, 1.3375, -7.2608],
+      "turn": 1.45,
+      "scale": [0.974, 0.974, 0.974],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-227",
+      "kind": "bottle",
+      "at": [-1.0533, 1.3375, -7.2367],
+      "turn": 4.21,
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-228",
+      "kind": "bottle",
+      "at": [-0.8862, 1.3375, -7.2321],
+      "turn": 7.93,
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-229",
+      "kind": "bottle",
+      "at": [-0.7347, 1.3375, -7.2609],
+      "turn": -8.38,
+      "scale": [0.982, 0.982, 0.982],
+      "parts": {"model": {"file": "bottle_wine_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-230",
+      "kind": "bottle",
+      "at": [-0.5874, 1.3375, -7.2539],
+      "turn": -5.36,
+      "scale": [1.009, 1.009, 1.009],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-231",
+      "kind": "bottle",
+      "at": [-0.4389, 1.3375, -7.2534],
+      "turn": -19.33,
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-232",
+      "kind": "bottle",
+      "at": [-1.355, 2.4175, -7.2441],
+      "turn": -8.15,
+      "scale": [1.025, 1.025, 1.025],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-233",
+      "kind": "bottle",
+      "at": [-1.2092, 2.4175, -7.2626],
+      "turn": -12.96,
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_slim_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-234",
+      "kind": "bottle",
+      "at": [-1.0528, 2.4175, -7.2453],
+      "turn": -20.79,
+      "scale": [1.017, 1.017, 1.017],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-235",
+      "kind": "bottle",
+      "at": [-0.9231, 2.4175, -7.2395],
+      "turn": -10.91,
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-236",
+      "kind": "bottle",
+      "at": [-0.7686, 2.4175, -7.2633],
+      "turn": -1.11,
+      "scale": [0.996, 0.996, 0.996],
+      "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-237",
+      "kind": "bottle",
+      "at": [-0.6262, 2.4175, -7.2248],
+      "turn": 6.49,
+      "scale": [0.997, 0.997, 0.997],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-238",
+      "kind": "bottle",
+      "at": [-0.4849, 2.4175, -7.2179],
+      "turn": 10.3,
+      "scale": [0.997, 0.997, 0.997],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-239",
+      "kind": "bottle",
+      "at": [-1.355, 2.7775, -7.215],
+      "turn": 9.49,
+      "scale": [1.017, 1.017, 1.017],
+      "parts": {"model": {"file": "bottle_tequila_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-240",
+      "kind": "bottle",
+      "at": [-1.1991, 2.7775, -7.2384],
+      "turn": -13.09,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-241",
+      "kind": "bottle",
+      "at": [-1.051, 2.7775, -7.2148],
+      "turn": 17.61,
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-242",
+      "kind": "bottle",
+      "at": [-0.9204, 2.7775, -7.2649],
+      "turn": 1.72,
+      "scale": [0.991, 0.991, 0.991],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-243",
+      "kind": "bottle",
+      "at": [-0.7512, 2.7775, -7.2598],
+      "turn": -17.84,
+      "scale": [0.975, 0.975, 0.975],
+      "parts": {"model": {"file": "bottle_square_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-244",
+      "kind": "bottle",
+      "at": [-0.6152, 2.7775, -7.2085],
+      "turn": 2.93,
+      "scale": [1.005, 1.005, 1.005],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-245",
+      "kind": "bottle",
+      "at": [-0.4842, 2.7775, -7.2295],
+      "turn": 19.94,
+      "scale": [0.994, 0.994, 0.994],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-246",
+      "kind": "bottle",
+      "at": [-0.3532, 2.7775, -7.2264],
+      "turn": 5.72,
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_stubby_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-247",
+      "kind": "bottle",
+      "at": [-0.1425, 1.3375, -7.2418],
+      "turn": 3.96,
+      "scale": [1.01, 1.01, 1.01],
+      "parts": {"model": {"file": "bottle_whiskey_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-248",
+      "kind": "bottle",
+      "at": [-0.0081, 1.3375, -7.2419],
+      "turn": 14.86,
+      "scale": [1.006, 1.006, 1.006],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-249",
+      "kind": "bottle",
+      "at": [0.1337, 1.3375, -7.2212],
+      "turn": 1.0,
+      "scale": [0.976, 0.976, 0.976],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-250",
+      "kind": "bottle",
+      "at": [0.3027, 1.3375, -7.2243],
+      "turn": -9.7,
+      "scale": [0.996, 0.996, 0.996],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-251",
+      "kind": "bottle",
+      "at": [0.4682, 1.3375, -7.226],
+      "turn": 2.05,
+      "scale": [0.981, 0.981, 0.981],
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-252",
+      "kind": "bottle",
+      "at": [0.6245, 1.3375, -7.2428],
+      "turn": 0.07,
+      "scale": [1.024, 1.024, 1.024],
+      "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-253",
+      "kind": "bottle",
+      "at": [0.7533, 1.3375, -7.2323],
+      "turn": 8.31,
+      "scale": [1.027, 1.027, 1.027],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-254",
+      "kind": "bottle",
+      "at": [-0.1425, 1.6975, -7.2618],
+      "turn": 3.35,
+      "scale": [0.979, 0.979, 0.979],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-255",
+      "kind": "bottle",
+      "at": [-0.0066, 1.6975, -7.216],
+      "turn": 5.6,
+      "scale": [1.003, 1.003, 1.003],
+      "parts": {"model": {"file": "bottle_liqueur_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-256",
+      "kind": "bottle",
+      "at": [0.1576, 1.6975, -7.2252],
+      "turn": 6.27,
+      "scale": [1.0, 1.0, 1.0],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-257",
+      "kind": "bottle",
+      "at": [0.2817, 1.6975, -7.21],
+      "turn": -3.25,
+      "scale": [0.993, 0.993, 0.993],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-258",
+      "kind": "bottle",
+      "at": [0.4158, 1.6975, -7.2098],
+      "turn": -10.21,
+      "scale": [0.977, 0.977, 0.977],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-259",
+      "kind": "bottle",
+      "at": [0.5369, 1.6975, -7.246],
+      "turn": 10.74,
+      "scale": [0.992, 0.992, 0.992],
+      "parts": {"model": {"file": "bottle_tequila_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-260",
+      "kind": "bottle",
+      "at": [0.6682, 1.6975, -7.209],
+      "turn": 8.19,
+      "scale": [0.996, 0.996, 0.996],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-261",
+      "kind": "bottle",
+      "at": [-0.1425, 2.0575, -7.2552],
+      "turn": -4.78,
+      "scale": [0.981, 0.981, 0.981],
+      "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-262",
+      "kind": "bottle",
+      "at": [0.0262, 2.0575, -7.2273],
+      "turn": -5.31,
+      "scale": [0.988, 0.988, 0.988],
+      "parts": {"model": {"file": "bottle_champagne_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-263",
+      "kind": "bottle",
+      "at": [0.1473, 2.0575, -7.2212],
+      "turn": -15.13,
+      "scale": [0.99, 0.99, 0.99],
+      "parts": {"model": {"file": "bottle_wine_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-264",
+      "kind": "bottle",
+      "at": [0.2695, 2.0575, -7.2168],
+      "turn": -9.81,
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_slim_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-265",
+      "kind": "bottle",
+      "at": [0.3965, 2.0575, -7.229],
+      "turn": -8.87,
+      "scale": [1.022, 1.022, 1.022],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-266",
+      "kind": "bottle",
+      "at": [0.5513, 2.0575, -7.2339],
+      "turn": 8.73,
+      "scale": [1.014, 1.014, 1.014],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-267",
+      "kind": "bottle",
+      "at": [0.689, 2.0575, -7.2216],
+      "turn": 2.62,
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_cognac_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-268",
+      "kind": "bottle",
+      "at": [-0.1425, 2.4175, -7.2469],
+      "turn": 10.44,
+      "scale": [1.024, 1.024, 1.024],
+      "parts": {"model": {"file": "bottle_liqueur_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-269",
+      "kind": "bottle",
+      "at": [-0.0157, 2.4175, -7.2383],
+      "turn": -1.9,
+      "scale": [0.98, 0.98, 0.98],
+      "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-270",
+      "kind": "bottle",
+      "at": [0.1157, 2.4175, -7.212],
+      "turn": -1.19,
+      "scale": [1.021, 1.021, 1.021],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-271",
+      "kind": "bottle",
+      "at": [0.263, 2.4175, -7.2331],
+      "turn": 10.84,
+      "scale": [0.994, 0.994, 0.994],
+      "parts": {"model": {"file": "bottle_slim_3.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-272",
+      "kind": "bottle",
+      "at": [0.4211, 2.4175, -7.2129],
+      "turn": 3.27,
+      "scale": [0.985, 0.985, 0.985],
+      "parts": {"model": {"file": "bottle_whiskey_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-273",
+      "kind": "bottle",
+      "at": [0.5663, 2.4175, -7.2641],
+      "turn": 6.64,
+      "scale": [0.992, 0.992, 0.992],
+      "parts": {"model": {"file": "bottle_wine_2.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-274",
+      "kind": "bottle",
+      "at": [0.721, 2.4175, -7.2122],
+      "turn": 6.11,
+      "scale": [1.007, 1.007, 1.007],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "bottle-275",
+      "kind": "bottle",
+      "at": [-0.55, 1.03, -7.125],
+      "turn": [17.19, -5.6, 0.0],
+      "scale": [0.983, 0.983, 0.983],
+      "parts": {"model": {"file": "bottle_champagne_1.glb", "material": "bottle-glass"}}
+    },
     {"id": "round_table-1", "kind": "round_table", "at": [-3, 0, -0.6]},
     {"id": "candle-1", "kind": "candle", "at": [-3, 0.785, -0.6]},
     {"id": "rocks_glass-3", "kind": "rocks_glass", "at": [-2.78, 0.785, -0.48]},

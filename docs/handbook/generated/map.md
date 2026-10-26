@@ -9,9 +9,9 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 261 | audio, 3D models, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 284 | audio, 3D models, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
-| `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 102 | 3D models, JSON, Markdown | deploy.yml → home/bar |
+| `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 125 | 3D models, JSON, Markdown | deploy.yml → home/bar |
 | `assets/music/` | The jukebox's songs, with their licences and credits. | 17 | audio, Markdown | deploy.yml → home/bar |
 | `assets/piano/` | The piano's recorded notes (Salamander Grand Piano, CC BY 3.0, J100; tools/piano_samples.sh), with their credit. | 121 | audio, Markdown | deploy.yml → home/bar |
 | `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
@@ -74,8 +74,8 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 157 | JavaScript, Python, C++ | not uploaded |
-| `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 39 | Python, shell | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 158 | JavaScript, Python, C++ | not uploaded |
+| `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 40 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 19 | JavaScript | not uploaded |
 | `tools/migrations/` | One-time conversions of the world files (kept as the record of what changed). | 3 | JavaScript, JSON | not uploaded |

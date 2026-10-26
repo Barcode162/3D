@@ -332,23 +332,6 @@
    ],
    "metal": 0.0
   },
-  "Bottle glass": {
-   "albedo": [
-    0.1593,
-    0.1056,
-    0.0701
-   ],
-   "metal": 0.0,
-   "seeThrough": true
-  },
-  "Bottle labels": {
-   "albedo": [
-    0.4828,
-    0.3398,
-    0.26
-   ],
-   "metal": 0.0
-  },
   "Brass": {
    "albedo": [
     0.91,
@@ -358,24 +341,6 @@
    "metal": 1.0,
    "rough": 0.4
   },
-  "Cap": {
-   "albedo": [
-    0.05,
-    0.04,
-    0.04
-   ],
-   "metal": 0.3,
-   "rough": 0.5
-  },
-  "Cap foil": {
-   "albedo": [
-    0.85,
-    0.65,
-    0.3
-   ],
-   "metal": 1.0,
-   "rough": 0.45
-  },
   "Chrome": {
    "albedo": [
     0.9,
@@ -383,22 +348,6 @@
     0.92
    ],
    "metal": 1.0
-  },
-  "Cork": {
-   "albedo": [
-    0.45,
-    0.3,
-    0.17
-   ],
-   "metal": 0.0
-  },
-  "Drinks": {
-   "albedo": [
-    0.4496,
-    0.3317,
-    0.235
-   ],
-   "metal": 0.0
   },
   "Espresso red": {
    "albedo": [
@@ -1354,6 +1303,805 @@
     0.55,
     0.22,
     0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_champagne_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.6855,
+    0.7254,
+    0.7621
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_champagne_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.8002,
+    0.3439,
+    0.0553
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_cognac_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7706,
+    0.685,
+    0.5314
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_cognac_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.1275,
+    0.0877,
+    0.0322
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_liqueur_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.2577,
+    0.0644,
+    0.0494
+   ],
+   "metal": 0.0
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_liqueur_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.652,
+    0.1437,
+    0.073
+   ],
+   "metal": 0.0
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_liqueur_3.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.1039,
+    0.0303,
+    0.0117
+   ],
+   "metal": 0.0
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_magnum_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7126,
+    0.6229,
+    0.4584
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_slim_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7692,
+    0.7684,
+    0.7277
+   ],
+   "metal": 0.0
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_slim_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.6855,
+    0.7254,
+    0.7621
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "bottle_slim_3.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5909,
+    0.7028,
+    0.6833
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_square_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7706,
+    0.685,
+    0.5314
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_square_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.1204,
+    0.1187,
+    0.0498
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_stubby_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5187,
+    0.1231,
+    0.072
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_stubby_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5231,
+    0.1884,
+    0.0635
+   ],
+   "metal": 0.0
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_tequila_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5187,
+    0.1231,
+    0.072
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_tequila_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.6987,
+    0.6138,
+    0.5059
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "bottle_whiskey_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.1275,
+    0.0877,
+    0.0322
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_whiskey_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.1048,
+    0.0477,
+    0.0515
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_whiskey_3.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.6987,
+    0.6138,
+    0.5059
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_wine_1.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7126,
+    0.6229,
+    0.4584
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_wine_2.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5765,
+    0.4556,
+    0.256
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_wine_3.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.8002,
+    0.3439,
+    0.0553
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
    ],
    "metal": 0.0
   }
