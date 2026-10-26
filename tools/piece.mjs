@@ -157,6 +157,14 @@ if (tests.length) {
   if (!run(`FAST=1 node tools/check.mjs ${tests.join(' ')}`)) { console.log(`✗ ${tag}: tests failed (nothing committed)`); process.exit(1); }
 }
 
+// The world check (rule "The user tests", request 2026-10-26 #9): whenever
+// the world's files change, a few seconds, even with --test none.
+const worldChanged = sh('git status --porcelain -- assets/world').trim() !== '';
+if (worldChanged) {
+  step('world check');
+  if (!run('bash tools/world_check.sh')) { console.log(`✗ ${tag}: the world check failed (nothing committed): bash tools/world_check.sh`); process.exit(1); }
+}
+
 let shots = { images: [], stats: {}, perf: null, errors: [] };
 if (opt('pages')) {
   shots = await pagePictures(opt('pages').split(','));

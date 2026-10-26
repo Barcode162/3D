@@ -73,7 +73,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 154 | JavaScript, Python, C++ | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 155 | JavaScript, Python, C++ | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 39 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 19 | JavaScript | not uploaded |

@@ -23,7 +23,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
-- (2026-10-25) **The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone ("we need to be able to work without waiting for tests from you I can test everything"; "no more test … let me test it instead"). GitHub's long browser tests run only when the user asks ("Only when I ask", request 2026-10-25 #15); the build's quick checks still run with every deploy. Replaces the earlier wording of this rule (request 2026-10-25 #11).
+- (2026-10-26) **The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone ("we need to be able to work without waiting for tests from you I can test everything"; "no more test … let me test it instead"). One exception, on the user's word (request 2026-10-26 #9, "Yes, run it"): the seconds-long world check (tools/native/bar_world_test.cpp) runs whenever a piece changes the world's files (assets/world/). GitHub's long browser tests run only when the user asks ("Only when I ask", request 2026-10-25 #15); the build's quick checks still run with every deploy.
 - (2026-10-25) **Research, then build:** before any of a job's code changes, Claude researches what the job touches and writes the findings into the job's plan; the user sees them first ("We need to research to see what we are doing before we continue … 1 mistake is worse than making sure you are doing the right thing", request 2026-10-25 #12).
 - (2026-10-24) **Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job.
 - (2026-10-24) **Never assume the user knows anything:** the user only says what they want, in any words; Claude plans, organises, builds, checks, ships and documents everything else, and explains in plain words.
@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J102 → J99 → J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -127,6 +127,20 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J75 — The light rule (light only from light sources) and the light engine exist; the lights move from helper spots onto their things
 - [ ] **J77** The world remake, step 9, sound with the things: every thing that makes a sound carries it (the fire crackles from the fireplace, music from the speakers, glasses clink where they are), from its material's sound. · N3
   *Verdict:* Doable after J75 — The sound engine and the materials' sounds exist; sources move onto their things; your phone judges how it sounds
+- [ ] **J99** Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8) · N3
+  *Verdict:* Doable now — Public-domain texts from Project Gutenberg (Charter: assets need a licence that allows them, public domain does)
+- [ ] **J100** A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
+  *Verdict:* Doable at a cost — The Grandeur is a paid library we can't ship; the free Salamander Grand Piano (CC-BY, credited) is the closest; about 10 MB downloaded only when someone plays
+- [ ] **J101** Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
+  *Verdict:* Doable now — The chess game and its screen exist; this adds a full-screen view and theme sets
+- [ ] **J102** A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8) · N3
+  *Verdict:* Doable now — A shader effect inside the fireplace; small on screen, cheap on the phone
+- [ ] **J103** The cozy lounge grows: a bigger fireside room that breaks normal architecture (expanded beyond the old wall, its own nooks and levels) (request 2026-10-26 #8) · N3
+  *Verdict:* Doable after J74 — It changes the room shell, so it comes with or after the shells' remake
+- [ ] **J104** A sunken seating nook by the big mirror: a few steps down, seats, a pair of speakers, its own chill music with its own player to pick and control tracks (request 2026-10-26 #8) · N3 N4
+  *Verdict:* Doable after J74 — A change to the floor and walls (with the shells); music only with a licence that allows it, like the jukebox's CC-BY tracks
+- [ ] **J105** A holographic race broadcast in a wall recess above the sim rigs: the whole track as a spinning hologram, one camera on both drivers that splits smoothly into one per driver when they separate (one camera in solo play), the placing at the top, a minimap of the track with both cars in two colours at the bottom (request 2026-10-26 #8) · N3 N4
+  *Verdict:* Doable at a cost — Extra camera views of the race drawn into the hologram cost phone time; drawn small and only while a race runs
 
 ### The site
 

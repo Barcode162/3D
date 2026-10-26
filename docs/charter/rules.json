@@ -32,8 +32,8 @@
  "rulesIntro": "*Decisions that always hold, newest first. Only the user adds or changes them.*",
  "rules": [
   {
-   "date": "2026-10-25",
-   "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). GitHub's long browser tests run only when the user asks (\"Only when I ask\", request 2026-10-25 #15); the build's quick checks still run with every deploy. Replaces the earlier wording of this rule (request 2026-10-25 #11)."
+   "date": "2026-10-26",
+   "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). One exception, on the user's word (request 2026-10-26 #9, \"Yes, run it\"): the seconds-long world check (tools/native/bar_world_test.cpp) runs whenever a piece changes the world's files (assets/world/). GitHub's long browser tests run only when the user asks (\"Only when I ask\", request 2026-10-25 #15); the build's quick checks still run with every deploy."
   },
   {
    "date": "2026-10-25",

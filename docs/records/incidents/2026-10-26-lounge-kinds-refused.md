@@ -31,7 +31,6 @@ breathe, the candlesticks' flames flicker, the floor lamp's bulb breathes).
 The world test passes, and fails on the files as J70 shipped them.
 
 ## Proof
-Asked of the user: whether the seconds-long world test may run when a piece
-changes `assets/world/` (it is a check of the files, not of the game). Until
-then, Claude reads the live log's "World:" lines after each world change
-goes live.
+The user allowed it (request 2026-10-26 #9): the piece tool runs the
+seconds-long world check (`tools/world_check.sh`) whenever a piece changes
+`assets/world/`, even with `--test none`; a failure stops the piece.

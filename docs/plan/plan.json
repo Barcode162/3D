@@ -59,7 +59,7 @@
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J102 → J99 → J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
  "road": {
   "world": [
    {
@@ -477,6 +477,94 @@
      "kind": "after",
      "after": "J75",
      "why": "The sound engine and the materials' sounds exist; sources move onto their things; your phone judges how it sounds"
+    }
+   },
+   {
+    "id": "J99",
+    "text": "Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8)",
+    "serves": [
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Public-domain texts from Project Gutenberg (Charter: assets need a licence that allows them, public domain does)"
+    }
+   },
+   {
+    "id": "J100",
+    "text": "A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8)",
+    "serves": [
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "The Grandeur is a paid library we can't ship; the free Salamander Grand Piano (CC-BY, credited) is the closest; about 10 MB downloaded only when someone plays"
+    }
+   },
+   {
+    "id": "J101",
+    "text": "Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8)",
+    "serves": [
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "The chess game and its screen exist; this adds a full-screen view and theme sets"
+    }
+   },
+   {
+    "id": "J102",
+    "text": "A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8)",
+    "serves": [
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "A shader effect inside the fireplace; small on screen, cheap on the phone"
+    }
+   },
+   {
+    "id": "J103",
+    "text": "The cozy lounge grows: a bigger fireside room that breaks normal architecture (expanded beyond the old wall, its own nooks and levels) (request 2026-10-26 #8)",
+    "serves": [
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J74",
+     "why": "It changes the room shell, so it comes with or after the shells' remake"
+    }
+   },
+   {
+    "id": "J104",
+    "text": "A sunken seating nook by the big mirror: a few steps down, seats, a pair of speakers, its own chill music with its own player to pick and control tracks (request 2026-10-26 #8)",
+    "serves": [
+     "N3",
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J74",
+     "why": "A change to the floor and walls (with the shells); music only with a licence that allows it, like the jukebox's CC-BY tracks"
+    }
+   },
+   {
+    "id": "J105",
+    "text": "A holographic race broadcast in a wall recess above the sim rigs: the whole track as a spinning hologram, one camera on both drivers that splits smoothly into one per driver when they separate (one camera in solo play), the placing at the top, a minimap of the track with both cars in two colours at the bottom (request 2026-10-26 #8)",
+    "serves": [
+     "N3",
+     "N4"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "cost",
+     "why": "Extra camera views of the race drawn into the hologram cost phone time; drawn small and only while a race runs"
     }
    }
   ],
