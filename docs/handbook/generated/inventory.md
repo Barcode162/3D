@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (521 things)
+## bar (535 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -404,6 +404,20 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `log_basket` | `log_basket` |  | `log_basket.glb` |  |
 | `rug` | `rug` |  | `rug.glb` |  |
 | `coffee_table` | `coffee_table` |  | `coffee_table.glb` |  |
+| `drink-1` | `glass` |  | `drink_rocks_whiskey_ice.glb` |  |
+| `drink-2` | `glass` |  | `drink_snifter_whiskey.glb` |  |
+| `table_bottle-3` | `bottle` |  | `bottle_square_1.glb` |  |
+| `drink-4` | `glass` |  | `drink_wine_red_wine.glb` |  |
+| `drink-5` | `glass` |  | `drink_coupe_pink.glb` |  |
+| `drink-6` | `glass` |  | `drink_wine_white_wine.glb` |  |
+| `drink-7` | `glass` |  | `drink_coupe_pink.glb` |  |
+| `drink-8` | `glass` |  | `drink_pint_beer.glb` |  |
+| `drink-9` | `glass` |  | `drink_wine_red_wine.glb` |  |
+| `drink-10` | `glass` |  | `drink_martini_blue.glb` |  |
+| `drink-11` | `glass` |  | `drink_highball_cola_ice.glb` |  |
+| `drink-12` | `glass` |  | `drink_rocks_whiskey_ice.glb` |  |
+| `drink-13` | `glass` |  | `drink_pint_beer.glb` |  |
+| `drink-14` | `glass` |  | `drink_coupe_orange.glb` |  |
 | `chesterfield_sofa` | `chesterfield_sofa` |  | `chesterfield_sofa.glb` |  |
 | `armchair-1` | `armchair` |  | `armchair.glb` |  |
 | `armchair-2` | `armchair` |  | `armchair.glb` |  |
@@ -609,4 +623,4 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 
 Kinds that no place uses (they can be added from the Studio's Library): `smoke`.
 
-Base kinds (others build on them; not placed themselves): `glass`, `light`, `mirror_button`, `polished`, `room`, `stool`.
+Base kinds (others build on them; not placed themselves): `light`, `mirror_button`, `polished`, `room`, `stool`.

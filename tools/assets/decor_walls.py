@@ -479,8 +479,11 @@ def bay_table():
     common.cylinder("Bay table post", Vector((-0.2, 0.27, 7.25)), 0.03, 0.54, "y", black, segments=10)
     common.cylinder("Bay table foot", Vector((-0.2, 0.01, 7.25)), 0.2, 0.02, "y", black, segments=20)
     P.candle(-0.2, 0.565, 7.25, h=0.06, r=0.03)
+    P.record_glasses = []  # the drinks are their own things (J72.2)
     P.glass(-0.05, 0.565, 7.15, "coupe", "pink")
     P.glass(-0.35, 0.565, 7.35, "wine", "white_wine")
+    props_lib.save_records(P)
+    P.record_glasses = None
     save("bay_table", (-0.2, 0, 7.25))
     put("bay_table", "bay_table", "wall_prop", (-0.2, 0, 7.25))
 

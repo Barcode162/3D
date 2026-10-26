@@ -247,9 +247,13 @@ def build_coffee_table():
     common.quad("Chess squares", [(TX - CB / 2, TY + 0.0205, TZ + CB / 2), (TX + CB / 2, TY + 0.0205, TZ + CB / 2),
                                   (TX + CB / 2, TY + 0.0205, TZ - CB / 2), (TX - CB / 2, TY + 0.0205, TZ - CB / 2)],
                 chess, uvs=((0, 0), (1, 0), (1, 1), (0, 1)))
+    # The drinks and the bottle are their own things (J72.2: tools/assets/drinks.py).
+    P.record_glasses, P.record = [], []
     P.glass(TX + 0.2, TY, TZ + 0.42, "rocks", "whiskey", ice=True)
     P.glass(TX - 0.2, TY, TZ - 0.42, "snifter", "whiskey")
     P.bottle(TX + 0.02, TY, TZ + 0.48, "square", color=0)
+    props_lib.save_records(P)
+    P.record_glasses = P.record = None
     for k in range(2):
         P.book(TX - 0.15, TY + k * 0.035, TZ + 0.45, 0.035, 0.2, 0.14, yaw=0.2 * k, lying=True)
     P.candle(TX + 0.2, TY, TZ - 0.5, h=0.1, r=0.03)
@@ -306,7 +310,10 @@ def build_lamp_and_table():
     common.cylinder("Side table", Vector((SX, 0.55, SZ)), 0.24, 0.03, "y", M["wood"], segments=24)
     common.cylinder("Side table post", Vector((SX, 0.28, SZ)), 0.03, 0.54, "y", M["wood"], segments=10)
     common.cylinder("Side table foot", Vector((SX, 0.015, SZ)), 0.18, 0.03, "y", M["wood"], segments=18)
+    P.record_glasses = []
     P.glass(SX - 0.05, 0.565, SZ + 0.05, "wine", "red_wine")
+    props_lib.save_records(P)
+    P.record_glasses = None
     P.book(SX + 0.07, 0.565, SZ - 0.05, 0.03, 0.2, 0.14, yaw=0.5, lying=True)
     export_here("side_table")
 

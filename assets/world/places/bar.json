@@ -2675,6 +2675,104 @@
     {"id": "log_basket", "kind": "log_basket", "at": [-8.2, 0, -0.29], "turn": 90},
     {"id": "rug", "kind": "rug", "at": [-7.12, 0, 0.8]},
     {"id": "coffee_table", "kind": "coffee_table", "at": [-6.95, 0, 0.8]},
+    {
+      "id": "drink-1",
+      "kind": "glass",
+      "at": [-6.75, 0.45, 1.22],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_rocks_whiskey_ice.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-2",
+      "kind": "glass",
+      "at": [-7.15, 0.45, 0.38],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_snifter_whiskey.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "table_bottle-3",
+      "kind": "bottle",
+      "at": [-6.93, 0.45, 1.28],
+      "turn": 0.0,
+      "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-4",
+      "kind": "glass",
+      "at": [-5.9, 0.565, 2.7],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_wine_red_wine.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-5",
+      "kind": "glass",
+      "at": [-0.05, 0.565, 7.15],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_coupe_pink.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-6",
+      "kind": "glass",
+      "at": [-0.35, 0.565, 7.35],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_wine_white_wine.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-7",
+      "kind": "glass",
+      "at": [-6.6587, 1.08, -4.6834],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_coupe_pink.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-8",
+      "kind": "glass",
+      "at": [-6.0704, 1.08, -4.5354],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_pint_beer.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-9",
+      "kind": "glass",
+      "at": [-4.9766, 1.08, -4.3373],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_wine_red_wine.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-10",
+      "kind": "glass",
+      "at": [-4.2728, 1.08, -4.261],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_martini_blue.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-11",
+      "kind": "glass",
+      "at": [-2.808, 1.08, -4.2277],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_highball_cola_ice.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-12",
+      "kind": "glass",
+      "at": [-1.9508, 1.08, -4.2863],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_rocks_whiskey_ice.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-13",
+      "kind": "glass",
+      "at": [-0.95, 1.08, -4.4288],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_pint_beer.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "drink-14",
+      "kind": "glass",
+      "at": [-0.3561, 1.08, -4.5522],
+      "turn": 0.0,
+      "parts": {"model": {"file": "drink_coupe_orange.glb", "material": "bottle-glass"}}
+    },
     {"id": "chesterfield_sofa", "kind": "chesterfield_sofa", "at": [-5.75, 0, 0.8], "turn": -90},
     {"id": "armchair-1", "kind": "armchair", "at": [-7.25, 0, -0.5], "turn": -51.566},
     {"id": "armchair-2", "kind": "armchair", "at": [-7.25, 0, 2.1], "turn": -128.434},

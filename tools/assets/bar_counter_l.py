@@ -564,7 +564,10 @@ for (uu, kind, drink) in drinks:
     if uu > U_CURVE_END - 0.2:
         continue
     pos = world(uu, 0.14, TOP_Y)
+    P.record_glasses = P.record_glasses if P.record_glasses is not None else []  # their own things (J72.2)
     P.glass(*pos, kind=kind, drink=drink, ice=kind in ("rocks", "highball"))
+props_lib.save_records(P)
+P.record_glasses = None
 peanut = common.plain_material("Peanuts", (0.62, 0.42, 0.22), 0.0, 0.7)
 for uu in (1.95, 3.75, 6.15):
     c = world(uu, 0.06, TOP_Y)

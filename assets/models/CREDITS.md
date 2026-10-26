@@ -17,6 +17,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `hall.glb` (the new room shell) | `hall.py` | Herringbone Parquet, Red Brick 03, Brick Wall 006, Painted Plaster Wall, Plastered Wall 02, Dark Wood, Wood Table 001, Black Painted Planks, Concrete Floor Worn 001, Plywood, Rubber Tiles, Velour Velvet, Fabric Pattern 07 |
 | `bar_counter_l.glb` (curved counter, underbar, bar-top clutter) | `bar_counter_l.py` + `props_lib.py` | Wood Table 001, Dark Wood, Leather Red 02 |
 | `back_bar_tall.glb` | `back_bar_tall.py` + `props_lib.py` | Dark Wood, Marble 01, Wood Table 001 |
+| `drink_*.glb` (the glasses on the tables, one model per drink since J72) | `drinks.py` + `props_lib.py` | none |
 | `bottle_*.glb` (the back bar's bottles, one model per recipe since J72) | `bottles.py` + `props_lib.py` (labels: `labels.py`) | none |
 | `piano.glb` | `piano.py` | Wood Table 001, Fabric Leather 02 |
 | `stage.glb` (mic, guitar, amp, lights) | `stage.py` | Fabric Pattern 07, Leather Red 02, Wood Table 001, Dark Wood |

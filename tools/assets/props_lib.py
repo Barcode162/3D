@@ -8,6 +8,7 @@
 #   import props_lib
 #   P = props_lib.Props(tex_dir)
 #   P.bottle(x, y, z, "whiskey", yaw=0.3)
+import json
 import math
 import os
 import random
@@ -17,6 +18,18 @@ import numpy as np
 from mathutils import Matrix, Vector
 
 import common
+
+
+def save_records(P):
+    """J72.2: the glasses (and bottles) P wrote down instead of building, added
+    to the file named by $LOOPED_DRINKS (one JSON object a line), for
+    tools/assets/drinks.py."""
+    path = os.environ.get("LOOPED_DRINKS")
+    rows = [dict(r, type="glass") for r in (P.record_glasses or [])] + [dict(r, type="bottle") for r in (P.record or [])]
+    if path and rows:
+        with open(path, "a") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
 
 
 def _place(obj, x, y, z, yaw=0.0, tilt=None):
@@ -49,6 +62,8 @@ class Props:
         # (for the place file: each its own thing, tools/assets/bottles.py)
         # instead of building it into the model.
         self.record = record
+        # J72.2: the same for glasses with drinks (tools/assets/drinks.py).
+        self.record_glasses = None
 
     # ---- Materials (made on first use) ----
     def mat(self, key):
@@ -298,6 +313,10 @@ class Props:
 
     def glass(self, x, y, z, kind="rocks", drink=None, yaw=0.0, ice=False):
         """A drinking glass, optionally with a drink (LIQUIDS key) inside."""
+        if self.record_glasses is not None:
+            self.record_glasses.append({"kind": kind, "drink": drink or "", "ice": bool(ice), "at": [x, y, z],
+                                        "turn": math.degrees(yaw)})
+            return
         g = self.mat("glass")
         if kind in self.GLASSES:
             prof, fill_h = self.GLASSES[kind]

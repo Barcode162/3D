@@ -14,6 +14,10 @@ python3 tools/assets/labels.py "$tex"  # bottle labels (needs Pillow)
 ph() { bash tools/assets/polyhaven_fetch.sh "$1" "$scratch/polyhaven" 1k >/dev/null
        $B tools/assets/polyhaven.py -- "$scratch/polyhaven/$1" "$out/$2" "${@:3}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }
 B="/opt/blender/blender -b --factory-startup --python"
+# The glasses on the tables are written down by the scripts below (J72.2),
+# then made into things by drinks.py.
+export LOOPED_DRINKS="$scratch/drinks.jsonl"
+rm -f "$LOOPED_DRINKS"
 out=assets/models
 run() { $B "tools/assets/$1" -- "${@:2}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }
 # The big bar upgrade (docs/archive/BAR_REDESIGN.md): one model per zone, built in
@@ -53,6 +57,7 @@ run furniture.py "$tex" $out
 run lighting.py "$tex" $out
 run decor.py "$tex" $out
 run glasses.py $out
+run drinks.py "$tex" $out "$scratch/drinks.jsonl" "$scratch/drink_things.json"
 (cd $out && rm -f booth.glb booth_table.glb poster_jazz.glb poster_cocktails.glb mirror_frame_brass.glb \
   mirror_frame_black.glb neon_sign.glb beer_taps.glb coaster.glb napkin_holder.glb menu_stand.glb)
 $B tools/assets/preview.py -- "$scratch/previews" $out/*.glb 2>&1 | grep -cE "PREVIEW" | sed 's/$/ previews rendered/'

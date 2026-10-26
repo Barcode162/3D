@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J72 · The world remake, step 4, bottles and glasses as real things** (the world). The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
 - [x] **J72.1** The back bar's bottles as real things: about 200 bottles each its own thing, copies of 24 bottle recipes (shape, glass, label, drink) placed where they stood, each a little different (turn, size, tint), still drawn together *Check:* Look along the back bar: the bottles look as before; in the Studio, tap a bottle and move it
-- [ ] **J72.2** The glasses on the tables as real things: the drinks on the coffee table, the side table, the bay table and the bar top each their own thing (coupe, wine, martini, highball, rocks, snifter with their drinks) *Check:* The drinks on the tables look as before; in the Studio, tap a glass and move it
+- [x] **J72.2** The glasses on the tables as real things: the drinks on the coffee table, the side table, the bay table and the bar top each their own thing (coupe, wine, martini, highball, rocks, snifter with their drinks) *Check:* The drinks on the tables look as before; in the Studio, tap a glass and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
