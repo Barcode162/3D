@@ -51,7 +51,7 @@ void Profiler::beginFrame(double nowMs) {
     }
     const bool afterEnter = enteredMs_ > 0 && lastStartMs_ >= enteredMs_;
     if (afterEnter && lastStartMs_ - enteredMs_ < 10000) worstAfterEnter_ = std::max(worstAfterEnter_, last.intervalMs);
-    if (last.intervalMs > kHitchMs) {
+    if (last.intervalMs > kHitchMs && !last.covered) {
       int top = 0;
       for (int p = 1; p < kPhases; ++p) {
         if (last.phaseMs[p] > last.phaseMs[top]) top = p;
@@ -114,8 +114,10 @@ Profiler::Stats Profiler::stats(int count) const {
   Stats s;
   float intervals[kFrames];
   int n = 0;
-  for (int i = 0; i < std::min(count, count_); ++i) {
+  // The newest `count` frames drawn with nothing covering the bar.
+  for (int i = 0; i < count_ && s.frames < count; ++i) {
     const Frame& f = frame(i);
+    if (f.covered) continue;
     s.cpuAvg += f.cpuMs;
     s.cpuWorst = std::max(s.cpuWorst, f.cpuMs);
     s.gpuAvg += f.gpuMs;
@@ -183,7 +185,7 @@ void Profiler::publish() {
 // The last 5 seconds in numbers, plus start-up stages, as JSON.
 std::string Profiler::json() const {
   const double nowMs = emscripten_get_now();
-  const Stats s = stats(kFrames);
+  const Stats s = stats(kReportFrames);
   const Frame& f = frame(0);
   std::string j;
   j.reserve(2048);

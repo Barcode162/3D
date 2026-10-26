@@ -54,7 +54,8 @@ inline void draw(uint32_t indexOrVertexCount) {
 
 class Profiler {
  public:
-  static constexpr int kFrames = 300;
+  static constexpr int kFrames = 600;  // twice a report's 300, so time under a menu leaves enough
+  static constexpr int kReportFrames = 300;
   static constexpr float kHitchMs = 20.0f;
 
   struct Frame {
@@ -69,6 +70,7 @@ class Profiler {
     uint8_t touches = 0;  // touch / mouse presses since the previous frame
     uint16_t moves = 0;   // touch / mouse move events since the previous frame
     float gpuMs = 0;      // newest submit-to-done time (see trackGpu)
+    bool covered = false;  // a menu covered the bar (J110.4): left out of the numbers
   };
   struct Stats {
     int frames = 0;
@@ -91,6 +93,9 @@ class Profiler {
 
   void beginFrame(double nowMs);
   void endFrame(double nowMs);
+  // This frame drew under a menu or panel that covers the bar: the page's
+  // own drawing costs more then, and it isn't what playing feels like.
+  void setCovered(bool covered) { current_.covered = covered; }
   void add(Phase phase, double ms) { current_.phaseMs[static_cast<int>(phase)] += static_cast<float>(ms); }
   void jobs(int ran, size_t pending, double maxJobMs);
   // A touch or mouse event arrived (looped/input.cpp).

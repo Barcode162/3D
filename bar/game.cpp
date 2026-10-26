@@ -1363,7 +1363,8 @@ void watchQuality(double nowMs) {
   const engine::Profiler& p = engine::profiler();
   if (p.frameCount() == 0) return;
   const engine::Profiler::Frame& last = p.frame(0);
-  const bool drawing = g_app.entered && !g_app.meridianOpen && !engine::frameTime().resumed;
+  const bool drawing = g_app.entered && !g_app.meridianOpen && !engine::frameTime().resumed &&
+                       !engine::bridge::frame().modalOpen;  // a menu over the bar isn't the bar's cost
   if (g_app.quality.frame(nowMs, last.intervalMs, last.cpuMs, last.gpuMs, drawing)) {
     applyQuality(g_app.quality.pixelRatioCap() < g_app.gpu.resolutionCap ? "frames ran late" : "steady again");
     applyMirrorDetail();
@@ -1385,6 +1386,8 @@ void frame(double rafMs) {
   g_app.input.setCanvasSize(g_app.gpu.cssWidth, g_app.gpu.cssHeight);
   g_app.input.poll();  // what the player did since last frame (read-only from here on)
   ProfiledFrame profiled(engine::clockMs());
+  // Under a menu the page's own drawing costs more: not counted (J110.4).
+  engine::profiler().setCovered(engine::bridge::frame().modalOpen);
   // Back from another app (a long gap between frames). A slow machine has
   // long gaps all the time (software drawing: about one a second), so at most
   // one line every 30 s: it must not push everything else out of the log.
