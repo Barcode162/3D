@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J73.1 Fix: the deploy refused J72's place file (the lying wine bottles turned about three axes; a thing's turn is one angle): tilted bottles get models of their own, sizes are one number; the world check now also runs the schema and material tests; incident recorded
+
+`dd40f9c` · 2026-10-26 10:15 · 15 files, +948 −744 · tests: none
+
+Phone check: The bar loads with every bottle in place; the wine rack's bottles lie with their necks out
+
 ## J72.2 The glasses on the tables as real things: the drinks on the coffee table, the side table, the bay table and the bar top (14, from 9 drink models: coupe, wine, martini, highball, rocks with ice, snifter, pint) each their own glass thing where it stood, and the coffee table's bottle a bottle thing
 
 `9cb13e3` · 2026-10-26 10:09 · 26 files, +391 −103 · tests: none
