@@ -494,6 +494,71 @@ void Piano::addBoxes(std::vector<SceneRenderer::Box>& out, double nowMs) const {
     str.roughness = 0.3f;
     out.push_back(str);
   }
+  addSparks(out, now);
+}
+
+// Light rising from the strings (J108.3): each note sends up a few sparks
+// that zigzag as they climb and fade, and every third note one that shoots
+// far up toward the ceiling. Worked out from each note's start time (no
+// state), with its own steady randomness per note.
+void Piano::addSparks(std::vector<SceneRenderer::Box>& out, double now) const {
+  constexpr double kLife = 2.6;     // a zigzag spark, seconds
+  constexpr double kShotLife = 1.5;  // one shot up
+  constexpr int kMaxSparks = 240;   // the boxes are shared with the rest of the bar
+  int made = 0;
+  auto note = [&](int i, double start, float velocity) {
+    const double age = now - start;
+    if (age < 0 || age > kLife || made >= kMaxSparks) return;
+    uint32_t seed = static_cast<uint32_t>(i) * 2654435761u ^ static_cast<uint32_t>(start * 1000.0);
+    auto rnd = [&seed]() {
+      seed ^= seed << 13;
+      seed ^= seed >> 17;
+      seed ^= seed << 5;
+      return static_cast<float>(seed & 0xffff) / 65535.0f;
+    };
+    Vec3 a, b;
+    stringEnds(i, a, b);
+    const float hue = static_cast<float>(i) / 87.0f;
+    const Vec3 tint{0.55f + 0.45f * hue, 0.6f + 0.25f * rnd(), 1.0f - 0.5f * hue};
+    const float t = static_cast<float>(age);
+    const int count = 2 + static_cast<int>(velocity * 3.0f);
+    for (int k = 0; k < count && made < kMaxSparks; ++k) {
+      const Vec3 from = a + (b - a) * (0.15f + 0.6f * rnd());
+      const float speed = 0.25f + 0.25f * rnd(), zig = 5.0f + 5.0f * rnd(), phase = 6.28f * rnd();
+      const float life = static_cast<float>(kLife) * (0.6f + 0.4f * rnd());
+      if (t > life) continue;
+      const float fade = 1.0f - t / life;
+      SceneRenderer::Box sp;
+      // A zigzag: side to side (sharp turns, a triangle wave) while it climbs.
+      const float tri = 2.0f * std::fabs(2.0f * std::fmod(t * zig / 6.28f + phase, 1.0f) - 1.0f) - 1.0f;
+      sp.center = world(from + Vec3{0.05f * tri, speed * t, 0.02f * std::sin(t * 3.0f + phase)});
+      const float sz = 0.008f + 0.006f * fade;
+      sp.size = {sz, sz, sz};
+      sp.rotation = engine::Quat::axisAngle({0.3f, 1, 0.2f}, t * 4.0f + phase);
+      sp.color = tint;
+      sp.glow = 3.0f * fade * (0.5f + 0.5f * velocity);
+      out.push_back(sp);
+      ++made;
+    }
+    // Every third note (by its own randomness): one shot far up.
+    if (rnd() < 0.34f && age < kShotLife && made < kMaxSparks) {
+      const float u = static_cast<float>(age / kShotLife);
+      const float rise = 3.2f * (1.0f - (1.0f - u) * (1.0f - u));  // fast, then slowing
+      const Vec3 from = a + (b - a) * 0.4f;
+      SceneRenderer::Box sh;
+      sh.center = world(from + Vec3{0.08f * (rnd() - 0.5f) * u, rise, 0.08f * (rnd() - 0.5f) * u});
+      sh.size = {0.007f, 0.05f + 0.06f * (1.0f - u), 0.007f};  // a streak
+      sh.rotation = rotation_;
+      sh.color = {1.0f, 0.85f, 0.55f};
+      sh.glow = 4.0f * (1.0f - u);
+      out.push_back(sh);
+      ++made;
+    }
+  };
+  for (const Active& a : active_) note(a.key - kFirstKey, a.startTime, a.velocity);
+  for (const auto& [player, h] : hands_)
+    for (int i = 0; i < 88; ++i)
+      if (h.voice[i] > 0) note(i, h.start[i], 0.7f);
 }
 
 // ---- On-screen keyboard ----

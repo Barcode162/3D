@@ -59,7 +59,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 **J108 · The piano redone** (the world). The piano redone: its note glow at the piano (it shows mid-room), a bigger, better keyboard to play, held pedal and pianissimo to fortissimo, songs that keep playing when you leave the bench, particles from the strings (zigzagging up, some shot far up) (request 2026-10-26 #13) · N3
 - [x] **J108.1** The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo *Check:* Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong
 - [x] **J108.2** A new, bigger keyboard to play: full width, taller keys you can see and press well, two octaves at a time that slide, the pedal and your loudness by where you press *Check:* Sit at the piano: the keyboard fills the bottom of the screen; press near the top for soft, near the bottom for loud
-- [ ] **J108.3** Particles from the strings when notes play: sparks zigzagging up and some shot far up toward the ceiling *Check:* Play: light rises from the strings in zigzags, some shoot high
+- [x] **J108.3** Particles from the strings when notes play: sparks zigzagging up and some shot far up toward the ceiling *Check:* Play: light rises from the strings in zigzags, some shoot high
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

@@ -110,6 +110,7 @@ class Piano {
   };
   void releaseAll(Hands& h);
   bool keyLit(int i, double& since) const;
+  void addSparks(std::vector<SceneRenderer::Box>& out, double now) const;
   void startScheduled(double nowSound);
   engine::Vec3 world(engine::Vec3 local) const;
   int keyAt(float x, float y, float W, float H, float px, float* velocity) const;
