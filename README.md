@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J110.3 (fix) Frames drawn under a menu are left out: the reports, the hitch count and Ultra/Auto's watching skip them (report WQUMXC: with Settings open the page's own drawing held frames at 25 ms and eased Ultra to 2x; in the bar itself, standing, no frame was late); the profiler keeps 600 frames so a report still has 300 of play
+
+`5d6c6bb` · 2026-10-26 23:35 · 5 files, +17 −7 · tests: none
+
+Phone check: Open Settings for a while, then close it: Ultra stays at 3x; a report sent from the menu shows the frames before it opened
+
 ## J110.3 Ultra and Auto keep it smooth: both step by late frames (over 6 % of frames past 20 ms, or slow, while the CPU is idle), not by the GPU wait; Ultra keeps every feature and eases only its sharpness 3x to 2.5x to 2x while frames run late, back to 3x after 6 steady seconds; Auto can climb back up again
 
 `ee94e60` · 2026-10-26 23:09 · 5 files, +88 −37 · tests: native
