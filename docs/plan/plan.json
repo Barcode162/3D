@@ -54,7 +54,7 @@
     "id": "J35.2",
     "text": "The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height",
     "check": "Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it",
-    "done": false
+    "done": true
    },
    {
     "id": "J35.3",

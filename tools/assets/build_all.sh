@@ -9,6 +9,9 @@ scratch=${1:?usage: build_all.sh <scratch dir>}
 tex="$scratch/textures"
 bash tools/assets/get_blender.sh
 bash tools/assets/fetch_textures.sh "$tex"
+# Poly Haven models (CC0, the remake's kit, J35): fetched, slimmed, written.
+ph() { bash tools/assets/polyhaven_fetch.sh "$1" "$scratch/polyhaven" 1k >/dev/null
+       $B tools/assets/polyhaven.py -- "$scratch/polyhaven/$1" "$out/$2" "${@:3}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }
 B="/opt/blender/blender -b --factory-startup --python"
 out=assets/models
 run() { $B "tools/assets/$1" -- "${@:2}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }
@@ -30,6 +33,9 @@ run decor_walls.py "$tex" $out/decor_walls.glb
 # unused ones; delete those again: booth, posters, mirror frames, ...).
 run jukebox.py "$tex" $out/jukebox.glb
 run stools.py "$tex" $out
+# The bar stools (J35.2): seat at 0.76 m (Poly Haven's is a counter stool,
+# 0.69 m), its back away from the counter (+z).
+ph bar_chair_round_01 bar_stool.glb --tris 8000 --height 0.825 --turn 180
 run furniture.py "$tex" $out
 run lighting.py "$tex" $out
 run decor.py "$tex" $out

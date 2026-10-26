@@ -34,5 +34,6 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 
 | Model | Poly Haven model | Authors |
 |---|---|---|
+| `bar_stool.glb` | [Bar Chair Round 01](https://polyhaven.com/a/bar_chair_round_01) (scaled to a 0.76 m seat) | Dairon Sanchez |
 
 CC0 needs no credit, but we list sources anyway.

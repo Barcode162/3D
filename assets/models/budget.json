@@ -1,5 +1,9 @@
 {
   "about": "Each remade model's budget (J35's kit): at most this many triangles and this much texture memory (MB, uncompressed with mipmaps, as glb_report.py counts it; the phone gets ASTC, about a quarter). Checked by python3 tools/assets/glb_report.py --budget. A model joins this list when it is remade.",
   "models": {
+    "bar_stool.glb": {
+      "tris": 8000,
+      "texMB": 17
+    }
   }
 }
