@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J74.1 The user's notes from the phone: a little less haze in the light beams (0.02 → 0.014); the highlight on the thing you can tap softer (0.35 → 0.12); the string lights (four strands as twelve tube lights, ~25 lm a bulb), the mirror's vanity bulbs (one 480 lm tube) and the stage and darts spotlights (their own small lamps) give their own light in place of six invisible helper lamps; Settings → Pointer: a crosshair that taps what it points at, with an editor (shape, size, thickness, gap, colour, opacity, outline) whose preview docks at the top while you scroll through it
+
+`b04cdd4` · 2026-10-26 10:43 · 14 files, +446 −57 · tests: none
+
+Phone check: Look up at the string lights and the mirror: they light their surroundings; stand at something: its glow is gentle; Settings → Pointer: turn the crosshair on, tap anywhere: it uses what the centre points at
+
 ## J73.2 The stage, the darts corner, the taped-off room and the arcade taken apart: the mic, guitar, amp, light bar and stool; the darts in the board, the surround, the holder, the oche and mat, the spotlights; the tape, plastic sheet, sawhorses, cones, sign, work light, ladder, buckets, drop cloth, lumber, drywall and toolbox; the arcade's signs, neon art and bench: 36 things where they stood (asset scripts mark groups, one model each); the DARTS neon reads the right way (it was backwards), the sawhorse lamps sit on their rails
 
 `5c841ab` · 2026-10-26 10:30 · 54 files, +1182 −303 · tests: none
