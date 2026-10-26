@@ -7,5 +7,5 @@ https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html.
 
 Changes: 30 of its notes (A, C, D#, F# from A0 to C8) in 4 of its 16
 loudness layers (4, 8, 12, 16), shortened to 4 to 7 seconds with a fade, and
-encoded as 96 kbps MP3 (`tools/piano_samples.sh`). The credit is shown in
+encoded as 80 kbps mono MP3 (J108.1; was 96 kbps stereo) (`tools/piano_samples.sh`). The credit is shown in
 the game: Menu → Help → Credits.

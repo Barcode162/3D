@@ -48,7 +48,7 @@
     "id": "J108.1",
     "text": "The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo",
     "check": "Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong",
-    "done": false
+    "done": true
    },
    {
     "id": "J108.2",
@@ -1146,7 +1146,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "cf58fb5",
    "text": "J107.1, J107.2: J107: quality in four levels (Ultra, High, Medium, Low) that set every feature together, and a 20-second GPU check for the phone report → 71d8b24^..be3b0ed"
   },
   {

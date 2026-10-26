@@ -190,11 +190,14 @@ BarScene buildBarScene(const std::string& placeName) {
     }
     if (const Json& c = world->part(i, "chess"); c.isObject() && model >= 0)
       scene.chessPieces.push_back({static_cast<size_t>(model), static_cast<int8_t>(c["piece"].integer(0))});
-    if (world->part(i, "piano").isObject()) {
+    // Marker parts ("piano": {}) are checked for being there, not for being
+    // objects: the Studio's store saves an empty {} as [] (PHP), and the live
+    // world's piano then lost its place (its glow showed mid-room, J108.1).
+    if (!world->part(i, "piano").isNull()) {
       scene.pianoPosition = pos;
       scene.pianoYaw = yawOf(rot);
     }
-    if (world->part(i, "coin").isObject()) scene.coinModel = model;
+    if (!world->part(i, "coin").isNull()) scene.coinModel = model;
   }
   for (const Pending& p : mirrorUses) {
     const auto it = mirrorOf.find(p.mirror);

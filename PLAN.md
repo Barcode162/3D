@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J108 · The piano redone** (the world). The piano redone: its note glow at the piano (it shows mid-room), a bigger, better keyboard to play, held pedal and pianissimo to fortissimo, songs that keep playing when you leave the bench, particles from the strings (zigzagging up, some shot far up) (request 2026-10-26 #13) · N3
-- [ ] **J108.1** The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo *Check:* Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong
+- [x] **J108.1** The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo *Check:* Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong
 - [ ] **J108.2** A new, bigger keyboard to play: full width, taller keys you can see and press well, two octaves at a time that slide, the pedal and your loudness by where you press *Check:* Sit at the piano: the keyboard fills the bottom of the screen; press near the top for soft, near the bottom for loud
 - [ ] **J108.3** Particles from the strings when notes play: sparks zigzagging up and some shot far up toward the ceiling *Check:* Play: light rises from the strings in zigzags, some shoot high
 
@@ -271,7 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J107.1, J107.2: J107: quality in four levels (Ultra, High, Medium, Low) that set every feature together, and a 20-second GPU check for the phone report → 71d8b24^..be3b0ed
+- `cf58fb5` J107.1, J107.2: J107: quality in four levels (Ultra, High, Medium, Low) that set every feature together, and a 20-second GPU check for the phone report → 71d8b24^..be3b0ed
 - `b188a36` J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4
 - `a489b01` J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab
 - `981a2a1` J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3

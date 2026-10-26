@@ -200,7 +200,9 @@ window.bar3dAudio = (function () {
       p.panningModel = 'HRTF';
       p.distanceModel = 'inverse';
       p.refDistance = 1.2;
-      p.rolloffFactor = 1;
+      // The piano carries across the room like a real one (J108.1: with the
+      // effects' rolloff a song was nearly silent a few metres away).
+      p.rolloffFactor = e.bus === 'piano' ? 0.3 : 1;
       if (p.positionX) { p.positionX.value = e.x; p.positionY.value = e.y; p.positionZ.value = e.z; }
       else p.setPosition(e.x, e.y, e.z);
       p.connect(bus(e.bus));
