@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J100 · A real piano sound** (the world). A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
-- [x] **J100.1** A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you *Check:* Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same
+**J72 · The world remake, step 4, bottles and glasses as real things** (the world). The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
+- [ ] **J72.1** Bottles and glasses as real things: every bottle on the back bar and every glass on the tables its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured later (J25) *Check:* Look along the back bar: every bottle is its own thing; in the Studio, tap a bottle and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
+**Up next, in order:** J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -114,8 +114,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J72** The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
-  *Verdict:* Doable after J35 — Uses the kit and the recipes' idea (J48); dozens of copies stay cheap only when drawn together (instancing, J35)
 - [ ] **J73** The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs. · N3
   *Verdict:* Doable after J35 — Uses the kit; four smaller room models (stage, darts_zone, construction, arcade)
 - [ ] **J74** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open. · N3

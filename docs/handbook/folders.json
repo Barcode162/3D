@@ -9,6 +9,7 @@
     "assets/midi": "The piano's songs as MIDI files, with their credits.",
     "assets/models": "3D models (.glb) made by tools/assets/ in headless Blender, with their credits.",
     "assets/music": "The jukebox's songs, with their licences and credits.",
+    "assets/piano": "The piano's recorded notes (Salamander Grand Piano, CC BY 3.0, J100; tools/piano_samples.sh), with their credit.",
     "assets/world": "The built-in world: its schema, catalog, materials, songs list, and the kinds and places files.",
     "assets/world/kinds": "What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place.",
     "assets/world/places": "Every thing in a place, where it sits and its parts, one file per place (bar, home).",

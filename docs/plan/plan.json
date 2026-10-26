@@ -36,24 +36,24 @@
   }
  ],
  "now": {
-  "id": "J100",
-  "title": "A real piano sound",
+  "id": "J72",
+  "title": "The world remake, step 4, bottles and glasses as real things",
   "chapter": "the world",
-  "about": "A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8)",
+  "about": "The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25).",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J100.1",
-    "text": "A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you",
-    "check": "Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same",
-    "done": true
+    "id": "J72.1",
+    "text": "Bottles and glasses as real things: every bottle on the back bar and every glass on the tables its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured later (J25)",
+    "check": "Look along the back bar: every bottle is its own thing; in the Studio, tap a bottle and move it",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
+ "upNext": "J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
  "road": {
   "world": [
    {
@@ -393,19 +393,6 @@
     "verdict": {
      "kind": "now",
      "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
-    }
-   },
-   {
-    "id": "J72",
-    "text": "The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25).",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J35",
-     "why": "Uses the kit and the recipes' idea (J48); dozens of copies stay cheap only when drawn together (instancing, J35)"
     }
    },
    {
