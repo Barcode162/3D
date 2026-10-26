@@ -36,25 +36,24 @@
   }
  ],
  "now": {
-  "id": "J98",
-  "title": "Light tune-up from your screenshots",
+  "id": "J97",
+  "title": "Lamp shadows",
   "chapter": "the engine",
-  "about": "Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md.",
+  "about": "Lamp shadows: the 16 brightest lamps cast shadows (drawn once, kept), so stools, tables and the counter block their light and their highlights on the floor; an off switch. Its plan: docs/plan/jobs/J97.md.",
   "serves": [
-   "N3",
-   "N5"
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J98.2",
-    "text": "Tables softer, the floor a little shinier, the whole bar a third of a stop darker",
-    "check": "The round tables shine softly with no squares in them; the stage isn't washed out",
-    "done": true
+    "id": "J97.1",
+    "text": "Lamp shadows: the 16 brightest lamps, their cube shadows drawn once, used for their light and highlights instead of the probes' blocky test; the switch",
+    "check": "Stand by the bar stools: under each stool the floor is darker and the lamps' reflections stop where stools and tables are; no squares of light on the walls; Settings → Graphics → Lamp shadows off brings back the old look",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J97 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -824,18 +823,6 @@
     }
    },
    {
-    "id": "J97",
-    "text": "Lamp shadows: the 16 brightest lamps cast shadows (drawn once, kept), so stools, tables and the counter block their light and their highlights on the floor; an off switch. Its plan: docs/plan/jobs/J97.md.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "cost",
-     "why": "Phone speed: a shadow look-up per lamp per pixel; you chose it (2026-10-26 #1); quality and an off switch"
-    }
-   },
-   {
     "id": "J91",
     "text": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
     "serves": [
@@ -1172,6 +1159,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8"
+  },
   {
    "build": "83dd678",
    "text": "J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f"
