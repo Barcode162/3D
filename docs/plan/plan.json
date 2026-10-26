@@ -904,6 +904,19 @@
      "kind": "now",
      "why": "Nothing reads them since S4.2; the hub test covers what stays"
     }
+   },
+   {
+    "id": "J106",
+    "text": "The design lab: a side folder (design/) where Claude explores bolder looks for the bar's screens as look-books you react to on the phone; nothing used until you say so",
+    "serves": [
+     "N1",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Files only, in their own folder; nothing the game, the site or the current job loads"
+    }
    }
   ],
   "backbone": [

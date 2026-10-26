@@ -196,6 +196,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own test; sign-up and profiles have no browser test on GitHub today
 - [ ] **J68** The hub's unused loop tuning (?tuning, tune) and hub/world.html's unused api() taken out (KI-29). · N2
   *Verdict:* Doable now — Nothing reads them since S4.2; the hub test covers what stays
+- [ ] **J106** The design lab: a side folder (design/) where Claude explores bolder looks for the bar's screens as look-books you react to on the phone; nothing used until you say so · N1 N5
+  *Verdict:* Doable now — Files only, in their own folder; nothing the game, the site or the current job loads
 
 ### The backbone
 - [ ] **J61** The room checks chess moves and 4K Mania scores; then more games pay credits. · N4
