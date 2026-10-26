@@ -1108,16 +1108,15 @@
     },
     {
       "id": "fire_flames",
-      "about": "The fireplace's flames: they lick and flicker. Tap to put the fire out (the flames sink to embers, the glow and sparks go with them); tap again to light it.",
-      "pivot": [-8.71, 0.12, 0.8],
+      "about": "The fireplace's fire (J102): flames the shader draws inside a box over the logs, licking and flickering. Tap to put the fire out (the flames sink to embers, the glow and sparks go with them); tap again to light it.",
       "parts": {
         "model": {"file": "fire_flames.glb", "material": "glow-glass"},
         "uses": [
           {
             "prompt": "Fireplace\nTap: fire on/off",
             "action": "fireplace",
-            "tag": [-8.5, 0.6, 0.8],
-            "box": [[-8.9, 0.1, 0], [-8.1, 1.1, 1.6]],
+            "tag": [0.21, 0.48, 0.0],
+            "box": [[-0.19, -0.02, -0.8], [0.61, 0.98, 0.8]],
             "direct": true
           }
         ],

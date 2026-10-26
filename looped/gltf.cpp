@@ -385,6 +385,7 @@ bool GlbParser::finish(ModelData& out, std::string& error) {
         static_cast<float>(m["extensions"]["KHR_materials_emissive_strength"]["emissiveStrength"].number(1));
     mat.emissive = Vec3{static_cast<float>(e[0].number()), static_cast<float>(e[1].number()),
                         static_cast<float>(e[2].number())} * strength;
+    mat.flame = static_cast<float>(m["extras"]["looped_flame"].number(0));
     out.materials.push_back(mat);
   }
   out.images.resize(doc["images"].size());  // filled by image()

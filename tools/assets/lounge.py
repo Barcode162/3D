@@ -321,30 +321,25 @@ def build_lounge():
     build_lamp_and_table()
 
 
+FIRE_AT = (FX - 0.16, 0.12, FZ)   # the flames' base, in the firebox over the logs (the place file's fire_flames)
+FIRE_HALF = (0.17, 0.6, 0.36)       # half depth (x), height, half width (z)
+
+
 def build_flames():
-    """Crossed glowing flame cards over the logs (see-through)."""
+    """The fire (J102): a box the shader fills with flames (scene.wgsl
+    flameVolume), not pictures. Its material's base colour carries the box's
+    size; "looped_flame" marks it."""
     common.reset_scene()
-    w, h = 64, 128
-    yy, xx = np.mgrid[0:h, 0:w] / np.array([h, w])[:, None, None]
-    rgba = np.zeros((h, w, 4), np.float32)
-    for k, (cx, height, width) in enumerate(((0.3, 0.75, 0.16), (0.55, 0.95, 0.2), (0.78, 0.6, 0.14))):
-        shape = np.clip(1 - (np.abs(xx - cx) / (width * (1 - yy / height) + 1e-3)), 0, 1) * (yy < height)
-        flick = 0.85 + 0.15 * np.sin(yy * 30 + k)
-        a = np.clip(shape * 1.6 * flick, 0, 1)
-        rgba[..., 3] = np.maximum(rgba[..., 3], a)
-    heat = np.clip(1 - yy * 1.1, 0, 1)
-    rgba[..., 0] = 1.0
-    rgba[..., 1] = 0.25 + 0.6 * heat
-    rgba[..., 2] = 0.05 + 0.25 * heat ** 3
-    rgba[..., 3] *= np.clip(yy * 8, 0, 1)
-    mat = common.glow_cutout_material("Flames", rgba, strength=3.0)
-    for k, a in enumerate((0.0, math.pi / 3, -math.pi / 3, math.pi / 2)):
-        q = common.quad("Flame card", [(-0.3, 0, 0), (0.3, 0, 0), (0.3, 0.5, 0), (-0.3, 0.5, 0)], mat)
-        back = common.quad("Flame card", [(0.3, 0, 0), (-0.3, 0, 0), (-0.3, 0.5, 0), (0.3, 0.5, 0)], mat,
-                           uvs=((1, 0), (0, 0), (0, 1), (1, 1)))
-        for o in (q, back):
-            o.data.transform(Matrix.Translation((FX - 0.2 + 0.03 * (k - 1.5), 0.12, FZ)) @ Matrix.Rotation(a + math.pi / 2, 4, "Y"))
-    common.finish_and_export(os.path.join(out_dir, "fire_flames.glb"), uv_scale={}, image_format="AUTO")
+    hx, hy, hz = FIRE_HALF
+    mat = bpy.data.materials.new("Flame volume")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (hx, hy, hz, 1.0)
+    bsdf.inputs["Alpha"].default_value = 0.99  # see-through: drawn after the solid things
+    mat.surface_render_method = "BLENDED"
+    mat["looped_flame"] = 1
+    common.box("Flame volume", (-hx, 0.0, -hz), (hx, hy, hz), mat, 0.0)
+    common.finish_and_export(os.path.join(out_dir, "fire_flames.glb"), uv_scale={}, extras=True)
 
 
 build_lounge()

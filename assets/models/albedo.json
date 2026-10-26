@@ -2439,16 +2439,11 @@
   }
  },
  "fire_flames.glb": {
-  "Flames": {
+  "Flame volume": {
    "albedo": [
-    1.0,
-    0.3881,
-    0.0202
-   ],
-   "emissive": [
-    3.0,
-    1.1643,
-    0.0605
+    0.17,
+    0.6,
+    0.36
    ],
    "metal": 0.0,
    "seeThrough": true

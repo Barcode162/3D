@@ -41,6 +41,10 @@ struct ModelMaterial {
   int baseColorImage = -1, metalRoughImage = -1, normalImage = -1, occlusionImage = -1;
   int emissiveImage = -1;  // glow pattern (screens, lit windows), times `emissive`
   bool blend = false;  // see-through (glTF alphaMode BLEND), e.g. glass
+  // A flame volume (J102, the material's extras "looped_flame": 1): the
+  // shader draws a fire inside its box (scene.wgsl flameVolume); the base
+  // colour holds the box's half width, height and half depth.
+  float flame = 0;
 };
 
 struct ModelImage {

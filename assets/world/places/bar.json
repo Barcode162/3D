@@ -481,7 +481,7 @@
     {"id": "lounge_bookshelf", "kind": "bookshelf", "at": [-9.0, 0, 2.625], "turn": 90},
     {"id": "floor_lamp", "kind": "floor_lamp", "at": [-6.3, 0, 2.75]},
     {"id": "side_table", "kind": "side_table", "at": [-5.85, 0, 2.65]},
-    {"id": "fire_flames", "kind": "fire_flames", "at": [0, 0, 0]},
+    {"id": "fire_flames", "kind": "fire_flames", "at": [-8.71, 0.12, 0.8]},
     {
       "id": "chess_rook_w-1",
       "kind": "chess",

@@ -215,6 +215,7 @@ void finish(const std::shared_ptr<Loading>& l) {
       u.params[1] = m.roughness;
       u.params[2] = m.normalScale;
       u.params[3] = m.occlusionStrength;
+      u.surface[0] = m.flame;  // J102: a flame volume
       u.emissive[0] = m.emissive.x;
       u.emissive[1] = m.emissive.y;
       u.emissive[2] = m.emissive.z;

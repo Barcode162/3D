@@ -422,7 +422,7 @@ def _join_by_material():
     bpy.ops.object.select_all(action="DESELECT")
 
 
-def finish_and_export(out_path, uv_scale, image_format="JPEG"):
+def finish_and_export(out_path, uv_scale, image_format="JPEG", extras=False):
     """Applies modifiers, adds UVs and smooth shading, and writes the .glb."""
     view_layer = bpy.context.view_layer
     for obj in list(bpy.context.scene.objects):
@@ -456,6 +456,7 @@ def finish_and_export(out_path, uv_scale, image_format="JPEG"):
         export_materials="EXPORT",
         export_cameras=False,
         export_lights=False,
+        export_extras=extras,  # materials' custom properties (J102: "looped_flame")
     )
     tris = sum(len(p.vertices) - 2 for o in bpy.context.scene.objects if o.type == "MESH" for p in o.data.polygons)
     print("EXPORTED", out_path, os.path.getsize(out_path), "bytes,", tris, "triangles")

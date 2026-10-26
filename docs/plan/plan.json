@@ -48,7 +48,7 @@
     "id": "J102.1",
     "text": "The fire drawn by a shader: flames from moving noise (shape, heat colour from deep red to yellow-white, flicker, rising embers) in place of the moving pictures; out: embers glow",
     "check": "Stand by the fire: the flames move and change like a real fire, no flat pictures; tap it: the fire goes out to glowing embers",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1185,7 +1185,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "e4a1905",
    "text": "J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13"
   },
   {

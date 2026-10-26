@@ -1750,6 +1750,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   const size_t fpCount = std::min<size_t>(firstPersonBones.size(), kMaxBones);
   if (fpCount) queue.WriteBuffer(firstPersonBonesBuffer_, 0, firstPersonBones.data(), fpCount * sizeof(Mat4));
 
+  frame_.clock[0] = static_cast<float>(std::fmod(engine::clockMs() / 1000.0, 3600.0));
   frame_.env[0] = 0;
   frame_.env[1] = envReady_ ? 1.0f : 0.0f;
   frame_.env[2] = static_cast<float>(kEnvLevels - 1);

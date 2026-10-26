@@ -45,6 +45,7 @@ struct Frame {
   // along each line, z = how far they go (m), w = frame number (the noise).
   invViewProj: mat4x4f,
   beams: vec4f,
+  clock: vec4f,  // x = seconds (wraps every hour): fire and other things that move by themselves (J102)
 };
 
 fn classicLight() -> bool { return frame.env.w > 0.5; }
@@ -277,6 +278,10 @@ struct ModelOut {
   @location(3) tangent: vec4f,
   @location(4) @interpolate(flat) tint: vec4f,
   @location(5) @interpolate(flat) highlight: f32,
+  // The model's own space (J102: a flame volume works in it): the position,
+  // and the line of sight in that space (uniform scale).
+  @location(6) local: vec3f,
+  @location(7) localView: vec3f,
 };
 
 @vertex
@@ -291,6 +296,9 @@ fn vs_model(in: ModelIn, copy: CopyIn) -> ModelOut {
   out.tangent = vec4f((model * vec4f(in.tangent.xyz, 0.0)).xyz, in.tangent.w);
   out.tint = copy.color;
   out.highlight = copy.material.x;
+  out.local = in.position;
+  let axes = mat3x3f(model[0].xyz, model[1].xyz, model[2].xyz);
+  out.localView = transpose(axes) * (world.xyz - frame.cameraPos.xyz) / max(dot(model[0].xyz, model[0].xyz), 1e-8);
   return out;
 }
 
@@ -343,8 +351,95 @@ fn fs_model(in: ModelOut) -> @location(0) vec4f {
 // See-through models (glass). Output is premultiplied: the color already
 // includes its opacity. Glass gets more opaque at grazing angles (Fresnel),
 // which is what makes its edges visible.
+// A flame volume (J102): the material's box (base at the model's origin,
+// half width, height and half depth in its base colour) holds a fire, worked
+// out as the line of sight crosses it: flames of moving noise, thinner and
+// hotter up the middle, rising and licking; their light runs from deep red
+// through orange to yellow-white with heat. The model's glow loop (its tint's
+// alpha) scales it: the fire dies to embers.
+fn hash3(p: vec3f) -> f32 {
+  let q = fract(p * 0.3183099 + vec3f(0.1, 0.17, 0.13));
+  let r = q * 17.0;
+  return fract(r.x * r.y * r.z * (r.x + r.y + r.z));
+}
+
+fn noise3(p: vec3f) -> f32 {
+  let i = floor(p);
+  let f = fract(p);
+  let u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash3(i), hash3(i + vec3f(1.0, 0.0, 0.0)), u.x),
+                 mix(hash3(i + vec3f(0.0, 1.0, 0.0)), hash3(i + vec3f(1.0, 1.0, 0.0)), u.x), u.y),
+             mix(mix(hash3(i + vec3f(0.0, 0.0, 1.0)), hash3(i + vec3f(1.0, 0.0, 1.0)), u.x),
+                 mix(hash3(i + vec3f(0.0, 1.0, 1.0)), hash3(i + vec3f(1.0, 1.0, 1.0)), u.x), u.y), u.z);
+}
+
+fn fireFbm(p: vec3f) -> f32 {
+  var v = 0.0;
+  var a = 0.5;
+  var q = p;
+  for (var i = 0; i < 4; i++) {
+    v += a * noise3(q);
+    q = q * 2.03 + vec3f(1.7, 9.2, 3.1);
+    a *= 0.5;
+  }
+  return v;
+}
+
+fn fireColor(heat: f32) -> vec3f {
+  // Blackbody-like: deep red, orange, yellow, near white.
+  let h = clamp(heat, 0.0, 1.0);
+  return vec3f(1.0, 0.18, 0.02) * smoothstep(0.0, 0.35, h) + vec3f(0.0, 0.42, 0.06) * smoothstep(0.3, 0.7, h) +
+         vec3f(0.0, 0.3, 0.45) * smoothstep(0.7, 1.0, h);
+}
+
+fn flameVolume(in: ModelOut, front: bool) -> vec4f {
+  if (!front) { discard; }
+  let half = modelMaterial.baseColor.xyz;  // half width, height, half depth
+  let dir = normalize(in.localView);
+  // Where the line of sight leaves the box.
+  let lo = vec3f(-half.x, 0.0, -half.z);
+  let hi = vec3f(half.x, half.y, half.z);
+  let inv = 1.0 / select(dir, vec3f(1e-6), abs(dir) < vec3f(1e-6));
+  let t1 = (lo - in.local) * inv;
+  let t2 = (hi - in.local) * inv;
+  let tExit = max(min(min(max(t1.x, t2.x), max(t1.y, t2.y)), max(t1.z, t2.z)), 0.0);
+  let steps = 24;
+  let ds = tExit / f32(steps);
+  let t = frame.clock.x;
+  let jitter = fract(sin(dot(in.clip.xy, vec2f(12.9898, 78.233))) * 43758.5453);
+  var color = vec3f(0.0);
+  var alpha = 0.0;
+  for (var k = 0; k < steps; k++) {
+    let p = in.local + dir * ((f32(k) + jitter) * ds);
+    let q = p / vec3f(half.x, half.y, half.z);   // -1..1 across, 0..1 up
+    let y = clamp(q.y, 0.0, 1.0);
+    // Flames all along the logs (across is z, into the fireplace x): each
+    // stretch of the logs has its own flame height, from slow noise that
+    // rises and drifts, so tongues of different heights lick up side by side;
+    // finer noise breaks their edges; they thin out toward their tips.
+    let across = clamp(1.0 - pow(abs(q.z) / 0.92, 4.0), 0.0, 1.0);
+    let deep = clamp(1.0 - pow(abs(q.x) / 0.85, 2.0), 0.0, 1.0);
+    let column = noise3(vec3f(q.z * 4.2 + 3.0, y * 1.1 - t * 1.6, q.x * 2.0 + t * 0.2));
+    let reach = 0.3 + 0.7 * column * column;
+    let body = smoothstep(reach, reach - 0.45, y);
+    let n = fireFbm(vec3f(q.z * 3.4, y * 3.4 - t * 3.2, q.x * 3.0 + t * 0.5));
+    var d = clamp(across * deep * body * (0.45 + n) * 1.6 - 0.32, 0.0, 1.0);
+    d *= smoothstep(0.0, 0.05, y);  // fades in just above the logs
+    let heat = d * 1.1 * (1.1 - y * 0.9);
+    let a = 1.0 - exp(-d * ds * 26.0);
+    color += (1.0 - alpha) * a * fireColor(heat) * (0.35 + 1.3 * heat);
+    alpha += (1.0 - alpha) * a;
+    if (alpha > 0.97) { break; }
+  }
+  let glow = in.tint.a;
+  let strength = select(frame.units.x, 1.0, classicLight()) * 1.2 * glow;
+  if (alpha < 0.002) { discard; }
+  return vec4f(color * strength / alpha, alpha * clamp(glow, 0.0, 1.0));
+}
+
 @fragment
-fn fs_model_blend(in: ModelOut) -> @location(0) vec4f {
+fn fs_model_blend(in: ModelOut, @builtin(front_facing) front: bool) -> @location(0) vec4f {
+  if (modelMaterial.surface.x > 0.5) { return flameVolume(in, front); }
   let c = litModel(in, true);
   let v = normalize(frame.cameraPos.xyz - in.worldPos);
   let edge = pow(1.0 - abs(dot(normalize(in.normal), v)), 5.0);

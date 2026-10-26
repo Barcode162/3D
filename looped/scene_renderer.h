@@ -250,6 +250,7 @@ class SceneRenderer {
     // reach (m), frame number.
     engine::Mat4 invViewProj;
     float beams[4];
+    float clock[4];  // x = seconds, wrapping every hour (J102: the fire moves by itself)
   };
   // The lights and the light grid: the floor is cut into square cells, and
   // each cell lists the (at most 8) lights that reach it, so a pixel only
