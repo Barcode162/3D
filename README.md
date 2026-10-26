@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J108.2 A new, bigger piano keyboard: big shaded keys filling the bottom of the screen, a strip of all 88 keys to slide along, slide across keys to glide, pianissimo to fortissimo by where you press, Songs / Pedal / Stand buttons
+
+`0f05e33` · 2026-10-26 22:03 · 7 files, +198 −81 · tests: none
+
+Phone check: Sit at the piano: big keys at the bottom; drag the thin strip above them to move along; press near the top of a key for soft, near the bottom for loud
+
 ## J108.1 The piano's notes back at the piano: its lit keys, glowing strings and sound had lost their place in the live world (shown mid-room); lighter samples that carry across the bar
 
 `61c77a5` · 2026-10-26 22:02 · 126 files, +16 −10 · tests: none
