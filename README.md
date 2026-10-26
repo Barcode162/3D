@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J91.3 Tuned: soft shade 0.5 m at full strength, the bar's haze 0.02, beam steps follow Quality (16/12/8)
+
+`bb6755a` · 2026-10-26 03:57 · 6 files, +11 −5 · tests: none
+
+Phone check: Bar stays smooth with both on; Quality Low still shows soft beams
+
 ## J91.2 Light beams: lamp light in a thin haze, cut by what blocks it
 
 `f971261` · 2026-10-26 03:55 · 24 files, +358 −20 · tests: none
