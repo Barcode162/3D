@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J35.2 The stools: Poly Haven's carved wooden bar stool (Bar Chair Round 01, CC0) in place of all 8, scaled to a real 0.76 m seat, its low back away from the counter; you sit at the new height; its solids follow the new shape
+
+`2c36d25` · 2026-10-26 04:38 · 9 files, +25 −78 · tests: none
+
+Phone check: Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it
+
 ## J35.1 The kit: Blender 4.5 set up, Poly Haven models fetched and slimmed by script (triangles, 1k textures, origin on the floor), a budget per remade model checked with the quick checks, credits table
 
 `6be0a2a` · 2026-10-26 04:35 · 12 files, +168 −19 · tests: none
