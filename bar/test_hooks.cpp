@@ -55,7 +55,10 @@ TestHooks TestHooks::parse() {
   if (param(query, "walkpose", v) && !v.empty()) h.walkPose = static_cast<float>(std::atof(v.c_str()));
   if (param(query, "previewturn", v) && !v.empty()) h.previewTurn = static_cast<float>(std::atof(v.c_str()));
   if (param(query, "walkdir", v) && !v.empty()) h.walkDir = static_cast<float>(std::atof(v.c_str()));
-  if (param(query, "sit", v) && !v.empty()) h.sit = std::atoi(v.c_str());
+  if (param(query, "sit", v) && !v.empty()) {
+    if (v[0] >= '0' && v[0] <= '9') h.sit = std::atoi(v.c_str());
+    else if (v.size() <= 16) h.sitKind = v;
+  }
   if (param(query, "emote", v) && !v.empty()) h.emote = std::atoi(v.c_str());
   if (param(query, "pianosong", v) && !v.empty()) h.pianoSong = std::atoi(v.c_str());
   if (param(query, "mirrorq", v) && !v.empty()) h.mirrorQ = std::atoi(v.c_str());

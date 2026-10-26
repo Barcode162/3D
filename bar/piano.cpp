@@ -80,14 +80,41 @@ struct Rect {
   float x, y, w, h;
   bool contains(float px, float py) const { return px >= x && px <= x + w && py >= y && py <= y + h; }
 };
-// On-screen keyboard layout (device pixels): two octaves at the bottom.
-constexpr int kWhitesShown = 15;  // two octaves and the next C
-Rect keyboardArea(float W, float H) { return {0, H * 0.72f, W, H * 0.28f}; }
-Rect topButton(int i, float W, float H) {
-  const float bw = W / 5.0f;
-  return {bw * static_cast<float>(i) + 3, H * 0.655f, bw - 6, H * 0.06f};
+// The on-screen keyboard (J108.2), in device pixels (px = device pixels per
+// CSS pixel): from the bottom up, the keys (about 40% of the screen), a strip
+// with all 88 keys (the window you play, drag it to slide), the buttons and
+// the song playing.
+struct KeyLayout {
+  float W, H, px;
+  Rect keys, strip, buttons;
+  int whites;  // white keys in view
+};
+KeyLayout keyLayout(float W, float H, float px) {
+  KeyLayout k{W, H, px, {}, {}, {}, 0};
+  const float bottom = H - 6 * px;
+  const float keyH = std::min(H * 0.4f, W * 0.95f);
+  k.keys = {0, bottom - keyH, W, keyH};
+  k.strip = {6 * px, k.keys.y - 34 * px, W - 12 * px, 26 * px};
+  k.buttons = {6 * px, k.strip.y - 52 * px, W - 12 * px, 44 * px};
+  k.whites = std::clamp(static_cast<int>(std::lround(W / (46 * px))), 7, 24);
+  return k;
 }
-const char* kButtons[5] = {"< OCT", "OCT >", "PEDAL", "SONGS", "STAND"};
+Rect topButton(int i, const KeyLayout& k) {
+  const float bw = k.buttons.w / 3.0f;
+  return {k.buttons.x + bw * static_cast<float>(i) + 3 * k.px, k.buttons.y, bw - 6 * k.px, k.buttons.h};
+}
+const char* kButtons[3] = {"SONGS", "PEDAL", "STAND"};
+// The 52 white keys of the 88, as MIDI keys (A0 = 21 ... C8 = 108).
+const std::array<int, 52>& whiteKeys() {
+  static const std::array<int, 52> w = [] {
+    std::array<int, 52> out{};
+    int n = 0;
+    for (int key = 21; key <= 108; ++key)
+      if (!isBlack(key - 21)) out[static_cast<size_t>(n++)] = key;
+    return out;
+  }();
+  return w;
+}
 
 }  // namespace
 
@@ -95,6 +122,8 @@ void Piano::init(const BarScene& scene) {
   position_ = scene.pianoPosition;
   yaw_ = scene.pianoYaw;
   rotation_ = engine::Quat::axisAngle({0, 1, 0}, yaw_);
+  LOG_INFO("TEMP piano at %.2f %.2f %.2f", position_.x, position_.y, position_.z);
+  LOG_INFO("TEMP piano at %.2f %.2f %.2f", position_.x, position_.y, position_.z);
   const char* files[10][2] = {
       {"Fur Elise - Beethoven", "01-fur-elise"},
       {"Moonlight Sonata - Beethoven", "02-moonlight-sonata"},
@@ -163,14 +192,18 @@ int Piano::playKey(int i, float velocity, double when) {
   if (emitter_ == 0) emitter_ = engine::audio::createEmitter(world({0, 1.0f, 0.8f}), true);
   loadRecorded();
   // The nearest recorded note (at most a semitone away), in the layer for
-  // this loudness; the recording carries the tone, the gain a little more.
+  // this loudness (its tone: soft is mellow, hard is bright); the gain makes
+  // the rest of the range, pianissimo (about -24 dB) to fortissimo (0 dB),
+  // J108.1.
   const int s = std::clamp((i + 1) / 3, 0, kSamples - 1);
-  const int layer = velocity < 0.3f ? 0 : velocity < 0.55f ? 1 : velocity < 0.8f ? 2 : 3;
+  const float v = std::clamp(velocity, 0.0f, 1.0f);
+  const int layer = v < 0.3f ? 0 : v < 0.55f ? 1 : v < 0.8f ? 2 : 3;
+  const float gain = 0.06f + 0.94f * std::pow(v, 1.8f);
   const float rate = std::pow(2.0f, static_cast<float>(i - 3 * s) / 12.0f);
   for (int l : {layer, 1, 2, 0, 3}) {  // that layer, or the nearest that has arrived
-    if (recorded_[s][l].loaded()) return recorded_[s][l].playAt(emitter_, 0.55f + 0.45f * velocity, when, rate);
+    if (recorded_[s][l].loaded()) return recorded_[s][l].playAt(emitter_, gain, when, rate);
   }
-  return samples_[sampleOf(i)].playAt(emitter_, 0.25f + 0.75f * velocity, when, rateFor(i));
+  return samples_[sampleOf(i)].playAt(emitter_, gain, when, rateFor(i));
 }
 
 void Piano::releaseAll(Hands& h) {
@@ -472,49 +505,67 @@ void Piano::closeKeyboard() {
   setPedal(false, true);
 }
 
-int Piano::keyAt(float x, float y, float W, float H) const {
-  const Rect area = keyboardArea(W, H);
-  if (!area.contains(x, y)) return -1;
-  const float ww = W / kWhitesShown;
-  const int c0 = 12 * (octave_ + 1);  // MIDI key of the lowest C shown
-  // Black keys first (they sit on top, in the upper 60%).
-  if (y < area.y + area.h * 0.6f) {
-    static const int kBlackAfterWhite[7] = {1, 1, 0, 1, 1, 1, 0};  // C# D# - F# G# A# -
-    static const int kWhiteSemis[7] = {0, 2, 4, 5, 7, 9, 11};
-    for (int w = 0; w + 1 < kWhitesShown; ++w) {
-      if (!kBlackAfterWhite[w % 7]) continue;
+// The key under (x, y) and how hard: higher up the key is softer, lower is
+// louder (pianissimo to fortissimo, J108.1). -1 when it's not on a key.
+int Piano::keyAt(float x, float y, float W, float H, float px, float* velocity) const {
+  const KeyLayout k = keyLayout(W, H, px);
+  if (!k.keys.contains(x, y)) return -1;
+  const float ww = k.keys.w / static_cast<float>(k.whites);
+  const int first = std::clamp(firstWhite_, 0, 52 - k.whites);
+  const float rel = (y - k.keys.y) / k.keys.h;
+  if (velocity) *velocity = std::clamp(0.12f + 0.95f * rel, 0.1f, 1.0f);
+  const auto& whites = whiteKeys();
+  if (rel < 0.62f) {  // black keys first: they sit on top
+    for (int w = 0; w + 1 < k.whites; ++w) {
+      const int key = whites[static_cast<size_t>(first + w)];
+      if (key + 1 > 108 || !isBlack(key + 1 - 21)) continue;
       const float bx = ww * static_cast<float>(w + 1);
-      if (std::fabs(x - bx) < ww * 0.32f) return c0 + 12 * (w / 7) + kWhiteSemis[w % 7] + 1;
+      if (std::fabs(x - bx) < ww * 0.3f) {
+        if (velocity) *velocity = std::clamp(0.12f + 0.95f * rel / 0.62f, 0.1f, 1.0f);
+        return key + 1;
+      }
     }
   }
-  static const int kWhiteSemis[7] = {0, 2, 4, 5, 7, 9, 11};
-  const int w = std::clamp(static_cast<int>(x / ww), 0, kWhitesShown - 1);
-  return c0 + 12 * (w / 7) + kWhiteSemis[w % 7];
+  const int w = std::clamp(static_cast<int>(x / ww), 0, k.whites - 1);
+  return whites[static_cast<size_t>(first + w)];
 }
 
-bool Piano::updateKeyboard(const std::vector<engine::Input::RawPress>& presses, float W, float H) {
+bool Piano::updateKeyboard(const engine::InputFrame& frame, float W, float H, float px) {
   bool standUp = false;
   prepareSamples();
-  for (const engine::Input::RawPress& p : presses) {
+  const KeyLayout k = keyLayout(W, H, px);
+  const int maxFirst = 52 - k.whites;
+  firstWhite_ = std::clamp(firstWhite_, 0, maxFirst);
+  // The strip: the window follows the finger (tap or drag).
+  const auto stripTo = [&](float x) {
+    const float t = std::clamp((x - k.strip.x) / k.strip.w, 0.0f, 1.0f);
+    firstWhite_ = std::clamp(static_cast<int>(std::lround(t * 52.0f - k.whites * 0.5f)), 0, maxFirst);
+  };
+  for (const engine::Input::RawPress& p : frame.presses) {
     const float x = p.pos.x * W, y = p.pos.y * H;
     if (p.key == 4 && p.down) standUp = true;  // Escape
     if (p.down) {
-      for (int b = 0; b < 5; ++b) {
-        if (!topButton(b, W, H).contains(x, y)) continue;
-        if (b == 0) octave_ = std::max(0, octave_ - 1);
-        if (b == 1) octave_ = std::min(6, octave_ + 1);
-        if (b == 2) setPedal(!hands_[kYou].pedal, true);
-        if (b == 3) songsRequest_ = true;
-        if (b == 4) standUp = true;
+      for (int b = 0; b < 3; ++b) {
+        if (!topButton(b, k).contains(x, y)) continue;
+        if (b == 0) songsRequest_ = true;
+        if (b == 1) setPedal(!hands_[kYou].pedal, true);
+        if (b == 2) standUp = true;
       }
-      // Keyboard lanes D F J K (computers) play C D E F.
-      int key = p.key >= 0 && p.key < 4 ? 12 * (octave_ + 1) + std::array<int, 4>{0, 2, 4, 5}[static_cast<size_t>(p.key)]
-                                        : keyAt(x, y, W, H);
+      if (k.strip.contains(x, y)) {
+        stripTo(x);
+        stripFinger_ = p.id;
+        continue;
+      }
+      // Keyboard lanes D F J K (computers) play the first four white keys in view.
+      float velocity = 0.75f;
+      const int key = p.key >= 0 && p.key < 4 ? whiteKeys()[static_cast<size_t>(firstWhite_ + p.key)]
+                                              : keyAt(x, y, W, H, px, &velocity);
       if (key >= 0) {
-        keyDown(key, 0.75f, true);
-        fingers_.push_back({p.id, key});
+        keyDown(key, velocity, true);
+        fingers_.push_back({p.id, key, velocity});
       }
     } else {
+      if (p.id == stripFinger_) stripFinger_ = -1;
       for (size_t f = 0; f < fingers_.size(); ++f) {
         if (fingers_[f].id != p.id) continue;
         keyUp(fingers_[f].key, true);
@@ -523,58 +574,108 @@ bool Piano::updateKeyboard(const std::vector<engine::Input::RawPress>& presses, 
       }
     }
   }
+  // Fingers that slide: along the strip it moves the window; over the keys a
+  // glissando (the old key lets go, the new one plays).
+  for (const engine::Input::Pointer& ptr : frame.pointers) {
+    const float x = ptr.pos.x * W, y = ptr.pos.y * H;
+    if (ptr.id == stripFinger_) {
+      stripTo(x);
+      continue;
+    }
+    for (Finger& f : fingers_) {
+      if (f.id != ptr.id) continue;
+      float velocity = f.velocity;
+      const int key = keyAt(x, y, W, H, px, &velocity);
+      if (key >= 0 && key != f.key) {
+        keyUp(f.key, true);
+        keyDown(key, f.velocity, true);
+        f.key = key;
+      }
+    }
+  }
   return standUp;
 }
 
 void Piano::drawKeyboard(engine::TextRenderer& text, float W, float H, float px) const {
-  const Rect area = keyboardArea(W, H);
-  text.addRect(0, H * 0.645f, W, H * 0.08f, {0.05f, 0.03f, 0.07f, 0.85f});
-  for (int b = 0; b < 5; ++b) {
-    const Rect r = topButton(b, W, H);
-    const auto mine = hands_.find(kYou);
-    const bool on = b == 2 && mine != hands_.end() && mine->second.pedal;
-    text.addRect(r.x, r.y, r.w, r.h, on ? Vec4{1.0f, 0.42f, 0.78f, 0.9f} : Vec4{0.16f, 0.12f, 0.2f, 0.95f});
+  const KeyLayout k = keyLayout(W, H, px);
+  const int first = std::clamp(firstWhite_, 0, 52 - k.whites);
+  const auto& whites = whiteKeys();
+  // A panel behind it all.
+  text.addRect(0, k.buttons.y - 30 * px, W, H - (k.buttons.y - 30 * px), {0.04f, 0.03f, 0.05f, 0.88f});
+  engine::TextStyle st;
+  st.align = 0.5f;
+  const std::string playing = song_ >= 0 ? "Playing: " + songs_[static_cast<size_t>(song_)].title
+                                         : "Press higher on a key for soft, lower for loud";
+  text.addScreen(playing, W * 0.5f, k.buttons.y - 22 * px, 8 * px, st);
+  // Buttons.
+  const auto mine = hands_.find(kYou);
+  for (int b = 0; b < 3; ++b) {
+    const Rect r = topButton(b, k);
+    const bool on = b == 1 && mine != hands_.end() && mine->second.pedal;
+    text.addRect(r.x, r.y, r.w, r.h, on ? Vec4{0.95f, 0.72f, 0.35f, 0.95f} : Vec4{0.17f, 0.14f, 0.2f, 0.95f});
+    text.addRect(r.x, r.y, r.w, 2 * px, {1, 1, 1, 0.12f});
     engine::TextStyle s;
     s.align = 0.5f;
-    const float cap = std::min(r.h * 0.32f, 10 * px);
-    text.addScreen(kButtons[b], r.x + r.w / 2, r.y + (r.h - cap) / 2, cap, s);
+    if (on) s.color = {0.1f, 0.06f, 0.02f, 1};
+    const float cap = std::min(r.h * 0.3f, 10 * px);
+    text.addScreen(b == 1 && on ? "PEDAL ON" : kButtons[b], r.x + r.w / 2, r.y + (r.h - cap) / 2, cap, s);
   }
-  const float ww = W / kWhitesShown;
-  const int c0 = 12 * (octave_ + 1);
-  static const int kWhiteSemis[7] = {0, 2, 4, 5, 7, 9, 11};
-  const auto mine = hands_.find(kYou);
+  // The 88-key strip: every white key a sliver, black keys dark, the window
+  // you play outlined.
+  const float sw = k.strip.w / 52.0f;
+  text.addRect(k.strip.x, k.strip.y, k.strip.w, k.strip.h, {0.12f, 0.1f, 0.12f, 1});
+  for (int w = 0; w < 52; ++w) {
+    const bool in = w >= first && w < first + k.whites;
+    text.addRect(k.strip.x + sw * static_cast<float>(w) + 0.5f * px, k.strip.y + 2 * px, sw - px, k.strip.h - 4 * px,
+                 in ? Vec4{0.95f, 0.92f, 0.86f, 1} : Vec4{0.45f, 0.43f, 0.4f, 1});
+    const int key = whites[static_cast<size_t>(w)];
+    if (key + 1 <= 108 && isBlack(key + 1 - 21))
+      text.addRect(k.strip.x + sw * static_cast<float>(w + 1) - sw * 0.3f, k.strip.y + 2 * px, sw * 0.6f,
+                   (k.strip.h - 4 * px) * 0.6f, {0.05f, 0.05f, 0.06f, 1});
+  }
+  const float wx = k.strip.x + sw * static_cast<float>(first);
+  for (const Rect& e : {Rect{wx - px, k.strip.y - px, sw * k.whites + 2 * px, 2 * px},
+                        Rect{wx - px, k.strip.y + k.strip.h - px, sw * k.whites + 2 * px, 2 * px},
+                        Rect{wx - 2 * px, k.strip.y - px, 2 * px, k.strip.h + 2 * px},
+                        Rect{wx + sw * k.whites, k.strip.y - px, 2 * px, k.strip.h + 2 * px}})
+    text.addRect(e.x, e.y, e.w, e.h, {0.95f, 0.72f, 0.35f, 1});
+  // The keys: ivory with a shaded lip, pressed keys sink and take a warm tint;
+  // black keys with a glossy top.
   auto down = [&](int key) {
     const int i = key - kFirstKey;
     if (i < 0 || i >= 88 || mine == hands_.end()) return false;
     const Hands& h = mine->second;
     return h.voice[i] > 0 && std::find(h.pedalHeld.begin(), h.pedalHeld.end(), i) == h.pedalHeld.end();
   };
-  for (int w = 0; w < kWhitesShown; ++w) {
-    const int key = c0 + 12 * (w / 7) + kWhiteSemis[w % 7];
-    const Vec4 c = down(key) ? Vec4{1.0f, 0.75f, 0.88f, 1} : Vec4{0.95f, 0.93f, 0.88f, 1};
-    text.addRect(ww * static_cast<float>(w) + 1, area.y, ww - 2, area.h, c);
-    if (w % 7 == 0) {
+  const float ww = k.keys.w / static_cast<float>(k.whites);
+  text.addRect(0, k.keys.y - 3 * px, W, 3 * px, {0.5f, 0.08f, 0.08f, 1});  // the felt strip
+  for (int w = 0; w < k.whites; ++w) {
+    const int key = whites[static_cast<size_t>(first + w)];
+    const bool d = down(key);
+    const float x = ww * static_cast<float>(w) + px, kw = ww - 2 * px, h = k.keys.h - (d ? 0 : 6 * px);
+    text.addRect(x, k.keys.y, kw, h, d ? Vec4{0.98f, 0.86f, 0.7f, 1} : Vec4{0.97f, 0.95f, 0.9f, 1});
+    text.addRect(x, k.keys.y, kw, 10 * px, {0, 0, 0, d ? 0.18f : 0.1f});  // shade under the black keys' rail
+    if (!d) text.addRect(x, k.keys.y + h, kw, 6 * px, {0.72f, 0.69f, 0.63f, 1});  // the front lip
+    if (key % 12 == 0) {
       char label[8];
       std::snprintf(label, sizeof(label), "C%d", key / 12 - 1);
       engine::TextStyle s;
       s.align = 0.5f;
-      s.color = {0.2f, 0.2f, 0.25f, 1};
+      s.color = {0.35f, 0.33f, 0.3f, 1};
       s.outline.w = 0;
-      text.addScreen(label, ww * (static_cast<float>(w) + 0.5f), area.y + area.h - 18 * px, 7 * px, s);
+      text.addScreen(label, x + kw / 2, k.keys.y + h - 20 * px, 7 * px, s);
     }
   }
-  static const int kBlackAfterWhite[7] = {1, 1, 0, 1, 1, 1, 0};
-  for (int w = 0; w + 1 < kWhitesShown; ++w) {
-    if (!kBlackAfterWhite[w % 7]) continue;
-    const int key = c0 + 12 * (w / 7) + kWhiteSemis[w % 7] + 1;
-    const float bx = ww * static_cast<float>(w + 1);
-    const Vec4 c = down(key) ? Vec4{0.9f, 0.3f, 0.6f, 1} : Vec4{0.05f, 0.05f, 0.06f, 1};
-    text.addRect(bx - ww * 0.3f, area.y, ww * 0.6f, area.h * 0.6f, c);
+  for (int w = 0; w + 1 < k.whites; ++w) {
+    const int key = whites[static_cast<size_t>(first + w)] + 1;
+    if (key > 108 || !isBlack(key - 21)) continue;
+    const bool d = down(key);
+    const float bx = ww * static_cast<float>(w + 1), bw = ww * 0.58f, bh = k.keys.h * 0.62f - (d ? 0 : 4 * px);
+    text.addRect(bx - bw / 2, k.keys.y, bw, bh, d ? Vec4{0.45f, 0.25f, 0.12f, 1} : Vec4{0.06f, 0.055f, 0.065f, 1});
+    text.addRect(bx - bw / 2 + 2 * px, k.keys.y, bw - 4 * px, bh * 0.85f, d ? Vec4{0.55f, 0.32f, 0.16f, 1}
+                                                                          : Vec4{0.14f, 0.13f, 0.15f, 1});
+    text.addRect(bx - bw / 2 + 3 * px, k.keys.y + 4 * px, 2 * px, bh * 0.7f, {1, 1, 1, 0.12f});  // the gloss
   }
-  engine::TextStyle s;
-  s.align = 0.5f;
-  const std::string playing = song_ >= 0 ? "Playing: " + songs_[static_cast<size_t>(song_)].title : "Piano: play the keys";
-  text.addScreen(playing, W * 0.5f, H * 0.615f, 9 * px, s);
 }
 
 }  // namespace app

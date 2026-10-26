@@ -13,6 +13,7 @@
 #include <cstring>
 #include <vector>
 
+#include "bar/scene_names.h"
 #include "bar/avatar.h"
 #include "bar/bar_scene.h"
 #include "bar/world_live.h"
@@ -872,7 +873,7 @@ void updateInteraction(double nowMs, float dt) {
   } else if (g_app.race.open()) {
     if (g_app.race.update(nowMs, dt, g_app.input.frame())) standUp();
   } else if (g_app.piano.keyboardOpen()) {
-    if (g_app.piano.updateKeyboard(g_app.input.frame().presses, W, H)) standUp();
+    if (g_app.piano.updateKeyboard(g_app.input.frame(), W, H, g_app.gpu.pixelRatio)) standUp();
     if (g_app.piano.takeSongsRequest()) engine::ui::openPanel("piano");
   }
   g_app.darts.update(nowMs);
@@ -1026,6 +1027,14 @@ void applyTestHooks() {
     syncCapture();
     if (h.rhythmSong >= 0) g_app.rhythm.start(h.rhythmSong, static_cast<app::Difficulty>(std::clamp(h.rhythmDifficulty, 0, app::kDifficultyCount - 1)));
     setActivity(Activity::kRhythm);
+  }
+  app::SeatKind want;
+  if (!h.sitKind.empty() && app::seatKindFromName(h.sitKind, &want)) {
+    for (size_t i = 0; i < g_app.scene.seats.size(); ++i)
+      if (g_app.scene.seats[i].kind == want) {
+        g_app.hooks.sit = static_cast<int>(i);
+        break;
+      }
   }
   if (h.sit >= 0 && h.sit < static_cast<int>(g_app.scene.seats.size())) sitOn(h.sit);
   if (h.chess && g_app.chess.open(g_app.others.online()).empty()) syncCapture();

@@ -60,7 +60,8 @@ class Piano {
   void openKeyboard() { keyboard_ = true; }
   void closeKeyboard();
   // Returns true when you tapped "stand up".
-  bool updateKeyboard(const std::vector<engine::Input::RawPress>& presses, float W, float H);
+  // The on-screen keyboard (J108.2): presses and sliding fingers; px = device pixels per CSS pixel.
+  bool updateKeyboard(const engine::InputFrame& frame, float W, float H, float px);
   void drawKeyboard(engine::TextRenderer& text, float W, float H, float px) const;
   // Tapped "songs" on the keyboard (cleared when read).
   bool takeSongsRequest() {
@@ -111,7 +112,7 @@ class Piano {
   bool keyLit(int i, double& since) const;
   void startScheduled(double nowSound);
   engine::Vec3 world(engine::Vec3 local) const;
-  int keyAt(float x, float y, float W, float H) const;
+  int keyAt(float x, float y, float W, float H, float px, float* velocity) const;
 
   std::vector<SongInfo> songs_;
   std::vector<LoadedSong> loaded_;
@@ -136,9 +137,11 @@ class Piano {
 
   // On-screen keyboard.
   bool keyboard_ = false;
-  int octave_ = 4;               // lowest C shown (C4 = middle C)
+  int firstWhite_ = 23;          // the first white key in view, of the 52 (23 = C4, middle C)
+  int stripFinger_ = -1;         // a finger sliding the 88-key strip
   struct Finger {
     int id, key;
+    float velocity;
   };
   std::vector<Finger> fingers_;
   bool songsRequest_ = false;

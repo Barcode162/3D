@@ -7,7 +7,7 @@
 //   ?reflect=0            no reflection cube (E4.4): shiny things as before
 //   ?place=home           another place (assets/world/places/<name>.json, E7)
 //   ?perf=1               performance overlay on
-//   ?sit=N  ?emote=N  ?pianosong=N  ?rhythm=song,difficulty  ?autoplay
+//   ?sit=N (or ?sit=piano-bench: the first seat of that kind)  ?emote=N  ?pianosong=N  ?rhythm=song,difficulty  ?autoplay
 //   ?shift  ?darts        start a bartending shift / the darts game
 //   ?garage               with ?sit= on a racing rig: open its garage
 //   ?chess                play chess at the lounge's board
@@ -43,6 +43,7 @@ struct TestHooks {
   bool coin = false;    // ?coin: the credit coin pops once after you enter
   bool chess = false;   // ?chess: sit down at the chessboard  // with ?sit= on a racing rig: the garage instead of straight into a race
   int sit = -1, emote = -1, pianoSong = -1;
+  std::string sitKind;  // ?sit=piano-bench (a seat kind's name in the world files)
   int rhythmSong = -1, rhythmDifficulty = 1;
   bool hasCam = false;
   float cam[5] = {};  // x, y, z, yaw, pitch (degrees)
