@@ -30,6 +30,14 @@ lounge kind has a live loop (a faint shimmer; the fireplace's embers
 breathe, the candlesticks' flames flicker, the floor lamp's bulb breathes).
 The world test passes, and fails on the files as J70 shipped them.
 
+## Also found (J71's live check)
+The live bar takes its world from the Studio's store (`World: v5 (live, by
+Claude)`), published after each deploy (`node tools/studio.mjs push`): the
+J71 fix only reached players with v6, and between a deploy and its publish
+the new models run with the old world (after J70 went live, v4 still named
+`lounge.glb` for a few minutes). The publish follows the live check at once,
+and the live log is read again after it (J71: v6, 264 things, no problems).
+
 ## Proof
 The user allowed it (request 2026-10-26 #9): the piece tool runs the
 seconds-long world check (`tools/world_check.sh`) whenever a piece changes
