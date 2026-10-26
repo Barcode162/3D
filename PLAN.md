@@ -56,10 +56,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J108 · The piano redone** (the world). The piano redone: its note glow at the piano (it shows mid-room), a bigger, better keyboard to play, held pedal and pianissimo to fortissimo, songs that keep playing when you leave the bench, particles from the strings (zigzagging up, some shot far up) (request 2026-10-26 #13) · N3
-- [x] **J108.1** The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo *Check:* Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong
-- [x] **J108.2** A new, bigger keyboard to play: full width, taller keys you can see and press well, two octaves at a time that slide, the pedal and your loudness by where you press *Check:* Sit at the piano: the keyboard fills the bottom of the screen; press near the top for soft, near the bottom for loud
-- [x] **J108.3** Particles from the strings when notes play: sparks zigzagging up and some shot far up toward the ceiling *Check:* Play: light rises from the strings in zigzags, some shoot high
+**J110 · Smoother graphics** (the engine). Smoother graphics: the GPU check and reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late (request 2026-10-26 #14) · N2 N3
+- [x] **J110.1** The GPU check and reports measure what you feel: each step's late frames and slowest 5%, beside the wait *Check:* Settings → Help Claude fix lag → Check the GPU, then send a report
+- [ ] **J110.2** Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included *Check:* The bar looks the same; fewer stutters
+- [ ] **J110.3** Ultra and Auto keep it smooth: they step by late frames; Ultra eases sharpness 3x to 2.5x to 2x only while frames run late, back to 3x when steady; Auto climbs back up *Check:* On Ultra walk around: smooth
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -271,7 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J108.1, J108.2, J108.3, J108.3 (fix): The piano redone: its glow and sound back at the piano, a bigger keyboard with loudness by touch, and sparks rising from the strings → 61c77a5^..87a2348
+- `5d680c1` J108.1, J108.2, J108.3, J108.3 (fix): The piano redone: its glow and sound back at the piano, a bigger keyboard with loudness by touch, and sparks rising from the strings → 61c77a5^..87a2348
 - `cf58fb5` J107.1, J107.2: J107: quality in four levels (Ultra, High, Medium, Low) that set every feature together, and a 20-second GPU check for the phone report → 71d8b24^..be3b0ed
 - `b188a36` J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4
 - `a489b01` J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab

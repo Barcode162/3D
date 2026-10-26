@@ -36,31 +36,32 @@
   }
  ],
  "now": {
-  "id": "J108",
-  "title": "The piano redone",
-  "chapter": "the world",
-  "about": "The piano redone: its note glow at the piano (it shows mid-room), a bigger, better keyboard to play, held pedal and pianissimo to fortissimo, songs that keep playing when you leave the bench, particles from the strings (zigzagging up, some shot far up) (request 2026-10-26 #13)",
+  "id": "J110",
+  "title": "Smoother graphics",
+  "chapter": "the engine",
+  "about": "Smoother graphics: the GPU check and reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late (request 2026-10-26 #14)",
   "serves": [
+   "N2",
    "N3"
   ],
   "pieces": [
    {
-    "id": "J108.1",
-    "text": "The piano's note glow at the piano (it showed in the middle of the room); songs keep playing when you leave the bench; pedal held through a song and real loudness from pianissimo to fortissimo",
-    "check": "Play a song and stand up: it keeps playing; the glow is over the keys; quiet notes are soft, loud ones strong",
+    "id": "J110.1",
+    "text": "The GPU check and reports measure what you feel: each step's late frames and slowest 5%, beside the wait",
+    "check": "Settings → Help Claude fix lag → Check the GPU, then send a report",
     "done": true
    },
    {
-    "id": "J108.2",
-    "text": "A new, bigger keyboard to play: full width, taller keys you can see and press well, two octaves at a time that slide, the pedal and your loudness by where you press",
-    "check": "Sit at the piano: the keyboard fills the bottom of the screen; press near the top for soft, near the bottom for loud",
-    "done": true
+    "id": "J110.2",
+    "text": "Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included",
+    "check": "The bar looks the same; fewer stutters",
+    "done": false
    },
    {
-    "id": "J108.3",
-    "text": "Particles from the strings when notes play: sparks zigzagging up and some shot far up toward the ceiling",
-    "check": "Play: light rises from the strings in zigzags, some shoot high",
-    "done": true
+    "id": "J110.3",
+    "text": "Ultra and Auto keep it smooth: they step by late frames; Ultra eases sharpness 3x to 2.5x to 2x only while frames run late, back to 3x when steady; Auto climbs back up",
+    "check": "On Ultra walk around: smooth",
+    "done": false
    }
   ]
  },
@@ -1146,7 +1147,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "5d680c1",
    "text": "J108.1, J108.2, J108.3, J108.3 (fix): The piano redone: its glow and sound back at the piano, a bigger keyboard with loudness by touch, and sparks rising from the strings → 61c77a5^..87a2348"
   },
   {
