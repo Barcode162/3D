@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J35.5 The pendant lamps over the counter: Poly Haven's hanging industrial lamp (CC0) at 80% size on its chain, its glass see-through, their light moved down into the bulbs (2.25 → 2.11 m); the kit learnt hanging models and glass
+
+`4bd8356` · 2026-10-26 05:10 · 10 files, +43 −63 · tests: none
+
+Phone check: Under the lamps over the counter: real metal shades, the light comes from the bulbs
+
 ## J35.4 The back bar remade: bottles of see-through tinted glass with the drink inside (whiskey, wine, liqueurs; clear spirits show the glass alone), sharp printed labels of 16 made-up brands, the shelf light strips solid from post to post and softer; the counter's fridge and speed-rail bottles match
 
 `b356290` · 2026-10-26 05:03 · 12 files, +183 −20 · tests: none
