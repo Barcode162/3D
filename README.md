@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J110.2 Lighter lighting, the same picture: on rough surfaces a lamp adding under half a percent of the light already there is skipped (its shadow and visibility work too), and a lamp under a twentieth takes one shadow look instead of five; before/after pictures at three spots differ only where things move (the swaying pendant, candle flicker)
+
+`0b0cb64` · 2026-10-26 23:05 · 3 files, +20 −5 · tests: none
+
+Phone check: The bar looks the same; fewer stutters
+
 ## J110.1 The GPU check measures what you feel: each step's late frames (over 20 ms) and slowest 5 %, beside the wait (a frame's hand-over to the phone saying done, which counts the frames queued ahead: not the chip's own time)
 
 `fb7283c` · 2026-10-26 22:58 · 6 files, +120 −33 · tests: none
