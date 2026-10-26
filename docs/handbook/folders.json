@@ -81,6 +81,8 @@
     "ui/system": "The UI store's copy: themes, tokens, screens and parts, pulled from the UI Editor (never edited by hand).",
     "ui/system/img": "Pictures the screens use.",
     "ui/system/screens": "Screens as data (Dev's tabs among them), drawn by ui/looped.js.",
-    "ui/system/themes": "The themes (colours, shapes, motion), turned into ui/themes.css by tools/uikit.mjs css."
+    "ui/system/themes": "The themes (colours, shapes, motion), turned into ui/themes.css by tools/uikit.mjs css.",
+    "design": "The design lab (J106): look-books of bolder looks for the bar's screens, for the user to react to; nothing loads it, used only when the user says so.",
+    "design/round-1": "Round 1: the bar's Jukebox menu drawn seven ways."
   }
 }
