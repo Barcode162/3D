@@ -31,7 +31,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `design/` | The design lab (J106): look-books of bolder looks for the bar's screens, for the user to react to; nothing loads it, used only when the user says so. | 3 | Markdown, HTML | not uploaded |
-| `design/coaster/` | Coaster, the one theme the lab is working on: the bar's menus as printed bar cards. | 1 | HTML | not uploaded |
+| `design/theme/` | The lab's one theme: seven parts (menu wheel, glass strip, phone, clean panels, note cards, arcade tablet, posters). | 1 | HTML | not uploaded |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 12 | JavaScript, PHP, CSS | hub.yml → home/dev |
 | `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 202 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans, instructions and notes (DECISIONS, STUDIO, ENGINE, REFERENCE, AUTOMATION, the audits...). Never instructions. | 29 | Markdown, JSON | not uploaded |

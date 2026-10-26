@@ -83,6 +83,6 @@
     "ui/system/screens": "Screens as data (Dev's tabs among them), drawn by ui/looped.js.",
     "ui/system/themes": "The themes (colours, shapes, motion), turned into ui/themes.css by tools/uikit.mjs css.",
     "design": "The design lab (J106): look-books of bolder looks for the bar's screens, for the user to react to; nothing loads it, used only when the user says so.",
-    "design/coaster": "Coaster, the one theme the lab is working on: the bar's menus as printed bar cards."
+    "design/theme": "The lab's one theme: seven parts (menu wheel, glass strip, phone, clean panels, note cards, arcade tablet, posters)."
   }
 }

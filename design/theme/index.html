@@ -1,0 +1,374 @@
+<title>Bar3D Theme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one theme, seven moments. Each card is a phone in the bar showing
+   one part of the theme, in the order a player meets them. */
+@font-face { font-family: "Archivo"; src: url("fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
+@font-face { font-family: "Martian Mono"; src: url("fonts/MartianMono.woff2") format("woff2"); font-weight: 100 800; }
+@font-face { font-family: "Limelight"; src: url("fonts/Limelight.woff2") format("woff2"); }
+@font-face { font-family: "Unbounded"; src: url("fonts/Unbounded.woff2") format("woff2"); font-weight: 200 900; }
+@font-face { font-family: "Righteous"; src: url("fonts/Righteous.woff2") format("woff2"); }
+
+:root {
+  color-scheme: dark;
+  /* the page */
+  --bg: #0f0b09;
+  --ink: #f1e7da;
+  --ink-2: #b9a893;
+  --ink-3: #7c6c5b;
+  --line: rgba(241, 231, 218, .12);
+  --card: #17110d;
+  /* the theme: one accent, shared by every part */
+  --amber: #f0a24a;
+  --amber-glow: rgba(240, 162, 74, .55);
+  --glass: rgba(255, 236, 214, .13);
+  --glass-edge: inset 0 1px 0 rgba(255,240,220,.32), inset 0 0 0 1px rgba(255,240,220,.1), 0 14px 34px rgba(0,0,0,.4);
+  --paper: #ece2cc;
+  --print: #2a1d14;
+  --print-2: #7a5f45;
+  --stamp: #c33d2e;
+  --pink: #ff4fa8;
+  --cyan: #35c8ff;
+  --poster: #8a1218;
+  --poster-ink: #ffd23f;
+  --tilt: perspective(900px) rotateY(-9deg) rotateX(5deg) rotate(-1.5deg);
+  /* type */
+  --text: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --type: "Martian Mono", ui-monospace, Menlo, monospace;
+  --paper-title: "Limelight", Georgia, serif;
+  --neon-title: "Righteous", "Archivo", sans-serif;
+  --poster-title: "Unbounded", "Archivo", sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+
+header { display: grid; gap: 10px; max-width: 64ch; }
+.eyebrow { font-family: var(--type); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+h1 { font-family: var(--text); font-weight: 850; font-stretch: 112%; font-size: clamp(30px, 6vw, 48px); line-height: 1.02; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--ink-2); }
+.rules { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.rules span { font-size: 12.5px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line); color: var(--ink-2); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.head { display: grid; gap: 2px; }
+.role { font-family: var(--type); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+.card h2 { font-family: var(--text); font-weight: 800; font-stretch: 108%; font-size: 20px; margin: 0; letter-spacing: -.01em; }
+.card p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.card blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--amber); color: var(--ink); font-size: 13.5px; font-style: italic; }
+.stage { display: flex; justify-content: center; padding: 8px 0; }
+.hint { font-family: var(--type); font-size: 10.5px; color: var(--ink-3); text-align: center; }
+
+footer { border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 8px; max-width: 64ch; color: var(--ink-2); }
+footer p { margin: 0; }
+footer strong { color: var(--ink); }
+
+/* ---------- phone + bar ---------- */
+.phone { position: relative; width: 248px; height: 520px; border-radius: 34px; overflow: hidden; flex: none;
+  box-shadow: 0 0 0 6px #050404, 0 0 0 7px #2a2420, 0 30px 60px rgba(0,0,0,.55); isolation: isolate; font-family: var(--text); color: #fff; }
+.scene { position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255,180,90,.9) 0 2px, rgba(255,160,70,.18) 3px 16px, transparent 17px),
+    radial-gradient(circle at 52% 10%, rgba(255,190,110,.85) 0 2px, rgba(255,160,70,.14) 3px 14px, transparent 15px),
+    radial-gradient(circle at 84% 17%, rgba(255,170,80,.9) 0 2px, rgba(255,150,60,.16) 3px 18px, transparent 19px),
+    radial-gradient(ellipse 90% 55% at 50% 22%, #4a2c18, #1a0f09 70%, #0b0705); }
+.scene::before { content: ""; position: absolute; left: 0; right: 0; top: 28%; height: 9%;
+  background: repeating-linear-gradient(90deg, rgba(120,190,150,.38) 0 9px, transparent 9px 14px, rgba(220,150,70,.42) 14px 22px, transparent 22px 30px, rgba(200,90,80,.32) 30px 37px, transparent 37px 46px);
+  -webkit-mask: linear-gradient(180deg, transparent 0 25%, #000 25%); mask: linear-gradient(180deg, transparent 0 25%, #000 25%); filter: blur(.6px); }
+.scene::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: 0; height: 36%;
+  background: linear-gradient(180deg, #6a4128 0 2px, #3a2214 2px, #1c110a 40%, #0c0705); border-radius: 50% 50% 0 0 / 14% 14% 0 0; }
+.scene.arcade { background: radial-gradient(ellipse 90% 60% at 50% 25%, #2a1240, #0c0614 70%, #050208); }
+.scene.arcade::before { background: repeating-linear-gradient(90deg, rgba(53,200,255,.35) 0 18px, transparent 18px 34px, rgba(255,79,168,.35) 34px 52px, transparent 52px 70px); }
+.ui { position: absolute; inset: 0; }
+.tilt { transform: var(--tilt); transform-origin: 50% 100%; }
+.status { position: absolute; top: 14px; left: 22px; right: 22px; display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; opacity: .8; }
+
+/* the menu button (thumb wheel) — the same button on every screen */
+.hub { position: absolute; right: 18px; bottom: 24px; width: 60px; height: 60px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255,248,238,.94); color: #1a0f09; font: 800 10px/1 var(--text); letter-spacing: .06em;
+  box-shadow: 0 0 0 7px rgba(255,255,255,.12), 0 10px 26px rgba(0,0,0,.5); display: grid; place-items: center; z-index: 3; }
+.hub:focus-visible { outline: 2px solid var(--amber); outline-offset: 10px; }
+.hub.small { width: 46px; height: 46px; font-size: 9px; right: 16px; bottom: 18px; }
+
+/* ---------- 1: the wheel ---------- */
+.w .shade { position: absolute; inset: 0; background: radial-gradient(circle at 80% 88%, rgba(0,0,0,.7), rgba(0,0,0,.1) 62%); transition: opacity .3s; }
+.w .opt { position: absolute; right: 48px; bottom: 54px; width: 52px; height: 52px; margin: 0 -26px -26px 0; border-radius: 50%;
+  display: grid; place-items: center; text-align: center; font-size: 9.5px; font-weight: 700; color: #fff;
+  background: rgba(24,16,11,.8); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transform: translate(calc(-1 * var(--dx)), calc(-1 * var(--dy))); opacity: 1;
+  transition: transform .42s cubic-bezier(.3,1.5,.55,1) calc(var(--i) * 55ms), opacity .2s calc(var(--i) * 55ms); }
+.w .opt small { display: block; font-weight: 500; font-size: 7.5px; opacity: .7; margin-top: 1px; }
+.w .opt.on { background: var(--amber); color: #1a0f09; border-color: transparent; box-shadow: 0 0 22px var(--amber-glow); }
+.w.closed .opt { transform: translate(0, 0) scale(.3); opacity: 0; transition-delay: 0s; }
+.w.closed .shade { opacity: 0; }
+.w .label { position: absolute; left: 16px; bottom: 210px; font-weight: 800; font-size: 22px; line-height: 1.05; text-shadow: 0 2px 10px rgba(0,0,0,.6); transition: opacity .3s; }
+.w .label small { display: block; font-family: var(--type); font-weight: 400; font-size: 8.5px; letter-spacing: .1em; color: var(--amber); margin-bottom: 4px; }
+.w.closed .label { opacity: 0; }
+.chip { position: absolute; top: 40px; left: 12px; display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 20px; background: rgba(10,7,5,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 10.5px; }
+.chip .art { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(var(--amber), var(--stamp), #6a3fb8, var(--amber)); animation: spin 6s linear infinite; }
+.chip i { font-style: normal; color: rgba(255,255,255,.6); }
+@keyframes spin { to { transform: rotate(1turn); } }
+
+/* ---------- 2: small menu (dock glass) ---------- */
+.glass { background: var(--glass); backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%); box-shadow: var(--glass-edge); }
+.d .strip { position: absolute; left: 12px; right: 74px; bottom: 22px; border-radius: 26px; padding: 7px; display: flex; justify-content: space-between; }
+.d .strip b { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: rgba(255,255,255,.1); }
+.d .strip b.on { background: #fff; color: #1a0f09; }
+.d .tag { position: absolute; left: 22px; bottom: 76px; font-family: var(--type); font-size: 9px; letter-spacing: .1em; color: rgba(255,255,255,.75); }
+.d .avatar { position: absolute; left: 92px; top: 170px; width: 64px; height: 120px; }
+.d .avatar::before { content: ""; position: absolute; left: 20px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: #3a2618; }
+.d .avatar::after { content: ""; position: absolute; left: 6px; top: 27px; width: 52px; height: 80px; border-radius: 22px 22px 6px 6px; background: #3a2618; }
+.d .arm { position: absolute; left: 140px; top: 182px; width: 12px; height: 46px; border-radius: 6px; background: #3a2618; transform-origin: 50% 100%; animation: wave 1.2s ease-in-out infinite; z-index: 1; }
+@keyframes wave { 0%, 100% { transform: rotate(18deg); } 50% { transform: rotate(-12deg); } }
+.d .bubble { position: absolute; left: 150px; top: 150px; padding: 4px 9px; border-radius: 12px; font-size: 10px; font-weight: 700; background: #fff; color: #1a0f09; }
+
+/* ---------- 3: the phone ---------- */
+.p .ui { background: radial-gradient(ellipse at 50% 70%, transparent 30%, rgba(0,0,0,.45)); }
+.p .device { position: absolute; left: 40px; top: 104px; width: 164px; height: 322px; border-radius: 26px; background: #0b0b0d; padding: 7px;
+  transform: perspective(700px) rotateX(10deg) rotateY(-18deg) rotate(-6deg); box-shadow: -14px 24px 40px rgba(0,0,0,.6), inset 0 0 0 1.5px #3a3a40, 4px 0 0 #1c1c20; }
+.p .screen { width: 100%; height: 100%; border-radius: 19px; overflow: hidden; background: linear-gradient(170deg, #3a2010, #140b06 65%); padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 7px; position: relative; }
+.p .screen::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,190,120,.24), transparent 38%); pointer-events: none; }
+.p .top { display: flex; justify-content: space-between; font-size: 8px; font-weight: 700; opacity: .85; }
+.p .note { border-radius: 10px; padding: 6px 8px; font-size: 8.5px; line-height: 1.3; background: rgba(255,255,255,.12); animation: drop .6s cubic-bezier(.3,1.4,.5,1) both .4s; }
+.p .note b { display: block; font-size: 7.5px; opacity: .65; font-weight: 600; }
+@keyframes drop { from { transform: translateY(-14px); opacity: 0; } }
+.p .np { border-radius: 12px; padding: 8px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; background: rgba(0,0,0,.3); }
+.p .np .art { width: 34px; height: 34px; border-radius: 8px; background: radial-gradient(circle at 30% 30%, #ffb35c, transparent 55%), #c33d6b; }
+.p .np .s { font-weight: 800; font-size: 10px; line-height: 1.15; }
+.p .np .s i { display: block; font-style: normal; font-weight: 400; font-size: 8px; opacity: .6; }
+.bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; margin-top: 3px; }
+.bars b { width: 3px; border-radius: 2px; background: var(--amber); height: 100%; transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
+.bars b:nth-child(2) { animation-delay: .15s; } .bars b:nth-child(3) { animation-delay: .3s; } .bars b:nth-child(4) { animation-delay: .45s; } .bars b:nth-child(5) { animation-delay: .6s; }
+@keyframes eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+.p .apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px 5px; margin-top: auto; }
+.p .apps div { display: grid; justify-items: center; gap: 2px; font-size: 7px; opacity: .9; }
+.p .apps div b { width: 30px; height: 30px; border-radius: 9px; }
+.p .badge { position: relative; }
+.p .badge::after { content: "2"; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--stamp); font-size: 7px; display: grid; place-items: center; color: #fff; }
+.p .thumb { position: absolute; left: 152px; top: 340px; width: 60px; height: 120px; border-radius: 30px; background: linear-gradient(160deg, #c98d66, #8a5a3e); transform: rotate(-30deg); box-shadow: inset -6px 0 10px rgba(0,0,0,.25); }
+
+/* ---------- 4: everyday panel (Ember, clean) ---------- */
+.e .panel { position: absolute; left: 12px; right: 12px; bottom: 96px; border-radius: 22px; padding: 14px; display: grid; gap: 10px; }
+.e .t { font-weight: 800; font-stretch: 112%; font-size: 19px; display: flex; justify-content: space-between; align-items: center; }
+.e .seg { display: flex; background: rgba(0,0,0,.28); border-radius: 12px; padding: 3px; font-size: 10.5px; }
+.e .seg b { flex: 1; text-align: center; padding: 5px 0; border-radius: 9px; font-weight: 600; color: rgba(255,240,220,.65); }
+.e .seg b.on { background: rgba(255,240,220,.18); color: #fff; }
+.e .row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 2px; border-top: 1px solid rgba(255,240,220,.1); }
+.e .row i { font-style: normal; color: rgba(255,240,220,.6); font-size: 10px; display: block; }
+.e .row .tm { color: rgba(255,240,220,.65); font-variant-numeric: tabular-nums; }
+.e .prog { height: 3px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
+.e .prog::before { content: ""; display: block; height: 100%; width: 62%; background: var(--amber); animation: prog 8s linear infinite; }
+@keyframes prog { from { width: 58%; } to { width: 70%; } }
+.e .go { text-align: center; font-size: 12px; font-weight: 700; padding: 9px 0; border-radius: 14px; background: linear-gradient(135deg, #f8bf68, #ec7f34); color: #1e1206; box-shadow: 0 6px 20px var(--amber-glow); }
+
+/* ---------- 5: notes (Coaster paper) ---------- */
+.n .ui { display: flex; flex-direction: column; justify-content: flex-end; padding: 0 12px 92px; }
+.n .tabs { display: flex; gap: 4px; padding-left: 14px; }
+.n .tabs b { font-family: var(--type); font-weight: 500; font-size: 8.5px; letter-spacing: .06em; padding: 5px 9px 7px; border-radius: 8px 8px 0 0; background: #d9ccb0; color: #5b4632; }
+.n .tabs b.on { background: var(--paper); color: var(--print); }
+.n .paper { position: relative; background: var(--paper); color: var(--print); border-radius: 4px 4px 10px 10px; padding: 16px 16px 14px; box-shadow: 0 18px 40px rgba(0,0,0,.6);
+  background-image: radial-gradient(rgba(90,60,30,.07) 1px, transparent 1px); background-size: 4px 4px; display: grid; gap: 6px; }
+.n .paper::before { content: ""; position: absolute; inset: 6px; border: 1px dashed rgba(42,29,20,.3); border-radius: 4px; pointer-events: none; }
+.n .t { font-family: var(--paper-title); font-size: 22px; line-height: 1; }
+.n .from { font-family: var(--type); font-size: 8.5px; letter-spacing: .1em; color: var(--print-2); }
+.n .msg { font-size: 13px; line-height: 1.4; }
+.n .stamp { position: absolute; top: -10px; right: 14px; transform: rotate(-10deg); border: 2px solid var(--stamp); color: var(--stamp); background: var(--paper); font-family: var(--type); font-weight: 700; font-size: 8px; letter-spacing: .1em; padding: 2px 5px; border-radius: 3px; }
+.n .keys { display: flex; gap: 8px; margin-top: 4px; }
+.n .key { flex: 1; text-align: center; font-family: var(--type); font-size: 9.5px; letter-spacing: .06em; padding: 8px 0; border: 1.5px solid var(--print); border-radius: 3px; }
+.n .key.go { background: var(--print); color: var(--paper); }
+
+/* ---------- 6: arcade tablet (Neon) ---------- */
+.a .tab { position: absolute; left: 14px; right: 14px; top: 92px; bottom: 96px; border-radius: 20px; padding: 14px 12px; background: rgba(6,3,12,.86);
+  box-shadow: 0 0 0 1.5px rgba(53,200,255,.45), 0 0 26px rgba(53,200,255,.18), 0 24px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 10px; font-family: var(--neon-title); }
+.a .t { text-align: center; font-size: 26px; color: #ffe7f4; letter-spacing: .04em; text-shadow: 0 0 4px var(--pink), 0 0 12px var(--pink), 0 0 26px #ff2d8f; }
+.a .t .f { animation: flick 4s infinite; }
+@keyframes flick { 0%, 46%, 50%, 54%, 100% { opacity: 1; } 48%, 52% { opacity: .25; } }
+.a .games { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.a .g { border: 1.5px solid rgba(53,200,255,.55); border-radius: 14px; padding: 9px 8px; color: #c9f3ff; font-size: 12.5px; box-shadow: inset 0 0 8px rgba(53,200,255,.15); }
+.a .g i { display: block; font-style: normal; font-family: var(--text); font-size: 8.5px; opacity: .7; margin-top: 2px; }
+.a .g.on { border-color: var(--pink); color: #ffe7f4; box-shadow: 0 0 12px rgba(255,79,168,.55), inset 0 0 10px rgba(255,79,168,.3); }
+.a .g.wide { grid-column: span 2; }
+.a .live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7bff9e; box-shadow: 0 0 6px #7bff9e; margin-right: 4px; animation: blink 1.4s infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.a .play { margin-top: auto; text-align: center; padding: 10px 0; border-radius: 22px; font-size: 13px; border: 1.5px solid #ffb23a; color: #fff1d6; text-shadow: 0 0 8px #ffb23a; box-shadow: 0 0 12px rgba(255,178,58,.45); }
+
+/* ---------- 7: announcement (Poster) ---------- */
+.k .sheet { position: absolute; left: 12px; right: 12px; top: 54px; bottom: 92px; padding: 16px 14px; background: linear-gradient(180deg, rgba(138,18,24,.97), rgba(40,5,8,.97));
+  display: flex; flex-direction: column; font-family: var(--poster-title); color: #fff1e0; box-shadow: 0 24px 50px rgba(0,0,0,.6); }
+.k .meta { font-family: var(--type); font-size: 8.5px; letter-spacing: .14em; color: var(--poster-ink); display: flex; justify-content: space-between; }
+.k .big { font-weight: 900; font-size: 42px; line-height: .9; letter-spacing: -.03em; margin: 12px 0 6px; text-transform: uppercase; }
+.k .when { font-weight: 600; font-size: 13px; color: var(--poster-ink); margin-bottom: 14px; }
+.k .row { display: flex; gap: 10px; align-items: baseline; border-top: 2px solid rgba(255,241,224,.85); padding: 8px 0; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+.k .row span:last-child { margin-left: auto; font-family: var(--type); font-weight: 400; font-size: 9px; text-transform: none; opacity: .8; }
+.k .keys { margin-top: auto; display: grid; grid-template-columns: 2fr 1fr; gap: 6px; }
+.k .key { padding: 12px 10px; font-weight: 800; font-size: 12px; text-transform: uppercase; background: var(--poster-ink); color: #1e0406; }
+.k .key.ghost { background: transparent; color: #fff1e0; border: 2px solid #fff1e0; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">J Production · Design lab · Our theme</div>
+    <h1>One theme, seven parts</h1>
+    <p>Every idea you liked, each in the place you gave it. They share one button, one amber colour and the same slight sideways tilt, and each one has small moving details so the bar feels alive. Nothing here is in the live bar.</p>
+    <div class="rules">
+      <span>One menu button: the wheel</span>
+      <span>Everything tilts a little, like it's held</span>
+      <span>Small things move: songs, notes, people</span>
+      <span>Amber means "you can tap this"</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <article class="card">
+      <div class="head"><span class="role">The menu button</span><h2>The wheel</h2></div>
+      <div class="stage"><div class="phone w" id="wheelPhone"><div class="scene"></div><div class="ui">
+        <div class="shade"></div>
+        <div class="chip"><span class="art"></span><span>Late Train Home <i>· Maya</i></span></div>
+        <div class="label"><small>TAP ONE</small>Your menu</div>
+        <div class="opt on" style="--dx:0px;--dy:128px;--i:0">Phone<small>all of it</small></div>
+        <div class="opt" style="--dx:64px;--dy:111px;--i:1">Emotes<small>small menu</small></div>
+        <div class="opt" style="--dx:111px;--dy:64px;--i:2">Sit<small>does it</small></div>
+        <div class="opt" style="--dx:128px;--dy:0px;--i:3">Arcade<small>tablet</small></div>
+        <button class="hub" id="hub" type="button" aria-pressed="true">MENU</button>
+      </div></div></div>
+      <div class="hint">Tap the white button to open and close it.</div>
+      <p>It's the only button on screen. Tap it and the choices spring out around your thumb. Some do the thing at once (Sit), some open a small menu (Emotes), and Phone opens everything.</p>
+      <blockquote>“instead of a menu button… a nice animation would open up the other options”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">A small menu</span><h2>The glass strip</h2></div>
+      <div class="stage"><div class="phone d"><div class="scene"></div><div class="ui">
+        <div class="avatar"></div><div class="arm"></div><div class="bubble">Hey!</div>
+        <div class="tag">EMOTES</div>
+        <div class="strip glass tilt"><b class="on">✋</b><b>🍻</b><b>💃</b><b>👏</b><b>😂</b></div>
+        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">✕</button>
+      </div></div></div>
+      <p>When a wheel choice needs a little more, a compact glass strip appears next to your thumb, from the Liquid Dock. Pick one and it's gone again; the bar stays in view.</p>
+      <blockquote>“perfect blend of clean and professional but tailored to compact and no clutter”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">Everything at once</span><h2>Your phone</h2></div>
+      <div class="stage"><div class="phone p"><div class="scene"></div><div class="ui">
+        <div class="device"><div class="screen">
+          <div class="top"><span>9:41 PM</span><span>Bar · 14 here</span></div>
+          <div class="note"><b>MAYA · just now</b>Saved you a stool by the piano</div>
+          <div class="np"><span class="art"></span><span class="s">Late Train Home<i>Jukebox · 2:41 left</i><span class="bars"><b></b><b></b><b></b><b></b><b></b></span></span></div>
+          <div class="apps">
+            <div><b style="background:linear-gradient(135deg,#f8bf68,#ec7f34)"></b>Jukebox</div>
+            <div class="badge"><b style="background:linear-gradient(135deg,#7bd08f,#2f8a55)"></b>Friends</div>
+            <div><b style="background:linear-gradient(135deg,#ff6fb8,#b0246c)"></b>Arcade</div>
+            <div><b style="background:linear-gradient(135deg,#ece2cc,#b9a582)"></b>Notes</div>
+            <div><b style="background:linear-gradient(135deg,#5fd0ff,#1f6fa8)"></b>Map</div>
+            <div><b style="background:linear-gradient(135deg,#8c8c96,#45454c)"></b>Settings</div>
+          </div>
+        </div></div>
+        <div class="thumb"></div>
+      </div></div></div>
+      <p>Your avatar pulls out a phone and the full menu lives on it, in the room, held at an angle. Notes drop in, the song's bars bounce, and the clock and the head count are live.</p>
+      <blockquote>“ABSOLUTELY SICK… the details on the screen make it feel so alive”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">Everyday panels</span><h2>Clean glass</h2></div>
+      <div class="stage"><div class="phone e"><div class="scene"></div><div class="ui">
+        <div class="panel glass tilt">
+          <div class="t">Jukebox <span class="bars"><b></b><b></b><b></b><b></b></span></div>
+          <div class="seg"><b class="on">Queue</b><b>Songs</b><b>Requests</b></div>
+          <div>
+            <div class="row"><span>Late Train Home<i>Playing · Maya</i></span><span class="tm">2:41</span></div>
+            <div class="prog"></div>
+            <div class="row"><span>Neon Rain<i>Next · you</i></span><span class="tm">3:12</span></div>
+            <div class="row"><span>Slow Pour<i>Leo</i></span><span class="tm">4:05</span></div>
+          </div>
+          <div class="go">+ Add a song</div>
+        </div>
+        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
+      </div></div></div>
+      <p>Menus you use every day (the jukebox, seats, settings) are today's clean Ember panel, a little tilted, with the bar showing above it.</p>
+      <blockquote>“very clean and creates a lot of usable space”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">Notes you pick up</span><h2>The card</h2></div>
+      <div class="stage"><div class="phone n"><div class="scene"></div><div class="ui">
+        <div class="tilt">
+          <div class="tabs"><b class="on">NOTE</b><b>REPLIES</b><b>BOARD</b></div>
+          <div class="paper">
+            <span class="stamp">NEW</span>
+            <div class="t">Back at ten</div>
+            <div class="from">LEFT ON THE COUNTER · LEO · 9:12 PM</div>
+            <div class="msg">Keep my stool warm. Loser of the next darts game buys the first round.</div>
+            <div class="keys"><span class="key go">REPLY</span><span class="key">PUT DOWN</span></div>
+          </div>
+        </div>
+        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
+      </div></div></div>
+      <p>Tap a note, a menu or a flyer lying in the bar and you pick it up as a paper card. Its tabs hold whatever it needs: the note, its replies, the board it came from.</p>
+      <blockquote>“a pickup and view note… tabs create space for anything we need”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">The arcade</span><h2>The game tablet</h2></div>
+      <div class="stage"><div class="phone a"><div class="scene arcade"></div><div class="ui">
+        <div class="tab tilt">
+          <div class="t">ARC<span class="f">A</span>DE</div>
+          <div class="games">
+            <div class="g on">Darts<i><span class="live"></span>2 playing</i></div>
+            <div class="g">Chess<i>1 waiting</i></div>
+            <div class="g">4K Mania<i>best 98.2%</i></div>
+            <div class="g">Racing<i>4 seats</i></div>
+            <div class="g wide">Piano<i>free play · anyone can join</i></div>
+          </div>
+          <div class="play">Play darts</div>
+        </div>
+        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
+      </div></div></div>
+      <p>The arcade's tablet: every game in one neon screen, with who's playing right now. Neon is only used here, so walking into the arcade feels like a different room.</p>
+      <blockquote>“would pair great with the arcade… a main tablet that lets you select any game”</blockquote>
+    </article>
+
+    <article class="card">
+      <div class="head"><span class="role">Big news</span><h2>The poster</h2></div>
+      <div class="stage"><div class="phone k"><div class="scene"></div><div class="ui">
+        <div class="sheet tilt">
+          <div class="meta"><span>TONIGHT</span><span>BACK ROOM</span></div>
+          <div class="big">Darts Night</div>
+          <div class="when">9:30 PM · 8 spots left</div>
+          <div class="row"><span>Winner</span><span>gets the gold dart</span></div>
+          <div class="row"><span>Signed up</span><span>Maya, Leo, +3</span></div>
+          <div class="keys"><div class="key">I'm in →</div><div class="key ghost">Later</div></div>
+        </div>
+        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
+      </div></div></div>
+      <p>Events and announcements: huge words first, then when and where, then the details, split by clean lines. You know what's going on in one look.</p>
+      <blockquote>“controlling the size of the font for specific reading order and attention grabber”</blockquote>
+    </article>
+
+  </div>
+
+  <footer>
+    <p><strong>From here:</strong> tell me what to change in any part, in any words. I change this page and it stays at the same link.</p>
+    <p>When you're happy, say "use it" and it becomes a job in the plan: the theme in the UI Editor first, then the bar's menus one part at a time.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var phone = document.getElementById('wheelPhone');
+  var hub = document.getElementById('hub');
+  hub.addEventListener('click', function () {
+    var closed = phone.classList.toggle('closed');
+    hub.setAttribute('aria-pressed', String(!closed));
+    hub.textContent = closed ? 'MENU' : '✕';
+  });
+  hub.textContent = '✕';
+})();
+</script>

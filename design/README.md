@@ -13,11 +13,15 @@ user says what to change, in any words (it goes in `likes.md`); Claude
 changes the page at the same link.
 
 ## The theme
-- `coaster/`: **Coaster**, the bar's menus as printed bar cards that slide
-  up from the bottom, opened by a round coaster in the corner. Page:
+- `theme/`: **one theme, seven parts**, each idea the user liked in the
+  place they gave it (request 2026-10-26 #14): the wheel (the only menu
+  button), the glass strip (small menus), the phone (everything at once),
+  clean glass (everyday panels), the card (notes you pick up), the game
+  tablet (the arcade, neon), the poster (big news). Shared: one amber, a
+  slight sideways tilt, small live details. Page:
   https://claude.ai/artifact/Qf8ApZP9okCJ7GsgXBh26S
-  (Picked by Claude: the repo already has a Neon theme. Its first page, a
-  seven-way comparison, is in this folder's history.)
+  (Earlier pages, the seven-way comparison and Coaster alone, are in this
+  folder's history.)
 
 ## Rules for the lab
 - Only fonts the repo already has a licence for (`ui/fonts/`,
