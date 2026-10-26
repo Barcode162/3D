@@ -61,7 +61,7 @@
     "id": "J110.3",
     "text": "Ultra and Auto keep it smooth: they step by late frames; Ultra eases sharpness 3x to 2.5x to 2x only while frames run late, back to 3x when steady; Auto climbs back up",
     "check": "On Ultra walk around: smooth",
-    "done": false
+    "done": true
    }
   ]
  },

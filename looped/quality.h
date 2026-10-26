@@ -28,6 +28,8 @@ class QualityController {
     ultra_ = mode_ == kUltra;
     if (mode_ != kAuto && !ultra_) tier_ = mode_ - 1;
     if (ultra_) tier_ = 0;
+    ultraStep_ = 0;
+    calmWindows_ = 0;
     resetWindow(nowMs);
     lastChangeMs_ = nowMs;
   }
@@ -35,15 +37,22 @@ class QualityController {
   int tier() const { return tier_; }  // Auto's steps: 0 High (sharpest Auto goes), 1 Medium, 2 Low
   // The level every feature follows: 0 Ultra, 1 High, 2 Medium, 3 Low.
   int level() const { return ultra_ ? kLevelUltra : tier_ + 1; }
-  double pixelRatioCap() const { return ultra_ ? kUltraRatio : kRatio[tier_]; }
-  static constexpr double kUltraRatio = 3.0;
+  double pixelRatioCap() const { return ultra_ ? kUltraRatios[ultraStep_] : kRatio[tier_]; }
+  // Ultra keeps every feature at its best and eases only its sharpness
+  // while frames run late, back to 3x when steady (J110.3).
+  static constexpr int kUltraSteps = 3;
+  static constexpr double kUltraRatios[kUltraSteps] = {3.0, 2.5, 2.0};
+  int ultraStep() const { return ultraStep_; }
 
   // One finished frame: the time since the previous one (what you feel),
-  // the game's CPU time, the newest GPU submit-to-done time. `drawing`
-  // false (loading, another game has the screen, the page was hidden)
-  // pauses watching. Returns true when the tier changed.
-  bool frame(double nowMs, float intervalMs, float cpuMs, float gpuMs, bool drawing) {
-    if (mode_ != kAuto || !drawing || intervalMs > 100) {  // a hitch or a pause: not a GPU signal
+  // the game's CPU time, and the newest GPU submit-to-done wait (kept for
+  // the reports; not used: on phones it counts the frames queued ahead, so
+  // it reads 50 ms while frames come every 17, J110.3). `drawing` false
+  // (loading, another game has the screen, the page was hidden) pauses
+  // watching. Auto steps its tier, Ultra its sharpness (3x, 2.5x, 2x), by
+  // the late frames: returns true when either changed.
+  bool frame(double nowMs, float intervalMs, float cpuMs, float /*gpuMs*/, bool drawing) {
+    if ((mode_ != kAuto && !ultra_) || !drawing || intervalMs > 100) {  // a hitch or a pause: not a GPU signal
       if (!drawing) resetWindow(nowMs);
       return false;
     }
@@ -51,27 +60,29 @@ class QualityController {
     ++frames_;
     sumInterval_ += intervalMs;
     sumCpu_ += cpuMs;
-    sumGpu_ += gpuMs;
+    if (intervalMs > kLateMs) ++late_;
     if (nowMs - windowStartMs_ < kWindowMs) return false;
     const float n = static_cast<float>(frames_);
-    const float interval = sumInterval_ / n, cpu = sumCpu_ / n, gpu = sumGpu_ / n;
+    const float interval = sumInterval_ / n, cpu = sumCpu_ / n, lateShare = static_cast<float>(late_) / n;
     resetWindow(nowMs);
     if (nowMs - lastChangeMs_ < kSettleMs) return false;
-    // Slow frames while the CPU is idle: the GPU is the limit.
-    if (interval > kSlowMs && cpu < kCpuBoundMs && gpu > kGpuBusyMs && tier_ < kTiers - 1) {
-      ++tier_;
+    int& step = ultra_ ? ultraStep_ : tier_;
+    const int lowest = ultra_ ? kUltraSteps - 1 : kTiers - 1;
+    // Late or slow frames while the CPU is idle: the GPU is the limit.
+    const bool slow = (interval > kSlowMs || lateShare > kLateShareDown) && cpu < kCpuBoundMs;
+    if (slow && step < lowest) {
+      ++step;
       if (nowMs - lastUpMs_ < kBounceMs) upBlockedUntilMs_ = nowMs + kUpBlockMs;  // went up, came straight back down
+      calmWindows_ = 0;
       lastChangeMs_ = nowMs;
       return true;
     }
-    // Room to spare: the GPU time scaled to the sharper level's pixels
-    // still fits well inside a frame, for a few windows in a row.
-    if (tier_ > 0 && nowMs >= upBlockedUntilMs_) {
-      const double k = kRatio[tier_ - 1] / kRatio[tier_];
-      const bool roomy = interval < kSmoothMs && gpu * k * k < kGpuRoomMs;
-      calmWindows_ = roomy ? calmWindows_ + 1 : 0;
+    // Steady for a few windows in a row: try the sharper step again.
+    if (step > 0 && nowMs >= upBlockedUntilMs_) {
+      const bool calm = interval < kSmoothMs && lateShare < kLateShareUp;
+      calmWindows_ = calm ? calmWindows_ + 1 : 0;
       if (calmWindows_ >= kCalmWindows) {
-        --tier_;
+        --step;
         calmWindows_ = 0;
         lastChangeMs_ = lastUpMs_ = nowMs;
         return true;
@@ -84,25 +95,27 @@ class QualityController {
   static constexpr double kSettleMs = 4000;    // no change sooner than 4 s after the last
   static constexpr float kSlowMs = 18.5f;      // average frame slower than this: under 60
   static constexpr float kSmoothMs = 17.5f;
+  static constexpr float kLateMs = 20.0f;      // a frame you feel as a stutter
+  static constexpr float kLateShareDown = 0.06f;  // more late frames than this: step down
+  static constexpr float kLateShareUp = 0.02f;    // fewer than this: calm
   static constexpr float kCpuBoundMs = 8.0f;   // above this, fewer pixels wouldn't help
-  static constexpr float kGpuBusyMs = 12.0f;
-  static constexpr float kGpuRoomMs = 11.0f;
-  static constexpr int kCalmWindows = 3;        // 6 s of room before stepping up
+  static constexpr int kCalmWindows = 3;        // 6 s of calm before stepping up
   static constexpr double kBounceMs = 15000;
   static constexpr double kUpBlockMs = 60000;  // after a bounce, stay down for a minute
 
  private:
   void resetWindow(double nowMs) {
     windowStartMs_ = nowMs;
-    frames_ = 0;
-    sumInterval_ = sumCpu_ = sumGpu_ = 0;
+    frames_ = late_ = 0;
+    sumInterval_ = sumCpu_ = 0;
   }
   int mode_ = kAuto;
   int tier_ = 0;
   bool ultra_ = false;
   double windowStartMs_ = -1;
-  int frames_ = 0;
-  float sumInterval_ = 0, sumCpu_ = 0, sumGpu_ = 0;
+  int frames_ = 0, late_ = 0;
+  int ultraStep_ = 0;  // Ultra's sharpness: kUltraRatios[ultraStep_]
+  float sumInterval_ = 0, sumCpu_ = 0;
   double lastChangeMs_ = -1e9, lastUpMs_ = -1e9, upBlockedUntilMs_ = 0;
   int calmWindows_ = 0;
 };

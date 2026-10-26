@@ -1320,7 +1320,8 @@ void tuneMoodFromPage() {
 // switch (Settings → Graphics, or the page option) can still turn it off.
 //
 //                     Ultra  High  Medium  Low
-//   pixels per CSS px   3     2     1.6    1.3   (looped/quality.h)
+//   pixels per CSS px   3     2     1.6    1.3   (looped/quality.h; Ultra eases to
+//                                                2.5 and 2 while frames run late, J110.3)
 //   lamps per pixel    16    12     10      8
 //   lamp shadows       on    on     on      on   (drawn once; without them the
 //                                                hanging lamps' shades darken the floor: KI-46)
@@ -1364,7 +1365,7 @@ void watchQuality(double nowMs) {
   const engine::Profiler::Frame& last = p.frame(0);
   const bool drawing = g_app.entered && !g_app.meridianOpen && !engine::frameTime().resumed;
   if (g_app.quality.frame(nowMs, last.intervalMs, last.cpuMs, last.gpuMs, drawing)) {
-    applyQuality(g_app.quality.pixelRatioCap() < g_app.gpu.resolutionCap ? "the GPU was busy" : "room to spare");
+    applyQuality(g_app.quality.pixelRatioCap() < g_app.gpu.resolutionCap ? "frames ran late" : "steady again");
     applyMirrorDetail();
   }
 }
