@@ -36,24 +36,24 @@
   }
  ],
  "now": {
-  "id": "J99",
-  "title": "Real books to read",
+  "id": "J101",
+  "title": "Chess full screen like chess.com, with themes",
   "chapter": "the world",
-  "about": "Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8)",
+  "about": "Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8)",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J99.1",
-    "text": "Real books: tap the lounge bookshelf to pick one of several public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity, and more) and read it in a reader with pages to turn, your place kept",
-    "check": "Tap the bookshelf: pick Crime and Punishment, read, turn pages, close it; open it again: you're on the same page",
-    "done": true
+    "id": "J101.1",
+    "text": "Chess full screen like chess.com, with themes: each theme a calm pair of square colours that always contrast, pieces drawn to match, a smooth matching background; pick one, it's kept",
+    "check": "Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
+ "upNext": "J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
  "road": {
   "world": [
    {
@@ -483,18 +483,6 @@
     "verdict": {
      "kind": "now",
      "why": "The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)"
-    }
-   },
-   {
-    "id": "J101",
-    "text": "Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8)",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The chess game and its screen exist; this adds a full-screen view and theme sets"
     }
    },
    {
@@ -1172,6 +1160,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed"
+  },
   {
    "build": "4887cd3",
    "text": "J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722"
