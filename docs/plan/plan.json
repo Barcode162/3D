@@ -36,30 +36,24 @@
   }
  ],
  "now": {
-  "id": "J72",
-  "title": "The world remake, step 4, bottles and glasses as real things",
+  "id": "J73",
+  "title": "The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart",
   "chapter": "the world",
-  "about": "The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25).",
+  "about": "The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs.",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J72.1",
-    "text": "The back bar's bottles as real things: about 200 bottles each its own thing, copies of 24 bottle recipes (shape, glass, label, drink) placed where they stood, each a little different (turn, size, tint), still drawn together",
-    "check": "Look along the back bar: the bottles look as before; in the Studio, tap a bottle and move it",
-    "done": true
-   },
-   {
-    "id": "J72.2",
-    "text": "The glasses on the tables as real things: the drinks on the coffee table, the side table, the bay table and the bar top each their own thing (coupe, wine, martini, highball, rocks, snifter with their drinks)",
-    "check": "The drinks on the tables look as before; in the Studio, tap a glass and move it",
-    "done": true
+    "id": "J73.1",
+    "text": "The stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs each their own thing where they stand; the arcade's walls and floor fixed (they vanished through the arch, its floor edge left a gap)",
+    "check": "Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was, the arcade's walls stay when seen through the arch",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
+ "upNext": "J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
  "road": {
   "world": [
    {
@@ -399,19 +393,6 @@
     "verdict": {
      "kind": "now",
      "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
-    }
-   },
-   {
-    "id": "J73",
-    "text": "The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J35",
-     "why": "Uses the kit; four smaller room models (stage, darts_zone, construction, arcade)"
     }
    },
    {
@@ -1141,6 +1122,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3"
+  },
   {
    "build": "080c01f",
    "text": "J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d"
