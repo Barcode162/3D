@@ -56,13 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J73 · The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart** (the world). The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs. · N3
-- [x] **J73.1** Fix: the deploy refused J72's place file (the lying wine bottles turned about three axes; a thing's turn is one angle): tilted bottles get models of their own, sizes are one number; the world check now also runs the schema and material tests *Check:* The bar loads with every bottle in place; the wine rack's bottles lie with their necks out
-- [x] **J73.2** The stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs each their own thing where they stand; the arcade's walls and floor fixed (they vanished through the arch, its floor edge left a gap) *Check:* Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was, the arcade's walls stay when seen through the arch
+**J74 · The world remake, step 6, the room shells remade** (the world). The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open. · N3
+- [ ] **J74.1** The room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows things of their own *Check:* Walk the bar: walls, floor and ceiling meet cleanly, no gaps or flicker; the doors and windows are where they were
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
+**Up next, in order:** J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -115,8 +114,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J74** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open. · N3
-  *Verdict:* Doable after J70, J71, J73 — Once the props are out, the shells are only walls, floors and ceilings; their size is checked against real units
 - [ ] **J75** The world remake, step 7, placement: every thing sits on something real (a floor, a shelf, a table, a wall), snaps there in the Studio, and the place check refuses things floating, sunk or overlapping. · N3
   *Verdict:* Doable after J70, J71, J72, J73, J74 — The place check (tools/place_check.py) and the inventory's Sits on column exist; this makes them strict
 - [ ] **J76** The world remake, step 8, light with the things: every lamp, bulb, sconce, neon sign and the fire is a thing that carries its own light at its real spot and bulb colour, each room balanced again (no light without a source). · N3
@@ -268,6 +265,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab
 - `981a2a1` J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3
 - `080c01f` J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d
 - `6d4f1af` J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7

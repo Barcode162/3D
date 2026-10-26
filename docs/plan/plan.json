@@ -36,30 +36,24 @@
   }
  ],
  "now": {
-  "id": "J73",
-  "title": "The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart",
+  "id": "J74",
+  "title": "The world remake, step 6, the room shells remade",
   "chapter": "the world",
-  "about": "The world remake, step 5, the stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs.",
+  "about": "The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open.",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J73.1",
-    "text": "Fix: the deploy refused J72's place file (the lying wine bottles turned about three axes; a thing's turn is one angle): tilted bottles get models of their own, sizes are one number; the world check now also runs the schema and material tests",
-    "check": "The bar loads with every bottle in place; the wine rack's bottles lie with their necks out",
-    "done": true
-   },
-   {
-    "id": "J73.2",
-    "text": "The stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs each their own thing where they stand; the arcade's walls and floor fixed (they vanished through the arch, its floor edge left a gap)",
-    "check": "Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was, the arcade's walls stay when seen through the arch",
-    "done": true
+    "id": "J74.1",
+    "text": "The room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows things of their own",
+    "check": "Walk the bar: walls, floor and ceiling meet cleanly, no gaps or flicker; the doors and windows are where they were",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
+ "upNext": "J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)",
  "road": {
   "world": [
    {
@@ -399,19 +393,6 @@
     "verdict": {
      "kind": "now",
      "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
-    }
-   },
-   {
-    "id": "J74",
-    "text": "The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials (brick, plaster, oak, steel); doors and windows become things that open.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J70, J71, J73",
-     "why": "Once the props are out, the shells are only walls, floors and ceilings; their size is checked against real units"
     }
    },
    {
@@ -1128,6 +1109,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab"
+  },
   {
    "build": "981a2a1",
    "text": "J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3"
