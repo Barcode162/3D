@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J73.2 The stage, the darts corner, the taped-off room and the arcade taken apart: the mic, guitar, amp, light bar and stool; the darts in the board, the surround, the holder, the oche and mat, the spotlights; the tape, plastic sheet, sawhorses, cones, sign, work light, ladder, buckets, drop cloth, lumber, drywall and toolbox; the arcade's signs, neon art and bench: 36 things where they stood (asset scripts mark groups, one model each); the DARTS neon reads the right way (it was backwards), the sawhorse lamps sit on their rails
+
+`5c841ab` · 2026-10-26 10:30 · 54 files, +1182 −303 · tests: none
+
+Phone check: Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was; the DARTS sign reads normally
+
 ## J73.1 Fix: the deploy refused J72's place file (the lying wine bottles turned about three axes; a thing's turn is one angle): tilted bottles get models of their own, sizes are one number; the world check now also runs the schema and material tests; incident recorded
 
 `dd40f9c` · 2026-10-26 10:15 · 15 files, +948 −744 · tests: none
