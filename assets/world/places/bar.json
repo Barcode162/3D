@@ -85,7 +85,7 @@
     {"id": "chesterfield_sofa", "kind": "chesterfield_sofa", "at": [-5.75, 0, 0.8], "turn": -90},
     {"id": "armchair-1", "kind": "armchair", "at": [-7.25, 0, -0.5], "turn": -51.566},
     {"id": "armchair-2", "kind": "armchair", "at": [-7.25, 0, 2.1], "turn": -128.434},
-    {"id": "bookshelf", "kind": "bookshelf", "at": [-9.0, 0, 2.625], "turn": 90},
+    {"id": "lounge_bookshelf", "kind": "bookshelf", "at": [-9.0, 0, 2.625], "turn": 90},
     {"id": "floor_lamp", "kind": "floor_lamp", "at": [-6.3, 0, 2.75]},
     {"id": "side_table", "kind": "side_table", "at": [-5.85, 0, 2.65]},
     {"id": "fire_flames", "kind": "fire_flames", "at": [0, 0, 0]},

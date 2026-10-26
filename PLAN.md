@@ -57,7 +57,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J71 · The world remake, step 3, the walls' props taken apart** (the world). The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
-- [ ] **J71.1** The walls' props taken apart: neon and tin signs, licence plates, photos, the clock, the TV, coats and umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates each their own thing where they hang or stand; decor_walls.glb keeps only what is truly wall *Check:* Walk around the walls: every sign, photo and plant is where it was, nothing floats; in the Studio, tap a sign and move it
+- [x] **J71.1** Fix (urgent): the lounge bookshelf's thing renamed (it took the id of the bookshelf's tap spot, so 'read a book' was dropped), and every new lounge kind gets a live loop (the world refused them as still) *Check:* Tap the bookshelf in the lounge: 'read a book' works; the log shows no 'World:' problems
+- [ ] **J71.2** The walls' props taken apart: neon and tin signs, licence plates, photos, the clock, the TV, coats and umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates each their own thing where they hang or stand; decor_walls.glb keeps only what is truly wall *Check:* Walk around the walls: every sign, photo and plant is where it was, nothing floats; in the Studio, tap a sign and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -265,7 +266,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37
+- `0d40f55` J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37
 - `35e68bb` J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
 - `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231

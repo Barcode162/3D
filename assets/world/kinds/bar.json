@@ -103,7 +103,7 @@
     {"id": "decor_walls", "is": "room", "parts": {"model": {"file": "decor_walls.glb", "material": "dark-wood"}}},
     {
       "id": "fireplace",
-      "about": "The fireplace on the chimney breast: marble surround, a mantel shelf on corbels, the firebox with its grate, logs and embers (its flames and glow are fire_flames and light-fire).",
+      "about": "The fireplace on the chimney breast: marble surround, a mantel shelf on corbels, the firebox with its grate, logs and embers (its flames and glow are fire_flames and light-fire). The embers in the firebox breathe.",
       "parts": {
         "model": {"file": "fireplace.glb", "material": "brick"},
         "solids": [
@@ -111,7 +111,10 @@
           {"at": [0, 1.205, 0.13], "half": [0.84, 0.025, 0.13], "material": "dark-wood"},
           {"at": [0, 0.02, 0.25], "half": [0.84, 0.02, 0.25], "material": "brick"}
         ]
-      }
+      },
+      "loops": {"embers": {"period": 3, "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.25, "rate": 1.5}]}},
+      "states": {"embers": {"loop": "embers"}},
+      "start": "embers"
     },
     {
       "id": "painting",
@@ -119,7 +122,10 @@
       "parts": {
         "model": {"file": "painting.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 0.375, 0], "half": [0.485, 0.375, 0.015], "material": "dark-wood"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "mantel_clock",
@@ -128,16 +134,22 @@
         "model": {"file": "mantel_clock.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 0.08, 0], "half": [0.17, 0.08, 0.065], "material": "dark-wood"}],
         "touchSound": {"effect": "wood", "gain": 0.4}
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "candlestick",
-      "about": "A brass candlestick with a tall candle.",
+      "about": "A brass candlestick with a tall candle. Its candle flame flickers.",
       "parts": {
         "model": {"file": "candlestick.glb", "material": "brass"},
         "solids": [{"at": [0, 0.11, 0], "half": [0.05, 0.11, 0.05], "material": "brass"}],
         "touchSound": {"effect": "bong", "gain": 0.3}
-      }
+      },
+      "loops": {"flame": {"period": 1, "pieces": [{"ch": "glow", "shape": "flicker", "amp": 0.5, "rate": 1.6}]}},
+      "states": {"flame": {"loop": "flame"}},
+      "start": "flame"
     },
     {
       "id": "mantel_photo_a",
@@ -145,7 +157,10 @@
       "parts": {
         "model": {"file": "mantel_photo_a.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 0.09, 0.01], "half": [0.07, 0.09, 0.01], "material": "dark-wood"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "mantel_photo_b",
@@ -153,7 +168,10 @@
       "parts": {
         "model": {"file": "mantel_photo_b.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 0.07, 0.01], "half": [0.09, 0.07, 0.01], "material": "dark-wood"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "mantel_books",
@@ -161,7 +179,10 @@
       "parts": {
         "model": {"file": "mantel_books.glb", "material": "leather"},
         "solids": [{"at": [0, 0.045, 0], "half": [0.11, 0.045, 0.08], "material": "leather"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "vase",
@@ -170,7 +191,10 @@
         "model": {"file": "vase.glb", "material": "bottle-glass"},
         "solids": [{"at": [0, 0.135, 0], "half": [0.09, 0.135, 0.09], "material": "bottle-glass"}],
         "touchSound": {"effect": "clink", "gain": 0.4}
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "fire_tools",
@@ -178,7 +202,10 @@
       "parts": {
         "model": {"file": "fire_tools.glb", "material": "black-steel"},
         "solids": [{"at": [0, 0.42, 0], "half": [0.11, 0.42, 0.11], "material": "black-steel"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "log_basket",
@@ -186,12 +213,18 @@
       "parts": {
         "model": {"file": "log_basket.glb", "material": "black-steel"},
         "solids": [{"at": [0, 0.15, 0], "half": [0.24, 0.15, 0.24], "material": "black-steel"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "rug",
       "about": "A woven rug in front of the fire.",
-      "parts": {"model": {"file": "rug.glb", "material": "leather"}}
+      "parts": {"model": {"file": "rug.glb", "material": "leather"}},
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "coffee_table",
@@ -200,7 +233,10 @@
         "model": {"file": "coffee_table.glb", "material": "varnished-wood"},
         "solids": [{"at": [0, 0.43, 0], "half": [0.38, 0.02, 0.6], "material": "varnished-wood"}],
         "touchSound": {"effect": "wood", "gain": 0.6}
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "chesterfield_sofa",
@@ -216,7 +252,10 @@
           {"at": [0, 0.22, 0.03], "half": [0.98, 0.22, 0.42], "material": "leather"},
           {"at": [0, 0.55, -0.33], "half": [0.98, 0.23, 0.12], "material": "leather"}
         ]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "armchair",
@@ -228,7 +267,10 @@
           {"at": [0, 0.24, 0], "half": [0.33, 0.24, 0.32], "material": "leather"},
           {"at": [0, 0.75, -0.28], "half": [0.3, 0.3, 0.05], "material": "leather"}
         ]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "bookshelf",
@@ -236,15 +278,21 @@
       "parts": {
         "model": {"file": "bookshelf.glb", "material": "dark-wood"},
         "solids": [{"at": [0, 1.15, 0.17], "half": [0.7, 1.15, 0.17], "material": "dark-wood"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {
       "id": "floor_lamp",
-      "about": "A brass floor lamp with a fabric shade (its light: the light-bulb above it).",
+      "about": "A brass floor lamp with a fabric shade (its light: the light-bulb above it). Its bulb breathes like an old filament.",
       "parts": {
         "model": {"file": "floor_lamp.glb", "material": "brass"},
         "solids": [{"at": [0, 0.8, 0], "half": [0.16, 0.8, 0.16], "material": "brass"}]
-      }
+      },
+      "loops": {"bulb": {"period": 8, "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.06, "rate": 0.5}]}},
+      "states": {"bulb": {"loop": "bulb"}},
+      "start": "bulb"
     },
     {
       "id": "side_table",
@@ -252,7 +300,10 @@
       "parts": {
         "model": {"file": "side_table.glb", "material": "varnished-wood"},
         "solids": [{"at": [0, 0.28, 0], "half": [0.24, 0.28, 0.24], "material": "varnished-wood"}]
-      }
+      },
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
     },
     {"id": "stage", "is": "room", "parts": {"model": {"file": "stage.glb", "material": "black-steel"}}},
     {"id": "darts_zone", "is": "room", "parts": {"model": {"file": "darts_zone.glb", "material": "dark-wood"}}},

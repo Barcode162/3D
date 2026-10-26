@@ -72,7 +72,7 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `chesterfield_sofa` | `chesterfield_sofa` |  | `chesterfield_sofa.glb` |  |
 | `armchair-1` | `armchair` |  | `armchair.glb` |  |
 | `armchair-2` | `armchair` |  | `armchair.glb` |  |
-| `bookshelf` | `bookshelf` |  | `bookshelf.glb` |  |
+| `lounge_bookshelf` | `bookshelf` |  | `bookshelf.glb` |  |
 | `floor_lamp` | `floor_lamp` |  | `floor_lamp.glb` |  |
 | `side_table` | `side_table` |  | `side_table.glb` |  |
 | `fire_flames` | `fire_flames` |  | `fire_flames.glb` |  |
