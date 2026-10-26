@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J110.3 (fix) Touch delay measured (the user: touches feel delayed though no frame is late): reports count the frames that drew a picture (while the GPU is busy the clock ticks at 60 but the screen doesn't change) and time each touch to the screen (to its frame, to the hand-over, to the GPU's done); the GPU check adds a step with 1 frame queued instead of 2 and counts drawn frames per step (25 s now)
+
+`205ac39` · 2026-10-26 23:43 · 9 files, +78 −18 · tests: none
+
+Phone check: Walk and look around for 10 s, send a report; then Check the GPU and send another
+
 ## J110.3 (fix) Frames drawn under a menu are left out: the reports, the hitch count and Ultra/Auto's watching skip them (report WQUMXC: with Settings open the page's own drawing held frames at 25 ms and eased Ultra to 2x; in the bar itself, standing, no frame was late); the profiler keeps 600 frames so a report still has 300 of play
 
 `5d6c6bb` · 2026-10-26 23:35 · 5 files, +17 −7 · tests: none
