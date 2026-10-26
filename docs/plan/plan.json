@@ -61,7 +61,7 @@
     "id": "J91.3",
     "text": "Tuned on the phone: the defaults from a ?perf=1 report by the fire",
     "check": "The bar stays smooth with both on",
-    "done": false
+    "done": true
    }
   ]
  },

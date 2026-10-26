@@ -59,7 +59,6 @@ constexpr wgpu::Color kClearColor{0.02, 0.015, 0.015, 1.0};
 constexpr wgpu::Color kAvatarBackdrop{0.10, 0.10, 0.13, 1.0};
 constexpr float kSoftShadeRadius = 0.5f;    // metres around each point that can shade it (J91)
 constexpr float kSoftShadeStrength = 1.0f;
-constexpr uint32_t kBeamSteps = 16;  // light beams (J91.2): steps along each line of sight
 constexpr float kBeamReach = 20.0f;   // metres
 
 wgpu::ShaderModule loadShader(const wgpu::Device& device, const char* path) {
@@ -1775,7 +1774,7 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   setVec4(f.clipPlane, {0, 0, 0}, 1);  // keep everything
   f.invViewProj = inverse(viewProj);
   f.beams[0] = beamsOn_ ? beamHaze_ * beamScale_ : 0.0f;
-  f.beams[1] = static_cast<float>(kBeamSteps);
+  f.beams[1] = static_cast<float>(beamSteps_);
   f.beams[2] = kBeamReach;
   f.beams[3] = static_cast<float>(beamFrame_++ % 64);
   queue.WriteBuffer(views_[0].buffer, 0, &f, sizeof(f));

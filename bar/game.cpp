@@ -1306,6 +1306,10 @@ void applyQuality(const char* why) {
   // far at lower quality, so nothing is cut off in squares).
   static const int kLightsPerPixel[] = {12, 8, 5};
   g_app.renderer.setLightsPerPixel(kLightsPerPixel[g_app.quality.tier()]);
+  // Light beams (J91.3): 16 steps along each line of sight at High, 12 at
+  // Medium, 8 at Low (Auto steps down when the phone struggles).
+  static const int kBeamSteps[] = {16, 12, 8};
+  g_app.renderer.setBeamSteps(kBeamSteps[g_app.quality.tier()]);
   if (cap == g_app.gpu.resolutionCap) return;
   g_app.gpu.resolutionCap = cap;
   if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[g_app.quality.tier()], cap, why);

@@ -109,6 +109,8 @@ class SceneRenderer {
   // (its air's "beams"; ?haze= for trying values).
   void setLightBeams(bool on) { beamsOn_ = on; }
   void setBeamStrength(float strength) { beamScale_ = strength; }
+  // Steps along each line of sight (fewer: cheaper, grainier; the quality tiers set it).
+  void setBeamSteps(int steps) { beamSteps_ = steps < 4 ? 4 : steps > 32 ? 32 : steps; }
   bool lampShadows() const { return shadowsOn_; }
   // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
   void setEyes(bool on) { eyes_ = on; }
@@ -476,6 +478,7 @@ class SceneRenderer {
   bool beamsOn_ = true;
   float beamHaze_ = 0, beamScale_ = 1;
   uint32_t beamFrame_ = 0;
+  int beamSteps_ = 16;
   wgpu::RenderPipeline beamsPipeline_;  // views_[0] reads the soft shade (else the 1x1 stand-in)
   wgpu::RenderPipeline aoObjectPipeline_, aoModelPipeline_;
   void drawSoftShade(const wgpu::CommandEncoder& encoder, const Mat4& viewProj, Vec3 eye, const RoomView& cull,
