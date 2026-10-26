@@ -5,7 +5,9 @@
 # rolling library ladder on a brass rail, and the working clutter on the
 # counter: espresso machine with cups, a vintage brass register, glass
 # stacks, a citrus cutting board, a banker's lamp, an ice bucket with
-# champagne, cocktail books, a plant.
+# champagne, cocktail books, a plant. The remake (J35.4): bottles of
+# see-through glass with the drink inside and printed labels of made-up
+# brands (props_lib, labels.py); light strips solid from post to post.
 #
 #   blender -b --factory-startup --python tools/assets/back_bar_tall.py -- <texture dir> <out.glb>
 #
@@ -46,7 +48,7 @@ wood = common.pbr_material("Back bar wood", tex_dir, "dark_wood", tint=(0.5, 0.3
 marble = common.pbr_material("Marble top", tex_dir, "marble_01", tint=(0.9, 0.88, 0.85), roughness_scale=0.3,
                              grain="u", size=512)
 mirror = common.plain_material("Smoked mirror", (0.30, 0.24, 0.19), 1.0, 0.06)
-led = common.plain_material("LED strip", (1.0, 0.75, 0.45), 0.0, 0.3, emission=(1.0, 0.55, 0.22), strength=3.0)
+led = common.plain_material("LED strip", (1.0, 0.75, 0.45), 0.0, 0.3, emission=(1.0, 0.55, 0.22), strength=1.8)
 kick = common.plain_material("Kick plate", (0.02, 0.02, 0.02), 0.0, 0.6)
 brass = P.mat("brass")
 shelf_glass = common.glass_material("Shelf glass", color=(0.7, 0.85, 0.8), alpha=0.25)
@@ -166,7 +168,10 @@ for b in range(BAYS):
     for si, y in enumerate(SHELVES):
         box("Shelf", (bx0, y - 0.0175, ZB + 0.012), (bx1, y + 0.0175, ZB + SHELF_D), wood, 0.006)
         box("Shelf lip", (bx0, y - 0.03, ZB + SHELF_D - 0.012), (bx1, y + 0.025, ZB + SHELF_D + 0.005), wood, 0.006)
-        box("LED", (bx0 + 0.03, y - 0.04, ZB + SHELF_D - 0.03), (bx1 - 0.03, y - 0.03, ZB + SHELF_D - 0.016), led,
+        # The light strip (J35.4): post to post, a 2 cm diffuser just below
+        # the lip's front, so it reads as one solid line from below and
+        # from the front (it was 1 cm, behind the lip: broken dashes).
+        box("LED", (bx0 + 0.005, y - 0.05, ZB + SHELF_D - 0.03), (bx1 - 0.005, y - 0.03, ZB + SHELF_D - 0.004), led,
             0.0)
         if b == STEM_BAY and si == 1:
             continue  # stemware hangs under this shelf

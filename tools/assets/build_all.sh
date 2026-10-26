@@ -9,6 +9,7 @@ scratch=${1:?usage: build_all.sh <scratch dir>}
 tex="$scratch/textures"
 bash tools/assets/get_blender.sh
 bash tools/assets/fetch_textures.sh "$tex"
+python3 tools/assets/labels.py "$tex"  # bottle labels (needs Pillow)
 # Poly Haven models (CC0, the remake's kit, J35): fetched, slimmed, written.
 ph() { bash tools/assets/polyhaven_fetch.sh "$1" "$scratch/polyhaven" 1k >/dev/null
        $B tools/assets/polyhaven.py -- "$scratch/polyhaven/$1" "$out/$2" "${@:3}" 2>&1 | grep -E "EXPORTED|Error|Traceback" || true; }

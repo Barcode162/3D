@@ -7,7 +7,11 @@
     },
     "bar_counter_l.glb": {
       "tris": 80000,
-      "texMB": 32
+      "texMB": 36
+    },
+    "back_bar_tall.glb": {
+      "tris": 112000,
+      "texMB": 24
     }
   }
 }

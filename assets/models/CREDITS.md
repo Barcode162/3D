@@ -36,4 +36,6 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 |---|---|---|
 | `bar_stool.glb` | [Bar Chair Round 01](https://polyhaven.com/a/bar_chair_round_01) (scaled to a 0.76 m seat) | Dairon Sanchez |
 
+Bottle labels (`tools/assets/labels.py`, J35.4): made-up brands set in DejaVu Serif and Sans (Bitstream Vera licence, public-domain changes) and Liberation Serif (SIL Open Font License); both allow text drawn into pictures.
+
 CC0 needs no credit, but we list sources anyway.

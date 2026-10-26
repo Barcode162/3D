@@ -60,7 +60,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J35.1** The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing *Check:* Nothing changes in the bar yet
 - [x] **J35.2** The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height *Check:* Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it
 - [x] **J35.3** The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker *Check:* Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker
-- [ ] **J35.4** The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands) *Check:* Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
+- [x] **J35.4** The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands) *Check:* Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
 - [ ] **J35.5** The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs *Check:* Under the lamps over the counter: real metal shades, the light comes from the bulbs
 
 ## 5. The road

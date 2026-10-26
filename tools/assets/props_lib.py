@@ -9,6 +9,7 @@
 #   P = props_lib.Props(tex_dir)
 #   P.bottle(x, y, z, "whiskey", yaw=0.3)
 import math
+import os
 import random
 
 import bmesh
@@ -52,12 +53,23 @@ class Props:
         c = common
         m = None
         if key == "bottle_glass":
+            # See-through tinted glass (J35.4): the drink inside is its own
+            # solid shape, the colour shows through.
             sw = np.zeros((16, 16, 3), np.float32)
             for i, col in enumerate(GLASS_COLORS):
                 sw[:, i] = col
             m = c.image_material("Bottle glass", np.repeat(np.repeat(sw, 4, 0), 4, 1), roughness=0.05)
+            m.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.42
+            m.surface_render_method = "BLENDED"
         elif key == "labels":
-            m = c.image_material("Bottle labels", _label_atlas(), roughness=0.55)
+            # Printed labels of made-up brands (tools/assets/labels.py), or
+            # the old drawn ones when that picture hasn't been made.
+            path = os.path.join(self.tex_dir or "", "bottle_labels.png")
+            if os.path.exists(path):
+                _, _, px = c._load_pixels(path)
+                m = c.image_material("Bottle labels", px[..., :3], roughness=0.55)
+            else:
+                m = c.image_material("Bottle labels", _label_atlas(), roughness=0.55)
         elif key == "liquid":
             sw = np.zeros((16, 16, 3), np.float32)
             for i, k in enumerate(_LIQ_KEYS):
@@ -167,6 +179,17 @@ class Props:
         body = common.lathe("Bottle", prof, self.mat("bottle_glass"), segments)
         common.swatch_uvs(body, (color + 0.5) / 16, 0.5)
         _place(body, x, y, z, yaw, tilt)
+        drink = fill if fill is not None else self._drink_for(kind)
+        if drink:
+            # The drink: the body's shape a little inside the glass, filled
+            # 55-90% of the way to the shoulder.
+            shoulder = next(yy for (r, yy) in prof[2:] if r < max(rr for (rr, _) in prof) - 0.003)
+            level = 0.006 + (shoulder - 0.006) * rng.uniform(0.55, 0.9)
+            inner = [(0.0, 0.006), (self._radius_at(prof, 0.006) * 0.9, 0.006)] + [(r * 0.9, yy) for (r, yy) in prof[1:] if 0.006 < yy < level] + \
+                    [(self._radius_at(prof, level) * 0.9, level), (0.0, level)]
+            liq = common.lathe("Drink", inner, self.mat("liquid"), max(6, segments - 2))
+            common.swatch_uvs(liq, (_LIQ_KEYS.index(drink) + 0.5) / 16, 0.5)
+            _place(liq, x, y, z, yaw, tilt)
         r_body = max(r for (r, _) in prof)
         y0, y1 = self.LABEL_Y[kind]
         self._label_band(r_body + 0.0015, y0, y1, label, x, y, z, yaw, tilt=tilt)
@@ -180,11 +203,32 @@ class Props:
             band = self._label_band(r_body + 0.002, 0.005, 0.105, label, x, y, z, yaw, wide=2.9)
         return top + 0.008
 
+    DRINKS = {"whiskey": ["whiskey"], "stubby": ["whiskey", "cola"], "cognac": ["whiskey"], "magnum": ["red_wine"],
+              "tequila": ["white_wine", None], "slim": [None, None, "green"], "beer": ["beer"],
+              "liqueur": ["red", "green", "orange", "cream", "coffee", "blue"], "wine": ["red_wine", "white_wine"],
+              "champagne": ["white_wine"], "bitters": ["coffee"]}
+
+    def _drink_for(self, kind):
+        """What's in a bottle of this kind (None: a clear spirit, the glass
+        alone shows)."""
+        return self.rng.choice(self.DRINKS.get(kind, [None]))
+
+    @staticmethod
+    def _radius_at(prof, h):
+        for (r0, y0), (r1, y1) in zip(prof, prof[1:]):
+            if y0 <= h <= y1 and y1 > y0:
+                return r0 + (r1 - r0) * (h - y0) / (y1 - y0)
+        return prof[1][0]
+
     def _square_bottle(self, x, y, z, color, label, yaw):
         s = 0.034
         body = common.box("Square bottle", (-s, 0, -s), (s, 0.17, s), self.mat("bottle_glass"), 0.008, 2)
         common.swatch_uvs(body, (color + 0.5) / 16, 0.5)
         _place(body, x, y, z, yaw)
+        liq = common.box("Drink", (-s + 0.004, 0.005, -s + 0.004), (s - 0.004, 0.17 * self.rng.uniform(0.55, 0.9),
+                                                                     s - 0.004), self.mat("liquid"), 0.006, 2)
+        common.swatch_uvs(liq, (_LIQ_KEYS.index("whiskey") + 0.5) / 16, 0.5)
+        _place(liq, x, y, z, yaw)
         sh = common.lathe("Shoulder", [(0.0, 0.17), (0.034, 0.17), (0.026, 0.19), (0.014, 0.205),
                                        (0.0125, 0.25), (0.0, 0.25)], self.mat("bottle_glass"), 12)
         common.swatch_uvs(sh, (color + 0.5) / 16, 0.5)
