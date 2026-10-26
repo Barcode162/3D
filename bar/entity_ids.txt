@@ -18,14 +18,14 @@
 20494 seat.stool@0.7,2.1
 11588 seat.stool@4.4,2.4
 49895 seat.stool@4.0,0.8
-1822 seat.chair@-1.4,7.5
-39361 seat.chair@-0.2,7.5
-37748 seat.chair@1.0,7.5
 43990 seat.sofa@-5.9,0.1
 45521 seat.sofa@-5.9,0.8
 47426 seat.sofa@-5.9,1.5
 25887 seat.chair@-7.3,-0.5
 25044 seat.chair@-7.3,2.1
+1822 seat.chair@-1.4,7.5
+39361 seat.chair@-0.2,7.5
+37748 seat.chair@1.0,7.5
 31698 seat.bench@-8.6,5.8
 20413 seat.stool@-6.8,6.3
 38354 seat.rig@7.6,-3.0
