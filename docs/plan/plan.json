@@ -36,37 +36,54 @@
   }
  ],
  "now": {
-  "id": "J91",
-  "title": "A real engine, step 4",
-  "chapter": "the engine",
-  "about": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
+  "id": "J35",
+  "title": "The world remake, step 1, the kit",
+  "chapter": "the world",
+  "about": "The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md.",
   "serves": [
-   "N3",
-   "N5"
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J91.1",
-    "text": "The prepass and ambient occlusion, its blur and its switch",
-    "check": "By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone",
-    "done": true
+    "id": "J35.1",
+    "text": "The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing",
+    "check": "Nothing changes in the bar yet",
+    "done": false
    },
    {
-    "id": "J91.2",
-    "text": "The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch",
-    "check": "Stand at the stage door: soft beams under the stage lights; Light beams off: gone",
-    "done": true
+    "id": "J35.2",
+    "text": "The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height",
+    "check": "Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it",
+    "done": false
    },
    {
-    "id": "J91.3",
-    "text": "Tuned on the phone: the defaults from a ?perf=1 report by the fire",
-    "check": "The bar stays smooth with both on",
-    "done": true
+    "id": "J35.3",
+    "text": "The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker",
+    "check": "Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker",
+    "done": false
+   },
+   {
+    "id": "J35.4",
+    "text": "The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands)",
+    "check": "Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines",
+    "done": false
+   },
+   {
+    "id": "J35.5",
+    "text": "The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs",
+    "check": "Under the lamps over the counter: real metal shades, the light comes from the bulbs",
+    "done": false
+   },
+   {
+    "id": "J35.6",
+    "text": "Your look on the phone: changes from your notes until the corner is approved",
+    "check": "You say the corner is approved",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -406,19 +423,6 @@
     "verdict": {
      "kind": "now",
      "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
-    }
-   },
-   {
-    "id": "J35",
-    "formerly": "W24",
-    "text": "The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "Models are grown by Blender scripts, the way Claude makes 3D (Charter: Claude); splitting things apart costs draw calls on the phone, which the kit's instancing and budget keep in check (J37's report)"
     }
    },
    {

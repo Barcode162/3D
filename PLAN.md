@@ -56,14 +56,17 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J91 · A real engine, step 4** (the engine). A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
-- [x] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
-- [x] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
-- [x] **J91.3** Tuned on the phone: the defaults from a ?perf=1 report by the fire *Check:* The bar stays smooth with both on
+**J35 · The world remake, step 1, the kit** (the world). The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md. · N3
+- [ ] **J35.1** The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing *Check:* Nothing changes in the bar yet
+- [ ] **J35.2** The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height *Check:* Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it
+- [ ] **J35.3** The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker *Check:* Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker
+- [ ] **J35.4** The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands) *Check:* Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
+- [ ] **J35.5** The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs *Check:* Under the lamps over the counter: real metal shades, the light comes from the bulbs
+- [ ] **J35.6** Your look on the phone: changes from your notes until the corner is approved *Check:* You say the corner is approved
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -116,8 +119,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J35** The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md. · N3
-  *Formerly* W24 · *Verdict:* Doable now — Models are grown by Blender scripts, the way Claude makes 3D (Charter: Claude); splitting things apart costs draw calls on the phone, which the kit's instancing and budget keep in check (J37's report)
 - [ ] **J70** The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
   *Verdict:* Doable after J35 — Uses the kit's rules and budget; the lounge's 33 baked parts are listed in lounge.glb
 - [ ] **J71** The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
