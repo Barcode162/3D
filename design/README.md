@@ -6,20 +6,18 @@ here is loaded by the game, the site or any tool**, and nothing here is
 used until the user says "use it"; then the chosen direction becomes its own
 job in the plan (built with the UI Editor's themes and screens, `ui/`).
 
-## How a round works
-1. Claude makes a look-book: the same content drawn several ways, so only
-   the style changes. Each direction says how big it is to build (theme
-   only, new controls, or engine work).
-2. It is shown to the user privately (a claude.ai page, never on
-   joshuavelasco.com).
-3. The user says what they like, in any words; it goes in `likes.md`.
-4. The next round refines what they picked, then carries it to other
-   screens.
+## How it works
+The lab works on **one theme at a time** (the user's word, request
+2026-10-26 #13). Claude shows it on a page the user opens on the phone; the
+user says what to change, in any words (it goes in `likes.md`); Claude
+changes the page at the same link.
 
-## The rounds
-- `round-1/`: the bar's Jukebox menu, seven ways (today's Ember, Coaster,
-  Neon Sign, Thumb Wheel, In-world Phone, Liquid Dock, Poster). Page:
+## The theme
+- `coaster/`: **Coaster**, the bar's menus as printed bar cards that slide
+  up from the bottom, opened by a round coaster in the corner. Page:
   https://claude.ai/artifact/Qf8ApZP9okCJ7GsgXBh26S
+  (Picked by Claude: the repo already has a Neon theme. Its first page, a
+  seven-way comparison, is in this folder's history.)
 
 ## Rules for the lab
 - Only fonts the repo already has a licence for (`ui/fonts/`,

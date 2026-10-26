@@ -1,0 +1,204 @@
+<title>Coaster Theme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the theme's sheet. Its screens first (two phones), then its parts:
+   colours, type, buttons and controls, each as the bar would draw them. */
+@font-face { font-family: "Archivo"; src: url("fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
+@font-face { font-family: "Martian Mono"; src: url("fonts/MartianMono.woff2") format("woff2"); font-weight: 100 800; }
+@font-face { font-family: "Limelight"; src: url("fonts/Limelight.woff2") format("woff2"); }
+
+:root {
+  color-scheme: dark;
+  /* the page around the theme */
+  --bg: #0f0b09;
+  --ink: #f1e7da;
+  --ink-2: #b9a893;
+  --ink-3: #7c6c5b;
+  --line: rgba(241, 231, 218, .12);
+  --card: #17110d;
+  /* the Coaster theme itself */
+  --paper: #ece2cc;
+  --paper-2: #d9ccb0;
+  --print: #2a1d14;
+  --print-2: #7a5f45;
+  --stamp: #c33d2e;
+  --brass: #b8863b;
+  --title: "Limelight", Georgia, serif;
+  --text: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --type: "Martian Mono", ui-monospace, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 36px; }
+
+header { display: grid; gap: 10px; max-width: 62ch; }
+.eyebrow { font-family: var(--type); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass); }
+h1 { font-family: var(--title); font-weight: 400; font-size: clamp(40px, 9vw, 64px); line-height: 1; margin: 0; color: var(--paper); }
+header p { margin: 0; color: var(--ink-2); }
+h2 { font-family: var(--type); font-weight: 500; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+
+.screens { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; }
+.shot { display: grid; gap: 12px; justify-items: center; }
+.shot p { margin: 0; max-width: 248px; font-size: 13.5px; color: var(--ink-2); text-align: center; }
+
+.parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 20px; }
+.part { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+.swatches { display: grid; gap: 10px; }
+.sw { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; font-size: 13.5px; }
+.sw b { width: 40px; height: 40px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.sw span { color: var(--ink-2); }
+.sw strong { color: var(--ink); font-weight: 600; display: block; }
+.typeset { display: grid; gap: 14px; }
+.typeset div { display: grid; gap: 2px; }
+.typeset small { font-family: var(--type); font-size: 10px; letter-spacing: .1em; color: var(--ink-3); text-transform: uppercase; }
+.sample { background: var(--paper); color: var(--print); border-radius: 6px; padding: 18px; display: grid; gap: 14px;
+  background-image: radial-gradient(rgba(90,60,30,.07) 1px, transparent 1px); background-size: 4px 4px; }
+
+/* ---------- the theme's pieces (what the bar would draw) ---------- */
+.c-key { display: inline-block; text-align: center; font-family: var(--type); font-size: 10.5px; letter-spacing: .06em; padding: 9px 14px; border: 1.5px solid var(--print); border-radius: 3px; color: var(--print); background: transparent; }
+.c-key.go { background: var(--print); color: var(--paper); }
+.c-key.press { transform: translateY(1px); box-shadow: inset 0 2px 0 rgba(0,0,0,.25); }
+.keys { display: flex; gap: 8px; flex-wrap: wrap; }
+.c-switch { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.c-switch i { width: 40px; height: 22px; border: 1.5px solid var(--print); border-radius: 11px; position: relative; }
+.c-switch i::after { content: ""; position: absolute; top: 2px; left: 20px; width: 15px; height: 15px; border-radius: 50%; background: var(--stamp); }
+.c-fader { display: grid; gap: 6px; font-size: 13px; }
+.c-fader .track { height: 2px; background: var(--print); position: relative; margin: 8px 0; }
+.c-fader .track::before { content: ""; position: absolute; left: 0; right: 0; top: -5px; height: 12px; background: repeating-linear-gradient(90deg, var(--print) 0 1px, transparent 1px 10%); opacity: .5; }
+.c-fader .track::after { content: ""; position: absolute; left: 64%; top: -8px; width: 18px; height: 18px; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--print); transform: translateX(-50%); }
+.c-fader span { display: flex; justify-content: space-between; font-family: var(--type); font-size: 10px; color: var(--print-2); }
+.c-row { display: flex; align-items: baseline; gap: 6px; font-size: 13px; }
+.c-row .fill { flex: 1; border-bottom: 1px dotted rgba(42,29,20,.45); transform: translateY(-3px); }
+.c-row .tm { font-family: var(--type); font-size: 10.5px; }
+.c-stamp { display: inline-block; transform: rotate(-8deg); border: 2px solid var(--stamp); color: var(--stamp); font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: .1em; padding: 2px 6px; border-radius: 3px; }
+
+/* ---------- the phone and the bar behind ---------- */
+.phone { position: relative; width: 248px; height: 520px; border-radius: 34px; overflow: hidden; flex: none;
+  box-shadow: 0 0 0 6px #050404, 0 0 0 7px #2a2420, 0 30px 60px rgba(0,0,0,.55); isolation: isolate; }
+.scene { position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255,180,90,.9) 0 2px, rgba(255,160,70,.18) 3px 16px, transparent 17px),
+    radial-gradient(circle at 52% 10%, rgba(255,190,110,.85) 0 2px, rgba(255,160,70,.14) 3px 14px, transparent 15px),
+    radial-gradient(circle at 84% 17%, rgba(255,170,80,.9) 0 2px, rgba(255,150,60,.16) 3px 18px, transparent 19px),
+    radial-gradient(ellipse 90% 55% at 50% 22%, #4a2c18, #1a0f09 70%, #0b0705); }
+.scene::before { content: ""; position: absolute; left: 0; right: 0; top: 28%; height: 9%;
+  background: repeating-linear-gradient(90deg, rgba(120,190,150,.38) 0 9px, transparent 9px 14px, rgba(220,150,70,.42) 14px 22px, transparent 22px 30px, rgba(200,90,80,.32) 30px 37px, transparent 37px 46px);
+  -webkit-mask: linear-gradient(180deg, transparent 0 25%, #000 25%); mask: linear-gradient(180deg, transparent 0 25%, #000 25%); filter: blur(.6px); }
+.scene::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: 0; height: 36%;
+  background: linear-gradient(180deg, #6a4128 0 2px, #3a2214 2px, #1c110a 40%, #0c0705); border-radius: 50% 50% 0 0 / 14% 14% 0 0; }
+.ui { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 10px 14px; font-family: var(--text); }
+.mat { position: absolute; top: 44px; right: 14px; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle, var(--paper) 0 52%, var(--stamp) 53% 60%, var(--paper) 61%); display: grid; place-items: center; font-family: var(--title); font-size: 11px; color: var(--stamp); transform: rotate(12deg); box-shadow: 0 6px 14px rgba(0,0,0,.5); }
+.mat.open { box-shadow: 0 0 0 3px rgba(236,226,204,.35), 0 6px 14px rgba(0,0,0,.5); }
+.tabs { display: flex; gap: 4px; padding-left: 14px; transform: rotate(-2deg); }
+.tabs b { font-family: var(--type); font-weight: 500; font-size: 9px; letter-spacing: .06em; padding: 5px 9px 7px; border-radius: 8px 8px 0 0; background: var(--paper-2); color: #5b4632; }
+.tabs b.on { background: var(--paper); color: var(--print); }
+.paper { position: relative; transform: rotate(-2deg); background: var(--paper); color: var(--print); border-radius: 4px 4px 10px 10px; padding: 16px 16px 14px; box-shadow: 0 18px 40px rgba(0,0,0,.6);
+  background-image: radial-gradient(rgba(90,60,30,.07) 1px, transparent 1px); background-size: 4px 4px; display: grid; gap: 4px; }
+.paper::before { content: ""; position: absolute; inset: 6px; border: 1px dashed rgba(42,29,20,.3); border-radius: 4px; pointer-events: none; }
+.paper .t { font-family: var(--title); font-size: 24px; text-align: center; line-height: 1; }
+.paper .sub { text-align: center; font-family: var(--type); font-size: 8.5px; letter-spacing: .14em; color: var(--print-2); margin: 2px 0 8px; }
+.paper .c-row { font-size: 12.5px; padding: 3px 0; }
+.paper .note { font-style: italic; color: var(--print-2); font-size: 11px; }
+.paper .c-stamp { position: absolute; top: -10px; right: 14px; background: var(--paper); transform: rotate(-14deg); font-size: 8px; opacity: .85; }
+.paper .keys { margin-top: 8px; flex-wrap: nowrap; }
+.paper .keys .c-key { flex: 1; padding: 8px 0; font-size: 10px; }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-top: 4px; }
+.menu-grid div { font-size: 12.5px; padding: 6px 0; border-bottom: 1px dotted rgba(42,29,20,.4); display: flex; justify-content: space-between; }
+.menu-grid i { font-style: normal; font-family: var(--type); font-size: 9.5px; color: var(--print-2); }
+.paper .c-switch { margin-top: 8px; font-size: 12px; }
+
+.next { max-width: 62ch; color: var(--ink-2); display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 20px; }
+.next p { margin: 0; }
+.next strong { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">J Production · Design lab · Our theme</div>
+    <h1>Coaster</h1>
+    <p>The bar's menus are printed cards, like the menu on a real bar table. A round coaster in the corner opens them, and they slide up from the bottom, leaving the bar in view. Nothing here is in the live bar yet.</p>
+  </header>
+
+  <section>
+    <h2>In the bar</h2>
+    <div class="screens">
+      <div class="shot">
+        <div class="phone"><div class="scene"></div><div class="ui">
+          <div class="mat open">MENU</div>
+          <div class="paper">
+            <div class="t">The Bar</div>
+            <div class="sub">WHAT'S ON TONIGHT</div>
+            <div class="menu-grid">
+              <div>Jukebox <i>3</i></div>
+              <div>Emotes <i>12</i></div>
+              <div>Seats <i>4</i></div>
+              <div>Mirror <i>you</i></div>
+              <div>Games <i>darts</i></div>
+              <div>Settings <i>›</i></div>
+            </div>
+            <div class="c-switch">Voice chat <i></i></div>
+          </div>
+        </div></div>
+        <p>Tap the coaster: the main menu card.</p>
+      </div>
+
+      <div class="shot">
+        <div class="phone"><div class="scene"></div><div class="ui">
+          <div class="mat">MENU</div>
+          <div class="tabs"><b class="on">QUEUE</b><b>SONGS</b><b>ASK</b></div>
+          <div class="paper">
+            <span class="c-stamp">ON NOW</span>
+            <div class="t">The Jukebox</div>
+            <div class="sub">TONIGHT'S RECORDS</div>
+            <div class="c-row"><span>Late Train Home</span><span class="fill"></span><span class="tm">2:41</span></div>
+            <div class="note">for Maya</div>
+            <div class="c-row"><span>Neon Rain</span><span class="fill"></span><span class="tm">3:12</span></div>
+            <div class="c-row"><span>Slow Pour</span><span class="fill"></span><span class="tm">4:05</span></div>
+            <div class="keys"><span class="c-key go">ADD A SONG</span><span class="c-key">SKIP</span></div>
+          </div>
+        </div></div>
+        <p>Jukebox: paper tabs on top switch pages; the song playing gets a red stamp.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Its parts</h2>
+    <div class="parts">
+      <div class="part">
+        <h2>Colours</h2>
+        <div class="swatches">
+          <div class="sw"><b style="background:var(--paper)"></b><div><strong>Paper</strong><span>Every card. Warm and a little dim, so it isn't glaring at night.</span></div></div>
+          <div class="sw"><b style="background:var(--print)"></b><div><strong>Print</strong><span>Text and buttons, like ink.</span></div></div>
+          <div class="sw"><b style="background:var(--stamp)"></b><div><strong>Stamp red</strong><span>Only for "this one": what's playing, what's on.</span></div></div>
+          <div class="sw"><b style="background:var(--brass)"></b><div><strong>Brass</strong><span>Small details over the 3D view.</span></div></div>
+        </div>
+      </div>
+
+      <div class="part">
+        <h2>Lettering</h2>
+        <div class="sample typeset">
+          <div><small>Titles</small><span style="font-family:var(--title);font-size:28px;line-height:1">The Jukebox</span></div>
+          <div><small>Text</small><span style="font-size:14px">Late Train Home, for Maya</span></div>
+          <div><small>Small print</small><span style="font-family:var(--type);font-size:11px;letter-spacing:.06em">TONIGHT'S RECORDS · 2:41</span></div>
+        </div>
+      </div>
+
+      <div class="part">
+        <h2>Buttons and controls</h2>
+        <div class="sample">
+          <div class="keys"><span class="c-key go">ADD A SONG</span><span class="c-key">SKIP</span><span class="c-key press">PRESSED</span></div>
+          <div class="c-row"><span>A list line</span><span class="fill"></span><span class="tm">4:05</span></div>
+          <div class="c-switch">A switch <i></i></div>
+          <div class="c-fader">Volume<div class="track"></div><span><b>0</b><b>64%</b><b>100</b></span></div>
+          <div><span class="c-stamp">ON NOW</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="next">
+    <p><strong>From here:</strong> tell me anything, in any words: the colours, the lettering, the tilt of the card, "less paper", "more like an old diner", anything. I'll change this page and you'll see it at the same link.</p>
+    <p>When you like it, say "use it" and it becomes a theme in the UI Editor and the bar's menus.</p>
+  </div>
+</div>
