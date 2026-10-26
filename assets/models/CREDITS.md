@@ -25,7 +25,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `rhythm.glb` | `rhythm.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood |
 | `darts_zone.glb` | `darts_zone.py` | Dark Wood |
 | `fireplace.glb`, `candlestick.glb`, `mantel_photo_a.glb`, `mantel_photo_b.glb`, `mantel_books.glb`, `fire_tools.glb`, `log_basket.glb`, `rug.glb`, `coffee_table.glb`, `bookshelf.glb`, `floor_lamp.glb`, `side_table.glb`, `fire_flames.glb` (the lounge, one model each since J70) | `lounge.py` + `props_lib.py` | Marble 01, Dark Wood, Brick Wall 006, Wood Table 001 |
-| `decor_walls.glb` | `decor_walls.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood, Wood Table 001 |
+| The hall's decor, one model each since J71: `string_lights.glb`, `neon_*.glb`, `gallery_photo_*.glb`, `tin_sign_*.glb`, `license_plate_*.glb`, `record_*.glb`, `wall_clock.glb`, `wall_tv.glb`, `chalk_a_frame.glb`, `floor_plant_*.glb`, `hanging_plant_*.glb`, `corner_speaker.glb`, `wall_sconce.glb`, `fire_extinguisher.glb`, `smoke_detector.glb`, `wall_switch.glb`, `coat_rack.glb`, `umbrella_stand.glb`, `trash_can.glb`, `beer_crate.glb`, `keg.glb`, `bay_table.glb` | `decor_walls.py` + `props_lib.py` | Fabric Pattern 07, Dark Wood, Wood Table 001 |
 
 ## Poly Haven models (the remake, J35)
 

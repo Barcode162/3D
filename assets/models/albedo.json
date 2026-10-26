@@ -1128,6 +1128,125 @@
    "metal": 0.007
   }
  },
+ "bay_table.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Candle wax": {
+   "albedo": [
+    0.9,
+    0.85,
+    0.72
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  },
+  "Flame": {
+   "albedo": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "emissive": [
+    12.0,
+    6.6,
+    2.16
+   ],
+   "metal": 0.0
+  },
+  "Glassware": {
+   "albedo": [
+    0.86,
+    0.93,
+    0.92
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
+ "beer_crate.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.4828,
+    0.3398,
+    0.26
+   ],
+   "metal": 0.0
+  },
+  "Cap": {
+   "albedo": [
+    0.05,
+    0.04,
+    0.04
+   ],
+   "metal": 0.3,
+   "rough": 0.5
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Cork": {
+   "albedo": [
+    0.45,
+    0.3,
+    0.17
+   ],
+   "metal": 0.0
+  },
+  "Crate plastic": {
+   "albedo": [
+    0.6,
+    0.08,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
  "big_mirror.glb": {
   "Frame brass": {
    "albedo": [
@@ -1327,6 +1446,46 @@
     2.16
    ],
    "metal": 0.0
+  }
+ },
+ "chalk_a_frame.glb": {
+  "A-frame chalk": {
+   "albedo": [
+    0.0137,
+    0.0071,
+    0.0049
+   ],
+   "fix": 2.397,
+   "metal": 0.0,
+   "rough": 0.95
+  },
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Prop wood": {
+   "albedo": [
+    0.0248,
+    0.0044,
+    0.0013
+   ],
+   "fix": 5.873,
+   "metal": 0.007,
+   "rough": 0.45
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
   }
  },
  "chalkboard.glb": {
@@ -1682,6 +1841,55 @@
    "metal": 0.004
   }
  },
+ "coat_rack.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Coat 0": {
+   "albedo": [
+    0.013,
+    0.0098,
+    0.0058
+   ],
+   "fix": 4.906,
+   "metal": 0.013,
+   "rough": 1.0
+  },
+  "Coat 2": {
+   "albedo": [
+    0.0293,
+    0.0039,
+    0.0027
+   ],
+   "fix": 5.427,
+   "metal": 0.013,
+   "rough": 1.0
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
  "coffee_table.glb": {
   "Book spines": {
    "albedo": [
@@ -1987,6 +2195,26 @@
    "metal": 0.0
   }
  },
+ "corner_speaker.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Grill cloth": {
+   "albedo": [
+    0.04,
+    0.04,
+    0.045
+   ],
+   "metal": 0.0,
+   "rough": 0.95
+  }
+ },
  "credit_coin.glb": {
   "Gold": {
    "albedo": [
@@ -2190,17 +2418,7 @@
    "rough": 0.4
   }
  },
- "decor_walls.glb": {
-  "A-frame chalk": {
-   "albedo": [
-    0.0137,
-    0.0071,
-    0.0049
-   ],
-   "fix": 2.397,
-   "metal": 0.0,
-   "rough": 0.95
-  },
+ "fire_extinguisher.glb": {
   "Black plastic": {
    "albedo": [
     0.02,
@@ -2208,188 +2426,6 @@
     0.02
    ],
    "fix": 1.25,
-   "metal": 0.0
-  },
-  "Bottle glass": {
-   "albedo": [
-    0.1593,
-    0.1056,
-    0.0701
-   ],
-   "metal": 0.0
-  },
-  "Bottle labels": {
-   "albedo": [
-    0.3713,
-    0.2548,
-    0.1663
-   ],
-   "metal": 0.0
-  },
-  "Brass": {
-   "albedo": [
-    0.91,
-    0.7,
-    0.38
-   ],
-   "metal": 1.0,
-   "rough": 0.4
-  },
-  "Candle wax": {
-   "albedo": [
-    0.9,
-    0.85,
-    0.72
-   ],
-   "metal": 0.0
-  },
-  "Cap": {
-   "albedo": [
-    0.05,
-    0.04,
-    0.04
-   ],
-   "metal": 0.3,
-   "rough": 0.5
-  },
-  "Cap foil": {
-   "albedo": [
-    0.85,
-    0.65,
-    0.3
-   ],
-   "metal": 1.0,
-   "rough": 0.45
-  },
-  "Coat 0": {
-   "albedo": [
-    0.013,
-    0.0098,
-    0.0058
-   ],
-   "fix": 4.906,
-   "metal": 0.013,
-   "rough": 1.0
-  },
-  "Coat 2": {
-   "albedo": [
-    0.0293,
-    0.0039,
-    0.0027
-   ],
-   "fix": 5.427,
-   "metal": 0.013,
-   "rough": 1.0
-  },
-  "Cord": {
-   "albedo": [
-    0.02,
-    0.02,
-    0.02
-   ],
-   "metal": 0.0,
-   "rough": 0.9
-  },
-  "Cork": {
-   "albedo": [
-    0.45,
-    0.3,
-    0.17
-   ],
-   "metal": 0.0
-  },
-  "Crate plastic": {
-   "albedo": [
-    0.6,
-    0.08,
-    0.05
-   ],
-   "metal": 0.0
-  },
-  "Detector LED": {
-   "albedo": [
-    0.2,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.44,
-    2.2,
-    0.44
-   ],
-   "metal": 0.0
-  },
-  "Detector LED.001": {
-   "albedo": [
-    0.2,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.44,
-    2.2,
-    0.44
-   ],
-   "metal": 0.0
-  },
-  "Detector LED.002": {
-   "albedo": [
-    0.2,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.44,
-    2.2,
-    0.44
-   ],
-   "metal": 0.0
-  },
-  "Detector LED.003": {
-   "albedo": [
-    0.2,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.44,
-    2.2,
-    0.44
-   ],
-   "metal": 0.0
-  },
-  "Detector LED.004": {
-   "albedo": [
-    0.2,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.44,
-    2.2,
-    0.44
-   ],
-   "metal": 0.0
-  },
-  "Drinks": {
-   "albedo": [
-    0.4496,
-    0.3317,
-    0.235
-   ],
-   "metal": 0.0
-  },
-  "Edison bulb": {
-   "albedo": [
-    1.0,
-    0.8,
-    0.5
-   ],
-   "emissive": [
-    9.0,
-    5.58,
-    2.52
-   ],
    "metal": 0.0
   },
   "Extinguisher red": {
@@ -2400,393 +2436,6 @@
    ],
    "metal": 0.2,
    "rough": 0.5
-  },
-  "Flame": {
-   "albedo": [
-    1.0,
-    0.7,
-    0.3
-   ],
-   "emissive": [
-    12.0,
-    6.6,
-    2.16
-   ],
-   "metal": 0.0
-  },
-  "Glassware": {
-   "albedo": [
-    0.86,
-    0.93,
-    0.92
-   ],
-   "metal": 0.0,
-   "seeThrough": true
-  },
-  "Grill cloth": {
-   "albedo": [
-    0.04,
-    0.04,
-    0.045
-   ],
-   "metal": 0.0,
-   "rough": 0.95
-  },
-  "Grill cloth.001": {
-   "albedo": [
-    0.04,
-    0.04,
-    0.045
-   ],
-   "metal": 0.0,
-   "rough": 0.95
-  },
-  "Grill cloth.002": {
-   "albedo": [
-    0.04,
-    0.04,
-    0.045
-   ],
-   "metal": 0.0,
-   "rough": 0.95
-  },
-  "Grill cloth.003": {
-   "albedo": [
-    0.04,
-    0.04,
-    0.045
-   ],
-   "metal": 0.0,
-   "rough": 0.95
-  },
-  "Groove shine": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.001": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.002": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.003": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.004": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.005": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.006": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.007": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Groove shine.008": {
-   "albedo": [
-    0.1,
-    0.1,
-    0.11
-   ],
-   "metal": 0.5
-  },
-  "Hanger rope": {
-   "albedo": [
-    0.62,
-    0.5,
-    0.34
-   ],
-   "metal": 0.0
-  },
-  "Hanger rope.001": {
-   "albedo": [
-    0.62,
-    0.5,
-    0.34
-   ],
-   "metal": 0.0
-  },
-  "Leaves": {
-   "albedo": [
-    0.06,
-    0.2,
-    0.05
-   ],
-   "metal": 0.0
-  },
-  "Leaves light": {
-   "albedo": [
-    0.12,
-    0.3,
-    0.06
-   ],
-   "metal": 0.0
-  },
-  "License plates": {
-   "albedo": [
-    0.4706,
-    0.2262,
-    0.1304
-   ],
-   "metal": 0.5
-  },
-  "Neon amber": {
-   "albedo": [
-    1.0,
-    0.7,
-    0.3
-   ],
-   "emissive": [
-    2.2,
-    1.21,
-    0.33
-   ],
-   "metal": 0.0
-  },
-  "Neon backer": {
-   "albedo": [
-    0.5,
-    0.5,
-    0.6
-   ],
-   "metal": 0.0,
-   "seeThrough": true
-  },
-  "Neon cyan": {
-   "albedo": [
-    0.3,
-    0.9,
-    1.0
-   ],
-   "emissive": [
-    0.44,
-    1.87,
-    2.2
-   ],
-   "metal": 0.0
-  },
-  "Neon green": {
-   "albedo": [
-    0.4,
-    1.0,
-    0.4
-   ],
-   "emissive": [
-    0.66,
-    2.2,
-    0.77
-   ],
-   "metal": 0.0
-  },
-  "Neon pink": {
-   "albedo": [
-    1.0,
-    0.3,
-    0.7
-   ],
-   "emissive": [
-    2.2,
-    0.396,
-    1.21
-   ],
-   "metal": 0.0
-  },
-  "Photos": {
-   "albedo": [
-    0.0986,
-    0.0385,
-    0.0605
-   ],
-   "metal": 0.0,
-   "rough": 0.6
-  },
-  "Prop dark wood": {
-   "albedo": [
-    0.0285,
-    0.0057,
-    0.0026
-   ],
-   "fix": 3.875,
-   "metal": 0.006
-  },
-  "Prop wood": {
-   "albedo": [
-    0.0248,
-    0.0044,
-    0.0013
-   ],
-   "fix": 5.873,
-   "metal": 0.007,
-   "rough": 0.45
-  },
-  "Record label 0": {
-   "albedo": [
-    0.8,
-    0.1,
-    0.1
-   ],
-   "metal": 0.0
-  },
-  "Record label 1": {
-   "albedo": [
-    0.95,
-    0.8,
-    0.2
-   ],
-   "metal": 0.0
-  },
-  "Record label 2": {
-   "albedo": [
-    0.2,
-    0.4,
-    0.8
-   ],
-   "metal": 0.0
-  },
-  "Sconce glass": {
-   "albedo": [
-    1.0,
-    0.85,
-    0.6
-   ],
-   "emissive": [
-    3.5,
-    2.38,
-    1.225
-   ],
-   "metal": 0.0
-  },
-  "Soil": {
-   "albedo": [
-    0.06,
-    0.04,
-    0.03
-   ],
-   "metal": 0.0
-  },
-  "Stainless": {
-   "albedo": [
-    0.8,
-    0.8,
-    0.82
-   ],
-   "metal": 1.0,
-   "rough": 0.45
-  },
-  "TV picture": {
-   "albedo": [
-    0.0012,
-    0.003,
-    0.0012
-   ],
-   "emissive": [
-    0.0502,
-    0.079,
-    0.0512
-   ],
-   "metal": 0.0
-  },
-  "Terracotta": {
-   "albedo": [
-    0.55,
-    0.22,
-    0.12
-   ],
-   "metal": 0.0
-  },
-  "Tin signs": {
-   "albedo": [
-    0.1935,
-    0.0883,
-    0.0224
-   ],
-   "metal": 0.6
-  },
-  "Umbrella 0": {
-   "albedo": [
-    0.05,
-    0.05,
-    0.05
-   ],
-   "metal": 0.0
-  },
-  "Umbrella 1": {
-   "albedo": [
-    0.5,
-    0.05,
-    0.05
-   ],
-   "metal": 0.0
-  },
-  "Vinyl": {
-   "albedo": [
-    0.01,
-    0.01,
-    0.012
-   ],
-   "fix": 2.957,
-   "metal": 0.0,
-   "rough": 0.4
-  },
-  "Wall clock": {
-   "albedo": [
-    0.5068,
-    0.4334,
-    0.2978
-   ],
-   "metal": 0.0,
-   "rough": 0.75
-  },
-  "White ceramic": {
-   "albedo": [
-    0.85,
-    0.83,
-    0.78
-   ],
-   "fix": 0.963,
-   "metal": 0.0,
-   "rough": 0.3
   }
  },
  "fire_flames.glb": {
@@ -2930,6 +2579,282 @@
    ],
    "metal": 0.0,
    "rough": 0.95
+  }
+ },
+ "floor_plant_1.glb": {
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Soil": {
+   "albedo": [
+    0.06,
+    0.04,
+    0.03
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "floor_plant_2.glb": {
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Soil": {
+   "albedo": [
+    0.06,
+    0.04,
+    0.03
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "floor_plant_3.glb": {
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Soil": {
+   "albedo": [
+    0.06,
+    0.04,
+    0.03
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "floor_plant_4.glb": {
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Soil": {
+   "albedo": [
+    0.06,
+    0.04,
+    0.03
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "gallery_photo_1.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  }
+ },
+ "gallery_photo_2.glb": {
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
+ "gallery_photo_3.glb": {
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
+ "gallery_photo_4.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  }
+ },
+ "gallery_photo_5.glb": {
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
+ "gallery_photo_6.glb": {
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Prop dark wood": {
+   "albedo": [
+    0.0285,
+    0.0057,
+    0.0026
+   ],
+   "fix": 3.875,
+   "metal": 0.006
+  }
+ },
+ "gallery_photo_7.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Photos": {
+   "albedo": [
+    0.0986,
+    0.0385,
+    0.0605
+   ],
+   "metal": 0.0,
+   "rough": 0.6
   }
  },
  "hall.glb": {
@@ -3165,6 +3090,92 @@
    "rough": 0.5
   }
  },
+ "hanging_plant_1.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Hanger rope": {
+   "albedo": [
+    0.62,
+    0.5,
+    0.34
+   ],
+   "metal": 0.0
+  },
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
+ "hanging_plant_2.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Hanger rope": {
+   "albedo": [
+    0.62,
+    0.5,
+    0.34
+   ],
+   "metal": 0.0
+  },
+  "Leaves": {
+   "albedo": [
+    0.06,
+    0.2,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Leaves light": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.06
+   ],
+   "metal": 0.0
+  },
+  "Terracotta": {
+   "albedo": [
+    0.55,
+    0.22,
+    0.12
+   ],
+   "metal": 0.0
+  }
+ },
  "jukebox.glb": {
   "Chrome": {
    "albedo": [
@@ -3293,6 +3304,102 @@
    "rough": 0.4
   }
  },
+ "keg.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "license_plate_1.glb": {
+  "License plates": {
+   "albedo": [
+    0.4706,
+    0.2262,
+    0.1304
+   ],
+   "metal": 0.5
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "license_plate_2.glb": {
+  "License plates": {
+   "albedo": [
+    0.4706,
+    0.2262,
+    0.1304
+   ],
+   "metal": 0.5
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "license_plate_3.glb": {
+  "License plates": {
+   "albedo": [
+    0.4706,
+    0.2262,
+    0.1304
+   ],
+   "metal": 0.5
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "license_plate_4.glb": {
+  "License plates": {
+   "albedo": [
+    0.4706,
+    0.2262,
+    0.1304
+   ],
+   "metal": 0.5
+  },
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
  "log_basket.glb": {
   "Cast iron": {
    "albedo": [
@@ -3400,6 +3507,142 @@
    ],
    "metal": 1.0,
    "rough": 0.45
+  }
+ },
+ "neon_cocktails.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Neon backer": {
+   "albedo": [
+    0.5,
+    0.5,
+    0.6
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Neon pink": {
+   "albedo": [
+    1.0,
+    0.3,
+    0.7
+   ],
+   "emissive": [
+    2.2,
+    0.396,
+    1.21
+   ],
+   "metal": 0.0
+  }
+ },
+ "neon_game_on.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Neon backer": {
+   "albedo": [
+    0.5,
+    0.5,
+    0.6
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Neon cyan": {
+   "albedo": [
+    0.3,
+    0.9,
+    1.0
+   ],
+   "emissive": [
+    0.44,
+    1.87,
+    2.2
+   ],
+   "metal": 0.0
+  },
+  "Neon green": {
+   "albedo": [
+    0.4,
+    1.0,
+    0.4
+   ],
+   "emissive": [
+    0.66,
+    2.2,
+    0.77
+   ],
+   "metal": 0.0
+  }
+ },
+ "neon_note.glb": {
+  "Neon backer": {
+   "albedo": [
+    0.5,
+    0.5,
+    0.6
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Neon pink": {
+   "albedo": [
+    1.0,
+    0.3,
+    0.7
+   ],
+   "emissive": [
+    2.2,
+    0.396,
+    1.21
+   ],
+   "metal": 0.0
+  }
+ },
+ "neon_play.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Neon amber": {
+   "albedo": [
+    1.0,
+    0.7,
+    0.3
+   ],
+   "emissive": [
+    2.2,
+    1.21,
+    0.33
+   ],
+   "metal": 0.0
+  },
+  "Neon backer": {
+   "albedo": [
+    0.5,
+    0.5,
+    0.6
+   ],
+   "metal": 0.0,
+   "seeThrough": true
   }
  },
  "painting.glb": {
@@ -3624,6 +3867,90 @@
    ],
    "metal": 0.0,
    "seeThrough": true
+  }
+ },
+ "record_1.glb": {
+  "Groove shine": {
+   "albedo": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "metal": 0.5
+  },
+  "Record label 0": {
+   "albedo": [
+    0.8,
+    0.1,
+    0.1
+   ],
+   "metal": 0.0
+  },
+  "Vinyl": {
+   "albedo": [
+    0.01,
+    0.01,
+    0.012
+   ],
+   "fix": 2.957,
+   "metal": 0.0,
+   "rough": 0.4
+  }
+ },
+ "record_2.glb": {
+  "Groove shine": {
+   "albedo": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "metal": 0.5
+  },
+  "Record label 1": {
+   "albedo": [
+    0.95,
+    0.8,
+    0.2
+   ],
+   "metal": 0.0
+  },
+  "Vinyl": {
+   "albedo": [
+    0.01,
+    0.01,
+    0.012
+   ],
+   "fix": 2.957,
+   "metal": 0.0,
+   "rough": 0.4
+  }
+ },
+ "record_3.glb": {
+  "Groove shine": {
+   "albedo": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "metal": 0.5
+  },
+  "Record label 2": {
+   "albedo": [
+    0.2,
+    0.4,
+    0.8
+   ],
+   "metal": 0.0
+  },
+  "Vinyl": {
+   "albedo": [
+    0.01,
+    0.01,
+    0.012
+   ],
+   "fix": 2.957,
+   "metal": 0.0,
+   "rough": 0.4
   }
  },
  "rhythm.glb": {
@@ -4150,6 +4477,31 @@
    "metal": 0.0
   }
  },
+ "smoke_detector.glb": {
+  "Detector LED": {
+   "albedo": [
+    0.2,
+    1.0,
+    0.2
+   ],
+   "emissive": [
+    0.44,
+    2.2,
+    0.44
+   ],
+   "metal": 0.0
+  },
+  "White ceramic": {
+   "albedo": [
+    0.85,
+    0.83,
+    0.78
+   ],
+   "fix": 0.963,
+   "metal": 0.0,
+   "rough": 0.3
+  }
+ },
  "stage.glb": {
   "Amp cream": {
    "albedo": [
@@ -4250,6 +4602,39 @@
    "metal": 1.0
   }
  },
+ "string_lights.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Cord": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "metal": 0.0,
+   "rough": 0.9
+  },
+  "Edison bulb": {
+   "albedo": [
+    1.0,
+    0.8,
+    0.5
+   ],
+   "emissive": [
+    9.0,
+    5.58,
+    2.52
+   ],
+   "metal": 0.0
+  }
+ },
  "table_stool.glb": {
   "Black steel": {
    "albedo": [
@@ -4288,12 +4673,215 @@
    "rough": 0.55
   }
  },
+ "tin_sign_1.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Tin signs": {
+   "albedo": [
+    0.1935,
+    0.0883,
+    0.0224
+   ],
+   "metal": 0.6
+  }
+ },
+ "tin_sign_2.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Tin signs": {
+   "albedo": [
+    0.1935,
+    0.0883,
+    0.0224
+   ],
+   "metal": 0.6
+  }
+ },
+ "tin_sign_3.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Tin signs": {
+   "albedo": [
+    0.1935,
+    0.0883,
+    0.0224
+   ],
+   "metal": 0.6
+  }
+ },
+ "tin_sign_4.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Tin signs": {
+   "albedo": [
+    0.1935,
+    0.0883,
+    0.0224
+   ],
+   "metal": 0.6
+  }
+ },
+ "trash_can.glb": {
+  "Stainless": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  }
+ },
+ "umbrella_stand.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Umbrella 0": {
+   "albedo": [
+    0.05,
+    0.05,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Umbrella 1": {
+   "albedo": [
+    0.5,
+    0.05,
+    0.05
+   ],
+   "metal": 0.0
+  }
+ },
  "vase.glb": {
   "ceramic_vase_02": {
    "albedo": [
     0.6125,
     0.5493,
     0.4639
+   ],
+   "metal": 0.0
+  }
+ },
+ "wall_clock.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Wall clock": {
+   "albedo": [
+    0.5068,
+    0.4334,
+    0.2978
+   ],
+   "metal": 0.0,
+   "rough": 0.75
+  }
+ },
+ "wall_sconce.glb": {
+  "Brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Sconce glass": {
+   "albedo": [
+    1.0,
+    0.85,
+    0.6
+   ],
+   "emissive": [
+    3.5,
+    2.38,
+    1.225
+   ],
+   "metal": 0.0
+  }
+ },
+ "wall_switch.glb": {
+  "White ceramic": {
+   "albedo": [
+    0.85,
+    0.83,
+    0.78
+   ],
+   "fix": 0.963,
+   "metal": 0.0,
+   "rough": 0.3
+  }
+ },
+ "wall_tv.glb": {
+  "Black plastic": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "fix": 1.25,
+   "metal": 0.0
+  },
+  "TV picture": {
+   "albedo": [
+    0.0012,
+    0.003,
+    0.0012
+   ],
+   "emissive": [
+    0.0502,
+    0.079,
+    0.0512
    ],
    "metal": 0.0
   }

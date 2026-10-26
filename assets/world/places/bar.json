@@ -68,7 +68,400 @@
     {"id": "candle-6", "kind": "candle", "at": [4.2, 0.785, 1.6]},
     {"id": "table_stool-11", "kind": "table_stool", "at": [4.36442, 0, 2.36247], "turn": 12.169},
     {"id": "table_stool-12", "kind": "table_stool", "at": [4.03558, 0, 0.83753], "turn": -167.83099},
-    {"id": "decor_walls", "kind": "decor_walls", "at": [0, 0, 0]},
+    {
+      "id": "string_lights",
+      "kind": "glow_prop",
+      "at": [0, 0, 0],
+      "parts": {"model": {"file": "string_lights.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "neon_cocktails",
+      "kind": "neon_sign",
+      "at": [-6.3, 0, -3.465],
+      "parts": {"model": {"file": "neon_cocktails.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "neon_game_on",
+      "kind": "neon_sign",
+      "at": [9.0, 0, -2.0],
+      "turn": -90.0,
+      "parts": {"model": {"file": "neon_game_on.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "neon_play",
+      "kind": "neon_sign",
+      "at": [-3.8, 0, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "neon_play.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "neon_note",
+      "kind": "neon_sign",
+      "at": [-7.2, 0, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "neon_note.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "gallery_photo_1",
+      "kind": "wall_prop",
+      "at": [-5.0, 2.3, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_1.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_2",
+      "kind": "wall_prop",
+      "at": [-4.4, 2.55, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_2.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_3",
+      "kind": "wall_prop",
+      "at": [-4.45, 2.05, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_3.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_4",
+      "kind": "wall_prop",
+      "at": [-3.25, 2.5, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_4.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_5",
+      "kind": "wall_prop",
+      "at": [-2.65, 2.15, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_5.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_6",
+      "kind": "wall_prop",
+      "at": [-2.6, 2.75, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_6.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "gallery_photo_7",
+      "kind": "wall_prop",
+      "at": [-4.95, 1.6, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "gallery_photo_7.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "tin_sign_1",
+      "kind": "wall_prop",
+      "at": [4.85, 2.9, -7.4],
+      "parts": {"model": {"file": "tin_sign_1.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "tin_sign_2",
+      "kind": "wall_prop",
+      "at": [5.55, 2.55, -7.4],
+      "parts": {"model": {"file": "tin_sign_2.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "tin_sign_3",
+      "kind": "wall_prop",
+      "at": [5.0, 2.2, -7.4],
+      "parts": {"model": {"file": "tin_sign_3.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "tin_sign_4",
+      "kind": "wall_prop",
+      "at": [5.6, 3.3, -7.4],
+      "parts": {"model": {"file": "tin_sign_4.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "license_plate_1",
+      "kind": "wall_prop",
+      "at": [4.9, 1.55, -7.4],
+      "parts": {"model": {"file": "license_plate_1.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "license_plate_2",
+      "kind": "wall_prop",
+      "at": [5.3, 1.55, -7.4],
+      "parts": {"model": {"file": "license_plate_2.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "license_plate_3",
+      "kind": "wall_prop",
+      "at": [4.9, 1.79, -7.4],
+      "parts": {"model": {"file": "license_plate_3.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "license_plate_4",
+      "kind": "wall_prop",
+      "at": [5.3, 1.79, -7.4],
+      "parts": {"model": {"file": "license_plate_4.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "record_1",
+      "kind": "wall_prop",
+      "at": [5.75, 1.9, -7.4],
+      "parts": {"model": {"file": "record_1.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "record_2",
+      "kind": "wall_prop",
+      "at": [4.75, 3.45, -7.4],
+      "parts": {"model": {"file": "record_2.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "record_3",
+      "kind": "wall_prop",
+      "at": [5.9, 2.95, -7.4],
+      "parts": {"model": {"file": "record_3.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_clock",
+      "kind": "wall_prop",
+      "at": [-2.6, 3.42, -3.465],
+      "parts": {"model": {"file": "wall_clock.glb", "material": "brass"}}
+    },
+    {
+      "id": "wall_tv",
+      "kind": "screen_prop",
+      "at": [0.9, 3.05, -3.465],
+      "parts": {"model": {"file": "wall_tv.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "chalk_a_frame",
+      "kind": "wall_prop",
+      "at": [1.95, 0, 5.75],
+      "turn": 28.648,
+      "parts": {"model": {"file": "chalk_a_frame.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "floor_plant_1",
+      "kind": "plant",
+      "at": [-1.85, 0.0, 6.7],
+      "parts": {"model": {"file": "floor_plant_1.glb", "material": "brick"}}
+    },
+    {
+      "id": "floor_plant_2",
+      "kind": "plant",
+      "at": [5.35, 0.0, 6.65],
+      "parts": {"model": {"file": "floor_plant_2.glb", "material": "brick"}}
+    },
+    {
+      "id": "floor_plant_3",
+      "kind": "plant",
+      "at": [-5.15, 0.15, 6.65],
+      "parts": {"model": {"file": "floor_plant_3.glb", "material": "brick"}}
+    },
+    {
+      "id": "floor_plant_4",
+      "kind": "plant",
+      "at": [8.55, 0.0, 6.6],
+      "parts": {"model": {"file": "floor_plant_4.glb", "material": "brick"}}
+    },
+    {
+      "id": "hanging_plant_1",
+      "kind": "hanging_plant",
+      "at": [-1.2, 2.9, 7.55],
+      "parts": {"model": {"file": "hanging_plant_1.glb", "material": "brick"}}
+    },
+    {
+      "id": "hanging_plant_2",
+      "kind": "hanging_plant",
+      "at": [0.8, 2.9, 7.55],
+      "parts": {"model": {"file": "hanging_plant_2.glb", "material": "brick"}}
+    },
+    {
+      "id": "corner_speaker-1",
+      "kind": "wall_prop",
+      "at": [-8.7, 3.35, -3.3],
+      "turn": 135.0,
+      "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "corner_speaker-2",
+      "kind": "wall_prop",
+      "at": [8.7, 3.35, 6.7],
+      "turn": -135.0,
+      "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "corner_speaker-3",
+      "kind": "wall_prop",
+      "at": [-8.7, 3.35, 6.7],
+      "turn": 135.0,
+      "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "corner_speaker-4",
+      "kind": "wall_prop",
+      "at": [8.7, 3.35, -4.0],
+      "turn": -45.0,
+      "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "wall_sconce-1",
+      "kind": "glow_prop",
+      "at": [-1.0, 0, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
+    },
+    {
+      "id": "wall_sconce-2",
+      "kind": "glow_prop",
+      "at": [-5.45, 0, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
+    },
+    {
+      "id": "wall_sconce-3",
+      "kind": "glow_prop",
+      "at": [-9.0, 0, -4.6],
+      "turn": 90.0,
+      "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
+    },
+    {
+      "id": "wall_sconce-4",
+      "kind": "glow_prop",
+      "at": [-9.0, 0, 3.15],
+      "turn": 90.0,
+      "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
+    },
+    {
+      "id": "fire_extinguisher-1",
+      "kind": "wall_prop",
+      "at": [2.75, 0, -7.4],
+      "parts": {"model": {"file": "fire_extinguisher.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "fire_extinguisher-2",
+      "kind": "wall_prop",
+      "at": [-5.6, 0, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "fire_extinguisher.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "smoke_detector-1",
+      "kind": "wall_prop",
+      "at": [-4.0, 4.0, 0.0],
+      "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "smoke_detector-2",
+      "kind": "wall_prop",
+      "at": [3.0, 4.0, 3.0],
+      "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "smoke_detector-3",
+      "kind": "wall_prop",
+      "at": [-6.0, 4.0, 5.0],
+      "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "smoke_detector-4",
+      "kind": "wall_prop",
+      "at": [4.0, 4.0, -2.0],
+      "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "smoke_detector-5",
+      "kind": "wall_prop",
+      "at": [-1.0, 4.0, 5.5],
+      "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_switch-1",
+      "kind": "wall_prop",
+      "at": [2.2, 1.25, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_switch-2",
+      "kind": "wall_prop",
+      "at": [4.35, 0.35, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_switch-3",
+      "kind": "wall_prop",
+      "at": [9.0, 1.25, 0.7],
+      "turn": -90.0,
+      "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_switch-4",
+      "kind": "wall_prop",
+      "at": [-5.6, 0.35, 7.0],
+      "turn": 180.0,
+      "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "wall_switch-5",
+      "kind": "wall_prop",
+      "at": [1.1, 0.35, -7.4],
+      "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "coat_rack",
+      "kind": "wall_prop",
+      "at": [3.925, 1.75, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "coat_rack.glb", "material": "dark-wood"}}
+    },
+    {
+      "id": "umbrella_stand",
+      "kind": "wall_prop",
+      "at": [4.6, 0, 6.7],
+      "parts": {"model": {"file": "umbrella_stand.glb", "material": "brass"}}
+    },
+    {
+      "id": "trash_can",
+      "kind": "wall_prop",
+      "at": [1.95, 0, 6.7],
+      "parts": {"model": {"file": "trash_can.glb", "material": "chrome"}}
+    },
+    {
+      "id": "beer_crate-1",
+      "kind": "wall_prop",
+      "at": [4.95, 0.0, -7.1],
+      "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "beer_crate-2",
+      "kind": "wall_prop",
+      "at": [5.4, 0.0, -7.08],
+      "turn": 2.865,
+      "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "beer_crate-3",
+      "kind": "wall_prop",
+      "at": [5.15, 0.28, -7.1],
+      "turn": -5.73,
+      "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "beer_crate-4",
+      "kind": "wall_prop",
+      "at": [5.65, 0.0, -6.65],
+      "turn": 17.189,
+      "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "keg",
+      "kind": "wall_prop",
+      "at": [5.75, 0, -7.1],
+      "parts": {"model": {"file": "keg.glb", "material": "chrome"}}
+    },
+    {
+      "id": "bay_table",
+      "kind": "wall_prop",
+      "at": [-0.2, 0, 7.25],
+      "parts": {"model": {"file": "bay_table.glb", "material": "dark-wood"}}
+    },
     {"id": "fireplace", "kind": "fireplace", "at": [-8.55, 0, 0.8], "turn": 90},
     {"id": "painting", "kind": "painting", "at": [-8.535, 1.975, 0.8], "turn": 90},
     {"id": "mantel_clock", "kind": "mantel_clock", "at": [-8.43, 1.23, 0.8], "turn": 90},

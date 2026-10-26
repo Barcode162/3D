@@ -29,7 +29,7 @@ run sim_rig.py "$tex" $out/sim_rig.glb
 run rhythm.py "$tex" $out/rhythm.glb
 run darts_zone.py "$tex" $out/darts_zone.glb
 run lounge.py "$tex" $out  # each lounge object its own model (J70)
-run decor_walls.py "$tex" $out/decor_walls.glb
+run decor_walls.py "$tex" $out  # each decor piece its own model (J71)
 # Older scripts that still provide models in use (they also write a few
 # unused ones; delete those again: booth, posters, mirror frames, ...).
 run jukebox.py "$tex" $out/jukebox.glb

@@ -54,7 +54,7 @@
     "id": "J71.2",
     "text": "The walls' props taken apart: neon and tin signs, licence plates, photos, the clock, the TV, coats and umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates each their own thing where they hang or stand; decor_walls.glb keeps only what is truly wall",
     "check": "Walk around the walls: every sign, photo and plant is where it was, nothing floats; in the Studio, tap a sign and move it",
-    "done": false
+    "done": true
    }
   ]
  },

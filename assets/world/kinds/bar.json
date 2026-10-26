@@ -100,7 +100,64 @@
         ]
       }
     },
-    {"id": "decor_walls", "is": "room", "parts": {"model": {"file": "decor_walls.glb", "material": "dark-wood"}}},
+    {
+      "id": "wall_prop",
+      "about": "A thing on a wall, the ceiling or the floor (a photo, a sign, a speaker, a crate): its model is the thing's own; it catches the light.",
+      "loops": {"rest": {"period": 6, "pieces": [{"ch": "tint", "shape": "noise", "amp": 0.03, "rate": 0.5}]}},
+      "states": {"rest": {"loop": "rest"}},
+      "start": "rest"
+    },
+    {
+      "id": "glow_prop",
+      "about": "A thing that glows (string lights, a sconce): its bulbs breathe like old filaments.",
+      "loops": {"breathe": {"period": 8, "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.06, "rate": 0.5}]}},
+      "states": {"on": {"loop": "breathe"}},
+      "start": "on"
+    },
+    {
+      "id": "neon_sign",
+      "about": "A neon sign: its gas hums, the glow trembles now and then.",
+      "loops": {
+        "hum": {
+          "period": 5,
+          "pieces": [
+            {"ch": "glow", "shape": "noise", "amp": 0.05, "rate": 3},
+            {"ch": "glow", "shape": "flicker", "amp": 0.08, "rate": 0.3}
+          ]
+        }
+      },
+      "states": {"on": {"loop": "hum"}},
+      "start": "on"
+    },
+    {
+      "id": "screen_prop",
+      "about": "A screen showing something: its picture shimmers.",
+      "loops": {"show": {"period": 4, "pieces": [{"ch": "glow", "shape": "noise", "amp": 0.08, "rate": 1.5}]}},
+      "states": {"on": {"loop": "show"}},
+      "start": "on"
+    },
+    {
+      "id": "plant",
+      "about": "A potted plant: its leaves stir in the air.",
+      "loops": {"stir": {"period": 9, "pieces": [{"ch": "turn.y", "shape": "noise", "amp": 0.6, "rate": 0.3}]}},
+      "states": {"rest": {"loop": "stir"}},
+      "start": "rest"
+    },
+    {
+      "id": "hanging_plant",
+      "about": "A plant hanging from the ceiling on ropes: it sways a little.",
+      "loops": {
+        "sway": {
+          "period": 12,
+          "pieces": [
+            {"ch": "turn.x", "shape": "wave", "amp": 0.8, "every": 2},
+            {"ch": "turn.z", "shape": "wave", "amp": 0.6, "every": 3, "phase": 0.3}
+          ]
+        }
+      },
+      "states": {"rest": {"loop": "sway"}},
+      "start": "rest"
+    },
     {
       "id": "fireplace",
       "about": "The fireplace on the chimney breast: marble surround, a mantel shelf on corbels, the firebox with its grate, logs and embers (its flames and glow are fire_flames and light-fire). The embers in the firebox breathe.",

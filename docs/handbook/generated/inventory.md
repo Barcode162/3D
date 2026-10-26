@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (186 things)
+## bar (246 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -55,7 +55,67 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `candle-6` | `candle` |  | `candle.glb` |  |
 | `table_stool-11` | `table_stool` |  | `table_stool.glb` |  |
 | `table_stool-12` | `table_stool` |  | `table_stool.glb` |  |
-| `decor_walls` | `decor_walls` |  | `decor_walls.glb` | room model |
+| `string_lights` | `glow_prop` |  | `string_lights.glb` |  |
+| `neon_cocktails` | `neon_sign` |  | `neon_cocktails.glb` |  |
+| `neon_game_on` | `neon_sign` |  | `neon_game_on.glb` |  |
+| `neon_play` | `neon_sign` |  | `neon_play.glb` |  |
+| `neon_note` | `neon_sign` |  | `neon_note.glb` |  |
+| `gallery_photo_1` | `wall_prop` |  | `gallery_photo_1.glb` |  |
+| `gallery_photo_2` | `wall_prop` |  | `gallery_photo_2.glb` |  |
+| `gallery_photo_3` | `wall_prop` |  | `gallery_photo_3.glb` |  |
+| `gallery_photo_4` | `wall_prop` |  | `gallery_photo_4.glb` |  |
+| `gallery_photo_5` | `wall_prop` |  | `gallery_photo_5.glb` |  |
+| `gallery_photo_6` | `wall_prop` |  | `gallery_photo_6.glb` |  |
+| `gallery_photo_7` | `wall_prop` |  | `gallery_photo_7.glb` |  |
+| `tin_sign_1` | `wall_prop` |  | `tin_sign_1.glb` |  |
+| `tin_sign_2` | `wall_prop` |  | `tin_sign_2.glb` |  |
+| `tin_sign_3` | `wall_prop` |  | `tin_sign_3.glb` |  |
+| `tin_sign_4` | `wall_prop` |  | `tin_sign_4.glb` |  |
+| `license_plate_1` | `wall_prop` |  | `license_plate_1.glb` |  |
+| `license_plate_2` | `wall_prop` |  | `license_plate_2.glb` |  |
+| `license_plate_3` | `wall_prop` |  | `license_plate_3.glb` |  |
+| `license_plate_4` | `wall_prop` |  | `license_plate_4.glb` |  |
+| `record_1` | `wall_prop` |  | `record_1.glb` |  |
+| `record_2` | `wall_prop` |  | `record_2.glb` |  |
+| `record_3` | `wall_prop` |  | `record_3.glb` |  |
+| `wall_clock` | `wall_prop` |  | `wall_clock.glb` |  |
+| `wall_tv` | `screen_prop` |  | `wall_tv.glb` |  |
+| `chalk_a_frame` | `wall_prop` |  | `chalk_a_frame.glb` |  |
+| `floor_plant_1` | `plant` |  | `floor_plant_1.glb` |  |
+| `floor_plant_2` | `plant` |  | `floor_plant_2.glb` |  |
+| `floor_plant_3` | `plant` |  | `floor_plant_3.glb` |  |
+| `floor_plant_4` | `plant` |  | `floor_plant_4.glb` |  |
+| `hanging_plant_1` | `hanging_plant` |  | `hanging_plant_1.glb` |  |
+| `hanging_plant_2` | `hanging_plant` |  | `hanging_plant_2.glb` |  |
+| `corner_speaker-1` | `wall_prop` |  | `corner_speaker.glb` |  |
+| `corner_speaker-2` | `wall_prop` |  | `corner_speaker.glb` |  |
+| `corner_speaker-3` | `wall_prop` |  | `corner_speaker.glb` |  |
+| `corner_speaker-4` | `wall_prop` |  | `corner_speaker.glb` |  |
+| `wall_sconce-1` | `glow_prop` |  | `wall_sconce.glb` |  |
+| `wall_sconce-2` | `glow_prop` |  | `wall_sconce.glb` |  |
+| `wall_sconce-3` | `glow_prop` |  | `wall_sconce.glb` |  |
+| `wall_sconce-4` | `glow_prop` |  | `wall_sconce.glb` |  |
+| `fire_extinguisher-1` | `wall_prop` |  | `fire_extinguisher.glb` |  |
+| `fire_extinguisher-2` | `wall_prop` |  | `fire_extinguisher.glb` |  |
+| `smoke_detector-1` | `wall_prop` |  | `smoke_detector.glb` |  |
+| `smoke_detector-2` | `wall_prop` |  | `smoke_detector.glb` |  |
+| `smoke_detector-3` | `wall_prop` |  | `smoke_detector.glb` |  |
+| `smoke_detector-4` | `wall_prop` |  | `smoke_detector.glb` |  |
+| `smoke_detector-5` | `wall_prop` |  | `smoke_detector.glb` |  |
+| `wall_switch-1` | `wall_prop` |  | `wall_switch.glb` |  |
+| `wall_switch-2` | `wall_prop` |  | `wall_switch.glb` |  |
+| `wall_switch-3` | `wall_prop` |  | `wall_switch.glb` |  |
+| `wall_switch-4` | `wall_prop` |  | `wall_switch.glb` |  |
+| `wall_switch-5` | `wall_prop` |  | `wall_switch.glb` |  |
+| `coat_rack` | `wall_prop` |  | `coat_rack.glb` |  |
+| `umbrella_stand` | `wall_prop` |  | `umbrella_stand.glb` |  |
+| `trash_can` | `wall_prop` |  | `trash_can.glb` |  |
+| `beer_crate-1` | `wall_prop` |  | `beer_crate.glb` |  |
+| `beer_crate-2` | `wall_prop` |  | `beer_crate.glb` |  |
+| `beer_crate-3` | `wall_prop` |  | `beer_crate.glb` |  |
+| `beer_crate-4` | `wall_prop` |  | `beer_crate.glb` |  |
+| `keg` | `wall_prop` |  | `keg.glb` |  |
+| `bay_table` | `wall_prop` |  | `bay_table.glb` |  |
 | `fireplace` | `fireplace` |  | `fireplace.glb` |  |
 | `painting` | `painting` |  | `painting.glb` |  |
 | `mantel_clock` | `mantel_clock` |  | `mantel_clock.glb` |  |
