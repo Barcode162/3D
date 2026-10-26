@@ -363,7 +363,6 @@
       "start": "rest"
     },
     {"id": "stage", "is": "room", "parts": {"model": {"file": "stage.glb", "material": "black-steel"}}},
-    {"id": "darts_zone", "is": "room", "parts": {"model": {"file": "darts_zone.glb", "material": "dark-wood"}}},
     {
       "id": "arcade",
       "is": "room",
@@ -380,7 +379,6 @@
         ]
       }
     },
-    {"id": "construction", "is": "room", "parts": {"model": {"file": "construction.glb", "material": "door-wood"}}},
     {
       "id": "big_mirror",
       "about": "The big mirror: full (the whole room), avatars only, or off. Tap the glass to step through them; its three buttons pick one.",

@@ -3277,7 +3277,6 @@
     {"id": "stage", "kind": "stage", "at": [0, 0, 0]},
     {"id": "dartboard", "kind": "dartboard", "at": [6, 1.73, 7], "turn": 180},
     {"id": "chalkboard", "kind": "chalkboard", "at": [7.7, 1.6, 7], "turn": 180},
-    {"id": "darts_zone", "kind": "darts_zone", "at": [0, 0, 0]},
     {"id": "round_table-7", "kind": "round_table", "at": [4.65, 0, 5]},
     {"id": "pint_glass-5", "kind": "pint_glass", "at": [4.8, 0.785, 5.1]},
     {
@@ -3353,8 +3352,253 @@
         ]
       }
     },
-    {"id": "construction", "kind": "construction", "at": [0, 0, 0]},
     {"id": "arcade", "kind": "arcade", "at": [0, 0, 0]},
+    {
+      "id": "stage_mic",
+      "kind": "wall_prop",
+      "at": [-6.25, 0.3, 6.3],
+      "parts": {"model": {"file": "stage_mic.glb", "material": "chrome"}}
+    },
+    {
+      "id": "stage_guitar",
+      "kind": "wall_prop",
+      "at": [-5.72, 0.3, 6.62],
+      "parts": {"model": {"file": "stage_guitar.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "stage_amp",
+      "kind": "wall_prop",
+      "at": [-6.95, 0.3, 6.78],
+      "turn": 180,
+      "parts": {"model": {"file": "stage_amp.glb", "material": "leather"}}
+    },
+    {
+      "id": "stage_lights",
+      "kind": "glow_prop",
+      "at": [-6.3, 4.0, 5.4],
+      "parts": {"model": {"file": "stage_lights.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "stage_stool",
+      "kind": "wall_prop",
+      "at": [-6.8, 0.3, 6.35],
+      "parts": {"model": {"file": "stage_stool.glb", "material": "leather"}}
+    },
+    {
+      "id": "board_darts",
+      "kind": "wall_prop",
+      "at": [6.0, 1.73, 6.96],
+      "turn": 180,
+      "parts": {"model": {"file": "board_darts.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "dart_surround",
+      "kind": "wall_prop",
+      "at": [6.0, 1.73, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "dart_surround.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "dart_holder",
+      "kind": "wall_prop",
+      "at": [6.72, 1.35, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "dart_holder.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "oche",
+      "kind": "wall_prop",
+      "at": [6.0, 0.0, 4.59],
+      "turn": 180,
+      "parts": {"model": {"file": "oche.glb", "material": "brass"}}
+    },
+    {
+      "id": "dart_spotlights",
+      "kind": "glow_prop",
+      "at": [6.0, 4.0, 5.56],
+      "turn": 180,
+      "parts": {"model": {"file": "dart_spotlights.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "neon_darts",
+      "kind": "neon_sign",
+      "at": [6.0, 0.0, 7.0],
+      "turn": 180,
+      "parts": {"model": {"file": "neon_darts.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "caution_tape",
+      "kind": "wall_prop",
+      "at": [-9.0, 0.0, -2.5],
+      "turn": 90.0,
+      "parts": {"model": {"file": "caution_tape.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "plastic_sheet",
+      "kind": "wall_prop",
+      "at": [-9.35, 0.0, -2.5],
+      "turn": 90.0,
+      "parts": {"model": {"file": "plastic_sheet.glb", "material": "bottle-glass"}}
+    },
+    {
+      "id": "sawhorse_1",
+      "kind": "wall_prop",
+      "at": [-8.4, 0.0, -2.15],
+      "turn": 90.0,
+      "parts": {"model": {"file": "sawhorse_1.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "sawhorse_2",
+      "kind": "wall_prop",
+      "at": [-8.25, 0.0, -2.8],
+      "turn": 90.0,
+      "parts": {"model": {"file": "sawhorse_2.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "cone_1",
+      "kind": "wall_prop",
+      "at": [-8.55, 0.0, -1.35],
+      "turn": 90.0,
+      "parts": {"model": {"file": "cone_1.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "cone_2",
+      "kind": "wall_prop",
+      "at": [-8.5, 0.0, -3.7],
+      "turn": 90.0,
+      "parts": {"model": {"file": "cone_2.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "cone_3",
+      "kind": "wall_prop",
+      "at": [-8.05, 0.0, -3.65],
+      "turn": 90.0,
+      "parts": {"model": {"file": "cone_3.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "easel_sign",
+      "kind": "wall_prop",
+      "at": [-8.45, 0.0, -0.95],
+      "turn": 90.0,
+      "parts": {"model": {"file": "easel_sign.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "work_light",
+      "kind": "glow_prop",
+      "at": [-10.65, 0.0, -3.172],
+      "turn": 90.0,
+      "parts": {"model": {"file": "work_light.glb", "material": "black-steel"}}
+    },
+    {
+      "id": "step_ladder",
+      "kind": "wall_prop",
+      "at": [-11.1, 0.0, -1.9],
+      "turn": 90.0,
+      "parts": {"model": {"file": "step_ladder.glb", "material": "chrome"}}
+    },
+    {
+      "id": "paint_bucket_1",
+      "kind": "wall_prop",
+      "at": [-10.5, 0.0, -2.74],
+      "turn": 90.0,
+      "parts": {"model": {"file": "paint_bucket_1.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "paint_bucket_2",
+      "kind": "wall_prop",
+      "at": [-10.95, 0.0, -3.46],
+      "turn": 90.0,
+      "parts": {"model": {"file": "paint_bucket_2.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "paint_bucket_3",
+      "kind": "wall_prop",
+      "at": [-9.9, 0.0, -3.1],
+      "turn": 90.0,
+      "parts": {"model": {"file": "paint_bucket_3.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "drop_cloth",
+      "kind": "wall_prop",
+      "at": [-10.35, 0.0, -2.38],
+      "turn": 90.0,
+      "parts": {"model": {"file": "drop_cloth.glb", "material": "leather"}}
+    },
+    {
+      "id": "lumber",
+      "kind": "wall_prop",
+      "at": [-10.05, 0.0, -1.88],
+      "turn": 90.0,
+      "parts": {"model": {"file": "lumber.glb", "material": "door-wood"}}
+    },
+    {
+      "id": "drywall",
+      "kind": "wall_prop",
+      "at": [-12.15, 0.0, -2.962],
+      "turn": 90.0,
+      "parts": {"model": {"file": "drywall.glb", "material": "plaster"}}
+    },
+    {
+      "id": "toolbox",
+      "kind": "wall_prop",
+      "at": [-9.9, 0.0, -3.34],
+      "turn": 90.0,
+      "parts": {"model": {"file": "toolbox.glb", "material": "lacquer"}}
+    },
+    {
+      "id": "arcade_neon_bolt",
+      "kind": "neon_sign",
+      "at": [0.46, 0.0, -10.1],
+      "turn": 90.0,
+      "parts": {"model": {"file": "arcade_neon_bolt.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_neon_ring",
+      "kind": "neon_sign",
+      "at": [0.46, 0.0, -13.2],
+      "turn": 90.0,
+      "parts": {"model": {"file": "arcade_neon_ring.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_neon_triangle",
+      "kind": "neon_sign",
+      "at": [8.34, 0.0, -10.2],
+      "turn": -90.0,
+      "parts": {"model": {"file": "arcade_neon_triangle.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_neon_zigzag",
+      "kind": "neon_sign",
+      "at": [8.34, 0.0, -13.3],
+      "turn": -90.0,
+      "parts": {"model": {"file": "arcade_neon_zigzag.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_neon_wave",
+      "kind": "neon_sign",
+      "at": [4.4, 0.0, -15.64],
+      "parts": {"model": {"file": "arcade_neon_wave.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_sign_bar",
+      "kind": "neon_sign",
+      "at": [3.7, 0.0, -7.4],
+      "parts": {"model": {"file": "arcade_sign_bar.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_sign_inside",
+      "kind": "neon_sign",
+      "at": [3.7, 0.0, -7.83],
+      "turn": 180.0,
+      "parts": {"model": {"file": "arcade_sign_inside.glb", "material": "glow-glass"}}
+    },
+    {
+      "id": "arcade_bench",
+      "kind": "wall_prop",
+      "at": [0.75, 0.0, -11.7],
+      "turn": 90.0,
+      "parts": {"model": {"file": "arcade_bench.glb", "material": "leather"}}
+    },
     {"id": "arcade_cabinet", "kind": "arcade_cabinet", "at": [4.4, 0, -15.2]},
     {"id": "credit_coin", "kind": "credit_coin", "at": [0, -20, 0]},
     {

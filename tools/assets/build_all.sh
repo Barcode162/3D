@@ -28,12 +28,12 @@ run back_bar_tall.py "$tex" $out/back_bar_tall.glb "$scratch/bottles.json"
 # The back bar's bottles as things (J72): their recipe models and where each stands.
 run bottles.py "$tex" $out "$scratch/bottles.json" "$scratch/bottle_things.json"
 run piano.py "$tex" $out/piano.glb
-run stage.py "$tex" $out/stage.glb
+run stage.py "$tex" $out/stage.glb  # its props are their own models (J73)
 run big_mirror.py "$tex" $out
-run construction.py "$tex" $out/construction.glb
+run construction.py "$tex" $out  # one model per piece (J73)
 run sim_rig.py "$tex" $out/sim_rig.glb
 run rhythm.py "$tex" $out/rhythm.glb
-run darts_zone.py "$tex" $out/darts_zone.glb
+run darts_zone.py "$tex" $out  # one model per piece (J73)
 run lounge.py "$tex" $out  # each lounge object its own model (J70)
 run decor_walls.py "$tex" $out  # each decor piece its own model (J71)
 # Older scripts that still provide models in use (they also write a few

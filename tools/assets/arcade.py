@@ -6,7 +6,11 @@
 # it, and a padded bench. The machines are their own models
 # (arcade_cabinet.py), placed by the app.
 #
-#   blender -b --factory-startup --python tools/assets/arcade.py -- <texture dir> <out.glb>
+#   blender -b --factory-startup --python tools/assets/arcade.py -- <texture dir> <out.glb> [<things.json>]
+#
+# Since J73 the ARCADE signs, the neon shapes on the walls and the bench are
+# things of their own (common.group, next to <out.glb>); <out.glb> keeps the
+# shell, its neon lines and the ceiling.
 #
 # Model space = world space (like hall.py). The room: x AX0..AX1, z AZ0..AZ1
 # (AZ1 = the back of the bar's back wall), floor y = 0, ceiling AH.
@@ -22,7 +26,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common  # noqa: E402
 import layout as L  # noqa: E402
 
-tex_dir, out_path = sys.argv[sys.argv.index("--") + 1:][:2]
+import json  # noqa: E402
+
+args = sys.argv[sys.argv.index("--") + 1:]
+tex_dir, out_path = args[:2]
+things_path = args[2] if len(args) > 2 else None
 common.reset_scene()
 rng = random.Random(7)
 
@@ -153,6 +161,9 @@ common.tube("Door neon", arch, 0.02, neon["yellow"], sides=8)
 # ---- Neon shapes on the walls (bent tubes, like real neon art). ----
 def wall_shape(points2d, origin, right, up, scale, mat, name):
     o, rt, u = Vector(origin), Vector(right), Vector(up)
+    # Its own thing, standing on the wall (its front: the wall's normal).
+    n = rt.cross(u)
+    common.group("arcade_neon_" + name.lower(), (o.x, 0.0, o.z), math.degrees(math.atan2(n.x, n.z)))
     common.tube(name, [o + rt * (x * scale) + u * (y * scale) for x, y in points2d], 0.02, mat, sides=8)
 
 
@@ -173,6 +184,7 @@ for k, (y, m) in enumerate(((2.55, "purple"), (2.75, "pink"))):
     wall_shape([(x, 0.08 * math.sin(x * 3 + k)) for x in np.linspace(-3.6, 3.6, 60)],
                ((AX0 + AX1) / 2, y, AZ0 + 0.06), (1, 0, 0), (0, 1, 0), 1.0, neon[m], "Wave")
 
+common.group(None)
 # ---- Ceiling: an LED grid (squares of light strips) and a ring. ----
 cols, rows = 3, 3
 for i in range(cols):
@@ -217,16 +229,23 @@ def sign_image(text, w=512, h=128):
 sign_m = common.glow_image_material("Arcade sign", sign_image("ARCADE"), strength=3.0, base_scale=0.3)
 sx = (DX0 + DX1) / 2
 # Bar side: on the brick above the arch (faces +z, into the bar).
+common.group("arcade_sign_bar", (sx, 0.0, L.Z0), 0.0)
 common.panel("Arcade sign", (sx, DOOR_TOP + 0.38, L.Z0 + 0.025), (1, 0, 0), (0, 1, 0), 1.6, 0.4, sign_m)
 box("Sign backer", (sx - 0.84, DOOR_TOP + 0.16, L.Z0), (sx + 0.84, DOOR_TOP + 0.6, L.Z0 + 0.02), wainscot_m)
 # Inside, over the door (faces -z, into the arcade).
+common.group("arcade_sign_inside", (sx, 0.0, fz - T), 180.0)
 common.panel("Arcade sign", (sx, DOOR_TOP + 0.2, fz - T - 0.02), (-1, 0, 0), (0, 1, 0), 1.4, 0.35, sign_m)
 
 # ---- A padded bench along the left wall (somewhere to sit and watch). ----
 bx0, bx1 = AX0 + 0.1, AX0 + 0.6
 bz0, bz1 = zmid - 1.0, zmid + 1.0
+common.group("arcade_bench", ((bx0 + bx1) / 2, 0.0, zmid), 90.0)
 box("Bench base", (bx0, 0, bz0), (bx1, 0.38, bz1), wainscot_m, 0.01)
 box("Bench pad", (bx0 + 0.01, 0.38, bz0 + 0.01), (bx1 - 0.01, 0.46, bz1 - 0.01), bench_m, 0.03)
 common.tube("Bench glow", [Vector((bx1 + 0.005, 0.03, bz0)), Vector((bx1 + 0.005, 0.03, bz1))], 0.012, neon["cyan"], sides=6)
 
-common.finish_and_export(out_path, uv_scale={"Arcade carpet": 0.45})
+placed = common.finish_and_export_groups(os.path.dirname(out_path), os.path.basename(out_path)[:-4],
+                                        uv_scale={"Arcade carpet": 0.45})
+if things_path:
+    with open(things_path, "w") as f:
+        json.dump(placed, f)

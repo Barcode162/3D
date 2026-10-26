@@ -54,7 +54,7 @@
     "id": "J73.2",
     "text": "The stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs each their own thing where they stand; the arcade's walls and floor fixed (they vanished through the arch, its floor edge left a gap)",
     "check": "Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was, the arcade's walls stay when seen through the arch",
-    "done": false
+    "done": true
    }
   ]
  },

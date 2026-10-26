@@ -5,7 +5,10 @@
 # tripod, a step ladder, paint buckets, a drop cloth, lumber, drywall
 # sheets and a toolbox.
 #
-#   blender -b --factory-startup --python tools/assets/construction.py -- <texture dir> <out.glb>
+#   blender -b --factory-startup --python tools/assets/construction.py -- <texture dir> <out dir> [<things.json>]
+#
+# Since J73 each piece is a thing of its own (common.group), placed where it
+# stands (<things.json>).
 #
 # Model space = world space.
 import math
@@ -20,7 +23,12 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common  # noqa: E402
 import layout as L  # noqa: E402
 
-tex_dir, out_path = sys.argv[sys.argv.index("--") + 1:][:2]
+import json  # noqa: E402
+
+args = sys.argv[sys.argv.index("--") + 1:]
+tex_dir, out_dir = args[:2]
+things_path = args[2] if len(args) > 2 else None
+TURN = [0.0]  # the doorway's turn (degrees), for its pieces
 common.reset_scene()
 rng = random.Random(2)
 
@@ -105,7 +113,8 @@ def sawhorse(m, x, z, yaw):
         for sz in (-1, 1):
             common.tube("Barricade leg", [mm @ Vector((sx, 0.0, sz * foot)), mm @ Vector((sx, 0.98, sz * top))], 0.02, steel,
                         sides=4)
-    lamp_c = common.cylinder("Barricade lamp", Vector((0.0, 1.06, 0)), 0.05, 0.03, "z",
+    # The amber lamp sits on the top rail (it floated 3 cm above it).
+    lamp_c = common.cylinder("Barricade lamp", Vector((0.0, 1.03, 0)), 0.05, 0.03, "z",
                              common.plain_material("Amber lamp", (1, 0.6, 0.1), 0.0, 0.3, emission=(1.0, 0.5, 0.05),
                                                    strength=5.0), segments=14)
     place(lamp_c, mm)
@@ -173,8 +182,11 @@ def plastic_sheet(m, w, h, z):
 
 def work_room(m, depth, width):
     """Things inside the unfinished room (local frame, z negative = deeper)."""
+    def g(name, x, z):
+        common.group(name, tuple(m @ Vector((x, 0, z))), TURN[0])
     # Work light on a tripod, aimed at the back wall.
     tx, tz = width * 0.28, -depth * 0.45
+    g("work_light", tx, tz)
     for k in range(3):
         a = k * 2 * math.pi / 3
         leg = common.tube("Tripod leg", [(tx + 0.35 * math.cos(a), 0.0, tz + 0.35 * math.sin(a)), (tx, 1.2, tz)],
@@ -188,6 +200,7 @@ def work_room(m, depth, width):
     # Step ladder (A-frame, aluminum): the front rails carry the steps, the
     # back rails brace it; they meet at the top cap, the feet apart.
     lx, lz = -width * 0.25, -depth * 0.6
+    g("step_ladder", lx, lz)
     lm = m @ Matrix.Translation((lx, 0, lz)) @ Matrix.Rotation(0.4, 4, "Y")
     H, foot, top = 1.6, 0.42, 0.07
     for sx in (-0.22, 0.22):
@@ -207,22 +220,27 @@ def work_room(m, depth, width):
     # Paint buckets, one open with a stir stick.
     for k, (bx, bz) in enumerate(((0.1, -0.4), (0.4, -0.55), (0.25, -0.2))):
         bxx, bzz = bx * width, bz * depth
+        g(f"paint_bucket_{k + 1}", bxx, bzz)
         place(common.lathe("Bucket", [(0, 0), (0.14, 0), (0.16, 0.36), (0, 0.36)], paint[k], 18),
               m @ Matrix.Translation((bxx, 0, bzz)))
         place(common.torus("Bucket handle", Vector((0, 0.36, 0)), 0.16, 0.004, steel, axis="z", segments=16, sides=4),
               m @ Matrix.Translation((bxx, 0, bzz)))
     # Drop cloth on the floor, lumber stack, drywall leaning on the wall, toolbox.
+    g("drop_cloth", -width * 0.05, -depth * 0.35)
     dc = common.box("Drop cloth", (-0.9, 0.0, -0.7), (0.9, 0.01, 0.7), cloth, 0.004)
     place(dc, m @ Matrix.Translation((-width * 0.05, 0.002, -depth * 0.35)) @ Matrix.Rotation(0.2, 4, "Y"))
+    g("lumber", -width * 0.3 + 0.1, -depth * 0.25)
     for k in range(6):
         board = common.box("Lumber", (-1.2, 0, -0.045), (1.2, 0.04, 0.045), lumber, 0.003)
         place(board, m @ Matrix.Translation((-width * 0.3 + (k % 3) * 0.1, 0.01 + (k // 3) * 0.041, -depth * 0.25))
               @ Matrix.Rotation(1.45, 4, "Y"))
+    g("drywall", width * 0.18 + 0.03, -depth + 0.15)
     for k in range(3):
         sheet = common.box("Drywall", (-0.6, 0, -0.006), (0.6, 2.4, 0.006), drywall, 0.002)
         place(sheet, m @ Matrix.Translation((width * 0.18 + k * 0.03, 0.0, -depth + 0.15 + k * 0.02)) @
               Matrix.Rotation(-0.08, 4, "X"))
     tb = m @ Matrix.Translation((width * 0.35, 0, -depth * 0.2))
+    g("toolbox", width * 0.35, -depth * 0.2)
     place(common.box("Toolbox", (-0.25, 0, -0.12), (0.25, 0.22, 0.12), common.plain_material(
         "Toolbox red", (0.7, 0.05, 0.03), 0.4, 0.4), 0.01), tb)
     place(common.tube("Toolbox handle", [(-0.12, 0.22, 0), (-0.1, 0.28, 0), (0.1, 0.28, 0), (0.12, 0.22, 0)], 0.01,
@@ -235,19 +253,31 @@ def doorway(origin, yaw, width, name):
     m = frame_for(origin, yaw)
     hw = width / 2
     top = L.ARCH_SPRING + hw * 0.8
+    TURN[0] = math.degrees(yaw)
+
+    def g(name, x, z):
+        common.group(name, tuple(m @ Vector((x, 0, z))), TURN[0])
     # Crossed tape plus two level strips, slightly sagging.
+    g("caution_tape", 0, 0)
     tape_strip(m, (-hw - 0.05, 0.35, 0.03), (hw + 0.05, top, 0.03))
     tape_strip(m, (-hw - 0.05, top, 0.035), (hw + 0.05, 0.35, 0.035))
     tape_strip(m, (-hw - 0.05, 1.05, 0.04), (hw + 0.05, 1.0, 0.04))
     tape_strip(m, (-hw - 0.05, 1.6, 0.045), (hw + 0.05, 1.55, 0.045))
+    g("plastic_sheet", 0, -0.35)
     plastic_sheet(m, width - 0.1, L.ARCH_SPRING + hw * 0.9, -0.35)
+    g("sawhorse_1", -0.35, 0.6)
     sawhorse(m, -0.35, 0.6, 0.12)
     # (Local +x is toward the bar for doorway B: kept 0.3 from the middle so
     # the way behind the bar stays wide.)
+    g("sawhorse_2", 0.3 if abs(yaw) > 0.1 else 0.55, 0.75)
     sawhorse(m, 0.3 if abs(yaw) > 0.1 else 0.55, 0.75, -0.2)
+    g("cone_1", -hw - 0.35, 0.45)
     cone(m, -hw - 0.35, 0.45)
+    g("cone_2", hw + 0.4, 0.5)
     cone(m, hw + 0.4, 0.5, 0.85)
+    g("cone_3", 1.15, 0.95)
     cone(m, 1.15, 0.95, 0.9)
+    g("easel_sign", -hw - 0.75, 0.55)
     easel_sign(m, -hw - 0.75, 0.55, 0.35)
     work_room(m @ Matrix.Translation((0, 0, -L.T)), L.CORRIDOR_DEPTH, width + 0.8)
 
@@ -255,4 +285,7 @@ def doorway(origin, yaw, width, name):
 # (Doorway A is the arcade now: tools/assets/arcade.py.)
 doorway(Vector((L.X0, 0, (L.DOOR_B_Z0 + L.DOOR_B_Z1) / 2)), math.pi / 2, L.DOOR_B_Z1 - L.DOOR_B_Z0, "Room 3")
 
-common.finish_and_export(out_path, uv_scale={"Lumber": 1.5, "Drop cloth": 1.0})
+placed = common.finish_and_export_groups(out_dir, None, uv_scale={"Lumber": 1.5, "Drop cloth": 1.0})
+if things_path:
+    with open(things_path, "w") as f:
+        json.dump(placed, f)

@@ -4,7 +4,10 @@
 # regulation 2.37 m, a rubber throwing mat with distance marks, a track
 # with two spotlights aimed at the board, and a neon "DARTS" sign.
 #
-#   blender -b --factory-startup --python tools/assets/darts_zone.py -- <texture dir> <out.glb>
+#   blender -b --factory-startup --python tools/assets/darts_zone.py -- <texture dir> <out dir> [<things.json>]
+#
+# Since J73 each piece is a thing of its own (common.group): the darts in the
+# board, the surround, the holder, the oche and mat, the spotlights, the neon.
 #
 # Model space = world space. The board's center is at (BX, BY), its face at
 # z = FACE_Z (bar/bar_scene.cpp places dartboard.glb at x = 6.0 on the
@@ -20,7 +23,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common  # noqa: E402
 import layout as L  # noqa: E402
 
-tex_dir, out_path = sys.argv[sys.argv.index("--") + 1:][:2]
+import json  # noqa: E402
+
+args = sys.argv[sys.argv.index("--") + 1:]
+tex_dir, out_dir = args[:2]
+things_path = args[2] if len(args) > 2 else None
 common.reset_scene()
 
 BX, BY = 6.0, 1.73
@@ -75,21 +82,25 @@ def dart(tip, direction, flight):
 
 
 # Three darts in the board (a decent throw: treble 20 and two near it).
+common.group("board_darts", (BX, BY, FACE_Z), 180)
 for k, (dx, dy, tilt) in enumerate(((0.002, 0.103, 0.06), (-0.012, 0.09, -0.04), (0.02, 0.06, 0.08))):
     tip = Vector((BX + dx, BY + dy, FACE_Z - 0.004))
     dart(tip, (math.sin(tilt) * 0.3, -0.18 + tilt, 1.0), flight_cols[k])
 
 # Black foam surround ring behind the board.
+common.group("dart_surround", (BX, BY, L.Z1), 180)
 common.lathe("Surround", [(0.23, 0.0), (0.45, 0.0), (0.45, 0.03), (0.23, 0.03)], foam, 48).data.transform(
     Matrix.Translation((BX, BY, FACE_Z + 0.002)) @ Matrix.Rotation(math.pi / 2, 4, "X"))
 
 # A wall holder with three spare darts, beside the cabinet.
 HX, HY = BX + 0.72, 1.35
+common.group("dart_holder", (HX, HY, L.Z1), 180)
 common.box("Dart holder", (HX - 0.07, HY - 0.04, L.Z1 - 0.03), (HX + 0.07, HY + 0.04, L.Z1), holder_wood, 0.006)
 for k in range(3):
     dart(Vector((HX - 0.04 + k * 0.04, HY + 0.035, L.Z1 - 0.015)), (0.05 * (k - 1), -1.0, 0.05), flight_cols[k])
 
 # Oche: a brass strip set in the floor, and the throwing mat.
+common.group("oche", (BX, 0.0, OCHE_Z), 180)
 common.box("Oche", (BX - 0.5, 0.0, OCHE_Z - 0.04), (BX + 0.5, 0.008, OCHE_Z), brass, 0.002)
 q = common.quad("Throw mat", [(BX - 0.32, 0.004, FACE_Z - 0.05), (BX + 0.32, 0.004, FACE_Z - 0.05),
                               (BX + 0.32, 0.004, FACE_Z - 2.85), (BX - 0.32, 0.004, FACE_Z - 2.85)], throw_mat,
@@ -97,6 +108,7 @@ q = common.quad("Throw mat", [(BX - 0.32, 0.004, FACE_Z - 0.05), (BX + 0.32, 0.0
 
 # Track with two spotlights on the ceiling, aimed at the board.
 TZ = FACE_Z - 1.4
+common.group("dart_spotlights", (BX, L.H, TZ), 180)
 common.box("Track", (BX - 0.6, L.H - 0.04, TZ - 0.02), (BX + 0.6, L.H, TZ + 0.02), black, 0.004)
 for sx in (-0.35, 0.35):
     aim = Vector((BX, BY, FACE_Z)) - Vector((BX + sx, L.H - 0.15, TZ))
@@ -109,17 +121,23 @@ for sx in (-0.35, 0.35):
     common.box("Spot stem", (BX + sx - 0.01, L.H - 0.15, TZ - 0.01), (BX + sx + 0.01, L.H - 0.04, TZ + 0.01), black,
                0.002)
 
-# Neon "DARTS" above the cabinet.
+# Neon "DARTS" above the cabinet. It faces the room (-z), so its letters run
+# toward -x to read left to right (they ran toward +x: it read backwards,
+# the user's screenshots, KI-45).
+common.group("neon_darts", (BX, 0.0, L.Z1), 180)
 glyphs = common._glyphs()
 s = 0.04
-x0 = BX - len("DARTS") * 6 * s / 2
+x0 = BX + len("DARTS") * 6 * s / 2
 for i, ch in enumerate("DARTS"):
     for r, row in enumerate(glyphs[ch]):
         for c, dot in enumerate(row):
             if dot == "#":
-                x = x0 + (i * 6 + c) * s
+                x = x0 - (i * 6 + c) * s
                 y = 2.55 - r * s
                 common.box("Neon", (x - s * 0.32, y - s * 0.32, L.Z1 - 0.06), (x + s * 0.32, y + s * 0.32, L.Z1 - 0.04),
                            neon_red, 0.006)
 
-common.finish_and_export(out_path, uv_scale={"Holder wood": 2.0})
+placed = common.finish_and_export_groups(out_dir, None, uv_scale={"Holder wood": 2.0})
+if things_path:
+    with open(things_path, "w") as f:
+        json.dump(placed, f)

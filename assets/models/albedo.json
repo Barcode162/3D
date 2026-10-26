@@ -23,19 +23,6 @@
    "fix": 7.368,
    "metal": 0.0
   },
-  "Arcade sign": {
-   "albedo": [
-    0.0179,
-    0.0024,
-    0.0072
-   ],
-   "emissive": [
-    0.6423,
-    0.0688,
-    0.2147
-   ],
-   "metal": 0.0
-  },
   "Arcade trim": {
    "albedo": [
     0.06,
@@ -62,15 +49,6 @@
    "fix": 2.333,
    "metal": 0.0
   },
-  "Bench vinyl": {
-   "albedo": [
-    0.35,
-    0.04,
-    0.25
-   ],
-   "metal": 0.0,
-   "rough": 0.4
-  },
   "Neon cyan": {
    "albedo": [
     0.1,
@@ -81,19 +59,6 @@
     0.11,
     0.935,
     1.1
-   ],
-   "metal": 0.0
-  },
-  "Neon lime": {
-   "albedo": [
-    0.45,
-    1.0,
-    0.2
-   ],
-   "emissive": [
-    0.495,
-    1.1,
-    0.22
    ],
    "metal": 0.0
   },
@@ -133,6 +98,39 @@
     1.1,
     0.935,
     0.11
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_bench.glb": {
+  "Arcade wainscot": {
+   "albedo": [
+    0.012,
+    0.012,
+    0.018
+   ],
+   "fix": 3.217,
+   "metal": 0.2
+  },
+  "Bench vinyl": {
+   "albedo": [
+    0.35,
+    0.04,
+    0.25
+   ],
+   "metal": 0.0,
+   "rough": 0.4
+  },
+  "Neon cyan": {
+   "albedo": [
+    0.1,
+    0.85,
+    1.0
+   ],
+   "emissive": [
+    0.11,
+    0.935,
+    1.1
    ],
    "metal": 0.0
   }
@@ -279,6 +277,133 @@
     0.32
    ],
    "metal": 0.9
+  }
+ },
+ "arcade_neon_bolt.glb": {
+  "Neon yellow": {
+   "albedo": [
+    1.0,
+    0.85,
+    0.1
+   ],
+   "emissive": [
+    1.1,
+    0.935,
+    0.11
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_neon_ring.glb": {
+  "Neon pink": {
+   "albedo": [
+    1.0,
+    0.12,
+    0.62
+   ],
+   "emissive": [
+    1.1,
+    0.132,
+    0.682
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_neon_triangle.glb": {
+  "Neon cyan": {
+   "albedo": [
+    0.1,
+    0.85,
+    1.0
+   ],
+   "emissive": [
+    0.11,
+    0.935,
+    1.1
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_neon_wave.glb": {
+  "Neon pink": {
+   "albedo": [
+    1.0,
+    0.12,
+    0.62
+   ],
+   "emissive": [
+    1.1,
+    0.132,
+    0.682
+   ],
+   "metal": 0.0
+  },
+  "Neon purple": {
+   "albedo": [
+    0.6,
+    0.25,
+    1.0
+   ],
+   "emissive": [
+    0.66,
+    0.275,
+    1.1
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_neon_zigzag.glb": {
+  "Neon lime": {
+   "albedo": [
+    0.45,
+    1.0,
+    0.2
+   ],
+   "emissive": [
+    0.495,
+    1.1,
+    0.22
+   ],
+   "metal": 0.0
+  }
+ },
+ "arcade_sign_bar.glb": {
+  "Arcade sign": {
+   "albedo": [
+    0.0179,
+    0.0024,
+    0.0072
+   ],
+   "emissive": [
+    0.6423,
+    0.0688,
+    0.2147
+   ],
+   "metal": 0.0
+  },
+  "Arcade wainscot": {
+   "albedo": [
+    0.012,
+    0.012,
+    0.018
+   ],
+   "fix": 3.217,
+   "metal": 0.2
+  }
+ },
+ "arcade_sign_inside.glb": {
+  "Arcade sign": {
+   "albedo": [
+    0.0179,
+    0.0024,
+    0.0072
+   ],
+   "emissive": [
+    0.6423,
+    0.0688,
+    0.2147
+   ],
+   "metal": 0.0
   }
  },
  "armchair.glb": {
@@ -1217,6 +1342,59 @@
     2.7
    ],
    "metal": 0.0
+  }
+ },
+ "board_darts.glb": {
+  "Dart shaft": {
+   "albedo": [
+    0.05,
+    0.05,
+    0.05
+   ],
+   "metal": 0.2,
+   "rough": 0.5
+  },
+  "Dart tip": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
+   ],
+   "metal": 1.0,
+   "rough": 0.3
+  },
+  "Flight 0": {
+   "albedo": [
+    0.8,
+    0.05,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Flight 1": {
+   "albedo": [
+    0.05,
+    0.25,
+    0.8
+   ],
+   "metal": 0.0
+  },
+  "Flight 2": {
+   "albedo": [
+    0.95,
+    0.75,
+    0.05
+   ],
+   "metal": 0.0
+  },
+  "Tungsten": {
+   "albedo": [
+    0.45,
+    0.45,
+    0.48
+   ],
+   "metal": 1.0,
+   "rough": 0.4
   }
  },
  "bookshelf.glb": {
@@ -2314,6 +2492,22 @@
    "metal": 0.0
   }
  },
+ "caution_tape.glb": {
+  "Caution tape": {
+   "albedo": [
+    0.5983,
+    0.2463,
+    0.0027
+   ],
+   "emissive": [
+    0.2094,
+    0.0862,
+    0.0009
+   ],
+   "metal": 0.0,
+   "rough": 0.7
+  }
+ },
  "chalk_a_frame.glb": {
   "A-frame chalk": {
    "albedo": [
@@ -2806,51 +3000,7 @@
    "rough": 0.45
   }
  },
- "construction.glb": {
-  "Aluminum": {
-   "albedo": [
-    0.75,
-    0.76,
-    0.78
-   ],
-   "metal": 1.0,
-   "rough": 0.45
-  },
-  "Amber lamp": {
-   "albedo": [
-    1.0,
-    0.6,
-    0.1
-   ],
-   "emissive": [
-    5.0,
-    2.5,
-    0.25
-   ],
-   "metal": 0.0
-  },
-  "Amber lamp.001": {
-   "albedo": [
-    1.0,
-    0.6,
-    0.1
-   ],
-   "emissive": [
-    5.0,
-    2.5,
-    0.25
-   ],
-   "metal": 0.0
-  },
-  "Barricade stripes": {
-   "albedo": [
-    0.7656,
-    0.379,
-    0.3125
-   ],
-   "metal": 0.0,
-   "rough": 0.5
-  },
+ "cone_1.glb": {
   "Black rubber": {
    "albedo": [
     0.03,
@@ -2859,20 +3009,6 @@
    ],
    "metal": 0.0,
    "rough": 0.85
-  },
-  "Caution tape": {
-   "albedo": [
-    0.5983,
-    0.2463,
-    0.0027
-   ],
-   "emissive": [
-    0.2094,
-    0.0862,
-    0.0009
-   ],
-   "metal": 0.0,
-   "rough": 0.7
   },
   "Cone orange": {
    "albedo": [
@@ -2883,89 +3019,35 @@
    "metal": 0.0,
    "rough": 0.5
   },
-  "Construction sign": {
+  "Reflective white": {
    "albedo": [
-    0.6452,
-    0.2413,
-    0.0047
-   ],
-   "emissive": [
-    0.1936,
-    0.0724,
-    0.0014
-   ],
-   "metal": 0.0
-  },
-  "Drop cloth": {
-   "albedo": [
-    0.0893,
-    0.0882,
-    0.0691
-   ],
-   "metal": 0.013,
-   "rough": 0.95
-  },
-  "Drywall sheet": {
-   "albedo": [
-    0.75,
-    0.73,
-    0.68
-   ],
-   "metal": 0.0
-  },
-  "Lumber": {
-   "albedo": [
-    0.2099,
-    0.0852,
-    0.0231
-   ],
-   "metal": 0.004
-  },
-  "Paint 0": {
-   "albedo": [
-    0.9,
-    0.9,
-    0.88
-   ],
-   "metal": 0.0,
-   "rough": 0.6
-  },
-  "Paint 1": {
-   "albedo": [
-    0.12,
-    0.3,
-    0.2
-   ],
-   "metal": 0.0,
-   "rough": 0.6
-  },
-  "Paint 2": {
-   "albedo": [
-    0.6,
-    0.1,
-    0.08
-   ],
-   "metal": 0.0,
-   "rough": 0.6
-  },
-  "Painted steel": {
-   "albedo": [
-    0.12,
-    0.12,
-    0.12
-   ],
-   "metal": 0.6,
-   "rough": 0.6
-  },
-  "Plastic sheet": {
-   "albedo": [
-    0.85,
-    0.9,
+    0.95,
+    0.95,
     0.95
    ],
+   "fix": 0.947,
    "metal": 0.0,
-   "rough": 0.45,
-   "seeThrough": true
+   "rough": 0.5
+  }
+ },
+ "cone_2.glb": {
+  "Black rubber": {
+   "albedo": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "metal": 0.0,
+   "rough": 0.85
+  },
+  "Cone orange": {
+   "albedo": [
+    0.95,
+    0.28,
+    0.02
+   ],
+   "metal": 0.0,
+   "rough": 0.5
   },
   "Reflective white": {
    "albedo": [
@@ -2976,37 +3058,36 @@
    "fix": 0.947,
    "metal": 0.0,
    "rough": 0.5
+  }
+ },
+ "cone_3.glb": {
+  "Black rubber": {
+   "albedo": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "metal": 0.0,
+   "rough": 0.85
   },
-  "Tool yellow": {
+  "Cone orange": {
    "albedo": [
     0.95,
-    0.7,
-    0.05
+    0.28,
+    0.02
    ],
    "metal": 0.0,
    "rough": 0.5
   },
-  "Toolbox red": {
+  "Reflective white": {
    "albedo": [
-    0.7,
-    0.05,
-    0.03
-   ],
-   "metal": 0.4,
-   "rough": 0.5
-  },
-  "Work light": {
-   "albedo": [
-    1.0,
     0.95,
-    0.85
+    0.95,
+    0.95
    ],
-   "emissive": [
-    14.0,
-    12.88,
-    10.5
-   ],
-   "metal": 0.0
+   "fix": 0.947,
+   "metal": 0.0,
+   "rough": 0.5
   }
  },
  "corner_speaker.glb": {
@@ -3071,44 +3152,7 @@
    "rough": 0.35
   }
  },
- "dartboard.glb": {
-  "Board rim": {
-   "albedo": [
-    0.02,
-    0.02,
-    0.02
-   ],
-   "metal": 0.0
-  },
-  "Cabinet wood": {
-   "albedo": [
-    0.0399,
-    0.0074,
-    0.0031
-   ],
-   "fix": 3.572,
-   "metal": 0.005,
-   "rough": 0.45
-  },
-  "Dartboard face": {
-   "albedo": [
-    0.1351,
-    0.1041,
-    0.0549
-   ],
-   "metal": 0.0
-  },
-  "Wire": {
-   "albedo": [
-    0.8,
-    0.8,
-    0.82
-   ],
-   "metal": 1.0,
-   "rough": 0.4
-  }
- },
- "darts_zone.glb": {
+ "dart_holder.glb": {
   "Dart shaft": {
    "albedo": [
     0.05,
@@ -3160,28 +3204,17 @@
    "fix": 3.696,
    "metal": 0.006
   },
-  "Neon red": {
+  "Tungsten": {
    "albedo": [
-    1.0,
-    0.25,
-    0.15
-   ],
-   "emissive": [
-    2.0,
-    0.3,
-    0.16
-   ],
-   "metal": 0.0
-  },
-  "Oche brass": {
-   "albedo": [
-    0.91,
-    0.7,
-    0.38
+    0.45,
+    0.45,
+    0.48
    ],
    "metal": 1.0,
    "rough": 0.4
-  },
+  }
+ },
+ "dart_spotlights.glb": {
   "Spot lens": {
    "albedo": [
     1.0,
@@ -3195,23 +3228,6 @@
    ],
    "metal": 0.0
   },
-  "Surround foam": {
-   "albedo": [
-    0.02,
-    0.02,
-    0.02
-   ],
-   "metal": 0.0
-  },
-  "Throw mat": {
-   "albedo": [
-    0.0227,
-    0.007,
-    0.0072
-   ],
-   "fix": 1.932,
-   "metal": 0.0
-  },
   "Track black": {
    "albedo": [
     0.02,
@@ -3221,12 +3237,50 @@
    "fix": 1.25,
    "metal": 0.3,
    "rough": 0.5
-  },
-  "Tungsten": {
+  }
+ },
+ "dart_surround.glb": {
+  "Surround foam": {
    "albedo": [
-    0.45,
-    0.45,
-    0.48
+    0.02,
+    0.02,
+    0.02
+   ],
+   "metal": 0.0
+  }
+ },
+ "dartboard.glb": {
+  "Board rim": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "metal": 0.0
+  },
+  "Cabinet wood": {
+   "albedo": [
+    0.0399,
+    0.0074,
+    0.0031
+   ],
+   "fix": 3.572,
+   "metal": 0.005,
+   "rough": 0.45
+  },
+  "Dartboard face": {
+   "albedo": [
+    0.1351,
+    0.1041,
+    0.0549
+   ],
+   "metal": 0.0
+  },
+  "Wire": {
+   "albedo": [
+    0.8,
+    0.8,
+    0.82
    ],
    "metal": 1.0,
    "rough": 0.4
@@ -3419,6 +3473,59 @@
    ],
    "metal": 0.0,
    "seeThrough": true
+  }
+ },
+ "drop_cloth.glb": {
+  "Drop cloth": {
+   "albedo": [
+    0.0893,
+    0.0882,
+    0.0691
+   ],
+   "metal": 0.013,
+   "rough": 0.95
+  }
+ },
+ "drywall.glb": {
+  "Drywall sheet": {
+   "albedo": [
+    0.75,
+    0.73,
+    0.68
+   ],
+   "metal": 0.0
+  }
+ },
+ "easel_sign.glb": {
+  "Construction sign": {
+   "albedo": [
+    0.6452,
+    0.2413,
+    0.0047
+   ],
+   "emissive": [
+    0.1936,
+    0.0724,
+    0.0014
+   ],
+   "metal": 0.0
+  },
+  "Lumber": {
+   "albedo": [
+    0.2099,
+    0.0852,
+    0.0231
+   ],
+   "metal": 0.004
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
   }
  },
  "fire_extinguisher.glb": {
@@ -4417,6 +4524,16 @@
    "metal": 0.006
   }
  },
+ "lumber.glb": {
+  "Lumber": {
+   "albedo": [
+    0.2099,
+    0.0852,
+    0.0231
+   ],
+   "metal": 0.004
+  }
+ },
  "mantel_books.glb": {
   "Book spines": {
    "albedo": [
@@ -4540,6 +4657,21 @@
    "metal": 0.0
   }
  },
+ "neon_darts.glb": {
+  "Neon red": {
+   "albedo": [
+    1.0,
+    0.25,
+    0.15
+   ],
+   "emissive": [
+    2.0,
+    0.3,
+    0.16
+   ],
+   "metal": 0.0
+  }
+ },
  "neon_game_on.glb": {
   "Brass": {
    "albedo": [
@@ -4641,6 +4773,86 @@
    ],
    "metal": 0.0,
    "seeThrough": true
+  }
+ },
+ "oche.glb": {
+  "Oche brass": {
+   "albedo": [
+    0.91,
+    0.7,
+    0.38
+   ],
+   "metal": 1.0,
+   "rough": 0.4
+  },
+  "Throw mat": {
+   "albedo": [
+    0.0227,
+    0.007,
+    0.0072
+   ],
+   "fix": 1.932,
+   "metal": 0.0
+  }
+ },
+ "paint_bucket_1.glb": {
+  "Paint 0": {
+   "albedo": [
+    0.9,
+    0.9,
+    0.88
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
+  }
+ },
+ "paint_bucket_2.glb": {
+  "Paint 1": {
+   "albedo": [
+    0.12,
+    0.3,
+    0.2
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
+  }
+ },
+ "paint_bucket_3.glb": {
+  "Paint 2": {
+   "albedo": [
+    0.6,
+    0.1,
+    0.08
+   ],
+   "metal": 0.0,
+   "rough": 0.6
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
   }
  },
  "painting.glb": {
@@ -4864,6 +5076,18 @@
     0.92
    ],
    "metal": 0.0,
+   "seeThrough": true
+  }
+ },
+ "plastic_sheet.glb": {
+  "Plastic sheet": {
+   "albedo": [
+    0.85,
+    0.9,
+    0.95
+   ],
+   "metal": 0.0,
+   "rough": 0.45,
    "seeThrough": true
   }
  },
@@ -5246,6 +5470,72 @@
    "rough": 1.0
   }
  },
+ "sawhorse_1.glb": {
+  "Amber lamp": {
+   "albedo": [
+    1.0,
+    0.6,
+    0.1
+   ],
+   "emissive": [
+    5.0,
+    2.5,
+    0.25
+   ],
+   "metal": 0.0
+  },
+  "Barricade stripes": {
+   "albedo": [
+    0.7656,
+    0.379,
+    0.3125
+   ],
+   "metal": 0.0,
+   "rough": 0.5
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
+  }
+ },
+ "sawhorse_2.glb": {
+  "Amber lamp.001": {
+   "albedo": [
+    1.0,
+    0.6,
+    0.1
+   ],
+   "emissive": [
+    5.0,
+    2.5,
+    0.25
+   ],
+   "metal": 0.0
+  },
+  "Barricade stripes": {
+   "albedo": [
+    0.7656,
+    0.379,
+    0.3125
+   ],
+   "metal": 0.0,
+   "rough": 0.5
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
+  }
+ },
  "side_table.glb": {
   "Book spines": {
    "albedo": [
@@ -5484,6 +5774,18 @@
   }
  },
  "stage.glb": {
+  "Stage black": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.022
+   ],
+   "fix": 1.241,
+   "metal": 0.4,
+   "rough": 0.5
+  }
+ },
+ "stage_amp.glb": {
   "Amp cream": {
    "albedo": [
     0.85,
@@ -5525,6 +5827,27 @@
    "fix": 26.468,
    "metal": 0.007
   },
+  "Stage black": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.022
+   ],
+   "fix": 1.241,
+   "metal": 0.4,
+   "rough": 0.5
+  }
+ },
+ "stage_guitar.glb": {
+  "Amp cream": {
+   "albedo": [
+    0.85,
+    0.8,
+    0.65
+   ],
+   "metal": 0.0,
+   "rough": 0.5
+  },
   "Guitar back": {
    "albedo": [
     0.0285,
@@ -5551,6 +5874,26 @@
    ],
    "metal": 0.007
   },
+  "Stage black": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.022
+   ],
+   "fix": 1.241,
+   "metal": 0.4,
+   "rough": 0.5
+  },
+  "Stage chrome": {
+   "albedo": [
+    0.85,
+    0.85,
+    0.88
+   ],
+   "metal": 1.0
+  }
+ },
+ "stage_lights.glb": {
   "PAR lens": {
    "albedo": [
     1.0,
@@ -5573,6 +5916,18 @@
    "fix": 1.241,
    "metal": 0.4,
    "rough": 0.5
+  }
+ },
+ "stage_mic.glb": {
+  "Stage black": {
+   "albedo": [
+    0.02,
+    0.02,
+    0.022
+   ],
+   "fix": 1.241,
+   "metal": 0.4,
+   "rough": 0.5
   },
   "Stage chrome": {
    "albedo": [
@@ -5581,6 +5936,54 @@
     0.88
    ],
    "metal": 1.0
+  }
+ },
+ "stage_stool.glb": {
+  "Amp tolex": {
+   "albedo": [
+    0.0021,
+    0.0009,
+    0.0006
+   ],
+   "fix": 26.468,
+   "metal": 0.007
+  },
+  "Stage chrome": {
+   "albedo": [
+    0.85,
+    0.85,
+    0.88
+   ],
+   "metal": 1.0
+  }
+ },
+ "step_ladder.glb": {
+  "Aluminum": {
+   "albedo": [
+    0.75,
+    0.76,
+    0.78
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Black rubber": {
+   "albedo": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "metal": 0.0,
+   "rough": 0.85
+  },
+  "Painted steel": {
+   "albedo": [
+    0.12,
+    0.12,
+    0.12
+   ],
+   "metal": 0.6,
+   "rough": 0.6
   }
  },
  "string_lights.glb": {
@@ -5730,6 +6133,26 @@
    "metal": 0.6
   }
  },
+ "toolbox.glb": {
+  "Black rubber": {
+   "albedo": [
+    0.03,
+    0.03,
+    0.03
+   ],
+   "metal": 0.0,
+   "rough": 0.85
+  },
+  "Toolbox red": {
+   "albedo": [
+    0.7,
+    0.05,
+    0.03
+   ],
+   "metal": 0.4,
+   "rough": 0.5
+  }
+ },
  "trash_can.glb": {
   "Stainless": {
    "albedo": [
@@ -5863,6 +6286,30 @@
     0.0502,
     0.079,
     0.0512
+   ],
+   "metal": 0.0
+  }
+ },
+ "work_light.glb": {
+  "Tool yellow": {
+   "albedo": [
+    0.95,
+    0.7,
+    0.05
+   ],
+   "metal": 0.0,
+   "rough": 0.5
+  },
+  "Work light": {
+   "albedo": [
+    1.0,
+    0.95,
+    0.85
+   ],
+   "emissive": [
+    14.0,
+    12.88,
+    10.5
    ],
    "metal": 0.0
   }

@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (535 things)
+## bar (569 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -495,7 +495,6 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `stage` | `stage` |  | `stage.glb` | room model |
 | `dartboard` | `dartboard` |  | `dartboard.glb` |  |
 | `chalkboard` | `chalkboard` |  | `chalkboard.glb` |  |
-| `darts_zone` | `darts_zone` |  | `darts_zone.glb` | room model |
 | `round_table-7` | `round_table` |  | `round_table.glb` |  |
 | `pint_glass-5` | `pint_glass` |  | `pint_glass.glb` |  |
 | `sim_rig-1` | `sim_rig` |  | `sim_rig.glb` |  |
@@ -506,8 +505,43 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `mirror_button-1` | `mirror-button-full` |  | `mirror_button.glb` |  |
 | `mirror_button-2` | `mirror-button-avatars` |  | `mirror_button.glb` |  |
 | `mirror_button-3` | `mirror-button-off` |  | `mirror_button.glb` |  |
-| `construction` | `construction` |  | `construction.glb` | room model |
 | `arcade` | `arcade` |  | `arcade.glb` | room model |
+| `stage_mic` | `wall_prop` |  | `stage_mic.glb` |  |
+| `stage_guitar` | `wall_prop` |  | `stage_guitar.glb` |  |
+| `stage_amp` | `wall_prop` |  | `stage_amp.glb` |  |
+| `stage_lights` | `glow_prop` |  | `stage_lights.glb` |  |
+| `stage_stool` | `wall_prop` |  | `stage_stool.glb` |  |
+| `board_darts` | `wall_prop` |  | `board_darts.glb` |  |
+| `dart_surround` | `wall_prop` |  | `dart_surround.glb` |  |
+| `dart_holder` | `wall_prop` |  | `dart_holder.glb` |  |
+| `oche` | `wall_prop` |  | `oche.glb` |  |
+| `dart_spotlights` | `glow_prop` |  | `dart_spotlights.glb` |  |
+| `neon_darts` | `neon_sign` |  | `neon_darts.glb` |  |
+| `caution_tape` | `wall_prop` |  | `caution_tape.glb` |  |
+| `plastic_sheet` | `wall_prop` |  | `plastic_sheet.glb` |  |
+| `sawhorse_1` | `wall_prop` |  | `sawhorse_1.glb` |  |
+| `sawhorse_2` | `wall_prop` |  | `sawhorse_2.glb` |  |
+| `cone_1` | `wall_prop` |  | `cone_1.glb` |  |
+| `cone_2` | `wall_prop` |  | `cone_2.glb` |  |
+| `cone_3` | `wall_prop` |  | `cone_3.glb` |  |
+| `easel_sign` | `wall_prop` |  | `easel_sign.glb` |  |
+| `work_light` | `glow_prop` |  | `work_light.glb` |  |
+| `step_ladder` | `wall_prop` |  | `step_ladder.glb` |  |
+| `paint_bucket_1` | `wall_prop` |  | `paint_bucket_1.glb` |  |
+| `paint_bucket_2` | `wall_prop` |  | `paint_bucket_2.glb` |  |
+| `paint_bucket_3` | `wall_prop` |  | `paint_bucket_3.glb` |  |
+| `drop_cloth` | `wall_prop` |  | `drop_cloth.glb` |  |
+| `lumber` | `wall_prop` |  | `lumber.glb` |  |
+| `drywall` | `wall_prop` |  | `drywall.glb` |  |
+| `toolbox` | `wall_prop` |  | `toolbox.glb` |  |
+| `arcade_neon_bolt` | `neon_sign` |  | `arcade_neon_bolt.glb` |  |
+| `arcade_neon_ring` | `neon_sign` |  | `arcade_neon_ring.glb` |  |
+| `arcade_neon_triangle` | `neon_sign` |  | `arcade_neon_triangle.glb` |  |
+| `arcade_neon_zigzag` | `neon_sign` |  | `arcade_neon_zigzag.glb` |  |
+| `arcade_neon_wave` | `neon_sign` |  | `arcade_neon_wave.glb` |  |
+| `arcade_sign_bar` | `neon_sign` |  | `arcade_sign_bar.glb` |  |
+| `arcade_sign_inside` | `neon_sign` |  | `arcade_sign_inside.glb` |  |
+| `arcade_bench` | `wall_prop` |  | `arcade_bench.glb` |  |
 | `arcade_cabinet` | `arcade_cabinet` |  | `arcade_cabinet.glb` |  |
 | `credit_coin` | `credit_coin` |  | `credit_coin.glb` |  |
 | `arcade-bench` | `seat-spot` |  |  | no model |

@@ -3,9 +3,12 @@
 # amp, a ceiling lighting bar with three PAR spotlights aimed at the piano,
 # cables on the floor, and a stool.
 #
-#   blender -b --factory-startup --python tools/assets/stage.py -- <texture dir> <out.glb>
+#   blender -b --factory-startup --python tools/assets/stage.py -- <texture dir> <out.glb> [<things.json>]
 #
-# Model space = world space; the stage floor is at y = STAGE_H.
+# Model space = world space; the stage floor is at y = STAGE_H. Since J73 the
+# mic, the guitar, the amp, the light bar and the stool are things of their
+# own (common.group): their models go next to <out.glb>, where they stand
+# into <things.json>; <out.glb> keeps the cables.
 import math
 import os
 import sys
@@ -17,7 +20,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 import common  # noqa: E402
 import layout as L  # noqa: E402
 
-tex_dir, out_path = sys.argv[sys.argv.index("--") + 1:][:2]
+import json  # noqa: E402
+
+args = sys.argv[sys.argv.index("--") + 1:]
+tex_dir, out_path = args[:2]
+things_path = args[2] if len(args) > 2 else None
 common.reset_scene()
 
 Y = L.STAGE_H
@@ -34,6 +41,7 @@ cream = common.plain_material("Amp cream", (0.85, 0.8, 0.65), 0.0, 0.4)
 
 # ---- Microphone on a boom stand ----
 MX, MZ = -6.25, 6.3
+common.group("stage_mic", (MX, Y, MZ))
 for k in range(3):
     a = k * 2 * math.pi / 3 + 0.3
     common.tube("Mic leg", [(MX, Y + 0.12, MZ), (MX + 0.32 * math.cos(a), Y + 0.01, MZ + 0.32 * math.sin(a))], 0.009,
@@ -53,6 +61,7 @@ common.tube("Mic cable", [mic_base, (MX - 0.1, Y + 1.0, MZ - 0.05), (MX - 0.05, 
 
 # ---- Acoustic guitar on an A-frame stand ----
 GX, GZ = -5.72, 6.62
+common.group("stage_guitar", (GX, Y, GZ))
 g = Matrix.Translation((GX, Y + 0.12, GZ)) @ Matrix.Rotation(-math.pi / 2 - 0.6, 4, "Y") @ \
     Matrix.Rotation(-0.25, 4, "X")
 
@@ -113,6 +122,7 @@ common.tube("Stand back", [(GX - 0.2, Y, GZ - 0.25), (GX, Y + 0.65, GZ - 0.05)],
 
 # ---- Combo amp against the front wall ----
 AX, AZ = -6.95, L.Z1 - 0.22
+common.group("stage_amp", (AX, Y, AZ), 180)  # its front faces the room (-z)
 common.box("Amp", (AX - 0.3, Y, AZ - 0.13), (AX + 0.3, Y + 0.48, AZ + 0.13), tolex, 0.015, 3)
 common.box("Amp grille", (AX - 0.27, Y + 0.03, AZ - 0.132), (AX + 0.27, Y + 0.36, AZ - 0.126), grille, 0.004)
 common.box("Amp panel", (AX - 0.28, Y + 0.38, AZ - 0.135), (AX + 0.28, Y + 0.46, AZ - 0.126), cream, 0.004)
@@ -126,6 +136,7 @@ common.cylinder("Amp light", Vector((AX + 0.24, Y + 0.42, AZ - 0.14)), 0.006, 0.
 
 # ---- Lighting bar with three PAR cans aimed at the piano ----
 BX, BY = -6.3, L.H - 0.35
+common.group("stage_lights", (BX, L.H, 5.4))  # hanging from the ceiling
 common.cylinder("Light bar", Vector((BX, BY, 5.4)), 0.025, 3.0, "z", black, segments=10)
 for z in (4.3, 6.5):
     common.cylinder("Bar drop", Vector((BX, (BY + L.H) / 2, z)), 0.012, L.H - BY, "y", black, segments=8)
@@ -141,13 +152,19 @@ for z, target in ((4.6, (-7.2, 1.0, 5.2)), (5.4, (-7.6, 1.0, 5.6)), (6.2, (-7.0,
 
 # ---- A bar stool by the mic, cables ----
 SX, SZ = -6.8, 6.35
+common.group("stage_stool", (SX, Y, SZ))
 common.cylinder("Stool seat", Vector((SX, Y + 0.74, SZ)), 0.17, 0.05, "y", tolex, segments=20)
 for k in range(4):
     a = k * math.pi / 2 + 0.4
     common.tube("Stool leg", [(SX + 0.1 * math.cos(a), Y + 0.72, SZ + 0.1 * math.sin(a)),
                               (SX + 0.2 * math.cos(a), Y, SZ + 0.2 * math.sin(a))], 0.012, chrome, sides=6)
 common.torus("Stool ring", Vector((SX, Y + 0.28, SZ)), 0.16, 0.008, chrome, segments=20, sides=5)
+common.group(None)  # the cables stay with the stage
 common.tube("Cable", [(AX + 0.2, Y + 0.1, AZ - 0.1), (-6.6, Y + 0.004, 6.4), (-5.9, Y + 0.004, 6.0),
                       (-5.45, Y + 0.004, 5.6)], 0.006, black, sides=5)
 
-common.finish_and_export(out_path, uv_scale={"Amp grille": 6.0, "Amp tolex": 3.0})
+placed = common.finish_and_export_groups(os.path.dirname(out_path), os.path.basename(out_path)[:-4],
+                                        uv_scale={"Amp grille": 6.0, "Amp tolex": 3.0})
+if things_path:
+    with open(things_path, "w") as f:
+        json.dump(placed, f)

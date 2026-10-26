@@ -186,6 +186,22 @@ def mesh_object(name, bm, mat, smooth=False):
     return obj
 
 
+# Groups (the world remake J73): a room-sized script marks what it builds
+# next as one thing (group("guitar", origin, turn)); finish_and_export_groups
+# then writes each group as a model of its own, standing on its origin, and
+# the rest (no group) as the room's model.
+_GROUP = {"name": None}
+GROUPS = {}  # name -> (origin, turn in degrees)
+
+
+def group(name, origin=(0.0, 0.0, 0.0), turn=0.0):
+    """What is built from now on is the thing `name`, placed at `origin`
+    (world), turned `turn` degrees about +y (its front = +z). None: the room."""
+    _GROUP["name"] = name
+    if name is not None:
+        GROUPS[name] = (tuple(origin), turn)
+
+
 def _new_object(name, bm, mat):
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
@@ -193,6 +209,8 @@ def _new_object(name, bm, mat):
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.scene.collection.objects.link(obj)
     mesh.materials.append(mat)
+    if _GROUP["name"] is not None:
+        obj["group"] = _GROUP["name"]
     return obj
 
 
@@ -404,11 +422,12 @@ def _project_uvs(obj, repeats_per_meter):
 
 
 def _join_by_material():
-    """One mesh per material, so the engine draws each model in a few calls."""
+    """One mesh per material (per group), so the engine draws each model in a
+    few calls."""
     groups = {}
     for obj in bpy.context.scene.objects:
         if obj.type == "MESH":
-            groups.setdefault(obj.data.materials[0].name, []).append(obj)
+            groups.setdefault((obj.get("group", ""), obj.data.materials[0].name), []).append(obj)
     view_layer = bpy.context.view_layer
     for name, objs in groups.items():
         if len(objs) < 2:
@@ -418,8 +437,58 @@ def _join_by_material():
             o.select_set(True)
         view_layer.objects.active = objs[0]
         bpy.ops.object.join()
-        objs[0].name = name
+        objs[0].name = name[1]
     bpy.ops.object.select_all(action="DESELECT")
+
+
+def finish_and_export_groups(out_dir, room_name, uv_scale, image_format="JPEG"):
+    """Like finish_and_export, but each group (group()) becomes
+    <out_dir>/<name>.glb on its own origin and turn, and what has no group
+    <out_dir>/<room_name>.glb (in world space; None: none). Returns
+    {name: (origin, turn)} for the place file."""
+    _prepare(uv_scale)
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    by_group = {}
+    for o in meshes:
+        by_group.setdefault(o.get("group", ""), []).append(o)
+    os.makedirs(out_dir, exist_ok=True)
+    for name, objs in by_group.items():
+        if not name and not room_name:
+            continue
+        origin, turn = GROUPS.get(name, ((0, 0, 0), 0.0))
+        m = Matrix.Rotation(-math.radians(turn), 4, "Y") @ Matrix.Translation((-origin[0], -origin[1], -origin[2]))
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in objs:
+            o.data.transform(m)
+            o.select_set(True)
+        path = os.path.join(out_dir, (name or room_name) + ".glb")
+        bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=False, export_apply=True,
+                                  export_image_format=image_format, export_jpeg_quality=88, export_texcoords=True,
+                                  export_normals=True, export_tangents=True, export_materials="EXPORT",
+                                  export_cameras=False, export_lights=False, use_selection=True)
+        tris = sum(len(p.vertices) - 2 for o in objs for p in o.data.polygons)
+        print("EXPORTED", path, os.path.getsize(path), "bytes,", tris, "triangles")
+    return {n: GROUPS[n] for n in by_group if n}
+
+
+def _prepare(uv_scale):
+    """Applies modifiers, adds UVs and smooth shading, joins by material."""
+    view_layer = bpy.context.view_layer
+    for obj in list(bpy.context.scene.objects):
+        if obj.type != "MESH":
+            continue
+        view_layer.objects.active = obj
+        obj.select_set(True)
+        for mod in list(obj.modifiers):
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+        mat = obj.data.materials[0]
+        _project_uvs(obj, obj.get("uv_scale", uv_scale.get(mat.name, 1.0)))
+        if obj.get("smooth"):
+            bpy.ops.object.shade_smooth_by_angle(angle=math.radians(35))
+        else:
+            bpy.ops.object.shade_smooth(keep_sharp_edges=True)
+        obj.select_set(False)
+    _join_by_material()
 
 
 def finish_and_export(out_path, uv_scale, image_format="JPEG", extras=False):
