@@ -56,13 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J71 · The world remake, step 3, the walls' props taken apart** (the world). The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
-- [x] **J71.1** Fix (urgent): the lounge bookshelf's thing renamed (it took the id of the bookshelf's tap spot, so 'read a book' was dropped), and every new lounge kind gets a live loop (the world refused them as still) *Check:* Tap the bookshelf in the lounge: 'read a book' works; the log shows no 'World:' problems
-- [x] **J71.2** The walls' props taken apart: neon and tin signs, licence plates, photos, the clock, the TV, coats and umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates each their own thing where they hang or stand; decor_walls.glb keeps only what is truly wall *Check:* Walk around the walls: every sign, photo and plant is where it was, nothing floats; in the Studio, tap a sign and move it
+**J102 · A real fire** (the world). A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8) · N3
+- [ ] **J102.1** The fire drawn by a shader: flames from moving noise (shape, heat colour from deep red to yellow-white, flicker, rising embers) in place of the moving pictures; out: embers glow *Check:* Stand by the fire: the flames move and change like a real fire, no flat pictures; tap it: the fire goes out to glowing embers
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J102 → J99 → J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
+**Up next, in order:** J99 → J101 → J100 → J72 → J73 → J74 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the wall props first, then the fire, books, chess and piano, then the rest of the remake with the new rooms built with the shells, 2026-10-26 #8)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -133,8 +132,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)
 - [ ] **J101** Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
   *Verdict:* Doable now — The chess game and its screen exist; this adds a full-screen view and theme sets
-- [ ] **J102** A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8) · N3
-  *Verdict:* Doable now — A shader effect inside the fireplace; small on screen, cheap on the phone
 - [ ] **J103** The cozy lounge grows: a bigger fireside room that breaks normal architecture (expanded beyond the old wall, its own nooks and levels) (request 2026-10-26 #8) · N3
   *Verdict:* Doable after J74 — It changes the room shell, so it comes with or after the shells' remake
 - [ ] **J104** A sunken seating nook by the big mirror: a few steps down, seats, a pair of speakers, its own chill music with its own player to pick and control tracks (request 2026-10-26 #8) · N3 N4
@@ -280,6 +277,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13
 - `0d40f55` J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37
 - `35e68bb` J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
 - `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
