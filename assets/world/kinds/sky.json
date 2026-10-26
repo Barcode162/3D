@@ -1,0 +1,85 @@
+{
+  "about": "Minimal kinds for the sky-platform demo. Proves the shared-property model: every thing of a kind shares the kind's parts/loops/states unless the thing itself overrides them.",
+  "kinds": [
+    {
+      "id": "sky-platform",
+      "about": "A simple floating platform: floor + thin edge. Shared by every sky platform unless a thing overrides parts.",
+      "still": "a static platform shell",
+      "parts": {
+        "boxes": [
+          {"at": [0, 0, 0], "size": [6, 0.2, 6], "material": "dark-wood", "color": [0.18, 0.14, 0.12]},
+          {"at": [0, 0.12, 0], "size": [5.6, 0.04, 5.6], "material": "oak-floor"},
+          {"at": [0, 0.05, -3.05], "size": [6.1, 0.3, 0.15], "material": "black-steel"},
+          {"at": [0, 0.05, 3.05], "size": [6.1, 0.3, 0.15], "material": "black-steel"},
+          {"at": [-3.05, 0.05, 0], "size": [0.15, 0.3, 6.1], "material": "black-steel"},
+          {"at": [3.05, 0.05, 0], "size": [0.15, 0.3, 6.1], "material": "black-steel"}
+        ],
+        "blocks": [
+          [-3.2, -3.2, 3.2, 3.2]
+        ],
+        "floors": [
+          [-2.9, -2.9, 2.9, 2.9, 0.14]
+        ]
+      }
+    },
+    {
+      "id": "sky-lamp",
+      "about": "A hanging point light with a soft glow. Shared colour and brightness; a thing can override the light fields.",
+      "parts": {
+        "boxes": [
+          {"at": [0, 0, 0], "size": [0.18, 0.12, 0.18], "material": "brass"},
+          {"at": [0, -0.2, 0], "size": [0.35, 0.28, 0.35], "material": "glow-glass", "color": [1, 0.92, 0.8], "solid": false}
+        ],
+        "light": {
+          "color": [1, 0.92, 0.82],
+          "kelvin": 2700,
+          "lumens": 800,
+          "intensity": 6,
+          "range": 8,
+          "radius": 0.15,
+          "shape": "ball",
+          "center": [0, -0.2, 0]
+        }
+      },
+      "loops": {
+        "idle": {
+          "period": 4,
+          "pieces": [
+            {"ch": "glow", "shape": "wave", "amp": 0.15, "rate": 1}
+          ]
+        }
+      },
+      "states": {
+        "on": {"loop": "idle"}
+      },
+      "start": "on"
+    },
+    {
+      "id": "sky-marker",
+      "about": "A small glowing cube used to prove per-thing overrides. Default is amber; instances can change colour and size.",
+      "parts": {
+        "boxes": [
+          {"at": [0, 0.25, 0], "size": [0.5, 0.5, 0.5], "material": "glow-glass", "color": [1, 0.7, 0.2]}
+        ],
+        "glowbox": {
+          "color": [1, 0.7, 0.2],
+          "glow": 3,
+          "size": 0.5
+        }
+      },
+      "loops": {
+        "pulse": {
+          "period": 2.5,
+          "pieces": [
+            {"ch": "glow", "shape": "wave", "amp": 0.8},
+            {"ch": "scale.xyz", "shape": "wave", "amp": 0.08}
+          ]
+        }
+      },
+      "states": {
+        "live": {"loop": "pulse"}
+      },
+      "start": "live"
+    }
+  ]
+}

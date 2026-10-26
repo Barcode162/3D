@@ -1,0 +1,78 @@
+{
+  "id": "sky",
+  "about": "Minimal sky platform. Proves shared kind properties + per-thing overrides. Platform sits high above the origin so it is clearly 'in the sky'.",
+  "kinds": ["sky"],
+  "spawn": {
+    "at": [0, 42.5, 2],
+    "yaw": 180
+  },
+  "air": {
+    "ambient": [0.08, 0.09, 0.14],
+    "fog": [0.12, 0.14, 0.22],
+    "fogDensity": 0.008,
+    "beams": 0.01
+  },
+  "lightGrid": {
+    "min": [-8, 38, -8],
+    "max": [8, 50, 8]
+  },
+  "rooms": [
+    {
+      "id": "platform",
+      "min": [-4, 39, -4],
+      "max": [4, 48, 4]
+    }
+  ],
+  "things": [
+    {
+      "id": "platform",
+      "kind": "sky-platform",
+      "at": [0, 40, 0]
+    },
+    {
+      "id": "lamp-center",
+      "kind": "sky-lamp",
+      "at": [0, 43.2, 0]
+    },
+    {
+      "id": "marker-default",
+      "kind": "sky-marker",
+      "at": [-1.5, 40.2, -1.5],
+      "about": "Uses the kind's shared amber colour and size."
+    },
+    {
+      "id": "marker-blue",
+      "kind": "sky-marker",
+      "at": [1.5, 40.2, -1.5],
+      "scale": 1.4,
+      "parts": {
+        "boxes": [
+          {"at": [0, 0.25, 0], "size": [0.5, 0.5, 0.5], "material": "glow-glass", "color": [0.25, 0.55, 1]}
+        ],
+        "glowbox": {
+          "color": [0.25, 0.55, 1],
+          "glow": 4,
+          "size": 0.5
+        }
+      },
+      "about": "Same kind, but this thing overrides colour (blue) and scale. Proves properties are shared unless the thing specifies otherwise."
+    },
+    {
+      "id": "marker-green",
+      "kind": "sky-marker",
+      "at": [0, 40.2, 1.8],
+      "phase": 0.4,
+      "parts": {
+        "boxes": [
+          {"at": [0, 0.25, 0], "size": [0.5, 0.5, 0.5], "material": "glow-glass", "color": [0.3, 0.95, 0.45]}
+        ],
+        "glowbox": {
+          "color": [0.3, 0.95, 0.45],
+          "glow": 3.5,
+          "size": 0.5
+        }
+      },
+      "about": "Shared kind + colour override + phase offset so its pulse is out of step with the others."
+    }
+  ]
+}
