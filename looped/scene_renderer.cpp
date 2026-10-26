@@ -211,7 +211,9 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   buildLighting();
   if (!gi_.init(gpu, lightingBuffer_, sizeof(LightingUniforms))) LOG_ERROR("Bounced light: not available.");
   createEnvironment();
+  createShadows();
   for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms"));
+  for (View& v : shadowViews_) v = makeView(envDummyView_, "lamp shadow frame uniforms", nullptr, true);
   // The capture's own views: they can't read the cube they draw into.
   for (View& v : captureViews_) v = makeView(envDummyView_, "capture frame uniforms");
 
@@ -352,6 +354,7 @@ void SceneRenderer::buildLighting() {
   gpuLights_.assign(l->lights, l->lights + kMaxLights);
   lightsDirtyFrom_ = SIZE_MAX;
   lightsDirtyTo_ = 0;
+  applyShadowSlots();  // which lamps use their shadow maps (J97)
   LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells, at most %u each; lamps reach down to %.2f lux%s.",
            classic_ ? "classic" : "real units", count, nx, nz, cell, cap, classic_ ? 0.0f : minLux,
            crowded ? " (some cells are too full; the faintest are left out)" : "");
@@ -371,12 +374,13 @@ wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const ch
   return gpu_->device.CreateBindGroup(&desc);
 }
 
-SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer) {
+SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer,
+                                            bool shadowPass) {
   const wgpu::Device& device = gpu_->device;
   View v;
   v.buffer = buffer ? buffer : makeUniformBuffer(device, sizeof(FrameUniforms), label);
   v.env = env;
-  wgpu::BindGroupEntry entries[11];
+  wgpu::BindGroupEntry entries[13];
   entries[0].binding = 0;
   entries[0].buffer = v.buffer;
   entries[0].size = sizeof(FrameUniforms);
@@ -399,9 +403,13 @@ SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const 
   }
   entries[10].binding = 10;
   entries[10].textureView = gi_.mask();
+  entries[11].binding = 11;
+  entries[11].textureView = shadowPass ? shadowDummyView_ : shadowArrayView_;
+  entries[12].binding = 12;
+  entries[12].sampler = shadowSampler_;
   wgpu::BindGroupDescriptor desc;
   desc.layout = frameLayout_;
-  desc.entryCount = 11;
+  desc.entryCount = 13;
   desc.entries = entries;
   v.bindGroup = device.CreateBindGroup(&desc);
   return v;
@@ -498,7 +506,7 @@ bool SceneRenderer::createScenePipelines() {
   if (!module) return false;
 
   // Group 0: frame uniforms + material textures. Group 1: per-object uniforms.
-  wgpu::BindGroupLayoutEntry frameEntries[11];
+  wgpu::BindGroupLayoutEntry frameEntries[13];
   frameEntries[0].binding = 0;
   frameEntries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
   frameEntries[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -529,8 +537,15 @@ bool SceneRenderer::createScenePipelines() {
     frameEntries[i].texture.sampleType = i == 10 ? wgpu::TextureSampleType::Uint : wgpu::TextureSampleType::UnfilterableFloat;
     frameEntries[i].texture.viewDimension = wgpu::TextureViewDimension::e3D;
   }
+  frameEntries[11].binding = 11;  // lamp shadows (J97): the cube maps, and comparing with them
+  frameEntries[11].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[11].texture.sampleType = wgpu::TextureSampleType::Depth;
+  frameEntries[11].texture.viewDimension = wgpu::TextureViewDimension::CubeArray;
+  frameEntries[12].binding = 12;
+  frameEntries[12].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[12].sampler.type = wgpu::SamplerBindingType::Comparison;
   wgpu::BindGroupLayoutDescriptor frameDesc;
-  frameDesc.entryCount = 11;
+  frameDesc.entryCount = 13;
   frameDesc.entries = frameEntries;
   frameLayout_ = device.CreateBindGroupLayout(&frameDesc);
 
@@ -648,6 +663,29 @@ bool SceneRenderer::createScenePipelines() {
   desc.label = "model see-through";
   desc.primitive.frontFace = wgpu::FrontFace::CCW;
   engine::pipelines::create(device, desc, &modelBlendPipeline_);
+
+  // Lamp shadows (J97): depth only, both faces (no winding to get wrong in
+  // a cube face), pushed back a little so lit surfaces don't shadow themselves.
+  {
+    wgpu::DepthStencilState shadowDepth;
+    shadowDepth.format = wgpu::TextureFormat::Depth16Unorm;
+    shadowDepth.depthWriteEnabled = true;
+    shadowDepth.depthCompare = wgpu::CompareFunction::Less;
+    shadowDepth.depthBias = 4;
+    shadowDepth.depthBiasSlopeScale = 2.0f;
+    wgpu::RenderPipelineDescriptor sd = desc;
+    sd.fragment = nullptr;
+    sd.depthStencil = &shadowDepth;
+    sd.primitive.cullMode = wgpu::CullMode::None;
+    sd.label = "lamp shadows (models)";
+    engine::pipelines::create(device, sd, &shadowModelPipeline_);
+    sd.label = "lamp shadows (shapes)";
+    sd.layout = layout;
+    sd.vertex.entryPoint = "vs_main";
+    sd.vertex.bufferCount = 1;
+    sd.vertex.buffers = &vertexLayout;
+    engine::pipelines::create(device, sd, &shadowObjectPipeline_);
+  }
 
   wgpu::SamplerDescriptor samplerDesc;
   samplerDesc.addressModeU = samplerDesc.addressModeV = wgpu::AddressMode::Repeat;
@@ -778,6 +816,7 @@ void SceneRenderer::setLight(size_t light, const PointLight& p) {
   g.color[3] *= lightScale_[light];
   // Its reach stays as the grid has it (a bigger one would need the grid rebuilt).
   g.position[3] = std::min(g.position[3], gpuLights_[light].position[3]);
+  g.params[1] = gpuLights_[light].params[1];  // its shadow map, if it has one (J97)
   gpuLights_[light] = g;
   lightsDirtyFrom_ = std::min(lightsDirtyFrom_, light);
   lightsDirtyTo_ = std::max(lightsDirtyTo_, light + 1);
@@ -1008,6 +1047,7 @@ void SceneRenderer::applyAlbedo(size_t f) {
 void SceneRenderer::remakeViews() {
   for (View& v : views_) v = makeView(v.env, "frame uniforms", v.buffer);
   for (View& v : captureViews_) v = makeView(v.env, "capture frame uniforms", v.buffer);
+  for (View& v : shadowViews_) v = makeView(v.env, "lamp shadow frame uniforms", v.buffer, true);
 }
 
 namespace {
@@ -1056,7 +1096,7 @@ void SceneRenderer::buildGi() {
 
 void SceneRenderer::relightGi() { gi_.relight(giLamps(lights_)); }
 
-void SceneRenderer::layoutChanged() { giDirtyMs_ = engine::clockMs(); }
+void SceneRenderer::layoutChanged() { giDirtyMs_ = shadowDirtyMs_ = engine::clockMs(); }
 
 void SceneRenderer::streamRooms(Vec3 eye, double nowMs) {
   if (streamStartMs_ < 0) streamStartMs_ = nowMs;
@@ -1189,11 +1229,13 @@ SceneRenderer::RoomView SceneRenderer::roomView(const Mat4& viewProj, int eyeRoo
 // nearer glass blends over farther glass. Only chunks inside `view` are
 // drawn; neighbouring visible chunks go out as one draw.
 void SceneRenderer::drawModels(const wgpu::RenderPassEncoder& pass, bool blend, Vec3 eye, const RoomView& view,
-                               float minSize) const {
+                               float minSize, int skipModel, bool stillOnly) const {
   static_assert(offsetof(ObjectUniforms, material) + 16 == kCopyBytes, "a copy = matrix, colour, material");
   std::vector<const ModelDraw*> order;
   for (const ModelDraw& m : models_) {
     if (!m.gpu || (blend && !m.gpu->hasBlend)) continue;
+    const auto mi = static_cast<size_t>(&m - models_.data());
+    if (static_cast<int>(mi) == skipModel || (stillOnly && !modelStill_[mi])) continue;
     const engine::Aabb box = engine::transformAabb(m.world, {m.gpu->boundsMin, m.gpu->boundsMax});
     if (!seen(view, box, m.room)) continue;
     if (minSize > 0) {
@@ -1512,6 +1554,118 @@ void SceneRenderer::renderOverlay(const wgpu::TextureView& target, const engine:
   gpu_->queue.Submit(1, &commands);
 }
 
+// ---- Lamp shadows (J97, docs/plan/jobs/J97.md) ----
+
+void SceneRenderer::createShadows() {
+  const wgpu::Device& device = gpu_->device;
+  wgpu::TextureDescriptor t;
+  t.label = "lamp shadows";
+  t.size = {kShadowSize, kShadowSize, kShadowLamps * 6};
+  t.format = wgpu::TextureFormat::Depth16Unorm;
+  t.usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding;
+  shadowTex_ = device.CreateTexture(&t);
+  wgpu::TextureViewDescriptor v;
+  v.dimension = wgpu::TextureViewDimension::CubeArray;
+  v.arrayLayerCount = kShadowLamps * 6;
+  shadowArrayView_ = shadowTex_.CreateView(&v);
+  t.label = "no lamp shadows here";
+  t.size = {1, 1, 6};
+  t.usage = wgpu::TextureUsage::TextureBinding;
+  shadowDummy_ = device.CreateTexture(&t);
+  v.arrayLayerCount = 6;
+  shadowDummyView_ = shadowDummy_.CreateView(&v);
+  wgpu::SamplerDescriptor sd;
+  sd.magFilter = sd.minFilter = wgpu::FilterMode::Linear;  // 2 x 2 compared and blended
+  sd.addressModeU = sd.addressModeV = sd.addressModeW = wgpu::AddressMode::ClampToEdge;
+  sd.compare = wgpu::CompareFunction::LessEqual;
+  shadowSampler_ = device.CreateSampler(&sd);
+}
+
+void SceneRenderer::setLampShadows(bool on) {
+  if (on == shadowsOn_) return;
+  shadowsOn_ = on;
+  applyShadowSlots();
+}
+
+// The brightest lamps get a map (small bulbs and candles keep the probes'
+// test); drawing starts again from the first face.
+void SceneRenderer::planShadows() {
+  std::vector<size_t> order;
+  for (size_t i = 0; i < lightIntensity_.size(); ++i)
+    if (lightIntensity_[i] > 0) order.push_back(i);
+  std::sort(order.begin(), order.end(), [&](size_t a, size_t b) { return lightIntensity_[a] > lightIntensity_[b]; });
+  if (order.size() > kShadowLamps) order.resize(kShadowLamps);
+  shadowSlot_.assign(lights_.size(), -1);
+  shadowLight_.clear();
+  for (size_t i : order) {
+    shadowSlot_[i] = static_cast<int>(shadowLight_.size());
+    shadowLight_.push_back(static_cast<int>(i));
+  }
+  shadowReady_.assign(shadowLight_.size(), false);
+  shadowCursor_ = 0;
+  applyShadowSlots();
+  LOG_INFO("Lamp shadows: the %zu brightest of %zu lamps.", shadowLight_.size(), lights_.size());
+}
+
+void SceneRenderer::applyShadowSlots() {
+  for (size_t i = 0; i < gpuLights_.size(); ++i) {
+    const int slot = i < shadowSlot_.size() ? shadowSlot_[i] : -1;
+    const bool use = shadowsOn_ && !classic_ && slot >= 0 && shadowReady_[static_cast<size_t>(slot)];
+    const float v = use ? static_cast<float>(slot + 1) : 0.0f;
+    if (gpuLights_[i].params[1] == v) continue;
+    gpuLights_[i].params[1] = v;
+    lightsDirtyFrom_ = std::min(lightsDirtyFrom_, i);
+    lightsDirtyTo_ = std::max(lightsDirtyTo_, i + 1);
+  }
+}
+
+// A few cube faces a frame: each lamp's view of the still things around it
+// (its own model left out), 90 degrees a face, oriented as cube maps are
+// read (as the reflection capture does).
+void SceneRenderer::drawShadowFaces(const wgpu::CommandEncoder& encoder) {
+  static const Vec3 kForward[6] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+  static const Vec3 kUp[6] = {{0, 1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}, {0, 1, 0}, {0, 1, 0}};
+  Mat4 flip;
+  flip.at(0, 0) = -1;
+  const Mat4 proj = flip * Mat4::perspective(engine::kPi / 2, 1, kShadowNear, kShadowFar);
+  const size_t total = shadowLight_.size() * 6;
+  for (uint32_t k = 0; k < kShadowFacesPerFrame && shadowCursor_ < total; ++k, ++shadowCursor_) {
+    const size_t slot = shadowCursor_ / 6, face = shadowCursor_ % 6;
+    const auto light = static_cast<size_t>(shadowLight_[slot]);
+    const Vec3 at = lights_[light].position;
+    FrameUniforms f = frame_;
+    f.viewProj = proj * Mat4::lookAt(at, at + kForward[face], kUp[face]);
+    setVec4(f.cameraPos, at, 1);
+    gpu_->queue.WriteBuffer(shadowViews_[k].buffer, 0, &f, sizeof(f));
+    wgpu::TextureViewDescriptor one;
+    one.dimension = wgpu::TextureViewDimension::e2D;
+    one.baseArrayLayer = static_cast<uint32_t>(slot * 6 + face);
+    one.arrayLayerCount = 1;
+    wgpu::RenderPassDepthStencilAttachment depth;
+    depth.view = shadowTex_.CreateView(&one);
+    depth.depthLoadOp = wgpu::LoadOp::Clear;
+    depth.depthStoreOp = wgpu::StoreOp::Store;
+    depth.depthClearValue = 1.0f;
+    wgpu::RenderPassDescriptor pd;
+    pd.label = "lamp shadow";
+    pd.colorAttachmentCount = 0;  // no default in webgpu_cpp.h: left alone it's whatever was in memory
+    pd.depthStencilAttachment = &depth;
+    const RoomView cull = roomView(f.viewProj, roomAt(at));
+    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&pd);
+    pass.SetPipeline(shadowObjectPipeline_);
+    pass.SetBindGroup(0, shadowViews_[k].bindGroup);
+    drawItems(pass, sceneDraws_, cull);
+    pass.SetPipeline(shadowModelPipeline_);
+    drawModels(pass, false, at, cull, 0, lights_[light].model, true);
+    pass.End();
+    if (face == 5) {
+      shadowReady_[slot] = true;
+      applyShadowSlots();
+      if (slot + 1 == shadowLight_.size()) LOG_INFO("Lamp shadows: ready.");
+    }
+  }
+}
+
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
                            const std::vector<Mat4>& avatarBones, const std::vector<Mat4>& firstPersonBones,
                            const std::vector<Mirror>& mirrors, const engine::TextRenderer& text,
@@ -1576,6 +1730,19 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
       engine::mipmapsReady(gpu_->device, engine::Gpu::kSceneFormat)) {
     capturePending_ = false;
     captureEnvironment(encoder);
+  }
+  // Lamp shadows (J97): planned once everything has loaded (again when more
+  // rooms load or the Studio moved things), then drawn a few faces a frame.
+  if (shadowsOn_ && !classic_ && shadowModelPipeline_ && shadowObjectPipeline_) {
+    const double now = engine::clockMs();
+    const bool loaded = filesDone_ >= fileProgress_.size() && engine::pendingJobs() == 0 && modelsLoaded_ > 0;
+    if (loaded && (shadowReplan_ || modelsLoaded_ != shadowModels_ || (shadowDirtyMs_ > 0 && now - shadowDirtyMs_ > 1500))) {
+      shadowReplan_ = false;
+      shadowModels_ = modelsLoaded_;
+      shadowDirtyMs_ = -1;
+      planShadows();
+    }
+    if (shadowCursor_ < shadowLight_.size() * 6) drawShadowFaces(encoder);
   }
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 

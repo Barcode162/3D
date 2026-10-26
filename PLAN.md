@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J97 · Lamp shadows** (the engine). Lamp shadows: the 16 brightest lamps cast shadows (drawn once, kept), so stools, tables and the counter block their light and their highlights on the floor; an off switch. Its plan: docs/plan/jobs/J97.md. · N3
-- [ ] **J97.1** Lamp shadows: the 16 brightest lamps, their cube shadows drawn once, used for their light and highlights instead of the probes' blocky test; the switch *Check:* Stand by the bar stools: under each stool the floor is darker and the lamps' reflections stop where stools and tables are; no squares of light on the walls; Settings → Graphics → Lamp shadows off brings back the old look
+- [x] **J97.1** Lamp shadows: the 16 brightest lamps, their cube shadows drawn once, used for their light and highlights instead of the probes' blocky test; the switch *Check:* Stand by the bar stools: under each stool the floor is darker and the lamps' reflections stop where stools and tables are; no squares of light on the walls; Settings → Graphics → Lamp shadows off brings back the old look
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -273,7 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8
+- `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8
 - `83dd678` J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f
 - `b3c6b97` J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2
 - `7521b64` J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1

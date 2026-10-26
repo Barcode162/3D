@@ -21,7 +21,7 @@ window.bar3dSettings = (function () {
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (looped/profiler)
     // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (looped/quality.h); fov: degrees, up/down.
-    quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1],
+    quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1],
   };
   function defaultOf(k) { var d = SCHEMA[k]; return Array.isArray(d) ? d[0] : d; }
   // The value if it fits the schema, else undefined.
@@ -465,6 +465,8 @@ window.bar3dUi = (function () {
       choice('Quality', 'quality', ['Auto', 'High', 'Medium', 'Low']),
       choice('Lighting', 'lighting', ['New', 'Classic']),
       el('div', { class: 'mSmall', text: 'Auto draws a little less sharp when your phone is struggling, and sharp again when it isn\u2019t.' }),
+      choice('Lamp shadows', 'lampShadows', ['On', 'Off']),
+      el('div', { class: 'mSmall', text: 'Stools, tables and the counter block the lamps\u2019 light and their shine on the floor.' }),
       choice('Mirror', 'mirrorQ', ['Full', 'Simple']),
       el('div', { class: 'mSmall', text: 'Simple: a softer reflection without small things far away (people and things near the glass stay).' }),
       slider('Field of view', 'fov', 50, 100, 1, function (v) { return Math.round(v) + '\u00b0'; }),

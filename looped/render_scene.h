@@ -60,6 +60,9 @@ struct PointLight {
   // and `axis2` are half its sides; it shines from both faces).
   int shape = 0;  // 0 ball, 1 tube, 2 panel
   Vec3 axis, axis2;
+  // The placed model the lamp belongs to (its bulb, its shade; an index into
+  // RenderScene::models, -1 = none): left out of the lamp's own shadow (J97).
+  int model = -1;
 };
 
 // A mirror on a wall. Like VRChat's mirror options: kFull reflects the whole

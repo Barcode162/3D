@@ -12,7 +12,7 @@ const kMaxGridCells = 256u;
 struct Light {
   position: vec4f,   // xyz = position, w = range in meters
   color: vec4f,      // rgb = color, w = intensity
-  params: vec4f,     // x = radius of the glowing part
+  params: vec4f,     // x = radius of the glowing part, y = its shadow map + 1 (J97; 0 = none)
   axis: vec4f,       // xyz = half a tube's length / a panel's first side; w = shape (0 ball, 1 tube, 2 panel)
   axis2: vec4f,      // xyz = half a panel's second side
 };
@@ -74,6 +74,12 @@ struct Object {
 @group(0) @binding(8) var giG: texture_3d<f32>;
 @group(0) @binding(9) var giB: texture_3d<f32>;
 @group(0) @binding(10) var giMask: texture_3d<u32>;
+// Lamp shadows (J97): each shadowed lamp's cube map of the still things
+// around it (looped/scene_renderer.cpp drawShadowFaces), compared per look-up.
+@group(0) @binding(11) var shadowMaps: texture_depth_cube_array;
+@group(0) @binding(12) var shadowSampler: sampler_comparison;
+const kShadowNear = 0.1;  // looped/scene_renderer.h kShadowNear, kShadowFar
+const kShadowFar = 25.0;
 @group(1) @binding(0) var<uniform> object: Object;
 
 // Skinned meshes (the avatar): one matrix per bone, set every frame.
@@ -399,6 +405,30 @@ fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
   return textureSampleLevel(envMap, envSampler, dir, roughness * frame.env.z).rgb;  // linear light
 }
 
+// How much of lamp `l` (shadow map `slot`) reaches `p` (0..1): the cube
+// map's depth for the direction from the lamp, compared with this point's
+// (pushed out along the normal a little, more far from the lamp), at five
+// spots around it spread by the bulb's size (soft edges for big bulbs).
+fn lampShadow(p: vec3f, n: vec3f, l: Light, slot: i32) -> f32 {
+  let v0 = p - l.position.xyz;
+  let dist = length(v0);
+  let v = v0 + n * (0.01 + 0.004 * dist);
+  let a = abs(v);
+  let major = max(a.x, max(a.y, a.z));
+  let depthRef = kShadowFar * (major - kShadowNear) / (major * (kShadowFar - kShadowNear));
+  // Two directions across the ray, for the soft spots.
+  let up = select(vec3f(0.0, 1.0, 0.0), vec3f(1.0, 0.0, 0.0), abs(v.y) > 0.9 * length(v));
+  let t1 = normalize(cross(v, up));
+  let t2 = cross(normalize(v), t1);
+  let spread = length(v) * (2.0 / 256.0) + max(l.params.x, 0.01) * 0.5;
+  var s = textureSampleCompareLevel(shadowMaps, shadowSampler, v, slot, depthRef);
+  s += textureSampleCompareLevel(shadowMaps, shadowSampler, v + t1 * spread, slot, depthRef);
+  s += textureSampleCompareLevel(shadowMaps, shadowSampler, v - t1 * spread, slot, depthRef);
+  s += textureSampleCompareLevel(shadowMaps, shadowSampler, v + t2 * spread, slot, depthRef);
+  s += textureSampleCompareLevel(shadowMaps, shadowSampler, v - t2 * spread, slot, depthRef);
+  return s * 0.2;
+}
+
 // Bounced light at a surface: the light arriving from all around (lux,
 // facing `n`) from the 8 probes around it, and which lamps it can see.
 // Probes inside walls are left out, and probes behind the surface count
@@ -602,7 +632,9 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     if (!classic && l.axis.w > 0.5) {  // a tube or a panel (L1.6)
       let al = areaLight(l, worldPos, n, v, a, roughness, nv, f0);
       var seen = 1.0;
-      if (giWeight > 0.0) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
+      let shadowSlot = i32(l.params.y + 0.5) - 1;  // its shadow map (J97), -1 = none
+      if (shadowSlot >= 0) { seen = lampShadow(worldPos, n, l, shadowSlot); }
+      else if (giWeight > 0.0) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
       diffuse += al.diffuse * seen;
       specular += al.specular * seen;
       continue;
@@ -624,7 +656,11 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let atten = window * window / select(max(d2, r2), d2 + 0.25, classic);
     var radiance = l.color.rgb * l.color.w * atten;
     // No lamp light through walls: what the probes around here can see of it.
-    if (giWeight > 0.0) { radiance = radiance * mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
+    // What blocks it: its shadow map (J97: stools, tables, the counter), else
+    // the probes around here (walls; their 0.2 m steps showed as squares).
+    let shadowSlot = i32(l.params.y + 0.5) - 1;
+    if (shadowSlot >= 0) { radiance = radiance * lampShadow(worldPos, n, l, shadowSlot); }
+    else if (giWeight > 0.0) { radiance = radiance * mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
     diffuse += radiance * nl;
 
     // Bulbs aren't points: a bigger glowing part makes a wider, softer

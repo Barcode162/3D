@@ -682,6 +682,8 @@ void handleCommands() {
     }
     g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
     g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));
+    // Lamp shadows (J97): Settings → Graphics → Lamp shadows, or ?shadows=0.
+    g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") && engine::settings::number("lampShadows", 0) == 0);
     g_app.renderer.setRoughFix(g_app.hooks.feature("roughfix"));
     g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
     g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);

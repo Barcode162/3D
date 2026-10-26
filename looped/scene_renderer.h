@@ -95,6 +95,11 @@ class SceneRenderer {
   // above instead of every lamp per pixel (scene.wgsl), so software drawing is quick.
   void setTestLighting(bool on) { testLight_ = on; }
   bool classicLighting() const { return classic_; }
+  // Lamp shadows (J97): the brightest lamps' shadows of still things, drawn
+  // once into cube maps and kept (again when the layout changes); off = the
+  // old look (bounced light's probes decide what a lamp reaches).
+  void setLampShadows(bool on);
+  bool lampShadows() const { return shadowsOn_; }
   // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
   void setEyes(bool on) { eyes_ = on; }
   // After a teleport or travel: the eyes jump to the new place instead of easing.
@@ -313,8 +318,10 @@ class SceneRenderer {
   // Both skip what the view can't see. `minSize` (mirrors): also skip models
   // smaller than this fraction of their distance (tiny far props).
   void drawItems(const wgpu::RenderPassEncoder& pass, const std::vector<DrawItem>& items, const RoomView& view) const;
+  // `skipModel`: leave that model out (a lamp's own, in its shadow);
+  // `stillOnly`: only models that never move (shadows drawn once).
   void drawModels(const wgpu::RenderPassEncoder& pass, bool blend, engine::Vec3 eye, const RoomView& view,
-                  float minSize = 0) const;
+                  float minSize = 0, int skipModel = -1, bool stillOnly = false) const;
   std::vector<engine::Aabb> rooms_;
   std::vector<Doorway> doorways_;
   void loadModels(const RenderScene& scene);
@@ -368,7 +375,9 @@ class SceneRenderer {
   engine::Aabb envRoom_;
   bool capturePending_ = false, envReady_ = false;
   void createEnvironment();
-  View makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer = nullptr);
+  // `shadowPass`: for drawing the lamp shadows themselves (they can't read the
+  // maps they draw into: a stand-in is bound instead).
+  View makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer = nullptr, bool shadowPass = false);
   void captureEnvironment(const wgpu::CommandEncoder& encoder);
   std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
@@ -420,6 +429,29 @@ class SceneRenderer {
   std::vector<GpuLight> gpuLights_;    // what the GPU has (setLightScale changes it, flushLights sends it)
   size_t lightsDirtyFrom_ = SIZE_MAX, lightsDirtyTo_ = 0;
   void flushLights();
+  // Lamp shadows (J97, docs/plan/jobs/J97.md): kShadowLamps cube maps of
+  // kShadowSize² (16-bit depth) in one cube-array texture, drawn
+  // kShadowFacesPerFrame faces a frame; a lamp uses its map once all six
+  // faces are drawn (GpuLight::params[1] = slot + 1; 0 = none).
+  static constexpr uint32_t kShadowLamps = 16, kShadowSize = 256, kShadowFacesPerFrame = 12;
+  static constexpr float kShadowNear = 0.1f, kShadowFar = 25.0f;  // matches looped/shaders/scene.wgsl
+  wgpu::Texture shadowTex_;
+  wgpu::TextureView shadowArrayView_, shadowDummyView_;
+  wgpu::Texture shadowDummy_;
+  wgpu::Sampler shadowSampler_;
+  wgpu::RenderPipeline shadowModelPipeline_, shadowObjectPipeline_;
+  View shadowViews_[kShadowFacesPerFrame];
+  std::vector<int> shadowSlot_;      // per light: its slot, or -1
+  std::vector<int> shadowLight_;     // per slot: its light
+  std::vector<bool> shadowReady_;    // per slot: all six faces drawn
+  size_t shadowCursor_ = 0;          // the next face to draw (slot * 6 + face)
+  bool shadowsOn_ = true, shadowReplan_ = true;
+  size_t shadowModels_ = SIZE_MAX;   // models loaded when the shadows were planned
+  double shadowDirtyMs_ = -1;        // the layout changed (the Studio): plan again 1.5 s later
+  void createShadows();
+  void planShadows();                // pick the lamps and start drawing their maps
+  void drawShadowFaces(const wgpu::CommandEncoder& encoder);
+  void applyShadowSlots();           // which lamps use their maps (GpuLight::params[1])
   void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;

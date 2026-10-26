@@ -48,7 +48,7 @@
     "id": "J97.1",
     "text": "Lamp shadows: the 16 brightest lamps, their cube shadows drawn once, used for their light and highlights instead of the probes' blocky test; the switch",
     "check": "Stand by the bar stools: under each stool the floor is darker and the lamps' reflections stop where stools and tables are; no squares of light on the walls; Settings → Graphics → Lamp shadows off brings back the old look",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1160,7 +1160,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "11033e0",
    "text": "J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8"
   },
   {

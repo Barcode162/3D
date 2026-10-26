@@ -121,6 +121,7 @@ PlaceLayout layOut(const World& world, const Json& place, const MaterialLookup& 
         light.axis = rot.rotate(readVec3(l["axis"], {1, 0, 0})) * static_cast<float>(l["length"].number(1) * 0.5);
         if (light.shape == 2) light.axis2 = rot.rotate(readVec3(l["axis2"], {0, 0, 1})) * static_cast<float>(l["width"].number(1) * 0.5);
       }
+      light.model = out.modelOfThing[n];  // its own model stays out of its shadow (J97)
       out.lights.push_back(light);
       out.lightThing.push_back(i);
       out.lightDims.push_back(l["dims"].boolean(false));
