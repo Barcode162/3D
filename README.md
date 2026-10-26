@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J100.2 The Handbook's folder map names assets/piano
+
+`a70619d` · 2026-10-26 09:39 · 4 files, +13 −26 · tests: none
+
+Phone check: Nothing to see in the bar
+
 ## J100.1 A real piano: the Salamander Grand Piano's recorded notes (Alexander Holm, CC BY 3.0) replace the synth: 30 notes in 4 loudness layers (7.5 MB), loaded when someone plays, the synth until each arrives; the engine can play sounds from files; Help → Credits names it
 
 `b24a760` · 2026-10-26 09:39 · 135 files, +182 −16 · tests: none
