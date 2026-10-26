@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J35.4 The back bar remade: bottles of see-through tinted glass with the drink inside (whiskey, wine, liqueurs; clear spirits show the glass alone), sharp printed labels of 16 made-up brands, the shelf light strips solid from post to post and softer; the counter's fridge and speed-rail bottles match
+
+`b356290` · 2026-10-26 05:03 · 12 files, +183 −20 · tests: none
+
+Phone check: Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
+
 ## J35.3 The counter remade: a round left end the arm rest and the brass foot rail wrap around (no step, no gap), rounded bar-top edges, moldings along the whole front with boards on the turn, one brushed-steel top per station along the curve with real recessed sinks and ice wells (nothing at the same depth, no seams), fridges you can see into; 75k triangles (was 79k)
 
 `af463ca` · 2026-10-26 04:55 · 7 files, +195 −42 · tests: none
