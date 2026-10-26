@@ -56,16 +56,15 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J35 · The world remake, step 1, the kit** (the world). The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md. · N3
-- [x] **J35.1** The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing *Check:* Nothing changes in the bar yet
-- [x] **J35.2** The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height *Check:* Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it
-- [x] **J35.3** The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker *Check:* Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker
-- [x] **J35.4** The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands) *Check:* Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines
-- [x] **J35.5** The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs *Check:* Under the lamps over the counter: real metal shades, the light comes from the bulbs
+**J70 · The world remake, step 2, the lounge taken apart** (the world). The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
+- [ ] **J70.1** The fireplace its own thing: firebox, marble surround, mantel, logs and embers, remade to real size and look *Check:* Stand by the fire: one real fireplace, the flames in the firebox, nothing floating
+- [ ] **J70.2** The seating its own things: the Chesterfield sofa, the wingback chair and the rug *Check:* By the fire: the sofa and the chair look real, you can sit on both, the rug lies flat
+- [ ] **J70.3** The bookshelf, its books, the vase, the lamp, the clock and the photos its own things *Check:* The bookshelf looks real, its books sit on the shelves, the lamp, clock and photos are where they were
+- [ ] **J70.4** The chess table and the plants its own things; the lounge model keeps only its walls and floor *Check:* The chess table still plays, the plants look real; in the Studio, tap the vase and move it
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -118,8 +117,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W22 · *Verdict:* Doable after J9 — The body with sliders first; outfits are sold for earned credits through the ledger
 - [ ] **J34** The game screens remade in Ember after R6: HUD, 4K Mania and race screens, emote faces, the loading screen. · N5
   *Formerly* W23 · *Verdict:* Doable now — Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone
-- [ ] **J70** The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor. · N3
-  *Verdict:* Doable after J35 — Uses the kit's rules and budget; the lounge's 33 baked parts are listed in lounge.glb
 - [ ] **J71** The world remake, step 3, the walls' props taken apart: the neon signs, tin signs, licence plates, photos, the clock, the TV, coats and the umbrella, plants, sconces, the fire extinguisher, speakers, smoke detectors and crates become things; decor_walls.glb keeps only what is truly wall. · N3
   *Verdict:* Doable after J35 — Uses the kit; decor_walls.glb holds 63 baked parts today, the most of any model
 - [ ] **J72** The world remake, step 4, bottles and glasses as real things: every bottle on the back bar and every glass on a table its own thing, grown from a recipe so copies differ a little, ready to be picked up, knocked over and poured (J25). · N3
@@ -273,6 +270,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356
 - `b4821f4` J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a
 - `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
 - `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8

@@ -36,48 +36,42 @@
   }
  ],
  "now": {
-  "id": "J35",
-  "title": "The world remake, step 1, the kit",
+  "id": "J70",
+  "title": "The world remake, step 2, the lounge taken apart",
   "chapter": "the world",
-  "about": "The world remake, step 1, the kit: every new thing a kind with its own model at real size, grown by script (tools/assets/), painted with the named materials, within a budget per thing (triangles, texture memory) that a tool checks; copies of one model drawn together (instancing); the inventory flags anything still baked into a room model. Its plan: docs/plan/jobs/J35.md.",
+  "about": "The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor.",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J35.1",
-    "text": "The kit: Blender set up, a tool that fetches a Poly Haven model and slims it to the budget (triangles, 1k textures, credits), and a budget check per thing",
-    "check": "Nothing changes in the bar yet",
-    "done": true
+    "id": "J70.1",
+    "text": "The fireplace its own thing: firebox, marble surround, mantel, logs and embers, remade to real size and look",
+    "check": "Stand by the fire: one real fireplace, the flames in the firebox, nothing floating",
+    "done": false
    },
    {
-    "id": "J35.2",
-    "text": "The stools: Poly Haven's bar stool (seat at 0.75 m), slimmed, in place of all 8; you sit at the right height",
-    "check": "Walk to the counter: the stools look real (wood and metal), sit on one: you sit on it, not in it",
-    "done": true
+    "id": "J70.2",
+    "text": "The seating its own things: the Chesterfield sofa, the wingback chair and the rug",
+    "check": "By the fire: the sofa and the chair look real, you can sit on both, the rug lies flat",
+    "done": false
    },
    {
-    "id": "J35.3",
-    "text": "The counter remade: one continuous top with no step or gap, bevelled edges, real wood, brass and leather, steel tops without seams or flicker",
-    "check": "Walk along the counter: no step at its end, the rail runs unbroken, the steel behind it has no white spots or flicker",
-    "done": true
+    "id": "J70.3",
+    "text": "The bookshelf, its books, the vase, the lamp, the clock and the photos its own things",
+    "check": "The bookshelf looks real, its books sit on the shelves, the lamp, clock and photos are where they were",
+    "done": false
    },
    {
-    "id": "J35.4",
-    "text": "The back bar remade: shelves with unbroken light strips, bottles with glass, a drink inside and real-looking labels (our own brands)",
-    "check": "Look at the back bar: bottles look like glass with drinks in them, labels are sharp, the shelf lights are solid lines",
-    "done": true
-   },
-   {
-    "id": "J35.5",
-    "text": "The pendant lamps over the counter: real hanging lamps, their light coming from their bulbs",
-    "check": "Under the lamps over the counter: real metal shades, the light comes from the bulbs",
-    "done": true
+    "id": "J70.4",
+    "text": "The chess table and the plants its own things; the lounge model keeps only its walls and floor",
+    "check": "The chess table still plays, the plants look real; in the Studio, tap the vase and move it",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -417,19 +411,6 @@
     "verdict": {
      "kind": "now",
      "why": "Plain HTML over the 3D in the house theme (rule: the menus stay HTML), no cost on the phone"
-    }
-   },
-   {
-    "id": "J70",
-    "text": "The world remake, step 2, the lounge taken apart: the fireplace (firebox, marble surround, mantel, logs), the Chesterfield sofa, the wingback chair, the rug, the bookshelf and its books, the vase, the lamp, the clock, the photos, the chess table and the plants become things of their own, where they stand today; lounge.glb keeps only its walls and floor.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J35",
-     "why": "Uses the kit's rules and budget; the lounge's 33 baked parts are listed in lounge.glb"
     }
    },
    {
@@ -1157,6 +1138,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J35.1, J35.2, J35.3, J35.4, J35.5: J35: the remake's first corner: real wooden bar stools, the counter rebuilt (round end, unbroken rail, clean steel), bottles of real glass with drinks and sharp labels, industrial hanging lamps; the kit for Poly Haven models → 6be0a2a^..4bd8356"
+  },
   {
    "build": "b4821f4",
    "text": "J91.1, J91.2, J91.3: J91: soft shade where things meet (ambient occlusion) and light beams (lamp light in a thin haze, cut by what blocks it); Settings → Graphics → Soft shade, Light beams → 3455757^..bb6755a"
