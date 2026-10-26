@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J107.1 Quality in four levels: Ultra (3x pixels, 16 lamps a pixel, beams 24 steps), High (2x, 12, 16), Medium (1.6x, 10, 10, simple mirror), Low (1.3x, 8, no soft shade or beams, simple mirror, lighter bounced light); lamp shadows stay on everywhere (without them the hanging lamps darken the floor: KI-46); Auto moves between Low and High; each feature's own switch can still turn it off
+
+`71d8b24` · 2026-10-26 21:23 · 11 files, +132 −56 · tests: none
+
+Phone check: Settings → Graphics → Quality: Auto, Ultra, High, Medium, Low; Low runs smooth; Ultra is the sharpest
+
 ## J74.1 The user's notes from the phone: a little less haze in the light beams (0.02 → 0.014); the highlight on the thing you can tap softer (0.35 → 0.12); the string lights (four strands as twelve tube lights, ~25 lm a bulb), the mirror's vanity bulbs (one 480 lm tube) and the stage and darts spotlights (their own small lamps) give their own light in place of six invisible helper lamps; Settings → Pointer: a crosshair that taps what it points at, with an editor (shape, size, thickness, gap, colour, opacity, outline) whose preview docks at the top while you scroll through it
 
 `b04cdd4` · 2026-10-26 10:43 · 14 files, +446 −57 · tests: none
