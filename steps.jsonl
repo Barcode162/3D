@@ -30,3 +30,4 @@
 {"step":"J95","what":"J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live","mainSha":"7521b64","lastPiece":"6f66cb1","pieces":["J95.1"],"date":"2026-10-25 21:48"}
 {"step":"J88","what":"J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace","mainSha":"b3c6b97","lastPiece":"db6eac2","pieces":["J88.1","J88.3"],"date":"2026-10-25 23:13"}
 {"step":"J96","what":"J96: the floor's square of light and the reflections that followed you, fixed","mainSha":"83dd678","lastPiece":"a3c9f6f","pieces":["J96.1"],"date":"2026-10-25 23:47"}
+{"step":"J98","what":"J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker","mainSha":"11033e0","lastPiece":"1be7df8","pieces":["J98.2"],"date":"2026-10-26 01:56"}
