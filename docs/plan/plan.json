@@ -55,7 +55,7 @@
     "id": "J110.2",
     "text": "Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included",
     "check": "The bar looks the same; fewer stutters",
-    "done": false
+    "done": true
    },
    {
     "id": "J110.3",

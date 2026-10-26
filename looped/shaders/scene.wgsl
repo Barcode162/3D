@@ -158,6 +158,8 @@ fn vs_skinned(in: SkinIn) -> VsOut {
 }
 
 // Filmic tone mapping (ACES approximation): keeps bright lights from clipping.
+fn luminance(c: vec3f) -> f32 { return dot(c, vec3f(0.2126, 0.7152, 0.0722)); }
+
 fn tonemap(x: vec3f) -> vec3f {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), vec3f(0.0), vec3f(1.0));
 }
@@ -526,7 +528,7 @@ fn environment(p: vec3f, r: vec3f, roughness: f32) -> vec3f {
 // map's depth for the direction from the lamp, compared with this point's
 // (pushed out along the normal a little, more far from the lamp), at five
 // spots around it spread by the bulb's size (soft edges for big bulbs).
-fn lampShadow(p: vec3f, n: vec3f, l: Light, slot: i32) -> f32 {
+fn lampShadow(p: vec3f, n: vec3f, l: Light, slot: i32, soft: bool) -> f32 {
   let v0 = p - l.position.xyz;
   let dist = length(v0);
   let v = v0 + n * (0.01 + 0.004 * dist);
@@ -539,6 +541,8 @@ fn lampShadow(p: vec3f, n: vec3f, l: Light, slot: i32) -> f32 {
   let t2 = cross(normalize(v), t1);
   let spread = length(v) * (2.0 / 256.0) + max(l.params.x, 0.01) * 0.5;
   var s = textureSampleCompareLevel(shadowMaps, shadowSampler, v, slot, depthRef);
+  // A dim lamp here: its soft edge can't be seen, one (filtered) look will do.
+  if (!soft) { return s; }
   s += textureSampleCompareLevel(shadowMaps, shadowSampler, v + t1 * spread, slot, depthRef);
   s += textureSampleCompareLevel(shadowMaps, shadowSampler, v - t1 * spread, slot, depthRef);
   s += textureSampleCompareLevel(shadowMaps, shadowSampler, v + t2 * spread, slot, depthRef);
@@ -758,15 +762,23 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
   // Each cell's lights are listed brightest first, so a view can take only
   // the strongest few (the mirror: its reflection doesn't need them all).
   let lightCount = select(16u, min(16u, u32(frame.ambient.w)), frame.ambient.w > 0.5);
+  // A lamp that adds under half a percent of the light already here (rough
+  // surfaces: no sharp highlight to give it away) can't be seen: skip its
+  // shadow and visibility work (J110.2). Dimmer than a twentieth: one shadow
+  // look instead of five (its soft edge is too faint to see).
+  let skipFaint = !classic && roughness >= 0.5;
   for (var k = 0u; k < lightCount; k++) {
     let lightIndex = (cell[k / 4u] >> (8u * (k % 4u))) & 0xffu;
     if (lightIndex == 0xffu) { break; }
     let l = lighting.lights[lightIndex];
     if (!classic && l.axis.w > 0.5) {  // a tube or a panel (L1.6)
       let al = areaLight(l, worldPos, n, v, a, roughness, nv, f0);
+      let here = luminance(diffuse);
+      let adds = luminance(al.diffuse);
+      if (skipFaint && adds < 0.005 * here) { continue; }
       var seen = 1.0;
       let shadowSlot = i32(l.params.y + 0.5) - 1;  // its shadow map (J97), -1 = none
-      if (shadowSlot >= 0) { seen = lampShadow(worldPos, n, l, shadowSlot); }
+      if (shadowSlot >= 0) { seen = lampShadow(worldPos, n, l, shadowSlot, adds >= 0.05 * here); }
       else if (giWeight > 0.0) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
       diffuse += al.diffuse * seen;
       specular += al.specular * seen;
@@ -788,11 +800,14 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
     let r2 = l.params.x * l.params.x;
     let atten = window * window / select(max(d2, r2), d2 + 0.25, classic);
     var radiance = l.color.rgb * l.color.w * atten;
+    let here = luminance(diffuse);
+    let adds = luminance(radiance) * nl;
+    if (skipFaint && adds < 0.005 * here) { continue; }
     // No lamp light through walls: what the probes around here can see of it.
     // What blocks it: its shadow map (J97: stools, tables, the counter), else
     // the probes around here (walls; their 0.2 m steps showed as squares).
     let shadowSlot = i32(l.params.y + 0.5) - 1;
-    if (shadowSlot >= 0) { radiance = radiance * lampShadow(worldPos, n, l, shadowSlot); }
+    if (shadowSlot >= 0) { radiance = radiance * lampShadow(worldPos, n, l, shadowSlot, adds >= 0.05 * here); }
     else if (giWeight > 0.0) { radiance = radiance * mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
     diffuse += radiance * nl;
 

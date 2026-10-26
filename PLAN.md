@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J110 · Smoother graphics** (the engine). Smoother graphics: the GPU check and reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late (request 2026-10-26 #14) · N2 N3
 - [x] **J110.1** The GPU check and reports measure what you feel: each step's late frames and slowest 5%, beside the wait *Check:* Settings → Help Claude fix lag → Check the GPU, then send a report
-- [ ] **J110.2** Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included *Check:* The bar looks the same; fewer stutters
+- [x] **J110.2** Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included *Check:* The bar looks the same; fewer stutters
 - [ ] **J110.3** Ultra and Auto keep it smooth: they step by late frames; Ultra eases sharpness 3x to 2.5x to 2x only while frames run late, back to 3x when steady; Auto climbs back up *Check:* On Ultra walk around: smooth
 
 ## 5. The road
