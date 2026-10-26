@@ -39,7 +39,7 @@ struct TestHooks {
   float walkDir = 0;
   float previewTurn = 0;  // ?previewturn=<degrees>: the avatar customizer's view turned (side views)  // ?walkcheck: log how much planted feet slide (bar/avatar.cpp walkReport)
   int mirrorQ = -1;     // ?mirrorq=0|1: Settings → Graphics → Mirror forced (full, simple)
-  int quality = -1;     // ?quality=auto|high|medium|low: Settings → Graphics forced (-1: the setting)
+  int quality = -1;     // ?quality=auto|high|medium|low|ultra: Settings → Graphics forced (-1: the setting)
   bool coin = false;    // ?coin: the credit coin pops once after you enter
   bool chess = false;   // ?chess: sit down at the chessboard  // with ?sit= on a racing rig: the garage instead of straight into a race
   int sit = -1, emote = -1, pianoSong = -1;

@@ -69,8 +69,8 @@ TestHooks TestHooks::parse() {
     if (h.mirrorQ < 0) h.mirrorQ = 1;
   }
   if (param(query, "quality", v)) {
-    const char* names[] = {"auto", "high", "medium", "low"};
-    for (int i = 0; i < 4; ++i) if (v == names[i]) h.quality = i;
+    const char* names[] = {"auto", "high", "medium", "low", "ultra"};
+    for (int i = 0; i < 5; ++i) if (v == names[i]) h.quality = i;
   }
   if (param(query, "rhythm", v)) {
     if (v == "menu") h.rhythmSong = -2;  // just the song select

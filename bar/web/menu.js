@@ -21,7 +21,7 @@ window.bar3dSettings = (function () {
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (looped/profiler)
     // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (looped/quality.h); fov: degrees, up/down.
-    quality: [0, 0, 3], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
+    quality: [0, 0, 4], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
     // The crosshair (the user, 2026-10-26 #12; bar/web/crosshair.js): on, a tap
     // anywhere uses what the centre points at. Shape 0 dot, 1 cross, 2 cross
     // and dot, 3 circle, 4 circle and dot; size, thickness, gap in CSS px;
@@ -233,11 +233,13 @@ window.bar3dUi = (function () {
   }
   var pct = function (v) { return Math.round(v * 100) + '%'; };
   // One of a few options (a row of small buttons), for a number setting.
-  function choice(label, key, names) {
+  // `values`: the setting's value for each button (default: 0, 1, 2...).
+  function choice(label, key, names, values) {
     var row = el('div', { class: 'mChoice' });
     names.forEach(function (n, i) {
-      row.appendChild(el('button', { class: S.get(key) === i ? 'on' : '', text: n, onclick: function () {
-        S.set(key, i);
+      var v = values ? values[i] : i;
+      row.appendChild(el('button', { class: S.get(key) === v ? 'on' : '', text: n, onclick: function () {
+        S.set(key, v);
         [].forEach.call(row.children, function (b, j) { b.classList.toggle('on', j === i); });
       } }));
     });
@@ -505,9 +507,9 @@ window.bar3dUi = (function () {
       toggle('Show name tags', 'showNames'),
       toggle('Performance overlay', 'perf'),
       el('h3', { text: 'Graphics' }),
-      choice('Quality', 'quality', ['Auto', 'High', 'Medium', 'Low']),
+      choice('Quality', 'quality', ['Auto', 'Ultra', 'High', 'Medium', 'Low'], [0, 4, 1, 2, 3]),
       choice('Lighting', 'lighting', ['New', 'Classic']),
-      el('div', { class: 'mSmall', text: 'Auto draws a little less sharp when your phone is struggling, and sharp again when it isn\u2019t.' }),
+      el('div', { class: 'mSmall', text: 'Each level sets the sharpness, the lamps, shadows, soft shade and light beams together. Low turns shadows, soft shade and beams off; Ultra is the sharpest and the heaviest. Auto moves between Low and High as your phone keeps up.' }),
       choice('Lamp shadows', 'lampShadows', ['On', 'Off']),
       el('div', { class: 'mSmall', text: 'Stools, tables and the counter block the lamps\u2019 light and their shine on the floor.' }),
       choice('Soft shade', 'softShade', ['On', 'Off']),

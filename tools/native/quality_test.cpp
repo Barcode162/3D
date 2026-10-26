@@ -66,6 +66,10 @@ int main() {
     check(q.tier() == 2 && q.pixelRatioCap() == 1.3, "Low stays Low (no auto changes)");
     q.setMode(Q::kHigh, 1);
     check(q.tier() == 0 && q.pixelRatioCap() == 2.0, "High is the old picture (2x)");
+    q.setMode(Q::kUltra, 2);
+    check(q.level() == Q::kLevelUltra && q.pixelRatioCap() == 3.0, "Ultra draws at up to 3x (level Ultra)");
+    q.setMode(Q::kMedium, 3);
+    check(q.level() == Q::kLevelMedium && q.pixelRatioCap() == 1.6, "Medium is level Medium");
   }
   {
     Q q;

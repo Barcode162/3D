@@ -56,12 +56,13 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J74 · The world remake, step 6, the room shells remade** (the world). Lights, haze, highlight and the crosshair (request 2026-10-26 #12): the user's notes from the phone, before the room shells (now J106) · N3
-- [x] **J74.1** A little less haze in the light beams; the highlight on the thing you can tap softer; the string lights, the mirror's bulbs and the spotlights give real light at their small real lumens instead of invisible helper lamps; Settings → Pointer: a crosshair that taps what it points at, with an editor whose preview docks at the top *Check:* Look up at the string lights and the mirror: they light their surroundings; stand at something: its glow is gentle; Settings → Pointer: turn the crosshair on, tap anywhere: it uses what the centre points at
+**J107 · Quality in four levels (Low, Medium, High, Ultra) for everything the engine draws** (the engine). Quality in four levels (Low, Medium, High, Ultra) for everything the engine draws: resolution, lamps per pixel, lamp shadows, soft shade, light beams, bounced light, reflections, the mirror, the fire; Auto moves between Low and High; then the GPU time of each pass in the phone report, and the fixes for the biggest costs (request 2026-10-26 #13, report YYXLV8) · N5
+- [x] **J107.1** Quality in four levels: Low, Medium, High, Ultra (and Auto between Low and High), each setting resolution, lamps per pixel, lamp shadows, soft shade, light beams, bounced light, reflections, the mirror and the fire together *Check:* Settings → Graphics → Quality: four levels and Auto; Low runs smooth; Ultra is the sharpest
+- [ ] **J107.2** The GPU time of each pass in the phone report and the performance overlay, so the biggest costs show by name *Check:* Send a report: it names what takes the GPU's time
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes from the phone first as J74, 2026-10-26 #12; then the shells and the new rooms)
+**Up next, in order:** J108 → J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -128,6 +129,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J73 — J73
 - [ ] **J106** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
   *Verdict:* Doable now — The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)
+- [ ] **J108** The piano redone: its note glow at the piano (it shows mid-room), a bigger, better keyboard to play, held pedal and pianissimo to fortissimo, songs that keep playing when you leave the bench, particles from the strings (zigzagging up, some shot far up) (request 2026-10-26 #13) · N3
+  *Verdict:* Doable now — The piano, its sampled notes (J100) and its songs exist; this redoes how it's played and shown
+- [ ] **J109** Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13) · N3
+  *Verdict:* Doable now — The reader (J99) lays out pages; a page curl is drawn by the page itself (CSS 3D or canvas)
 
 ### The site
 
@@ -267,7 +272,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4
+- `b188a36` J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4
 - `a489b01` J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab
 - `981a2a1` J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3
 - `080c01f` J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d

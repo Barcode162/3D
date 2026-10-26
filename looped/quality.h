@@ -1,6 +1,8 @@
-// Picture quality: how many pixels the game draws (RESTRUCTURE 6.7).
-// Settings → Graphics: Auto, High, Medium, Low. High draws at up to 2 device
-// pixels per CSS pixel (the old fixed cap), Medium 1.6, Low 1.3. On Auto the
+// Picture quality: how many pixels the game draws (RESTRUCTURE 6.7), and
+// since J107 the level every feature follows (the game's table: bar/game.cpp
+// applyQuality). Settings → Graphics: Auto, Ultra, High, Medium, Low. Ultra
+// draws at up to 3 device pixels per CSS pixel (chosen only by hand), High 2
+// (the old fixed cap), Medium 1.6, Low 1.3. On Auto the
 // controller watches the frames and steps down when the GPU is what keeps the
 // frame rate under 60 (frames slow while the game's own CPU work is small),
 // and back up when the GPU has room to spare at the sharper level.
@@ -13,22 +15,28 @@ namespace engine {
 
 class QualityController {
  public:
-  enum Mode { kAuto = 0, kHigh = 1, kMedium = 2, kLow = 3 };
+  enum Mode { kAuto = 0, kHigh = 1, kMedium = 2, kLow = 3, kUltra = 4 };
+  enum Level { kLevelUltra = 0, kLevelHigh = 1, kLevelMedium = 2, kLevelLow = 3 };
   static constexpr int kTiers = 3;
   static constexpr double kRatio[kTiers] = {2.0, 1.6, 1.3};  // device pixels per CSS pixel
 
-  // Settings "quality" (0 Auto, 1 High, 2 Medium, 3 Low).
+  // Settings "quality" (0 Auto, 1 High, 2 Medium, 3 Low, 4 Ultra).
   void setMode(int mode, double nowMs) {
-    mode = std::clamp(mode, 0, 3);
+    mode = std::clamp(mode, 0, 4);
     if (mode == mode_) return;
     mode_ = mode;
-    if (mode_ != kAuto) tier_ = mode_ - 1;
+    ultra_ = mode_ == kUltra;
+    if (mode_ != kAuto && !ultra_) tier_ = mode_ - 1;
+    if (ultra_) tier_ = 0;
     resetWindow(nowMs);
     lastChangeMs_ = nowMs;
   }
   int mode() const { return mode_; }
-  int tier() const { return tier_; }  // 0 sharpest
-  double pixelRatioCap() const { return kRatio[tier_]; }
+  int tier() const { return tier_; }  // Auto's steps: 0 High (sharpest Auto goes), 1 Medium, 2 Low
+  // The level every feature follows: 0 Ultra, 1 High, 2 Medium, 3 Low.
+  int level() const { return ultra_ ? kLevelUltra : tier_ + 1; }
+  double pixelRatioCap() const { return ultra_ ? kUltraRatio : kRatio[tier_]; }
+  static constexpr double kUltraRatio = 3.0;
 
   // One finished frame: the time since the previous one (what you feel),
   // the game's CPU time, the newest GPU submit-to-done time. `drawing`
@@ -91,6 +99,7 @@ class QualityController {
   }
   int mode_ = kAuto;
   int tier_ = 0;
+  bool ultra_ = false;
   double windowStartMs_ = -1;
   int frames_ = 0;
   float sumInterval_ = 0, sumCpu_ = 0, sumGpu_ = 0;

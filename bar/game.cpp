@@ -690,16 +690,12 @@ void handleCommands() {
     }
     g_app.renderer.setEyes(g_app.hooks.feature("eyes"));
     g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));
-    // Lamp shadows (J97): Settings → Graphics → Lamp shadows, or ?shadows=0.
-    g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") && engine::settings::number("lampShadows", 0) == 0);
-    // Soft shade (J91): Settings → Graphics → Soft shade, or ?ao=0.
-    g_app.renderer.setSoftShade(g_app.hooks.feature("ao") && engine::settings::number("softShade", 0) == 0);
-    // Light beams (J91.2): Settings → Graphics → Light beams, or ?beams=0; ?haze= scales the place's haze.
-    g_app.renderer.setLightBeams(g_app.hooks.feature("beams") && engine::settings::number("lightBeams", 0) == 0);
+    // Lamp shadows, soft shade, light beams, bounced light's detail: the
+    // quality level and their own switches (applyQuality).
+    applyQuality(nullptr);
     g_app.renderer.setBeamStrength(g_app.hooks.number("haze", 1));
     g_app.renderer.setRoughFix(g_app.hooks.feature("roughfix"));
     g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
-    g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);
     g_app.renderer.setGiView(static_cast<int>(g_app.hooks.number("giview", 0)));
     g_app.camera.fovY = engine::radians(std::clamp(static_cast<float>(engine::settings::number("fov", 70)), 50.0f, 100.0f));
     // Your saved look, at start only (later the menu sends a "look" command).
@@ -1306,28 +1302,46 @@ void tuneMoodFromPage() {
   g_app.renderer.setLightUnits(h.number("emissive", 8), h.number("ambient", 14));
 }
 
-// Picture quality (looped/quality.h): on Auto, the last frame's times decide
-// whether to draw fewer (or again more) pixels.
+// Picture quality (looped/quality.h): the level (Ultra, High, Medium, Low)
+// sets every feature together (J107, the user's request 2026-10-26 #13); on
+// Auto the last frames' times move it between High and Low. A feature's own
+// switch (Settings → Graphics, or the page option) can still turn it off.
+//
+//                     Ultra  High  Medium  Low
+//   pixels per CSS px   3     2     1.6    1.3   (looped/quality.h)
+//   lamps per pixel    16    12     10      8
+//   lamp shadows       on    on     on      on   (drawn once; without them the
+//                                                hanging lamps' shades darken the floor: KI-46)
+//   soft shade         on    on     on     off
+//   light beams       24    16     10     off   (steps along each line of sight)
+//   bounced light     full  full   full   lite  (fewer lamps traced)
+//   mirror            full  full  simple simple (Settings → Mirror can make it simple)
 void applyQuality(const char* why) {
-  static const char* kNames[] = {"High", "Medium", "Low"};
+  static const char* kNames[] = {"Ultra", "High", "Medium", "Low"};
+  static const int kLightsPerPixel[] = {16, 12, 10, 8};
+  static const int kBeamSteps[] = {24, 16, 10, 0};
+  const int level = g_app.quality.level();
   const double cap = g_app.quality.pixelRatioCap();
-  // Lights per pixel: 12 at High, 8 at Medium, 5 at Low (lamps reach less
-  // far at lower quality, so nothing is cut off in squares).
-  static const int kLightsPerPixel[] = {12, 8, 5};
-  g_app.renderer.setLightsPerPixel(kLightsPerPixel[g_app.quality.tier()]);
-  // Light beams (J91.3): 16 steps along each line of sight at High, 12 at
-  // Medium, 8 at Low (Auto steps down when the phone struggles).
-  static const int kBeamSteps[] = {16, 12, 8};
-  g_app.renderer.setBeamSteps(kBeamSteps[g_app.quality.tier()]);
+  const bool low = level == engine::QualityController::kLevelLow;
+  g_app.renderer.setLightsPerPixel(kLightsPerPixel[level]);
+  g_app.renderer.setBeamSteps(std::max(kBeamSteps[level], 4));
+  // Lamp shadows (J97): ?shadows=0, Settings → Graphics → Lamp shadows.
+  g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") &&
+                                engine::settings::number("lampShadows", 0) == 0);
+  // Soft shade (J91): ?ao=0, Settings → Graphics → Soft shade.
+  g_app.renderer.setSoftShade(!low && g_app.hooks.feature("ao") && engine::settings::number("softShade", 0) == 0);
+  // Light beams (J91.2): ?beams=0, Settings → Graphics → Light beams.
+  g_app.renderer.setLightBeams(kBeamSteps[level] > 0 && g_app.hooks.feature("beams") &&
+                               engine::settings::number("lightBeams", 0) == 0);
+  g_app.renderer.setGiLite(low || g_app.hooks.number("gilite", 0) != 0);
   if (cap == g_app.gpu.resolutionCap) return;
   g_app.gpu.resolutionCap = cap;
-  if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[g_app.quality.tier()], cap, why);
+  if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[level], cap, why);
 }
-// The mirror's detail: the setting, or simple while Auto has gone down to Low.
+// The mirror's detail: the setting, or simple at Medium and Low.
 void applyMirrorDetail() {
-  const bool autoLow = g_app.quality.mode() == engine::QualityController::kAuto &&
-                       g_app.quality.tier() == engine::QualityController::kTiers - 1;
-  const int detail = std::max(g_app.mirrorSetting, autoLow ? 1 : 0);
+  const bool simple = g_app.quality.level() >= engine::QualityController::kLevelMedium;  // Medium and Low (J107)
+  const int detail = std::max(g_app.mirrorSetting, simple ? 1 : 0);
   if (detail == g_app.renderer.mirrorDetail()) return;
   g_app.renderer.setMirrorDetail(detail);
   LOG_INFO("Mirror detail: %s.", detail ? "simple" : "full");
