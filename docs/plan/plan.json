@@ -46,6 +46,12 @@
   "pieces": [
    {
     "id": "J73.1",
+    "text": "Fix: the deploy refused J72's place file (the lying wine bottles turned about three axes; a thing's turn is one angle): tilted bottles get models of their own, sizes are one number; the world check now also runs the schema and material tests",
+    "check": "The bar loads with every bottle in place; the wine rack's bottles lie with their necks out",
+    "done": true
+   },
+   {
+    "id": "J73.2",
     "text": "The stage, the darts corner, the construction and the arcade taken apart: the guitar, the amp, the stage lights; the darts, their holder, the oche and the mat; cones, barricades, the toolbox and the work light; the arcade's benches and signs each their own thing where they stand; the arcade's walls and floor fixed (they vanished through the arch, its floor edge left a gap)",
     "check": "Walk the stage, the darts corner, the taped-off room and the arcade: everything where it was, the arcade's walls stay when seen through the arch",
     "done": false
@@ -1123,7 +1129,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "981a2a1",
    "text": "J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3"
   },
   {

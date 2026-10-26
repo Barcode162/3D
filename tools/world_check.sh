@@ -10,3 +10,8 @@ mkdir -p build/native
 g++ -std=c++20 -O1 -I. tools/native/bar_world_test.cpp $SCENE -o build/native/bar_world_test
 ./build/native/bar_world_test | grep -E "FAIL|^ +|PASSED|FAILED" || true
 ./build/native/bar_world_test >/dev/null
+# The world's files against their schema, and the models' materials (both
+# also run on GitHub before a deploy; a failure there stops the deploy).
+node tools/schema_test.mjs | grep -E "FAIL|PASSED|FAILED" | head -20
+node tools/schema_test.mjs >/dev/null
+node tools/albedo_test.mjs >/dev/null

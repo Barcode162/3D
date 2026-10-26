@@ -9,6 +9,8 @@
 #   blender -b --factory-startup --python tools/assets/bottles.py -- <texture dir> <out dir> <bottles.json> <things.json>
 import json
 import math
+
+from mathutils import Euler
 import os
 import random
 import sys
@@ -74,16 +76,30 @@ for kind, recipes in RECIPES.items():
 
 rng = random.Random(72)
 things = []
+tilted = {}  # a recipe lying or leaning (the wine rack, the ice bucket): its own model, turned already
 for n, b in enumerate(json.load(open(bottles_path))):
     recipes = RECIPES[b["kind"]]
     k = (b["color"] + b["label"]) % len(recipes)
     s = round(rng.uniform(0.97, 1.03), 3)
-    turn = [round(v, 2) for v in b["turn"]]
-    turn[1] = round(turn[1] + rng.uniform(-12, 12), 2)  # each faces a little its own way
+    tx, ty, tz = b["turn"]
+    model = model_name(b["kind"], k)
+    if round(tx) or round(tz):
+        # A thing turns only about the up axis (the place file's "turn"), so
+        # the tilt is built into a model of its own.
+        model = f"{model}_tilt{round(tx)}_{round(tz)}"
+        tilted[model] = (b["kind"], k, tx, tz)
     t = {"id": f"bottle-{n + 1}", "kind": "bottle", "at": [round(v, 4) for v in b["at"]],
-         "turn": turn if (turn[0] or turn[2]) else turn[1], "scale": [s, s, s],
-         "parts": {"model": {"file": model_name(b["kind"], k) + ".glb", "material": "bottle-glass"}}}
+         "turn": round(ty + rng.uniform(-12, 12), 2) if not (round(tx) or round(tz)) else round(ty, 2),
+         "scale": s, "parts": {"model": {"file": model + ".glb", "material": "bottle-glass"}}}
     things.append(t)
+for model, (kind, k, tx, tz) in tilted.items():
+    color, label, drink = RECIPES[kind][k]
+    common.reset_scene()
+    P = props_lib.Props(tex_dir, seed=40 + k)
+    P.bottle(0, 0, 0, kind, color=color, label=label, yaw=0.0, segments=12, fill=drink,
+             tilt=Euler((math.radians(tx), 0, math.radians(tz)), "XYZ").to_matrix().to_4x4())
+    own_label(P, label)
+    common.finish_and_export(os.path.join(out_dir, model + ".glb"), uv_scale={})
 with open(things_path, "w") as f:
     json.dump(things, f)
 print("BOTTLE THINGS", len(things), "from", sum(len(r) for r in RECIPES.values()), "recipes")

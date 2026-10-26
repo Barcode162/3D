@@ -1317,6 +1317,42 @@
    "metal": 0.0
   }
  },
+ "bottle_champagne_1_tilt17_0.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.6855,
+    0.7254,
+    0.7621
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
  "bottle_champagne_2.glb": {
   "Bottle glass": {
    "albedo": [
@@ -2008,6 +2044,42 @@
    "metal": 0.0
   }
  },
+ "bottle_wine_1_tilt90_0.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.7126,
+    0.6229,
+    0.4584
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
  "bottle_wine_2.glb": {
   "Bottle glass": {
    "albedo": [
@@ -2044,7 +2116,79 @@
    "metal": 0.0
   }
  },
+ "bottle_wine_2_tilt90_0.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.5765,
+    0.4556,
+    0.256
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
  "bottle_wine_3.glb": {
+  "Bottle glass": {
+   "albedo": [
+    0.1593,
+    0.1056,
+    0.0701
+   ],
+   "metal": 0.0,
+   "seeThrough": true
+  },
+  "Bottle labels": {
+   "albedo": [
+    0.8002,
+    0.3439,
+    0.0553
+   ],
+   "metal": 0.0
+  },
+  "Cap foil": {
+   "albedo": [
+    0.85,
+    0.65,
+    0.3
+   ],
+   "metal": 1.0,
+   "rough": 0.45
+  },
+  "Drinks": {
+   "albedo": [
+    0.4496,
+    0.3317,
+    0.235
+   ],
+   "metal": 0.0
+  }
+ },
+ "bottle_wine_3_tilt90_0.glb": {
   "Bottle glass": {
    "albedo": [
     0.1593,
