@@ -269,6 +269,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d
 - `6d4f1af` J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7
 - `ae02b1c` J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed
 - `4887cd3` J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722

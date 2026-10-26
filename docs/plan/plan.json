@@ -1136,6 +1136,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d"
+  },
+  {
    "build": "6d4f1af",
    "text": "J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7"
   },
