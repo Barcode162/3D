@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J71.1 Fix (urgent): the lounge bookshelf's thing renamed lounge_bookshelf (it took the id of the bookshelf's tap spot, so 'read a book' was dropped), and every new lounge kind gets a live loop (embers breathe, candle flames flicker, the floor lamp's bulb breathes, the rest a faint shimmer); incident recorded
+
+`f971219` · 2026-10-26 06:53 · 7 files, +123 −28 · tests: none
+
+Phone check: Tap the bookshelf in the lounge: 'read a book' works; the log shows no 'World:' problems
+
 ## J70.2 The floor lamp's shade is held by three brass arms (it hung in the air, 11 cm from its pole: found by the place check)
 
 `3a43f37` · 2026-10-26 06:16 · 2 files, +6 −0 · tests: none
