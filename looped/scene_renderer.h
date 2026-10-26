@@ -24,6 +24,7 @@
 #include "looped/gi.h"
 #include "looped/gpu_upload.h"
 #include "looped/shadows.h"
+#include "looped/ssao.h"
 #include "looped/render_scene.h"
 #include "looped/scene_geometry.h"
 #include "looped/skinned_mesh.h"
@@ -99,6 +100,10 @@ class SceneRenderer {
   // once into cube maps and kept (again when the layout changes); off = the
   // old look (bounced light's probes decide what a lamp reaches).
   void setLampShadows(bool on);
+  // Soft shade where things meet (ambient occlusion, J91, looped/ssao.h):
+  // Settings → Graphics → Soft shade, ?ao=0.
+  void setSoftShade(bool on);
+  bool softShade() const { return aoOn_; }
   bool lampShadows() const { return shadowsOn_; }
   // Eyes adapting (L1.1); off = a fixed exposure (?eyes=0).
   void setEyes(bool on) { eyes_ = on; }
@@ -377,7 +382,8 @@ class SceneRenderer {
   void createEnvironment();
   // `shadowPass`: for drawing the lamp shadows themselves (they can't read the
   // maps they draw into: a stand-in is bound instead).
-  View makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer = nullptr, bool shadowPass = false);
+  View makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer = nullptr, bool shadowPass = false,
+                bool mainView = false);  // mainView: reads the soft shade (J91)
   void captureEnvironment(const wgpu::CommandEncoder& encoder);
   std::vector<engine::Vec4> shadowDiscs_;
   std::vector<uint8_t> modelData_;
@@ -452,6 +458,13 @@ class SceneRenderer {
   void planShadows();                // pick the lamps and start drawing their maps
   void drawShadowFaces(const wgpu::CommandEncoder& encoder);
   void applyShadowSlots();           // which lamps use their maps (GpuLight::params[1])
+  // Soft shade (J91): the prepass (half size: depth and directions) and the
+  // shade itself; the main view's bind group reads its result.
+  ScreenAo ssao_;
+  bool aoOn_ = true;
+  bool aoBound_ = false;  // views_[0] reads the soft shade (else the 1x1 stand-in)
+  wgpu::RenderPipeline aoObjectPipeline_, aoModelPipeline_;
+  void drawSoftShade(const wgpu::CommandEncoder& encoder, const Mat4& viewProj, Vec3 eye, const RoomView& cull);
   void writeModelGlow(size_t model);
   wgpu::Buffer objectBuffer_;
   wgpu::BindGroup objectBindGroup_;

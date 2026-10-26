@@ -20,6 +20,17 @@ static bool near(float a, float b, float eps = 1e-5f) { return std::fabs(a - b) 
 static bool near(Vec3 a, Vec3 b, float eps = 1e-5f) { return length(a - b) <= eps; }
 
 int main() {
+  // inverse: a camera's view-projection and back (J91: depth to positions).
+  {
+    const Mat4 vp = Mat4::perspective(1.2f, 0.46f, 0.05f, 100.0f) *
+                    Mat4::lookAt({1, 1.65f, 4}, {0.5f, 1.2f, 0}, {0, 1, 0});
+    const Mat4 id = inverse(vp) * vp;
+    for (int c = 0; c < 4; ++c)
+      for (int r = 0; r < 4; ++r) CHECK(near(id.at(c, r), c == r ? 1.0f : 0.0f, 1e-3f));
+    const Vec4 clip = transformPoint(vp, {0.3f, 1.0f, 1.5f});
+    const Vec4 back = transformPoint(inverse(vp), {clip.x / clip.w, clip.y / clip.w, clip.z / clip.w});
+    CHECK(near(Vec3{back.x / back.w, back.y / back.w, back.z / back.w}, {0.3f, 1.0f, 1.5f}, 1e-3f));
+  }
   // A zero axis gives no turn (used to give a broken quaternion).
   const Quat z = Quat::axisAngle({0, 0, 0}, 1.0f);
   CHECK(z.x == 0 && z.y == 0 && z.z == 0 && z.w == 1);

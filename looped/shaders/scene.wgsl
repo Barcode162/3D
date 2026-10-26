@@ -78,6 +78,11 @@ struct Object {
 // around it (looped/scene_renderer.cpp drawShadowFaces), compared per look-up.
 @group(0) @binding(11) var shadowMaps: texture_depth_cube_array;
 @group(0) @binding(12) var shadowSampler: sampler_comparison;
+// Soft shade where things meet (J91, looped/ssao.h): r = how much ambient and
+// bounced light reaches, g = the distance it was worked out at (the main
+// view only; others get a stand-in that never matches).
+@group(0) @binding(13) var aoTex: texture_2d<f32>;
+@group(0) @binding(14) var aoSampler: sampler;
 const kShadowNear = 0.1;  // looped/scene_renderer.h kShadowNear, kShadowFar
 const kShadowFar = 25.0;
 @group(1) @binding(0) var<uniform> object: Object;
@@ -342,6 +347,18 @@ fn fs_model_blend(in: ModelOut) -> @location(0) vec4f {
   return vec4f(c.rgb, alpha);
 }
 
+// The soft shade's prepass (J91, looped/ssao.h): each surface's direction
+// (world space, 0..1), at half size; the depth goes with it.
+@fragment
+fn fs_prepass(in: VsOut) -> @location(0) vec4f {
+  return vec4f(normalize(in.normal) * 0.5 + 0.5, 1.0);
+}
+
+@fragment
+fn fs_prepass_model(in: ModelOut) -> @location(0) vec4f {
+  return vec4f(normalize(in.normal) * 0.5 + 0.5, 1.0);
+}
+
 const kPi = 3.14159265;
 
 // GGX microfacet distribution: how many tiny surface facets face `h`.
@@ -586,11 +603,27 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
 // specular term is multiplied by pi to match.
 // `emission` is light the surface gives off itself; `ao` (0..1) darkens the
 // ambient light in creases (ambient occlusion).
+// The soft shade at `p` (J91): looked up where `p` is on screen, used only
+// if it was worked out for this surface (glass and people in front of a
+// shaded wall don't take its shade).
+fn screenAo(p: vec3f) -> f32 {
+  let c = frame.viewProj * vec4f(p, 1.0);
+  if (c.w <= 0.0) { return 1.0; }
+  let uv = vec2f(c.x / c.w * 0.5 + 0.5, 0.5 - c.y / c.w * 0.5);
+  let s = textureSampleLevel(aoTex, aoSampler, uv, 0.0);
+  let d = length(p - frame.cameraPos.xyz);
+  if (abs(s.g - d) > 0.05 + 0.04 * d) { return 1.0; }
+  return s.r;
+}
+
 fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32, emission: vec3f,
-         ao: f32) -> vec4f {
+         aoIn: f32) -> vec4f {
   // Test lighting: the tests check what happens, not how it looks; software
   // drawing on machines without a graphics card can't afford every lamp.
-  if (frame.env.w > 1.5) { return vec4f(min(base * (0.45 + 0.55 * max(n.y, 0.0)) * ao + emission, vec3f(1.0)), 1.0); }
+  if (frame.env.w > 1.5) { return vec4f(min(base * (0.45 + 0.55 * max(n.y, 0.0)) * aoIn + emission, vec3f(1.0)), 1.0); }
+  // The model's own occlusion times the soft shade where things meet: only
+  // the ambient and bounced light (and the room's reflection) take it.
+  let ao = aoIn * screenAo(worldPos);
   let v = normalize(frame.cameraPos.xyz - worldPos);
   let roughness = clamp(roughnessIn, 0.04, 1.0);
   let a = roughness * roughness;

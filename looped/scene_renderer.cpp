@@ -26,37 +26,6 @@ using engine::Vec4;
 namespace engine {
 namespace {
 
-// General 4x4 inverse (Gauss-Jordan in double precision).
-Mat4 inverse(const Mat4& m) {
-  double a[4][8];
-  for (int r = 0; r < 4; ++r) {
-    for (int c = 0; c < 4; ++c) {
-      a[r][c] = m.at(c, r);
-      a[r][c + 4] = r == c ? 1.0 : 0.0;
-    }
-  }
-  for (int col = 0; col < 4; ++col) {
-    int pivot = col;
-    for (int r = col + 1; r < 4; ++r) {
-      if (std::fabs(a[r][col]) > std::fabs(a[pivot][col])) pivot = r;
-    }
-    for (int c = 0; c < 8; ++c) std::swap(a[col][c], a[pivot][c]);
-    const double p = a[col][col];
-    if (std::fabs(p) < 1e-12) return Mat4{};
-    for (int c = 0; c < 8; ++c) a[col][c] /= p;
-    for (int r = 0; r < 4; ++r) {
-      if (r == col) continue;
-      const double f = a[r][col];
-      for (int c = 0; c < 8; ++c) a[r][c] -= f * a[col][c];
-    }
-  }
-  Mat4 out;
-  for (int r = 0; r < 4; ++r) {
-    for (int c = 0; c < 4; ++c) out.at(c, r) = static_cast<float>(a[r][c + 4]);
-  }
-  return out;
-}
-
 // Tilts the near plane of world->clip matrix `m` (depth 0..1) onto `plane`
 // (world space, a·x + b·y + c·z + d >= 0 is kept), so the GPU clips away
 // everything on the other side (Lengyel's oblique near plane). Used for
@@ -88,6 +57,8 @@ constexpr uint64_t kObjectStride = 256;
 static_assert(kObjectStride == SceneRenderer::kObjectStrideBytes);
 constexpr wgpu::Color kClearColor{0.02, 0.015, 0.015, 1.0};
 constexpr wgpu::Color kAvatarBackdrop{0.10, 0.10, 0.13, 1.0};
+constexpr float kSoftShadeRadius = 0.5f;    // metres around each point that can shade it (J91)
+constexpr float kSoftShadeStrength = 1.0f;
 
 wgpu::ShaderModule loadShader(const wgpu::Device& device, const char* path) {
   auto source = engine::readTextFile(path);
@@ -212,7 +183,8 @@ bool SceneRenderer::init(engine::Gpu& gpu, const RenderScene& scene, const std::
   if (!gi_.init(gpu, lightingBuffer_, sizeof(LightingUniforms))) LOG_ERROR("Bounced light: not available.");
   createEnvironment();
   createShadows();
-  for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms"));
+  if (!ssao_.init(device)) LOG_ERROR("Soft shade: ssao.wgsl is missing.");
+  for (size_t i = 0; i < 1 + mirrorCount_; ++i) views_.push_back(makeView(envView_, "frame uniforms", nullptr, false, i == 0));
   for (View& v : shadowViews_) v = makeView(envDummyView_, "lamp shadow frame uniforms", nullptr, true);
   // The capture's own views: they can't read the cube they draw into.
   for (View& v : captureViews_) v = makeView(envDummyView_, "capture frame uniforms");
@@ -375,12 +347,12 @@ wgpu::BindGroup SceneRenderer::makeBonesBindGroup(wgpu::Buffer& buffer, const ch
 }
 
 SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const char* label, wgpu::Buffer buffer,
-                                            bool shadowPass) {
+                                            bool shadowPass, bool mainView) {
   const wgpu::Device& device = gpu_->device;
   View v;
   v.buffer = buffer ? buffer : makeUniformBuffer(device, sizeof(FrameUniforms), label);
   v.env = env;
-  wgpu::BindGroupEntry entries[13];
+  wgpu::BindGroupEntry entries[15];
   entries[0].binding = 0;
   entries[0].buffer = v.buffer;
   entries[0].size = sizeof(FrameUniforms);
@@ -407,9 +379,13 @@ SceneRenderer::View SceneRenderer::makeView(const wgpu::TextureView& env, const 
   entries[11].textureView = shadowPass ? shadowDummyView_ : shadowArrayView_;
   entries[12].binding = 12;
   entries[12].sampler = shadowSampler_;
+  entries[13].binding = 13;
+  entries[13].textureView = mainView && aoBound_ ? ssao_.result() : ssao_.none();
+  entries[14].binding = 14;
+  entries[14].sampler = ssao_.sampler();
   wgpu::BindGroupDescriptor desc;
   desc.layout = frameLayout_;
-  desc.entryCount = 13;
+  desc.entryCount = 15;
   desc.entries = entries;
   v.bindGroup = device.CreateBindGroup(&desc);
   return v;
@@ -506,7 +482,7 @@ bool SceneRenderer::createScenePipelines() {
   if (!module) return false;
 
   // Group 0: frame uniforms + material textures. Group 1: per-object uniforms.
-  wgpu::BindGroupLayoutEntry frameEntries[13];
+  wgpu::BindGroupLayoutEntry frameEntries[15];
   frameEntries[0].binding = 0;
   frameEntries[0].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
   frameEntries[0].buffer.type = wgpu::BufferBindingType::Uniform;
@@ -544,8 +520,14 @@ bool SceneRenderer::createScenePipelines() {
   frameEntries[12].binding = 12;
   frameEntries[12].visibility = wgpu::ShaderStage::Fragment;
   frameEntries[12].sampler.type = wgpu::SamplerBindingType::Comparison;
+  frameEntries[13].binding = 13;  // the soft shade (J91): shade and distance
+  frameEntries[13].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[13].texture.sampleType = wgpu::TextureSampleType::Float;
+  frameEntries[14].binding = 14;
+  frameEntries[14].visibility = wgpu::ShaderStage::Fragment;
+  frameEntries[14].sampler.type = wgpu::SamplerBindingType::Filtering;
   wgpu::BindGroupLayoutDescriptor frameDesc;
-  frameDesc.entryCount = 13;
+  frameDesc.entryCount = 15;
   frameDesc.entries = frameEntries;
   frameLayout_ = device.CreateBindGroupLayout(&frameDesc);
 
@@ -685,6 +667,35 @@ bool SceneRenderer::createScenePipelines() {
     sd.vertex.bufferCount = 1;
     sd.vertex.buffers = &vertexLayout;
     engine::pipelines::create(device, sd, &shadowObjectPipeline_);
+  }
+  // The soft shade's prepass (J91): the opaque scene's directions and depth
+  // at half size (looped/ssao.h).
+  {
+    wgpu::DepthStencilState preDepth;
+    preDepth.format = engine::ScreenAo::kDepthFormat;
+    preDepth.depthWriteEnabled = true;
+    preDepth.depthCompare = wgpu::CompareFunction::Less;
+    wgpu::ColorTargetState preTarget;
+    preTarget.format = engine::ScreenAo::kNormalFormat;
+    wgpu::FragmentState preFragment;
+    preFragment.module = module;
+    preFragment.entryPoint = "fs_prepass_model";
+    preFragment.targetCount = 1;
+    preFragment.targets = &preTarget;
+    wgpu::RenderPipelineDescriptor pd = desc;
+    pd.fragment = &preFragment;
+    pd.depthStencil = &preDepth;
+    pd.primitive.cullMode = wgpu::CullMode::Back;
+    pd.primitive.frontFace = wgpu::FrontFace::CCW;
+    pd.label = "soft shade prepass (models)";
+    engine::pipelines::create(device, pd, &aoModelPipeline_);
+    preFragment.entryPoint = "fs_prepass";
+    pd.label = "soft shade prepass (shapes)";
+    pd.layout = layout;
+    pd.vertex.entryPoint = "vs_main";
+    pd.vertex.bufferCount = 1;
+    pd.vertex.buffers = &vertexLayout;
+    engine::pipelines::create(device, pd, &aoObjectPipeline_);
   }
 
   wgpu::SamplerDescriptor samplerDesc;
@@ -1045,7 +1056,8 @@ void SceneRenderer::applyAlbedo(size_t f) {
 }
 
 void SceneRenderer::remakeViews() {
-  for (View& v : views_) v = makeView(v.env, "frame uniforms", v.buffer);
+  for (size_t i = 0; i < views_.size(); ++i)
+    views_[i] = makeView(views_[i].env, "frame uniforms", views_[i].buffer, false, i == 0);
   for (View& v : captureViews_) v = makeView(v.env, "capture frame uniforms", v.buffer);
   for (View& v : shadowViews_) v = makeView(v.env, "lamp shadow frame uniforms", v.buffer, true);
 }
@@ -1666,6 +1678,40 @@ void SceneRenderer::drawShadowFaces(const wgpu::CommandEncoder& encoder) {
   }
 }
 
+void SceneRenderer::setSoftShade(bool on) { aoOn_ = on; }  // render() rebinds views_[0]
+
+// Soft shade (J91): the solid things' depth and surface directions at half
+// size, then the shade from them (looped/ssao.h). A new size remakes the
+// main view's bindings (they hold the old textures).
+void SceneRenderer::drawSoftShade(const wgpu::CommandEncoder& encoder, const Mat4& viewProj, Vec3 eye,
+                                  const RoomView& cull) {
+  if (ssao_.resize(static_cast<uint32_t>(gpu_->width), static_cast<uint32_t>(gpu_->height)) && aoBound_)
+    views_[0] = makeView(views_[0].env, "frame uniforms", views_[0].buffer, false, true);
+  wgpu::RenderPassColorAttachment color;
+  color.view = ssao_.normalView();
+  color.loadOp = wgpu::LoadOp::Clear;
+  color.storeOp = wgpu::StoreOp::Store;
+  color.clearValue = {0.5, 0.5, 1.0, 1.0};
+  wgpu::RenderPassDepthStencilAttachment depth;
+  depth.view = ssao_.depthView();
+  depth.depthLoadOp = wgpu::LoadOp::Clear;
+  depth.depthStoreOp = wgpu::StoreOp::Store;
+  depth.depthClearValue = 1.0f;
+  wgpu::RenderPassDescriptor pd;
+  pd.label = "soft shade prepass";
+  pd.colorAttachmentCount = 1;
+  pd.colorAttachments = &color;
+  pd.depthStencilAttachment = &depth;
+  wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&pd);
+  pass.SetPipeline(aoObjectPipeline_);
+  pass.SetBindGroup(0, views_[0].bindGroup);
+  drawItems(pass, sceneDraws_, cull);
+  pass.SetPipeline(aoModelPipeline_);
+  drawModels(pass, false, eye, cull);
+  pass.End();
+  ssao_.encode(encoder, viewProj, eye, kSoftShadeRadius, kSoftShadeStrength);
+}
+
 void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj, Vec3 eye, const Mat4& avatar,
                            const std::vector<Mat4>& avatarBones, const std::vector<Mat4>& firstPersonBones,
                            const std::vector<Mirror>& mirrors, const engine::TextRenderer& text,
@@ -1746,6 +1792,16 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   }
   for (size_t i = 0; i < mirrorCount_ && i < mirrors.size(); ++i) renderMirror(encoder, i, mirrors[i], viewProj, eye);
 
+  const RoomView cull = roomView(viewProj, roomAt(eye));
+  // Soft shade (J91): off with classic light and the tests' light.
+  const bool aoWanted = aoOn_ && !classic_ && !testLight_ && ssao_.ready() && aoModelPipeline_ && aoObjectPipeline_ &&
+                        post_.ready();
+  if (aoWanted) drawSoftShade(encoder, viewProj, eye, cull);
+  if (aoWanted != aoBound_) {
+    aoBound_ = aoWanted;
+    views_[0] = makeView(views_[0].env, "frame uniforms", views_[0].buffer, false, true);
+  }
+
   // The scene draws offscreen as linear light; eyes and mood follow
   // (looped/post.h). Its depth is kept for the name pictures on top.
   if (!post_.ready()) {  // the first frames, while the post pipelines compile: nothing to show yet
@@ -1770,7 +1826,6 @@ void SceneRenderer::render(const wgpu::TextureView& target, const Mat4& viewProj
   wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&passDesc);
   pass.SetPipeline(pipeline_);
   pass.SetBindGroup(0, views_[0].bindGroup);
-  const RoomView cull = roomView(viewProj, roomAt(eye));
   roomOnScreen_ = cull.roomSeen;  // streamRooms: a room you can see into loads now
   drawItems(pass, sceneDraws_, cull);
   drawBoxes(pass);

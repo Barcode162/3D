@@ -684,6 +684,8 @@ void handleCommands() {
     g_app.renderer.setGiEnabled(g_app.hooks.feature("bounce"));
     // Lamp shadows (J97): Settings → Graphics → Lamp shadows, or ?shadows=0.
     g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") && engine::settings::number("lampShadows", 0) == 0);
+    // Soft shade (J91): Settings → Graphics → Soft shade, or ?ao=0.
+    g_app.renderer.setSoftShade(g_app.hooks.feature("ao") && engine::settings::number("softShade", 0) == 0);
     g_app.renderer.setRoughFix(g_app.hooks.feature("roughfix"));
     g_app.renderer.setBounceStrength(g_app.hooks.number("bouncek", 1));
     g_app.renderer.setGiLite(g_app.hooks.number("gilite", 0) != 0);

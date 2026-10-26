@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J91 · A real engine, step 4** (the engine). A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
-- [ ] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
+- [x] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
 - [ ] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by the lamps' shadows and walls, its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
 - [ ] **J91.3** Tuned on the phone: the defaults from a ?perf=1 report by the fire *Check:* The bar stays smooth with both on
 
@@ -273,7 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
+- `fa1b9fe` J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231
 - `11033e0` J98.2: J98: tables softer, the floor a little shinier, steel calmer, the bar a third of a stop darker → 1be7df8^..1be7df8
 - `83dd678` J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f
 - `b3c6b97` J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2

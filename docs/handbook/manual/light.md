@@ -180,6 +180,8 @@ thirds as strong (the glow itself was taken out in J92).
 
 **Lamp shadows (J97, 2026-10-26):** the 16 brightest lamps each keep a cube map of the still things around them (256² a face, 16-bit depth, drawn 12 faces a frame after loading and again when more rooms load or the Studio moves things; a lamp's own model is left out). Their light and their highlights are blocked by stools, tables and the counter; they no longer use bounced light's probe test (its 0.2 m steps were the squares of light). The other lamps (small bulbs, candles) keep the probes' test. Settings → Graphics → Lamp shadows, `?shadows=0`. Moving things (glasses, darts, people) don't cast lamp shadows yet. Still to come: lamp patterns (IES), lampshades that glow, fire that moves its shadows (J42).
 
+**Soft shade (J91, 2026-10-26):** ambient occlusion in screen space (`looped/ssao.*`, `shaders/ssao.wgsl`). Before the main pass, the solid still things are drawn at half size into a depth and surface-direction prepass; for each pixel 12 samples in a spiral within 0.5 m say how much of the room nearby surfaces close in (Alchemy-style), a 4×4 blur follows the depth, and the main pass multiplies only the ambient and bounced light by it (never a lamp's direct light). The result also holds each pixel's distance: a surface the prepass didn't see (people, glass, moving things) gets no shade. Off with classic light and the tests' light. Settings → Graphics → Soft shade, `?ao=0`.
+
 ## L3 Eyes and camera
 
 _Not built yet._

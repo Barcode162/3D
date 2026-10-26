@@ -49,7 +49,7 @@
     "id": "J91.1",
     "text": "The prepass and ambient occlusion, its blur and its switch",
     "check": "By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone",
-    "done": false
+    "done": true
    },
    {
     "id": "J91.2",
@@ -1160,7 +1160,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "fa1b9fe",
    "text": "J97.1: J97: lamp shadows: stools, tables and the counter block the lamps' light and their shine; no more squares of light → 1cd9231^..1cd9231"
   },
   {
