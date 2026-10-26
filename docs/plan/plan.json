@@ -48,7 +48,7 @@
     "id": "J101.1",
     "text": "Chess full screen like chess.com, with themes: each theme a calm pair of square colours that always contrast, pieces drawn to match, a smooth matching background; pick one, it's kept",
     "check": "Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1161,7 +1161,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "ae02b1c",
    "text": "J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed"
   },
   {

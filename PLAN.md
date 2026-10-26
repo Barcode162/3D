@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J101 · Chess full screen like chess.com, with themes** (the world). Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
-- [ ] **J101.1** Chess full screen like chess.com, with themes: each theme a calm pair of square colours that always contrast, pieces drawn to match, a smooth matching background; pick one, it's kept *Check:* Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together
+- [x] **J101.1** Chess full screen like chess.com, with themes: each theme a calm pair of square colours that always contrast, pieces drawn to match, a smooth matching background; pick one, it's kept *Check:* Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -273,7 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed
+- `ae02b1c` J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed
 - `4887cd3` J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722
 - `e4a1905` J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13
 - `0d40f55` J70.1, J70.2: J70: the lounge taken apart: every object by the fire its own thing (Poly Haven sofa, armchairs, mantel clock, painting, vase); floating things on the mantel and the lamp shade fixed → 49bb635^..3a43f37

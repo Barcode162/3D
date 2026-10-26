@@ -5,6 +5,7 @@
 #include <cstdio>
 
 #include "bar/renderer.h"
+#include "looped/bridge.h"
 #include "looped/log.h"
 #include "looped/net.h"
 #include "looped/ui.h"
@@ -182,6 +183,8 @@ std::string ChessGame::open(bool online) {
 void ChessGame::close() {
   if (!open_) return;
   open_ = false;
+  if (full_) engine::bridge::op("[\"chess\",null]");
+  pageState_.clear();
   selected_ = -1;
   computerAtMs_ = 0;
   search_.cancel();
@@ -285,7 +288,66 @@ int ChessGame::buttonAt(Vec2 tap, float aspect) const {
     if (tap.x > 0.04f && tap.x < 0.46f) return 0;
     if (tap.x > 0.54f && tap.x < 0.96f) return 1;
   }
+  if (tap.y > 0.79f && tap.y < 0.86f && tap.x > 0.3f && tap.x < 0.7f) return 2;
   return -1;
+}
+
+void ChessGame::setFull(bool on) {
+  full_ = on;
+  selected_ = -1;
+  pageState_.clear();
+  if (!on) engine::bridge::op("[\"chess\",null]");
+}
+
+void ChessGame::pageMove(int from, int to, double nowMs) {
+  if (!open_ || !myTurn() || pos_.result() != Result::kPlaying) return;
+  std::vector<Move> moves;
+  pos_.legalMoves(moves);
+  for (const Move& m : moves) {
+    if (m.from == from && m.to == to && (m.promo == 0 || m.promo == kQueen)) {
+      playMove(m, nowMs, true);
+      return;
+    }
+  }
+}
+
+void ChessGame::pageNewGame(double nowMs) {
+  if (!open_ || (twoPlayers_ && mySide_ == kBlack)) return;  // white starts new games
+  newGame(nowMs, twoPlayers_);
+  message_ = "New game.";
+  messageMs_ = nowMs;
+}
+
+// The position for the full-screen board, sent when it changes: squares
+// (0 = empty, 1..6 white, 9..14 black), whose turn, your side, your moves
+// (only on your turn), the last move, the king in check, the status line.
+void ChessGame::sendPage() {
+  std::string s = "[\"chess\",{\"b\":[";
+  for (int i = 0; i < 64; ++i) s += (i ? "," : "") + std::to_string(pos_.board[i]);
+  s += "],\"turn\":" + std::to_string(static_cast<int>(pos_.turn)) + ",\"me\":" + std::to_string(static_cast<int>(mySide_));
+  s += ",\"moves\":[";
+  if (myTurn() && pos_.result() == Result::kPlaying) {
+    std::vector<Move> moves;
+    pos_.legalMoves(moves);
+    bool first = true;
+    for (const Move& m : moves) {
+      if (m.promo && m.promo != kQueen) continue;
+      s += std::string(first ? "" : ",") + "[" + std::to_string(m.from) + "," + std::to_string(m.to) + "]";
+      first = false;
+    }
+  }
+  s += "],\"last\":[" + std::to_string(lastFrom_) + "," + std::to_string(lastTo_) + "]";
+  s += ",\"check\":" + std::to_string(pos_.inCheck(pos_.turn) ? pos_.king(pos_.turn) : -1);
+  s += ",\"move\":" + std::to_string(pos_.fullmove);
+  s += ",\"canNew\":" + std::string(twoPlayers_ && mySide_ == kBlack ? "false" : "true");
+  std::string status = statusText(), msg = !message_.empty() && nowMs_ - messageMs_ < 3500 ? message_ : "";
+  for (std::string* t : {&status, &msg})
+    for (char& c : *t)
+      if (c == '"' || c == '\\') c = '\'';
+  s += ",\"status\":\"" + status + "\",\"msg\":\"" + msg + "\"}]";
+  if (s == pageState_) return;
+  pageState_ = s;
+  engine::bridge::op(s);
 }
 
 bool ChessGame::update(double nowMs, float dt, const std::vector<Vec2>& taps, const engine::FirstPersonCamera& cam,
@@ -329,9 +391,19 @@ bool ChessGame::update(double nowMs, float dt, const std::vector<Vec2>& taps, co
       playMove(m, nowMs, true);
     }
   }
+  if (full_) {
+    sendPage();
+    for (const Vec2 tap : taps)
+      if (buttonAt(tap, aspect) == 0) return true;  // Escape: leave
+    return false;
+  }
   for (const Vec2 tap : taps) {
     const int b = buttonAt(tap, aspect);
     if (b == 0) return true;
+    if (b == 2) {
+      setFull(true);
+      continue;
+    }
     if (b == 1) {
       if (twoPlayers_ && mySide_ == kBlack) continue;  // white starts new games
       newGame(nowMs, twoPlayers_);
@@ -403,7 +475,7 @@ std::string ChessGame::statusText() const {
 }
 
 void ChessGame::draw(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
-  if (!open_) return;
+  if (!open_ || full_) return;  // full screen: the page draws it all
   // On the board: the last move, your selection, where it can go.
   const auto squareQuad = [&](int sq, Vec4 color, float inset) {
     const Vec3 c = squareCenter(sq) + Vec3{0, 0.0015f, 0};
@@ -451,6 +523,16 @@ void ChessGame::draw(engine::TextRenderer& text, float W, float H, float px, dou
     text.addScreen(label, W * (x0 + x1) / 2, y + (h - cap) / 2, cap, b);
   };
   button(0.04f, 0.46f, "LEAVE", {0.27f, 0.62f, 1.0f, 0.95f});
+  {  // Full screen (J101): the board flat, with themes.
+    const float y = H * 0.79f, h = H * 0.07f;
+    text.addRect(W * 0.3f, y, W * 0.4f, h, {0.12f, 0.12f, 0.14f, 0.85f});
+    text.addRect(W * 0.3f, y, W * 0.4f, 2 * u, {1, 1, 1, 0.3f});
+    engine::TextStyle b;
+    b.align = 0.5f;
+    b.outlineWidth = 0.8f;
+    const float cap = std::min(h * 0.38f, 10 * u);
+    text.addScreen("FULL SCREEN", W * 0.5f, y + (h - cap) / 2, cap, b);
+  }
   if (!(twoPlayers_ && mySide_ == kBlack)) button(0.54f, 0.96f, "NEW GAME", {1.0f, 0.78f, 0.15f, 0.95f});
   (void)px;
 }

@@ -189,6 +189,7 @@ window.bar3dBridge = (function () {
             case 'se': { var A6 = window.bar3dAudio; if (A6) A6['emitterCreate'](op[1], op[2], op[3], op[4], op[5]); break; }
             case 'bodyClass': document.body.classList.toggle(op[1], !!op[2]); break;
             case 'panel': { var U4 = window.bar3dUi; if (U4) U4['open'](op[1]); break; }
+            case 'chess': if (window.bar3dChess) window.bar3dChess.state(op[1]); break;  // the full-screen board (J101)
             // The Studio page around this one (studio/studio.js, bar/studio_mode.cpp).
             case 'studio': if (window.bar3dStudioSink) window.bar3dStudioSink(op[1]); break;
           }

@@ -45,6 +45,13 @@ class ChessGame {
   void onRoom(const std::vector<double>& values);
   // What others see you doing: [playing (1/0), your side]
   void stateFor(float out[5]) const;
+  // Full screen (J101): the page draws the board flat over the game, with
+  // its themes (bar/web/chess.js); the game sends it the position and your
+  // moves ("chess" page operation) and takes your moves back.
+  void setFull(bool on);
+  bool full() const { return full_; }
+  void pageMove(int from, int to, double nowMs);  // a pawn reaching the end becomes a queen
+  void pageNewGame(double nowMs);
 
  private:
   struct Instance {
@@ -64,7 +71,10 @@ class ChessGame {
   bool myTurn() const;
   std::string statusText() const;
   // Taps on the HUD buttons (screen 0..1). -1 none, 0 leave, 1 new game.
-  int buttonAt(engine::Vec2 tap, float aspect) const;
+  int buttonAt(engine::Vec2 tap, float aspect) const;  // 2: full screen
+  bool full_ = false;               // kept while you sit at the board and the next time
+  std::string pageState_;           // last sent to the page
+  void sendPage();
 
   bool ready_ = false, open_ = false, online_ = false;
   engine::Vec3 center_;  // the board's middle, on its surface

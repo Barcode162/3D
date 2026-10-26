@@ -34,3 +34,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 ## The bookshelf (J99)
 
 Tap the lounge bookshelf: **The bookshelf** lists the books (title, author and translator, year, and where you are or how long it reads). Tap one to read: `‹` back to the list, `☰` contents (tap a chapter), `A−` / `A+` text size, `☀` / `☾` light or dark paper; tap the right side or swipe left for the next page, the left side or swipe right for the one before; the bottom bar shows the chapter and page with `‹` `›`. Your place in each book, the size and the paper are kept on the phone (`bar/web/reader.js`; books in `bar/web/books/`, made by `tools/books.py`).
+
+## Chess, full screen (J101)
+
+At the lounge chessboard, `FULL SCREEN` (between the game's two buttons) lays the board flat over the game, like the chess sites (`bar/web/chess.js`): the status on top, the board (yours at the bottom; files and ranks on the edge squares; the last move marked; dots where the tapped piece can go, rings on captures; the king in check glows red), then `Leave`, `New game` (white starts new games) and `3D view` (back to the table). Themes under it, kept on the phone: `Walnut`, `Sage`, `Dusk`, `Coral`, `Slate`, `Night`; each sets the square colours (always far apart in lightness), the pieces (classic or round, their colours and shine) and the background. The game keeps the rules and the room's game (bar/projects/chess: page operation `chess`, commands `chessMove`, `chessNew`, `chessFull`, `chessLeave`).
