@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J91.2 Light beams: lamp light in a thin haze, cut by what blocks it
+
+`f971261` · 2026-10-26 03:55 · 24 files, +358 −20 · tests: none
+
+Phone check: By the bar counter: soft cones of light under the hanging lamps; Settings → Graphics → Light beams Off: gone
+
 ## J91.1 Soft shade: ambient occlusion where things meet
 
 `3455757` · 2026-10-26 03:38 · 15 files, +533 −50 · tests: none
