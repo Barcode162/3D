@@ -134,6 +134,6 @@ def candle():
     common.finish_and_export(os.path.join(out_dir, "candle.glb"), uv_scale={})
 
 
-pendant()
+# pendant(): replaced by Poly Haven's hanging lamp (J35.5, build_all.sh)
 neon_sign()
 candle()

@@ -290,7 +290,7 @@
     {
       "id": "light-bulb-1",
       "kind": "light-bulb",
-      "at": [-6.6, 2.25, -4.6],
+      "at": [-6.6, 2.11, -4.6],
       "parts": {
         "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
       }
@@ -298,7 +298,7 @@
     {
       "id": "light-bulb-2",
       "kind": "light-bulb",
-      "at": [-4.3, 2.25, -4.6],
+      "at": [-4.3, 2.11, -4.6],
       "parts": {
         "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
       }
@@ -306,7 +306,7 @@
     {
       "id": "light-bulb-3",
       "kind": "light-bulb",
-      "at": [-2, 2.25, -4.6],
+      "at": [-2, 2.11, -4.6],
       "parts": {
         "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
       }
@@ -314,7 +314,7 @@
     {
       "id": "light-bulb-4",
       "kind": "light-bulb",
-      "at": [0.2, 2.25, -4.6],
+      "at": [0.2, 2.11, -4.6],
       "parts": {
         "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
       }

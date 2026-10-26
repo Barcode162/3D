@@ -11,7 +11,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `bar_stool.glb`, `table_stool.glb` | `stools.py` | Leather Red 02, Fabric Leather 02 |
 | `round_table.glb` | `furniture.py` | Wood Table 001, Dark Wood, Leather Red 02 |
 | `jukebox.glb` | `jukebox.py` | Dark Wood |
-| `pendant_lamp.glb`, `candle.glb` | `lighting.py` | none |
+| `candle.glb` | `lighting.py` | none |
 | `dartboard.glb`, `chalkboard.glb` | `decor.py` | Dark Wood, Wood Table 001 |
 | `pint_glass.glb`, `rocks_glass.glb` | `glasses.py` | none |
 | `hall.glb` (the new room shell) | `hall.py` | Herringbone Parquet, Red Brick 03, Brick Wall 006, Painted Plaster Wall, Plastered Wall 02, Dark Wood, Wood Table 001, Black Painted Planks, Concrete Floor Worn 001, Plywood, Rubber Tiles, Velour Velvet, Fabric Pattern 07 |
@@ -34,6 +34,7 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 
 | Model | Poly Haven model | Authors |
 |---|---|---|
+| `pendant_lamp.glb` | [Hanging Industrial Lamp](https://polyhaven.com/a/hanging_industrial_lamp) (80% size, its glass made see-through) | Kuutti Siitonen |
 | `bar_stool.glb` | [Bar Chair Round 01](https://polyhaven.com/a/bar_chair_round_01) (scaled to a 0.76 m seat) | Dairon Sanchez |
 
 Bottle labels (`tools/assets/labels.py`, J35.4): made-up brands set in DejaVu Serif and Sans (Bitstream Vera licence, public-domain changes) and Liberation Serif (SIL Open Font License); both allow text drawn into pictures.

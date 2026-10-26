@@ -37,6 +37,9 @@ run stools.py "$tex" $out
 # The bar stools (J35.2): seat at 0.76 m (Poly Haven's is a counter stool,
 # 0.69 m), its back away from the counter (+z).
 ph bar_chair_round_01 bar_stool.glb --tris 8000 --height 0.825 --turn 180
+# The pendant lamps over the counter (J35.5): 80% size, hanging from their
+# top (lighting.py's own pendant is no longer used).
+ph hanging_industrial_lamp pendant_lamp.glb --tris 8000 --height 1.07 --hang
 run furniture.py "$tex" $out
 run lighting.py "$tex" $out
 run decor.py "$tex" $out

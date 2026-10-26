@@ -5,11 +5,12 @@
 # optionally scales it to a real height, and writes the .glb.
 #
 #   blender -b --factory-startup --python tools/assets/polyhaven.py -- \
-#       <fetched dir> <out.glb> [--tris N] [--tex 1024] [--height metres] [--turn degrees]
+#       <fetched dir> <out.glb> [--tris N] [--tex 1024] [--height metres] [--turn degrees] [--hang]
 #
 # Poly Haven models are already in metres; --height only when a real size
 # differs. --turn spins it about the vertical so its front faces +z (the
-# bar's facing convention).
+# bar's facing convention). --hang: the origin goes to the top instead (a
+# lamp hanging from the ceiling, placed where it meets the ceiling).
 import math
 import os
 import sys
@@ -29,6 +30,7 @@ max_tris = opt("--tris", 0)
 tex_size = opt("--tex", 1024)
 height = opt("--height", 0.0)
 turn = opt("--turn", 0.0)
+hang = "--hang" in args
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=os.path.join(src, "model.gltf"))
@@ -67,11 +69,20 @@ for o in meshes:
         lo = Vector(map(min, lo, v.co))
         hi = Vector(map(max, hi, v.co))
 scale = height / (hi.z - lo.z) if height > 0 else 1.0
-center = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))
+center = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, hi.z if hang else lo.z))
 m = Matrix.Rotation(math.radians(turn), 4, "Z") @ Matrix.Scale(scale, 4) @ Matrix.Translation(-center)
 for o in meshes:
     o.data.transform(m)
     o.data.update()
+
+# Glass made with transmission (the engine has none): see-through glass
+# with a light tint instead (drawn after the solid things, J35.5).
+for mat in bpy.data.materials:
+    bsdf = mat.node_tree.nodes.get("Principled BSDF") if mat.use_nodes else None
+    if bsdf and bsdf.inputs["Transmission Weight"].default_value > 0.5:
+        bsdf.inputs["Transmission Weight"].default_value = 0.0
+        bsdf.inputs["Alpha"].default_value = 0.22
+        mat.surface_render_method = "BLENDED"
 
 # Textures no bigger than the budget (the phone gets ASTC from these).
 for img in bpy.data.images:
