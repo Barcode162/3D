@@ -289,6 +289,12 @@ def build_lamp_and_table():
                          common.plain_material("Shade fabric", (0.85, 0.7, 0.5), 0.0, 0.9, emission=(1.0, 0.7, 0.4),
                                                strength=0.8), 24)
     shade.data.transform(Matrix.Translation((LX, 0, LZ)))
+    # The harp: three thin arms from the pole's top to the shade's rim, so the
+    # shade is held (it hung in the air, 11 cm from the pole).
+    for k in range(3):
+        a = k * 2 * math.pi / 3
+        common.tube("Lamp harp", [(LX, 1.6, LZ), (LX + 0.13 * math.cos(a), 1.7, LZ + 0.13 * math.sin(a))], 0.004, brass,
+                    sides=5)
     common.sphere("Lamp bulb", Vector((LX, 1.55, LZ)), 0.04,
                   common.plain_material("Floor lamp bulb", (1, 0.9, 0.7), 0.0, 0.3, emission=(1, 0.75, 0.45),
                                         strength=8.0), 10, 6)
