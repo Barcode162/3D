@@ -130,7 +130,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **J99** Real books to read: the lounge bookshelf opens real public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity: The Special and General Theory, and a few more) in a reader with pages to turn (request 2026-10-26 #8) · N3
   *Verdict:* Doable now — Public-domain texts from Project Gutenberg (Charter: assets need a licence that allows them, public domain does)
 - [ ] **J100** A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
-  *Verdict:* Doable at a cost — The Grandeur is a paid library we can't ship; the free Salamander Grand Piano (CC-BY, credited) is the closest; about 10 MB downloaded only when someone plays
+  *Verdict:* Doable now — The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)
 - [ ] **J101** Chess full screen like chess.com, with themes: board, pieces and background matched, two calm colours that always contrast (request 2026-10-26 #8) · N3
   *Verdict:* Doable now — The chess game and its screen exist; this adds a full-screen view and theme sets
 - [ ] **J102** A real fire: flames drawn from moving noise in a shader (shape, heat colour, flicker, rising embers) instead of a few moving pictures (request 2026-10-26 #8) · N3
@@ -140,7 +140,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [ ] **J104** A sunken seating nook by the big mirror: a few steps down, seats, a pair of speakers, its own chill music with its own player to pick and control tracks (request 2026-10-26 #8) · N3 N4
   *Verdict:* Doable after J74 — A change to the floor and walls (with the shells); music only with a licence that allows it, like the jukebox's CC-BY tracks
 - [ ] **J105** A holographic race broadcast in a wall recess above the sim rigs: the whole track as a spinning hologram, one camera on both drivers that splits smoothly into one per driver when they separate (one camera in solo play), the placing at the top, a minimap of the track with both cars in two colours at the bottom (request 2026-10-26 #8) · N3 N4
-  *Verdict:* Doable at a cost — Extra camera views of the race drawn into the hologram cost phone time; drawn small and only while a race runs
+  *Verdict:* Doable after J73 — J73
 
 ### The site
 

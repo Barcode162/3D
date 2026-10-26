@@ -499,8 +499,8 @@
     ],
     "done": false,
     "verdict": {
-     "kind": "cost",
-     "why": "The Grandeur is a paid library we can't ship; the free Salamander Grand Piano (CC-BY, credited) is the closest; about 10 MB downloaded only when someone plays"
+     "kind": "now",
+     "why": "The user chose the free Salamander Grand Piano (CC-BY, credited), about 10 MB loaded only when someone plays (request 2026-10-26 #10)"
     }
    },
    {
@@ -563,8 +563,9 @@
     ],
     "done": false,
     "verdict": {
-     "kind": "cost",
-     "why": "Extra camera views of the race drawn into the hologram cost phone time; drawn small and only while a race runs"
+     "kind": "after",
+     "after": "J73",
+     "why": "J73"
     }
    }
   ],
