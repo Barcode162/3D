@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J101.1 Chess full screen: a FULL SCREEN button at the lounge board lays it flat over the game like the chess sites (status, board with the last move, move dots and the check glow, Leave, New game, 3D view), in six calm themes (Walnut, Sage, Dusk, Coral, Slate, Night) that set the squares, the pieces (classic or round, our own drawings) and the background together; the theme is kept
+
+`64e0cd7` · 2026-10-26 09:24 · 10 files, +328 −9 · tests: none
+
+Phone check: Sit at the chess table and play: tap full screen; the board fills the screen; change the theme: board, pieces and background change together
+
 ## J99.1 Real books: the lounge bookshelf opens a reader with six public-domain works (Crime and Punishment, The Brothers Karamazov and Notes from Underground in Constance Garnett's English, Einstein's Relativity, Moby-Dick, The Great Gatsby): pages to tap or swipe, contents, text size, light or dark paper, your place kept
 
 `f13aaed` · 2026-10-26 09:07 · 18 files, +433 −16 · tests: none
