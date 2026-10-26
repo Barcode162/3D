@@ -63,7 +63,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J97 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J98 → J97 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -186,6 +186,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 - [ ] **J97** Lamp shadows: the 16 brightest lamps cast shadows (drawn once, kept), so stools, tables and the counter block their light and their highlights on the floor; an off switch. Its plan: docs/plan/jobs/J97.md. · N3
   *Verdict:* Doable at a cost — Phone speed: a shadow look-up per lamp per pixel; you chose it (2026-10-26 #1); quality and an off switch
+- [ ] **J98** Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md. · N3 N5
+  *Verdict:* Doable now — Our own shader and moods; the squares' cause found first
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
