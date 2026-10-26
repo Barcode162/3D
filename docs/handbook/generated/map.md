@@ -16,14 +16,14 @@ What each folder is, how many files it holds, its main languages, and which work
 | `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
 | `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
 | `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 3 | JSON | deploy.yml → home/bar |
-| `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 144 | C++, pictures, JavaScript | deploy.yml → home/bar |
+| `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 153 | C++, pictures, JavaScript | deploy.yml → home/bar |
 | `bar/projects/` | The bar's projects, each with its project.json (web: copied to the site; native: built into the game). | 48 | C++, JavaScript, JSON | deploy.yml → home/bar |
 | `bar/projects/chess/` | The lounge's chessboard and its computer player (C++). | 5 | C++, JSON | deploy.yml → home/bar |
 | `bar/projects/mania/` | 4K Mania, the rhythm game (a web page inside the bar). | 5 | C++, JSON | deploy.yml → home/bar |
 | `bar/projects/meridian/` | Meridian, the user's driving game (three.js, the approved exception), opened from a racing rig. | 13 | JavaScript, Markdown, HTML | deploy.yml → home/bar |
 | `bar/projects/platformer/` | The arcade's platformer "Test 2" (three.js, added as is). | 8 | JavaScript, Markdown, text | deploy.yml → home/bar |
 | `bar/projects/racing/` | The racing sim: track, cars, bots, controls, view, the race (C++). | 17 | C++, JSON | deploy.yml → home/bar |
-| `bar/web/` | The bar's page: index.html and its JavaScript bridges (menus, audio, network, voice, accounts, the live world). | 41 | pictures, JavaScript, HTML | deploy.yml → home/bar |
+| `bar/web/` | The bar's page: index.html and its JavaScript bridges (menus, audio, network, voice, accounts, the live world). | 50 | pictures, JavaScript, JSON | deploy.yml → home/bar |
 | `bar/web/badges/` | The badge pictures on players' cards. | 8 | pictures | deploy.yml → home/bar |
 | `bar/web/icons/` | The page's own icons. | 22 | pictures | deploy.yml → home/bar |
 | `cloud/` | The room server on Cloudflare: the Worker (router), the room (one per room name), the ledger, the protocol codec, the rules. | 15 | JavaScript, JSON, shell | deploy.yml → Cloudflare (the room server and the ledger) |
@@ -73,7 +73,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 155 | JavaScript, Python, C++ | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 156 | JavaScript, Python, C++ | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 39 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 19 | JavaScript | not uploaded |

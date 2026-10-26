@@ -48,7 +48,7 @@
     "id": "J99.1",
     "text": "Real books: tap the lounge bookshelf to pick one of several public-domain works (Dostoyevsky in Constance Garnett's English, Einstein's Relativity, and more) and read it in a reader with pages to turn, your place kept",
     "check": "Tap the bookshelf: pick Crime and Punishment, read, turn pages, close it; open it again: you're on the same page",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1173,7 +1173,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "4887cd3",
    "text": "J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722"
   },
   {

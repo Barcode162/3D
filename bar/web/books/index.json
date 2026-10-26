@@ -1,0 +1,57 @@
+{
+ "about": "The lounge bookshelf's books (tools/books.py): public-domain works from Project Gutenberg.",
+ "books": [
+  {
+   "id": "crime-and-punishment",
+   "title": "Crime and Punishment",
+   "author": "Fyodor Dostoyevsky",
+   "year": 1866,
+   "translator": "Constance Garnett",
+   "chapters": 40,
+   "words": 202627
+  },
+  {
+   "id": "brothers-karamazov",
+   "title": "The Brothers Karamazov",
+   "author": "Fyodor Dostoyevsky",
+   "year": 1880,
+   "translator": "Constance Garnett",
+   "chapters": 96,
+   "words": 349763
+  },
+  {
+   "id": "notes-from-underground",
+   "title": "Notes from Underground",
+   "author": "Fyodor Dostoyevsky",
+   "year": 1864,
+   "translator": "Constance Garnett",
+   "chapters": 21,
+   "words": 43823
+  },
+  {
+   "id": "relativity",
+   "title": "Relativity: The Special and General Theory",
+   "author": "Albert Einstein",
+   "year": 1916,
+   "translator": "Robert W. Lawson",
+   "chapters": 38,
+   "words": 30259
+  },
+  {
+   "id": "moby-dick",
+   "title": "Moby-Dick; or, The Whale",
+   "author": "Herman Melville",
+   "year": 1851,
+   "chapters": 136,
+   "words": 211363
+  },
+  {
+   "id": "great-gatsby",
+   "title": "The Great Gatsby",
+   "author": "F. Scott Fitzgerald",
+   "year": 1925,
+   "chapters": 9,
+   "words": 48143
+  }
+ ]
+}

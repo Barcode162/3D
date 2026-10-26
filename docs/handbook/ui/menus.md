@@ -30,3 +30,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 | `Test my mic (record 4 s, play back)` | Records 4 seconds and plays them back. |
 | `Visit the test home` | Go to the test home (its own room). |
 | `Voice chat` | Mic on/off, push to talk, the noise gate, mic boost, test your mic. Voice joins only signed-in people of your own age group (the room enforces it, J84): a guest is told to log in, an older account to add its birth date. |
+
+## The bookshelf (J99)
+
+Tap the lounge bookshelf: **The bookshelf** lists the books (title, author and translator, year, and where you are or how long it reads). Tap one to read: `‹` back to the list, `☰` contents (tap a chapter), `A−` / `A+` text size, `☀` / `☾` light or dark paper; tap the right side or swipe left for the next page, the left side or swipe right for the one before; the bottom bar shows the chapter and page with `‹` `›`. Your place in each book, the size and the paper are kept on the phone (`bar/web/reader.js`; books in `bar/web/books/`, made by `tools/books.py`).

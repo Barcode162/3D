@@ -480,15 +480,10 @@ void use(const app::Interactable& it) {
       playSfx(engine::synth::Effect::kKnock, where, 0.8f, true);
       showToast("The street outside isn't built yet.");
       break;
-    case Action::kBooks: {
-      static const char* kBooks[] = {"\"The Joy of Mixology\" - you learn three new cocktails.",
-                                     "\"Moby-Dick\" - Call me Ishmael...", "\"The Great Gatsby\" - a party book.",
-                                     "\"Piano for Beginners\" - try the bench on the stage!",
-                                     "\"Darts: The Perfect 180\" - aim for the treble 20."};
-      showToast(kBooks[g_app.nextBook++ % 5]);
+    case Action::kBooks:  // the lounge bookshelf: real books to read (J99, bar/web/reader.js)
+      engine::ui::openPanel("books");
       playSfx(engine::synth::Effect::kClick, where, 0.4f);
       break;
-    }
     case Action::kChess: {
       if (g_app.seat >= 0) standUp();
       const std::string why = g_app.chess.open(g_app.others.online());

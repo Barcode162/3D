@@ -830,6 +830,7 @@ window.bar3dUi = (function () {
     open: function (name) {
       var panels = { main: mainPanel, emotes: emotesPanel, avatar: avatarPanel, settings: settingsPanel, voice: voicePanel,
                      piano: pianoPanel, bartender: bartenderPanel, help: helpPanel, sim: simPanel, carSetup: carSetupPanel };
+      if (name === 'books') { close(); if (window.bar3dReader) bar3dReader.open(); return; }  // the lounge bookshelf (J99, reader.js)
       if (name === 'bartenderShift') { info.shift = 1; name = 'bartender'; }
       if (GAMES[name] && name !== 'meridian') { close(); openGame(name); return; }  // an arcade machine
       if (panels[name]) panels[name]();
