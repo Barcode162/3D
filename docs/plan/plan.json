@@ -36,37 +36,25 @@
   }
  ],
  "now": {
-  "id": "J91",
-  "title": "A real engine, step 4",
+  "id": "J98",
+  "title": "Light tune-up from your screenshots",
   "chapter": "the engine",
-  "about": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
+  "about": "Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md.",
   "serves": [
    "N3",
    "N5"
   ],
   "pieces": [
    {
-    "id": "J91.1",
-    "text": "The prepass and ambient occlusion, its blur and its switch",
-    "check": "By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone",
-    "done": false
-   },
-   {
-    "id": "J91.2",
-    "text": "The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by walls (bounced light's probes), its switch",
-    "check": "Stand at the stage door: soft beams under the stage lights; Light beams off: gone",
-    "done": false
-   },
-   {
-    "id": "J91.3",
-    "text": "Tuned on the phone: the defaults from a ?perf=1 report by the fire",
-    "check": "The bar stays smooth with both on",
-    "done": false
+    "id": "J98.2",
+    "text": "Tables softer, the floor a little shinier, the whole bar a third of a stop darker",
+    "check": "The round tables shine softly with no squares in them; the stage isn't washed out",
+    "done": true
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J98 → J97 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
+ "upNext": "J97 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)",
  "road": {
   "world": [
    {
@@ -848,16 +836,16 @@
     }
    },
    {
-    "id": "J98",
-    "text": "Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md.",
+    "id": "J91",
+    "text": "A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md.",
     "serves": [
      "N3",
      "N5"
     ],
     "done": false,
     "verdict": {
-     "kind": "now",
-     "why": "Our own shader and moods; the squares' cause found first"
+     "kind": "cost",
+     "why": "Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality"
     }
    }
   ],
@@ -1185,7 +1173,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "83dd678",
    "text": "J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f"
   },
   {

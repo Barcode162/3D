@@ -56,14 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J91 · A real engine, step 4** (the engine). A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
-- [ ] **J91.1** The prepass and ambient occlusion, its blur and its switch *Check:* By the sofa and the stools the floor darkens softly where things touch it; Settings → Graphics → Soft shade off: it's gone
-- [ ] **J91.2** The light grid and the beams: lamps, neon, the fire, haze per place and mood, blocked by walls (bounced light's probes), its switch *Check:* Stand at the stage door: soft beams under the stage lights; Light beams off: gone
-- [ ] **J91.3** Tuned on the phone: the defaults from a ?perf=1 report by the fire *Check:* The bar stays smooth with both on
+**J98 · Light tune-up from your screenshots** (the engine). Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md. · N3 N5
+- [x] **J98.2** Tables softer, the floor a little shinier, the whole bar a third of a stop darker *Check:* The round tables shine softly with no squares in them; the stage isn't washed out
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J98 → J97 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
+**Up next, in order:** J97 → J91 → J35 → J70 → J71 → J72 → J73 → J74 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the artificial glow out first, 2026-10-25 #10; the engine finished, then the bar rebuilt from zero, 2026-10-25 #9; then the rest as approved)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -186,8 +184,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 - [ ] **J97** Lamp shadows: the 16 brightest lamps cast shadows (drawn once, kept), so stools, tables and the counter block their light and their highlights on the floor; an off switch. Its plan: docs/plan/jobs/J97.md. · N3
   *Verdict:* Doable at a cost — Phone speed: a shadow look-up per lamp per pixel; you chose it (2026-10-26 #1); quality and an off switch
-- [ ] **J98** Light tune-up from your screenshots: no squares of light, tables softer, the floor a little shinier, the whole bar a third of a stop darker. Its plan: docs/plan/jobs/J98.md. · N3 N5
-  *Verdict:* Doable now — Our own shader and moods; the squares' cause found first
+- [ ] **J91** A real engine, step 4: ambient occlusion (soft shade in corners, under furniture and where things meet, worked out on screen each frame at half size) and volumetric light (beams through a light haze from the lamps, the neon and the fire, at their real spots and colours), each with an off switch and a quality setting; after J88. Its plan: docs/plan/jobs/J91.md. · N3 N5
+  *Verdict:* Doable at a cost — Phone speed: both are extra full-screen passes; you asked for them (2026-10-25 #9), so they ship at half size with off switches and the phone's report (J37) sets their quality
 
 ### The tools
 - [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
@@ -277,7 +275,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f
+- `83dd678` J96.1: J96: the floor's square of light and the reflections that followed you, fixed → a3c9f6f^..a3c9f6f
 - `b3c6b97` J88.1, J88.3: J88: up to 255 lamps (bounced light and walls for 127), bounced light at its own pace → 38f092c^..db6eac2
 - `7521b64` J95.1: J95: GitHub's long browser tests only on request; puts J87 (copies drawn together) live → 6f66cb1^..6f66cb1
 - `1889278` J87.1: J87: copies drawn together: every copy of a model in one draw, up to 4096 models → eb42d32^..eb42d32

@@ -574,7 +574,7 @@
     0.82
    ],
    "metal": 1.0,
-   "rough": 0.38
+   "rough": 0.45
   },
   "Terracotta": {
    "albedo": [
@@ -962,7 +962,7 @@
     0.82
    ],
    "metal": 1.0,
-   "rough": 0.38
+   "rough": 0.45
   },
   "Straw 0": {
    "albedo": [
@@ -2514,7 +2514,7 @@
     0.82
    ],
    "metal": 1.0,
-   "rough": 0.38
+   "rough": 0.45
   },
   "TV picture": {
    "albedo": [
@@ -2750,7 +2750,7 @@
     0.0148
    ],
    "metal": 0.003,
-   "rough": 0.75
+   "rough": 0.62
   },
   "Pillow fabric": {
    "albedo": [
@@ -3826,7 +3826,7 @@
    ],
    "fix": 1.207,
    "metal": 0.005,
-   "rough": 0.32
+   "rough": 0.42
   }
  },
  "sim_rig.glb": {

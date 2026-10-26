@@ -26,7 +26,7 @@ see it:
 
 | Dial | Page option | Default | What it does |
 |---|---|---|---|
-| Exposure | `?exposure=-1` | -1 EV | the whole picture brighter (+) or darker (-) |
+| Exposure | `?exposure=-1` | -1.63 EV in the bar (-1.3 the engine's default; a third of a stop darker since 2026-10-26) | the whole picture brighter (+) or darker (-) |
 | Darkness kept | `?eyekeep=0.6` | 0.6 | 0 = every room looks equally bright, 1 = eyes never adapt |
 | Reference | `?eyeref=-1.5` | -1.5 | the room brightness (log2) that shows as "normal" |
 | Darkest / brightest adapted | `?eyemin=-9` `?eyemax=6` | | eyes don't adapt beyond these |
