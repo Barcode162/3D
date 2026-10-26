@@ -9,6 +9,14 @@
 # station (shakers, jiggers, strainers, garnish tray, bitters, straws) and
 # customers' clutter (drinks, peanut bowls, a phone, keys, candles).
 #
+# The remake (J35.3): the bar top's left end is a round end the arm rest and
+# the foot rail wrap around (no step, no gap); its edges are rounded;
+# continuous moldings run along the whole front, the turn included (with
+# tongue-and-groove boards where flat panels can't follow the curve); the
+# underbar's steel top is one piece per station that follows the curve, with
+# openings over real basins and ice wells (nothing at the same depth, no
+# seams), in brushed stainless.
+#
 #   blender -b --factory-startup --python tools/assets/bar_counter_l.py -- <texture dir> <out.glb>
 #
 # Model space = world space (placed at the origin).
@@ -44,6 +52,23 @@ leather = common.pbr_material("Arm rest leather", tex_dir, "leather_red_02", tin
                               roughness_scale=0.7, size=512)
 brass = P.mat("brass")
 steel = P.mat("steel")
+
+
+def brushed_stainless():
+    """Brushed stainless: fine lines along u (the brushing), a little
+    roughness and brightness change between them."""
+    rng_b = np.random.default_rng(7)
+    lines = np.convolve(rng_b.random(256 + 4), np.ones(5) / 5, mode="valid")[:256].astype(np.float32)
+    drift = common.noise2d(256, 256, 3, seed=11, octaves=2)
+    streak = np.clip(lines[:, None] * 0.7 + drift * 0.3, 0, 1)
+    rough = 0.46 + 0.12 * streak
+    col = np.zeros((256, 256, 3), np.float32)
+    col[:] = 0.70
+    col *= (0.95 + 0.08 * streak)[..., None]
+    return common.image_material("Brushed stainless", col, metallic=1.0, roughness=0.5, rough_pixels=rough)
+
+
+brushed = brushed_stainless()
 plinth = common.plain_material("Plinth", (0.02, 0.018, 0.016), 0.0, 0.5)
 dark_steel = common.plain_material("Dark steel", (0.12, 0.12, 0.13), 1.0, 0.35)
 fridge_light = common.plain_material("Fridge light", (0.9, 0.95, 1.0), 0.0, 0.4, emission=(0.75, 0.85, 1.0),
@@ -55,6 +80,7 @@ sink_water = common.glass_material("Sink water", color=(0.6, 0.7, 0.75), alpha=0
 
 # ---- The path ----
 path = L.bar_centerline(0.04)
+SWEEP_PATH = L.bar_centerline(0.1)  # the long sweeps: 10 cm steps are smooth enough, half the triangles
 frames = common.path_frames(path)
 lengths = [0.0]
 for a, b in zip(path, path[1:]):
@@ -110,25 +136,30 @@ U_CURVE_END = next(lengths[k] for k in range(1, len(path) - 1)
 U_RETURN = U_CURVE_END + L.BAR_TURN_R * 1.3
 
 # ---- Swept body ----
-common.sweep("Counter body", path, [(-BODY_S, 0.12), (0.2, 0.12), (BODY_S, 0.16), (BODY_S, 1.02),
+common.sweep("Counter body", SWEEP_PATH, [(-BODY_S, 0.12), (0.2, 0.12), (BODY_S, 0.16), (BODY_S, 1.02),
                                     (-BODY_S, 1.02)], body_wood)["grain_axis"] = "y"
-common.sweep("Plinth", path, [(-BODY_S, 0.0), (0.255, 0.0), (0.255, 0.12), (-BODY_S, 0.12)], plinth)
-common.sweep("Base molding", path, [(0.2, 0.12), (0.29, 0.12), (0.295, 0.14), (0.28, 0.17), (0.2, 0.17)], body_wood)
-common.sweep("Apron", path, [(0.25, 0.9), (0.285, 0.91), (0.31, 0.95), (0.325, 0.99), (0.325, 1.02), (0.25, 1.02)],
+common.sweep("Plinth", SWEEP_PATH, [(-BODY_S, 0.0), (0.255, 0.0), (0.255, 0.12), (-BODY_S, 0.12)], plinth)
+common.sweep("Base molding", SWEEP_PATH, [(0.2, 0.12), (0.29, 0.12), (0.295, 0.14), (0.28, 0.17), (0.2, 0.17)], body_wood)
+common.sweep("Apron", SWEEP_PATH, [(0.25, 0.9), (0.285, 0.91), (0.31, 0.95), (0.325, 0.99), (0.325, 1.02), (0.25, 1.02)],
              body_wood)
-common.sweep("Bar top", path, [(-0.42, 1.02), (0.34, 1.02), (0.34, TOP_Y), (-0.40, TOP_Y), (-0.42, TOP_Y - 0.015)],
-             mahogany)["grain_axis"] = "x"
+def rounded(s0, y0, r, a0, a1, steps=5):
+    return [(s0 + r * math.cos(a0 + (a1 - a0) * i / steps), y0 + r * math.sin(a0 + (a1 - a0) * i / steps))
+            for i in range(steps + 1)]
+
+
+TOP_PROFILE = ([(-0.40, 1.02), (0.32, 1.02)] + rounded(0.32, 1.04, 0.02, -math.pi / 2, 0)[1:] +
+               rounded(0.32, TOP_Y - 0.02, 0.02, 0, math.pi / 2) + rounded(-0.40, TOP_Y - 0.02, 0.02, math.pi / 2, math.pi) +
+               rounded(-0.40, 1.04, 0.02, math.pi, 1.5 * math.pi)[:-1])
+common.sweep("Bar top", SWEEP_PATH, TOP_PROFILE, mahogany)["grain_axis"] = "x"
 roll = [(0.37 + 0.058 * math.cos(a), TOP_Y + 0.032 + 0.042 * math.sin(a))
         for a in [i * 2 * math.pi / 16 for i in range(16)]]
-common.sweep("Arm rest", path, roll, leather, smooth=True)
-common.sweep("Arm rest welt", path, [(0.31, TOP_Y - 0.003), (0.43, TOP_Y - 0.003), (0.43, TOP_Y + 0.004),
+common.sweep("Arm rest", SWEEP_PATH, roll, leather, smooth=True)
+common.sweep("Arm rest welt", SWEEP_PATH, [(0.31, TOP_Y - 0.003), (0.43, TOP_Y - 0.003), (0.43, TOP_Y + 0.004),
                                      (0.31, TOP_Y + 0.004)], dark_steel)
 # Brass foot rail on brackets, with end caps.
 rail = [(p[0] + n[0] * 0.46, 0.2, p[1] + n[1] * 0.46) for (p, t, n) in common.path_frames(common.resample(path, 0.1))]
 rail = [r for r in rail if r[2] > L.Z0 + 0.25]
-common.tube("Foot rail", rail, 0.026, brass, sides=14)
-for end in (rail[0], rail[-1]):
-    common.sphere("Rail cap", Vector(end), 0.03, brass, 14, 8)
+RAIL = rail
 u = 0.4
 while u < TOTAL - 0.4:
     if world(u, 0.46)[2] > L.Z0 + 0.3:
@@ -156,28 +187,137 @@ for (u0, u1) in spans:
         lbox("Panel frame", uu, BODY_S + 0.006, 0.56, (w, 0.6, 0.014), body_wood, 0.004, grain="y")
         lbox("Panel field", uu, BODY_S + 0.012, 0.56, (w - 0.12, 0.48, 0.02), body_wood, 0.018, 3, grain="y")
         lbox("Panel bead", uu, BODY_S + 0.01, 0.56, (w - 0.07, 0.53, 0.012), plinth, 0.003)
-# A rounded end post at the left end.
+# Continuous moldings along the whole front, the turn included: a rail
+# under the apron and one above the base.
+common.sweep("Rail molding", SWEEP_PATH, [(BODY_S - 0.01, 0.855), (BODY_S + 0.022, 0.855), (BODY_S + 0.03, 0.868),
+                                    (BODY_S + 0.022, 0.885), (BODY_S - 0.01, 0.885)], body_wood)
+common.sweep("Base rail", SWEEP_PATH, [(BODY_S - 0.01, 0.235), (BODY_S + 0.02, 0.235), (BODY_S + 0.026, 0.25),
+                                 (BODY_S + 0.02, 0.262), (BODY_S - 0.01, 0.262)], body_wood)
+# The turn: flat panels can't follow it, so tongue-and-groove boards (a dark
+# groove every 9 cm) between the two rails.
+uu = U_CURVE_END - 0.05
+while uu < U_RETURN + 0.05:
+    lbox("Board groove", uu, BODY_S + 0.001, 0.56, (0.006, 0.59, 0.006), plinth, 0.0)
+    uu += 0.09
+# A round end post on the bar's left end, wrapped by the rails too.
+for (y0, y1) in ((0.855, 0.885), (0.235, 0.262)):
+    common.cylinder("End molding", Vector((at(0.0)[0][0], (y0 + y1) / 2, at(0.0)[0][1])), BODY_S + 0.022, y1 - y0, "y",
+                    body_wood, segments=40)
+
+# The round left end: the post, a round top as wide as the bar top, and the
+# arm rest and the foot rail wrapping around it (no step, no gap).
 p0, t0, n0 = at(0.0)
-common.cylinder("End post", Vector((p0[0] - t0[0] * 0.02, 0.56, p0[1] - t0[1] * 0.02)), 0.29, 0.92, "y", body_wood,
-                segments=28)
-common.cylinder("End top", Vector((p0[0] - t0[0] * 0.02, TOP_Y - 0.03, p0[1] - t0[1] * 0.02)), 0.37, 0.06, "y",
-                mahogany, segments=32)
+common.cylinder("End post", Vector((p0[0], 0.56, p0[1])), BODY_S, 0.92, "y", body_wood, segments=40)
+common.cylinder("End plinth", Vector((p0[0], 0.06, p0[1])), BODY_S - 0.015, 0.12, "y", plinth, segments=40)
+def end_arc(radius, a_from, a_to, steps=24):
+    """Floor points around the left end, angle 0 = the customer side
+    (normal), pi/2 = straight out of the end (-tangent)."""
+    pts = []
+    for i in range(steps + 1):
+        a = a_from + (a_to - a_from) * i / steps
+        d = (n0[0] * math.cos(a) - t0[0] * math.sin(a), n0[1] * math.cos(a) - t0[1] * math.sin(a))
+        pts.append((p0[0] + d[0] * radius, p0[1] + d[1] * radius))
+    return pts
+
+
+# The round end of the bar top: a half disc beyond the sweep's end (no
+# overlap, so no two surfaces at the same depth), its edge rounded like the
+# bar top's.
+END_PROFILE = ([(0.0, 1.02), (0.40, 1.02)] + rounded(0.40, 1.04, 0.02, -math.pi / 2, 0)[1:] +
+               rounded(0.40, TOP_Y - 0.02, 0.02, 0, math.pi / 2) + [(0.0, TOP_Y)])
+bm = bmesh.new()
+rings = []
+for a in [math.pi * i / 32 for i in range(33)]:
+    d = (n0[0] * math.cos(a) - t0[0] * math.sin(a), n0[1] * math.cos(a) - t0[1] * math.sin(a))
+    rings.append([bm.verts.new((p0[0] + d[0] * r, y, p0[1] + d[1] * r)) for (r, y) in END_PROFILE])
+for ra, rb in zip(rings, rings[1:]):
+    for k in range(len(END_PROFILE) - 1):
+        bm.faces.new([ra[k], ra[k + 1], rb[k + 1], rb[k]])
+bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+common.mesh_object("End top", bm, mahogany, smooth=True)["grain_axis"] = "x"
+
+# Arm rest around the end: from the customer side over the end to the
+# bartender's side, the same roll centred on the arc, a rounded stop.
+arm_end = end_arc(0.37, 0.0, math.pi * 0.85, 30)
+arm_roll = [(0.058 * math.cos(a), TOP_Y + 0.032 + 0.042 * math.sin(a)) for a in [i * 2 * math.pi / 16 for i in range(16)]]
+common.sweep("Arm rest", arm_end, arm_roll, leather, smooth=True)
+common.sphere("Arm rest end", Vector((arm_end[-1][0], TOP_Y + 0.032, arm_end[-1][1])), 0.05, leather, 16, 8)
+# The foot rail comes round the end to its tip.
+rail_end = [(x, 0.2, z) for (x, z) in end_arc(0.46, math.pi * 0.5, 0.0, 16)]
+full_rail = rail_end[:-1] + RAIL
+common.tube("Foot rail", full_rail, 0.026, brass, sides=14)
+for end in (full_rail[0], full_rail[-1]):
+    common.sphere("Rail cap", Vector(end), 0.03, brass, 14, 8)
+
 
 # ---- Underbar (bartender side) ----
 S_MID = (UNDER_S[0] + UNDER_S[1]) / 2
 DEPTH = UNDER_S[0] - UNDER_S[1]
 
 
-def unit_shell(u, w, h=UNDER_Y):
-    lbox("Underbar", u, S_MID, h / 2 + 0.05, (w - 0.01, h - 0.1, DEPTH), steel, 0.004)
+TOP_T = 0.02  # the steel top's thickness
+
+
+def sub_path(u0, u1, step=0.12):
+    n = max(1, int(math.ceil((u1 - u0) / step)))
+    return [at(u0 + (u1 - u0) * i / n)[0] for i in range(n + 1)]
+
+
+def strip(name, u0, u1, s0, s1, y0, y1, mat):
+    """A slab following the counter's curve from arc length u0 to u1,
+    between offsets s0 and s1 (toward the customers) and heights y0, y1."""
+    return common.sweep(name, sub_path(u0, u1), [(s0, y0), (s1, y0), (s1, y1), (s0, y1)], mat)
+
+
+def unit_shell(u, w, h=UNDER_Y, body_top=None):
+    """A station's steel body (up to `body_top`, just under the top) and toe
+    kick. The top is laid separately (station_top), continuous along the
+    curve."""
+    top = (h - TOP_T - 0.002) if body_top is None else body_top
+    lbox("Underbar", u, S_MID, (0.1 + top) / 2, (w - 0.01, top - 0.1, DEPTH), brushed, 0.004)
     lbox("Underbar toe", u, S_MID + 0.02, 0.05, (w - 0.01, 0.1, DEPTH - 0.06), plinth, 0.002)
-    lbox("Underbar top", u, S_MID - 0.005, h - 0.01, (w, 0.02, DEPTH + 0.02), steel, 0.003)
+
+
+def station_top(u0, u1, opening=None):
+    """The steel top over [u0, u1]: whole, or a frame around `opening`
+    (u_a, u_b) where basins or ice sit below."""
+    y0, y1 = UNDER_Y - TOP_T, UNDER_Y
+    s_back, s_front = UNDER_S[0] + 0.01, UNDER_S[1] - 0.01  # customer side, bartender side
+    if opening is None:
+        strip("Underbar top", u0, u1, s_front, s_back, y0, y1, brushed)
+        return
+    ua, ub = opening
+    strip("Underbar top", u0, ua, s_front, s_back, y0, y1, brushed)
+    strip("Underbar top", ub, u1, s_front, s_back, y0, y1, brushed)
+    strip("Underbar top", ua, ub, s_front, s_front + 0.06, y0, y1, brushed)
+    strip("Underbar top", ua, ub, s_back - 0.06, s_back, y0, y1, brushed)
+
+
+def tub(name, u0, u1, s0, s1, y_bottom, mat, wall=0.008):
+    """An open steel tub below the top's opening: a floor and four walls up
+    to just under the top."""
+    y_top = UNDER_Y - TOP_T - 0.001
+    strip(name, u0, u1, s0, s1, y_bottom, y_bottom + wall, mat)
+    strip(name, u0, u1, s0, s0 + wall, y_bottom, y_top, mat)
+    strip(name, u0, u1, s1 - wall, s1, y_bottom, y_top, mat)
+    strip(name, u0, u0 + wall, s0, s1, y_bottom, y_top, mat)
+    strip(name, u1 - wall, u1, s0, s1, y_bottom, y_top, mat)
 
 
 def fridge(u, w, kind="beer"):
-    """Under-counter fridge with two glass doors, lit, full of bottles."""
-    unit_shell(u, w)
-    lbox("Fridge light", u, UNDER_S[0] - 0.04, 0.48, (w - 0.08, 0.6, 0.01), fridge_light, 0.0)
+    """Under-counter fridge with two glass doors, lit, full of bottles: a
+    hollow steel cabinet (you see the bottles through the glass)."""
+    u0, u1 = u - w / 2 + 0.005, u + w / 2 - 0.005
+    s_front, s_back = UNDER_S[1], UNDER_S[0]
+    top = UNDER_Y - TOP_T - 0.002
+    strip("Underbar", u0, u1, s_front, s_back, 0.1, 0.13, brushed)               # floor
+    strip("Underbar", u0, u1, s_back - 0.02, s_back, 0.13, top, brushed)          # back
+    strip("Underbar", u0, u0 + 0.02, s_front, s_back - 0.02, 0.13, top, brushed)  # sides
+    strip("Underbar", u1 - 0.02, u1, s_front, s_back - 0.02, 0.13, top, brushed)
+    strip("Fridge inside", u0 + 0.02, u1 - 0.02, s_front + 0.02, s_back - 0.02, top - 0.02, top, dark_steel)
+    lbox("Underbar toe", u, S_MID + 0.02, 0.05, (w - 0.01, 0.1, DEPTH - 0.06), plinth, 0.002)
+    lbox("Fridge light", u, UNDER_S[0] - 0.03, 0.48, (w - 0.08, 0.6, 0.005), fridge_light, 0.0)
     for sy in (0.2, 0.48):
         lbox("Fridge shelf", u, S_MID, sy, (w - 0.08, 0.01, DEPTH - 0.1), dark_steel, 0.0)
         k = -w / 2 + 0.08
@@ -198,8 +338,9 @@ def fridge(u, w, kind="beer"):
 
 
 def ice_well(u, w):
-    unit_shell(u, w, UNDER_Y)
-    lbox("Ice well rim", u, S_MID, UNDER_Y + 0.005, (w - 0.04, 0.012, DEPTH - 0.04), steel, 0.002)
+    unit_shell(u, w, body_top=UNDER_Y - 0.25)
+    tub("Ice well", u - w / 2 + 0.05, u + w / 2 - 0.05, UNDER_S[1] + 0.05, UNDER_S[0] - 0.05, UNDER_Y - 0.25, brushed)
+    OPENINGS[u] = (u - w / 2 + 0.05, u + w / 2 - 0.05)
     # Lumpy ice surface.
     bm = bmesh.new()
     nu, nv = 14, 8
@@ -209,7 +350,7 @@ def ice_well(u, w):
         for j in range(nv + 1):
             uu = u - (w - 0.1) / 2 + (w - 0.1) * i / nu
             ss = UNDER_S[0] - 0.05 - (DEPTH - 0.1) * j / nv
-            p = world(uu, ss, UNDER_Y - 0.03 + rng.uniform(0, 0.025))
+            p = world(uu, ss, UNDER_Y - 0.06 + rng.uniform(0, 0.025))
             row.append(bm.verts.new(p))
         grid.append(row)
     for i in range(nu):
@@ -231,12 +372,18 @@ def ice_well(u, w):
 
 
 def sink(u, w):
-    unit_shell(u, w)
+    unit_shell(u, w, body_top=UNDER_Y - 0.2)
+    OPENINGS[u] = (u - w / 2 + 0.04, u + w / 2 - 0.04)
     for k in range(3):
         uu = u - w / 3 + k * w / 3
-        lbox("Basin", uu, S_MID, UNDER_Y - 0.07, (w / 3 - 0.06, 0.14, DEPTH - 0.1), basin, 0.01)
+        a, b = uu - w / 6 + 0.04, uu + w / 6 - 0.04
+        tub("Basin", a, b, UNDER_S[1] + 0.05, UNDER_S[0] - 0.05, UNDER_Y - 0.2, brushed)
+        if k < 2:  # the dividers between basins, up to the top
+            strip("Basin divider", b, b + 0.08, UNDER_S[1] + 0.05, UNDER_S[0] - 0.05, UNDER_Y - 0.2,
+                  UNDER_Y - TOP_T - 0.001, brushed)
         if k == 1:
-            lbox("Water", uu, S_MID, UNDER_Y - 0.06, (w / 3 - 0.08, 0.005, DEPTH - 0.12), sink_water, 0.0)
+            strip("Water", a + 0.01, b - 0.01, UNDER_S[1] + 0.06, UNDER_S[0] - 0.06, UNDER_Y - 0.11, UNDER_Y - 0.105,
+                  sink_water)
     # Gooseneck faucet at the back.
     base = world(u, UNDER_S[0] - 0.03, UNDER_Y)
     _, t, n = at(u)
@@ -255,7 +402,7 @@ def sink(u, w):
 def drainboard(u, w):
     unit_shell(u, w)
     for k in range(int(w / 0.03)):
-        lbox("Drain rib", u - w / 2 + 0.03 + k * 0.03, S_MID, UNDER_Y + 0.004, (0.006, 0.006, DEPTH - 0.06), steel, 0.0)
+        lbox("Drain rib", u - w / 2 + 0.03 + k * 0.03, S_MID, UNDER_Y + 0.004, (0.006, 0.006, DEPTH - 0.06), brushed, 0.0)
     # A glass rack with upside-down glasses.
     lbox("Rack", u, S_MID, UNDER_Y + 0.05, (0.48, 0.09, 0.48), rack_plastic, 0.01)
     for i in range(3):
@@ -283,11 +430,12 @@ def kegerator(u, w):
 
 def trash(u, w):
     unit_shell(u, w)
-    lbox("Trash opening", u, S_MID, UNDER_Y + 0.001, (0.2, 0.004, 0.14), plinth, 0.0)
+    lbox("Trash opening", u, S_MID, UNDER_Y + 0.003, (0.2, 0.004, 0.14), plinth, 0.0)
 
 
 stations = [(fridge, 1.15, "beer"), (ice_well, 0.85), (sink, 1.1), (drainboard, 0.6), (ice_well, 0.85),
             (glass_washer, 0.6), (fridge, 1.15, "wine"), (trash, 0.5), (kegerator, 0.9)]
+OPENINGS = {}
 u = 0.55
 for st in stations:
     fn, w = st[0], st[1]
@@ -297,6 +445,8 @@ for st in stations:
         fn(u + w / 2, w, st[2])
     else:
         fn(u + w / 2, w)
+    # One top per station, end to end with the next (no gaps, no seams).
+    station_top(u, u + w + 0.01, OPENINGS.get(u + w / 2))
     u += w + 0.01
 
 # ---- On the bar top ----

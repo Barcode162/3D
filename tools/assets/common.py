@@ -471,7 +471,7 @@ def _glyphs():
     global _GLYPHS
     if _GLYPHS is None:
         import re
-        src = open(os.path.join(os.path.dirname(__file__), "..", "..", "engine", "font.cpp")).read()
+        src = open(os.path.join(os.path.dirname(__file__), "..", "..", "looped", "font.cpp")).read()
         _GLYPHS = {}
         for m in re.finditer(r"\{'(\\.|.)',\s*\{([^}]*)\}\}", src):
             c = m.group(1)[-1] if m.group(1).startswith("\\") else m.group(1)

@@ -4,6 +4,10 @@
     "bar_stool.glb": {
       "tris": 8000,
       "texMB": 17
+    },
+    "bar_counter_l.glb": {
+      "tris": 80000,
+      "texMB": 32
     }
   }
 }

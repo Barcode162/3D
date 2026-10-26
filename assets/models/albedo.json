@@ -670,15 +670,6 @@
    "metal": 0.004,
    "rough": 0.28
   },
-  "Basin": {
-   "albedo": [
-    0.25,
-    0.26,
-    0.27
-   ],
-   "metal": 1.0,
-   "rough": 0.35
-  },
   "Bills": {
    "albedo": [
     0.35,
@@ -720,6 +711,14 @@
    ],
    "metal": 1.0,
    "rough": 0.4
+  },
+  "Brushed stainless": {
+   "albedo": [
+    0.4368,
+    0.4368,
+    0.4368
+   ],
+   "metal": 0.999
   },
   "Candle wax": {
    "albedo": [
