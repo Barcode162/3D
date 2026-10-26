@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J70.1 The lounge taken apart: the fireplace, mantel clock, candlesticks, photos, books, vase, painting, fire tools, log basket, rug, coffee table with the chessboard, Chesterfield sofa, two armchairs, bookshelf, floor lamp and side table each their own thing where they stood (sofa, armchairs, clock, painting and vase from Poly Haven); lounge.glb gone; the vase, books and photos that floated now sit on the mantel; the counter's ice scoops lie on the ice
+
+`49bb635` · 2026-10-26 05:56 · 32 files, +936 −544 · tests: none
+
+Phone check: Stand by the fire: everything is where it was, the vase and books sit on the mantel; sit on the sofa and an armchair; chess still plays; in the Studio, tap the vase and move it
+
 ## J35.5 The pendant lamps over the counter: Poly Haven's hanging industrial lamp (CC0) at 80% size on its chain, its glass see-through, their light moved down into the bulbs (2.25 → 2.11 m); the kit learnt hanging models and glass
 
 `4bd8356` · 2026-10-26 05:10 · 10 files, +43 −63 · tests: none
