@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J72.1 The back bar's bottles as real things: 275 bottles each its own thing, copies of 23 bottle recipes (shape, glass, own label, drink; 9 MB for all) where they stood, each turned and sized a little differently; the wine rack now shows its bottles (they lay neck-first into the wall) and is full to the top
+
+`f618a04` · 2026-10-26 10:04 · 37 files, +3424 −69 · tests: none
+
+Phone check: Look along the back bar: the bottles look as before, the wine rack is full of bottles; in the Studio, tap a bottle and move it
+
 ## J100.2 The Handbook's folder map names assets/piano
 
 `a70619d` · 2026-10-26 09:39 · 4 files, +13 −26 · tests: none
