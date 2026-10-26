@@ -1147,6 +1147,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39"
+  },
+  {
    "build": "f0074b3",
    "text": "J110.1, J110.2, J110.3: Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late → fb7283c^..ee94e60"
   },
