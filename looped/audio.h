@@ -51,6 +51,10 @@ class Sound {
  public:
   enum Bus { kEffects, kPiano };
   void create(const std::vector<float>& samples, float rate);
+  // A recorded sound from a file (J100): fetched at once, playable once
+  // decoded (after the first tap); plays before that are silent.
+  void load(const std::string& url);
+  bool loaded() const;
   bool valid() const { return id_ >= 0; }
   // `when` = seconds from now. `where` = place it in 3D (nullptr = everywhere).
   // Returns a voice id (0 if sound isn't unlocked yet).

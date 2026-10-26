@@ -72,6 +72,14 @@ void Sound::create(const std::vector<float>& samples, float rate) {
                    static_cast<int>(samples.size()), rate);
 }
 
+void Sound::load(const std::string& url) {
+  id_ = EM_ASM_INT({ return window['loopedHost']['audio']['soundLoad'](UTF8ToString($0)); }, url.c_str());
+}
+
+bool Sound::loaded() const {
+  return id_ >= 0 && EM_ASM_INT({ return window['loopedHost']['audio']['soundReady']($0); }, id_) != 0;
+}
+
 namespace {
 int g_nextVoice = 0;
 

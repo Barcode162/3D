@@ -48,7 +48,7 @@
     "id": "J100.1",
     "text": "A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you",
     "check": "Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same",
-    "done": false
+    "done": true
    }
   ]
  },
@@ -1149,7 +1149,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "6d4f1af",
    "text": "J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7"
   },
   {

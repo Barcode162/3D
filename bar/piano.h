@@ -90,7 +90,15 @@ class Piano {
   static float rateFor(int i);
   bool sampleReady(int i) const { return samples_[sampleOf(i)].valid(); }
   void ensureSample(int i);
-  int playKey(int i, float gain, double when);
+  int playKey(int i, float velocity, double when);  // velocity 0..1
+  // Recorded notes (J100): the Salamander Grand Piano (assets/piano/, made by
+  // tools/piano_samples.sh), every 3rd key from A0, in 4 loudness layers;
+  // loaded when someone plays (until then, and for any note not yet
+  // arrived, the synth's note).
+  static constexpr int kLayers = 4;
+  engine::Sound recorded_[kSamples][kLayers];
+  bool recordedAsked_ = false;
+  void loadRecorded();
   // One player's hands on the keyboard.
   struct Hands {
     int voice[88] = {};       // held (or pedal-held) keys: their voice (0 = up)

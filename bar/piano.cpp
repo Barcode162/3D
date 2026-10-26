@@ -139,11 +139,38 @@ void Piano::prepareSamples() {
   }
 }
 
-int Piano::playKey(int i, float gain, double when) {
+void Piano::loadRecorded() {
+  if (recordedAsked_) return;
+  recordedAsked_ = true;
+  static const char* kNames[4] = {"A", "C", "Ds", "Fs"};
+  static const int kLayerOrder[kLayers] = {1, 2, 0, 3};  // the middle loudness first, the loudest last
+  static const int kLayerFile[kLayers] = {4, 8, 12, 16};  // Salamander's layers (of 16)
+  for (int l : kLayerOrder) {
+    for (int d = 0; d < kSamples; ++d) {  // middle of the keyboard first, then outwards
+      const int s = kSamples / 2 + ((d % 2) ? -(d + 1) / 2 : d / 2);
+      if (s < 0 || s >= kSamples) continue;
+      const int key = 21 + 3 * s;
+      recorded_[s][l].load(std::string("assets/piano/") + kNames[s % 4] + std::to_string((key - 12) / 12) + "v" +
+                           std::to_string(kLayerFile[l]) + ".mp3");
+    }
+  }
+  LOG_INFO("Piano: loading the recorded grand piano (Salamander, %d notes).", kSamples * kLayers);
+}
+
+int Piano::playKey(int i, float velocity, double when) {
   // All notes come from one shared 3D emitter at the piano (cheaper than a
   // 3D panner per note).
   if (emitter_ == 0) emitter_ = engine::audio::createEmitter(world({0, 1.0f, 0.8f}), true);
-  return samples_[sampleOf(i)].playAt(emitter_, gain, when, rateFor(i));
+  loadRecorded();
+  // The nearest recorded note (at most a semitone away), in the layer for
+  // this loudness; the recording carries the tone, the gain a little more.
+  const int s = std::clamp((i + 1) / 3, 0, kSamples - 1);
+  const int layer = velocity < 0.3f ? 0 : velocity < 0.55f ? 1 : velocity < 0.8f ? 2 : 3;
+  const float rate = std::pow(2.0f, static_cast<float>(i - 3 * s) / 12.0f);
+  for (int l : {layer, 1, 2, 0, 3}) {  // that layer, or the nearest that has arrived
+    if (recorded_[s][l].loaded()) return recorded_[s][l].playAt(emitter_, 0.55f + 0.45f * velocity, when, rate);
+  }
+  return samples_[sampleOf(i)].playAt(emitter_, 0.25f + 0.75f * velocity, when, rateFor(i));
 }
 
 void Piano::releaseAll(Hands& h) {
@@ -227,7 +254,7 @@ void Piano::keyDown(int key, float velocity, bool share, int player) {
   Hands& h = hands_[player];
   h.lastMs = engine::frameTime().nowMs;
   if (h.voice[i] > 0) engine::Sound::stop(h.voice[i], 0, 0.05f);
-  h.voice[i] = playKey(i, 0.25f + 0.75f * velocity, 0);
+  h.voice[i] = playKey(i, velocity, 0);
   h.start[i] = engine::audio::now();
   h.pedalHeld.erase(std::remove(h.pedalHeld.begin(), h.pedalHeld.end(), i), h.pedalHeld.end());
   if (share) {
@@ -345,7 +372,7 @@ void Piano::update(double nowMs, std::vector<engine::net::WorldEntry>& entries, 
     if (t < now - 0.05 || i < 0 || i >= 88) continue;  // joined late: skip notes already past
     if (!sampleReady(i)) continue;
     const double when = t - now;
-    const int voice = playKey(i, 0.2f + 0.7f * n.velocity, when);
+    const int voice = playKey(i, n.velocity, when);
     engine::Sound::stop(voice, when + n.length, 0.18f);
     active_.push_back({n.key, t + n.length, t, n.velocity, voice});
   }

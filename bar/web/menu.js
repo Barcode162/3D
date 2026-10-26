@@ -744,7 +744,13 @@ window.bar3dUi = (function () {
       'Tap things to use them: seats to sit, glasses to pick up, the jukebox, the piano, the darts, the racing sims, the 4K MANIA machine, the bell, the guitar, the light switch, the fireplace...\n' +
       'Stand up: move the joystick (or Menu → Stand up).\n' +
       'Voice chat: the mic button at the top. Settings: Menu → Voice chat.\n' +
-      'Tap a person to see their card.' })]);
+      'Tap a person to see their card.' }),
+      el('h3', { text: 'Credits' }),
+      el('div', { class: 'mSmall', style: 'white-space:pre-line', text:
+      'Piano: Salamander Grand Piano V3 by Alexander Holm (CC BY 3.0, creativecommons.org/licenses/by/3.0), shortened and re-encoded.\n' +
+      'Music: Kevin MacLeod (incompetech.com), CC BY 4.0.\n' +
+      'Models and textures: Poly Haven (CC0) and our own.\n' +
+      'Books: public-domain works from Project Gutenberg\'s texts.' })]);
   }
 
   function toast(text) {

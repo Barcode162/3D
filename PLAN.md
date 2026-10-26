@@ -57,7 +57,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J100 · A real piano sound** (the world). A real piano sound: sampled grand piano notes instead of the synth, several loudness layers, loaded when someone sits at the piano (request 2026-10-26 #8) · N3
-- [ ] **J100.1** A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you *Check:* Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same
+- [x] **J100.1** A real piano: the Salamander Grand Piano's recorded notes (CC-BY, credited) instead of the synth, several loudness layers, loaded only when someone sits at the piano or plays near you *Check:* Sit at the piano and play soft and hard: it sounds like a real grand; someone else playing sounds the same
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -271,7 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7
+- `6d4f1af` J101.1: J101: chess full screen like the chess sites, in six calm themes with matching pieces and backgrounds → 64e0cd7^..64e0cd7
 - `ae02b1c` J99.1: J99: the lounge bookshelf: real books to read (Dostoyevsky, Einstein, Melville, Fitzgerald) in a reader with pages to turn → f13aaed^..f13aaed
 - `4887cd3` J102.1: J102: a real fire in the fireplace: flames the shader draws (tongues of different heights, red to yellow), not moving pictures → 83fb722^..83fb722
 - `e4a1905` J71.1, J71.2: J71: the lounge fix (read a book again, no World problems) and the walls' props taken apart: every sign, photo, plant, speaker, sconce and crate its own thing; the clock over the bar is round → f971219^..c76ce13

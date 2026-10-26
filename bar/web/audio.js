@@ -105,6 +105,7 @@ window.bar3dAudio = (function () {
       ctx = new AC();
       applyListener();
       watchState();
+      decodeLoaded();
     }
     var p = ctx.state !== 'running' ? ctx.resume() : null;
     sources.forEach(function (s) { connect(s); bless(s); });
@@ -221,7 +222,19 @@ window.bar3dAudio = (function () {
     }
     return buses[name];
   }
+  // Recorded sounds (J100, the piano's notes): fetched at once, decoded once
+  // there is a sound context (after the first tap).
+  function decodeLoaded() {
+    if (!ctx) return;
+    sounds.forEach(function (s) {
+      if (!s.bytes || s.decoding) return;
+      s.decoding = true;
+      ctx.decodeAudioData(s.bytes, function (b) { s.buffer = b; s.bytes = null; },
+                          function () { s.failed = true; s.bytes = null; report('A sound could not be read: ' + s.url); });
+    });
+  }
   function bufferOf(s) {
+    if (s.url) return s.buffer;  // null until it has arrived
     if (!s.buffer && ctx) {
       s.buffer = ctx.createBuffer(1, s.data.length, s.rate);
       s.buffer.getChannelData(0).set(s.data);
@@ -238,6 +251,16 @@ window.bar3dAudio = (function () {
       sounds.push({ data: heap.slice(start, start + count), rate: rate, buffer: null });
       return sounds.length - 1;
     },
+    // A recorded sound from a file (mp3, m4a...): ready once fetched and decoded.
+    soundLoad: function (url) {
+      var s = { url: url, buffer: null, bytes: null, decoding: false, failed: false };
+      sounds.push(s);
+      fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then(function (b) { s.bytes = b; decodeLoaded(); })
+        .catch(function (e) { s.failed = true; report('A sound could not be loaded: ' + url + ' (' + e.message + ')'); });
+      return sounds.length - 1;
+    },
+    soundReady: function (id) { var s = sounds[id]; return s && bufferOf(s) ? 1 : 0; },
     // Plays sound `id` as voice `voice` (the game picks the number) at
     // sound-clock time `at`. placed = use x, y, z (a cheap equal-power
     // panner); emitter > 0 = through that shared 3D emitter instead.
@@ -253,8 +276,10 @@ window.bar3dAudio = (function () {
         delete voices[ids[0]];
         stats.stolen++;
       }
+      var buf = bufferOf(s);
+      if (!buf) return 0;  // a recorded sound still on its way
       var src = ctx.createBufferSource();
-      src.buffer = bufferOf(s);
+      src.buffer = buf;
       src.playbackRate.value = rate || 1;
       src.loop = !!loop;
       var g = ctx.createGain();
