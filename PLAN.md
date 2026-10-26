@@ -267,6 +267,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4
 - `a489b01` J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab
 - `981a2a1` J72.1, J72.2: J72: every bottle on the back bar (275) and every glass on the tables its own thing; the wine rack shows its bottles → f618a04^..9cb13e3
 - `080c01f` J100.1, J100.2: J100: a real piano: the recorded Salamander grand (credited), loaded when someone plays → b24a760^..a70619d

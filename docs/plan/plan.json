@@ -1122,6 +1122,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J74.1: J74: your notes from the phone: less haze, a softer highlight, the string lights, mirror bulbs and spotlights give their own light, and a crosshair with its editor in Settings → Pointer → b04cdd4^..b04cdd4"
+  },
+  {
    "build": "a489b01",
    "text": "J73.1, J73.2: J73: the stage, the darts corner, the taped-off room and the arcade taken apart into their own things; the DARTS sign reads the right way; J72's bottles fixed so they deploy → dd40f9c^..5c841ab"
   },
