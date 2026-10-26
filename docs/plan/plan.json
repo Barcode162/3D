@@ -36,24 +36,24 @@
   }
  ],
  "now": {
-  "id": "J74",
+  "id": "J106",
   "title": "The world remake, step 6, the room shells remade",
   "chapter": "the world",
-  "about": "Lights, haze, highlight and the crosshair (request 2026-10-26 #12): the user's notes from the phone, before the room shells (now J106)",
+  "about": "The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open",
   "serves": [
    "N3"
   ],
   "pieces": [
    {
-    "id": "J74.1",
-    "text": "A little less haze in the light beams; the highlight on the thing you can tap softer; the string lights, the mirror's bulbs and the spotlights give real light at their small real lumens instead of invisible helper lamps; Settings → Pointer: a crosshair that taps what it points at, with an editor whose preview docks at the top",
-    "check": "Look up at the string lights and the mirror: they light their surroundings; stand at something: its glow is gentle; Settings → Pointer: turn the crosshair on, tap anywhere: it uses what the centre points at",
-    "done": true
+    "id": "J106.1",
+    "text": "The room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows things of their own",
+    "check": "Walk the bar: walls, floor and ceiling meet cleanly, no gaps or flicker; the doors and windows are where they were",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes from the phone first as J74, 2026-10-26 #12; then the shells and the new rooms)",
+ "upNext": "J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes from the phone first, 2026-10-26 #12; then the shells and the new rooms)",
  "road": {
   "world": [
    {
@@ -473,18 +473,6 @@
      "kind": "after",
      "after": "J73",
      "why": "J73"
-    }
-   },
-   {
-    "id": "J106",
-    "text": "The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)"
     }
    }
   ],
