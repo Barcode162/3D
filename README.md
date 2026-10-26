@@ -6,6 +6,10 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J108.3 (fix) the entity id list in its new order: the lounge rework moved three lounge chairs after the sofas (same ids, so nothing changes for players)
+
+`87a2348` · 2026-10-26 22:24 · 1 files, +3 −3 · tests: none
+
 ## J108.3 Light rising from the piano's strings: sparks zigzag up from each note and fade, and about every third note shoots one streak far up toward the ceiling
 
 `b479aee` · 2026-10-26 22:03 · 4 files, +68 −2 · tests: none
