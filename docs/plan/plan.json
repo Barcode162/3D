@@ -1134,6 +1134,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08"
+  },
+  {
    "build": "b33230d",
    "text": "J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a"
   },
