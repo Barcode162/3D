@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J109.1 Books turn their pages with a curl: the page lifts and bends over, its text bending with it (five strips of the page in a chain, each turning more toward the free edge, shaded as it turns); a swipe from the left or right edge drags the page with your finger (past a third or a flick turns it, less falls back; a tap on the edge turns too); taps on the sides and swipes play the turn by themselves; Reduce Motion keeps the plain slide
+
+`3d99d24` · 2026-10-27 05:39 · 5 files, +133 −10 · tests: none
+
+Phone check: Open a book, swipe from the right edge: the page curls over with your finger
+
 ## J115.2 The string lights' bulbs glow white (the model's Edison glow was orange: string_lights.glb's bulb material and tools/assets/decor_walls.py, so a rebuild keeps it)
 
 `e2dc252` · 2026-10-27 05:34 · 4 files, +3 −3 · tests: none
