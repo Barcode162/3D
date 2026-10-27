@@ -6,6 +6,10 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J109.1 (fix) The plan's absorb command keeps no extra field: the joined jobs are named in Now's text, so the plan turns into PLAN.md and back without losing a word (the plan test)
+
+`477ceb2` · 2026-10-27 05:40 · 2 files, +0 −5 · tests: none
+
 ## J109.1 Books turn their pages with a curl: the page lifts and bends over, its text bending with it (five strips of the page in a chain, each turning more toward the free edge, shaded as it turns); a swipe from the left or right edge drags the page with your finger (past a third or a flick turns it, less falls back; a tap on the edge turns too); taps on the sides and swipes play the turn by themselves; Reduce Motion keeps the plain slide
 
 `3d99d24` · 2026-10-27 05:39 · 5 files, +133 −10 · tests: none
