@@ -2,6 +2,18 @@
 
 Their words, newest first, with the round they answer.
 
+- 2026-10-27 #5 (in the main chat; then "pick up the UI rework"): the menu
+  button: a tap opens the quick actions; holding opens a different set,
+  "categorize everything properly without cramming everything on top of
+  itself"; hold and drag onto a button, it glows, letting go picks it;
+  proper animations. And the 3D view's selection, "not a bit ugly square
+  green selector dot": modern, usable for the UI rework too.
+  → J106.4: tap = the quick five; hold (a ring fills, 380 ms, in Tune) =
+  four groups (Social, Play, Bar, You), slide onto a group and its buttons
+  fan out on an outer ring, slide onto one: it glows and its name shows,
+  let go to pick it; the selection marker: a breathing ring on the thing,
+  corner brackets, a glass label "TAP · Note · pick up".
+
 - 2026-10-26 #14, on the seven-way page (their full words are in the request):
   - Ember: very clean, lots of usable space → everyday panels.
   - Coaster: a note you pick up and view; tabs make room for anything → notes.

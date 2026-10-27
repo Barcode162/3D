@@ -1,8 +1,8 @@
-<title>Bar3D Theme</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<title>Bar3D Theme Playground</title>
 <style>
-/* Layout: one theme, seven moments. Each card is a phone in the bar showing
-   one part of the theme, in the order a player meets them. */
+/* Layout: the bar fills the screen (a phone frame on a wide screen); the
+   Tune panel is a bottom sheet on a phone and a side panel on a wide screen.
+   Every theme value is a CSS variable on #app, set live from the panel. */
 @font-face { font-family: "Archivo"; src: url("fonts/Archivo.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
 @font-face { font-family: "Martian Mono"; src: url("fonts/MartianMono.woff2") format("woff2"); font-weight: 100 800; }
 @font-face { font-family: "Limelight"; src: url("fonts/Limelight.woff2") format("woff2"); }
@@ -11,364 +11,976 @@
 
 :root {
   color-scheme: dark;
-  /* the page */
-  --bg: #0f0b09;
-  --ink: #f1e7da;
-  --ink-2: #b9a893;
-  --ink-3: #7c6c5b;
-  --line: rgba(241, 231, 218, .12);
-  --card: #17110d;
-  /* the theme: one accent, shared by every part */
-  --amber: #f0a24a;
-  --amber-glow: rgba(240, 162, 74, .55);
-  --glass: rgba(255, 236, 214, .13);
-  --glass-edge: inset 0 1px 0 rgba(255,240,220,.32), inset 0 0 0 1px rgba(255,240,220,.1), 0 14px 34px rgba(0,0,0,.4);
+  /* the page and the Tune panel (a plain tool look, apart from the theme) */
+  --page: #0b0908;
+  --tool: #161412;
+  --tool-2: #201d1a;
+  --tool-line: rgba(255,255,255,.09);
+  --tool-ink: #ece6df;
+  --tool-ink-2: #a39a90;
+  --tool-hi: #f0a24a;
+  /* the theme's defaults (the panel overrides them on #app) */
+  --accent: #f0a24a;
+  --glass-a: .13;
+  --blur: 18px;
+  --r: 22px;
+  --tilt: 9;
+  --scale: 1;
+  --dur: 1;
+  --ease: cubic-bezier(.3, 1.5, .55, 1);
+  --bar-light: 1;
   --paper: #ece2cc;
   --print: #2a1d14;
-  --print-2: #7a5f45;
   --stamp: #c33d2e;
-  --pink: #ff4fa8;
-  --cyan: #35c8ff;
-  --poster: #8a1218;
+  --neon-a: #ff4fa8;
+  --neon-b: #35c8ff;
+  --poster-bg: #8a1218;
   --poster-ink: #ffd23f;
-  --tilt: perspective(900px) rotateY(-9deg) rotateX(5deg) rotate(-1.5deg);
-  /* type */
-  --text: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --type: "Martian Mono", ui-monospace, Menlo, monospace;
-  --paper-title: "Limelight", Georgia, serif;
-  --neon-title: "Righteous", "Archivo", sans-serif;
-  --poster-title: "Unbounded", "Archivo", sans-serif;
+  --f-text: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --f-small: "Martian Mono", ui-monospace, Menlo, monospace;
+  --f-paper: "Limelight", Georgia, serif;
+  --f-neon: "Righteous", "Archivo", sans-serif;
+  --f-poster: "Unbounded", "Archivo", sans-serif;
 }
-* { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 15px; line-height: 1.5; }
-.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 30px; }
+html, body { height: 100%; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--page); color: var(--tool-ink); font: 14px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--tool-hi); outline-offset: 2px; }
 
-header { display: grid; gap: 10px; max-width: 64ch; }
-.eyebrow { font-family: var(--type); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
-h1 { font-family: var(--text); font-weight: 850; font-stretch: 112%; font-size: clamp(30px, 6vw, 48px); line-height: 1.02; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
-header p { margin: 0; color: var(--ink-2); }
-.rules { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.rules span { font-size: 12.5px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line); color: var(--ink-2); }
+#shell { height: 100%; display: grid; }
+@media (min-width: 820px) {
+  #shell { grid-template-columns: 1fr 380px; }
+  #stageWrap { display: grid; place-items: center; padding: 24px; overflow: auto; }
+  #app { width: 390px; height: min(800px, calc(100vh - 48px)); border-radius: 40px; box-shadow: 0 0 0 7px #050404, 0 0 0 8px #2e2824, 0 40px 80px rgba(0,0,0,.6); }
+  #tune { position: static; transform: none !important; height: 100%; border-radius: 0; border-left: 1px solid var(--tool-line); }
+  #tuneBtn, #tuneClose { display: none !important; }
+}
+#stageWrap { min-height: 0; min-width: 0; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 20px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
-.head { display: grid; gap: 2px; }
-.role { font-family: var(--type); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
-.card h2 { font-family: var(--text); font-weight: 800; font-stretch: 108%; font-size: 20px; margin: 0; letter-spacing: -.01em; }
-.card p { margin: 0; color: var(--ink-2); font-size: 14px; }
-.card blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--amber); color: var(--ink); font-size: 13.5px; font-style: italic; }
-.stage { display: flex; justify-content: center; padding: 8px 0; }
-.hint { font-family: var(--type); font-size: 10.5px; color: var(--ink-3); text-align: center; }
+/* ================= the app (the bar and the theme) ================= */
+#app { position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate; font-family: var(--f-text); color: #fff; font-size: calc(13px * var(--scale)); user-select: none; -webkit-user-select: none; }
+.tilt-t { transform: perspective(900px) rotateY(calc(var(--tilt) * -1deg)) rotateX(calc(var(--tilt) * .55deg)) rotate(calc(var(--tilt) * -.17deg)); }
 
-footer { border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 8px; max-width: 64ch; color: var(--ink-2); }
-footer p { margin: 0; }
-footer strong { color: var(--ink); }
-
-/* ---------- phone + bar ---------- */
-.phone { position: relative; width: 248px; height: 520px; border-radius: 34px; overflow: hidden; flex: none;
-  box-shadow: 0 0 0 6px #050404, 0 0 0 7px #2a2420, 0 30px 60px rgba(0,0,0,.55); isolation: isolate; font-family: var(--text); color: #fff; }
-.scene { position: absolute; inset: 0; z-index: -1;
+/* the bar behind everything */
+.scene { position: absolute; inset: 0; z-index: -1; filter: brightness(var(--bar-light));
+  background: radial-gradient(ellipse 95% 55% at 50% 22%, #4a2c18, #1a0f09 70%, #0b0705); }
+.lights { position: absolute; inset: 0;
   background:
-    radial-gradient(circle at 18% 14%, rgba(255,180,90,.9) 0 2px, rgba(255,160,70,.18) 3px 16px, transparent 17px),
-    radial-gradient(circle at 52% 10%, rgba(255,190,110,.85) 0 2px, rgba(255,160,70,.14) 3px 14px, transparent 15px),
-    radial-gradient(circle at 84% 17%, rgba(255,170,80,.9) 0 2px, rgba(255,150,60,.16) 3px 18px, transparent 19px),
-    radial-gradient(ellipse 90% 55% at 50% 22%, #4a2c18, #1a0f09 70%, #0b0705); }
-.scene::before { content: ""; position: absolute; left: 0; right: 0; top: 28%; height: 9%;
-  background: repeating-linear-gradient(90deg, rgba(120,190,150,.38) 0 9px, transparent 9px 14px, rgba(220,150,70,.42) 14px 22px, transparent 22px 30px, rgba(200,90,80,.32) 30px 37px, transparent 37px 46px);
+    radial-gradient(circle at 16% 13%, rgba(255,180,90,.9) 0 2.5px, rgba(255,160,70,.18) 3.5px 20px, transparent 21px),
+    radial-gradient(circle at 50% 9%, rgba(255,190,110,.85) 0 2.5px, rgba(255,160,70,.14) 3.5px 18px, transparent 19px),
+    radial-gradient(circle at 85% 15%, rgba(255,170,80,.9) 0 2.5px, rgba(255,150,60,.16) 3.5px 22px, transparent 23px); }
+.alive .lights { animation: flickerL calc(7s * var(--dur)) ease-in-out infinite; }
+@keyframes flickerL { 50% { opacity: .82; } }
+.shelf { position: absolute; left: 0; right: 0; top: 27%; height: 9%;
+  background: repeating-linear-gradient(90deg, rgba(120,190,150,.38) 0 10px, transparent 10px 16px, rgba(220,150,70,.42) 16px 25px, transparent 25px 34px, rgba(200,90,80,.32) 34px 42px, transparent 42px 52px);
   -webkit-mask: linear-gradient(180deg, transparent 0 25%, #000 25%); mask: linear-gradient(180deg, transparent 0 25%, #000 25%); filter: blur(.6px); }
-.scene::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: 0; height: 36%;
+.counter { position: absolute; left: -10%; right: -10%; bottom: 0; height: 34%;
   background: linear-gradient(180deg, #6a4128 0 2px, #3a2214 2px, #1c110a 40%, #0c0705); border-radius: 50% 50% 0 0 / 14% 14% 0 0; }
-.scene.arcade { background: radial-gradient(ellipse 90% 60% at 50% 25%, #2a1240, #0c0614 70%, #050208); }
-.scene.arcade::before { background: repeating-linear-gradient(90deg, rgba(53,200,255,.35) 0 18px, transparent 18px 34px, rgba(255,79,168,.35) 34px 52px, transparent 52px 70px); }
-.ui { position: absolute; inset: 0; }
-.tilt { transform: var(--tilt); transform-origin: 50% 100%; }
-.status { position: absolute; top: 14px; left: 22px; right: 22px; display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; opacity: .8; }
+.person { position: absolute; width: 46px; height: 110px; transition: transform calc(.5s * var(--dur)) var(--ease); }
+.person .hd { position: absolute; left: 12px; top: 0; width: 22px; height: 22px; border-radius: 50%; background: #2e1e14; }
+.person .bd { position: absolute; left: 0; top: 25px; width: 46px; height: 85px; border-radius: 20px 20px 6px 6px; background: #2e1e14; }
+.person.far { opacity: .55; transform: scale(.7); }
+#me { left: calc(50% - 23px); bottom: 31%; }
+#me .hd, #me .bd { background: #3d2819; }
+#me .arm { position: absolute; left: 40px; top: 28px; width: 11px; height: 44px; border-radius: 6px; background: #3d2819; transform-origin: 50% 90%; transform: rotate(160deg); opacity: 0; }
+#me.waving .arm { opacity: 1; animation: waveArm calc(.45s * var(--dur)) ease-in-out 4 alternate; }
+@keyframes waveArm { from { transform: rotate(150deg); } to { transform: rotate(195deg); } }
+#me.sitting { transform: translateY(26px) scale(.94); }
+.bubble { position: absolute; left: 34px; top: -34px; min-width: 34px; padding: 4px 8px; border-radius: 14px; background: #fff; color: #1a0f09; font-size: 18px; text-align: center; opacity: 0; transform: translateY(8px) scale(.6); transition: all calc(.35s * var(--dur)) var(--ease); }
+.bubble.show { opacity: 1; transform: none; }
+.floor-note { position: absolute; left: 18%; bottom: 25%; width: 38px; height: 28px; background: var(--paper); border-radius: 2px; transform: rotate(-14deg) skewX(-12deg); box-shadow: 0 4px 8px rgba(0,0,0,.5); }
+.floor-note::after { content: ""; position: absolute; inset: 7px 6px; background: repeating-linear-gradient(180deg, rgba(42,29,20,.45) 0 1px, transparent 1px 5px); }
+.alive .floor-note { animation: nudge calc(3s * var(--dur)) ease-in-out infinite; }
+@keyframes nudge { 0%, 88%, 100% { transform: rotate(-14deg) skewX(-12deg); } 92% { transform: rotate(-10deg) skewX(-12deg) translateY(-3px); } }
+.pickup { position: absolute; left: calc(18% - 8px); bottom: calc(25% + 34px); font: 600 9px/1 var(--f-small); letter-spacing: .08em; color: rgba(255,255,255,.75); pointer-events: none; }
 
-/* the menu button (thumb wheel) — the same button on every screen */
-.hub { position: absolute; right: 18px; bottom: 24px; width: 60px; height: 60px; border-radius: 50%; border: 0; cursor: pointer;
-  background: rgba(255,248,238,.94); color: #1a0f09; font: 800 10px/1 var(--text); letter-spacing: .06em;
-  box-shadow: 0 0 0 7px rgba(255,255,255,.12), 0 10px 26px rgba(0,0,0,.5); display: grid; place-items: center; z-index: 3; }
-.hub:focus-visible { outline: 2px solid var(--amber); outline-offset: 10px; }
-.hub.small { width: 46px; height: 46px; font-size: 9px; right: 16px; bottom: 18px; }
-
-/* ---------- 1: the wheel ---------- */
-.w .shade { position: absolute; inset: 0; background: radial-gradient(circle at 80% 88%, rgba(0,0,0,.7), rgba(0,0,0,.1) 62%); transition: opacity .3s; }
-.w .opt { position: absolute; right: 48px; bottom: 54px; width: 52px; height: 52px; margin: 0 -26px -26px 0; border-radius: 50%;
-  display: grid; place-items: center; text-align: center; font-size: 9.5px; font-weight: 700; color: #fff;
-  background: rgba(24,16,11,.8); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  transform: translate(calc(-1 * var(--dx)), calc(-1 * var(--dy))); opacity: 1;
-  transition: transform .42s cubic-bezier(.3,1.5,.55,1) calc(var(--i) * 55ms), opacity .2s calc(var(--i) * 55ms); }
-.w .opt small { display: block; font-weight: 500; font-size: 7.5px; opacity: .7; margin-top: 1px; }
-.w .opt.on { background: var(--amber); color: #1a0f09; border-color: transparent; box-shadow: 0 0 22px var(--amber-glow); }
-.w.closed .opt { transform: translate(0, 0) scale(.3); opacity: 0; transition-delay: 0s; }
-.w.closed .shade { opacity: 0; }
-.w .label { position: absolute; left: 16px; bottom: 210px; font-weight: 800; font-size: 22px; line-height: 1.05; text-shadow: 0 2px 10px rgba(0,0,0,.6); transition: opacity .3s; }
-.w .label small { display: block; font-family: var(--type); font-weight: 400; font-size: 8.5px; letter-spacing: .1em; color: var(--amber); margin-bottom: 4px; }
-.w.closed .label { opacity: 0; }
-.chip { position: absolute; top: 40px; left: 12px; display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 20px; background: rgba(10,7,5,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 10.5px; }
-.chip .art { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(var(--amber), var(--stamp), #6a3fb8, var(--amber)); animation: spin 6s linear infinite; }
-.chip i { font-style: normal; color: rgba(255,255,255,.6); }
+/* top bar: the song chip and the Tune button */
+.topbar { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); display: flex; justify-content: space-between; gap: 8px; z-index: 6; }
+.chip { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 22px; background: rgba(10,7,5,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: calc(11px * var(--scale)); min-width: 0; max-width: 70%; }
+.chip > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .art { flex: none; width: 24px; height: 24px; border-radius: 50%; background: conic-gradient(var(--accent), var(--stamp), #6a3fb8, var(--accent)); }
+.alive .chip .art { animation: spin calc(6s * var(--dur)) linear infinite; }
 @keyframes spin { to { transform: rotate(1turn); } }
+.chip i { font-style: normal; opacity: .6; }
+#tuneBtn { padding: 7px 14px; border-radius: 22px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); font: 700 11px/1 -apple-system, sans-serif; letter-spacing: .04em; color: #fff; }
 
-/* ---------- 2: small menu (dock glass) ---------- */
-.glass { background: var(--glass); backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%); box-shadow: var(--glass-edge); }
-.d .strip { position: absolute; left: 12px; right: 74px; bottom: 22px; border-radius: 26px; padding: 7px; display: flex; justify-content: space-between; }
-.d .strip b { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: rgba(255,255,255,.1); }
-.d .strip b.on { background: #fff; color: #1a0f09; }
-.d .tag { position: absolute; left: 22px; bottom: 76px; font-family: var(--type); font-size: 9px; letter-spacing: .1em; color: rgba(255,255,255,.75); }
-.d .avatar { position: absolute; left: 92px; top: 170px; width: 64px; height: 120px; }
-.d .avatar::before { content: ""; position: absolute; left: 20px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: #3a2618; }
-.d .avatar::after { content: ""; position: absolute; left: 6px; top: 27px; width: 52px; height: 80px; border-radius: 22px 22px 6px 6px; background: #3a2618; }
-.d .arm { position: absolute; left: 140px; top: 182px; width: 12px; height: 46px; border-radius: 6px; background: #3a2618; transform-origin: 50% 100%; animation: wave 1.2s ease-in-out infinite; z-index: 1; }
-@keyframes wave { 0%, 100% { transform: rotate(18deg); } 50% { transform: rotate(-12deg); } }
-.d .bubble { position: absolute; left: 150px; top: 150px; padding: 4px 9px; border-radius: 12px; font-size: 10px; font-weight: 700; background: #fff; color: #1a0f09; }
+.shade { position: absolute; inset: 0; background: radial-gradient(circle at 85% 88%, rgba(0,0,0,.72), rgba(0,0,0,.2) 70%); opacity: 0; pointer-events: none; transition: opacity calc(.3s * var(--dur)); z-index: 2; }
+.shade.on { opacity: 1; pointer-events: auto; }
 
-/* ---------- 3: the phone ---------- */
-.p .ui { background: radial-gradient(ellipse at 50% 70%, transparent 30%, rgba(0,0,0,.45)); }
-.p .device { position: absolute; left: 40px; top: 104px; width: 164px; height: 322px; border-radius: 26px; background: #0b0b0d; padding: 7px;
-  transform: perspective(700px) rotateX(10deg) rotateY(-18deg) rotate(-6deg); box-shadow: -14px 24px 40px rgba(0,0,0,.6), inset 0 0 0 1.5px #3a3a40, 4px 0 0 #1c1c20; }
-.p .screen { width: 100%; height: 100%; border-radius: 19px; overflow: hidden; background: linear-gradient(170deg, #3a2010, #140b06 65%); padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 7px; position: relative; }
-.p .screen::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,190,120,.24), transparent 38%); pointer-events: none; }
-.p .top { display: flex; justify-content: space-between; font-size: 8px; font-weight: 700; opacity: .85; }
-.p .note { border-radius: 10px; padding: 6px 8px; font-size: 8.5px; line-height: 1.3; background: rgba(255,255,255,.12); animation: drop .6s cubic-bezier(.3,1.4,.5,1) both .4s; }
-.p .note b { display: block; font-size: 7.5px; opacity: .65; font-weight: 600; }
-@keyframes drop { from { transform: translateY(-14px); opacity: 0; } }
-.p .np { border-radius: 12px; padding: 8px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; background: rgba(0,0,0,.3); }
-.p .np .art { width: 34px; height: 34px; border-radius: 8px; background: radial-gradient(circle at 30% 30%, #ffb35c, transparent 55%), #c33d6b; }
-.p .np .s { font-weight: 800; font-size: 10px; line-height: 1.15; }
-.p .np .s i { display: block; font-style: normal; font-weight: 400; font-size: 8px; opacity: .6; }
-.bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; margin-top: 3px; }
-.bars b { width: 3px; border-radius: 2px; background: var(--amber); height: 100%; transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
-.bars b:nth-child(2) { animation-delay: .15s; } .bars b:nth-child(3) { animation-delay: .3s; } .bars b:nth-child(4) { animation-delay: .45s; } .bars b:nth-child(5) { animation-delay: .6s; }
+/* the menu button and the wheel */
+.hub { position: absolute; right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: 62px; height: 62px; border-radius: 50%; z-index: 8;
+  background: rgba(255,248,238,.95); color: #1a0f09; font: 800 calc(10px * var(--scale))/1 var(--f-text); letter-spacing: .06em;
+  box-shadow: 0 0 0 7px rgba(255,255,255,.12), 0 10px 26px rgba(0,0,0,.5); transition: transform calc(.25s * var(--dur)) var(--ease); }
+.hub:active { transform: scale(.92); }
+.wheel { position: absolute; right: calc(49px + env(safe-area-inset-right, 0px)); bottom: calc(55px + env(safe-area-inset-bottom, 0px)); width: 0; height: 0; z-index: 7; }
+.opt { position: absolute; left: -27px; top: -27px; width: 54px; height: 54px; border-radius: 50%; display: grid; place-content: center; text-align: center; color: #fff;
+  font-size: calc(10px * var(--scale)); font-weight: 700; line-height: 1.1;
+  background: rgba(24,16,11,.82); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transform: translate(0, 0) scale(.3); opacity: 0; pointer-events: none;
+  transition: transform calc(.42s * var(--dur)) var(--ease), opacity calc(.2s * var(--dur)), background .15s; }
+.opt small { display: block; font-weight: 500; font-size: calc(7.5px * var(--scale)); opacity: .7; margin-top: 2px; }
+.wheel.open .opt { transform: translate(calc(-1 * var(--dx)), calc(-1 * var(--dy))); opacity: 1; pointer-events: auto; transition-delay: calc(var(--i) * 50ms * var(--dur)); }
+.opt:active, .opt.hot { background: var(--accent); color: #1a0f09; border-color: transparent; box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 60%, transparent); }
+.wheel-label { position: absolute; left: calc(18px + env(safe-area-inset-left, 0px)); bottom: calc(230px + env(safe-area-inset-bottom, 0px)); z-index: 7; font-weight: 800; font-size: calc(24px * var(--scale)); line-height: 1.05; text-shadow: 0 2px 10px rgba(0,0,0,.6); opacity: 0; transform: translateY(8px); transition: all calc(.3s * var(--dur)); pointer-events: none; }
+.wheel-label small { display: block; font: 400 calc(9px * var(--scale))/1.2 var(--f-small); letter-spacing: .1em; color: var(--accent); margin-bottom: 4px; }
+.wheel-label.on { opacity: 1; transform: none; }
+/* press and hold the menu button: a ring fills, then the categories open;
+   slide a finger over them and let go to pick (J106.4) */
+.hub::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(var(--accent) calc(var(--hold, 0) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); opacity: 0; transition: opacity .15s; }
+.hub.holding::before { opacity: 1; }
+.hub.holding { transform: scale(.94); }
+.hub { touch-action: none; }
+.opt.cat { width: 60px; height: 60px; left: -30px; top: -30px; background: rgba(32,22,14,.88); font-size: calc(10.5px * var(--scale)); }
+.opt.cat .ic, .opt.sub .ic { display: block; font-size: 15px; line-height: 1; margin-bottom: 2px; }
+.opt.sub { width: 50px; height: 50px; left: -25px; top: -25px; font-size: calc(9px * var(--scale)); background: rgba(18,12,8,.9); }
+.opt.cat.open-cat { background: color-mix(in srgb, var(--accent) 22%, rgba(32,22,14,.9)); border-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+.wheel .opt.hot { background: var(--accent); color: #1a0f09; border-color: transparent; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 26px color-mix(in srgb, var(--accent) 70%, transparent); }
+.wheel.open .opt.hot { transform: translate(calc(-1 * var(--dx)), calc(-1 * var(--dy))) scale(1.18); transition-delay: 0s; }
+.wheel.dragging .opt { transition-delay: 0s; }
+.wheel .ring { position: absolute; border-radius: 50%; border: 1px dashed rgba(255,240,220,.16); pointer-events: none; opacity: 0; transition: opacity calc(.3s * var(--dur)); }
+.wheel.open .ring { opacity: 1; }
+.wheel-label .hint { display: block; margin-top: 6px; font: 500 calc(9px * var(--scale))/1.3 var(--f-small); letter-spacing: .06em; color: rgba(255,255,255,.7); text-shadow: none; }
+
+/* the selection marker: what a tap would use now (in place of the bar's
+   green square). A soft ring breathes on the thing, corner brackets close
+   in, a glass label says what it is and what a tap does. */
+.sel { position: absolute; z-index: 3; pointer-events: none; width: 0; height: 0; transition: opacity calc(.25s * var(--dur)); }
+.shade.on ~ .sel, #app.menu-up .sel { opacity: 0; }
+.sel .halo { position: absolute; left: -38px; top: -23px; width: 76px; height: 46px; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 34%, transparent), transparent); }
+.sel .ring { position: absolute; left: -35px; top: -20px; width: 70px; height: 40px; border-radius: 50%; transform: rotateX(58deg);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 80%, #fff); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
+.alive .sel .ring { animation: selBreathe calc(2.2s * var(--dur)) ease-in-out infinite; }
+@keyframes selBreathe { 50% { transform: rotateX(58deg) scale(1.12); opacity: .55; } }
+.sel .br { position: absolute; width: 12px; height: 12px; border: 2px solid #fff; opacity: .9; transition: all calc(.4s * var(--dur)) var(--ease); }
+.sel .br.a { left: -40px; top: -30px; border-right: 0; border-bottom: 0; border-radius: 4px 0 0 0; }
+.sel .br.b { left: 28px; top: -30px; border-left: 0; border-bottom: 0; border-radius: 0 4px 0 0; }
+.sel .br.c { left: -40px; top: 18px; border-right: 0; border-top: 0; border-radius: 0 0 0 4px; }
+.sel .br.d { left: 28px; top: 18px; border-left: 0; border-top: 0; border-radius: 0 0 4px 0; }
+.sel.locked .br.a { left: -28px; top: -22px; } .sel.locked .br.b { left: 16px; top: -22px; }
+.sel.locked .br.c { left: -28px; top: 10px; } .sel.locked .br.d { left: 16px; top: 10px; }
+.sel .tag { position: absolute; left: 0; bottom: 38px; transform: translateX(-50%); white-space: nowrap; display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px 5px 6px; border-radius: 16px; background: rgba(14,9,6,.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255,240,220,.18); font-size: calc(10.5px * var(--scale)); font-weight: 700; }
+.sel .tag kbd { font: 700 calc(8px * var(--scale))/1 var(--f-small); letter-spacing: .08em; padding: 4px 6px; border-radius: 10px; background: var(--accent); color: #1a0f09; }
+.sel .tag i { font-style: normal; font-weight: 500; opacity: .7; }
+
+/* every part is a layer that springs in */
+.layer { position: absolute; z-index: 5; opacity: 0; pointer-events: none; transition: opacity calc(.25s * var(--dur)), transform calc(.45s * var(--dur)) var(--ease); }
+.layer.open { opacity: 1; pointer-events: auto; }
+.glass { background: rgba(255,236,214,var(--glass-a)); backdrop-filter: blur(var(--blur)) saturate(170%); -webkit-backdrop-filter: blur(var(--blur)) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,240,220,.32), inset 0 0 0 1px rgba(255,240,220,.1), 0 14px 34px rgba(0,0,0,.4); }
+.sheet-pos { left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(104px + env(safe-area-inset-bottom, 0px)); transform-origin: 50% 100%; }
+.layer.sheet-pos:not(.open) { transform: translateY(40px) scale(.96); }
+.layer.sheet-pos.open.tilt-t, .layer.tilt-t.open { /* keeps the tilt when open */ }
+
+/* clean glass: the jukebox */
+.jb { border-radius: var(--r); padding: 14px; display: grid; gap: 10px; max-height: 64%; }
+.jb .t { font-weight: 800; font-stretch: 112%; font-size: calc(19px * var(--scale)); display: flex; justify-content: space-between; align-items: center; }
+.seg { display: flex; background: rgba(0,0,0,.28); border-radius: calc(var(--r) * .55); padding: 3px; }
+.seg button { flex: 1; text-align: center; padding: 6px 0; border-radius: calc(var(--r) * .42); font-weight: 600; font-size: calc(11px * var(--scale)); color: rgba(255,240,220,.65); transition: background .2s, color .2s; }
+.seg button.on { background: rgba(255,240,220,.18); color: #fff; }
+.list { display: grid; overflow: auto; max-height: 190px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 2px; border-top: 1px solid rgba(255,240,220,.1); font-size: calc(12.5px * var(--scale)); text-align: left; width: 100%; }
+.row i { font-style: normal; display: block; font-size: calc(10px * var(--scale)); color: rgba(255,240,220,.6); }
+.row .tm { color: rgba(255,240,220,.65); font-variant-numeric: tabular-nums; flex: none; }
+.row .plus { flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,240,220,.14); display: grid; place-items: center; font-weight: 700; }
+.row.playing span:first-child { color: var(--accent); font-weight: 700; }
+.prog { height: 3px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
+.prog b { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
+.btns { display: flex; gap: 8px; }
+.go, .plain { flex: 1; text-align: center; font-size: calc(12px * var(--scale)); font-weight: 700; padding: 10px 0; border-radius: calc(var(--r) * .64); }
+.go { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); color: #1e1206; box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 50%, transparent); }
+.plain { background: rgba(255,240,220,.12); }
+.go:active, .plain:active { transform: translateY(1px); }
+.eq { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
+.eq b { width: 3px; border-radius: 2px; background: var(--accent); height: 100%; transform: scaleY(.4); transform-origin: bottom; }
+.alive .eq b { animation: eq calc(1s * var(--dur)) ease-in-out infinite; }
+.eq b:nth-child(2) { animation-delay: .15s !important; } .eq b:nth-child(3) { animation-delay: .3s !important; } .eq b:nth-child(4) { animation-delay: .45s !important; }
 @keyframes eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
-.p .apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px 5px; margin-top: auto; }
-.p .apps div { display: grid; justify-items: center; gap: 2px; font-size: 7px; opacity: .9; }
-.p .apps div b { width: 30px; height: 30px; border-radius: 9px; }
-.p .badge { position: relative; }
-.p .badge::after { content: "2"; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--stamp); font-size: 7px; display: grid; place-items: center; color: #fff; }
-.p .thumb { position: absolute; left: 152px; top: 340px; width: 60px; height: 120px; border-radius: 30px; background: linear-gradient(160deg, #c98d66, #8a5a3e); transform: rotate(-30deg); box-shadow: inset -6px 0 10px rgba(0,0,0,.25); }
 
-/* ---------- 4: everyday panel (Ember, clean) ---------- */
-.e .panel { position: absolute; left: 12px; right: 12px; bottom: 96px; border-radius: 22px; padding: 14px; display: grid; gap: 10px; }
-.e .t { font-weight: 800; font-stretch: 112%; font-size: 19px; display: flex; justify-content: space-between; align-items: center; }
-.e .seg { display: flex; background: rgba(0,0,0,.28); border-radius: 12px; padding: 3px; font-size: 10.5px; }
-.e .seg b { flex: 1; text-align: center; padding: 5px 0; border-radius: 9px; font-weight: 600; color: rgba(255,240,220,.65); }
-.e .seg b.on { background: rgba(255,240,220,.18); color: #fff; }
-.e .row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 2px; border-top: 1px solid rgba(255,240,220,.1); }
-.e .row i { font-style: normal; color: rgba(255,240,220,.6); font-size: 10px; display: block; }
-.e .row .tm { color: rgba(255,240,220,.65); font-variant-numeric: tabular-nums; }
-.e .prog { height: 3px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
-.e .prog::before { content: ""; display: block; height: 100%; width: 62%; background: var(--amber); animation: prog 8s linear infinite; }
-@keyframes prog { from { width: 58%; } to { width: 70%; } }
-.e .go { text-align: center; font-size: 12px; font-weight: 700; padding: 9px 0; border-radius: 14px; background: linear-gradient(135deg, #f8bf68, #ec7f34); color: #1e1206; box-shadow: 0 6px 20px var(--amber-glow); }
+/* the glass strip: emotes */
+.strip { left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(84px + env(safe-area-inset-right, 0px)); bottom: calc(31px + env(safe-area-inset-bottom, 0px)); border-radius: 30px; padding: 7px; display: flex; justify-content: space-between; gap: 4px; transform-origin: 100% 50%; }
+.strip:not(.open) { transform: translateX(30px) scaleX(.6); }
+.strip button { width: 38px; height: 38px; border-radius: 50%; font-size: 19px; display: grid; place-items: center; background: rgba(255,255,255,.1); transition: transform calc(.2s * var(--dur)) var(--ease); }
+.strip button:active { transform: scale(1.25); background: #fff; }
+.strip-tag { position: absolute; left: calc(24px + env(safe-area-inset-left, 0px)); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); font: 500 calc(9px * var(--scale))/1 var(--f-small); letter-spacing: .1em; opacity: 0; transition: opacity .2s; z-index: 5; pointer-events: none; }
+.strip.open + .strip-tag { opacity: .8; }
 
-/* ---------- 5: notes (Coaster paper) ---------- */
-.n .ui { display: flex; flex-direction: column; justify-content: flex-end; padding: 0 12px 92px; }
-.n .tabs { display: flex; gap: 4px; padding-left: 14px; }
-.n .tabs b { font-family: var(--type); font-weight: 500; font-size: 8.5px; letter-spacing: .06em; padding: 5px 9px 7px; border-radius: 8px 8px 0 0; background: #d9ccb0; color: #5b4632; }
-.n .tabs b.on { background: var(--paper); color: var(--print); }
-.n .paper { position: relative; background: var(--paper); color: var(--print); border-radius: 4px 4px 10px 10px; padding: 16px 16px 14px; box-shadow: 0 18px 40px rgba(0,0,0,.6);
-  background-image: radial-gradient(rgba(90,60,30,.07) 1px, transparent 1px); background-size: 4px 4px; display: grid; gap: 6px; }
-.n .paper::before { content: ""; position: absolute; inset: 6px; border: 1px dashed rgba(42,29,20,.3); border-radius: 4px; pointer-events: none; }
-.n .t { font-family: var(--paper-title); font-size: 22px; line-height: 1; }
-.n .from { font-family: var(--type); font-size: 8.5px; letter-spacing: .1em; color: var(--print-2); }
-.n .msg { font-size: 13px; line-height: 1.4; }
-.n .stamp { position: absolute; top: -10px; right: 14px; transform: rotate(-10deg); border: 2px solid var(--stamp); color: var(--stamp); background: var(--paper); font-family: var(--type); font-weight: 700; font-size: 8px; letter-spacing: .1em; padding: 2px 5px; border-radius: 3px; }
-.n .keys { display: flex; gap: 8px; margin-top: 4px; }
-.n .key { flex: 1; text-align: center; font-family: var(--type); font-size: 9.5px; letter-spacing: .06em; padding: 8px 0; border: 1.5px solid var(--print); border-radius: 3px; }
-.n .key.go { background: var(--print); color: var(--paper); }
+/* the phone */
+.phone-l { left: 0; right: 0; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); height: 440px; display: flex; justify-content: center; }
+.phone-l:not(.open) { transform: translateY(120px) rotate(8deg); }
+.device { width: 222px; height: 430px; border-radius: 30px; background: #0b0b0d; padding: 7px; position: relative;
+  transform: perspective(700px) rotateX(calc(var(--tilt) * 1.1deg)) rotateY(calc(var(--tilt) * -2deg)) rotate(calc(var(--tilt) * -.6deg));
+  box-shadow: -14px 24px 40px rgba(0,0,0,.6), inset 0 0 0 1.5px #3a3a40, 4px 0 0 #1c1c20; }
+.screen { width: 100%; height: 100%; border-radius: 23px; overflow: hidden; position: relative; background: linear-gradient(170deg, #3a2010, #140b06 65%); padding: 10px 11px 12px; display: flex; flex-direction: column; gap: 9px; }
+.screen::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,190,120,.2), transparent 38%); pointer-events: none; }
+.ph-top { display: flex; justify-content: space-between; font-size: calc(9.5px * var(--scale)); font-weight: 700; opacity: .85; }
+.ph-note { border-radius: 12px; padding: 7px 9px; font-size: calc(10px * var(--scale)); line-height: 1.3; background: rgba(255,255,255,.12); text-align: left; }
+.ph-note b { display: block; font-size: calc(8.5px * var(--scale)); opacity: .65; font-weight: 600; }
+.ph-note.drop { animation: drop calc(.6s * var(--dur)) var(--ease) both; }
+@keyframes drop { from { transform: translateY(-16px); opacity: 0; } }
+.np { border-radius: 14px; padding: 9px; display: grid; grid-template-columns: 38px 1fr; gap: 9px; align-items: center; background: rgba(0,0,0,.3); text-align: left; }
+.np .art { width: 38px; height: 38px; border-radius: 9px; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 70%, #fff), transparent 55%), var(--stamp); }
+.np .s { font-weight: 800; font-size: calc(11.5px * var(--scale)); line-height: 1.15; min-width: 0; }
+.np .s i { display: block; font-style: normal; font-weight: 400; font-size: calc(9px * var(--scale)); opacity: .6; }
+.apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 6px; margin-top: auto; }
+.apps button { display: grid; justify-items: center; gap: 3px; font-size: calc(8.5px * var(--scale)); }
+.apps button b { width: 40px; height: 40px; border-radius: 11px; position: relative; transition: transform .15s; }
+.apps button:active b { transform: scale(.88); }
+.apps .badge b::after { content: attr(data-n); position: absolute; top: -4px; right: -4px; min-width: 15px; height: 15px; border-radius: 8px; background: var(--stamp); font-size: 8.5px; display: grid; place-items: center; color: #fff; }
+.ph-back { align-self: flex-start; font-size: calc(10px * var(--scale)); font-weight: 700; color: var(--accent); }
+.ph-h { font-weight: 800; font-size: calc(17px * var(--scale)); }
+.ph-list { display: grid; gap: 2px; }
+.ph-list button { display: flex; justify-content: space-between; align-items: center; padding: 8px 2px; border-top: 1px solid rgba(255,255,255,.08); font-size: calc(11px * var(--scale)); text-align: left; }
+.ph-list i { font-style: normal; display: block; opacity: .6; font-size: calc(9px * var(--scale)); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #7bd08f; flex: none; }
+.dot.away { background: #7c6c5b; }
+.thumb { position: absolute; left: calc(50% + 78px); bottom: -78px; width: 62px; height: 130px; border-radius: 31px; background: linear-gradient(160deg, #c98d66, #8a5a3e); transform: rotate(-30deg); box-shadow: inset -6px 0 10px rgba(0,0,0,.25); pointer-events: none; }
 
-/* ---------- 6: arcade tablet (Neon) ---------- */
-.a .tab { position: absolute; left: 14px; right: 14px; top: 92px; bottom: 96px; border-radius: 20px; padding: 14px 12px; background: rgba(6,3,12,.86);
-  box-shadow: 0 0 0 1.5px rgba(53,200,255,.45), 0 0 26px rgba(53,200,255,.18), 0 24px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 10px; font-family: var(--neon-title); }
-.a .t { text-align: center; font-size: 26px; color: #ffe7f4; letter-spacing: .04em; text-shadow: 0 0 4px var(--pink), 0 0 12px var(--pink), 0 0 26px #ff2d8f; }
-.a .t .f { animation: flick 4s infinite; }
+/* the card: notes you pick up */
+.card-l { left: calc(14px + env(safe-area-inset-left, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(104px + env(safe-area-inset-bottom, 0px)); transform-origin: 30% 100%; color: var(--print); }
+.card-l:not(.open) { transform: translateY(60px) rotate(-8deg) scale(.9); }
+.tabs { display: flex; gap: 4px; padding-left: 14px; }
+.tabs button { font: 500 calc(9px * var(--scale))/1 var(--f-small); letter-spacing: .06em; padding: 6px 10px 8px; border-radius: 8px 8px 0 0; background: color-mix(in srgb, var(--paper) 82%, #6b5238); color: color-mix(in srgb, var(--print) 70%, var(--paper)); }
+.tabs button.on { background: var(--paper); color: var(--print); }
+.paper { position: relative; background: var(--paper); border-radius: 4px 4px calc(var(--r) * .45) calc(var(--r) * .45); padding: 18px 18px 16px; box-shadow: 0 18px 40px rgba(0,0,0,.6);
+  background-image: radial-gradient(rgba(90,60,30,.07) 1px, transparent 1px); background-size: 4px 4px; display: grid; gap: 8px; min-height: 210px; }
+.paper::before { content: ""; position: absolute; inset: 6px; border: 1px dashed color-mix(in srgb, var(--print) 30%, transparent); border-radius: 4px; pointer-events: none; }
+.paper .t { font-family: var(--f-paper); font-size: calc(24px * var(--scale)); line-height: 1; }
+.paper .from { font: 400 calc(8.5px * var(--scale))/1.3 var(--f-small); letter-spacing: .1em; color: color-mix(in srgb, var(--print) 65%, var(--paper)); text-transform: uppercase; }
+.paper .msg { font-size: calc(13.5px * var(--scale)); line-height: 1.4; }
+.paper .stamp { position: absolute; top: -10px; right: 16px; transform: rotate(-10deg); border: 2px solid var(--stamp); color: var(--stamp); background: var(--paper); font: 700 calc(8px * var(--scale))/1 var(--f-small); letter-spacing: .1em; padding: 3px 6px; border-radius: 3px; }
+.pkeys { display: flex; gap: 8px; margin-top: 4px; }
+.pkeys button { flex: 1; text-align: center; font: 500 calc(10px * var(--scale))/1 var(--f-small); letter-spacing: .06em; padding: 10px 0; border: 1.5px solid var(--print); border-radius: 3px; color: var(--print); text-transform: uppercase; }
+.pkeys button.go-p { background: var(--print); color: var(--paper); }
+.paper textarea { width: 100%; min-height: 60px; resize: none; border: 1.5px dashed color-mix(in srgb, var(--print) 50%, transparent); background: transparent; color: var(--print); font: calc(13px * var(--scale))/1.4 var(--f-text); padding: 8px; border-radius: 3px; user-select: text; -webkit-user-select: text; }
+.preply { font-size: calc(12.5px * var(--scale)); padding: 6px 0; border-bottom: 1px dotted color-mix(in srgb, var(--print) 40%, transparent); text-align: left; }
+.preply b { font-weight: 700; }
+.pboard { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; font-size: calc(12.5px * var(--scale)); padding: 7px 0; border-bottom: 1px dotted color-mix(in srgb, var(--print) 40%, transparent); }
+.pboard i { font: 400 calc(9px * var(--scale))/1.6 var(--f-small); font-style: normal; color: color-mix(in srgb, var(--print) 60%, var(--paper)); }
+
+/* the game tablet: the arcade (neon) */
+.arc { left: calc(14px + env(safe-area-inset-left, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); max-height: calc(100% - 180px); bottom: calc(104px + env(safe-area-inset-bottom, 0px)); border-radius: var(--r); padding: 16px 13px; background: rgba(6,3,12,.9);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--neon-b) 50%, transparent), 0 0 26px color-mix(in srgb, var(--neon-b) 20%, transparent), 0 24px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 12px; font-family: var(--f-neon); transform-origin: 50% 100%; }
+.arc:not(.open) { transform: translateY(40px) scale(.94); }
+.arc .t { text-align: center; font-size: calc(30px * var(--scale)); color: color-mix(in srgb, var(--neon-a) 20%, #fff); letter-spacing: .04em; text-shadow: 0 0 4px var(--neon-a), 0 0 12px var(--neon-a), 0 0 28px var(--neon-a); }
+.alive .arc .t .f { animation: flick calc(4s * var(--dur)) infinite; }
 @keyframes flick { 0%, 46%, 50%, 54%, 100% { opacity: 1; } 48%, 52% { opacity: .25; } }
-.a .games { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.a .g { border: 1.5px solid rgba(53,200,255,.55); border-radius: 14px; padding: 9px 8px; color: #c9f3ff; font-size: 12.5px; box-shadow: inset 0 0 8px rgba(53,200,255,.15); }
-.a .g i { display: block; font-style: normal; font-family: var(--text); font-size: 8.5px; opacity: .7; margin-top: 2px; }
-.a .g.on { border-color: var(--pink); color: #ffe7f4; box-shadow: 0 0 12px rgba(255,79,168,.55), inset 0 0 10px rgba(255,79,168,.3); }
-.a .g.wide { grid-column: span 2; }
-.a .live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7bff9e; box-shadow: 0 0 6px #7bff9e; margin-right: 4px; animation: blink 1.4s infinite; }
+.games { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; overflow: auto; }
+.g { border: 1.5px solid color-mix(in srgb, var(--neon-b) 55%, transparent); border-radius: calc(var(--r) * .64); padding: 11px 10px; color: color-mix(in srgb, var(--neon-b) 25%, #fff); font-size: calc(14px * var(--scale)); text-align: left; box-shadow: inset 0 0 8px color-mix(in srgb, var(--neon-b) 15%, transparent); transition: all .2s; }
+.g i { display: block; font-style: normal; font-family: var(--f-text); font-size: calc(9.5px * var(--scale)); opacity: .75; margin-top: 3px; }
+.g.on { border-color: var(--neon-a); color: color-mix(in srgb, var(--neon-a) 15%, #fff); box-shadow: 0 0 12px color-mix(in srgb, var(--neon-a) 55%, transparent), inset 0 0 10px color-mix(in srgb, var(--neon-a) 30%, transparent); }
+.g.wide { grid-column: span 2; }
+.live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7bff9e; box-shadow: 0 0 6px #7bff9e; margin-right: 5px; vertical-align: 1px; }
+.alive .live { animation: blink 1.4s infinite; }
 @keyframes blink { 50% { opacity: .3; } }
-.a .play { margin-top: auto; text-align: center; padding: 10px 0; border-radius: 22px; font-size: 13px; border: 1.5px solid #ffb23a; color: #fff1d6; text-shadow: 0 0 8px #ffb23a; box-shadow: 0 0 12px rgba(255,178,58,.45); }
+.play { margin-top: 4px; text-align: center; padding: 12px 0; border-radius: 26px; font-size: calc(14px * var(--scale)); border: 1.5px solid var(--accent); color: color-mix(in srgb, var(--accent) 25%, #fff); text-shadow: 0 0 8px var(--accent); box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent); }
 
-/* ---------- 7: announcement (Poster) ---------- */
-.k .sheet { position: absolute; left: 12px; right: 12px; top: 54px; bottom: 92px; padding: 16px 14px; background: linear-gradient(180deg, rgba(138,18,24,.97), rgba(40,5,8,.97));
-  display: flex; flex-direction: column; font-family: var(--poster-title); color: #fff1e0; box-shadow: 0 24px 50px rgba(0,0,0,.6); }
-.k .meta { font-family: var(--type); font-size: 8.5px; letter-spacing: .14em; color: var(--poster-ink); display: flex; justify-content: space-between; }
-.k .big { font-weight: 900; font-size: 42px; line-height: .9; letter-spacing: -.03em; margin: 12px 0 6px; text-transform: uppercase; }
-.k .when { font-weight: 600; font-size: 13px; color: var(--poster-ink); margin-bottom: 14px; }
-.k .row { display: flex; gap: 10px; align-items: baseline; border-top: 2px solid rgba(255,241,224,.85); padding: 8px 0; font-weight: 700; font-size: 12px; text-transform: uppercase; }
-.k .row span:last-child { margin-left: auto; font-family: var(--type); font-weight: 400; font-size: 9px; text-transform: none; opacity: .8; }
-.k .keys { margin-top: auto; display: grid; grid-template-columns: 2fr 1fr; gap: 6px; }
-.k .key { padding: 12px 10px; font-weight: 800; font-size: 12px; text-transform: uppercase; background: var(--poster-ink); color: #1e0406; }
-.k .key.ghost { background: transparent; color: #fff1e0; border: 2px solid #fff1e0; text-align: center; }
+/* the poster: big news */
+.pst { left: calc(14px + env(safe-area-inset-left, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); max-height: calc(100% - 170px); bottom: calc(104px + env(safe-area-inset-bottom, 0px)); padding: 18px 16px; display: flex; flex-direction: column; font-family: var(--f-poster); color: #fff1e0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--poster-bg) 97%, transparent), color-mix(in srgb, var(--poster-bg) 35%, #000)); box-shadow: 0 24px 50px rgba(0,0,0,.6); transform-origin: 50% 100%; border-radius: calc(var(--r) * .15); }
+.pst:not(.open) { transform: translateY(-30px) rotate(3deg); }
+.pst .meta { font: 400 calc(9px * var(--scale))/1 var(--f-small); letter-spacing: .14em; color: var(--poster-ink); display: flex; justify-content: space-between; }
+.pst .big { font-weight: 900; font-size: calc(46px * var(--scale)); line-height: .9; letter-spacing: -.03em; margin: 14px 0 8px; text-transform: uppercase; }
+.pst .when { font-weight: 600; font-size: calc(14px * var(--scale)); color: var(--poster-ink); margin-bottom: 16px; }
+.pst .prow { display: flex; gap: 10px; align-items: baseline; border-top: 2px solid rgba(255,241,224,.85); padding: 9px 0; font-weight: 700; font-size: calc(12.5px * var(--scale)); text-transform: uppercase; }
+.pst .prow span:last-child { margin-left: auto; font: 400 calc(9.5px * var(--scale))/1.3 var(--f-small); text-transform: none; opacity: .85; text-align: right; }
+.pst .pk { margin-top: 18px; display: grid; grid-template-columns: 2fr 1fr; gap: 6px; }
+.pst .pk button { padding: 14px 10px; font-weight: 800; font-size: calc(13px * var(--scale)); text-transform: uppercase; background: var(--poster-ink); color: #1e0406; text-align: left; font-family: var(--f-poster); }
+.pst .pk button.ghost { background: transparent; color: #fff1e0; border: 2px solid #fff1e0; text-align: center; }
+.pst .pager { display: flex; gap: 5px; justify-content: center; margin-top: 10px; }
+.pst .pager b { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,241,224,.35); }
+.pst .pager b.on { background: var(--poster-ink); }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-}
+/* toast */
+.toast { position: absolute; left: 50%; top: calc(58px + env(safe-area-inset-top, 0px)); z-index: 9; transform: translate(-50%, -16px); opacity: 0; padding: 9px 16px; border-radius: 22px; font-size: calc(12px * var(--scale)); font-weight: 600; white-space: nowrap; pointer-events: none; transition: all calc(.3s * var(--dur)) var(--ease); max-width: 86%; overflow: hidden; text-overflow: ellipsis; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.no-tilt .tilt-t, .no-tilt .device { transform: none; }
+
+/* ================= the Tune panel ================= */
+#tune { position: fixed; left: 0; right: 0; bottom: 0; height: 62%; z-index: 20; background: var(--tool); border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; transform: translateY(105%); transition: transform .35s cubic-bezier(.3,1.1,.5,1); }
+#tune.open { transform: none; }
+.t-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--tool-line); }
+.t-head h2 { margin: 0; font-size: 16px; }
+.t-head p { margin: 2px 0 0; color: var(--tool-ink-2); font-size: 12px; }
+#tuneClose { padding: 7px 14px; border-radius: 16px; background: var(--tool-2); font-weight: 600; }
+.t-body { overflow: auto; padding: 4px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); -webkit-overflow-scrolling: touch; }
+.t-sec { padding: 14px 0; border-bottom: 1px solid var(--tool-line); display: grid; gap: 12px; }
+.t-sec h3 { margin: 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--tool-ink-2); font-weight: 600; }
+.jump { display: flex; flex-wrap: wrap; gap: 6px; }
+.jump button { padding: 7px 12px; border-radius: 16px; background: var(--tool-2); border: 1px solid var(--tool-line); font-size: 13px; }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; }
+.ctl label { font-size: 13.5px; }
+.ctl output { font-variant-numeric: tabular-nums; color: var(--tool-ink-2); font-size: 12px; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--tool-hi); height: 28px; }
+.ctl input[type=color] { width: 44px; height: 30px; border: 1px solid var(--tool-line); border-radius: 8px; background: none; padding: 2px; }
+.ctl select { background: var(--tool-2); color: var(--tool-ink); border: 1px solid var(--tool-line); border-radius: 8px; padding: 6px 8px; font-size: 13px; }
+.ctl input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--tool-hi); }
+.ctl .note { grid-column: 1 / -1; color: var(--tool-ink-2); font-size: 11.5px; margin-top: -2px; }
+.t-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.t-actions button { padding: 9px 14px; border-radius: 10px; background: var(--tool-2); border: 1px solid var(--tool-line); font-weight: 600; font-size: 13px; }
+.t-actions button.hi { background: var(--tool-hi); color: #1a0f09; border-color: transparent; }
+#pasteBox { width: 100%; min-height: 70px; background: var(--tool-2); color: var(--tool-ink); border: 1px solid var(--tool-line); border-radius: 10px; padding: 8px; font: 12px/1.4 ui-monospace, Menlo, monospace; }
+.t-msg { font-size: 12px; color: var(--tool-hi); min-height: 1em; }
+@media (prefers-reduced-motion: reduce) { #app *, #app *::before, #app *::after { animation: none !important; } }
 </style>
 
-<div class="wrap">
-  <header>
-    <div class="eyebrow">J Production · Design lab · Our theme</div>
-    <h1>One theme, seven parts</h1>
-    <p>Every idea you liked, each in the place you gave it. They share one button, one amber colour and the same slight sideways tilt, and each one has small moving details so the bar feels alive. Nothing here is in the live bar.</p>
-    <div class="rules">
-      <span>One menu button: the wheel</span>
-      <span>Everything tilts a little, like it's held</span>
-      <span>Small things move: songs, notes, people</span>
-      <span>Amber means "you can tap this"</span>
-    </div>
-  </header>
+<div id="shell">
+  <div id="stageWrap">
+    <div id="app" class="alive">
+      <div class="scene">
+        <div class="lights"></div><div class="shelf"></div>
+        <div class="person far" style="left:12%;bottom:38%"><div class="hd"></div><div class="bd"></div></div>
+        <div class="person far" style="right:10%;bottom:40%"><div class="hd"></div><div class="bd"></div></div>
+        <div class="counter"></div>
+        <div class="person" id="me"><div class="hd"></div><div class="bd"></div><div class="arm"></div><div class="bubble" id="bubble"></div></div>
+      </div>
+      <button class="floor-note" id="floorNote" aria-label="Pick up the note on the counter"></button>
+      <div class="sel" id="sel" style="left:calc(18% + 19px);top:calc(75% - 14px)"><span class="halo"></span><span class="ring"></span><span class="br a"></span><span class="br b"></span><span class="br c"></span><span class="br d"></span><span class="tag"><kbd>TAP</kbd>Note <i>· pick up</i></span></div>
 
-  <div class="grid">
+      <div class="topbar">
+        <button class="chip" id="chip" aria-label="Open the jukebox"><span class="art"></span><span id="chipText">Late Train Home <i>· Maya</i></span></button>
+        <button id="tuneBtn" type="button">Tune</button>
+      </div>
 
-    <article class="card">
-      <div class="head"><span class="role">The menu button</span><h2>The wheel</h2></div>
-      <div class="stage"><div class="phone w" id="wheelPhone"><div class="scene"></div><div class="ui">
-        <div class="shade"></div>
-        <div class="chip"><span class="art"></span><span>Late Train Home <i>· Maya</i></span></div>
-        <div class="label"><small>TAP ONE</small>Your menu</div>
-        <div class="opt on" style="--dx:0px;--dy:128px;--i:0">Phone<small>all of it</small></div>
-        <div class="opt" style="--dx:64px;--dy:111px;--i:1">Emotes<small>small menu</small></div>
-        <div class="opt" style="--dx:111px;--dy:64px;--i:2">Sit<small>does it</small></div>
-        <div class="opt" style="--dx:128px;--dy:0px;--i:3">Arcade<small>tablet</small></div>
-        <button class="hub" id="hub" type="button" aria-pressed="true">MENU</button>
-      </div></div></div>
-      <div class="hint">Tap the white button to open and close it.</div>
-      <p>It's the only button on screen. Tap it and the choices spring out around your thumb. Some do the thing at once (Sit), some open a small menu (Emotes), and Phone opens everything.</p>
-      <blockquote>“instead of a menu button… a nice animation would open up the other options”</blockquote>
-    </article>
+      <div class="shade" id="shade"></div>
 
-    <article class="card">
-      <div class="head"><span class="role">A small menu</span><h2>The glass strip</h2></div>
-      <div class="stage"><div class="phone d"><div class="scene"></div><div class="ui">
-        <div class="avatar"></div><div class="arm"></div><div class="bubble">Hey!</div>
-        <div class="tag">EMOTES</div>
-        <div class="strip glass tilt"><b class="on">✋</b><b>🍻</b><b>💃</b><b>👏</b><b>😂</b></div>
-        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">✕</button>
-      </div></div></div>
-      <p>When a wheel choice needs a little more, a compact glass strip appears next to your thumb, from the Liquid Dock. Pick one and it's gone again; the bar stays in view.</p>
-      <blockquote>“perfect blend of clean and professional but tailored to compact and no clutter”</blockquote>
-    </article>
+      <!-- clean glass: jukebox -->
+      <section class="layer sheet-pos" id="L-jukebox" aria-label="Jukebox">
+        <div class="jb glass tilt-t">
+          <div class="t">Jukebox <span class="eq"><b></b><b></b><b></b><b></b></span></div>
+          <div class="seg" id="jbSeg"><button class="on" data-tab="queue">Queue</button><button data-tab="songs">Songs</button><button data-tab="requests">Requests</button></div>
+          <div class="list" id="jbList"></div>
+          <div class="prog"><b id="jbProg"></b></div>
+          <div class="btns"><button class="go" id="jbAdd">+ Add a song</button><button class="plain" id="jbSkip">Skip</button></div>
+        </div>
+      </section>
 
-    <article class="card">
-      <div class="head"><span class="role">Everything at once</span><h2>Your phone</h2></div>
-      <div class="stage"><div class="phone p"><div class="scene"></div><div class="ui">
-        <div class="device"><div class="screen">
-          <div class="top"><span>9:41 PM</span><span>Bar · 14 here</span></div>
-          <div class="note"><b>MAYA · just now</b>Saved you a stool by the piano</div>
-          <div class="np"><span class="art"></span><span class="s">Late Train Home<i>Jukebox · 2:41 left</i><span class="bars"><b></b><b></b><b></b><b></b><b></b></span></span></div>
-          <div class="apps">
-            <div><b style="background:linear-gradient(135deg,#f8bf68,#ec7f34)"></b>Jukebox</div>
-            <div class="badge"><b style="background:linear-gradient(135deg,#7bd08f,#2f8a55)"></b>Friends</div>
-            <div><b style="background:linear-gradient(135deg,#ff6fb8,#b0246c)"></b>Arcade</div>
-            <div><b style="background:linear-gradient(135deg,#ece2cc,#b9a582)"></b>Notes</div>
-            <div><b style="background:linear-gradient(135deg,#5fd0ff,#1f6fa8)"></b>Map</div>
-            <div><b style="background:linear-gradient(135deg,#8c8c96,#45454c)"></b>Settings</div>
-          </div>
-        </div></div>
+      <!-- glass strip: emotes -->
+      <section class="layer strip glass" id="L-emotes" aria-label="Emotes">
+        <button data-e="👋">👋</button><button data-e="🍻">🍻</button><button data-e="💃">💃</button><button data-e="👏">👏</button><button data-e="😂">😂</button>
+      </section>
+      <div class="strip-tag">EMOTES</div>
+
+      <!-- the phone -->
+      <section class="layer phone-l" id="L-phone" aria-label="Your phone">
+        <div class="device"><div class="screen" id="phone"></div></div>
         <div class="thumb"></div>
-      </div></div></div>
-      <p>Your avatar pulls out a phone and the full menu lives on it, in the room, held at an angle. Notes drop in, the song's bars bounce, and the clock and the head count are live.</p>
-      <blockquote>“ABSOLUTELY SICK… the details on the screen make it feel so alive”</blockquote>
-    </article>
+      </section>
 
-    <article class="card">
-      <div class="head"><span class="role">Everyday panels</span><h2>Clean glass</h2></div>
-      <div class="stage"><div class="phone e"><div class="scene"></div><div class="ui">
-        <div class="panel glass tilt">
-          <div class="t">Jukebox <span class="bars"><b></b><b></b><b></b><b></b></span></div>
-          <div class="seg"><b class="on">Queue</b><b>Songs</b><b>Requests</b></div>
-          <div>
-            <div class="row"><span>Late Train Home<i>Playing · Maya</i></span><span class="tm">2:41</span></div>
-            <div class="prog"></div>
-            <div class="row"><span>Neon Rain<i>Next · you</i></span><span class="tm">3:12</span></div>
-            <div class="row"><span>Slow Pour<i>Leo</i></span><span class="tm">4:05</span></div>
-          </div>
-          <div class="go">+ Add a song</div>
+      <!-- the card -->
+      <section class="layer card-l" id="L-note" aria-label="Note">
+        <div class="tilt-t">
+          <div class="tabs" id="noteTabs"><button class="on" data-tab="note">NOTE</button><button data-tab="replies">REPLIES</button><button data-tab="board">BOARD</button></div>
+          <div class="paper" id="paper"></div>
         </div>
-        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
-      </div></div></div>
-      <p>Menus you use every day (the jukebox, seats, settings) are today's clean Ember panel, a little tilted, with the bar showing above it.</p>
-      <blockquote>“very clean and creates a lot of usable space”</blockquote>
-    </article>
+      </section>
 
-    <article class="card">
-      <div class="head"><span class="role">Notes you pick up</span><h2>The card</h2></div>
-      <div class="stage"><div class="phone n"><div class="scene"></div><div class="ui">
-        <div class="tilt">
-          <div class="tabs"><b class="on">NOTE</b><b>REPLIES</b><b>BOARD</b></div>
-          <div class="paper">
-            <span class="stamp">NEW</span>
-            <div class="t">Back at ten</div>
-            <div class="from">LEFT ON THE COUNTER · LEO · 9:12 PM</div>
-            <div class="msg">Keep my stool warm. Loser of the next darts game buys the first round.</div>
-            <div class="keys"><span class="key go">REPLY</span><span class="key">PUT DOWN</span></div>
-          </div>
-        </div>
-        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
-      </div></div></div>
-      <p>Tap a note, a menu or a flyer lying in the bar and you pick it up as a paper card. Its tabs hold whatever it needs: the note, its replies, the board it came from.</p>
-      <blockquote>“a pickup and view note… tabs create space for anything we need”</blockquote>
-    </article>
+      <!-- the game tablet -->
+      <section class="layer arc tilt-t" id="L-arcade" aria-label="Arcade">
+        <div class="t">ARC<span class="f">A</span>DE</div>
+        <div class="games" id="games"></div>
+        <button class="play" id="play">Play darts</button>
+      </section>
 
-    <article class="card">
-      <div class="head"><span class="role">The arcade</span><h2>The game tablet</h2></div>
-      <div class="stage"><div class="phone a"><div class="scene arcade"></div><div class="ui">
-        <div class="tab tilt">
-          <div class="t">ARC<span class="f">A</span>DE</div>
-          <div class="games">
-            <div class="g on">Darts<i><span class="live"></span>2 playing</i></div>
-            <div class="g">Chess<i>1 waiting</i></div>
-            <div class="g">4K Mania<i>best 98.2%</i></div>
-            <div class="g">Racing<i>4 seats</i></div>
-            <div class="g wide">Piano<i>free play · anyone can join</i></div>
-          </div>
-          <div class="play">Play darts</div>
-        </div>
-        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
-      </div></div></div>
-      <p>The arcade's tablet: every game in one neon screen, with who's playing right now. Neon is only used here, so walking into the arcade feels like a different room.</p>
-      <blockquote>“would pair great with the arcade… a main tablet that lets you select any game”</blockquote>
-    </article>
+      <!-- the poster -->
+      <section class="layer pst tilt-t" id="L-news" aria-label="Tonight">
+        <div id="posterBody" style="display:contents"></div>
+      </section>
 
-    <article class="card">
-      <div class="head"><span class="role">Big news</span><h2>The poster</h2></div>
-      <div class="stage"><div class="phone k"><div class="scene"></div><div class="ui">
-        <div class="sheet tilt">
-          <div class="meta"><span>TONIGHT</span><span>BACK ROOM</span></div>
-          <div class="big">Darts Night</div>
-          <div class="when">9:30 PM · 8 spots left</div>
-          <div class="row"><span>Winner</span><span>gets the gold dart</span></div>
-          <div class="row"><span>Signed up</span><span>Maya, Leo, +3</span></div>
-          <div class="keys"><div class="key">I'm in →</div><div class="key ghost">Later</div></div>
-        </div>
-        <button class="hub small" type="button" tabindex="-1" aria-hidden="true">MENU</button>
-      </div></div></div>
-      <p>Events and announcements: huge words first, then when and where, then the details, split by clean lines. You know what's going on in one look.</p>
-      <blockquote>“controlling the size of the font for specific reading order and attention grabber”</blockquote>
-    </article>
-
+      <div class="wheel-label" id="wheelLabel"><small id="wlSmall">TAP ONE</small><span id="wlBig">Your menu</span><span class="hint" id="wlHint">Hold the button for everything</span></div>
+      <div class="wheel" id="wheel"></div>
+      <button class="hub" id="hub" type="button" aria-label="Menu">MENU</button>
+      <div class="toast glass" id="toast"></div>
+    </div>
   </div>
 
-  <footer>
-    <p><strong>From here:</strong> tell me what to change in any part, in any words. I change this page and it stays at the same link.</p>
-    <p>When you're happy, say "use it" and it becomes a job in the plan: the theme in the UI Editor first, then the bar's menus one part at a time.</p>
-  </footer>
+  <aside id="tune" aria-label="Tune the theme">
+    <div class="t-head">
+      <div><h2>Tune</h2><p>Changes show at once. Only on this phone; nothing is sent anywhere.</p></div>
+      <button id="tuneClose" type="button">Done</button>
+    </div>
+    <div class="t-body" id="tuneBody"></div>
+  </aside>
 </div>
 
 <script>
 (function () {
-  var phone = document.getElementById('wheelPhone');
-  var hub = document.getElementById('hub');
-  hub.addEventListener('click', function () {
-    var closed = phone.classList.toggle('closed');
-    hub.setAttribute('aria-pressed', String(!closed));
-    hub.textContent = closed ? 'MENU' : '✕';
+  'use strict';
+  var app = document.getElementById('app');
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'bar3d-theme-lab-v1';
+
+  /* ---------------- the theme's settings ---------------- */
+  var FONTS = {
+    'Archivo': '"Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif',
+    'Martian Mono': '"Martian Mono", ui-monospace, Menlo, monospace',
+    'Limelight': '"Limelight", Georgia, serif',
+    'Righteous': '"Righteous", "Archivo", sans-serif',
+    'Unbounded': '"Unbounded", "Archivo", sans-serif',
+    'iPhone (system)': '-apple-system, "Helvetica Neue", Arial, sans-serif',
+    'Typewriter (system)': '"Courier New", Courier, monospace',
+    'Serif (system)': 'Georgia, "Times New Roman", serif'
+  };
+  var SECTIONS = [
+    { h: 'Everywhere', items: [
+      { k: 'accent', t: 'color', l: 'Main colour', d: '#f0a24a', note: 'Buttons, the playing song, the wheel.' },
+      { k: 'tilt', t: 'range', l: 'Sideways tilt', d: 9, min: 0, max: 22, step: 1, u: '°' },
+      { k: 'scale', t: 'range', l: 'Text size', d: 1, min: .8, max: 1.35, step: .05, u: '×' },
+      { k: 'r', t: 'range', l: 'Corner roundness', d: 22, min: 0, max: 40, step: 1, u: 'px' },
+      { k: 'barLight', t: 'range', l: 'Bar brightness', d: 1, min: .4, max: 1.5, step: .05, u: '×' },
+      { k: 'fText', t: 'font', l: 'Text font', d: 'Archivo' },
+      { k: 'fSmall', t: 'font', l: 'Small print font', d: 'Martian Mono' }
+    ]},
+    { h: 'Glass (panels and small menus)', items: [
+      { k: 'glassA', t: 'range', l: 'Glass thickness', d: .13, min: 0, max: .45, step: .01, u: '' },
+      { k: 'blur', t: 'range', l: 'Blur behind glass', d: 18, min: 0, max: 40, step: 1, u: 'px' }
+    ]},
+    { h: 'Motion', items: [
+      { k: 'speed', t: 'range', l: 'Animation speed', d: 1, min: .3, max: 2.5, step: .1, u: '×', note: 'Higher is faster.' },
+      { k: 'bounce', t: 'range', l: 'Bounce', d: .6, min: 0, max: 1.2, step: .05, u: '' },
+      { k: 'wheelR', t: 'range', l: 'Wheel size', d: 140, min: 105, max: 185, step: 5, u: 'px' },
+      { k: 'holdMs', t: 'range', l: 'Hold for everything', d: 380, min: 200, max: 800, step: 20, u: ' ms', note: 'How long to hold the menu button before the groups open.' },
+      { k: 'alive', t: 'check', l: 'Live details', d: true, note: 'Moving lights, songs playing, notes arriving.' }
+    ]},
+    { h: 'Notes (the card)', items: [
+      { k: 'paper', t: 'color', l: 'Paper', d: '#ece2cc' },
+      { k: 'print', t: 'color', l: 'Ink', d: '#2a1d14' },
+      { k: 'stamp', t: 'color', l: 'Stamp', d: '#c33d2e' },
+      { k: 'fPaper', t: 'font', l: 'Note title font', d: 'Limelight' }
+    ]},
+    { h: 'Arcade (the tablet)', items: [
+      { k: 'neonA', t: 'color', l: 'Neon 1', d: '#ff4fa8' },
+      { k: 'neonB', t: 'color', l: 'Neon 2', d: '#35c8ff' },
+      { k: 'fNeon', t: 'font', l: 'Arcade font', d: 'Righteous' }
+    ]},
+    { h: 'News (the poster)', items: [
+      { k: 'posterBg', t: 'color', l: 'Poster colour', d: '#8a1218' },
+      { k: 'posterInk', t: 'color', l: 'Highlight', d: '#ffd23f' },
+      { k: 'fPoster', t: 'font', l: 'Poster font', d: 'Unbounded' }
+    ]}
+  ];
+  var DEFAULTS = {};
+  SECTIONS.forEach(function (s) { s.items.forEach(function (it) { DEFAULTS[it.k] = it.d; }); });
+  var S = Object.assign({}, DEFAULTS);
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved) Object.keys(DEFAULTS).forEach(function (k) { if (k in saved) S[k] = saved[k]; }); } catch (e) {}
+
+  function apply() {
+    var st = app.style;
+    st.setProperty('--accent', S.accent);
+    st.setProperty('--tilt', S.tilt);
+    st.setProperty('--scale', S.scale);
+    st.setProperty('--r', S.r + 'px');
+    st.setProperty('--bar-light', S.barLight);
+    st.setProperty('--glass-a', S.glassA);
+    st.setProperty('--blur', S.blur + 'px');
+    st.setProperty('--dur', (1 / S.speed).toFixed(3));
+    st.setProperty('--ease', 'cubic-bezier(.3,' + (1 + S.bounce * .9).toFixed(2) + ',.55,1)');
+    st.setProperty('--paper', S.paper); st.setProperty('--print', S.print); st.setProperty('--stamp', S.stamp);
+    st.setProperty('--neon-a', S.neonA); st.setProperty('--neon-b', S.neonB);
+    st.setProperty('--poster-bg', S.posterBg); st.setProperty('--poster-ink', S.posterInk);
+    st.setProperty('--f-text', FONTS[S.fText] || FONTS.Archivo);
+    st.setProperty('--f-small', FONTS[S.fSmall] || FONTS['Martian Mono']);
+    st.setProperty('--f-paper', FONTS[S.fPaper] || FONTS.Limelight);
+    st.setProperty('--f-neon', FONTS[S.fNeon] || FONTS.Righteous);
+    st.setProperty('--f-poster', FONTS[S.fPoster] || FONTS.Unbounded);
+    app.classList.toggle('alive', !!S.alive);
+    placeWheel();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  /* ---------------- the Tune panel ---------------- */
+  var body = $('tuneBody');
+  function el(tag, attrs, html) { var e = document.createElement(tag); if (attrs) Object.keys(attrs).forEach(function (a) { e.setAttribute(a, attrs[a]); }); if (html != null) e.innerHTML = html; return e; }
+  function fmt(it, v) { return (it.step < 1 ? Number(v).toFixed(2).replace(/0$/, '') : v) + (it.u || ''); }
+  var inputs = {};
+  function buildTune() {
+    body.innerHTML = '';
+    var jump = el('div', { class: 't-sec' });
+    jump.appendChild(el('h3', null, 'Open a part'));
+    var jr = el('div', { class: 'jump' });
+    [['wheel', 'Menu wheel'], ['all', 'Everything (hold)'], ['phone', 'Phone'], ['jukebox', 'Jukebox'], ['emotes', 'Emotes'], ['note', 'Note card'], ['arcade', 'Arcade'], ['news', 'Poster']].forEach(function (p) {
+      var b = el('button', { type: 'button' }, p[1]);
+      b.addEventListener('click', function () { if (window.innerWidth < 820) closeTune(); setTimeout(function () { p[0] === 'wheel' ? (closeLayer(), openWheel('quick')) : p[0] === 'all' ? (closeLayer(), openWheel('all')) : open(p[0]); }, window.innerWidth < 820 ? 250 : 0); });
+      jr.appendChild(b);
+    });
+    jump.appendChild(jr); body.appendChild(jump);
+
+    SECTIONS.forEach(function (sec) {
+      var box = el('div', { class: 't-sec' });
+      box.appendChild(el('h3', null, sec.h));
+      sec.items.forEach(function (it) {
+        var row = el('div', { class: 'ctl' });
+        var id = 'tune-' + it.k;
+        row.appendChild(el('label', { for: id }, it.l));
+        var inp, out;
+        if (it.t === 'range') {
+          out = el('output', { for: id }, fmt(it, S[it.k]));
+          row.appendChild(out);
+          inp = el('input', { type: 'range', id: id, min: it.min, max: it.max, step: it.step });
+          inp.value = S[it.k];
+          inp.addEventListener('input', function () { S[it.k] = Number(inp.value); out.textContent = fmt(it, inp.value); apply(); save(); });
+        } else if (it.t === 'color') {
+          inp = el('input', { type: 'color', id: id }); inp.value = S[it.k];
+          inp.addEventListener('input', function () { S[it.k] = inp.value; apply(); save(); });
+        } else if (it.t === 'font') {
+          inp = el('select', { id: id });
+          Object.keys(FONTS).forEach(function (f) { var o = el('option', { value: f }, f); inp.appendChild(o); });
+          inp.value = S[it.k];
+          inp.addEventListener('change', function () { S[it.k] = inp.value; apply(); save(); });
+        } else if (it.t === 'check') {
+          inp = el('input', { type: 'checkbox', id: id }); inp.checked = !!S[it.k];
+          inp.addEventListener('change', function () { S[it.k] = inp.checked; apply(); save(); });
+        }
+        row.appendChild(inp);
+        if (it.note) row.appendChild(el('div', { class: 'note' }, it.note));
+        inputs[it.k] = { inp: inp, out: out, it: it };
+        box.appendChild(row);
+      });
+      body.appendChild(box);
+    });
+
+    var keep = el('div', { class: 't-sec' });
+    keep.appendChild(el('h3', null, 'Keep your settings'));
+    keep.appendChild(el('div', { class: 'ctl' }, '<div class="note" style="margin:0">They stay on this phone. To send them to Claude, tap Copy and paste them in the chat.</div>'));
+    var acts = el('div', { class: 't-actions' });
+    var copy = el('button', { type: 'button', class: 'hi' }, 'Copy my settings');
+    var reset = el('button', { type: 'button' }, 'Reset all');
+    var paste = el('button', { type: 'button' }, 'Use pasted settings');
+    acts.appendChild(copy); acts.appendChild(reset); acts.appendChild(paste);
+    keep.appendChild(acts);
+    var box = el('textarea', { id: 'pasteBox', placeholder: 'Paste settings here, then tap "Use pasted settings".', 'aria-label': 'Paste settings' });
+    keep.appendChild(box);
+    var msg = el('div', { class: 't-msg', 'aria-live': 'polite' });
+    keep.appendChild(msg);
+    body.appendChild(keep);
+
+    var text = function () { return 'Bar3D theme settings: ' + JSON.stringify(S); };
+    copy.addEventListener('click', function () {
+      var t = text();
+      try {
+        navigator.clipboard.writeText(t).then(function () { msg.textContent = 'Copied. Paste it in the chat.'; }, function () { box.value = t; box.select(); msg.textContent = 'Select the text above and copy it.'; });
+      } catch (e) { box.value = t; box.select(); msg.textContent = 'Select the text above and copy it.'; }
+    });
+    var resetArmed = false;
+    reset.addEventListener('click', function () {
+      if (!resetArmed) { resetArmed = true; reset.textContent = 'Tap again to reset'; setTimeout(function () { resetArmed = false; reset.textContent = 'Reset all'; }, 3000); return; }
+      S = Object.assign({}, DEFAULTS); save(); apply(); buildTune(); $('tuneBody').querySelector('.t-msg').textContent = 'Back to the start.';
+    });
+    paste.addEventListener('click', function () {
+      var raw = box.value, i = raw.indexOf('{');
+      try { var o = JSON.parse(raw.slice(i)); Object.keys(DEFAULTS).forEach(function (k) { if (k in o) S[k] = o[k]; }); save(); apply(); buildTune(); $('tuneBody').querySelector('.t-msg').textContent = 'Settings used.'; }
+      catch (e) { msg.textContent = 'Those aren\'t settings from this page. Copy them again and paste the whole text.'; }
+    });
+  }
+  function openTune() { $('tune').classList.add('open'); }
+  function closeTune() { $('tune').classList.remove('open'); }
+  $('tuneBtn').addEventListener('click', openTune);
+  $('tuneClose').addEventListener('click', closeTune);
+
+  /* ---------------- the bar's live state ---------------- */
+  var songs = [
+    { t: 'Late Train Home', by: 'Maya', len: 221 },
+    { t: 'Neon Rain', by: 'you', len: 192 },
+    { t: 'Slow Pour', by: 'Leo', len: 245 }
+  ];
+  var library = [['Blue Hour', 204], ['Paper Lanterns', 187], ['Last Call Waltz', 233], ['Night Bus', 176], ['Copper Sky', 214], ['Velvet Room', 198]];
+  var requests = [{ who: 'Maya', t: 'Copper Sky', len: 214 }, { who: 'Sam', t: 'Night Bus', len: 176 }];
+  var elapsed = 80, here = 14, sitting = false, jbTab = 'queue';
+  var notes = [
+    { title: 'Back at ten', from: 'Leo', time: '9:12 PM', msg: 'Keep my stool warm. Loser of the next darts game buys the first round.', replies: [['Maya', 'Deal. Bring your gold dart.']], fresh: true },
+    { title: 'Piano at 11', from: 'Maya', time: '9:40 PM', msg: 'Anyone up for duets later? I know three songs and a half.', replies: [] },
+    { title: 'Lost: one dart', from: 'Sam', time: '8:55 PM', msg: 'Left it near the oche. Finder keeps the glory.', replies: [['Leo', 'It\'s mine now.']] }
+  ];
+  var noteIdx = 0, noteTab = 'note', replying = false;
+  var games = [
+    { n: 'Darts', s: function () { return '<span class="live"></span>' + dartsPlaying + ' playing'; } },
+    { n: 'Chess', s: function () { return '1 waiting'; } },
+    { n: '4K Mania', s: function () { return 'best 98.2%'; } },
+    { n: 'Racing', s: function () { return '4 seats'; } },
+    { n: 'Piano', s: function () { return 'free play · anyone can join'; }, wide: true }
+  ];
+  var dartsPlaying = 2, gameSel = 0;
+  var events = [
+    { meta: ['TONIGHT', 'BACK ROOM'], big: 'Darts Night', when: '9:30 PM · 8 spots', rows: [['Winner', 'gets the gold dart'], ['Signed up', null]], people: ['Maya', 'Leo', 'Sam', 'Ana', 'Kai'] },
+    { meta: ['FRIDAY', 'THE STAGE'], big: 'Open Mic', when: '10 PM · bring a song', rows: [['Host', 'Maya on piano'], ['Signed up', null]], people: ['Leo', 'Ana'] }
+  ];
+  var evIdx = 0, joined = [false, false];
+  var friends = [['Maya', 'at the piano', true], ['Leo', 'playing darts', true], ['Sam', 'in the arcade', true], ['Ana', 'away', false], ['Kai', 'away', false]];
+  var phoneView = 'home', lastPhoneNote = null;
+
+  /* ---------------- layers ---------------- */
+  var current = null;
+  function open(name) {
+    closeWheel(true);
+    if (current && current !== name) $('L-' + current).classList.remove('open');
+    current = name;
+    if (name === 'jukebox') renderJukebox();
+    if (name === 'phone') { phoneView = 'home'; renderPhone(); }
+    if (name === 'note') { noteTab = 'note'; replying = false; renderNote(); }
+    if (name === 'arcade') renderArcade();
+    if (name === 'news') renderPoster();
+    $('L-' + name).classList.add('open');
+    $('shade').classList.toggle('on', name !== 'emotes');
+    setHub();
+  }
+  function closeLayer() {
+    if (current) $('L-' + current).classList.remove('open');
+    current = null; $('shade').classList.remove('on'); setHub();
+  }
+  var wheelOpen = false, mode = 'quick', openCat = -1;
+  // Tap: the quick actions. Hold: everything, in groups (J106.4).
+  var OPTS = [
+    { id: 'phone', l: 'Phone', s: 'everything' },
+    { id: 'emotes', l: 'Emotes', s: 'small menu' },
+    { id: 'sit', l: 'Sit', s: 'does it' },
+    { id: 'arcade', l: 'Arcade', s: 'tablet' },
+    { id: 'news', l: 'Tonight', s: 'events' }
+  ];
+  var CATS = [
+    { l: 'Social', ic: '☺', items: [['friends', 'Friends', '♥'], ['emotes', 'Emotes', '✋'], ['voice', 'Voice', '◉'], ['note', 'Notes', '✎']] },
+    { l: 'Play', ic: '◆', items: [['arcade', 'Arcade', '▶'], ['chess', 'Chess', '♞'], ['piano', 'Piano', '♪'], ['darts', 'Darts', '◎'], ['racing', 'Racing', '⚑']] },
+    { l: 'Bar', ic: '◒', items: [['jukebox', 'Jukebox', '♫'], ['drinks', 'Drinks', '▽'], ['sit', 'Sit', '⌂'], ['news', 'Tonight', '★']] },
+    { l: 'You', ic: '◍', items: [['phone', 'Phone', '▯'], ['avatar', 'Avatar', '☻'], ['tune', 'Settings', '⚙'], ['help', 'Help', '?']] }
+  ];
+  var wheel = $('wheel');
+  // A quarter circle up and to the left of the button: n buttons spread evenly.
+  function arc(n, R, i) { var a = n > 1 ? (i / (n - 1)) * Math.PI / 2 : Math.PI / 4; return [R * Math.sin(a), R * Math.cos(a)]; }
+  function opt(cls, html, i, d, data) {
+    var b = el('button', { type: 'button', class: 'opt' + (cls ? ' ' + cls : '') }, html);
+    b.style.setProperty('--i', i);
+    b.style.setProperty('--dx', d[0].toFixed(1) + 'px');
+    b.style.setProperty('--dy', d[1].toFixed(1) + 'px');
+    Object.keys(data).forEach(function (k) { b.dataset[k] = data[k]; });
+    wheel.appendChild(b);
+    return b;
+  }
+  function ring(R) {
+    var r = el('div', { class: 'ring' });
+    r.style.cssText = 'left:' + (-R) + 'px;top:' + (-R) + 'px;width:' + (2 * R) + 'px;height:' + (2 * R) + 'px';
+    wheel.appendChild(r);
+  }
+  function itemName(id, name) { return id === 'sit' && sitting ? 'Stand' : name; }
+  function buildWheel() {
+    wheel.innerHTML = '';
+    var R = S.wheelR;
+    if (mode === 'quick') {
+      OPTS.forEach(function (o, i) {
+        opt('', '<span>' + itemName(o.id, o.l) + '<small>' + o.s + '</small></span>', i, arc(OPTS.length, R, i), { id: o.id, name: itemName(o.id, o.l) });
+      });
+      return;
+    }
+    var Rc = R * .78;
+    CATS.forEach(function (c, i) {
+      opt('cat' + (i === openCat ? ' open-cat' : ''), '<span><span class="ic">' + c.ic + '</span>' + c.l + '</span>', i, arc(CATS.length, Rc, i), { cat: i, name: c.l });
+    });
+    if (openCat < 0) return;
+    var items = CATS[openCat].items, R2 = Rc + 84;
+    ring(R2);
+    items.forEach(function (it, j) {
+      opt('sub', '<span><span class="ic">' + it[2] + '</span>' + itemName(it[0], it[1]) + '</span>', j, arc(items.length, R2, j), { id: it[0], name: itemName(it[0], it[1]) });
+    });
+  }
+  function placeWheel() {
+    var was = wheel.classList.contains('open');
+    buildWheel();
+    $('wheelLabel').style.bottom = 'calc(' + (S.wheelR + 95 + (mode === 'all' && openCat >= 0 ? 40 : 0)) + 'px + env(safe-area-inset-bottom, 0px))';
+    if (was || wheelOpen) {
+      // New buttons spring out from the button: one frame closed, then open.
+      wheel.classList.remove('open');
+      void wheel.offsetWidth;
+      if (wheelOpen) wheel.classList.add('open');
+    }
+  }
+  function label(small, big, hint) { $('wlSmall').textContent = small; $('wlBig').textContent = big; $('wlHint').textContent = hint || ''; }
+  function openWheel(m) {
+    mode = m || 'quick'; openCat = -1; wheelOpen = true;
+    placeWheel();
+    if (mode === 'quick') label('TAP ONE', 'Your menu', 'Hold the button for everything');
+    else label('SLIDE TO A GROUP', 'Everything', 'Let go on a button to pick it');
+    $('wheelLabel').classList.add('on'); $('shade').classList.add('on'); app.classList.add('menu-up'); setHub();
+  }
+  function closeWheel(keepShade) {
+    wheelOpen = false; wheel.classList.remove('open'); $('wheelLabel').classList.remove('on'); app.classList.remove('menu-up');
+    if (!keepShade && !current) $('shade').classList.remove('on');
+    setHub();
+  }
+  function setHub() { $('hub').textContent = (wheelOpen || current) ? '✕' : 'MENU'; }
+  function showCat(i) {
+    if (i === openCat) return;
+    openCat = i;
+    // Keep the groups where they are; only the group's buttons spring out.
+    var keep = wheel.classList.contains('open');
+    buildWheel();
+    $('wheelLabel').style.bottom = 'calc(' + (S.wheelR + 135) + 'px + env(safe-area-inset-bottom, 0px))';
+    if (keep) {
+      [].forEach.call(wheel.querySelectorAll('.opt.sub'), function (b) {
+        b.style.transform = 'translate(0,0) scale(.3)'; b.style.opacity = '0';
+        requestAnimationFrame(function () { requestAnimationFrame(function () { b.style.transform = ''; b.style.opacity = ''; }); });
+      });
+    }
+    label(CATS[i].l.toUpperCase(), CATS[i].l, 'Slide onto one, then let go');
+  }
+  var TOASTS = { friends: 'Friends would open on your phone', voice: 'Voice chat would open', chess: 'Chess would open', piano: 'You\'d walk to the piano', darts: 'Darts would start', racing: 'A racing seat would open', drinks: 'The bartender would come over', avatar: 'Your avatar would open', help: 'Help would open' };
+  function pick(id, b) {
+    if (b) { b.classList.add('hot'); setTimeout(function () { b.classList.remove('hot'); }, 300); }
+    if (id === 'sit') {
+      sitting = !sitting; $('me').classList.toggle('sitting', sitting);
+      closeWheel(); toast(sitting ? 'You sat on a stool' : 'You stood up'); return;
+    }
+    if (id === 'tune') { closeWheel(); return openTune(); }
+    if (id === 'note') { noteIdx = 0; return open('note'); }
+    if (TOASTS[id]) { closeWheel(); return toast(TOASTS[id]); }
+    open(id);
+  }
+  wheel.addEventListener('click', function (e) {
+    var b = e.target.closest('.opt'); if (!b || dragged) return;
+    if (b.dataset.cat != null) return showCat(+b.dataset.cat);
+    pick(b.dataset.id, b);
   });
-  hub.textContent = '✕';
+
+  // The menu button. A tap opens the quick actions. Holding fills a ring
+  // around it, then everything opens in groups. Sliding the finger (straight
+  // off the button, or after holding) lights the button under it with a
+  // glow and says its name; letting go there picks it. Letting go on a
+  // group keeps it open to tap; letting go on nothing leaves the wheel open.
+  var hub = $('hub'), press = null, dragged = false, hot = null;
+  function under(x, y) {
+    var best = null, bd = 1e9;
+    [].forEach.call(wheel.querySelectorAll('.opt'), function (b) {
+      var r = b.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, d = Math.hypot(x - cx, y - cy);
+      if (d < r.width * .78 && d < bd) { bd = d; best = b; }
+    });
+    return best;
+  }
+  function setHot(b) {
+    if (hot === b) return;
+    if (hot) hot.classList.remove('hot');
+    hot = b;
+    if (!b) return;
+    b.classList.add('hot');
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    if (b.dataset.cat != null) showCat(+b.dataset.cat);
+    else label(mode === 'all' && openCat >= 0 ? CATS[openCat].l.toUpperCase() : 'LET GO TO PICK', b.dataset.name, '');
+  }
+  hub.addEventListener('pointerdown', function (e) {
+    if (current || wheelOpen) return;  // then a tap closes (the click below)
+    try { hub.setPointerCapture(e.pointerId); } catch (er) {}
+    press = { x: e.clientX, y: e.clientY, t: performance.now(), held: false, moved: false };
+    dragged = false;
+    hub.classList.add('holding');
+    var tick = function () {
+      if (!press || press.moved || press.held) return;
+      var k = Math.min(1, (performance.now() - press.t) / S.holdMs);
+      hub.style.setProperty('--hold', k.toFixed(3));
+      if (k < 1) return requestAnimationFrame(tick);
+      press.held = true; hub.classList.remove('holding');
+      openWheel('all');
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (er) {} }
+    };
+    requestAnimationFrame(tick);
+  });
+  hub.addEventListener('pointermove', function (e) {
+    if (!press) return;
+    if (!press.moved && !press.held && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 14) {
+      press.moved = true; hub.classList.remove('holding'); hub.style.setProperty('--hold', 0);
+      openWheel('quick');  // slid straight off the button: the quick actions, live under the finger
+    }
+    if (press.moved || press.held) { dragged = true; wheel.classList.add('dragging'); setHot(under(e.clientX, e.clientY)); }
+  });
+  function release() {
+    if (!press) return;
+    var p = press; press = null;
+    hub.classList.remove('holding'); hub.style.setProperty('--hold', 0);
+    wheel.classList.remove('dragging');
+    if (!p.moved && !p.held) { openWheel('quick'); return; }  // a tap
+    var b = hot; setHot(null);
+    if (b && b.dataset.id) pick(b.dataset.id, b);
+    setTimeout(function () { dragged = false; }, 60);
+  }
+  hub.addEventListener('pointerup', release);
+  hub.addEventListener('pointercancel', release);
+  hub.addEventListener('click', function () {
+    if (dragged || press) return;
+    if (current) closeLayer();
+    else if (wheelOpen && !justOpened()) closeWheel();
+  });
+  var openedAt = 0;
+  function justOpened() { return performance.now() - openedAt < 250; }
+  var _openWheel = openWheel;
+  openWheel = function (m) { openedAt = performance.now(); _openWheel(m); };
+  $('shade').addEventListener('click', function () { if (current) closeLayer(); else closeWheel(); });
+  $('chip').addEventListener('click', function () { open('jukebox'); });
+  $('floorNote').addEventListener('click', function () { var m = $('sel'); m.classList.add('locked'); setTimeout(function () { m.classList.remove('locked'); }, 500); noteIdx = 0; open('note'); });
+
+  var toastT;
+  function toast(t) { var e = $('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { e.classList.remove('show'); }, 2200); }
+  function mmss(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* jukebox */
+  function renderJukebox() {
+    [].forEach.call($('jbSeg').children, function (b) { b.classList.toggle('on', b.dataset.tab === jbTab); });
+    var L = $('jbList'), h = '';
+    if (jbTab === 'queue') {
+      songs.forEach(function (s, i) {
+        h += '<div class="row' + (i === 0 ? ' playing' : '') + '"><span>' + esc(s.t) + '<i>' + (i === 0 ? 'Playing · ' : i === 1 ? 'Next · ' : '') + esc(s.by) + '</i></span><span class="tm">' + (i === 0 ? mmss(s.len - elapsed) : mmss(s.len)) + '</span></div>';
+      });
+    } else if (jbTab === 'songs') {
+      library.forEach(function (s, i) { h += '<button class="row" data-add="' + i + '"><span>' + esc(s[0]) + '<i>' + mmss(s[1]) + '</i></span><span class="plus">+</span></button>'; });
+    } else {
+      if (!requests.length) h = '<div class="row"><span>No requests right now<i>When someone asks for a song, it shows here.</i></span></div>';
+      requests.forEach(function (r, i) { h += '<button class="row" data-req="' + i + '"><span>' + esc(r.t) + '<i>asked by ' + esc(r.who) + '</i></span><span class="plus">▶</span></button>'; });
+    }
+    L.innerHTML = h;
+    updateProg();
+  }
+  function updateProg() { var s = songs[0]; $('jbProg').style.width = (100 * elapsed / s.len).toFixed(1) + '%'; $('chipText').innerHTML = esc(s.t) + ' <i>· ' + esc(s.by) + '</i>'; }
+  $('jbSeg').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; jbTab = b.dataset.tab; renderJukebox(); });
+  $('jbList').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.add != null) { var s = library[+b.dataset.add]; songs.push({ t: s[0], by: 'you', len: s[1] }); toast('Added "' + s[0] + '" to the queue'); jbTab = 'queue'; renderJukebox(); }
+    if (b.dataset.req != null) { var r = requests.splice(+b.dataset.req, 1)[0]; songs.splice(1, 0, { t: r.t, by: r.who, len: r.len }); toast('"' + r.t + '" plays next'); renderJukebox(); }
+  });
+  $('jbAdd').addEventListener('click', function () { jbTab = 'songs'; renderJukebox(); });
+  function nextSong() { songs.push(songs.shift()); elapsed = 0; updateProg(); if (current === 'jukebox') renderJukebox(); if (current === 'phone' && phoneView === 'home') renderPhone(); }
+  $('jbSkip').addEventListener('click', function () { nextSong(); toast('Skipped: now "' + songs[0].t + '"'); });
+
+  /* emotes */
+  $('L-emotes').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var me = $('me'), bub = $('bubble');
+    bub.textContent = b.dataset.e; bub.classList.add('show');
+    me.classList.remove('waving'); void me.offsetWidth; me.classList.add('waving');
+    setTimeout(function () { bub.classList.remove('show'); me.classList.remove('waving'); }, 2200);
+    closeLayer();
+  });
+
+  /* the phone */
+  function clock() { var d = new Date(), h = d.getHours(), m = ('0' + d.getMinutes()).slice(-2); return ((h % 12) || 12) + ':' + m + (h < 12 ? ' AM' : ' PM'); }
+  var unread = 2;
+  function renderPhone(dropNote) {
+    var P = $('phone'), s = songs[0], h = '<div class="ph-top"><span id="phClock">' + clock() + '</span><span>Bar · <span id="phHere">' + here + '</span> here</span></div>';
+    if (phoneView === 'home') {
+      var n = lastPhoneNote || { who: 'Maya', text: 'Saved you a stool by the piano', when: 'just now' };
+      h += '<button class="ph-note' + (dropNote ? ' drop' : '') + '" id="phNote"><b>' + esc(n.who).toUpperCase() + ' · ' + esc(n.when) + '</b>' + esc(n.text) + '</button>';
+      h += '<button class="np" id="phNp"><span class="art"></span><span class="s">' + esc(s.t) + '<i>Jukebox · <span id="phLeft">' + mmss(s.len - elapsed) + '</span> left</i><span class="eq" style="margin-top:4px"><b></b><b></b><b></b><b></b></span></span></button>';
+      h += '<div class="apps">' +
+        app_('jukebox', 'Jukebox', 'linear-gradient(135deg,#f8bf68,#ec7f34)') +
+        app_('friends', 'Friends', 'linear-gradient(135deg,#7bd08f,#2f8a55)', 2) +
+        app_('arcade', 'Arcade', 'linear-gradient(135deg,#ff6fb8,#b0246c)') +
+        app_('notes', 'Notes', 'linear-gradient(135deg,#ece2cc,#b9a582)', unread) +
+        app_('news', 'Tonight', 'linear-gradient(135deg,#ff5a5a,#8a1218)') +
+        app_('tune', 'Tune', 'linear-gradient(135deg,#8c8c96,#45454c)') + '</div>';
+    } else if (phoneView === 'friends') {
+      h += '<button class="ph-back" data-go="home">‹ Back</button><div class="ph-h">Friends</div><div class="ph-list">';
+      friends.forEach(function (f) { h += '<button data-wave="' + esc(f[0]) + '"><span>' + esc(f[0]) + '<i>' + esc(f[1]) + '</i></span><span class="dot' + (f[2] ? '' : ' away') + '"></span></button>'; });
+      h += '</div><div style="margin-top:auto;font-size:9px;opacity:.6">Tap a friend to wave.</div>';
+    } else if (phoneView === 'notes') {
+      h += '<button class="ph-back" data-go="home">‹ Back</button><div class="ph-h">Notes</div><div class="ph-list">';
+      notes.forEach(function (n, i) { h += '<button data-note="' + i + '"><span>' + esc(n.title) + '<i>' + esc(n.from) + ' · ' + esc(n.time) + '</i></span><span>›</span></button>'; });
+      h += '</div>';
+    }
+    P.innerHTML = h;
+  }
+  function app_(id, name, bg, n) { return '<button data-app="' + id + '"' + (n ? ' class="badge"' : '') + '><b style="background:' + bg + '"' + (n ? ' data-n="' + n + '"' : '') + '></b>' + name + '</button>'; }
+  $('phone').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'phNp') return open('jukebox');
+    if (b.id === 'phNote') { noteIdx = 0; return open('note'); }
+    if (b.dataset.go) { phoneView = b.dataset.go; return renderPhone(); }
+    if (b.dataset.wave) return toast('You waved at ' + b.dataset.wave);
+    if (b.dataset.note != null) { noteIdx = +b.dataset.note; return open('note'); }
+    var a = b.dataset.app; if (!a) return;
+    if (a === 'friends' || a === 'notes') { phoneView = a; if (a === 'notes') unread = 0; return renderPhone(); }
+    if (a === 'tune') { closeLayer(); return openTune(); }
+    open(a);
+  });
+
+  /* the card */
+  function renderNote() {
+    var n = notes[noteIdx], P = $('paper'), h = '';
+    [].forEach.call($('noteTabs').children, function (b) { b.classList.toggle('on', b.dataset.tab === noteTab); });
+    if (n.fresh) h += '<span class="stamp">NEW</span>';
+    if (noteTab === 'note') {
+      h += '<div class="t">' + esc(n.title) + '</div><div class="from">Left on the counter · ' + esc(n.from) + ' · ' + esc(n.time) + '</div><div class="msg">' + esc(n.msg) + '</div>';
+      if (replying) h += '<textarea id="replyBox" placeholder="Write a reply…"></textarea><div class="pkeys"><button class="go-p" data-act="pin">Pin reply</button><button data-act="cancel">Cancel</button></div>';
+      else h += '<div class="pkeys" style="margin-top:auto"><button class="go-p" data-act="reply">Reply</button><button data-act="down">Put down</button></div>';
+    } else if (noteTab === 'replies') {
+      h += '<div class="t">Replies</div>';
+      if (!n.replies.length) h += '<div class="msg">No replies yet. Be the first.</div>';
+      n.replies.forEach(function (r) { h += '<div class="preply"><b>' + esc(r[0]) + ':</b> ' + esc(r[1]) + '</div>'; });
+      h += '<div class="pkeys" style="margin-top:auto"><button class="go-p" data-act="reply">Reply</button><button data-act="down">Put down</button></div>';
+    } else {
+      h += '<div class="t">The board</div>';
+      notes.forEach(function (o, i) { h += '<button class="pboard" data-open="' + i + '"><span>' + esc(o.title) + '</span><i>' + esc(o.from) + '</i></button>'; });
+    }
+    P.innerHTML = h;
+    var box = $('replyBox'); if (box) box.focus();
+  }
+  $('noteTabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; noteTab = b.dataset.tab; replying = false; renderNote(); });
+  $('paper').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var n = notes[noteIdx], act = b.dataset.act;
+    if (b.dataset.open != null) { noteIdx = +b.dataset.open; noteTab = 'note'; replying = false; return renderNote(); }
+    if (act === 'reply') { noteTab = 'note'; replying = true; return renderNote(); }
+    if (act === 'cancel') { replying = false; return renderNote(); }
+    if (act === 'pin') { var v = ($('replyBox').value || '').trim(); if (!v) { toast('Write something first'); return; } n.replies.push(['You', v]); n.fresh = false; replying = false; noteTab = 'replies'; toast('Reply pinned to the note'); return renderNote(); }
+    if (act === 'down') { n.fresh = false; closeLayer(); toast('You put the note down'); }
+  });
+
+  /* arcade */
+  function renderArcade() {
+    var h = '';
+    games.forEach(function (g, i) { h += '<button class="g' + (g.wide ? ' wide' : '') + (i === gameSel ? ' on' : '') + '" data-g="' + i + '">' + g.n + '<i>' + g.s() + '</i></button>'; });
+    $('games').innerHTML = h; $('play').textContent = 'Play ' + games[gameSel].n.toLowerCase();
+  }
+  $('games').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; gameSel = +b.dataset.g; renderArcade(); });
+  $('play').addEventListener('click', function () { toast(games[gameSel].n + ' would start here'); });
+
+  /* poster */
+  function renderPoster() {
+    var ev = events[evIdx], ppl = ev.people.slice(), h = '';
+    if (joined[evIdx]) ppl.unshift('you');
+    h += '<div class="meta"><span>' + ev.meta[0] + '</span><span>' + ev.meta[1] + '</span></div><div class="big">' + esc(ev.big) + '</div><div class="when">' + esc(ev.when) + '</div>';
+    ev.rows.forEach(function (r) { h += '<div class="prow"><span>' + esc(r[0]) + '</span><span>' + esc(r[1] || (ppl.slice(0, 3).join(', ') + (ppl.length > 3 ? ', +' + (ppl.length - 3) : ''))) + '</span></div>'; });
+    h += '<div class="pk"><button data-act="join">' + (joined[evIdx] ? 'You\'re in ✓' : 'I\'m in →') + '</button><button class="ghost" data-act="next">Next</button></div>';
+    h += '<div class="pager">' + events.map(function (_, i) { return '<b' + (i === evIdx ? ' class="on"' : '') + '></b>'; }).join('') + '</div>';
+    $('posterBody').innerHTML = h;
+  }
+  $('L-news').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.act === 'join') { joined[evIdx] = !joined[evIdx]; toast(joined[evIdx] ? 'You\'re signed up for ' + events[evIdx].big : 'You left ' + events[evIdx].big); }
+    if (b.dataset.act === 'next') evIdx = (evIdx + 1) % events.length;
+    renderPoster();
+  });
+
+  /* the live details */
+  var incoming = [['Leo', 'Darts in 5? I\'m warming up'], ['Sam', 'The racing rig is free'], ['Ana', 'On my way, order me a lemonade'], ['Maya', 'Request a song for me!']], inc = 0, tick = 0;
+  setInterval(function () {
+    if (!S.alive) return;
+    tick++;
+    elapsed++;
+    if (elapsed >= songs[0].len) nextSong(); else updateProg();
+    if (current === 'jukebox' && jbTab === 'queue') { var t = $('jbList').querySelector('.tm'); if (t) t.textContent = mmss(songs[0].len - elapsed); }
+    if (current === 'phone') { var c = $('phClock'); if (c) c.textContent = clock(); var l = $('phLeft'); if (l) l.textContent = mmss(songs[0].len - elapsed); }
+    if (tick % 6 === 0) { here = Math.max(9, Math.min(22, here + (Math.random() < .5 ? -1 : 1))); var ph = $('phHere'); if (ph) ph.textContent = here; }
+    if (tick % 9 === 0) { dartsPlaying = dartsPlaying === 2 ? 3 : 2; if (current === 'arcade') renderArcade(); }
+    if (tick % 25 === 0) {
+      var m = incoming[inc++ % incoming.length];
+      lastPhoneNote = { who: m[0], text: m[1], when: 'just now' }; unread++;
+      if (current === 'phone' && phoneView === 'home') renderPhone(true);
+      else if (!current) toast(m[0] + ': ' + m[1]);
+    }
+  }, 1000);
+
+  apply();
+  buildTune();
+  renderJukebox();
 })();
 </script>
+

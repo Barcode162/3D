@@ -18,7 +18,9 @@ changes the page at the same link.
   button), the glass strip (small menus), the phone (everything at once),
   clean glass (everyday panels), the card (notes you pick up), the game
   tablet (the arcade, neon), the poster (big news). Shared: one amber, a
-  slight sideways tilt, small live details. Page:
+  slight sideways tilt, small live details. Since J106.4: tap the menu
+  button for the quick actions, hold it for everything in groups (slide and
+  let go to pick), and a new selection marker in the bar. Page:
   https://claude.ai/artifact/Qf8ApZP9okCJ7GsgXBh26S
   (Earlier pages, the seven-way comparison and Coaster alone, are in this
   folder's history.)
