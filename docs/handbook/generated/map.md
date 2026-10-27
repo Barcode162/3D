@@ -74,13 +74,13 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 174 | JavaScript, Python, C++ | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 175 | JavaScript, Python, C++ | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 41 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 19 | JavaScript | not uploaded |
 | `tools/migrations/` | One-time conversions of the world files (kept as the record of what changed). | 3 | JavaScript, JSON | not uploaded |
 | `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 24 | C++, shell | not uploaded |
-| `tools/preflight/` | The preflight checklist (J112): one small rule file per check in rules/<area>/ (copy TEMPLATE.mjs), run by node tools/preflight.mjs before any test, build or push; a broken rule names itself, the spot and the fix. | 14 | JavaScript | not uploaded |
+| `tools/preflight/` | The preflight checklist (J112): one small rule file per check in rules/<area>/ (copy TEMPLATE.mjs), run by node tools/preflight.mjs before any test, build or push; a broken rule names itself, the spot and the fix. | 15 | JavaScript | not uploaded |
 | `ui/` | The look kit shared by the site, the tools and the bar's menus: looped.js and looped.css (the parts), screens, fonts, icons, the theme CSS. | 46 | JSON, fonts, text | hub.yml → home/ui |
 | `ui/fonts/` | The fonts (with their licences in ui/CREDITS.md). | 10 | fonts, text | hub.yml → home/ui |
 | `ui/system/` | The UI store's copy: themes, tokens, screens and parts, pulled from the UI Editor (never edited by hand). | 26 | JSON, pictures | hub.yml → home/ui |

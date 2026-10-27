@@ -2,7 +2,7 @@
   "id": "bar",
   "about": "The bar: every thing in it and where it sits. Parts are in the thing's own space (they turn with it), except floor rectangles (blocks, floors) and tap boxes, which keep the world's axes.",
   "kinds": ["kinds/bar.json"],
-  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.012, "beams": 0.014},
+  "air": {"ambient": [0.07, 0.05, 0.045], "fog": [0.025, 0.015, 0.015], "fogDensity": 0.008, "beams": 0.008},
   "spawn": {"at": [0.4, 1.65, 5.2], "yaw": 0},
   "lightGrid": {"min": [-12.5, 0, -16], "max": [9.5, 0, 8.5]},
   "rooms": [
@@ -45,7 +45,7 @@
       "id": "bottle-1",
       "kind": "bottle",
       "at": [-8.62, 1.13, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.974,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -53,7 +53,7 @@
       "id": "bottle-2",
       "kind": "bottle",
       "at": [-8.45, 1.13, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.006,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -61,7 +61,7 @@
       "id": "bottle-3",
       "kind": "bottle",
       "at": [-8.28, 1.13, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.029,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -69,7 +69,7 @@
       "id": "bottle-4",
       "kind": "bottle",
       "at": [-8.11, 1.13, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.991,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -77,7 +77,7 @@
       "id": "bottle-5",
       "kind": "bottle",
       "at": [-7.94, 1.13, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.003,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -85,7 +85,7 @@
       "id": "bottle-6",
       "kind": "bottle",
       "at": [-8.535, 1.215, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.992,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -93,7 +93,7 @@
       "id": "bottle-7",
       "kind": "bottle",
       "at": [-8.365, 1.215, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.014,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -101,7 +101,7 @@
       "id": "bottle-8",
       "kind": "bottle",
       "at": [-8.195, 1.215, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.011,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -109,7 +109,7 @@
       "id": "bottle-9",
       "kind": "bottle",
       "at": [-8.025, 1.215, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.006,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -117,7 +117,7 @@
       "id": "bottle-10",
       "kind": "bottle",
       "at": [-7.855, 1.215, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.029,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -125,7 +125,7 @@
       "id": "bottle-11",
       "kind": "bottle",
       "at": [-8.62, 1.3, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.012,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -133,7 +133,7 @@
       "id": "bottle-12",
       "kind": "bottle",
       "at": [-8.45, 1.3, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.991,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -141,7 +141,7 @@
       "id": "bottle-13",
       "kind": "bottle",
       "at": [-8.28, 1.3, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.993,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -149,7 +149,7 @@
       "id": "bottle-14",
       "kind": "bottle",
       "at": [-8.11, 1.3, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.008,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -157,7 +157,7 @@
       "id": "bottle-15",
       "kind": "bottle",
       "at": [-7.94, 1.3, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.012,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -165,7 +165,7 @@
       "id": "bottle-16",
       "kind": "bottle",
       "at": [-8.535, 1.385, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.983,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -173,7 +173,7 @@
       "id": "bottle-17",
       "kind": "bottle",
       "at": [-8.365, 1.385, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.019,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -181,7 +181,7 @@
       "id": "bottle-18",
       "kind": "bottle",
       "at": [-8.195, 1.385, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.997,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -189,7 +189,7 @@
       "id": "bottle-19",
       "kind": "bottle",
       "at": [-8.025, 1.385, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.016,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -197,7 +197,7 @@
       "id": "bottle-20",
       "kind": "bottle",
       "at": [-7.855, 1.385, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.975,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -205,7 +205,7 @@
       "id": "bottle-21",
       "kind": "bottle",
       "at": [-8.62, 1.47, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.989,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -213,7 +213,7 @@
       "id": "bottle-22",
       "kind": "bottle",
       "at": [-8.45, 1.47, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.971,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -221,7 +221,7 @@
       "id": "bottle-23",
       "kind": "bottle",
       "at": [-8.28, 1.47, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.995,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -229,7 +229,7 @@
       "id": "bottle-24",
       "kind": "bottle",
       "at": [-8.11, 1.47, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.985,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -237,7 +237,7 @@
       "id": "bottle-25",
       "kind": "bottle",
       "at": [-7.94, 1.47, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.991,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -245,7 +245,7 @@
       "id": "bottle-26",
       "kind": "bottle",
       "at": [-8.535, 1.555, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.983,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -253,7 +253,7 @@
       "id": "bottle-27",
       "kind": "bottle",
       "at": [-8.365, 1.555, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.021,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -261,7 +261,7 @@
       "id": "bottle-28",
       "kind": "bottle",
       "at": [-8.195, 1.555, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.008,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -269,7 +269,7 @@
       "id": "bottle-29",
       "kind": "bottle",
       "at": [-8.025, 1.555, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.991,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -277,15 +277,15 @@
       "id": "bottle-30",
       "kind": "bottle",
       "at": [-7.855, 1.555, -7.38],
-      "turn": 0.0,
-      "scale": 1.0,
+      "turn": 0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
     {
       "id": "bottle-31",
       "kind": "bottle",
       "at": [-8.62, 1.64, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.981,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -293,7 +293,7 @@
       "id": "bottle-32",
       "kind": "bottle",
       "at": [-8.45, 1.64, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.027,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -301,7 +301,7 @@
       "id": "bottle-33",
       "kind": "bottle",
       "at": [-8.28, 1.64, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.024,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -309,7 +309,7 @@
       "id": "bottle-34",
       "kind": "bottle",
       "at": [-8.11, 1.64, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.004,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -317,7 +317,7 @@
       "id": "bottle-35",
       "kind": "bottle",
       "at": [-7.94, 1.64, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.979,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -325,7 +325,7 @@
       "id": "bottle-36",
       "kind": "bottle",
       "at": [-8.535, 1.725, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.027,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -333,7 +333,7 @@
       "id": "bottle-37",
       "kind": "bottle",
       "at": [-8.365, 1.725, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.983,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -341,7 +341,7 @@
       "id": "bottle-38",
       "kind": "bottle",
       "at": [-8.195, 1.725, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.973,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -349,7 +349,7 @@
       "id": "bottle-39",
       "kind": "bottle",
       "at": [-8.025, 1.725, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.995,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -357,7 +357,7 @@
       "id": "bottle-40",
       "kind": "bottle",
       "at": [-7.855, 1.725, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.993,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -365,7 +365,7 @@
       "id": "bottle-41",
       "kind": "bottle",
       "at": [-8.62, 1.81, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.021,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -373,7 +373,7 @@
       "id": "bottle-42",
       "kind": "bottle",
       "at": [-8.45, 1.81, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.979,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -381,7 +381,7 @@
       "id": "bottle-43",
       "kind": "bottle",
       "at": [-8.28, 1.81, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.974,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -389,7 +389,7 @@
       "id": "bottle-44",
       "kind": "bottle",
       "at": [-8.11, 1.81, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.996,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -397,7 +397,7 @@
       "id": "bottle-45",
       "kind": "bottle",
       "at": [-7.94, 1.81, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.972,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -405,7 +405,7 @@
       "id": "bottle-46",
       "kind": "bottle",
       "at": [-8.535, 1.895, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.01,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -413,7 +413,7 @@
       "id": "bottle-47",
       "kind": "bottle",
       "at": [-8.365, 1.895, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.999,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -421,7 +421,7 @@
       "id": "bottle-48",
       "kind": "bottle",
       "at": [-8.195, 1.895, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.022,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -429,7 +429,7 @@
       "id": "bottle-49",
       "kind": "bottle",
       "at": [-8.025, 1.895, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.026,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -437,7 +437,7 @@
       "id": "bottle-50",
       "kind": "bottle",
       "at": [-7.855, 1.895, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.984,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -445,7 +445,7 @@
       "id": "bottle-51",
       "kind": "bottle",
       "at": [-8.62, 1.98, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.017,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -453,15 +453,15 @@
       "id": "bottle-52",
       "kind": "bottle",
       "at": [-8.45, 1.98, -7.38],
-      "turn": 0.0,
-      "scale": 1.0,
+      "turn": 0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
     {
       "id": "bottle-53",
       "kind": "bottle",
       "at": [-8.28, 1.98, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.027,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -469,7 +469,7 @@
       "id": "bottle-54",
       "kind": "bottle",
       "at": [-8.11, 1.98, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.975,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -477,7 +477,7 @@
       "id": "bottle-55",
       "kind": "bottle",
       "at": [-7.94, 1.98, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.997,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -485,7 +485,7 @@
       "id": "bottle-56",
       "kind": "bottle",
       "at": [-8.535, 2.065, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.029,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -493,7 +493,7 @@
       "id": "bottle-57",
       "kind": "bottle",
       "at": [-8.365, 2.065, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.973,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -501,7 +501,7 @@
       "id": "bottle-58",
       "kind": "bottle",
       "at": [-8.195, 2.065, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.988,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -509,7 +509,7 @@
       "id": "bottle-59",
       "kind": "bottle",
       "at": [-8.025, 2.065, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.989,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -517,7 +517,7 @@
       "id": "bottle-60",
       "kind": "bottle",
       "at": [-7.855, 2.065, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.992,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -525,7 +525,7 @@
       "id": "bottle-61",
       "kind": "bottle",
       "at": [-8.62, 2.15, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.03,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -533,7 +533,7 @@
       "id": "bottle-62",
       "kind": "bottle",
       "at": [-8.45, 2.15, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.981,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -541,7 +541,7 @@
       "id": "bottle-63",
       "kind": "bottle",
       "at": [-8.28, 2.15, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.019,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -549,7 +549,7 @@
       "id": "bottle-64",
       "kind": "bottle",
       "at": [-8.11, 2.15, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.986,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -557,7 +557,7 @@
       "id": "bottle-65",
       "kind": "bottle",
       "at": [-7.94, 2.15, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.022,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -565,7 +565,7 @@
       "id": "bottle-66",
       "kind": "bottle",
       "at": [-8.535, 2.235, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.979,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -573,7 +573,7 @@
       "id": "bottle-67",
       "kind": "bottle",
       "at": [-8.365, 2.235, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.976,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -581,7 +581,7 @@
       "id": "bottle-68",
       "kind": "bottle",
       "at": [-8.195, 2.235, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.029,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -589,7 +589,7 @@
       "id": "bottle-69",
       "kind": "bottle",
       "at": [-8.025, 2.235, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.971,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -597,7 +597,7 @@
       "id": "bottle-70",
       "kind": "bottle",
       "at": [-7.855, 2.235, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.009,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -605,7 +605,7 @@
       "id": "bottle-71",
       "kind": "bottle",
       "at": [-8.62, 2.32, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.982,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -613,7 +613,7 @@
       "id": "bottle-72",
       "kind": "bottle",
       "at": [-8.45, 2.32, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.005,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -621,7 +621,7 @@
       "id": "bottle-73",
       "kind": "bottle",
       "at": [-8.28, 2.32, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.989,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -629,7 +629,7 @@
       "id": "bottle-74",
       "kind": "bottle",
       "at": [-8.11, 2.32, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.007,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -637,7 +637,7 @@
       "id": "bottle-75",
       "kind": "bottle",
       "at": [-7.94, 2.32, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.011,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -645,7 +645,7 @@
       "id": "bottle-76",
       "kind": "bottle",
       "at": [-8.535, 2.405, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.015,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -653,7 +653,7 @@
       "id": "bottle-77",
       "kind": "bottle",
       "at": [-8.365, 2.405, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.977,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -661,7 +661,7 @@
       "id": "bottle-78",
       "kind": "bottle",
       "at": [-8.195, 2.405, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.02,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -669,7 +669,7 @@
       "id": "bottle-79",
       "kind": "bottle",
       "at": [-8.025, 2.405, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.984,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -677,7 +677,7 @@
       "id": "bottle-80",
       "kind": "bottle",
       "at": [-7.855, 2.405, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.006,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -685,7 +685,7 @@
       "id": "bottle-81",
       "kind": "bottle",
       "at": [-8.62, 2.49, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.019,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -693,7 +693,7 @@
       "id": "bottle-82",
       "kind": "bottle",
       "at": [-8.45, 2.49, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.016,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -701,7 +701,7 @@
       "id": "bottle-83",
       "kind": "bottle",
       "at": [-8.28, 2.49, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.002,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -709,15 +709,15 @@
       "id": "bottle-84",
       "kind": "bottle",
       "at": [-8.11, 2.49, -7.38],
-      "turn": 0.0,
-      "scale": 1.0,
+      "turn": 0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
     {
       "id": "bottle-85",
       "kind": "bottle",
       "at": [-7.94, 2.49, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 0.979,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -725,7 +725,7 @@
       "id": "bottle-86",
       "kind": "bottle",
       "at": [-8.535, 2.575, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.023,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -733,7 +733,7 @@
       "id": "bottle-87",
       "kind": "bottle",
       "at": [-8.365, 2.575, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.006,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -741,7 +741,7 @@
       "id": "bottle-88",
       "kind": "bottle",
       "at": [-8.195, 2.575, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.016,
       "parts": {"model": {"file": "bottle_wine_1_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -749,7 +749,7 @@
       "id": "bottle-89",
       "kind": "bottle",
       "at": [-8.025, 2.575, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.028,
       "parts": {"model": {"file": "bottle_wine_2_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -757,7 +757,7 @@
       "id": "bottle-90",
       "kind": "bottle",
       "at": [-7.855, 2.575, -7.38],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.012,
       "parts": {"model": {"file": "bottle_wine_3_tilt90_0.glb", "material": "bottle-glass"}}
     },
@@ -805,7 +805,7 @@
       "id": "bottle-96",
       "kind": "bottle",
       "at": [-6.7382, 1.3375, -7.2102],
-      "turn": -9.0,
+      "turn": -9,
       "scale": 1.02,
       "parts": {"model": {"file": "bottle_whiskey_2.glb", "material": "bottle-glass"}}
     },
@@ -1190,7 +1190,7 @@
       "kind": "bottle",
       "at": [-5.9342, 2.4175, -7.257],
       "turn": -0.12,
-      "scale": 1.0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_liqueur_1.glb", "material": "bottle-glass"}}
     },
     {
@@ -1262,7 +1262,7 @@
       "kind": "bottle",
       "at": [-5.6146, 2.7775, -7.2155],
       "turn": 2.41,
-      "scale": 1.0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_stubby_1.glb", "material": "bottle-glass"}}
     },
     {
@@ -1293,7 +1293,7 @@
       "id": "bottle-157",
       "kind": "bottle",
       "at": [-4.8311, 1.3375, -7.2302],
-      "turn": -4.0,
+      "turn": -4,
       "scale": 0.979,
       "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
     },
@@ -1542,7 +1542,7 @@
       "kind": "bottle",
       "at": [-3.2988, 1.606, -7.23],
       "turn": 2.33,
-      "scale": 1.0,
+      "scale": 1,
       "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
     },
     {
@@ -2189,7 +2189,7 @@
       "id": "bottle-269",
       "kind": "bottle",
       "at": [-0.0157, 2.4175, -7.2383],
-      "turn": 7.0,
+      "turn": 7,
       "scale": 1.01,
       "parts": {"model": {"file": "bottle_cognac_2.glb", "material": "bottle-glass"}}
     },
@@ -2237,7 +2237,7 @@
       "id": "bottle-275",
       "kind": "bottle",
       "at": [-0.55, 1.03, -7.125],
-      "turn": 0.0,
+      "turn": 0,
       "scale": 1.009,
       "parts": {"model": {"file": "bottle_champagne_1_tilt17_0.glb", "material": "bottle-glass"}}
     },
@@ -2283,70 +2283,70 @@
     {
       "id": "neon_game_on",
       "kind": "neon_sign",
-      "at": [9.0, 0, -2.0],
-      "turn": -90.0,
+      "at": [9, 0, -2],
+      "turn": -90,
       "parts": {"model": {"file": "neon_game_on.glb", "material": "glow-glass"}}
     },
     {
       "id": "neon_play",
       "kind": "neon_sign",
-      "at": [-3.8, 0, 7.0],
-      "turn": 180.0,
+      "at": [-3.8, 0, 7],
+      "turn": 180,
       "parts": {"model": {"file": "neon_play.glb", "material": "glow-glass"}}
     },
     {
       "id": "neon_note",
       "kind": "neon_sign",
-      "at": [-7.2, 0, 7.0],
+      "at": [-7.2, 0, 7],
       "turn": 180,
       "parts": {"model": {"file": "neon_note.glb", "material": "glow-glass"}}
     },
     {
       "id": "gallery_photo_1",
       "kind": "wall_prop",
-      "at": [-5.0, 2.3, 7.0],
+      "at": [-5, 2.3, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_1.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_2",
       "kind": "wall_prop",
-      "at": [-4.4, 2.55, 7.0],
+      "at": [-4.4, 2.55, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_2.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_3",
       "kind": "wall_prop",
-      "at": [-4.45, 2.05, 7.0],
+      "at": [-4.45, 2.05, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_3.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_4",
       "kind": "wall_prop",
-      "at": [-3.25, 2.5, 7.0],
+      "at": [-3.25, 2.5, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_4.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_5",
       "kind": "wall_prop",
-      "at": [-2.65, 2.15, 7.0],
+      "at": [-2.65, 2.15, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_5.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_6",
       "kind": "wall_prop",
-      "at": [-2.6, 2.75, 7.0],
+      "at": [-2.6, 2.75, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_6.glb", "material": "dark-wood"}}
     },
     {
       "id": "gallery_photo_7",
       "kind": "wall_prop",
-      "at": [-4.95, 1.6, 7.0],
+      "at": [-4.95, 1.6, 7],
       "turn": 180,
       "parts": {"model": {"file": "gallery_photo_7.glb", "material": "dark-wood"}}
     },
@@ -2365,7 +2365,7 @@
     {
       "id": "tin_sign_3",
       "kind": "wall_prop",
-      "at": [5.0, 2.2, -7.4],
+      "at": [5, 2.2, -7.4],
       "parts": {"model": {"file": "tin_sign_3.glb", "material": "black-steel"}}
     },
     {
@@ -2438,13 +2438,13 @@
     {
       "id": "floor_plant_1",
       "kind": "plant",
-      "at": [-1.85, 0.0, 6.7],
+      "at": [-1.85, 0, 6.7],
       "parts": {"model": {"file": "floor_plant_1.glb", "material": "brick"}}
     },
     {
       "id": "floor_plant_2",
       "kind": "plant",
-      "at": [5.35, 0.0, 6.65],
+      "at": [5.35, 0, 6.65],
       "parts": {"model": {"file": "floor_plant_2.glb", "material": "brick"}}
     },
     {
@@ -2456,7 +2456,7 @@
     {
       "id": "floor_plant_4",
       "kind": "plant",
-      "at": [8.55, 0.0, 6.6],
+      "at": [8.55, 0, 6.6],
       "parts": {"model": {"file": "floor_plant_4.glb", "material": "brick"}}
     },
     {
@@ -2475,56 +2475,56 @@
       "id": "corner_speaker-1",
       "kind": "wall_prop",
       "at": [-8.7, 3.35, -3.3],
-      "turn": 135.0,
+      "turn": 135,
       "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
     },
     {
       "id": "corner_speaker-2",
       "kind": "wall_prop",
       "at": [8.7, 3.35, 6.7],
-      "turn": -135.0,
+      "turn": -135,
       "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
     },
     {
       "id": "corner_speaker-3",
       "kind": "wall_prop",
       "at": [-8.7, 3.35, 6.7],
-      "turn": 135.0,
+      "turn": 135,
       "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
     },
     {
       "id": "corner_speaker-4",
       "kind": "wall_prop",
-      "at": [8.7, 3.35, -4.0],
-      "turn": -45.0,
+      "at": [8.7, 3.35, -4],
+      "turn": -45,
       "parts": {"model": {"file": "corner_speaker.glb", "material": "black-steel"}}
     },
     {
       "id": "wall_sconce-1",
       "kind": "glow_prop",
-      "at": [-1.0, 0, 7.0],
-      "turn": 180.0,
+      "at": [-1, 0, 7],
+      "turn": 180,
       "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
     },
     {
       "id": "wall_sconce-2",
       "kind": "glow_prop",
-      "at": [-5.45, 0, 7.0],
-      "turn": 180.0,
+      "at": [-5.45, 0, 7],
+      "turn": 180,
       "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
     },
     {
       "id": "wall_sconce-3",
       "kind": "glow_prop",
-      "at": [-9.0, 0, -4.6],
-      "turn": 90.0,
+      "at": [-9, 0, -4.6],
+      "turn": 90,
       "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
     },
     {
       "id": "wall_sconce-4",
       "kind": "glow_prop",
-      "at": [-9.0, 0, 3.15],
-      "turn": 90.0,
+      "at": [-9, 0, 3.15],
+      "turn": 90,
       "parts": {"model": {"file": "wall_sconce.glb", "material": "brass"}}
     },
     {
@@ -2536,66 +2536,66 @@
     {
       "id": "fire_extinguisher-2",
       "kind": "wall_prop",
-      "at": [-5.6, 0, 7.0],
-      "turn": 180.0,
+      "at": [-5.6, 0, 7],
+      "turn": 180,
       "parts": {"model": {"file": "fire_extinguisher.glb", "material": "black-steel"}}
     },
     {
       "id": "smoke_detector-1",
       "kind": "wall_prop",
-      "at": [-4.0, 4.0, 0.0],
+      "at": [-4, 4, 0],
       "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
     },
     {
       "id": "smoke_detector-2",
       "kind": "wall_prop",
-      "at": [3.0, 4.0, 3.0],
+      "at": [3, 4, 3],
       "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
     },
     {
       "id": "smoke_detector-3",
       "kind": "wall_prop",
-      "at": [-6.0, 4.0, 5.0],
+      "at": [-6, 4, 5],
       "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
     },
     {
       "id": "smoke_detector-4",
       "kind": "wall_prop",
-      "at": [4.0, 4.0, -2.0],
+      "at": [4, 4, -2],
       "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
     },
     {
       "id": "smoke_detector-5",
       "kind": "wall_prop",
-      "at": [-1.0, 4.0, 5.5],
+      "at": [-1, 4, 5.5],
       "parts": {"model": {"file": "smoke_detector.glb", "material": "lacquer"}}
     },
     {
       "id": "wall_switch-1",
       "kind": "wall_prop",
-      "at": [2.2, 1.25, 7.0],
-      "turn": 180.0,
+      "at": [2.2, 1.25, 7],
+      "turn": 180,
       "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
     },
     {
       "id": "wall_switch-2",
       "kind": "wall_prop",
-      "at": [4.35, 0.35, 7.0],
-      "turn": 180.0,
+      "at": [4.35, 0.35, 7],
+      "turn": 180,
       "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
     },
     {
       "id": "wall_switch-3",
       "kind": "wall_prop",
-      "at": [9.0, 1.25, 0.7],
-      "turn": -90.0,
+      "at": [9, 1.25, 0.7],
+      "turn": -90,
       "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
     },
     {
       "id": "wall_switch-4",
       "kind": "wall_prop",
-      "at": [-5.6, 0.35, 7.0],
-      "turn": 180.0,
+      "at": [-5.6, 0.35, 7],
+      "turn": 180,
       "parts": {"model": {"file": "wall_switch.glb", "material": "lacquer"}}
     },
     {
@@ -2607,7 +2607,7 @@
     {
       "id": "coat_rack",
       "kind": "wall_prop",
-      "at": [3.925, 1.75, 7.0],
+      "at": [3.925, 1.75, 7],
       "turn": 180,
       "parts": {"model": {"file": "coat_rack.glb", "material": "dark-wood"}}
     },
@@ -2626,13 +2626,13 @@
     {
       "id": "beer_crate-1",
       "kind": "wall_prop",
-      "at": [4.95, 0.0, -7.1],
+      "at": [4.95, 0, -7.1],
       "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
     },
     {
       "id": "beer_crate-2",
       "kind": "wall_prop",
-      "at": [5.4, 0.0, -7.08],
+      "at": [5.4, 0, -7.08],
       "turn": 2.865,
       "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
     },
@@ -2646,7 +2646,7 @@
     {
       "id": "beer_crate-4",
       "kind": "wall_prop",
-      "at": [5.65, 0.0, -6.65],
+      "at": [5.65, 0, -6.65],
       "turn": 17.189,
       "parts": {"model": {"file": "beer_crate.glb", "material": "lacquer"}}
     },
@@ -2679,104 +2679,104 @@
       "id": "drink-1",
       "kind": "glass",
       "at": [-6.75, 0.45, 1.22],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_rocks_whiskey_ice.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-2",
       "kind": "glass",
       "at": [-7.15, 0.45, 0.38],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_snifter_whiskey.glb", "material": "bottle-glass"}}
     },
     {
       "id": "table_bottle-3",
       "kind": "bottle",
       "at": [-6.93, 0.45, 1.28],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "bottle_square_1.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-4",
       "kind": "glass",
       "at": [-5.9, 0.565, 2.7],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_wine_red_wine.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-5",
       "kind": "glass",
       "at": [-0.05, 0.565, 7.15],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_coupe_pink.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-6",
       "kind": "glass",
       "at": [-0.35, 0.565, 7.35],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_wine_white_wine.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-7",
       "kind": "glass",
       "at": [-6.6587, 1.08, -4.6834],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_coupe_pink.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-8",
       "kind": "glass",
       "at": [-6.0704, 1.08, -4.5354],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_pint_beer.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-9",
       "kind": "glass",
       "at": [-4.9766, 1.08, -4.3373],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_wine_red_wine.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-10",
       "kind": "glass",
       "at": [-4.2728, 1.08, -4.261],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_martini_blue.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-11",
       "kind": "glass",
       "at": [-2.808, 1.08, -4.2277],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_highball_cola_ice.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-12",
       "kind": "glass",
       "at": [-1.9508, 1.08, -4.2863],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_rocks_whiskey_ice.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-13",
       "kind": "glass",
       "at": [-0.95, 1.08, -4.4288],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_pint_beer.glb", "material": "bottle-glass"}}
     },
     {
       "id": "drink-14",
       "kind": "glass",
       "at": [-0.3561, 1.08, -4.5522],
-      "turn": 0.0,
+      "turn": 0,
       "parts": {"model": {"file": "drink_coupe_orange.glb", "material": "bottle-glass"}}
     },
     {"id": "chesterfield_sofa", "kind": "chesterfield_sofa", "at": [-5.75, 0, 0.8], "turn": -90},
     {"id": "armchair-1", "kind": "armchair", "at": [-7.25, 0, -0.5], "turn": -51.566},
     {"id": "armchair-2", "kind": "armchair", "at": [-7.25, 0, 2.1], "turn": -128.434},
-    {"id": "lounge_bookshelf", "kind": "bookshelf", "at": [-9.0, 0, 2.625], "turn": 90},
+    {"id": "lounge_bookshelf", "kind": "bookshelf", "at": [-9, 0, 2.625], "turn": 90},
     {"id": "floor_lamp", "kind": "floor_lamp", "at": [-6.3, 0, 2.75]},
     {"id": "side_table", "kind": "side_table", "at": [-5.85, 0, 2.65]},
     {"id": "fire_flames", "kind": "fire_flames", "at": [-8.71, 0.12, 0.8]},
@@ -3001,7 +3001,7 @@
       "kind": "light-bulb",
       "at": [-6.6, 2.11, -4.6],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
+        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2700}
       }
     },
     {
@@ -3009,7 +3009,7 @@
       "kind": "light-bulb",
       "at": [-4.3, 2.11, -4.6],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
+        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2700}
       }
     },
     {
@@ -3017,7 +3017,7 @@
       "kind": "light-bulb",
       "at": [-2, 2.11, -4.6],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
+        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2700}
       }
     },
     {
@@ -3025,20 +3025,20 @@
       "kind": "light-bulb",
       "at": [0.2, 2.11, -4.6],
       "parts": {
-        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2400}
+        "light": {"color": [1, 1, 1], "intensity": 2, "range": 5, "radius": 0.08, "dims": true, "lumens": 360, "kelvin": 2700}
       }
     },
     {
       "id": "light-bulb-5",
       "kind": "light-bulb",
-      "at": [-6.3, 1.9, -6.2],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.8, "range": 3.8, "radius": 0.6, "lumens": 144, "kelvin": 2400}}
+      "at": [-6.281, 1.985, -7.054],
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.8, "range": 3.8, "radius": 0.6, "lumens": 144, "kelvin": 2700}}
     },
     {
       "id": "light-bulb-6",
       "kind": "light-bulb",
-      "at": [-1.8, 1.9, -6.2],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.8, "range": 3.8, "radius": 0.6, "lumens": 144, "kelvin": 2400}}
+      "at": [-1.544, 1.985, -7.056],
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 0.8, "range": 3.8, "radius": 0.6, "lumens": 144, "kelvin": 2700}}
     },
     {
       "id": "light-bulb-7",
@@ -3051,7 +3051,7 @@
           "range": 3.5,
           "radius": 0.8,
           "lumens": 162,
-          "kelvin": 1900,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [-0.561, 0.005, -0.323],
           "axis": [1, 0, 0],
@@ -3070,8 +3070,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.816, -0.069, 0.573],
@@ -3090,11 +3090,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [0.818, 0.0, 0.575],
+          "axis": [0.818, 0, 0.575],
           "length": 5.743
         }
       }
@@ -3110,8 +3110,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.816, 0.069, 0.573],
@@ -3130,8 +3130,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.816, -0.069, -0.573],
@@ -3150,11 +3150,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [0.818, 0.0, -0.575],
+          "axis": [0.818, 0, -0.575],
           "length": 5.743
         }
       }
@@ -3170,8 +3170,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.816, 0.069, -0.573],
@@ -3190,8 +3190,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 233,
-          "kelvin": 2200,
+          "lumens": 135,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.802, -0.076, 0.592],
@@ -3210,11 +3210,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 233,
-          "kelvin": 2200,
+          "lumens": 135,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [0.805, 0.0, 0.594],
+          "axis": [0.805, 0, 0.594],
           "length": 5.22
         }
       }
@@ -3230,8 +3230,8 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 233,
-          "kelvin": 2200,
+          "lumens": 135,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0.802, 0.076, 0.592],
@@ -3250,11 +3250,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [0.998, -0.07, 0.0],
+          "axis": [0.998, -0.07, 0],
           "length": 5.747
         }
       }
@@ -3262,7 +3262,7 @@
     {
       "id": "string-light-4-2",
       "kind": "light-groove",
-      "at": [-0.0, 3.075, 2.2],
+      "at": [0, 3.075, 2.2],
       "parts": {
         "light": {
           "color": [1, 1, 1],
@@ -3270,11 +3270,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [1.0, 0.0, 0.0],
+          "axis": [1, 0, 0],
           "length": 5.733
         }
       }
@@ -3290,11 +3290,11 @@
           "range": 3.5,
           "radius": 0.03,
           "dims": true,
-          "lumens": 258,
-          "kelvin": 2200,
+          "lumens": 150,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
-          "axis": [0.998, 0.07, 0.0],
+          "axis": [0.998, 0.07, 0],
           "length": 5.747
         }
       }
@@ -3311,7 +3311,7 @@
           "radius": 0.035,
           "dims": true,
           "lumens": 480,
-          "kelvin": 2400,
+          "kelvin": 2700,
           "shape": "tube",
           "center": [0, 0, 0],
           "axis": [0, 0, 1],
@@ -3365,19 +3365,6 @@
       "at": [-0.2, 1.8, 7.6],
       "parts": {"light": {"color": [0.55, 0.6, 0.9], "intensity": 0.6, "range": 4, "radius": 1, "lumens": 108}}
     },
-    {"id": "light-fire", "kind": "light-fire", "at": [-8.1, 0.6, 0.8]},
-    {
-      "id": "light-bulb-8",
-      "kind": "light-bulb",
-      "at": [-6.3, 1.5, 2.75],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.1, "range": 4, "radius": 0.04, "lumens": 198, "kelvin": 2400}}
-    },
-    {
-      "id": "light-neon-2",
-      "kind": "light-neon",
-      "at": [-7.8, 3.2, 6.4],
-      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.04, "lumens": 288, "kelvin": 3000}}
-    },
     {
       "id": "light-neon-3",
       "kind": "light-neon",
@@ -3399,7 +3386,7 @@
     {
       "id": "light-neon-4",
       "kind": "light-neon",
-      "at": [6.58076, 1.7, -4.98076],
+      "at": [6.653, 1.887, -5.648],
       "parts": {"light": {"color": [0.85, 0.4, 1], "intensity": 1.2, "range": 4, "radius": 0.5, "lumens": 216}}
     },
     {
@@ -3408,6 +3395,660 @@
       "at": [7.07574, 3, -5.47574],
       "parts": {"light": {"color": [1, 0.3, 0.7], "intensity": 0.8, "range": 3, "radius": 0.09, "lumens": 144}}
     },
+    {
+      "id": "light-neon-cocktails",
+      "kind": "light-neon",
+      "at": [-6.3, 0, -3.465],
+      "parts": {
+        "light": {
+          "color": [1, 0.18, 0.55],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 180,
+          "shape": "panel",
+          "center": [-0.04, 3.49, 0.08],
+          "axis": [1, 0, 0],
+          "length": 2.21,
+          "axis2": [0, 1, 0],
+          "width": 0.28,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-neon-game-on",
+      "kind": "light-neon",
+      "at": [9, 0, -2],
+      "turn": -90,
+      "parts": {
+        "light": {
+          "color": [0.3, 1, 0.35],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 170,
+          "shape": "panel",
+          "center": [-0.05, 3.4, 0.08],
+          "axis": [1, 0, 0],
+          "length": 2.03,
+          "axis2": [0, 1, 0],
+          "width": 0.33,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-neon-play",
+      "kind": "light-neon",
+      "at": [-3.8, 0, 7],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 0.55, 0.15],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 110,
+          "shape": "panel",
+          "center": [-0.04, 3.08, 0.08],
+          "axis": [1, 0, 0],
+          "length": 0.91,
+          "axis2": [0, 1, 0],
+          "width": 0.27,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-neon-note",
+      "kind": "light-neon",
+      "at": [-7.2, 0, 7],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 0.18, 0.55],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 100,
+          "shape": "panel",
+          "center": [-0.05, 2.9, 0.08],
+          "axis": [1, 0, 0],
+          "length": 0.48,
+          "axis2": [0, 1, 0],
+          "width": 0.73,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-neon-darts",
+      "kind": "light-neon",
+      "at": [6, 0, 7],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 0.15, 0.08],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 120,
+          "shape": "panel",
+          "center": [-0.04, 2.43, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.15,
+          "axis2": [0, 1, 0],
+          "width": 0.27,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-high-w",
+      "kind": "light-neon-wave",
+      "at": [0.51, 3.26, -11.755],
+      "parts": {
+        "light": {
+          "color": [0.1, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 160,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, -1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-high-e",
+      "kind": "light-neon-wave",
+      "at": [8.29, 3.26, -11.755],
+      "parts": {
+        "light": {
+          "color": [0.1, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 160,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, 1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-high-n",
+      "kind": "light-neon-wave",
+      "at": [4.4, 3.26, -15.59],
+      "parts": {
+        "light": {
+          "color": [0.1, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 160,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-high-s",
+      "kind": "light-neon",
+      "at": [4.4, 3.26, -7.92],
+      "parts": {
+        "light": {
+          "color": [0.1, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 160,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [-1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-wainscot-w",
+      "kind": "light-neon",
+      "at": [0.51, 1, -11.755],
+      "parts": {
+        "light": {
+          "color": [0.6, 0.3, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, -1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-wainscot-e",
+      "kind": "light-neon",
+      "at": [8.29, 1, -11.755],
+      "parts": {
+        "light": {
+          "color": [0.6, 0.3, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, 1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-wainscot-n",
+      "kind": "light-neon",
+      "at": [4.4, 1, -15.59],
+      "parts": {
+        "light": {
+          "color": [0.6, 0.3, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-wainscot-s",
+      "kind": "light-neon",
+      "at": [4.4, 1, -7.92],
+      "parts": {
+        "light": {
+          "color": [0.6, 0.3, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [-1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-floor-w",
+      "kind": "light-neon",
+      "at": [0.51, 0.08, -11.755],
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 100,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, -1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-floor-e",
+      "kind": "light-neon",
+      "at": [8.29, 0.08, -11.755],
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 100,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [0, 0, 1],
+          "length": 7.59,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-floor-n",
+      "kind": "light-neon-wave",
+      "at": [4.4, 0.08, -15.59],
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 100,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-floor-s",
+      "kind": "light-neon",
+      "at": [4.4, 0.08, -7.92],
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 100,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [-1, 0, 0],
+          "length": 7.7,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-door",
+      "kind": "light-neon",
+      "at": [3.7, 2.8, -7.92],
+      "parts": {
+        "light": {
+          "color": [1, 0.85, 0.1],
+          "intensity": 1,
+          "range": 3,
+          "radius": 0.05,
+          "lumens": 70,
+          "shape": "panel",
+          "center": [0, 0, 0],
+          "axis": [1, 0, 0],
+          "length": 1.8,
+          "axis2": [0, 1, 0],
+          "width": 0.1,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-neon-bolt",
+      "kind": "light-neon",
+      "at": [0.46, 0, -10.1],
+      "turn": 90,
+      "parts": {
+        "light": {
+          "color": [1, 0.85, 0.1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 2, 0.08],
+          "axis": [1, 0, 0],
+          "length": 0.99,
+          "axis2": [0, 1, 0],
+          "width": 1.14,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-neon-ring",
+      "kind": "light-neon",
+      "at": [0.46, 0, -13.2],
+      "turn": 90,
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 2.05, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.14,
+          "axis2": [0, 1, 0],
+          "width": 1.14,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-neon-triangle",
+      "kind": "light-neon",
+      "at": [8.34, 0, -10.2],
+      "turn": -90,
+      "parts": {
+        "light": {
+          "color": [0.1, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 140,
+          "shape": "panel",
+          "center": [0, 2.21, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.13,
+          "axis2": [0, 1, 0],
+          "width": 0.96,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-neon-zigzag",
+      "kind": "light-neon",
+      "at": [8.34, 0, -13.3],
+      "turn": -90,
+      "parts": {
+        "light": {
+          "color": [0.45, 1, 0.2],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 150,
+          "shape": "panel",
+          "center": [0, 2, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.95,
+          "axis2": [0, 1, 0],
+          "width": 0.44,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-neon-wave",
+      "kind": "light-neon",
+      "at": [4.4, 0, -15.64],
+      "parts": {
+        "light": {
+          "color": [1, 0.12, 0.62],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 300,
+          "shape": "panel",
+          "center": [0, 2.65, 0.08],
+          "axis": [1, 0, 0],
+          "length": 7.21,
+          "axis2": [0, 1, 0],
+          "width": 0.4,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-sign-bar",
+      "kind": "light-sign",
+      "at": [3.7, 0, -7.4],
+      "parts": {
+        "light": {
+          "color": [1, 0.2, 0.65],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 130,
+          "shape": "panel",
+          "center": [0, 3.13, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.6,
+          "axis2": [0, 1, 0],
+          "width": 0.4,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-arcade-sign-inside",
+      "kind": "light-neon",
+      "at": [3.7, 0, -7.83],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 0.2, 0.65],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 110,
+          "shape": "panel",
+          "center": [0, 2.95, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.4,
+          "axis2": [0, 1, 0],
+          "width": 0.35,
+          "wall": true
+        }
+      }
+    },
+    {
+      "id": "light-wall-sconce-1",
+      "kind": "light-bulb",
+      "at": [-1, 0, 7],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 200,
+          "shape": "panel",
+          "center": [0, 2.09, 0.24],
+          "axis": [1, 0, 0],
+          "length": 0.12,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true,
+          "kelvin": 2700
+        }
+      }
+    },
+    {
+      "id": "light-wall-sconce-2",
+      "kind": "light-bulb",
+      "at": [-5.45, 0, 7],
+      "turn": 180,
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 200,
+          "shape": "panel",
+          "center": [0, 2.09, 0.24],
+          "axis": [1, 0, 0],
+          "length": 0.12,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true,
+          "kelvin": 2700
+        }
+      }
+    },
+    {
+      "id": "light-wall-sconce-3",
+      "kind": "light-bulb",
+      "at": [-9, 0, -4.6],
+      "turn": 90,
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 200,
+          "shape": "panel",
+          "center": [0, 2.09, 0.24],
+          "axis": [1, 0, 0],
+          "length": 0.12,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true,
+          "kelvin": 2700
+        }
+      }
+    },
+    {
+      "id": "light-wall-sconce-4",
+      "kind": "light-bulb",
+      "at": [-9, 0, 3.15],
+      "turn": 90,
+      "parts": {
+        "light": {
+          "color": [1, 1, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 200,
+          "shape": "panel",
+          "center": [0, 2.09, 0.24],
+          "axis": [1, 0, 0],
+          "length": 0.12,
+          "axis2": [0, 1, 0],
+          "width": 0.12,
+          "wall": true,
+          "kelvin": 2700
+        }
+      }
+    },
+    {
+      "id": "light-arcade-cabinet-screen",
+      "kind": "light-neon",
+      "at": [4.4, 0, -15.2],
+      "parts": {
+        "light": {
+          "color": [0.8, 0.85, 1],
+          "intensity": 1,
+          "range": 4,
+          "radius": 0.05,
+          "lumens": 110,
+          "shape": "panel",
+          "center": [0, 1.35, 0.5],
+          "axis": [1, 0, 0],
+          "length": 0.5,
+          "axis2": [0, 1, 0],
+          "width": 0.4,
+          "wall": true
+        }
+      }
+    },
+    {"id": "light-fire", "kind": "light-fire", "at": [-8.57, 0.161, 0.8]},
+    {
+      "id": "light-bulb-8",
+      "kind": "light-bulb",
+      "at": [-6.3, 1.5, 2.75],
+      "parts": {"light": {"color": [1, 1, 1], "intensity": 1.1, "range": 4, "radius": 0.04, "lumens": 198, "kelvin": 2400}}
+    },
     {"id": "light-jukebox", "kind": "light-jukebox", "at": [-3.8, 1.2, 5.85]},
     {
       "id": "light-neon-6",
@@ -3415,102 +4056,6 @@
       "at": [-10.8, 1.8, -3.1],
       "parts": {"light": {"color": [1, 1, 1], "intensity": 1.6, "range": 4, "radius": 0.12, "lumens": 288, "kelvin": 3800}}
     },
-    {
-      "id": "light-neon-wave-1",
-      "kind": "light-neon-wave",
-      "at": [2, 3, -13.9],
-      "parts": {
-        "light": {
-          "color": [1, 0.2, 0.7],
-          "intensity": 1.4,
-          "range": 5.5,
-          "radius": 0.3,
-          "lumens": 252,
-          "shape": "panel",
-          "center": [-0.294, 0.38, -0.487],
-          "axis": [0.691, 0, 0.723],
-          "length": 2.29,
-          "axis2": [-0.723, 0, 0.691],
-          "width": 2.29
-        }
-      }
-    },
-    {
-      "id": "light-neon-wave-2",
-      "kind": "light-neon-wave",
-      "at": [6.8, 3, -13.9],
-      "phase": 0.5,
-      "parts": {
-        "light": {
-          "color": [0.2, 0.8, 1],
-          "intensity": 1.4,
-          "range": 5.5,
-          "radius": 0.3,
-          "lumens": 252,
-          "shape": "panel",
-          "center": [0.239, 0.38, -0.487],
-          "axis": [0.691, 0, 0.723],
-          "length": 2.29,
-          "axis2": [-0.723, 0, 0.691],
-          "width": 2.29
-        }
-      }
-    },
-    {
-      "id": "light-neon-wave-3",
-      "kind": "light-neon-wave",
-      "at": [2, 3, -9.5],
-      "phase": 0.25,
-      "parts": {
-        "light": {
-          "color": [0.25, 0.85, 1],
-          "intensity": 1.2,
-          "range": 5,
-          "radius": 0.3,
-          "lumens": 216,
-          "shape": "panel",
-          "center": [-0.299, 0.38, 0.446],
-          "axis": [0.683, 0, 0.73],
-          "length": 2.29,
-          "axis2": [-0.73, 0, 0.683],
-          "width": 2.29
-        }
-      }
-    },
-    {
-      "id": "light-neon-wave-4",
-      "kind": "light-neon-wave",
-      "at": [6.8, 3, -9.5],
-      "phase": 0.75,
-      "parts": {
-        "light": {
-          "color": [0.8, 0.3, 1],
-          "intensity": 1.2,
-          "range": 5,
-          "radius": 0.3,
-          "lumens": 216,
-          "shape": "panel",
-          "center": [0.234, 0.38, 0.446],
-          "axis": [0.683, 0, 0.73],
-          "length": 2.29,
-          "axis2": [-0.73, 0, 0.683],
-          "width": 2.29
-        }
-      }
-    },
-    {
-      "id": "light-neon-7",
-      "kind": "light-neon",
-      "at": [4.4, 2.2, -14.1],
-      "parts": {"light": {"color": [1, 0.75, 0.9], "intensity": 1, "range": 3.5, "radius": 0.3, "lumens": 180}}
-    },
-    {
-      "id": "light-neon-8",
-      "kind": "light-neon",
-      "at": [4.4, 3.1, -11.7],
-      "parts": {"light": {"color": [0.6, 0.35, 1], "intensity": 0.9, "range": 4.5, "radius": 0.4, "lumens": 162}}
-    },
-    {"id": "light-sign", "kind": "light-sign", "at": [3.7, 3.1, -6.9]},
     {
       "id": "window-seat",
       "kind": "seat-spot",
@@ -3625,7 +4170,7 @@
     {
       "id": "stage_lights",
       "kind": "glow_prop",
-      "at": [-6.3, 4.0, 5.4],
+      "at": [-6.3, 4, 5.4],
       "parts": {"model": {"file": "stage_lights.glb", "material": "black-steel"}}
     },
     {
@@ -3637,216 +4182,216 @@
     {
       "id": "board_darts",
       "kind": "wall_prop",
-      "at": [6.0, 1.73, 6.96],
+      "at": [6, 1.73, 6.96],
       "turn": 180,
       "parts": {"model": {"file": "board_darts.glb", "material": "black-steel"}}
     },
     {
       "id": "dart_surround",
       "kind": "wall_prop",
-      "at": [6.0, 1.73, 7.0],
+      "at": [6, 1.73, 7],
       "turn": 180,
       "parts": {"model": {"file": "dart_surround.glb", "material": "black-steel"}}
     },
     {
       "id": "dart_holder",
       "kind": "wall_prop",
-      "at": [6.72, 1.35, 7.0],
+      "at": [6.72, 1.35, 7],
       "turn": 180,
       "parts": {"model": {"file": "dart_holder.glb", "material": "black-steel"}}
     },
     {
       "id": "oche",
       "kind": "wall_prop",
-      "at": [6.0, 0.0, 4.59],
+      "at": [6, 0, 4.59],
       "turn": 180,
       "parts": {"model": {"file": "oche.glb", "material": "brass"}}
     },
     {
       "id": "dart_spotlights",
       "kind": "glow_prop",
-      "at": [6.0, 4.0, 5.56],
+      "at": [6, 4, 5.56],
       "turn": 180,
       "parts": {"model": {"file": "dart_spotlights.glb", "material": "black-steel"}}
     },
     {
       "id": "neon_darts",
       "kind": "neon_sign",
-      "at": [6.0, 0.0, 7.0],
+      "at": [6, 0, 7],
       "turn": 180,
       "parts": {"model": {"file": "neon_darts.glb", "material": "glow-glass"}}
     },
     {
       "id": "caution_tape",
       "kind": "wall_prop",
-      "at": [-9.0, 0.0, -2.5],
-      "turn": 90.0,
+      "at": [-9, 0, -2.5],
+      "turn": 90,
       "parts": {"model": {"file": "caution_tape.glb", "material": "lacquer"}}
     },
     {
       "id": "plastic_sheet",
       "kind": "wall_prop",
-      "at": [-9.35, 0.0, -2.5],
-      "turn": 90.0,
+      "at": [-9.35, 0, -2.5],
+      "turn": 90,
       "parts": {"model": {"file": "plastic_sheet.glb", "material": "bottle-glass"}}
     },
     {
       "id": "sawhorse_1",
       "kind": "wall_prop",
-      "at": [-8.4, 0.0, -2.15],
-      "turn": 90.0,
+      "at": [-8.4, 0, -2.15],
+      "turn": 90,
       "parts": {"model": {"file": "sawhorse_1.glb", "material": "lacquer"}}
     },
     {
       "id": "sawhorse_2",
       "kind": "wall_prop",
-      "at": [-8.25, 0.0, -2.8],
-      "turn": 90.0,
+      "at": [-8.25, 0, -2.8],
+      "turn": 90,
       "parts": {"model": {"file": "sawhorse_2.glb", "material": "lacquer"}}
     },
     {
       "id": "cone_1",
       "kind": "wall_prop",
-      "at": [-8.55, 0.0, -1.35],
-      "turn": 90.0,
+      "at": [-8.55, 0, -1.35],
+      "turn": 90,
       "parts": {"model": {"file": "cone_1.glb", "material": "lacquer"}}
     },
     {
       "id": "cone_2",
       "kind": "wall_prop",
-      "at": [-8.5, 0.0, -3.7],
-      "turn": 90.0,
+      "at": [-8.5, 0, -3.7],
+      "turn": 90,
       "parts": {"model": {"file": "cone_2.glb", "material": "lacquer"}}
     },
     {
       "id": "cone_3",
       "kind": "wall_prop",
-      "at": [-8.05, 0.0, -3.65],
-      "turn": 90.0,
+      "at": [-8.05, 0, -3.65],
+      "turn": 90,
       "parts": {"model": {"file": "cone_3.glb", "material": "lacquer"}}
     },
     {
       "id": "easel_sign",
       "kind": "wall_prop",
-      "at": [-8.45, 0.0, -0.95],
-      "turn": 90.0,
+      "at": [-8.45, 0, -0.95],
+      "turn": 90,
       "parts": {"model": {"file": "easel_sign.glb", "material": "glow-glass"}}
     },
     {
       "id": "work_light",
       "kind": "glow_prop",
-      "at": [-10.65, 0.0, -3.172],
-      "turn": 90.0,
+      "at": [-10.65, 0, -3.172],
+      "turn": 90,
       "parts": {"model": {"file": "work_light.glb", "material": "black-steel"}}
     },
     {
       "id": "step_ladder",
       "kind": "wall_prop",
-      "at": [-11.1, 0.0, -1.9],
-      "turn": 90.0,
+      "at": [-11.1, 0, -1.9],
+      "turn": 90,
       "parts": {"model": {"file": "step_ladder.glb", "material": "chrome"}}
     },
     {
       "id": "paint_bucket_1",
       "kind": "wall_prop",
-      "at": [-10.5, 0.0, -2.74],
-      "turn": 90.0,
+      "at": [-10.5, 0, -2.74],
+      "turn": 90,
       "parts": {"model": {"file": "paint_bucket_1.glb", "material": "lacquer"}}
     },
     {
       "id": "paint_bucket_2",
       "kind": "wall_prop",
-      "at": [-10.95, 0.0, -3.46],
-      "turn": 90.0,
+      "at": [-10.95, 0, -3.46],
+      "turn": 90,
       "parts": {"model": {"file": "paint_bucket_2.glb", "material": "lacquer"}}
     },
     {
       "id": "paint_bucket_3",
       "kind": "wall_prop",
-      "at": [-9.9, 0.0, -3.1],
-      "turn": 90.0,
+      "at": [-9.9, 0, -3.1],
+      "turn": 90,
       "parts": {"model": {"file": "paint_bucket_3.glb", "material": "lacquer"}}
     },
     {
       "id": "drop_cloth",
       "kind": "wall_prop",
-      "at": [-10.35, 0.0, -2.38],
-      "turn": 90.0,
+      "at": [-10.35, 0, -2.38],
+      "turn": 90,
       "parts": {"model": {"file": "drop_cloth.glb", "material": "leather"}}
     },
     {
       "id": "lumber",
       "kind": "wall_prop",
-      "at": [-10.05, 0.0, -1.88],
-      "turn": 90.0,
+      "at": [-10.05, 0, -1.88],
+      "turn": 90,
       "parts": {"model": {"file": "lumber.glb", "material": "door-wood"}}
     },
     {
       "id": "drywall",
       "kind": "wall_prop",
-      "at": [-12.15, 0.0, -2.962],
-      "turn": 90.0,
+      "at": [-12.15, 0, -2.962],
+      "turn": 90,
       "parts": {"model": {"file": "drywall.glb", "material": "plaster"}}
     },
     {
       "id": "toolbox",
       "kind": "wall_prop",
-      "at": [-9.9, 0.0, -3.34],
-      "turn": 90.0,
+      "at": [-9.9, 0, -3.34],
+      "turn": 90,
       "parts": {"model": {"file": "toolbox.glb", "material": "lacquer"}}
     },
     {
       "id": "arcade_neon_bolt",
       "kind": "neon_sign",
-      "at": [0.46, 0.0, -10.1],
-      "turn": 90.0,
+      "at": [0.46, 0, -10.1],
+      "turn": 90,
       "parts": {"model": {"file": "arcade_neon_bolt.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_neon_ring",
       "kind": "neon_sign",
-      "at": [0.46, 0.0, -13.2],
-      "turn": 90.0,
+      "at": [0.46, 0, -13.2],
+      "turn": 90,
       "parts": {"model": {"file": "arcade_neon_ring.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_neon_triangle",
       "kind": "neon_sign",
-      "at": [8.34, 0.0, -10.2],
-      "turn": -90.0,
+      "at": [8.34, 0, -10.2],
+      "turn": -90,
       "parts": {"model": {"file": "arcade_neon_triangle.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_neon_zigzag",
       "kind": "neon_sign",
-      "at": [8.34, 0.0, -13.3],
-      "turn": -90.0,
+      "at": [8.34, 0, -13.3],
+      "turn": -90,
       "parts": {"model": {"file": "arcade_neon_zigzag.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_neon_wave",
       "kind": "neon_sign",
-      "at": [4.4, 0.0, -15.64],
+      "at": [4.4, 0, -15.64],
       "parts": {"model": {"file": "arcade_neon_wave.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_sign_bar",
       "kind": "neon_sign",
-      "at": [3.7, 0.0, -7.4],
+      "at": [3.7, 0, -7.4],
       "parts": {"model": {"file": "arcade_sign_bar.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_sign_inside",
       "kind": "neon_sign",
-      "at": [3.7, 0.0, -7.83],
-      "turn": 180.0,
+      "at": [3.7, 0, -7.83],
+      "turn": 180,
       "parts": {"model": {"file": "arcade_sign_inside.glb", "material": "glow-glass"}}
     },
     {
       "id": "arcade_bench",
       "kind": "wall_prop",
-      "at": [0.75, 0.0, -11.7],
-      "turn": 90.0,
+      "at": [0.75, 0, -11.7],
+      "turn": 90,
       "parts": {"model": {"file": "arcade_bench.glb", "material": "leather"}}
     },
     {"id": "arcade_cabinet", "kind": "arcade_cabinet", "at": [4.4, 0, -15.2]},

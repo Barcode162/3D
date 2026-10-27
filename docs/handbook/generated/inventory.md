@@ -3,7 +3,7 @@
 
 Every thing in every place of the built-in world (the repo's copy; the live version may differ: `node tools/project.mjs world status`): its kind, what it sits on, and the model file that holds it today. **Room model**: the thing is a whole room or wall set (its model is room-sized, so smaller things baked into it can't be moved one by one). **No model**: a spot, a light or a helper with no 3D model of its own.
 
-## bar (581 things)
+## bar (603 things)
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
@@ -487,21 +487,43 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `dart-spot-1` | `light-bulb` |  |  | no model |
 | `dart-spot-2` | `light-bulb` |  |  | no model |
 | `light-neon-1` | `light-neon` |  |  | no model |
-| `light-fire` | `light-fire` |  |  | no model |
-| `light-bulb-8` | `light-bulb` |  |  | no model |
-| `light-neon-2` | `light-neon` |  |  | no model |
 | `light-neon-3` | `light-neon` |  |  | no model |
 | `light-neon-4` | `light-neon` |  |  | no model |
 | `light-neon-5` | `light-neon` |  |  | no model |
+| `light-neon-cocktails` | `light-neon` |  |  | no model |
+| `light-neon-game-on` | `light-neon` |  |  | no model |
+| `light-neon-play` | `light-neon` |  |  | no model |
+| `light-neon-note` | `light-neon` |  |  | no model |
+| `light-neon-darts` | `light-neon` |  |  | no model |
+| `light-arcade-high-w` | `light-neon-wave` |  |  | no model |
+| `light-arcade-high-e` | `light-neon-wave` |  |  | no model |
+| `light-arcade-high-n` | `light-neon-wave` |  |  | no model |
+| `light-arcade-high-s` | `light-neon` |  |  | no model |
+| `light-arcade-wainscot-w` | `light-neon` |  |  | no model |
+| `light-arcade-wainscot-e` | `light-neon` |  |  | no model |
+| `light-arcade-wainscot-n` | `light-neon` |  |  | no model |
+| `light-arcade-wainscot-s` | `light-neon` |  |  | no model |
+| `light-arcade-floor-w` | `light-neon` |  |  | no model |
+| `light-arcade-floor-e` | `light-neon` |  |  | no model |
+| `light-arcade-floor-n` | `light-neon-wave` |  |  | no model |
+| `light-arcade-floor-s` | `light-neon` |  |  | no model |
+| `light-arcade-door` | `light-neon` |  |  | no model |
+| `light-arcade-neon-bolt` | `light-neon` |  |  | no model |
+| `light-arcade-neon-ring` | `light-neon` |  |  | no model |
+| `light-arcade-neon-triangle` | `light-neon` |  |  | no model |
+| `light-arcade-neon-zigzag` | `light-neon` |  |  | no model |
+| `light-arcade-neon-wave` | `light-neon` |  |  | no model |
+| `light-arcade-sign-bar` | `light-sign` |  |  | no model |
+| `light-arcade-sign-inside` | `light-neon` |  |  | no model |
+| `light-wall-sconce-1` | `light-bulb` |  |  | no model |
+| `light-wall-sconce-2` | `light-bulb` |  |  | no model |
+| `light-wall-sconce-3` | `light-bulb` |  |  | no model |
+| `light-wall-sconce-4` | `light-bulb` |  |  | no model |
+| `light-arcade-cabinet-screen` | `light-neon` |  |  | no model |
+| `light-fire` | `light-fire` |  |  | no model |
+| `light-bulb-8` | `light-bulb` |  |  | no model |
 | `light-jukebox` | `light-jukebox` |  |  | no model |
 | `light-neon-6` | `light-neon` |  |  | no model |
-| `light-neon-wave-1` | `light-neon-wave` |  |  | no model |
-| `light-neon-wave-2` | `light-neon-wave` |  |  | no model |
-| `light-neon-wave-3` | `light-neon-wave` |  |  | no model |
-| `light-neon-wave-4` | `light-neon-wave` |  |  | no model |
-| `light-neon-7` | `light-neon` |  |  | no model |
-| `light-neon-8` | `light-neon` |  |  | no model |
-| `light-sign` | `light-sign` |  |  | no model |
 | `window-seat` | `seat-spot` |  |  | no model |
 | `piano` | `piano` |  | `piano.glb` |  |
 | `stage` | `stage` |  | `stage.glb` | room model |

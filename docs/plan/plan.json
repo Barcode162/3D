@@ -54,7 +54,7 @@
     "id": "J113.2",
     "text": "Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1 keeps it); whiter, dimmer string lights; thinner haze",
     "check": "Look around: every light comes from something glowing",
-    "done": false
+    "done": true
    },
    {
     "id": "J113.3",
