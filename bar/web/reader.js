@@ -4,6 +4,9 @@
 // novel stays light on the phone). Tap the right side or swipe left for the
 // next page, the left side or swipe right for the one before; your place in
 // each book, the text size and light or dark paper are kept on this phone.
+// Pages turn with a curl (J109): the page lifts and bends over, its text
+// bending with it; a swipe from the left or right edge drags the page with
+// your finger, a tap or a swipe plays the turn by itself.
 window.bar3dReader = (function () {
   'use strict';
   var root = null, index = null, book = null, chapter = 0, page = 0, pages = 1;
@@ -52,6 +55,14 @@ window.bar3dReader = (function () {
       '#reader .rdToc{position:absolute;inset:0;overflow-y:auto;background:var(--rd-bg);padding:4px 0;}',
       '#reader .rdToc button{display:block;width:100%;text-align:left;margin:4px 0;background:transparent;font-family:Georgia,serif;}',
       '#reader .rdToc button.here{background:var(--rd-key);}',
+      // The turning page (J109): strips of the page in a chain, each turning
+      // a little more than the one before, so the sheet (and its text) bends.
+      '#reader .rdLeaf{position:absolute;inset:0;perspective:1800px;pointer-events:none;z-index:3;}',
+      '#reader .rdStrip{position:absolute;top:0;height:100%;transform-style:preserve-3d;transform-origin:0 50%;}',
+      '#reader .rdFace,#reader .rdBack{position:absolute;inset:0;overflow:hidden;background:var(--rd-bg);backface-visibility:hidden;-webkit-backface-visibility:hidden;}',
+      '#reader .rdBack{transform:rotateY(180deg);background:linear-gradient(90deg,var(--rd-bg),var(--rd-key));}',
+      '#reader .rdFace .rdCols{transition:none !important;}',
+      '#reader .rdShade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.0),rgba(0,0,0,.35));opacity:0;}',
     ].join('\n');
     document.head.appendChild(el('style', { id: 'readerStyle' }, [css]));
   }
@@ -157,7 +168,10 @@ window.bar3dReader = (function () {
   function place() { return pages > 1 ? page / pages : 0; }
   function remember() { if (book) save('bar3dReader.at.' + book.id, { ch: chapter, frac: place() }); }
   function turn(d) {
-    if (page + d >= 0 && page + d < pages) { page += d; show(); return; }
+    if (page + d >= 0 && page + d < pages) {
+      if (!reduced()) { var c = curl(d); if (c) { c.play(1); return; } }
+      page += d; show(); return;
+    }
     if (d > 0 && chapter + 1 < book.chapters.length) { chapter++; showChapter(0); }
     else if (d < 0 && chapter > 0) { chapter--; showChapter(0, true); }
   }
@@ -176,18 +190,125 @@ window.bar3dReader = (function () {
     var here = list.querySelector('.here');
     if (here) here.scrollIntoView({ block: 'center' });
   }
-  // Taps on the sides and swipes turn pages.
+  function reduced() {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+  }
+  // The page turn (J109). Forward: the next page is already underneath, and
+  // the current one lifts from its right edge and bends over to the left
+  // around the spine. Back: the page before comes over from the left.
+  // `t` 0..1 is how far over the page is; set(t) follows a finger, play(to)
+  // finishes on its own (to 1: turned, to 0: falls back).
+  var K = 5, WEIGHTS = [0.08, 0.14, 0.2, 0.26, 0.32];  // more turn toward the free edge: a curl
+  var WSUM = WEIGHTS.reduce(function (x, y) { return x + y; }, 0);
+  function curl(d) {
+    if (!view || !cols || page + d < 0 || page + d >= pages) return null;
+    var w = view.clientWidth, step = w + 44, sw = w / K;
+    var shownPage = d > 0 ? page : page - 1;  // the page that turns
+    var leaf = el('div', { class: 'rdLeaf' });
+    var parent = leaf, strips = [];
+    for (var i = 0; i < K; i++) {
+      var strip = el('div', { class: 'rdStrip' });
+      strip.style.left = (i === 0 ? 0 : sw) + 'px';
+      strip.style.width = sw + 'px';
+      var face = el('div', { class: 'rdFace' }), copy = cols.cloneNode(true);
+      // The page laid out exactly as on screen (the view's width), shifted
+      // so this strip shows its own slice of it.
+      copy.style.position = 'absolute';
+      copy.style.left = '0';
+      copy.style.top = '0';
+      copy.style.width = w + 'px';
+      copy.style.transform = 'translateX(' + (-(shownPage * step) - i * sw) + 'px)';
+      face.appendChild(copy);
+      var shade = el('div', { class: 'rdShade' });
+      face.appendChild(shade);
+      strip.appendChild(face);
+      strip.appendChild(el('div', { class: 'rdBack' }));
+      parent.appendChild(strip);
+      strips.push({ el: strip, shade: shade });
+      parent = strip;
+    }
+    // Underneath: forward shows the next page now; back keeps this one until done.
+    cols.style.transition = 'none';
+    if (d > 0) { cols.style.transform = 'translateX(' + (-(page + 1) * step) + 'px)'; }
+    view.appendChild(leaf);
+    var t = 0, done = false;
+    function set(v) {
+      t = Math.max(0, Math.min(1, v));
+      var over = d > 0 ? t : 1 - t, sum = 0;  // 0 = flat on the right, 1 = over on the left
+      strips.forEach(function (s, i) {
+        var a = -180 * over * WEIGHTS[i] / WSUM;
+        // Each strip turns relative to the one before (a chain): the sum is the page's turn.
+        s.el.style.transform = 'rotateY(' + a.toFixed(2) + 'deg)';
+        sum += a;
+        s.shade.style.opacity = (Math.abs(Math.sin(sum * Math.PI / 180)) * 0.9).toFixed(3);
+      });
+    }
+    function finish(turned) {
+      if (done) return;
+      done = true;
+      leaf.remove();
+      if (turned) page += d;
+      show();
+    }
+    function play(to) {
+      var from = t, start = performance.now(), dur = 420 * Math.max(0.35, Math.abs(to - from));
+      (function frame(now) {
+        var k = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k, 3);
+        set(from + (to - from) * e);
+        if (k < 1) requestAnimationFrame(frame);
+        else finish(to >= 1);
+      })(start);
+    }
+    set(0);
+    return { set: set, play: play, dir: d };
+  }
+
+  // Taps on the sides and swipes turn pages; a swipe from an edge drags the page.
   function touch(v) {
-    var x0 = null, y0 = 0;
-    v.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-    v.addEventListener('touchend', function (e) {
-      if (x0 === null || v.querySelector('.rdToc')) return;
+    var x0 = null, y0 = 0, drag = null, lastX = 0, lastT = 0, speed = 0;
+    var EDGE = 40;  // px from the screen's left or right edge
+    // On the whole reader, so a swipe from the very edge (outside the text's
+    // margin) still catches; not on its buttons.
+    var area = root;
+    if (area.dataset.edgeTouch) return clickOnly(v);
+    area.dataset.edgeTouch = '1';
+    var onButton = function (e) { return !!(e.target.closest && e.target.closest('button')); };
+    var reading = function () { return !!(book && view && cols && root && root.contains(cols)); };  // not on the book list
+    area.addEventListener('touchstart', function (e) {
+      if (onButton(e) || !reading()) { x0 = null; return; }
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; lastX = x0; lastT = performance.now(); speed = 0;
+      if ((view && view.querySelector('.rdToc')) || reduced()) return;
+      var W = window.innerWidth;
+      if (x0 > W - EDGE) drag = curl(1);
+      else if (x0 < EDGE) drag = curl(-1);
+    }, { passive: true });
+    area.addEventListener('touchmove', function (e) {
+      if (!drag) return;
+      var x = e.touches[0].clientX, now = performance.now();
+      speed = (x - lastX) / Math.max(1, now - lastT); lastX = x; lastT = now;
+      var w = view.clientWidth;
+      drag.set(drag.dir > 0 ? (x0 - x) / (w * 0.9) : (x - x0) / (w * 0.9));
+    }, { passive: true });
+    area.addEventListener('touchend', function (e) {
+      if (x0 === null || (view && view.querySelector('.rdToc'))) { x0 = null; return; }
       var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
       x0 = null;
+      if (drag) {
+        var d = drag; drag = null;
+        var fling = d.dir > 0 ? speed < -0.4 : speed > 0.4;
+        var far = Math.abs(dx) > view.clientWidth * 0.35, tapped = Math.abs(dx) < 10 && Math.abs(dy) < 10;
+        d.play(far || fling || tapped ? 1 : 0);  // a tap on the edge turns too
+        var vv = view; vv.dataset.dragged = '1';
+        setTimeout(function () { delete vv.dataset.dragged; }, 400);
+        return;
+      }
       if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) turn(dx < 0 ? 1 : -1);
     });
+    clickOnly(v);
+  }
+  function clickOnly(v) {
     v.addEventListener('click', function (e) {
-      if (v.querySelector('.rdToc')) return;
+      if (v.querySelector('.rdToc') || v.dataset.dragged || v.querySelector('.rdLeaf')) return;
       var r = v.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
       if (x > 0.66) turn(1);
       else if (x < 0.33) turn(-1);

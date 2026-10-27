@@ -62,7 +62,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
 - [x] **J28.1** Chess bots with a strength you can see: each bot names its rating (Elo) and plays at that strength *Check:* Open chess: each bot shows its rating
 - [x] **J28.2** A chess menu: pick a bot or wait for a person (1v1), and the game starts *Check:* Open chess, pick a bot: the game starts against it
-- [ ] **J109.1** Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it *Check:* Open a book, swipe from the right edge: the page curls over
+- [x] **J109.1** Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it *Check:* Open a book, swipe from the right edge: the page curls over
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

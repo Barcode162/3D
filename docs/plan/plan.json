@@ -72,7 +72,7 @@
     "id": "J109.1",
     "text": "Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it",
     "check": "Open a book, swipe from the right edge: the page curls over",
-    "done": false
+    "done": true
    }
   ],
   "absorbed": [

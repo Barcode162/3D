@@ -33,7 +33,7 @@ The Menu button and its panels over the game ([menus and HUD](../systems/world/m
 
 ## The bookshelf (J99)
 
-Tap the lounge bookshelf: **The bookshelf** lists the books (title, author and translator, year, and where you are or how long it reads). Tap one to read: `‹` back to the list, `☰` contents (tap a chapter), `A−` / `A+` text size, `☀` / `☾` light or dark paper; tap the right side or swipe left for the next page, the left side or swipe right for the one before; the bottom bar shows the chapter and page with `‹` `›`. Your place in each book, the size and the paper are kept on the phone (`bar/web/reader.js`; books in `bar/web/books/`, made by `tools/books.py`).
+Tap the lounge bookshelf: **The bookshelf** lists the books (title, author and translator, year, and where you are or how long it reads). Tap one to read: `‹` back to the list, `☰` contents (tap a chapter), `A−` / `A+` text size, `☀` / `☾` light or dark paper; tap the right side or swipe left for the next page, the left side or swipe right for the one before; the page turns with a curl, bending over with its text (J109), and a swipe that starts at the screen's left or right edge drags the page with your finger (let go past a third, or flick, to turn; less, and it falls back; motion off in the phone's Reduce Motion setting: pages slide); the bottom bar shows the chapter and page with `‹` `›`. Your place in each book, the size and the paper are kept on the phone (`bar/web/reader.js`; books in `bar/web/books/`, made by `tools/books.py`).
 
 ## Chess, full screen (J101)
 
