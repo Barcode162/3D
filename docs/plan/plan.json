@@ -1111,6 +1111,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40"
+  },
+  {
    "build": "8b5f7ed",
    "text": "J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08"
   },

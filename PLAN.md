@@ -269,6 +269,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
 - `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
 - `b33230d` J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
 - `c3a3d10` J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39
