@@ -1365,7 +1365,7 @@ void applyQuality(const char* why) {
   g_app.renderer.setGiLite(low || g_app.hooks.number("gilite", 0) != 0);
   if (cap == g_app.gpu.resolutionCap && !lampsChanged) return;
   g_app.gpu.resolutionCap = cap;
-  if (why) LOG_INFO("Quality: %s (%.1fx, %d lamps a pixel), %s.", kNames[level], cap, lamps, why);
+  if (why) LOG_INFO("Quality: %s (%.1fx), %s; %d lamps a pixel.", kNames[level], cap, why, lamps);
 }
 // The mirror's detail: the setting, or simple at Medium and Low.
 void applyMirrorDetail() {
