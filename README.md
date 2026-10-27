@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J28.1 Chess bots with a strength you can see: Pip (about 400 Elo, looks one move ahead and plays a random move 40 % of the time), Rosa (800), Theo (1200), Vera (1500), Odin (1800, four moves deep); the status names who's thinking; a new game takes a bot or waits for a person (1v1); the board opens full screen; plus the batch's tools: the plan's absorb command (a road job joins the job in Now) and the rule One ship for everything
+
+`8e66ce6` · 2026-10-27 05:33 · 9 files, +126 −48 · tests: none
+
+Phone check: Sit at the chessboard: the status says which bot is thinking
+
 ## J115.1 The string lights at 5000 K, cool industrial white near daylight (were 2700 K)
 
 `8d081c5` · 2026-10-27 05:18 · 6 files, +46 −37 · tests: none
