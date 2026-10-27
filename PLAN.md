@@ -59,7 +59,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J115 · Daylight string lights** (the world). Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5); with J28: Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.; with J109: Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13) · N3
 - [x] **J115.1** The string lights at 5000 K, cool industrial white near daylight (were 2700 K) *Check:* The strands light the hall white, not warm
-- [ ] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
+- [x] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
 - [x] **J28.1** Chess bots with a strength you can see: each bot names its rating (Elo) and plays at that strength *Check:* Open chess: each bot shows its rating
 - [x] **J28.2** A chess menu: pick a bot or wait for a person (1v1), and the game starts *Check:* Open chess, pick a bot: the game starts against it
 - [ ] **J109.1** Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it *Check:* Open a book, swipe from the right edge: the page curls over

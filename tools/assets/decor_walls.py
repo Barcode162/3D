@@ -109,7 +109,7 @@ def strand(a, b, sag, n_bulbs, bulb, cord):
 
 def string_lights():
     begin()
-    bulb = common.plain_material("Edison bulb", (1.0, 0.8, 0.5), 0.0, 0.3, emission=(1.0, 0.62, 0.28), strength=9.0)
+    bulb = common.plain_material("Edison bulb", (1.0, 0.98, 0.95), 0.0, 0.3, emission=(1.0, 0.97, 0.92), strength=9.0)  # daylight white (J115.2)
     cord = common.plain_material("Cord", (0.02, 0.02, 0.02), 0.0, 0.6)
     y = L.H - 0.45
     for (a, b) in (((-8.6, y, -3.3), (5.5, y, 6.6)), ((-8.6, y, 6.6), (5.5, y, -3.3)),

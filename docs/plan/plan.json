@@ -54,7 +54,7 @@
     "id": "J115.2",
     "text": "The bulbs themselves glow white (the model's Edison glow was orange)",
     "check": "The bulbs look white",
-    "done": false
+    "done": true
    },
    {
     "id": "J28.1",
