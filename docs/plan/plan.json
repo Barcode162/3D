@@ -36,32 +36,32 @@
   }
  ],
  "now": {
-  "id": "J110",
-  "title": "Smoother graphics",
+  "id": "J111",
+  "title": "Pictures drawn and power buttons",
   "chapter": "the engine",
-  "about": "Smoother graphics: the GPU check and reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late (request 2026-10-26 #14)",
+  "about": "Pictures drawn and power buttons: Ultra and Auto keep a new picture every refresh, a finer light grid, Cooler / Balanced / EXTREME (request 2026-10-27 #1)",
   "serves": [
    "N2",
    "N3"
   ],
   "pieces": [
    {
-    "id": "J110.1",
-    "text": "The GPU check and reports measure what you feel: each step's late frames and slowest 5%, beside the wait",
-    "check": "Settings → Help Claude fix lag → Check the GPU, then send a report",
+    "id": "J111.1",
+    "text": "A finer light grid (48 x 48 cells, ~0.5 m): fewer lamps per pixel on Ultra for the same picture, lamps reach further on High and below",
+    "check": "The bar looks the same on Ultra; a bit brighter at a distance on High",
     "done": true
    },
    {
-    "id": "J110.2",
-    "text": "Lighter lighting, the same picture: bounced light keeps fewer numbers per pixel; lamps too faint to see here skipped, shadow looks included",
-    "check": "The bar looks the same; fewer stutters",
-    "done": true
+    "id": "J111.2",
+    "text": "Ultra and Auto watch pictures drawn, not the clock: Ultra eases sharpness, then lamps a pixel, while pictures fall behind; back up when steady",
+    "check": "On Ultra a report shows nearly every frame drawn",
+    "done": false
    },
    {
-    "id": "J110.3",
-    "text": "Ultra and Auto keep it smooth: they step by late frames; Ultra eases sharpness 3x to 2.5x to 2x only while frames run late, back to 3x when steady; Auto climbs back up",
-    "check": "On Ultra walk around: smooth",
-    "done": true
+    "id": "J111.3",
+    "text": "Power in Settings → Graphics: Cooler (30 a second), Balanced, EXTREME (never eases, no frame limit)",
+    "check": "Cooler: the phone stays cooler; EXTREME: always the sharpest",
+    "done": false
    }
   ]
  },
@@ -1147,7 +1147,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "c3a3d10",
    "text": "J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39"
   },
   {

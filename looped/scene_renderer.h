@@ -215,7 +215,12 @@ class SceneRenderer {
   static constexpr uint32_t kMaxLights = 255;
   static constexpr uint32_t kLightsPerCell = 16;   // brightest first (4 x 4 bytes, 0xff ends the list)
   static constexpr float kMirrorLights = 4;        // the reflection takes the 4 strongest
-  static constexpr uint32_t kMaxGridCells = 256;
+  // The light grid: up to 48 x 48 cells over the floor (J111.2; it was
+  // 16 x 16, cells about 2 m wide, so a pixel went through every lamp that
+  // touched any part of its 2 m square). Sized so the lighting block stays
+  // under WebGPU's 64 KB for one uniform buffer (255 lights x 80 B + cells x 16 B).
+  static constexpr uint32_t kGridSide = 48;
+  static constexpr uint32_t kMaxGridCells = kGridSide * kGridSide;
   static constexpr uint32_t kMaxBones = 32;
   static constexpr size_t kMaxModels = 4096;
   struct GpuLight {
@@ -262,6 +267,7 @@ class SceneRenderer {
     GpuLight lights[kMaxLights];
     uint32_t cells[kMaxGridCells][4];  // 16 light indices (bytes), 0xff after the last
   };
+  static_assert(sizeof(LightingUniforms) <= 65536, "the lighting block must fit one uniform buffer (64 KB)");
   struct ObjectUniforms {
     engine::Mat4 model;
     float color[4];     // rgb = base color, a = metallic

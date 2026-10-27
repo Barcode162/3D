@@ -34,7 +34,7 @@ struct Light {
 };
 const kMaxLights = 255u;  // looped/scene_renderer.h
 const kMaskLamps = 127u;  // lamps the probes keep track of (looped/gi.h kMaskLamps)
-const kMaxGridCells = 256u;
+const kMaxGridCells = 2304u;  // 48 x 48 (looped/scene_renderer.h kGridSide)
 struct Lighting {
   lightCount: vec4u,
   grid: vec4f,

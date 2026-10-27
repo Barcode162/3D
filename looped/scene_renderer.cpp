@@ -271,10 +271,10 @@ void SceneRenderer::buildLighting() {
     l->lights[i].color[3] *= lightScale_[i];
   }
   const uint32_t cap = lightsPerPixel_ > 0 ? std::min<uint32_t>(lightsPerPixel_, kLightsPerCell) : kLightsPerCell;
-  // Cells cover the walkable area (blockers included) with at most 16 x 16.
+  // Cells cover the walkable area (blockers included) with at most kGridSide x kGridSide.
   float x0 = lightGridMin_.x, z0 = lightGridMin_.z;
   const float spanX = lightGridMax_.x - x0, spanZ = lightGridMax_.z - z0;
-  const float cell = std::max({spanX, spanZ, 1.0f}) / 16.0f;
+  const float cell = std::max({spanX, spanZ, 1.0f}) / static_cast<float>(kGridSide);
   const auto nx = static_cast<uint32_t>(std::ceil(spanX / cell)), nz = static_cast<uint32_t>(std::ceil(spanZ / cell));
   l->grid[0] = x0;
   l->grid[1] = z0;
@@ -314,12 +314,14 @@ void SceneRenderer::buildLighting() {
     }
   }
   int crowded = 0;
+  size_t listed = 0;  // lights listed over all cells (a pixel goes through its cell's list)
   for (uint32_t cz = 0; cz < nz; ++cz) {
     for (uint32_t cx = 0; cx < nx; ++cx) {
       reaching(cx, cz, reach);  // (strength here, light)
       std::sort(reach.begin(), reach.end(), [](auto a, auto b) { return a.first > b.first; });
       if (reach.size() > cap) ++crowded;
       const size_t n = std::min<size_t>(reach.size(), cap);
+      listed += n;
       uint32_t* c = l->cells[cz * nx + cx];
       for (size_t k = 0; k < kLightsPerCell; ++k) c[k / 4] |= (k < n ? reach[k].second : 0xffu) << (8 * (k % 4));
     }
@@ -330,8 +332,9 @@ void SceneRenderer::buildLighting() {
   lightsDirtyFrom_ = SIZE_MAX;
   lightsDirtyTo_ = 0;
   applyShadowSlots();  // which lamps use their shadow maps (J97)
-  LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells, at most %u each; lamps reach down to %.2f lux%s.",
-           classic_ ? "classic" : "real units", count, nx, nz, cell, cap, classic_ ? 0.0f : minLux,
+  LOG_INFO("Lights (%s): %zu in a %ux%u grid of %.2f m cells, at most %u each (%.1f on average); lamps reach down to %.2f lux%s.",
+           classic_ ? "classic" : "real units", count, nx, nz, cell, cap,
+           static_cast<double>(listed) / static_cast<double>(std::max(1u, nx * nz)), classic_ ? 0.0f : minLux,
            crowded ? " (some cells are too full; the faintest are left out)" : "");
   if (crowded) LOG_INFO("Crowded light cells: %d.", crowded);
 }

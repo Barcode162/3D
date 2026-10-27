@@ -7,7 +7,7 @@
 // the surface faces. Boxes get one clean projection per side.
 
 const kMaxLights = 255u;  // looped/scene_renderer.h (one byte per light in a cell; 0xff ends a list)
-const kMaxGridCells = 256u;
+const kMaxGridCells = 2304u;  // 48 x 48 (looped/scene_renderer.h kGridSide)
 
 struct Light {
   position: vec4f,   // xyz = position, w = range in meters
