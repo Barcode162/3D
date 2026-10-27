@@ -36,24 +36,36 @@
   }
  ],
  "now": {
-  "id": "J114",
-  "title": "The Studio parked",
-  "chapter": "the tools",
-  "about": "The Studio parked: the bar plays the world built in (edit assets/world, push), no Studio tests for engine or world changes, its jobs to Parked until the engine works (request 2026-10-27 #3)",
+  "id": "J113",
+  "title": "Only real objects give light",
+  "chapter": "the world",
+  "about": "Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze (request 2026-10-27 #4)",
   "serves": [
-   "N2"
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J114.1",
-    "text": "The Studio parked: the bar plays the world built in (the store only with ?liveworld=1), world changes skip the Studio's tests, the books updated, its jobs parked",
-    "check": "The bar loads as before; its log says World: built in.",
+    "id": "J113.1",
+    "text": "Wall lights and enough shadow maps: a panel on a wall shines only forward; 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares)",
+    "check": "Look at the darts ceiling and the floor: no square patches",
+    "done": true
+   },
+   {
+    "id": "J113.2",
+    "text": "Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1); whiter, dimmer string lights; thinner haze",
+    "check": "Look around: every light comes from something glowing",
+    "done": true
+   },
+   {
+    "id": "J113.3",
+    "text": "Less orange: tried a stronger white balance, kept as it was (the whiter bulbs were enough)",
+    "check": "The bar reads warm-white, not orange",
     "done": true
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked, J114)",
+ "upNext": "J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
  "road": {
   "world": [
    {

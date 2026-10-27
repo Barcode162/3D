@@ -56,12 +56,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J114 · The Studio parked** (the tools). The Studio parked: the bar plays the world built in (edit assets/world, push), no Studio tests for engine or world changes, its jobs to Parked until the engine works (request 2026-10-27 #3) · N2
-- [x] **J114.1** The Studio parked: the bar plays the world built in (the store only with ?liveworld=1), world changes skip the Studio's tests, the books updated, its jobs parked *Check:* The bar loads as before; its log says World: built in.
+**J113 · Only real objects give light** (the world). Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze (request 2026-10-27 #4) · N3
+- [x] **J113.1** Wall lights and enough shadow maps: a panel on a wall shines only forward; 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares) *Check:* Look at the darts ceiling and the floor: no square patches
+- [x] **J113.2** Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1); whiter, dimmer string lights; thinner haze *Check:* Look around: every light comes from something glowing
+- [x] **J113.3** Less orange: tried a stronger white balance, kept as it was (the whiter bulbs were enough) *Check:* The bar reads warm-white, not orange
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked, J114)
+**Up next, in order:** J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
