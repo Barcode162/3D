@@ -6,6 +6,10 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J113.2 (fix) The ARCADE sign's light keeps its name, light-sign, and its kind holds the panel on the sign's tube (the Studio's test turns that kind's colour red, live)
+
+`f683c9f` · 2026-10-27 03:01 · 3 files, +17 −24 · tests: none
+
 ## J113.3 (fix) The record put right: J113.3 changed nothing (the eyes stay at 55 % toward white); 75 % turned the bar grey in side-by-side pictures, and the whiter bulbs of J113.2 already brought it close to the user's screenshot
 
 `329b4cd` · 2026-10-27 02:32 · 1 files, +1 −1 · tests: none
