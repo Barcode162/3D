@@ -59,7 +59,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 **J113 · Only real objects give light** (the world). Only real objects give light: lights on every glowing thing and nowhere else, no square patches, less orange, thinner haze (request 2026-10-27 #3) · N3
 - [x] **J113.1** Wall lights and enough shadow maps: a panel on a wall shines only forward (no probe test, nothing through the wall); 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares) *Check:* Look at the darts ceiling and the floor: no square patches
 - [x] **J113.2** Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1 keeps it); whiter, dimmer string lights; thinner haze *Check:* Look around: every light comes from something glowing
-- [ ] **J113.3** Less orange: the eyes correct 75 % toward white (was 55 %) *Check:* The bar reads warm-white, not orange
+- [x] **J113.3** Less orange: the eyes correct 75 % toward white (was 55 %) *Check:* The bar reads warm-white, not orange
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
