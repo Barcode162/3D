@@ -48,3 +48,4 @@
 {"step":"J110","what":"Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late","mainSha":"f0074b3","lastPiece":"ee94e60","pieces":["J110.1","J110.2","J110.3"],"date":"2026-10-26 23:23"}
 {"step":"J110","what":"Frames under a menu left out of reports and of Ultra/Auto's watching","mainSha":"c3a3d10","lastPiece":"205ac39","pieces":["J110.3 (fix)","J110.3 (fix)"],"date":"2026-10-26 23:57"}
 {"step":"J111","what":"Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME","mainSha":"b33230d","lastPiece":"67fa65a","pieces":["J111.1","J111.2","J111.3","J111.3 (fix)"],"date":"2026-10-27 01:13"}
+{"step":"J112","what":"The preflight checklist: plain rules, one file each, run before any test or push","mainSha":"8b5f7ed","lastPiece":"7ccec08","pieces":["J112.1"],"date":"2026-10-27 01:46"}
