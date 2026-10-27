@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J113.3 Less orange: the eyes correct the light's colour 75 % of the way to white (was 55 %), so warm bulbs read warm-white, closer to the user's screenshot
+
+`25385e2` · 2026-10-27 02:30 · 2 files, +2 −2 · tests: none
+
+Phone check: The bar reads warm-white, not orange
+
 ## J113.2 Only real objects give light: 11 lights where nothing glowed are gone (the arcade's mid-air panels and ceiling light, a 288 lm white light by the stage speaker, a lone sign light); lights now sit on every neon sign, sconce and screen and along the arcade's neon strips (30 wall panels shining forward; four of the strips keep the arcade's wave, the ARCADE sign's light its buzz); lights a little off their source moved onto it (back-bar shelves, the fire, 4K Mania). New preflight rule R-LIGHT-1: every light within 0.6 m of a glowing surface (it flags the old file's 10 strays). String lights 2700 K and ~10 lm a bulb (were 2200 K, 258 lm a strand), pendants and back bar 2700 K; thinner haze (fog 0.012 to 0.008, beams 0.014 to 0.008)
 
 `f3204ef` · 2026-10-27 02:30 · 6 files, +1030 −351 · tests: none
