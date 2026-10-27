@@ -6,6 +6,10 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J111.3 (fix) The quality log keeps its wording (Quality: Low (1.3x), setting), the lamps a pixel after it: the menu test reads it
+
+`67fa65a` · 2026-10-27 00:52 · 1 files, +1 −1 · tests: none
+
 ## J111.3 Power in Settings → Graphics: Cooler (30 pictures a second: half the work, a cooler phone), Balanced, EXTREME (never eases: the sharpest every time)
 
 `d2aba95` · 2026-10-27 00:26 · 4 files, +6 −4 · tests: none
