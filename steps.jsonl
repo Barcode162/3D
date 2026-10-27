@@ -51,3 +51,4 @@
 {"step":"J112","what":"The preflight checklist: plain rules, one file each, run before any test or push","mainSha":"8b5f7ed","lastPiece":"7ccec08","pieces":["J112.1"],"date":"2026-10-27 01:46"}
 {"step":"J114","what":"The Studio parked: the bar plays the world built in, world changes skip the Studio's tests","mainSha":"7779287","lastPiece":"0010f40","pieces":["J114.1"],"date":"2026-10-27 04:14"}
 {"step":"J113","what":"Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze","mainSha":"088a198","lastPiece":"9f6c581","pieces":["J113.3 (fix)"],"date":"2026-10-27 04:35"}
+{"step":"J115","what":"Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl","mainSha":"ba18f3c","lastPiece":"477ceb2","pieces":["J115.1","J28.1","J28.2","J115.2","J109.1","J109.1 (fix)"],"date":"2026-10-27 05:58"}
