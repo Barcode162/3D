@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J111.2 Ultra and Auto watch the pictures drawn, not just the clock: under 90 % drawn (the GPU still busy) is behind, and Ultra eases its sharpness 3x, 2.5x, 2x, then its lamps a pixel 16, 12, 10, back when 97 % draw again; the engine side of Power too (Cooler expects half the pictures, EXTREME never eases)
+
+`22652e6` · 2026-10-27 00:26 · 5 files, +104 −17 · tests: native
+
+Phone check: On Ultra walk around, send a report: nearly every frame drawn; the log says what eased
+
 ## J111.1 A finer light grid: 48 x 48 cells (about 0.5 m, was 16 x 16 at 1.5 m) so a pixel goes through fewer lamps (Ultra: 8.0 to 6.8 on average, the same reach and picture); at High and below the lamps reach further for the same cap (High: down to 2.27 lux, was 3.55); the log names the average
 
 `392e4b0` · 2026-10-27 00:21 · 9 files, +83 −30 · tests: none
