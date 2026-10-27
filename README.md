@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J114.1 The Studio parked: the bar plays the world built into the game (the store's live world, and its 15 s watch, only with ?liveworld=1), so a world change is edited in assets/world and goes live with the push; a world change runs the build, native and game checks, not the Studio's; the live world test keeps its 5 checks and adds one (without the option the store is left alone); the Playbook and Handbook say so; the Studio's jobs (J53, J55, J57, J80) parked until the engine works
+
+`0010f40` · 2026-10-27 03:58 · 13 files, +118 −97 · tests: none
+
+Phone check: The bar loads as before; its log says World: built in.
+
 ## J113.2 (fix) The ARCADE sign's light keeps its name, light-sign, and its kind holds the panel on the sign's tube (the Studio's test turns that kind's colour red, live)
 
 `f683c9f` · 2026-10-27 03:01 · 3 files, +17 −24 · tests: none
