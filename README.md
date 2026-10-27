@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J115.2 The string lights' bulbs glow white (the model's Edison glow was orange: string_lights.glb's bulb material and tools/assets/decor_walls.py, so a rebuild keeps it)
+
+`e2dc252` · 2026-10-27 05:34 · 4 files, +3 −3 · tests: none
+
+Phone check: The bulbs look white
+
 ## J28.2 The chess picker: on a fresh game and from New game, Who do you want to play? lists the five bots (a face, a line about how each plays, its rating) and A person (1v1); picking one starts the game; the line under the status names your opponent; the chess test checks the picker (six choices, every rating) and picking a bot, then plays e4 on the 3D board as before
 
 `291d514` · 2026-10-27 05:34 · 5 files, +74 −9 · tests: none
