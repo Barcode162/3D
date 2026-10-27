@@ -16,6 +16,7 @@ Blender (`tools/assets/`, recipe 10); compressed textures at build time
 (`tools/assets/astc_pack.py`).
 
 ## Checking
+- **First, the preflight checklist** (J112, request 2026-10-27 #2): `node tools/preflight.mjs` (`all`: every rule; `list`: the rulebook). Quick plain rules, one file each in `tools/preflight/rules/<area>/`: a file changed without its partner, a model without its credits line, two things with one id, a number that must match in two files. A broken rule prints its id, the spot and the fix; the piece and ship tools run it first and stop on it. A new rule: copy `tools/preflight/TEMPLATE.mjs` to `rules/<area>/R-<AREA>-<n>.mjs` and fill it in (one plain sentence of what passing means, the files it watches, the check).
 - `node tools/project.mjs check` — the checks covering everything changed since `main`; `check changed` only what isn't committed; `check all` everything; `check <systems…>` by name (the list: `tools/lib/checks.mjs`).
 - Each check's log: `build/check/<name>.log`.
 - Native (no browser): `bash tools/native/run.sh` — maths, JSON, physics, cars, races, the world, light, chess, the protocol.

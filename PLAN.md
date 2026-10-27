@@ -56,10 +56,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J111 · Pictures drawn and power buttons** (the engine). Pictures drawn and power buttons: Ultra and Auto keep a new picture every refresh, a finer light grid, Cooler / Balanced / EXTREME (request 2026-10-27 #1) · N2 N3
-- [x] **J111.1** A finer light grid (48 x 48 cells, ~0.5 m): fewer lamps per pixel on Ultra for the same picture, lamps reach further on High and below *Check:* The bar looks the same on Ultra; a bit brighter at a distance on High
-- [x] **J111.2** Ultra and Auto watch pictures drawn, not the clock: Ultra eases sharpness, then lamps a pixel, while pictures fall behind; back up when steady *Check:* On Ultra a report shows nearly every frame drawn
-- [x] **J111.3** Power in Settings → Graphics: Cooler (30 a second), Balanced, EXTREME (never eases, no frame limit) *Check:* Cooler: the phone stays cooler; EXTREME: always the sharpest
+**J112 · The preflight checklist** (the tools). The preflight checklist: plain rules, one file each, run before any test or push; a broken rule names the rule, the spot and the fix (request 2026-10-27 #2) · N2
+- [x] **J112.1** The preflight checklist and its first 12 rules (world, docs, assets, engine, safety, plan), run first by the piece and ship tools; 28 models get their missing credits lines *Check:* Nothing to see in the bar
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -271,7 +269,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
+- `b33230d` J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
 - `c3a3d10` J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39
 - `f0074b3` J110.1, J110.2, J110.3: Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late → fb7283c^..ee94e60
 - `5d680c1` J108.1, J108.2, J108.3, J108.3 (fix): The piano redone: its glow and sound back at the piano, a bigger keyboard with loudness by touch, and sparks rising from the strings → 61c77a5^..87a2348

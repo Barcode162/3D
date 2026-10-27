@@ -40,7 +40,9 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
    ```
    PIECE_BRANCH=job/J<n> node tools/piece.mjs J<n>.<k> "<what changed, in words>" --check "<phone check>" --test none --no-shots
    ```
-   It finds the checks for the changed files (`node tools/check.mjs changed`,
+   It runs the preflight checklist first (`node tools/preflight.mjs`: a
+   broken rule names the rule, the spot and the fix; fix it, or add a rule
+   when a miss had no rule yet), then finds the checks for the changed files (`node tools/check.mjs changed`,
    browser tests included when they cover the change), builds only if the
    change needs it, takes before/after pictures (the bar's spots, or
    `--pages` for a site page; `--no-shots` when nothing on screen changes),

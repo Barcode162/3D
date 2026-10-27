@@ -36,31 +36,18 @@
   }
  ],
  "now": {
-  "id": "J111",
-  "title": "Pictures drawn and power buttons",
-  "chapter": "the engine",
-  "about": "Pictures drawn and power buttons: Ultra and Auto keep a new picture every refresh, a finer light grid, Cooler / Balanced / EXTREME (request 2026-10-27 #1)",
+  "id": "J112",
+  "title": "The preflight checklist",
+  "chapter": "the tools",
+  "about": "The preflight checklist: plain rules, one file each, run before any test or push; a broken rule names the rule, the spot and the fix (request 2026-10-27 #2)",
   "serves": [
-   "N2",
-   "N3"
+   "N2"
   ],
   "pieces": [
    {
-    "id": "J111.1",
-    "text": "A finer light grid (48 x 48 cells, ~0.5 m): fewer lamps per pixel on Ultra for the same picture, lamps reach further on High and below",
-    "check": "The bar looks the same on Ultra; a bit brighter at a distance on High",
-    "done": true
-   },
-   {
-    "id": "J111.2",
-    "text": "Ultra and Auto watch pictures drawn, not the clock: Ultra eases sharpness, then lamps a pixel, while pictures fall behind; back up when steady",
-    "check": "On Ultra a report shows nearly every frame drawn",
-    "done": true
-   },
-   {
-    "id": "J111.3",
-    "text": "Power in Settings → Graphics: Cooler (30 a second), Balanced, EXTREME (never eases, no frame limit)",
-    "check": "Cooler: the phone stays cooler; EXTREME: always the sharpest",
+    "id": "J112.1",
+    "text": "The preflight checklist and its first 12 rules (world, docs, assets, engine, safety, plan), run first by the piece and ship tools; 28 models get their missing credits lines",
+    "check": "Nothing to see in the bar",
     "done": true
    }
   ]
@@ -1147,7 +1134,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "b33230d",
    "text": "J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a"
   },
   {

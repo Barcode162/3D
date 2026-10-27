@@ -29,6 +29,8 @@ if (!job) refuse(`ship runs on a job branch (job/J<n>), not "${branch}"`);
 const unsaved = execSync('git status --porcelain', { encoding: 'utf8' }).split('\n').filter(Boolean).map((l) => l.slice(3))  // untrimmed: each line starts with its two status letters
   .filter((f) => !/^(PLAN\.md|CLAUDE\.md|docs\/plan\/|docs\/charter\/|docs\/records\/sessions\/)/.test(f));
 if (unsaved.length) refuse(`there are unsaved changes (${unsaved.join(', ')}): commit them as a piece (or take them out) first`);
+// The preflight checklist (J112): every rule watching what the job changed.
+if (!run('node tools/preflight.mjs')) refuse('the preflight checklist found broken rules (above)');
 sh('git fetch -q origin main');
 const foreign = sh('git log --format=%s origin/main..HEAD').split('\n').filter(Boolean)
   .filter((s) => !/^(J\d+(\.\d+)? |Notes: |World: |UI: |Merge )/.test(s));

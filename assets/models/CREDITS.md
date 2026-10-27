@@ -47,3 +47,8 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 Bottle labels (`tools/assets/labels.py`, J35.4): made-up brands set in DejaVu Serif and Sans (Bitstream Vera licence, public-domain changes) and Liberation Serif (SIL Open Font License); both allow text drawn into pictures.
 
 CC0 needs no credit, but we list sources anyway.
+| `arcade.glb`, `arcade_bench.glb`, the arcade's neon (`arcade_neon_*`), its signs (`arcade_sign_*`) | `arcade.py` | none (the carpet and signs are drawn by the script) |
+| `arcade_cabinet.glb` | `arcade_cabinet.py` | none (the screen, marquee and side art are drawn by the script) |
+| The chess pieces (`chess_*`, one model each) | `chess.py` | none |
+| `credit_coin.glb` | `credit_coin.py` | none |
+| The stage props as their own things since J73 (`stage_mic`, `stage_guitar`, `stage_amp`, `stage_lights`, `stage_stool`) | `stage.py` | Fabric Pattern 07, Leather Red 02, Wood Table 001, Dark Wood |

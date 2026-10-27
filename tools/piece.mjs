@@ -51,6 +51,18 @@ if (!tag) { console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n
 const t0 = Date.now();
 const step = (s) => console.log(`\n▶ ${tag}: ${s} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
 
+// The preflight checklist first (J112, tools/preflight/): quick, plain rules;
+// a broken one stops the piece before any build or test. --docs-unchanged
+// excuses the Handbook-page rule, with its reason.
+{
+  const excuse = opt('docs-unchanged') ? `R-DOCS-1=${opt('docs-unchanged')}` : '';
+  step('preflight');
+  if (!run(`PREFLIGHT_EXCUSE=${JSON.stringify(excuse)} node tools/preflight.mjs`)) {
+    console.log(`✗ ${tag}: the preflight checklist found broken rules (above)`);
+    process.exit(1);
+  }
+}
+
 function build() {
   step('build');
   if (!run(`${EMSDK} [ -f build/build.ninja ] || emcmake cmake -B build -G Ninja >/dev/null; cmake --build build 2>&1 | grep -E "error|Error|FAILED" ; exit \${PIPESTATUS[0]}`)) {
