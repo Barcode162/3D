@@ -681,6 +681,16 @@ void handleCommands() {
       g_app.quality.setMode(quality, engine::clockMs());
       applyQuality(first ? nullptr : "setting");
     }
+    // Power (J111.3): Cooler draws 30 a second, EXTREME never eases.
+    const int power = static_cast<int>(engine::settings::number("power", 1));
+    if (first || power != g_app.quality.power()) {
+      g_app.quality.setPower(power, engine::clockMs());
+      const double testFps = g_app.hooks.number("fps", 0);  // the tests' ?fps= wins
+      g_app.gpu.maxFps = testFps > 0 ? testFps : power == engine::QualityController::kCooler ? 30 : 0;
+      static const char* kPower[] = {"Cooler (30 pictures a second)", "Balanced", "EXTREME (never eases)"};
+      LOG_INFO("Power: %s.", kPower[g_app.quality.power()]);
+      applyQuality(first ? nullptr : "power");
+    }
     g_app.mirrorSetting = g_app.hooks.mirrorQ >= 0 ? g_app.hooks.mirrorQ
                                                    : static_cast<int>(engine::settings::number("mirrorQ", 0));
     applyMirrorDetail();
@@ -1337,7 +1347,12 @@ void applyQuality(const char* why) {
   const int level = g_app.quality.level();
   const double cap = g_app.quality.pixelRatioCap();
   const bool low = level == engine::QualityController::kLevelLow;
-  g_app.renderer.setLightsPerPixel(kLightsPerPixel[level]);
+  // Ultra eases its lamps last, while pictures still fall behind (J111.2).
+  const int lamps = level == engine::QualityController::kLevelUltra ? g_app.quality.ultraLamps() : kLightsPerPixel[level];
+  static int lastLamps = -1;
+  const bool lampsChanged = lamps != lastLamps;
+  lastLamps = lamps;
+  g_app.renderer.setLightsPerPixel(lamps);
   g_app.renderer.setBeamSteps(std::max(kBeamSteps[level], 4));
   // Lamp shadows (J97): ?shadows=0, Settings → Graphics → Lamp shadows.
   g_app.renderer.setLampShadows(g_app.hooks.feature("shadows") &&
@@ -1348,9 +1363,9 @@ void applyQuality(const char* why) {
   g_app.renderer.setLightBeams(kBeamSteps[level] > 0 && g_app.hooks.feature("beams") &&
                                engine::settings::number("lightBeams", 0) == 0);
   g_app.renderer.setGiLite(low || g_app.hooks.number("gilite", 0) != 0);
-  if (cap == g_app.gpu.resolutionCap) return;
+  if (cap == g_app.gpu.resolutionCap && !lampsChanged) return;
   g_app.gpu.resolutionCap = cap;
-  if (why) LOG_INFO("Quality: %s (%.1fx), %s.", kNames[level], cap, why);
+  if (why) LOG_INFO("Quality: %s (%.1fx, %d lamps a pixel), %s.", kNames[level], cap, lamps, why);
 }
 // The mirror's detail: the setting, or simple at Medium and Low.
 void applyMirrorDetail() {
@@ -1366,8 +1381,10 @@ void watchQuality(double nowMs) {
   const engine::Profiler::Frame& last = p.frame(0);
   const bool drawing = g_app.entered && !g_app.meridianOpen && !engine::frameTime().resumed &&
                        !engine::bridge::frame().modalOpen;  // a menu over the bar isn't the bar's cost
-  if (g_app.quality.frame(nowMs, last.intervalMs, last.cpuMs, last.gpuMs, drawing)) {
-    applyQuality(g_app.quality.pixelRatioCap() < g_app.gpu.resolutionCap ? "frames ran late" : "steady again");
+  const int before = g_app.quality.ultraStep() * 10 + g_app.quality.tier();
+  if (g_app.quality.frame(nowMs, last.intervalMs, last.cpuMs, last.gpuMs, drawing, last.drawn)) {
+    const bool eased = g_app.quality.ultraStep() * 10 + g_app.quality.tier() > before;
+    applyQuality(eased ? "the pictures fell behind" : "steady again");
     applyMirrorDetail();
   }
 }

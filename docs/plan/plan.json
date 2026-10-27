@@ -55,7 +55,7 @@
     "id": "J111.2",
     "text": "Ultra and Auto watch pictures drawn, not the clock: Ultra eases sharpness, then lamps a pixel, while pictures fall behind; back up when steady",
     "check": "On Ultra a report shows nearly every frame drawn",
-    "done": false
+    "done": true
    },
    {
     "id": "J111.3",

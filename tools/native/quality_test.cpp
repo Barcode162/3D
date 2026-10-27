@@ -34,6 +34,16 @@ static double stutter(engine::QualityController& q, double t, double seconds, in
   return t;
 }
 
+// Frames at 60 Hz where only every `every`-th draws a picture (the GPU busy).
+static double behind(engine::QualityController& q, double t, double seconds, int every, int* changes = nullptr) {
+  int i = 0;
+  for (double end = t + seconds * 1000; t < end; ++i) {
+    t += 16.7f;
+    if (q.frame(t, 16.7f, 1.3f, 50, true, i % every == 0) && changes) ++*changes;
+  }
+  return t;
+}
+
 int main() {
   using Q = engine::QualityController;
   {
@@ -114,6 +124,38 @@ int main() {
     check(q.tier() == 0, "nothing changes while not drawing (loading, Meridian)");
     run(q, 0, 20, 250, 2, 18);
     check(q.tier() == 0, "hitches (a frame over 100 ms) aren't a GPU signal");
+  }
+  {
+    // Report GADATU: the clock at 60, but only about half the frames drew a picture.
+    Q u;
+    u.setMode(Q::kUltra, 0);
+    double t = behind(u, 0, 5, 2);
+    check(u.pixelRatioCap() == 2.5 && u.ultraLamps() == 16, "Ultra: half the pictures drawn eases its sharpness");
+    t = behind(u, t, 30, 2);
+    check(u.pixelRatioCap() == 2.0 && u.ultraLamps() == 10, "then the lamps a pixel (12, 10), never under 2x");
+    t = behind(u, t, 60, 1);
+    check(u.pixelRatioCap() == 3.0 && u.ultraLamps() == 16, "every picture drawn again: back to 3x and 16 lamps");
+    Q a;
+    behind(a, 0, 10, 2);
+    check(a.tier() >= 1, "Auto steps down when pictures fall behind");
+    Q c;
+    c.setMode(Q::kUltra, 0);
+    c.setPower(Q::kCooler, 0);
+    behind(c, 0, 30, 2);
+    check(c.pixelRatioCap() == 3.0, "Cooler: half the pictures is the plan (30 a second), not behind");
+    behind(c, 30000, 10, 4);
+    check(c.pixelRatioCap() < 3.0, "Cooler: a quarter is behind");
+    Q x;
+    x.setMode(Q::kUltra, 0);
+    x.setPower(Q::kExtreme, 0);
+    int changes = 0;
+    behind(x, 0, 30, 3, &changes);
+    stutter(x, 30000, 10, 5, 30, &changes);
+    check(changes == 0 && x.pixelRatioCap() == 3.0 && x.ultraLamps() == 16, "EXTREME never eases");
+    Q xa;
+    xa.setPower(Q::kExtreme, 0);
+    run(xa, 0, 20, 25, 2, 50);
+    check(xa.tier() == 0, "EXTREME on Auto stays at High");
   }
   if (failures) { std::printf("QUALITY TEST FAILED (%d)\n", failures); return EXIT_FAILURE; }
   std::printf("QUALITY TEST PASSED\n");
