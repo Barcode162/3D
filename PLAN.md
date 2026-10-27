@@ -56,10 +56,9 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J113 · Only real objects give light** (the world). Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze (request 2026-10-27 #4) · N3
-- [x] **J113.1** Wall lights and enough shadow maps: a panel on a wall shines only forward; 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares) *Check:* Look at the darts ceiling and the floor: no square patches
-- [x] **J113.2** Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1); whiter, dimmer string lights; thinner haze *Check:* Look around: every light comes from something glowing
-- [x] **J113.3** Less orange: tried a stronger white balance, kept as it was (the whiter bulbs were enough) *Check:* The bar reads warm-white, not orange
+**J115 · Daylight string lights** (the world). Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5) · N3
+- [x] **J115.1** The string lights at 5000 K, cool industrial white near daylight (were 2700 K) *Check:* The strands light the hall white, not warm
+- [ ] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -271,7 +270,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
+- `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
 - `7779287` J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
 - `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
 - `b33230d` J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
