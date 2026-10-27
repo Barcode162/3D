@@ -21,7 +21,7 @@ window.bar3dSettings = (function () {
     hq: true, stereo: false, voice3d: true,
     perf: false,  // performance overlay (looped/profiler)
     // Graphics: quality 0 Auto, 1 High, 2 Medium, 3 Low (looped/quality.h); fov: degrees, up/down.
-    quality: [0, 0, 4], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
+    quality: [0, 0, 4], power: [1, 0, 2], fov: [70, 50, 100], mirrorQ: [0, 0, 1], lighting: [0, 0, 1], lampShadows: [0, 0, 1], softShade: [0, 0, 1], lightBeams: [0, 0, 1],
     // The crosshair (the user, 2026-10-26 #12; bar/web/crosshair.js): on, a tap
     // anywhere uses what the centre points at. Shape 0 dot, 1 cross, 2 cross
     // and dot, 3 circle, 4 circle and dot; size, thickness, gap in CSS px;
@@ -514,6 +514,8 @@ window.bar3dUi = (function () {
       toggle('Performance overlay', 'perf'),
       el('h3', { text: 'Graphics' }),
       choice('Quality', 'quality', ['Auto', 'Ultra', 'High', 'Medium', 'Low'], [0, 4, 1, 2, 3]),
+      choice('Power', 'power', ['Cooler', 'Balanced', 'EXTREME']),
+      el('div', { class: 'mSmall', text: 'Cooler draws 30 pictures a second: half the work, a cooler phone and a longer battery. Balanced draws up to 60 and eases Ultra or Auto only while pictures fall behind. EXTREME never eases: the sharpest every time, however hot the phone gets.' }),
       choice('Lighting', 'lighting', ['New', 'Classic']),
       el('div', { class: 'mSmall', text: 'Each level sets the sharpness, the lamps, shadows, soft shade and light beams together. Low turns shadows, soft shade and beams off; Ultra is the sharpest and the heaviest. Auto moves between Low and High as your phone keeps up.' }),
       choice('Lamp shadows', 'lampShadows', ['On', 'Off']),

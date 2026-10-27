@@ -61,7 +61,7 @@
     "id": "J111.3",
     "text": "Power in Settings → Graphics: Cooler (30 a second), Balanced, EXTREME (never eases, no frame limit)",
     "check": "Cooler: the phone stays cooler; EXTREME: always the sharpest",
-    "done": false
+    "done": true
    }
   ]
  },
