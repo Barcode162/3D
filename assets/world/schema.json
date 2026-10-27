@@ -176,7 +176,8 @@
       "axis": {"type": "vec3", "label": "Lies along", "live": true, "about": "The direction of a tube or a panel's first side (on the thing)."},
       "axis2": {"type": "vec3", "label": "Second side along", "live": true},
       "center": {"type": "vec3", "unit": "m", "label": "Middle", "live": true, "about": "Where the tube or panel's middle is, from the thing."},
-      "dims": {"type": "bool", "label": "Dims with the switch"}}},
+      "dims": {"type": "bool", "label": "Dims with the switch"},
+      "wall": {"type": "bool", "label": "On a wall", "about": "A panel on a wall (a sign, a sconce): it shines only from its front, the side its first side x second side points to (J113)."}}},
     "glowbox": {"label": "Glow", "about": "A small glowing thing (moths, sparks, smoke).", "fields": {
       "color": {"type": "color", "label": "Colour", "live": true},
       "glow": {"type": "number", "min": 0, "max": 10, "step": 0.1, "label": "Glow", "live": true},

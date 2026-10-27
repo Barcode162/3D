@@ -36,19 +36,31 @@
   }
  ],
  "now": {
-  "id": "J112",
-  "title": "The preflight checklist",
-  "chapter": "the tools",
-  "about": "The preflight checklist: plain rules, one file each, run before any test or push; a broken rule names the rule, the spot and the fix (request 2026-10-27 #2)",
+  "id": "J113",
+  "title": "Only real objects give light",
+  "chapter": "the world",
+  "about": "Only real objects give light: lights on every glowing thing and nowhere else, no square patches, less orange, thinner haze (request 2026-10-27 #3)",
   "serves": [
-   "N2"
+   "N3"
   ],
   "pieces": [
    {
-    "id": "J112.1",
-    "text": "The preflight checklist and its first 12 rules (world, docs, assets, engine, safety, plan), run first by the piece and ship tools; 28 models get their missing credits lines",
-    "check": "Nothing to see in the bar",
+    "id": "J113.1",
+    "text": "Wall lights and enough shadow maps: a panel on a wall shines only forward (no probe test, nothing through the wall); 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares)",
+    "check": "Look at the darts ceiling and the floor: no square patches",
     "done": true
+   },
+   {
+    "id": "J113.2",
+    "text": "Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1 keeps it); whiter, dimmer string lights; thinner haze",
+    "check": "Look around: every light comes from something glowing",
+    "done": false
+   },
+   {
+    "id": "J113.3",
+    "text": "Less orange: the eyes correct 75 % toward white (was 55 %)",
+    "check": "The bar reads warm-white, not orange",
+    "done": false
    }
   ]
  },
@@ -1134,7 +1146,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "8b5f7ed",
    "text": "J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08"
   },
   {

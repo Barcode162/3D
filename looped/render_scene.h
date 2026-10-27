@@ -60,6 +60,10 @@ struct PointLight {
   // and `axis2` are half its sides; it shines from both faces).
   int shape = 0;  // 0 ball, 1 tube, 2 panel
   Vec3 axis, axis2;
+  // On a wall (a sign, a sconce; J113): a panel that shines only from its
+  // front (the side axis x axis2 points to), so no light goes through the
+  // wall, and nothing needs to test whether it's seen.
+  bool oneSided = false;
   // The placed model the lamp belongs to (its bulb, its shade; an index into
   // RenderScene::models, -1 = none): left out of the lamp's own shadow (J97).
   int model = -1;

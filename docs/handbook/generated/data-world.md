@@ -221,6 +221,7 @@ Where a tap does something (world axes).
 | `axis2` | Second side along | vec3 |  |  | yes |  |
 | `center` | Middle | vec3 | m |  | yes | Where the tube or panel's middle is, from the thing. |
 | `dims` | Dims with the switch | bool |  |  |  |  |
+| `wall` | On a wall | bool |  |  |  | A panel on a wall (a sign, a sconce): it shines only from its front, the side its first side x second side points to (J113). |
 
 ### Glow (`glowbox`)
 

@@ -56,8 +56,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J112 · The preflight checklist** (the tools). The preflight checklist: plain rules, one file each, run before any test or push; a broken rule names the rule, the spot and the fix (request 2026-10-27 #2) · N2
-- [x] **J112.1** The preflight checklist and its first 12 rules (world, docs, assets, engine, safety, plan), run first by the piece and ship tools; 28 models get their missing credits lines *Check:* Nothing to see in the bar
+**J113 · Only real objects give light** (the world). Only real objects give light: lights on every glowing thing and nowhere else, no square patches, less orange, thinner haze (request 2026-10-27 #3) · N3
+- [x] **J113.1** Wall lights and enough shadow maps: a panel on a wall shines only forward (no probe test, nothing through the wall); 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares) *Check:* Look at the darts ceiling and the floor: no square patches
+- [ ] **J113.2** Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1 keeps it); whiter, dimmer string lights; thinner haze *Check:* Look around: every light comes from something glowing
+- [ ] **J113.3** Less orange: the eyes correct 75 % toward white (was 55 %) *Check:* The bar reads warm-white, not orange
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -269,7 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
+- `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
 - `b33230d` J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
 - `c3a3d10` J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39
 - `f0074b3` J110.1, J110.2, J110.3: Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late → fb7283c^..ee94e60

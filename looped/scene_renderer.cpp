@@ -232,7 +232,7 @@ SceneRenderer::GpuLight SceneRenderer::gpuLightOf(const PointLight& p, float sca
     setVec4(g.position, p.position, engine::light::reach(cd) + size);
     setVec4(g.color, engine::light::unitLuminance(color), cd * scale);
     setVec4(g.axis, p.axis, static_cast<float>(p.shape));
-    setVec4(g.axis2, p.axis2, 0);
+    setVec4(g.axis2, p.axis2, p.oneSided ? 1.0f : 0.0f);  // w: shines from its front only (J113)
   }
   g.params[0] = p.radius;
   return g;
@@ -1623,12 +1623,13 @@ void SceneRenderer::setLampShadows(bool on) {
   applyShadowSlots();
 }
 
-// The brightest lamps get a map (small bulbs and candles keep the probes'
-// test); drawing starts again from the first face.
+// The brightest lamps get a map (up to kShadowLamps; since J113 enough for
+// every lamp in the room, so none falls back to the probes' blocky test);
+// drawing starts again from the first face.
 void SceneRenderer::planShadows() {
   std::vector<size_t> order;
   for (size_t i = 0; i < lightIntensity_.size(); ++i)
-    if (lightIntensity_[i] > 0) order.push_back(i);
+    if (lightIntensity_[i] > 0 && !lights_[i].oneSided) order.push_back(i);  // a wall light needs none (J113)
   std::sort(order.begin(), order.end(), [&](size_t a, size_t b) { return lightIntensity_[a] > lightIntensity_[b]; });
   if (order.size() > kShadowLamps) order.resize(kShadowLamps);
   shadowSlot_.assign(lights_.size(), -1);
@@ -1640,7 +1641,10 @@ void SceneRenderer::planShadows() {
   shadowReady_.assign(shadowLight_.size(), false);
   shadowCursor_ = 0;
   applyShadowSlots();
-  LOG_INFO("Lamp shadows: the %zu brightest of %zu lamps.", shadowLight_.size(), lights_.size());
+  size_t onWalls = 0;
+  for (const PointLight& p : lights_) onWalls += p.oneSided ? 1 : 0;
+  LOG_INFO("Lamp shadows: the %zu brightest of %zu lamps (%zu on walls shine forward only, no map needed).",
+           shadowLight_.size(), lights_.size(), onWalls);
 }
 
 void SceneRenderer::applyShadowSlots() {

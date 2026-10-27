@@ -641,6 +641,7 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
   let r2 = max(l.params.x * l.params.x, 1e-4);
   let panel = shape > 1.5;
   let pn = normalize(cross(ha, hb) + vec3f(0.0, 1e-6, 0.0));
+  let oneSided = l.axis2.w > 0.5;  // on a wall: lights only what is in front of it (J113)
   // Diffuse from points along the lamp.
   let count = select(3, 4, panel);
   for (var i = 0; i < count; i++) {
@@ -658,7 +659,7 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
     if (nl <= 0.0) { continue; }
     let qq = d2 / reach2;
     let w = clamp(1.0 - qq * qq, 0.0, 1.0);
-    let emit = select(1.0, abs(dot(pn, dir)), panel);  // a panel is brightest head-on
+    let emit = select(1.0, select(abs(dot(pn, dir)), max(-dot(pn, dir), 0.0), oneSided), panel);  // brightest head-on
     out.diffuse += l.color.rgb * (l.color.w / f32(count)) * emit * nl * w * w / max(d2, r2);
   }
   // The highlight: the lamp's point nearest the reflected ray.
@@ -694,7 +695,7 @@ fn areaLight(l: Light, p: vec3f, n: vec3f, v: vec3f, a: f32, roughness: f32, nv:
     let h = normalize(dir + v);
     let d = distributionGgx(max(dot(n, h), 0.0), aSphere) * (a * a) / (aSphere * aSphere) * (a / aSize);
     let spec = d * visibilitySmith(nv, nl, roughness) * fresnelRough(f0, max(dot(v, h), 0.0), roughness);
-    let emit = select(1.0, abs(dot(pn, dir)), panel);
+    let emit = select(1.0, select(abs(dot(pn, dir)), max(-dot(pn, dir), 0.0), oneSided), panel);
     let qq = dist * dist / reach2;
     let w = clamp(1.0 - qq * qq, 0.0, 1.0);
     out.specular = l.color.rgb * l.color.w * emit * w * w / max(dist * dist, r2) * spec * (nl * kPi);
@@ -779,7 +780,7 @@ fn shade(worldPos: vec3f, n: vec3f, base: vec3f, roughnessIn: f32, metallic: f32
       var seen = 1.0;
       let shadowSlot = i32(l.params.y + 0.5) - 1;  // its shadow map (J97), -1 = none
       if (shadowSlot >= 0) { seen = lampShadow(worldPos, n, l, shadowSlot, adds >= 0.05 * here); }
-      else if (giWeight > 0.0) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
+      else if (giWeight > 0.0 && l.axis2.w < 0.5) { seen = mix(1.0, giLampVisible(gi, lightIndex), giWeight); }
       diffuse += al.diffuse * seen;
       specular += al.specular * seen;
       continue;

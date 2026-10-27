@@ -457,7 +457,7 @@ class SceneRenderer {
   // kShadowSize² (16-bit depth) in one cube-array texture, drawn
   // kShadowFacesPerFrame faces a frame; a lamp uses its map once all six
   // faces are drawn (GpuLight::params[1] = slot + 1; 0 = none).
-  static constexpr uint32_t kShadowLamps = 16, kShadowSize = 256, kShadowFacesPerFrame = 12;
+  static constexpr uint32_t kShadowLamps = 40, kShadowSize = 256, kShadowFacesPerFrame = 12;
   static constexpr float kShadowNear = 0.1f, kShadowFar = 25.0f;  // matches looped/shaders/scene.wgsl
   wgpu::Texture shadowTex_;
   wgpu::TextureView shadowArrayView_, shadowDummyView_;
