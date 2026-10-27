@@ -1325,9 +1325,22 @@
     {
       "id": "light-sign",
       "is": "light",
-      "about": "The pink light by the ARCADE sign: it buzzes now and then, like old neon.",
+      "about": "The ARCADE sign's own light (a panel on its tube, J113): it buzzes now and then, like old neon.",
       "parts": {
-        "light": {"color": [1, 0.2, 0.65], "intensity": 0.7, "range": 2.5, "radius": 0.2, "lumens": 126},
+        "light": {
+          "color": [1, 0.2, 0.65],
+          "intensity": 0.7,
+          "range": 2.5,
+          "radius": 0.05,
+          "lumens": 130,
+          "shape": "panel",
+          "center": [0, 3.13, 0.08],
+          "axis": [1, 0, 0],
+          "length": 1.6,
+          "axis2": [0, 1, 0],
+          "width": 0.4,
+          "wall": true
+        },
         "sound": {"effect": "buzz", "every": [4, 11], "gain": 0.18, "near": 4}
       },
       "loops": {"buzz": {"period": 1.2, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.6}]}},

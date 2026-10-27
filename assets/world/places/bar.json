@@ -3886,27 +3886,7 @@
         }
       }
     },
-    {
-      "id": "light-arcade-sign-bar",
-      "kind": "light-sign",
-      "at": [3.7, 0, -7.4],
-      "parts": {
-        "light": {
-          "color": [1, 0.2, 0.65],
-          "intensity": 1,
-          "range": 4,
-          "radius": 0.05,
-          "lumens": 130,
-          "shape": "panel",
-          "center": [0, 3.13, 0.08],
-          "axis": [1, 0, 0],
-          "length": 1.6,
-          "axis2": [0, 1, 0],
-          "width": 0.4,
-          "wall": true
-        }
-      }
-    },
+    {"id": "light-sign", "kind": "light-sign", "at": [3.7, 0, -7.4]},
     {
       "id": "light-arcade-sign-inside",
       "kind": "light-neon",

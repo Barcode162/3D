@@ -513,7 +513,7 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `light-arcade-neon-triangle` | `light-neon` |  |  | no model |
 | `light-arcade-neon-zigzag` | `light-neon` |  |  | no model |
 | `light-arcade-neon-wave` | `light-neon` |  |  | no model |
-| `light-arcade-sign-bar` | `light-sign` |  |  | no model |
+| `light-sign` | `light-sign` |  |  | no model |
 | `light-arcade-sign-inside` | `light-neon` |  |  | no model |
 | `light-wall-sconce-1` | `light-bulb` |  |  | no model |
 | `light-wall-sconce-2` | `light-bulb` |  |  | no model |
