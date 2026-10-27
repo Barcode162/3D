@@ -193,6 +193,10 @@ BarScene buildBarScene(const std::string& place = "bar");
 // with their materials' looks, the models, lights, rooms, air and textures.
 engine::RenderScene renderSceneOf(const BarScene& scene);
 
+// The bar's look after it's drawn (the eyes, the mood): one place, so the
+// game and the light tools (tools/native/light_tool.cpp `ref`) see alike.
+engine::Mood barMood();
+
 // Generates the surface textures (one per TextureLayer, in order).
 std::vector<engine::MaterialImages> buildBarTextures();
 

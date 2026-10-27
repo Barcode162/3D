@@ -129,17 +129,16 @@ void Bvh::split(uint32_t root, std::vector<Vec3>& centroids, std::vector<Vec3>& 
 
 namespace {
 
-// Slab test: the distance at which the ray enters the box, or +inf.
+// Slab test: the distance at which the ray enters the box, or +inf. No
+// branches but the last (min / max): twice as fast as testing axis by axis
+// on the tools' machine (J116.1), the same answers.
 inline float boxEnter(const float lo[3], const float hi[3], const float o[3], const float inv[3], float tMax) {
-  float t0 = 0, t1 = tMax;
-  for (int a = 0; a < 3; ++a) {
-    float n = (lo[a] - o[a]) * inv[a], f = (hi[a] - o[a]) * inv[a];
-    if (n > f) std::swap(n, f);
-    t0 = n > t0 ? n : t0;
-    t1 = f < t1 ? f : t1;
-    if (t0 > t1) return std::numeric_limits<float>::infinity();
-  }
-  return t0;
+  const float x0 = (lo[0] - o[0]) * inv[0], x1 = (hi[0] - o[0]) * inv[0];
+  const float y0 = (lo[1] - o[1]) * inv[1], y1 = (hi[1] - o[1]) * inv[1];
+  const float z0 = (lo[2] - o[2]) * inv[2], z1 = (hi[2] - o[2]) * inv[2];
+  const float t0 = std::max(std::max(std::min(x0, x1), std::min(y0, y1)), std::max(std::min(z0, z1), 0.0f));
+  const float t1 = std::min(std::min(std::max(x0, x1), std::max(y0, y1)), std::min(std::max(z0, z1), tMax));
+  return t0 <= t1 ? t0 : std::numeric_limits<float>::infinity();
 }
 
 }  // namespace

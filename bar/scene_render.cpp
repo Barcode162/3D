@@ -32,15 +32,7 @@ engine::RenderScene renderSceneOf(const BarScene& scene) {
   r.spawnPosition = scene.spawnPosition;
   r.makeTextures = buildBarTextures;
   r.avatarTextureScale = kAvatarTextureScale;
-  // A warm bar at night: amber tint, a touch richer, soft corners; the eyes a
-  // third of a stop darker than the engine's default (the user, 2026-10-26 #3:
-  // "sort of blinding … a tiny bit less strong").
-  r.mood.exposureComp = -1.63f;
-  r.mood.tint = {1.04f, 1.0f, 0.94f};
-  r.mood.saturation = 1.08f;
-  r.mood.contrast = 1.04f;
-  r.mood.lift = 0.01f;
-  r.mood.vignette = 0.22f;
+  r.mood = barMood();
   return r;
 }
 

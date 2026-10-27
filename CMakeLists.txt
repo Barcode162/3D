@@ -13,7 +13,12 @@ endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS looped/*.cpp)
 list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/apps/")  # programs built on the engine (below)
+# The new skeleton's pieces (J116, Looped rebuilt): the words and the baker
+# are built into their labs (below), not into the live bar, until the user
+# switches (J116.8).
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/(words|bake)/")
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS bar/*.cpp)
+list(FILTER APP_SOURCES EXCLUDE REGEX "/bar/light_rig\\.cpp$")  # the bar's rig in words: J116.6
 
 # Looped, the engine, is its own library (J86): it never includes bar/ and
 # talks to its page only through window.loopedHost (looped/host.h;
@@ -164,4 +169,24 @@ add_custom_command(OUTPUT ${SITE}/looped/viewer.js ${SITE}/looped/viewer.wasm ${
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/looped/apps/viewer/index.html ${SITE}/looped/index.html
                    VERBATIM)
 list(APPEND SITE_OUTPUTS ${SITE}/looped/viewer.js ${SITE}/looped/viewer.wasm ${SITE}/looped/index.html)
+
+# The labs (J116, Looped rebuilt): each piece of the new skeleton perfected
+# in its own small program and page, at /bar/labs/<name>/, before the bar
+# inherits it. The word lab: Looped Script's words (labs/words/).
+file(GLOB WORDS_SOURCES CONFIGURE_DEPENDS looped/words/*.cpp)
+add_executable(words_lab labs/words/words_lab.cpp ${WORDS_SOURCES} looped/world/loop.cpp looped/json.cpp)
+target_include_directories(words_lab PRIVATE ${CMAKE_SOURCE_DIR})
+target_compile_options(words_lab PRIVATE -Wall -Wextra -Werror)
+target_link_options(words_lab PRIVATE
+  -sMODULARIZE=1 -sEXPORT_NAME=WordsLab -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1
+  "-sEXPORTED_FUNCTIONS=_lw_load,_lw_read,_lw_lights,_lw_words,_malloc,_free"
+  "-sEXPORTED_RUNTIME_METHODS=ccall,UTF8ToString"
+  $<IF:$<CONFIG:Release>,-O3,-g>)
+add_custom_command(OUTPUT ${SITE}/labs/words/words_lab.js ${SITE}/labs/words/words_lab.wasm DEPENDS words_lab
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${SITE}/labs/words
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:words_lab>/words_lab.js $<TARGET_FILE_DIR:words_lab>/words_lab.wasm ${SITE}/labs/words
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/labs/words/words_lab.js ${SITE}/labs/words/words_lab.wasm)
+site_copy(${CMAKE_SOURCE_DIR}/labs/web "labs/")
+
 add_custom_target(site ALL DEPENDS ${SITE_OUTPUTS})

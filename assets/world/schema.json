@@ -137,6 +137,7 @@
       "size": {"type": "vec3", "unit": "m", "label": "Size"},
       "material": {"type": "choice", "choices": "material", "label": "Material"},
       "color": {"type": "color", "label": "Colour"},
+      "glow": {"type": "number", "min": 0, "max": 20, "step": 0.5, "label": "Glow", "about": "Glows by itself (a lit sign, a bulb's globe): times its colour."},
       "solid": {"type": "bool", "label": "Solid", "about": "Off: you walk through it (a rug)."}}},
     "solids": {"label": "Shapes you bump into", "list": true, "fields": {
       "at": {"type": "vec3", "unit": "m", "label": "Middle"},

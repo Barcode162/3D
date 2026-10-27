@@ -1,0 +1,31 @@
+{
+  "id": "lab",
+  "about": "The light lab (J116.3): a small test room with one lamp of every kind, so the light formula is perfected in seconds here before the bar inherits it. A bulb under a shade, a bare bulb in a corner, a neon tube, a flat sign on a wall, a candle; a table and two stools to cast shadows (the physics lab knocks them over).",
+  "kinds": ["kinds/bar.json", "kinds/home.json"],
+  "air": {"ambient": [0.08, 0.06, 0.05], "fog": [0.02, 0.015, 0.015], "fogDensity": 0.01, "beams": 0.01},
+  "spawn": {"at": [0, 1.65, 2.6], "yaw": 0},
+  "lightGrid": {"min": [-4, 0, -4], "max": [4, 0, 4]},
+  "rooms": [{"id": "lab", "min": [-3.25, -0.2, -3.25], "max": [3.25, 3.3, 3.25]}],
+  "doorways": [],
+  "areas": {"arcade": {"min": [0, 0, 0], "max": [0, 0, 0]}},
+  "points": {"arcade-door": [0, 0, 0]},
+  "things": [
+    {"id": "room", "kind": "home-room", "at": [0, 0, 0]},
+    {"id": "table", "kind": "round_table", "at": [0, 0, 0]},
+    {"id": "candle", "kind": "candle", "at": [0, 0.785, 0]},
+    {"id": "stool-1", "kind": "table_stool", "at": [0.78, 0, 0], "turn": 90},
+    {"id": "stool-2", "kind": "table_stool", "at": [-0.78, 0, 0], "turn": -90},
+    {"id": "lamp", "kind": "pendant_lamp", "at": [-1.4, 2.94, -1.2]},
+    {"id": "lamp-light", "kind": "light-bulb", "at": [-1.4, 2.15, -1.2], "parts": {"light": {"color": [1, 1, 1], "intensity": 1.8, "range": 5.5, "radius": 0.08, "dims": true, "lumens": 324, "kelvin": 2400}}},
+    {"id": "corner-bulb", "kind": "light-bulb", "at": [2.5, 2.55, 2.5], "parts": {
+      "light": {"color": [1, 1, 1], "intensity": 1, "range": 4.5, "radius": 0.05, "lumens": 200, "kelvin": 3000},
+      "boxes": [{"at": [0, 0, 0], "size": [0.1, 0.1, 0.1], "color": [1, 0.85, 0.65], "glow": 3, "solid": false}]}},
+    {"id": "neon-tube", "kind": "light-neon", "at": [-2.96, 2.1, 0.6], "parts": {
+      "light": {"color": [1, 0.25, 0.6], "intensity": 0.9, "range": 3.5, "radius": 0.03, "lumens": 160, "shape": "tube", "center": [0, 0, 0], "axis": [0, 0, 1], "length": 1.6},
+      "boxes": [{"at": [0, 0, 0], "size": [0.03, 0.03, 1.6], "color": [1, 0.25, 0.6], "glow": 5, "solid": false}]}},
+    {"id": "wall-sign", "kind": "light-neon-wave", "at": [0.8, 2.15, -2.98], "parts": {
+      "light": {"color": [0.3, 0.8, 1], "intensity": 0.9, "range": 3.5, "radius": 0.05, "lumens": 150, "shape": "panel", "center": [0, 0, 0.02], "axis": [1, 0, 0], "length": 1.0, "axis2": [0, 1, 0], "width": 0.3, "wall": true},
+      "boxes": [{"at": [0, 0, 0], "size": [1.0, 0.3, 0.03], "color": [0.3, 0.8, 1], "glow": 5, "solid": false}]}},
+    {"id": "candle-flame", "kind": "light-fire", "at": [0, 0.9, 0], "parts": {"light": {"color": [1, 1, 1], "intensity": 0.3, "range": 2, "radius": 0.01, "lumens": 12, "kelvin": 1800}}}
+  ]
+}

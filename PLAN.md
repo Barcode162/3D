@@ -58,7 +58,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J116 · One light formula, every browser, the first script** (the engine). Looped, rebuilt (request 2026-10-27 #13): the engine's skeleton as separate pieces (words, world, light, drawing, physics), each perfected in its own lab, and the language everywhere (places, things, lights and behaviours as sentences; every word a script made of other words, #10, #11); one light formula on WebGL2 and WebGPU (#7, #8, #9); the bar inherits it all and today's bar stays live until the user says switch (#12, #13) · N1 N2 N3
-- [ ] **J116.1** The reference: our own path tracer renders a world with every light correct, the standard every step is measured against *Check:* The reference pictures, side by side with today's bar
+- [x] **J116.1** The reference: our own path tracer renders a world with every light correct, the standard every step is measured against *Check:* The reference pictures, side by side with today's bar
 - [ ] **J116.2** The word lab: the language core, every word a script made of other words (thing, describing, doing, place, cause and amount words), the first dictionary, one meaning per sentence, errors with line and fix hint, the safe runner, a page to try phrases *Check:* On the word lab page, type a warm candle that flickers: it shows what it means and does
 - [ ] **J116.3** Worlds in words and the light lab: places and things as sentences placed by place words; the lab room baked per light channel and relit by its words, matching the reference within a set error *Check:* The light lab page: the room from its sentences, its baked light beside the reference
 - [ ] **J116.4** The draw lab: one drawing interface with WebGPU and WebGL2 backends; the lab drawn the same on both; a clear page for a browser with neither *Check:* The draw lab on Firefox for Android and an older iPhone
@@ -273,7 +273,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
+- `ba18f3c` J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
 - `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
 - `7779287` J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
 - `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08

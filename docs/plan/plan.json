@@ -50,7 +50,7 @@
     "id": "J116.1",
     "text": "The reference: our own path tracer renders a world with every light correct, the standard every step is measured against",
     "check": "The reference pictures, side by side with today's bar",
-    "done": false
+    "done": true
    },
    {
     "id": "J116.2",
@@ -1130,7 +1130,7 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
-   "build": null,
+   "build": "ba18f3c",
    "text": "J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2"
   },
   {

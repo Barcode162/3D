@@ -353,4 +353,18 @@ Vec3 resolveCollisions(const BarScene& scene, Vec3 p, float radius) {
   return p;
 }
 
+// A warm bar at night: amber tint, a touch richer, soft corners; the eyes a
+// third of a stop darker than the engine's default (the user, 2026-10-26 #3:
+// "sort of blinding … a tiny bit less strong").
+engine::Mood barMood() {
+  engine::Mood m;
+  m.exposureComp = -1.63f;
+  m.tint = {1.04f, 1.0f, 0.94f};
+  m.saturation = 1.08f;
+  m.contrast = 1.04f;
+  m.lift = 0.01f;
+  m.vignette = 0.22f;
+  return m;
+}
+
 }  // namespace app

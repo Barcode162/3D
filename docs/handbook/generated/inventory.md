@@ -628,6 +628,22 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 | `jukebox-glow` | `light-jukebox` |  |  | no model |
 | `neon` | `light-neon` |  |  | no model |
 
+## lab (11 things)
+
+| Thing | Kind | Sits on | Model | Note |
+|---|---|---|---|---|
+| `room` | `home-room` |  |  | no model |
+| `table` | `round_table` |  | `round_table.glb` |  |
+| `candle` | `candle` |  | `candle.glb` |  |
+| `stool-1` | `table_stool` |  | `table_stool.glb` |  |
+| `stool-2` | `table_stool` |  | `table_stool.glb` |  |
+| `lamp` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `lamp-light` | `light-bulb` |  |  | no model |
+| `corner-bulb` | `light-bulb` |  |  | no model |
+| `neon-tube` | `light-neon` |  |  | no model |
+| `wall-sign` | `light-neon-wave` |  |  | no model |
+| `candle-flame` | `light-fire` |  |  | no model |
+
 ## showroom (54 things)
 
 | Thing | Kind | Sits on | Model | Note |

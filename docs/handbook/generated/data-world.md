@@ -149,6 +149,7 @@ Plain shapes, drawn and solid: floors, walls, shelves.
 | `size` | Size | vec3 | m |  |  |  |
 | `material` | Material | choice: material |  |  |  |  |
 | `color` | Colour | color |  |  |  |  |
+| `glow` | Glow | number |  | 0 … 20 (step 0.5) |  | Glows by itself (a lit sign, a bulb's globe): times its colour. |
 | `solid` | Solid | bool |  |  |  | Off: you walk through it (a rug). |
 
 ### Shapes you bump into (`solids`)

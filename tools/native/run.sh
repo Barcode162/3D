@@ -29,6 +29,8 @@ declare -A TESTS=(
   [bar_world_test]="tools/native/bar_world_test.cpp $SCENE"
   [walk_test]="tools/native/walk_test.cpp $SCENE"
   [physics_test]="tools/native/physics_test.cpp looped/physics.cpp bar/props.cpp $SCENE"
+  [rig_test]="tools/native/rig_test.cpp bar/light_rig.cpp looped/words/syntax.cpp looped/words/program.cpp looped/words/rig.cpp $SCENE"
+  [words_test]="tools/native/words_test.cpp looped/words/words.cpp looped/words/program.cpp looped/words/syntax.cpp looped/world/loop.cpp looped/json.cpp"
 )
 for t in "${!TESTS[@]}"; do
   echo "== $t (g++)"

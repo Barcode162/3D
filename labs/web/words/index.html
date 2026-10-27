@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Word lab · Looped</title>
+<meta name="description" content="Looped Script's words: type a phrase, see what it means and how it glows (J116.2).">
+<style>
+  :root {
+    --bg: #0d0e12; --panel: #16181f; --line: #262a35; --text: #e9e7e2; --soft: #9aa0ad;
+    --accent: #ffb35c; --bad: #ff6b6b; --good: #7be0a0; --chip: #1f2230;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 60px; padding-top: max(18px, env(safe-area-inset-top)); }
+  h1 { font-size: 22px; margin: 0 0 2px; letter-spacing: .2px; }
+  .sub { color: var(--soft); margin: 0 0 16px; font-size: 14px; }
+  .field { display: flex; gap: 8px; }
+  input[type=text] {
+    flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+  .chip { background: var(--chip); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 6px 11px; font-size: 13px; cursor: pointer; }
+  .chip:active { transform: scale(.97); }
+  canvas { width: 100%; height: 260px; display: block; border-radius: 14px; background: #07080b; border: 1px solid var(--line); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 12px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--soft); margin: 0 0 8px; font-weight: 600; }
+  .problem { color: var(--bad); }
+  .problem .hint { color: var(--text); display: block; margin-top: 4px; }
+  .problem .where { color: var(--soft); font-size: 13px; }
+  ul.trail { list-style: none; margin: 0; padding: 0; }
+  ul.trail li { padding: 3px 0 3px 12px; border-left: 2px solid var(--line); margin-left: 4px; }
+  ul.trail li.head { border-left-color: var(--accent); font-weight: 600; }
+  ul.trail ul { list-style: none; padding-left: 14px; margin: 2px 0; }
+  .lights { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .light { background: #0f1117; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .kinds { display: grid; gap: 10px; }
+  .kind h3 { margin: 0 0 6px; font-size: 14px; color: var(--accent); font-weight: 600; }
+  .word { display: inline-block; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; margin: 0 4px 6px 0; font-size: 14px; cursor: pointer; }
+  .word.on { border-color: var(--accent); color: var(--accent); }
+  pre.meaning { background: #0b0c10; border: 1px solid var(--line); border-radius: 10px; padding: 10px; overflow-x: auto; font: 13px/1.5 ui-monospace, Menlo, monospace; margin: 8px 0 0; white-space: pre-wrap; }
+  .like a { color: var(--accent); text-decoration: none; margin-right: 8px; }
+  footer { color: var(--soft); font-size: 13px; margin-top: 18px; }
+  footer a { color: var(--soft); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Word lab</h1>
+  <p class="sub">Looped Script, where every word is a small script made of other words. Type a phrase to see what it means and how it glows.</p>
+
+  <div class="field">
+    <input id="phrase" type="text" value="a very warm candle that flickers fast" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="A phrase">
+  </div>
+  <div class="chips" id="examples"></div>
+
+  <canvas id="stage" aria-label="What the phrase looks like"></canvas>
+
+  <div class="card" id="problems" hidden><h2>Not yet</h2><div id="problemList"></div></div>
+  <div class="card" id="lightsCard" hidden><h2>Its light, right now</h2><div class="lights" id="lights"></div></div>
+  <div class="card" id="meaningCard" hidden><h2>Why it is as it is</h2><div id="trail"></div></div>
+
+  <div class="card">
+    <h2>The words</h2>
+    <div class="kinds" id="words"></div>
+    <div id="wordInfo"></div>
+  </div>
+
+  <footer>J116.2 · the dictionary: <a href="../../assets/words/first.looped">first.looped</a> · <a href="../">all labs</a></footer>
+</main>
+
+<script src="words_lab.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var EXAMPLES = [
+    'a warm candle that flickers',
+    'a very warm candle that flickers fast',
+    'a blue neon tube, buzzing gently',
+    'two dim bulbs',
+    'a sign, waving',
+    'a pink sign, waving wildly',
+    'a bulb, 3000 K, 400 lumens',
+    'a cozy candle',
+    'a warm table'
+  ];
+  var lab = null, thing = null, start = performance.now();
+
+  function call(name, args) {
+    return lab.ccall(name, 'string', args.map(function () { return 'string'; }), args);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function code(s) { return esc(s).replace(/`([^`]+)`/g, '<b>$1</b>'); }
+
+  EXAMPLES.forEach(function (e) {
+    var b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = e;
+    b.onclick = function () { $('phrase').value = e; read(); };
+    $('examples').appendChild(b);
+  });
+
+  function read() {
+    if (!lab) return;
+    var r = JSON.parse(call('lw_read', [$('phrase').value]));
+    var probs = r.problems || [];
+    $('problems').hidden = !probs.length;
+    $('problemList').innerHTML = probs.map(function (p) {
+      return '<div class="problem">' + code(p.what) + (p.hint ? '<span class="hint">' + code(p.hint) + '</span>' : '') +
+        '<span class="where">column ' + p.column + '</span></div>';
+    }).join('');
+    thing = r.ok ? r.thing : null;
+    $('meaningCard').hidden = !thing;
+    $('lightsCard').hidden = !thing;
+    if (thing) $('trail').innerHTML = trail(thing);
+    try { localStorage.setItem('wordlab.phrase', $('phrase').value); } catch (e) {}
+  }
+
+  function trail(t) {
+    var head = (t.count > 1 ? t.count + ' × ' : '') + t.word;
+    var items = t.trail.map(function (s) { return '<li>' + code(s) + '</li>'; }).join('');
+    var parts = (t.parts || []).map(function (p) { return '<li>' + trail(p) + '</li>'; }).join('');
+    return '<ul class="trail"><li class="head">' + esc(head) + '</li>' + items + (parts ? '<li><ul>' + parts + '</ul></li>' : '') + '</ul>';
+  }
+
+  // ---- The stage: the thing's lights, drawn as they glow right now ----
+  var canvas = $('stage'), ctx = canvas.getContext('2d');
+  function rgb(c, k) {
+    var m = Math.max(c[0], c[1], c[2], 1e-6);
+    return 'rgba(' + Math.round(255 * c[0] / m) + ',' + Math.round(255 * c[1] / m) + ',' + Math.round(255 * c[2] / m) + ',' + k + ')';
+  }
+  function frame() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#07080b'; ctx.fillRect(0, 0, w, h);
+    if (thing && lab) {
+      var t = (performance.now() - start) / 1000;
+      var glows = JSON.parse(call('lw_lights', [String(t), String(t * 2)])) || [];
+      // Metres → pixels, zoomed so the thing fills the stage: it stands on
+      // the floor in the middle (copies side by side).
+      var spread = Math.max(1, thing.count), ext = extent(thing, [0, 0, 0]);
+      var tall = Math.max(ext.top, 0.12), wide = Math.max(ext.wide, 0.12);
+      var gap = wide * 1.4;
+      var scale = Math.min((h - 70) / tall, (w - 40) / (gap * (spread - 1) + wide));
+      var floor = h - 30, cx = w / 2;
+      var place = function (p, copy) { return [cx + (copy - (spread - 1) / 2) * gap * scale + p[0] * scale, floor - p[1] * scale]; };
+      ctx.fillStyle = '#12141b'; ctx.fillRect(0, floor, w, h - floor);
+      for (var copy = 0; copy < spread; ++copy) {
+        // What it's made of: a model or a box, as a quiet shape.
+        drawBody(thing, [0, 0, 0], copy, place, scale);
+        glows.forEach(function (g) {
+          var at = place(g.at, copy), lit = Math.sqrt(Math.max(g.lumens, 0) / 200);
+          var r = Math.max(10, 70 * lit + 16);
+          // The light on the floor below it.
+          var pool = ctx.createRadialGradient(at[0], floor, 0, at[0], floor, r * 2.2);
+          pool.addColorStop(0, rgb(g.colour, Math.min(0.55, 0.35 * lit)));
+          pool.addColorStop(1, rgb(g.colour, 0));
+          ctx.fillStyle = pool; ctx.fillRect(at[0] - r * 2.2, floor, r * 4.4, h - floor);
+          // The glow in the air.
+          var halo = ctx.createRadialGradient(at[0], at[1], 0, at[0], at[1], r);
+          halo.addColorStop(0, rgb(g.colour, Math.min(0.9, 0.55 * lit + 0.15)));
+          halo.addColorStop(1, rgb(g.colour, 0));
+          ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(at[0], at[1], r, 0, Math.PI * 2); ctx.fill();
+          // The glowing part itself.
+          ctx.fillStyle = rgb(g.colour.map(function (v) { return v * 0.6 + 0.4; }), Math.min(1, 0.6 + lit));
+          if (g.shape === 1) { var L = Math.max(g.a * scale, 8); ctx.fillRect(at[0] - L / 2, at[1] - 2, L, 4); }
+          else if (g.shape === 2) { var W = Math.max(g.a * scale, 8), H = Math.max(g.b * scale, 4); ctx.fillRect(at[0] - W / 2, at[1] - H / 2, W, H); }
+          else { ctx.beginPath(); ctx.arc(at[0], at[1], Math.max(2.5, g.a * scale / 2), 0, Math.PI * 2); ctx.fill(); }
+        });
+      }
+      $('lights').innerHTML = glows.map(function (g, i) {
+        return '<div class="light"><span class="swatch" style="background:' + rgb(g.colour, 1) + '"></span>' +
+          ['a ball', 'a tube', 'a panel'][g.shape] + '<br><span class="num">' + g.lumens.toFixed(1) + ' lumens</span></div>';
+      }).join('');
+    }
+    requestAnimationFrame(frame);
+  }
+  // How tall and wide a thing is (m), its parts and lights included.
+  function bodySize(t) {
+    if (t.box && (t.box[0] > 0 || t.box[1] > 0)) return [t.box[0], t.box[1]];
+    if (t.model) return /candle/.test(t.model) ? [0.06, 0.09] : /table/.test(t.model) ? [0.7, 0.75] : /stool/.test(t.model) ? [0.35, 0.65] : /pendant/.test(t.model) ? [0.4, 0.5] : [0.3, 0.4];
+    return [0, 0];
+  }
+  function extent(t, at) {
+    var here = [at[0] + t.at[0], at[1] + t.at[1], at[2] + t.at[2]], s = bodySize(t);
+    var top = here[1] + s[1], wide = s[0];
+    if (t.light) {
+      var r = t.light.shape === 'ball' ? t.light.a * 4 + 0.08 : 0.15;
+      top = Math.max(top, here[1] + r);
+      wide = Math.max(wide, t.light.shape === 'ball' ? r * 2 : t.light.a + 0.1);
+    }
+    (t.parts || []).forEach(function (p) { var e = extent(p, here); top = Math.max(top, e.top); wide = Math.max(wide, e.wide); });
+    return { top: top, wide: wide };
+  }
+  function drawBody(t, at, copy, place, scale) {
+    var here = [at[0] + t.at[0], at[1] + t.at[1], at[2] + t.at[2]];
+    var p = place(here, copy);
+    ctx.fillStyle = '#2a2e3a';
+    if (t.box && (t.box[0] > 0 || t.box[1] > 0)) {
+      if (!t.light) ctx.fillRect(p[0] - t.box[0] * scale / 2, p[1] - t.box[1] * scale / 2, t.box[0] * scale, Math.max(2, t.box[1] * scale));
+    } else if (t.model) {
+      // A model: a quiet stand-in of its size (the draw lab draws the real one).
+      var size = bodySize(t);
+      ctx.fillRect(p[0] - size[0] * scale / 2, p[1] - size[1] * scale, size[0] * scale, size[1] * scale);
+    }
+    if (t.glow && t.box && t.box[0] > 0) {
+      ctx.fillStyle = rgb(t.glow, 0.9);
+      ctx.fillRect(p[0] - t.box[0] * scale / 2, p[1] - Math.max(2, t.box[1] * scale) / 2, t.box[0] * scale, Math.max(2, t.box[1] * scale));
+    }
+    (t.parts || []).forEach(function (part) { drawBody(part, here, copy, place, scale); });
+  }
+
+  // ---- The words ----
+  function showWords(words) {
+    var groups = {};
+    words.forEach(function (w) {
+      var k = w.kind === 'a describing word' ? 'describes ' + (w.describes === 'doing' ? 'a doing' : 'a light') : w.kind;
+      (groups[k] = groups[k] || []).push(w);
+    });
+    var order = ['a thing', 'describes a light', 'describes a doing', 'a doing', 'an amount', 'a place word'];
+    $('words').innerHTML = order.filter(function (k) { return groups[k]; }).map(function (k) {
+      return '<div class="kind"><h3>' + esc(k) + '</h3>' + groups[k].map(function (w) {
+        return '<span class="word" data-w="' + esc(w.name) + '">' + esc(w.name) + '</span>';
+      }).join('') + '</div>';
+    }).join('');
+    var byName = {};
+    words.forEach(function (w) { byName[w.name] = w; });
+    $('words').onclick = function (e) {
+      var el = e.target.closest('.word'); if (!el) return;
+      [].forEach.call(document.querySelectorAll('.word.on'), function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+      var w = byName[el.dataset.w];
+      var head = 'word ' + w.name + (w.forms.length && w.kind !== 'a thing' ? ' (' + w.forms.join(', ') + ')' : '') + ': ' +
+        (w.kind === 'a describing word' ? 'describes a ' + w.describes : w.kind) + (w.parent ? ', a kind of ' + w.parent : '');
+      $('wordInfo').innerHTML = '<pre class="meaning">' + esc(head + '\n' + w.meaning.map(function (m) { return '  ' + m; }).join('\n')) + '</pre>' +
+        (w.like.length ? '<p class="like">like: ' + w.like.map(function (l) { return '<a href="#" data-l="' + esc(l) + '">' + esc(l) + '</a>'; }).join('') + '</p>' : '');
+    };
+    $('wordInfo').onclick = function (e) {
+      var a = e.target.closest('a[data-l]'); if (!a) return;
+      e.preventDefault();
+      var target = document.querySelector('.word[data-w="' + a.dataset.l + '"]');
+      if (target) target.click();
+      else { $('phrase').value = 'a ' + a.dataset.l + ' candle'; read(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    };
+  }
+
+  $('phrase').addEventListener('input', read);
+  try { var saved = localStorage.getItem('wordlab.phrase'); if (saved) $('phrase').value = saved; } catch (e) {}
+
+  WordsLab().then(function (m) {
+    lab = m;
+    return fetch('../../assets/words/first.looped').then(function (r) { return r.text(); });
+  }).then(function (text) {
+    var probs = JSON.parse(call('lw_load', [text, 'assets/words/first.looped']));
+    if (probs.length) console.warn('dictionary problems', probs);
+    showWords(JSON.parse(call('lw_words', [])));
+    read();
+  }).catch(function (e) {
+    $('problems').hidden = false;
+    $('problemList').innerHTML = '<div class="problem">The lab didn\'t start: ' + esc(e && e.message || e) + '</div>';
+  });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

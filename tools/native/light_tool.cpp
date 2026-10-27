@@ -3,12 +3,17 @@
 //   build/native/light_tool gi [place]           builds the bounced light, times it, solves it on the CPU
 //   build/native/light_tool map [place] [y] [out.png]   a top-down map of the bounced light at height y
 //   build/native/light_tool fit [place]          fits each lamp to the glowing surface beside it (L1.4)
+//   build/native/light_tool ref [place] [out] [spot ...]   the reference pictures (J116.1): every light
+//       path traced at the standard spots (tools/lib/spots.mjs, or "name=x,y,z,yaw,pitch"); writes
+//       <out>/<spot>.png (what the eye sees), <spot>-light.png (the light alone, surfaces white) and
+//       <spot>.pfm (the light in lux, floats, for comparing). SAMPLES, BOUNCES, WIDTH, HEIGHT, THREADS.
 // Built by tools/native/run.sh (as light_tool_test with "test") and by bench_gi.
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <tuple>
@@ -18,6 +23,7 @@
 #include <vector>
 
 #include "bar/bar_scene.h"
+#include "looped/bake/light_paths.h"
 #include "looped/bvh.h"
 #include "looped/gltf.h"
 #include "looped/light_units.h"
@@ -50,6 +56,17 @@ struct Loaded {
   SceneGeometry geo;
   Aabb volume;
   int models = 0, skipped = 0;
+  std::map<std::string, ModelData> files;  // each model file read once (the baker unwraps them)
+  // Everything added to `geo`, in order: its file, where, its id in
+  // geo.triModel, and its first triangle there (the baker finds a
+  // triangle's model and primitive from these).
+  struct Placed {
+    std::string file;
+    Mat4 world;
+    uint32_t id = 0;
+    size_t firstTri = 0;
+  };
+  std::vector<Placed> placed;
 };
 
 // The place's still models, as the game has them (props left out).
@@ -57,7 +74,7 @@ void load(const std::string& place, Loaded& L) {
   L.scene = app::buildBarScene(place);
   const std::vector<uint8_t> t = readBytes("assets/models/albedo.json");
   L.table.parse(std::string(t.begin(), t.end()));
-  std::map<std::string, ModelData> cache;
+  std::map<std::string, ModelData>& cache = L.files;
   for (size_t i = 0; i < L.scene.models.size(); ++i) {
     const app::ModelPlacement& p = L.scene.models[i];
     if (p.prop != app::Prop::kNone) {
@@ -74,7 +91,36 @@ void load(const std::string& place, Loaded& L) {
       }
       it = cache.emplace(p.file, std::move(d)).first;
     }
-    L.geo.add(it->second, placement(p.position, p.rotation, p.scale), p.file, L.table, static_cast<uint32_t>(i));
+    L.placed.push_back({p.file, placement(p.position, p.rotation, p.scale), static_cast<uint32_t>(i), L.geo.triangleCount()});
+    L.geo.add(it->second, L.placed.back().world, p.file, L.table, static_cast<uint32_t>(i));
+    ++L.models;
+  }
+  // Plain boxes and shapes (a place built without models, E7.1): their own
+  // colour and glow, each its own "model" after the placed ones.
+  for (size_t i = 0; i < L.scene.objects.size(); ++i) {
+    const app::SceneObject& o = L.scene.objects[i];
+    ModelData d;
+    ModelPrimitive prim;
+    for (const engine::Vertex& v : o.mesh.vertices) {
+      ModelVertex mv;
+      mv.position = v.position;
+      mv.normal = v.normal;
+      prim.vertices.push_back(mv);
+    }
+    prim.indices = o.mesh.indices;
+    prim.material = 0;
+    d.primitives.push_back(std::move(prim));
+    ModelMaterial mm;
+    mm.name = "box";
+    mm.baseColor[0] = o.color.x, mm.baseColor[1] = o.color.y, mm.baseColor[2] = o.color.z;
+    mm.metallic = 0;
+    mm.emissive = o.color * o.emissive;
+    d.materials.push_back(mm);
+    const std::string name = "#box-" + std::to_string(i);
+    const auto id = static_cast<uint32_t>(L.scene.models.size() + i);
+    L.placed.push_back({name, placement(o.position, o.rotation, 1), id, L.geo.triangleCount()});
+    L.geo.add(d, L.placed.back().world, name, L.table, id);
+    L.files[name] = std::move(d);
     ++L.models;
   }
   if (const char* c = std::getenv("SIMPLIFY"); c && std::atof(c) > 0) {
@@ -387,6 +433,82 @@ int fit(Loaded& L, const std::string& out) {
   return 0;
 }
 
+
+// The reference pictures (J116.1). The spots as tools/lib/spots.mjs has them.
+const char* const kSpots[][2] = {
+    {"door", "0.4,1.65,5.2,0,0"},       {"mirror", "6.0,1.65,3.6,90,0"},  {"bartop", "-2.5,1.65,-2.6,0,-20"},
+    {"backbar", "-1.0,1.65,-3.2,0,8"}, {"piano", "-3.6,1.65,3.2,-115,-10"},
+};
+
+int envInt(const char* name, int def) {
+  const char* v = std::getenv(name);
+  return v && *v ? std::atoi(v) : def;
+}
+
+// A float picture (PFM: three floats a pixel, bottom row first).
+void writePfm(const std::string& path, int w, int h, const std::vector<Vec3>& px) {
+  std::ofstream f(path, std::ios::binary);
+  f << "PF\n" << w << " " << h << "\n-1.0\n";
+  for (int y = h - 1; y >= 0; --y)
+    f.write(reinterpret_cast<const char*>(&px[static_cast<size_t>(y) * w]), static_cast<std::streamsize>(sizeof(Vec3) * w));
+}
+
+int ref(Loaded& L, const std::string& out, std::vector<std::string> spots) {
+  if (spots.empty())
+    for (auto& s : kSpots) spots.push_back(s[0]);
+  std::vector<bake::Lamp> lamps;
+  lamps = bake::lampsOf(L.scene.lights);
+  const double t0 = nowMs();
+  bake::Room room;
+  room.build(L.geo, lamps);
+  std::printf("room: %zu triangles, %zu lamps, ray tree in %.0f ms\n", L.geo.triangleCount(), lamps.size(), nowMs() - t0);
+  if (std::getenv("LAMPS"))
+    for (size_t i = 0; i < lamps.size(); ++i) {
+      const bake::Lamp& l = lamps[i];
+      const int thing = i < L.scene.lightThing.size() ? L.scene.lightThing[i] : -1;
+      std::printf("  %-22s at %6.2f %5.2f %6.2f  %-5s %6.1f cd  colour %.2f %.2f %.2f  model %d\n",
+                  thing >= 0 ? L.scene.world->thing(thing).id.c_str() : "?", l.position.x, l.position.y, l.position.z,
+                  l.shape == 0 ? "ball" : l.shape == 1 ? "tube" : "panel", l.cd, l.color.x, l.color.y, l.color.z, l.model);
+    }
+  bake::RenderSettings rs;
+  rs.samples = envInt("SAMPLES", 64);
+  rs.bounces = envInt("BOUNCES", 6);
+  rs.picks = envInt("PICKS", 4);
+  rs.threads = envInt("THREADS", 4);
+  rs.seed = static_cast<uint64_t>(envInt("SEED", 1));
+  std::filesystem::create_directories(out);
+  for (const std::string& arg : spots) {
+    std::string name = arg, cam;
+    if (const size_t eq = arg.find('='); eq != std::string::npos) name = arg.substr(0, eq), cam = arg.substr(eq + 1);
+    for (auto& s : kSpots)
+      if (cam.empty() && name == s[0]) cam = s[1];
+    float c[5];
+    if (std::sscanf(cam.c_str(), "%f,%f,%f,%f,%f", &c[0], &c[1], &c[2], &c[3], &c[4]) != 5) {
+      std::printf("unknown spot %s\n", arg.c_str());
+      return 2;
+    }
+    bake::View v;
+    v.eye = {c[0], c[1], c[2]};
+    v.yaw = radians(c[3]);
+    v.pitch = radians(c[4]);
+    v.width = envInt("WIDTH", 480);
+    v.height = envInt("HEIGHT", 270);
+    const bake::Picture pic = bake::render(room, v, rs);
+    const Mood mood = app::barMood();
+    writePng(out + "/" + name + ".png", v.width, v.height, bake::toDisplay(pic.color, v.width, v.height, mood));
+    // The light alone: every surface a light grey (50 %), so shadows and bounces show plainly.
+    std::vector<Vec3> clay(pic.light.size());
+    for (size_t i = 0; i < clay.size(); ++i) clay[i] = pic.light[i] * (0.5f / kPi);
+    writePng(out + "/" + name + "-light.png", v.width, v.height, bake::toDisplay(clay, v.width, v.height, mood));
+    writePfm(out + "/" + name + ".pfm", v.width, v.height, pic.light);
+    double lux = 0;
+    for (const Vec3& e : pic.light) lux += light::luminance(e);
+    std::printf("%-8s %d x %d, %d paths a pixel: %.1f s, %.1f M rays/s; average light %.0f lux\n", name.c_str(), v.width,
+                v.height, rs.samples, pic.ms / 1000, pic.rays / 1e3 / std::max(pic.ms, 1.0), lux / pic.light.size());
+  }
+  return 0;
+}
+
 }  // namespace
 
 #ifndef LIGHT_TOOL_NO_MAIN
@@ -400,7 +522,8 @@ int main(int argc, char** argv) {
   if (cmd == "rays") return raybench(L);
   if (cmd == "fit") return fit(L, argc > 3 ? argv[3] : "build/light_fit.json");
   if (cmd == "map") return map(L, argc > 3 ? static_cast<float>(std::atof(argv[3])) : 1.2f, argc > 4 ? argv[4] : "build/gi_map.png");
-  std::printf("usage: light_tool stats|gi|map|fit [place] ...\n");
+  if (cmd == "ref") return ref(L, argc > 3 ? argv[3] : "build/ref", std::vector<std::string>(argv + std::min(argc, 4), argv + argc));
+  std::printf("usage: light_tool stats|gi|map|fit|ref [place] ...\n");
   return 2;
 }
 #endif
