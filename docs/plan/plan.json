@@ -66,7 +66,7 @@
     "id": "J28.2",
     "text": "A chess menu: pick a bot or wait for a person (1v1), and the game starts",
     "check": "Open chess, pick a bot: the game starts against it",
-    "done": false
+    "done": true
    },
    {
     "id": "J109.1",

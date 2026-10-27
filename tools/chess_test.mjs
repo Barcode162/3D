@@ -1,6 +1,8 @@
 // The lounge's chessboard (upgrade plan item 13): sits down at the board
-// (?chess), taps e2 then e4 on the 3D board, checks the move happened and
-// the computer answered. Screenshots: build/chess.png (after e4 and the reply).
+// (?chess); the full-screen board opens on the opponent picker (J28: five
+// bots with their ratings, and a person), picks Rosa; then, back in the 3D
+// view, taps e2 then e4 on the 3D board, checks the move happened and the
+// computer answered. Screenshots: build/chess-picker.png, build/chess.png.
 // Usage: NODE_PATH=$(npm root -g) node tools/chess_test.mjs
 import { launchBrowser, logText, logErrors, openBar } from './lib/browser.mjs';
 import { serveSite } from './lib/site.mjs';
@@ -13,6 +15,18 @@ const browser = await launchBrowser();
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 check('the bar loads', await openBar(page, url, 'skipintro&chess'));
 await page.waitForTimeout(2500);
+// The picker (J28.2): every bot with its rating, and a person.
+const pick = await page.waitForSelector('#chessFull .cfPick', { timeout: 10000 }).then(() => true, () => false);
+const rows = pick ? await page.$$eval('#chessFull .cfBot', (b) => b.map((x) => x.textContent)) : [];
+check(`the full-screen board opens on the picker (${rows.length} choices)`, pick && rows.length === 6);
+check('each bot shows its rating', rows.slice(0, 5).every((t) => /\d+ Elo/.test(t)) && /person/i.test(rows[5] || ''));
+await page.screenshot({ path: 'build/chess-picker.png' });
+if (pick) await page.click('#chessFull .cfBot >> nth=1');
+const picked = await page.waitForFunction(() => /Chess: a new game against Rosa/.test(document.getElementById('log').textContent),
+                                          null, { timeout: 5000 }).then(() => true, () => false);
+check('picking Rosa starts a game against her', picked);
+await page.click('#chessFull button:has-text("3D view")').catch(() => {});
+await page.waitForTimeout(2500);  // the camera settles over the board
 // Where a square is on screen: the game's chess camera (bar/projects/chess/chess.cpp):
 // above white's edge, 0.5 m up and 0.38 m back, pitched down 0.92 rad, 70 deg tall.
 function screenOf(file, rank) {

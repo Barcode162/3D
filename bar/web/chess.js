@@ -8,7 +8,9 @@
 // kept on this phone.
 window.bar3dChess = (function () {
   'use strict';
-  var root = null, st = null, sel = -1, shownLast = '', boardEl = null;
+  var root = null, st = null, sel = -1, shownLast = '', boardEl = null, picking = false, pickedOnce = false;
+  // Each bot's face colour in the picker, weakest to strongest.
+  var FACES = ['#9ad38a', '#f2c46b', '#f29a5c', '#e7646a', '#b48cf0'];
 
   // Square colours (light, dark), pieces (white: fill, edge; black: fill,
   // edge; the shine across them), the background, and the marks.
@@ -84,6 +86,19 @@ window.bar3dChess = (function () {
       '#chessFull .cfThemes button{padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:12px;}',
       '#chessFull .cfThemes button.on{outline:2px solid currentColor;}',
       '#chessFull .cfSw{width:16px;height:16px;border-radius:4px;display:inline-block;}',
+      // The opponent picker (J28.2): the bots with their ratings, or a person.
+      '#chessFull .cfPick{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);z-index:2;',
+      '  animation:cfFade .2s ease both;padding:0 12px calc(16px + env(safe-area-inset-bottom));}',
+      '#chessFull .cfSheet{width:min(420px,100%);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px;',
+      '  background:rgba(20,16,12,.92);box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);animation:cfUp .32s cubic-bezier(.3,1.4,.55,1) both;}',
+      '#chessFull .cfSheet h3{margin:0 0 4px;font-size:18px;}',
+      '#chessFull .cfBot{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;width:100%;}',
+      '#chessFull .cfBot.on{outline:2px solid currentColor;}',
+      '#chessFull .cfFace{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:16px;font-weight:800;color:#1a120c;}',
+      '#chessFull .cfBot b{display:block;font-size:15px;}',
+      '#chessFull .cfBot span.ab{display:block;font-weight:500;font-size:12px;opacity:.75;}',
+      '#chessFull .cfElo{margin-left:auto;flex:none;font:700 12px ui-monospace,Menlo,monospace;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.14);}',
+      '@keyframes cfFade{from{opacity:0}}@keyframes cfUp{from{transform:translateY(40px);opacity:0}}',
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -111,7 +126,8 @@ window.bar3dChess = (function () {
     root.style.color = theme.ink;
     root.innerHTML = '';
     root.appendChild(el('div', 'cfStatus', st.status));
-    root.appendChild(el('div', 'cfSub', st.msg || ((st.me ? 'You are black' : 'You are white') + ' · move ' + st.move)));
+    var vs = st.two ? 'against a person' : st.bot >= 0 && st.bots ? 'against ' + st.bots[st.bot][0] + ' (about ' + st.bots[st.bot][1] + ')' : 'waiting for a person';
+    root.appendChild(el('div', 'cfSub', st.msg || ((st.me ? 'You are black' : 'You are white') + ' ' + vs + ' · move ' + st.move)));
     var size = Math.floor(Math.min(window.innerWidth - 24, window.innerHeight - 260) / 8) * 8;
     var q = size / 8;
     boardEl = el('div', 'cfBoard');
@@ -176,7 +192,7 @@ window.bar3dChess = (function () {
     var keys = el('div', 'cfKeys');
     var key = function (label, fn) { var b = el('button', '', label); b.onclick = fn; keys.appendChild(b); };
     key('Leave', function () { cmd('chessLeave'); });
-    if (st.canNew) key('New game', function () { cmd('chessNew'); });
+    if (st.canNew) key('New game', function () { picking = true; render(); });
     key('3D view', function () { cmd('chessFull', 0); });
     root.appendChild(keys);
     var themes = el('div', 'cfThemes');
@@ -194,6 +210,38 @@ window.bar3dChess = (function () {
       themes.appendChild(b);
     });
     root.appendChild(themes);
+    if (picking && st.canNew && st.bots) root.appendChild(picker());
+  }
+
+  // Who to play (J28.2): a bot, each with its rating and a line about how
+  // it plays, or a person (the next one to sit across from you).
+  function picker() {
+    var wrap = el('div', 'cfPick'), sheet = el('div', 'cfSheet');
+    wrap.onclick = function (e) { if (e.target === wrap) { picking = false; render(); } };
+    sheet.appendChild(el('h3', '', 'Who do you want to play?'));
+    st.bots.forEach(function (b, i) {
+      var row = el('button', 'cfBot' + (!st.two && st.bot === i ? ' on' : ''));
+      var face = el('span', 'cfFace', b[0][0]);
+      face.style.background = FACES[i % FACES.length];
+      var txt = el('span');
+      txt.appendChild(el('b', '', b[0]));
+      txt.appendChild(el('span', 'ab', b[2]));
+      row.appendChild(face); row.appendChild(txt);
+      row.appendChild(el('span', 'cfElo', b[1] + ' Elo'));
+      row.onclick = function () { picking = false; cmd('chessNew', i + 1); };
+      sheet.appendChild(row);
+    });
+    var person = el('button', 'cfBot' + (!st.two && st.bot < 0 ? ' on' : ''));
+    var pf = el('span', 'cfFace', '♟');
+    pf.style.background = '#e9e2d6';
+    var pt = el('span');
+    pt.appendChild(el('b', '', 'A person (1v1)'));
+    pt.appendChild(el('span', 'ab', 'The next one to sit across from you plays black'));
+    person.appendChild(pf); person.appendChild(pt);
+    person.onclick = function () { picking = false; cmd('chessNew', 100); };
+    sheet.appendChild(person);
+    wrap.appendChild(sheet);
+    return wrap;
   }
 
   window.addEventListener('resize', function () { if (root) render(); });
@@ -201,9 +249,12 @@ window.bar3dChess = (function () {
   return {
     // From the game: the position, or null (the board closed or back in 3D).
     state: function (s) {
-      if (!s) { st = null; close(); return; }
+      if (!s) { st = null; picking = false; pickedOnce = false; close(); return; }
       if (st && (st.turn !== s.turn || st.move !== s.move)) sel = -1;
       st = s;
+      // The first time the board opens on a fresh game: pick who to play.
+      if (!pickedOnce && s.canNew && !s.two && s.move === 1 && s.last[0] < 0) picking = true;
+      pickedOnce = true;
       render();
     },
     themes: THEMES,
