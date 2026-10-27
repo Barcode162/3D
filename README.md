@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J113.1 Wall lights and enough shadow maps: a light can be a panel on a wall that shines only forward (nothing through the wall, and no test against the bounced light's probes, whose 0.5 m steps drew square patches); 40 lamp shadow maps (was 16), so every lamp in the room gets one; the schema's light gains 'On a wall'
+
+`c63aa3a` · 2026-10-27 02:28 · 12 files, +89 −25 · tests: none
+
+Phone check: Look at the darts ceiling and the floor: no square patches
+
 ## J112.1 The preflight checklist (node tools/preflight.mjs): plain rules, one file each in tools/preflight/rules/<area>/ from a copy-paste template, run first by the piece and ship tools; a broken rule prints its id, the spot and the fix. First 12: world ids, live loops, numbers and kinds, models present; Handbook pages with page changes, folder lines; model and sound credits; twin numbers in C++ and shaders; no secrets, no test losing checks; the plan only through its tool. It found 28 models without credits lines: added
 
 `7ccec08` · 2026-10-27 01:24 · 26 files, +435 −35 · tests: none
