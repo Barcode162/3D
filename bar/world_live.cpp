@@ -78,6 +78,11 @@ void fetchLiveWorld() {
     });
     return;
   }
+  // The Studio is parked (J114, request 2026-10-27 #3): the bar plays the
+  // world built into the game, so a world change ships with the game (edit
+  // assets/world/, push). The store's live world only with ?liveworld=1.
+  const bool useStore = EM_ASM_INT({ return /[?&]liveworld=1(?:&|$)/.test(location['search']) ? 1 : 0; }) != 0;
+  if (!useStore) return finish();
   engine::fetchOptional(std::string(kStore) + "?live", [](bool ok, std::vector<uint8_t> bytes) {
     const engine::Json live = ok ? engine::Json::parse(std::string(bytes.begin(), bytes.end())) : engine::Json();
     const int v = static_cast<int>(live["version"].number(0));

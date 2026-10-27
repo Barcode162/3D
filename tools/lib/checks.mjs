@@ -65,7 +65,10 @@ export const RULES = [
   [/^toolbelt\/|^tools\/(toolbelt|ui_editor|ui_api)_test/, ['toolbelt', 'labels']],
   [/^dev\/|^tools\/dev_test|^tools\/lib\/webspace/, ['dev', 'labels']],
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
-  [/^assets\/world\/|^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
+  // The Studio is parked (J114, request 2026-10-27 #3): a world change no
+  // longer runs its tests; a change to the Studio itself still does.
+  [/^assets\/world\//, ['build', 'native', 'game']],
+  [/^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],
   [/^bar\/projects\/mania\//, ['build', 'game', 'mania']],
   [/^bar\/projects\/chess\//, ['build', 'native', 'game', 'chess']],

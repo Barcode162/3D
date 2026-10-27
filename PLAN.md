@@ -56,12 +56,12 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J112 · The preflight checklist** (the tools). The preflight checklist: plain rules, one file each, run before any test or push; a broken rule names the rule, the spot and the fix (request 2026-10-27 #2) · N2
-- [x] **J112.1** The preflight checklist and its first 12 rules (world, docs, assets, engine, safety, plan), run first by the piece and ship tools; 28 models get their missing credits lines *Check:* Nothing to see in the bar
+**J114 · The Studio parked** (the tools). The Studio parked: the bar plays the world built in (edit assets/world, push), no Studio tests for engine or world changes, its jobs to Parked until the engine works (request 2026-10-27 #3) · N2
+- [x] **J114.1** The Studio parked: the bar plays the world built in (the store only with ?liveworld=1), world changes skip the Studio's tests, the books updated, its jobs parked *Check:* The bar loads as before; its log says World: built in.
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms)
+**Up next, in order:** J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked, J114)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -168,26 +168,18 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* L7 · *Verdict:* Doable at a cost — Your local time is free; real weather needs an outside weather service (Charter: ask first), and a sky through the windows costs phone speed
 - [ ] **J52** Scan it: bring real things in with the iPhone camera. · N3 N5
   *Formerly* RC3 · *Verdict:* Needs an experiment — Safari gives the camera but not the depth sensor; a model from photos, from scratch, is research: a time-boxed try
-- [ ] **J53** Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match. · N3
-  *Formerly* L8 · *Verdict:* Needs an experiment — Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable
 - [ ] **J78** The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them. · N2
   *Verdict:* Doable after J43 — Needs the grammar settled first; plain C++ with native tests, no graphics card needed
 - [ ] **J79** The script language, step 3, the tiny safe runner: events, states, timers, loops, remembered values, messages; a step budget per frame and a memory limit, a script touching only its own thing; a kind's states, rules and loops turned into a script and back without losing anything. · N2 N3
   *Verdict:* Doable after J78 — Runs inside the world model each frame; the budget keeps the phone smooth, and scripts sleep until their events
-- [ ] **J80** The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone. · N2 N5
-  *Verdict:* Doable after J79 — The Studio's live editing exists; your phone judges how it is to write
 - [ ] **J81** The script language, step 5, five behaviours rewritten as scripts (the light switch, the mirror, the polished things' knock, the candle, the jukebox), behaving exactly as before, the tests proving it. · N2 N3
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 
 ### The tools
-- [ ] **J55** The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too. · N5
-  *Formerly* P2 · *Verdict:* Doable now — Needs your phone: every "broke S…" you report, and a ?perf=1 report with the Monitor open
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
   *Formerly* TL1 · *Verdict:* Doable now — A list of switches in the Toolbelt; no engine change
-- [ ] **J57** The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md. · N2 N3
-  *Formerly* T2 · *Verdict:* Doable after J85 — The engine plays patterns and timelines first (J85); clips need no script language, only events on the timeline wait for J79
 - [ ] **J58** Launch: the check (rules, overlaps, blocked doors), bot players walk the draft, a report, then Launch with one-tap undo. · N3
   *Formerly* T3 · *Verdict:* Doable after J57 — Launch checks the timeline's draft; bot players walk it headless here (slow without a graphics card, fine for a check)
 - [ ] **J59** Claude in the Studio, live: Claude's edits stream into an open Studio one by one; you comment and press Launch. · N2
@@ -254,6 +246,14 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Claude can't be retrained, but the books can learn: lessons written from each session and read at the next (the Playbook and the records already do part of this)
 - Claude gets better from how the user works with it: what worked, what the user liked or corrected, kept as lessons in the books and read at every session start, so the engine, the Studio and modelling get easier each time (2026-10-25 #2)
   *Verdict:* Doable now — Claude can't be retrained, but the books can learn: lessons written from each session and read at the next (the Playbook and the records already do part of this)
+- J55 The Studio phone check: fix every "broke S…"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too.  (parked with the Studio, J114)
+  *Verdict:* Doable after J114 — the Studio waits until the engine works (the user, request 2026-10-27 #3)
+- J53 Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match.  (parked with the Studio, J114)
+  *Verdict:* Doable after J114 — the Studio waits until the engine works (the user, request 2026-10-27 #3)
+- J57 The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md.  (parked with the Studio, J114)
+  *Verdict:* Doable after J114 — the Studio waits until the engine works (the user, request 2026-10-27 #3)
+- J80 The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone.  (parked with the Studio, J114)
+  *Verdict:* Doable after J114 — the Studio waits until the engine works (the user, request 2026-10-27 #3)
 
 ### The backbone
 - The site on Cloudflare Pages (unlocks threads in the game).
@@ -269,7 +269,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
+- `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
 - `b33230d` J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
 - `c3a3d10` J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39
 - `f0074b3` J110.1, J110.2, J110.3: Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late → fb7283c^..ee94e60

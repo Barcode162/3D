@@ -60,8 +60,9 @@ of the live site fails.
   commit the merge. If both sides changed the same thing differently and it's
   the user's call: ask.
 - **The world store moved** (`studio.mjs push` refused: the user published
-  since): `node tools/studio.mjs pull`, redo our change on top of theirs, push
-  again. The user's version always wins a direct clash; tell them.
+  since; only when the Studio is back from Parked, J114): `node tools/studio.mjs
+  pull`, redo our change on top of theirs, push again. The user's version
+  always wins a direct clash; tell them.
 - **The UI store moved**: the same with `node tools/uikit.mjs`.
 
 ## The machine
