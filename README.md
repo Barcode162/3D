@@ -6,6 +6,22 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J116.1 The reference: our own path tracer (looped/bake/light_paths) renders any place with every lamp at its real size and every bounce, at the standard spots (node tools/light.mjs ref); the ray tree's box test twice as fast; with the word lab, the light rig and the baker started
+
+`7269aef` · 2026-10-27 13:09 · 42 files, +5693 −54 · tests: changed · headless frame 39.06 ms, 0 draws
+
+Phone check: The reference pictures beside today's bar (sent in the chat)
+
+![J116.1 door.jpg](J116.1/door.jpg)
+
+![J116.1 mirror.jpg](J116.1/mirror.jpg)
+
+![J116.1 bartop.jpg](J116.1/bartop.jpg)
+
+![J116.1 backbar.jpg](J116.1/backbar.jpg)
+
+![J116.1 piano.jpg](J116.1/piano.jpg)
+
 ## J109.1 (fix) The plan's absorb command keeps no extra field: the joined jobs are named in Now's text, so the plan turns into PLAN.md and back without losing a word (the plan test)
 
 `477ceb2` · 2026-10-27 05:40 · 2 files, +0 −5 · tests: none
