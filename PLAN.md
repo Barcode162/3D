@@ -270,6 +270,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
 - `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
 - `7779287` J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
 - `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
