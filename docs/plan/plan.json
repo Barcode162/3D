@@ -36,43 +36,63 @@
   }
  ],
  "now": {
-  "id": "J115",
-  "title": "Daylight string lights",
-  "chapter": "the world",
-  "about": "Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5); with J28: Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.; with J109: Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13)",
+  "id": "J116",
+  "title": "One light formula, every browser, the first script",
+  "chapter": "the engine",
+  "about": "Looped, rebuilt (request 2026-10-27 #13): the engine's skeleton as separate pieces (words, world, light, drawing, physics), each perfected in its own lab, and the language everywhere (places, things, lights and behaviours as sentences; every word a script made of other words, #10, #11); one light formula on WebGL2 and WebGPU (#7, #8, #9); the bar inherits it all and today's bar stays live until the user says switch (#12, #13)",
   "serves": [
+   "N1",
+   "N2",
    "N3"
   ],
   "pieces": [
    {
-    "id": "J115.1",
-    "text": "The string lights at 5000 K, cool industrial white near daylight (were 2700 K)",
-    "check": "The strands light the hall white, not warm",
-    "done": true
+    "id": "J116.1",
+    "text": "The reference: our own path tracer renders a world with every light correct, the standard every step is measured against",
+    "check": "The reference pictures, side by side with today's bar",
+    "done": false
    },
    {
-    "id": "J115.2",
-    "text": "The bulbs themselves glow white (the model's Edison glow was orange)",
-    "check": "The bulbs look white",
-    "done": true
+    "id": "J116.2",
+    "text": "The word lab: the language core, every word a script made of other words (thing, describing, doing, place, cause and amount words), the first dictionary, one meaning per sentence, errors with line and fix hint, the safe runner, a page to try phrases",
+    "check": "On the word lab page, type a warm candle that flickers: it shows what it means and does",
+    "done": false
    },
    {
-    "id": "J28.1",
-    "text": "Chess bots with a strength you can see: each bot names its rating (Elo) and plays at that strength",
-    "check": "Open chess: each bot shows its rating",
-    "done": true
+    "id": "J116.3",
+    "text": "Worlds in words and the light lab: places and things as sentences placed by place words; the lab room baked per light channel and relit by its words, matching the reference within a set error",
+    "check": "The light lab page: the room from its sentences, its baked light beside the reference",
+    "done": false
    },
    {
-    "id": "J28.2",
-    "text": "A chess menu: pick a bot or wait for a person (1v1), and the game starts",
-    "check": "Open chess, pick a bot: the game starts against it",
-    "done": true
+    "id": "J116.4",
+    "text": "The draw lab: one drawing interface with WebGPU and WebGL2 backends; the lab drawn the same on both; a clear page for a browser with neither",
+    "check": "The draw lab on Firefox for Android and an older iPhone",
+    "done": false
    },
    {
-    "id": "J109.1",
-    "text": "Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it",
-    "check": "Open a book, swipe from the right edge: the page curls over",
-    "done": true
+    "id": "J116.5",
+    "text": "The physics lab: furniture as bodies; what comes to rest joins the baked room and only the light around it is worked out again",
+    "check": "Knock the stool over in the lab: the light around it settles, nothing stutters",
+    "done": false
+   },
+   {
+    "id": "J116.6",
+    "text": "The bar inherits it all: its world, lights and behaviours in words, baked, drawn by the skeleton on both kinds of browser, behind ?engine=next",
+    "check": "The bar on the new skeleton on your phone, every frame drawn",
+    "done": false
+   },
+   {
+    "id": "J116.7",
+    "text": "Tune: quality levels as light-map sizes; the look matched to the liked screenshot",
+    "check": "The user says it looks right",
+    "done": false
+   },
+   {
+    "id": "J116.8",
+    "text": "The switch, when the user says: the skeleton becomes the live bar; the old renderer, lighting and JSON world files retired",
+    "check": "The live bar on the new skeleton",
+    "done": false
    }
   ]
  },
@@ -779,20 +799,6 @@
     "verdict": {
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
-    }
-   },
-   {
-    "id": "J116",
-    "text": "One light formula, every browser, the first script: the room's light baked per light channel and relit each frame by a few numbers a script computes; the same frame on WebGL2 and WebGPU; Looped Script v0 writes the light rig (request 2026-10-27 #7, #8)",
-    "serves": [
-     "N1",
-     "N2",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "experiment",
-     "why": "the formula is proven against our own reference renderer and on the user's phone before the old lighting goes"
     }
    }
   ],
