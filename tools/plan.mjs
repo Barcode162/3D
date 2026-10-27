@@ -293,7 +293,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       plan.upNext = plan.upNext.replace(new RegExp(`(^|\\s)${id}(?: →|,) `), '$1').replace(new RegExp(` → ${id}(?=\\s|$)`), '');
       plan.now.pieces.push(...pieces);
       plan.now.about = `${plan.now.about}; with ${id}: ${item.text}`;
-      plan.now.absorbed = [...(plan.now.absorbed || []), id];
       save(data); console.log(`${id} joined ${plan.now.id} in Now (${plan.now.pieces.length} pieces)`);
     } else if (cmd === 'drop') {
       const id = pos[0], i = plan.now?.pieces.findIndex((p) => p.id === id && !p.done) ?? -1;

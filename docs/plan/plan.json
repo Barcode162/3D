@@ -74,10 +74,6 @@
     "check": "Open a book, swipe from the right edge: the page curls over",
     "done": true
    }
-  ],
-  "absorbed": [
-   "J28",
-   "J109"
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
