@@ -271,6 +271,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J111.1, J111.2, J111.3, J111.3 (fix): Pictures drawn and power buttons: a finer light grid, Ultra and Auto keep a new picture every refresh, Cooler / Balanced / EXTREME → 392e4b0^..67fa65a
 - `c3a3d10` J110.3 (fix), J110.3 (fix): Frames under a menu left out of reports and of Ultra/Auto's watching → 5d6c6bb^..205ac39
 - `f0074b3` J110.1, J110.2, J110.3: Smoother graphics: reports measure late frames, lighter lighting with the same picture, Ultra and Auto ease sharpness only while frames run late → fb7283c^..ee94e60
 - `5d680c1` J108.1, J108.2, J108.3, J108.3 (fix): The piano redone: its glow and sound back at the piano, a bigger keyboard with loudness by touch, and sparks rising from the strings → 61c77a5^..87a2348
