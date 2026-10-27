@@ -12,10 +12,15 @@ const bash = (command) => guard({ tool_name: 'Bash', tool_input: { command } });
 const edit = (file) => guard({ tool_name: 'Edit', tool_input: { file_path: `${process.cwd()}/${file}` } });
 
 for (const c of ['git push -u origin HEAD:job/J4', 'git fetch origin main && git merge origin/main', 'node tools/project.mjs ship "x"',
-  'git log main', 'git config core.hooksPath tools/githooks', 'echo git push origin main', "cat > f <<'X'\nconst a = ['git push --force'];\nX"])
+  'git log main', 'git config core.hooksPath tools/githooks', 'echo git push origin main', "cat > f <<'X'\nconst a = ['git push --force'];\nX",
+  // Another repo's main is its own (the user's Think, request 2026-10-27 #16).
+  'cd /home/user/think && git push origin main', 'git -C /home/user/think push origin main'])
   check(bash(c) === 0, `guard lets through: ${c.split('\n')[0]}`);
 for (const c of ['git push origin HEAD:main', 'cd x && git push origin main', 'X=1 git -C . push origin main', 'git push --force origin HEAD:job/J4',
-  'git push origin +HEAD:job/J4', 'git push origin :job/J3', 'git push --delete origin job/J3', 'git commit --no-verify -m x', 'git config core.hooksPath /dev/null'])
+  'git push origin +HEAD:job/J4', 'git push origin :job/J3', 'git push --delete origin job/J3', 'git commit --no-verify -m x', 'git config core.hooksPath /dev/null',
+  // This project's main stays locked from wherever the command starts; force pushes stay refused everywhere.
+  `cd /home/user/think && git -C ${process.cwd()} push origin main`, `cd /tmp && cd ${process.cwd()} && git push origin main`,
+  'cd /home/user/think && git push --force origin main'])
   check(bash(c) === 2, `guard refuses: ${c}`);
 for (const f of ['PLAN.md', 'docs/plan/plan.json', 'docs/charter/rules.json', 'ui/themes.css']) check(edit(f) === 2, `guard refuses a hand edit of ${f}`);
 check(edit('tools/ship.mjs') === 0, 'guard lets through an edit of an ordinary file');
