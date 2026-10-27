@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J28.2 The chess picker: on a fresh game and from New game, Who do you want to play? lists the five bots (a face, a line about how each plays, its rating) and A person (1v1); picking one starts the game; the line under the status names your opponent; the chess test checks the picker (six choices, every rating) and picking a bot, then plays e4 on the 3D board as before
+
+`291d514` · 2026-10-27 05:34 · 5 files, +74 −9 · tests: none
+
+Phone check: Open chess: pick Rosa, the game starts against her
+
 ## J28.1 Chess bots with a strength you can see: Pip (about 400 Elo, looks one move ahead and plays a random move 40 % of the time), Rosa (800), Theo (1200), Vera (1500), Odin (1800, four moves deep); the status names who's thinking; a new game takes a bot or waits for a person (1v1); the board opens full screen; plus the batch's tools: the plan's absorb command (a road job joins the job in Now) and the rule One ship for everything
 
 `8e66ce6` · 2026-10-27 05:33 · 9 files, +126 −48 · tests: none
