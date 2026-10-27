@@ -36,36 +36,24 @@
   }
  ],
  "now": {
-  "id": "J113",
-  "title": "Only real objects give light",
-  "chapter": "the world",
-  "about": "Only real objects give light: lights on every glowing thing and nowhere else, no square patches, less orange, thinner haze (request 2026-10-27 #3)",
+  "id": "J114",
+  "title": "The Studio parked",
+  "chapter": "the tools",
+  "about": "The Studio parked: the bar plays the world built in (edit assets/world, push), no Studio tests for engine or world changes, its jobs to Parked until the engine works (request 2026-10-27 #3)",
   "serves": [
-   "N3"
+   "N2"
   ],
   "pieces": [
    {
-    "id": "J113.1",
-    "text": "Wall lights and enough shadow maps: a panel on a wall shines only forward (no probe test, nothing through the wall); 40 lamp shadow maps so every lamp has one (the probes' blocky test drew the squares)",
-    "check": "Look at the darts ceiling and the floor: no square patches",
-    "done": true
-   },
-   {
-    "id": "J113.2",
-    "text": "Only real objects give light: stray lights gone, lights on every sign, sconce, screen and the arcade's neon strips (rule R-LIGHT-1 keeps it); whiter, dimmer string lights; thinner haze",
-    "check": "Look around: every light comes from something glowing",
-    "done": true
-   },
-   {
-    "id": "J113.3",
-    "text": "Less orange: the eyes correct 75 % toward white (was 55 %)",
-    "check": "The bar reads warm-white, not orange",
+    "id": "J114.1",
+    "text": "The Studio parked: the bar plays the world built in (the store only with ?liveworld=1), world changes skip the Studio's tests, the books updated, its jobs parked",
+    "check": "The bar loads as before; its log says World: built in.",
     "done": true
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J57 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J80 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms)",
+ "upNext": "J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked, J114)",
  "road": {
   "world": [
    {
@@ -741,19 +729,6 @@
     }
    },
    {
-    "id": "J53",
-    "formerly": "L8",
-    "text": "Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match.",
-    "serves": [
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "experiment",
-     "why": "Working back from painted warmth to real lamps is research; a try in the Studio shows whether it's usable"
-    }
-   },
-   {
     "id": "J78",
     "text": "The script language, step 2, the parser and checker (C++, looped/script/): every error with its line, column, plain words and a fix hint; native tests on the 20 examples and on broken copies of them.",
     "serves": [
@@ -778,20 +753,6 @@
      "kind": "after",
      "after": "J78",
      "why": "Runs inside the world model each frame; the budget keeps the phone smooth, and scripts sleep until their events"
-    }
-   },
-   {
-    "id": "J80",
-    "text": "The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone.",
-    "serves": [
-     "N2",
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J79",
-     "why": "The Studio's live editing exists; your phone judges how it is to write"
     }
    },
    {
@@ -824,19 +785,6 @@
   ],
   "tools": [
    {
-    "id": "J55",
-    "formerly": "P2",
-    "text": "The Studio phone check: fix every \"broke S…\"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too.",
-    "serves": [
-     "N5"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "now",
-     "why": "Needs your phone: every \"broke S…\" you report, and a ?perf=1 report with the Monitor open"
-    }
-   },
-   {
     "id": "J56",
     "formerly": "TL1",
     "text": "Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses.",
@@ -847,21 +795,6 @@
     "verdict": {
      "kind": "now",
      "why": "A list of switches in the Toolbelt; no engine change"
-    }
-   },
-   {
-    "id": "J57",
-    "formerly": "T2",
-    "text": "The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md.",
-    "serves": [
-     "N2",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J85",
-     "why": "The engine plays patterns and timelines first (J85); clips need no script language, only events on the timeline wait for J79"
     }
    },
    {
@@ -1103,6 +1036,38 @@
      "kind": "now",
      "why": "Claude can't be retrained, but the books can learn: lessons written from each session and read at the next (the Playbook and the records already do part of this)"
     }
+   },
+   {
+    "text": "J55 The Studio phone check: fix every \"broke S…\"; a ?perf=1 report from the Studio with the Monitor open; the multiplayer test's late joiner (E3.6b) passing here too.  (parked with the Studio, J114)",
+    "verdict": {
+     "kind": "after",
+     "after": "J114",
+     "why": "the Studio waits until the engine works (the user, request 2026-10-27 #3)"
+    }
+   },
+   {
+    "text": "J53 Paint the light: brush warmth and shadow in the Studio; the engine places and tunes lamps to match.  (parked with the Studio, J114)",
+    "verdict": {
+     "kind": "after",
+     "after": "J114",
+     "why": "the Studio waits until the engine works (the user, request 2026-10-27 #3)"
+    }
+   },
+   {
+    "text": "J57 The Loop Maker, step 2, in the Studio, like a DAW or a video editor: the timeline strip (bars and beats, playhead, play, pause, scrub, loop region, zoom), a track per thing or kind, patterns dragged on as clips (moved, stretched, faded, copied), a clip opens its pattern in the Loop Maker (lanes per channel, keys drawn with a finger, presets, saved to the library); every edit plays live and publishes for everyone. Its plan: docs/plan/jobs/J57.md.  (parked with the Studio, J114)",
+    "verdict": {
+     "kind": "after",
+     "after": "J114",
+     "why": "the Studio waits until the engine works (the user, request 2026-10-27 #3)"
+    }
+   },
+   {
+    "text": "J80 The script language, step 4, scripts in the Studio: a script for a kind, errors underlined with their hint as you type, the change live on the phone.  (parked with the Studio, J114)",
+    "verdict": {
+     "kind": "after",
+     "after": "J114",
+     "why": "the Studio waits until the engine works (the user, request 2026-10-27 #3)"
+    }
    }
   ],
   "backbone": [
@@ -1145,6 +1110,10 @@
  },
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
+  {
+   "build": null,
+   "text": "J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40"
+  },
   {
    "build": "8b5f7ed",
    "text": "J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08"

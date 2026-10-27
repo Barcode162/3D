@@ -16,7 +16,7 @@ file below reads the store's folder from an environment variable in tests
 | Store | Where | Holds | Written by | Read by |
 |---|---|---|---|---|
 | The repo | GitHub `Barcode162/3D`, `main` | all code, the built-in world, the plan, the books, the records | Claude, only through the tools (one commit per piece; `main` only through the ship) | CI (builds and deploys), every session |
-| World store | `private/studio/` (`studio/api.php`) | the live world: numbered versions, each editor's draft, shared drafts, Claude's proposals | the user and admins (Studio → Publish), Claude (`node tools/studio.mjs push` / `propose`) | the game as it starts and every 15 s (`bar/web/live.js`), the room, the Studio, `studio.mjs pull` |
+| World store | `private/studio/` (`studio/api.php`) | the live world: numbered versions, each editor's draft, shared drafts, Claude's proposals | the user and admins (Studio → Publish), Claude (`node tools/studio.mjs push` / `propose`) | parked (J114): only the Studio, `studio.mjs pull`, and the game with `?liveworld=1` (as it starts and every 15 s, `bar/web/live.js`); the game otherwise plays the world built in |
 | UI store | `private/ui/` (`toolbelt/ui-editor/api.php`) | published themes and screens, numbered versions | the user and admins (UI Editor → Publish), Claude (`node tools/uikit.mjs push`) | `uikit.mjs pull` → `ui/system/` → the theme CSS the site and the bar use |
 | Dev's store | `private/dev/` (`dev/api.php`) | the plan's data (`plan.json`, `rules.json`, `incidents.json`, `plan-meta.json`), the deploy reports (`ci-game.json`, `ci-site.json`), the user's notes, the front page's words and highlights | CI (plan.yml: the plan; deploy.yml and hub.yml: their reports), the user (notes from Dev → Plan and the Studio's Note for Claude, Publish), Claude (marks notes read) | Dev, the front page, `project.mjs status`, `ship.mjs` |
 | The hub | `private/hub/` (`hub/hub.php`) | news posts and their screenshots (and the Studio notes' pictures), the Claude key (`key.json`), the loops' tuning (`tuning.json`, no reader since S4.2: KI-29); the retired board's files (`board.json`, `projects.json`) stay on the server, unused since J5.4 | Claude (news drafts: `tools/hub.mjs`), the user (publishes news, makes the key) | Dev → Publish, the news page (`news/`, published posts only; project names from `projects.json`), every server that checks the Claude key |
@@ -49,8 +49,8 @@ nothing (version 0) or can't be reached, and Claude's working copy.
 - At the start of a job Claude pulls it (`node tools/studio.mjs pull`,
   committed as "World: from the studio vN"); `project.mjs status` says whether
   the repo matches the live version.
-- A job that changed `assets/world/` publishes it once the deploy is live
-  (`studio.mjs push`), as a new version by Claude.
+- While the Studio is parked (J114) a job that changes `assets/world/` ships it
+  with the game; nothing is published to the store.
 **Conflict:** a publish names the version it started from; if someone
 published since, it's refused (pull, merge, push again). The user's version
 is never overwritten. **Stale shows as:** `studio.mjs status` ("repo matches

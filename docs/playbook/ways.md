@@ -32,10 +32,9 @@ whether something works before promising it.
 (themes and screens).
 - `node tools/studio.mjs pull` / `node tools/uikit.mjs pull`; commit as
   "World: from the studio vN" / "UI: from the editor vN" on the job branch.
-- The user's content is never edited by hand in the stores; Claude's own
-  world changes go back with `node tools/studio.mjs push` after the deploy is
-  live, or as a proposal (`node tools/studio.mjs propose`) for the user to
-  review.
+- The user's content is never edited by hand in the stores. While the Studio
+  is parked (J114) the world is edited in `assets/world/` and ships with the
+  game; nothing is pushed to the world store.
 
 ## Talk, questions, status
 - Answer from the books and the live state; no tools that change anything;

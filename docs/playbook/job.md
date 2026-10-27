@@ -27,9 +27,10 @@ J<n> --piece "J<n>.1|<what>|<phone check>" …` with the pieces from its spec.
    `config.json`), and Dev's deploy rows show the build. GitHub's tests run
    after the game is live (about an hour): a red result → [failures.md](failures.md)
    → A deploy is red.
-5. **The world store** (only if the job changed `assets/world/`): once the
-   deploy is live, `node tools/studio.mjs push --note "<pieces>"` (refused if
-   the user published since: pull, merge, push again).
+5. **The world** ships with the game: the Studio is parked (J114, request
+   2026-10-27 #3), the bar plays the world built in (`assets/world/`), so a
+   world change needs nothing after the deploy. (The store's live world only
+   with the page option `?liveworld=1`; no `studio.mjs push`.)
 6. **Reply** ([reply.md](reply.md) → Done).
 
 ## A piece

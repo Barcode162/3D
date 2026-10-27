@@ -72,7 +72,7 @@ export default {
   id: 'R-LIGHT-1',
   area: 'light',
   rule: 'Every light sits on something that visibly glows (a bulb, a sign, a screen, a flame): only real objects give light.',
-  why: 'The user, request 2026-10-27 #3: lights where nothing glows lit the room from nowhere and drew square patches.',
+  why: 'The user, request 2026-10-27 #4: lights where nothing glows lit the room from nowhere and drew square patches.',
   when: ['assets/world/**', 'assets/models/**'],
   check(ctx) {
     const w = worldFiles(ctx);

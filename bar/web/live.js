@@ -6,6 +6,9 @@
 (function () {
   'use strict';
   if (/[?&](studio=1|net=off)/.test(location.search)) return;
+  // The Studio is parked (J114): the bar plays the world built into the game,
+  // so there is nothing to watch, unless ?liveworld=1 brings the store back.
+  if (!/[?&]liveworld=1(&|$)/.test(location.search)) return;
   var STORE = '../studio/api.php?live', EVERY = 15000;
   var start = null, pending = false;
   function busy() {
