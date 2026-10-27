@@ -177,6 +177,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
+- [ ] **J116** One light formula, every browser, the first script: the room's light baked per light channel and relit each frame by a few numbers a script computes; the same frame on WebGL2 and WebGPU; Looped Script v0 writes the light rig (request 2026-10-27 #7, #8) · N1 N2 N3
+  *Verdict:* Needs an experiment — the formula is proven against our own reference renderer and on the user's phone before the old lighting goes
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5

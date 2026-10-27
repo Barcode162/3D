@@ -780,6 +780,20 @@
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
     }
+   },
+   {
+    "id": "J116",
+    "text": "One light formula, every browser, the first script: the room's light baked per light channel and relit each frame by a few numbers a script computes; the same frame on WebGL2 and WebGPU; Looped Script v0 writes the light rig (request 2026-10-27 #7, #8)",
+    "serves": [
+     "N1",
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "the formula is proven against our own reference renderer and on the user's phone before the old lighting goes"
+    }
    }
   ],
   "tools": [
