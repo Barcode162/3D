@@ -1,6 +1,7 @@
 #include "bar/projects/chess/chess.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 
@@ -20,7 +21,9 @@ namespace {
 using namespace chess;
 constexpr double kHopMs = 380;          // a piece's move, lifted in an arc
 constexpr double kComputerDelayMs = 700;
-constexpr int kComputerDepth = 3;
+// The bots (J28.1, request 2026-10-26 #13): names and ratings shown in the
+// picker; depth and random moves set how they play. The ratings are labels
+// matched to how such a search plays, not measured against rated players.
 constexpr double kThinkMsPerFrame = 3.0;
 
 // The room's "ch": board in 8 numbers (8 squares x 4 bits each), then turn,
@@ -170,13 +173,14 @@ std::string ChessGame::open(bool online) {
     message_ = "You play black against " + engine::net::playerName(engine::net::claimOwner("machine.chess.w")) + ".";
   } else if (pos_.result() != Result::kPlaying || twoPlayers_) {
     newGame(nowMs_, false);
-    message_ = "You play white against the computer.";
-  } else {
-    message_ = "You play white against the computer.";
   }
+  if (mySide_ == kWhite)
+    message_ = bot_ < 0 ? std::string("Waiting for someone to sit across from you.")
+                        : std::string("You play white against ") + kBots[bot_].name + " (about " + std::to_string(kBots[bot_].elo) + ").";
   messageMs_ = nowMs_;
   if (!myTurn() && !twoPlayers_) computerAtMs_ = nowMs_ + kComputerDelayMs;
-  LOG_INFO("Chess: playing %s%s.", mySide_ == kWhite ? "white" : "black", twoPlayers_ ? " (two players)" : " vs the computer");
+  LOG_INFO("Chess: playing %s%s.", mySide_ == kWhite ? "white" : "black",
+           twoPlayers_ ? " (two players)" : bot_ < 0 ? " (waiting for a person)" : (std::string(" vs ") + kBots[bot_].name).c_str());
   return "";
 }
 
@@ -197,6 +201,14 @@ void ChessGame::close() {
     }
   }
 }
+
+const ChessGame::Bot ChessGame::kBots[ChessGame::kBotCount] = {
+    {"Pip", 400, 1, 40, "Just learned how the horse moves"},
+    {"Rosa", 800, 1, 12, "Sees one move ahead"},
+    {"Theo", 1200, 2, 4, "A solid club player"},
+    {"Vera", 1500, 3, 0, "Punishes every loose piece"},
+    {"Odin", 1800, 4, 0, "Thinks four moves deep"},
+};
 
 void ChessGame::newGame(double nowMs, bool twoPlayers) {
   pos_ = Position::start();
@@ -311,11 +323,16 @@ void ChessGame::pageMove(int from, int to, double nowMs) {
   }
 }
 
-void ChessGame::pageNewGame(double nowMs) {
+void ChessGame::pageNewGame(double nowMs, int choice) {
   if (!open_ || (twoPlayers_ && mySide_ == kBlack)) return;  // white starts new games
+  if (choice >= 1 && choice <= kBotCount) bot_ = choice - 1;
+  if (choice == 100) bot_ = -1;
   newGame(nowMs, twoPlayers_);
-  message_ = "New game.";
+  if (twoPlayers_) message_ = "New game.";
+  else if (bot_ < 0) message_ = "Waiting for someone to sit across from you.";
+  else message_ = std::string("You play white against ") + kBots[bot_].name + " (about " + std::to_string(kBots[bot_].elo) + ").";
   messageMs_ = nowMs;
+  LOG_INFO("Chess: a new game %s.", bot_ < 0 ? "waiting for a person" : (std::string("against ") + kBots[bot_].name).c_str());
 }
 
 // The position for the full-screen board, sent when it changes: squares
@@ -340,6 +357,11 @@ void ChessGame::sendPage() {
   s += ",\"check\":" + std::to_string(pos_.inCheck(pos_.turn) ? pos_.king(pos_.turn) : -1);
   s += ",\"move\":" + std::to_string(pos_.fullmove);
   s += ",\"canNew\":" + std::string(twoPlayers_ && mySide_ == kBlack ? "false" : "true");
+  // The opponent and the picker's bots (J28).
+  s += ",\"two\":" + std::string(twoPlayers_ ? "true" : "false") + ",\"bot\":" + std::to_string(bot_) + ",\"bots\":[";
+  for (int i = 0; i < kBotCount; ++i)
+    s += std::string(i ? "," : "") + "[\"" + kBots[i].name + "\"," + std::to_string(kBots[i].elo) + ",\"" + kBots[i].about + "\"]";
+  s += "]";
   std::string status = statusText(), msg = !message_.empty() && nowMs_ - messageMs_ < 3500 ? message_ : "";
   for (std::string* t : {&status, &msg})
     for (char& c : *t)
@@ -372,22 +394,35 @@ bool ChessGame::update(double nowMs, float dt, const std::vector<Vec2>& taps, co
   if (online_ && twoPlayers_ && mySide_ == kWhite && engine::net::claimOwner("machine.chess.b") < 0 &&
       engine::net::status() == engine::net::Status::kConnected) {
     twoPlayers_ = false;
-    message_ = "Your opponent left: the computer plays on.";
+    if (bot_ < 0) bot_ = 2;  // a bot takes the empty side (Theo)
+    message_ = std::string("Your opponent left: ") + kBots[bot_].name + " plays on.";
     messageMs_ = nowMs;
     send();
   }
   // The computer's move (white's phone plays it).
-  if (!twoPlayers_ && pos_.turn != mySide_ && pos_.result() == Result::kPlaying) {
+  if (!twoPlayers_ && bot_ >= 0 && pos_.turn != mySide_ && pos_.result() == Result::kPlaying) {
     if (computerAtMs_ == 0) computerAtMs_ = nowMs + kComputerDelayMs;
     if (nowMs >= computerAtMs_ && !search_.running()) {
       seed_ = seed_ * 1664525u + 1013904223u + static_cast<uint32_t>(nowMs);
-      search_.start(pos_, kComputerDepth, seed_);
+      const Bot& bot = kBots[bot_];
+      if (static_cast<int>(seed_ % 100u) < bot.randomPct) {  // a beginner's move
+        std::vector<Move> moves;
+        pos_.legalMoves(moves);
+        if (!moves.empty()) {
+          computerAtMs_ = 0;
+          const Move m = moves[(seed_ / 100u) % moves.size()];
+          LOG_INFO("Chess: the computer plays %s (%s).", toText(m).c_str(), bot.name);
+          playMove(m, nowMs, true);
+        }
+      } else {
+        search_.start(pos_, bot.depth, seed_);
+      }
     }
     // A few milliseconds of thinking per frame, so the game never freezes.
     if (search_.running() && search_.step(kThinkMsPerFrame)) {
       computerAtMs_ = 0;
       const Move m = search_.best();
-      LOG_INFO("Chess: the computer plays %s.", toText(m).c_str());
+      LOG_INFO("Chess: the computer plays %s (%s).", toText(m).c_str(), kBots[bot_ < 0 ? 0 : bot_].name);
       playMove(m, nowMs, true);
     }
   }
@@ -471,7 +506,11 @@ std::string ChessGame::statusText() const {
   }
   if (r != Result::kPlaying) return r == Result::kStalemate ? "STALEMATE - DRAW" : "DRAW";
   if (pos_.turn == mySide_) return pos_.inCheck(mySide_) ? "CHECK! YOUR MOVE" : "YOUR MOVE";
-  return twoPlayers_ ? "THEIR MOVE" : "COMPUTER IS THINKING...";
+  if (twoPlayers_) return "THEIR MOVE";
+  if (bot_ < 0) return "WAITING FOR AN OPPONENT";
+  std::string s = std::string(kBots[bot_].name) + " IS THINKING...";
+  for (char& c : s) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+  return s;
 }
 
 void ChessGame::draw(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {

@@ -51,7 +51,20 @@ class ChessGame {
   void setFull(bool on);
   bool full() const { return full_; }
   void pageMove(int from, int to, double nowMs);  // a pawn reaching the end becomes a queen
-  void pageNewGame(double nowMs);
+  // A new game from the page's picker (J28): `choice` 0 = the same opponent,
+  // 1..kBotCount = that bot, 100 = wait for a person (1v1).
+  void pageNewGame(double nowMs, int choice = 0);
+  // The bots you can play (J28.1): each plays at about its rating. Weaker
+  // ones search less and now and then play a random move, as beginners do.
+  struct Bot {
+    const char* name;
+    int elo;       // about how strong (a label: not measured against rated players)
+    int depth;     // plies the search looks ahead
+    int randomPct; // chance of a random legal move instead of the best one
+    const char* about;
+  };
+  static constexpr int kBotCount = 5;
+  static const Bot kBots[kBotCount];
 
  private:
   struct Instance {
@@ -72,7 +85,7 @@ class ChessGame {
   std::string statusText() const;
   // Taps on the HUD buttons (screen 0..1). -1 none, 0 leave, 1 new game.
   int buttonAt(engine::Vec2 tap, float aspect) const;  // 2: full screen
-  bool full_ = false;               // kept while you sit at the board and the next time
+  bool full_ = true;                // full screen by default (J28.2: the picker lives there); kept while you sit and the next time
   std::string pageState_;           // last sent to the page
   void sendPage();
 
@@ -95,6 +108,7 @@ class ChessGame {
   std::string message_;
   double messageMs_ = 0;
   uint32_t seed_ = 1;
+  int bot_ = 2;  // the opponent: kBots[bot_], or -1 = waiting for a person (1v1)
 };
 
 }  // namespace app

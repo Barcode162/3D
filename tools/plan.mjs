@@ -278,6 +278,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (pieces.length) plan.now.pieces = pieces;
       if (flags('about').length) plan.now.about = flags('about')[0];
       save(data); console.log(`Now has ${plan.now.pieces.length} pieces`);
+    } else if (cmd === 'absorb') {
+      // One ship for everything (request 2026-10-27 #6): a road job joins the
+      // batch in Now; its pieces are added to Now's, it leaves the road and
+      // Up next, and Now's title names it.
+      const id = pos[0];
+      if (!plan.now) throw new Error('nothing in Now');
+      const ch = Object.keys(plan.road).find((c) => plan.road[c].some((r) => r.id === id && !r.done));
+      if (!ch) throw new Error(`${id} is not an open road item`);
+      const pieces = newPieces(flags('piece'));
+      if (!pieces.length) throw new Error('give the absorbed job its pieces: --piece "ID.1|what|phone check"');
+      const item = plan.road[ch].find((r) => r.id === id);
+      plan.road[ch] = plan.road[ch].filter((r) => r !== item);
+      plan.upNext = plan.upNext.replace(new RegExp(`(^|\\s)${id}(?: →|,) `), '$1').replace(new RegExp(` → ${id}(?=\\s|$)`), '');
+      plan.now.pieces.push(...pieces);
+      plan.now.about = `${plan.now.about}; with ${id}: ${item.text}`;
+      plan.now.absorbed = [...(plan.now.absorbed || []), id];
+      save(data); console.log(`${id} joined ${plan.now.id} in Now (${plan.now.pieces.length} pieces)`);
     } else if (cmd === 'drop') {
       const id = pos[0], i = plan.now?.pieces.findIndex((p) => p.id === id && !p.done) ?? -1;
       if (i < 0) throw new Error(`${id} is not an open piece in Now`);

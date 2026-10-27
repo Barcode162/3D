@@ -620,7 +620,7 @@ void handleCommands() {
     } else if (c.name == "chessMove") {  // the full-screen board (J101, bar/web/chess.js): a = from * 64 + to
       g_app.chess.pageMove(static_cast<int>(c.a) / 64, static_cast<int>(c.a) % 64, engine::clockMs());
     } else if (c.name == "chessNew") {
-      g_app.chess.pageNewGame(engine::clockMs());
+      g_app.chess.pageNewGame(engine::clockMs(), static_cast<int>(c.a));  // a: 0 same, 1..5 a bot, 100 a person (J28)
     } else if (c.name == "chessFull") {
       g_app.chess.setFull(c.a != 0);
     } else if (c.name == "chessLeave") {

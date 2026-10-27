@@ -32,6 +32,10 @@
  "rulesIntro": "*Decisions that always hold, newest first. Only the user adds or changes them.*",
  "rules": [
   {
+   "date": "2026-10-27",
+   "text": "**One ship for everything, never idle:** the jobs in progress go on one branch and ship together, once, at the end of a batch (one round of checks), not one ship per job; the ship runs from a separate copy of the project (a git worktree) so Claude keeps building while its checks run, and never sits waiting on a ship (\"I want everything to ship at once no more seperate shipping … never actually be stuck doing no work\", request 2026-10-27 #6)."
+  },
+  {
    "date": "2026-10-26",
    "text": "**The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone (\"we need to be able to work without waiting for tests from you I can test everything\"; \"no more test … let me test it instead\"). One exception, on the user's word (request 2026-10-26 #9, \"Yes, run it\"): the seconds-long world check (tools/native/bar_world_test.cpp) runs whenever a piece changes the world's files (assets/world/). GitHub's long browser tests run only when the user asks (\"Only when I ask\", request 2026-10-25 #15); the build's quick checks still run with every deploy."
   },

@@ -23,6 +23,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 2. Your rules
 *Decisions that always hold, newest first. Only the user adds or changes them.*
+- (2026-10-27) **One ship for everything, never idle:** the jobs in progress go on one branch and ship together, once, at the end of a batch (one round of checks), not one ship per job; the ship runs from a separate copy of the project (a git worktree) so Claude keeps building while its checks run, and never sits waiting on a ship ("I want everything to ship at once no more seperate shipping … never actually be stuck doing no work", request 2026-10-27 #6).
 - (2026-10-26) **The user tests:** Claude runs no tests before saving or shipping work; the user tests everything on the phone ("we need to be able to work without waiting for tests from you I can test everything"; "no more test … let me test it instead"). One exception, on the user's word (request 2026-10-26 #9, "Yes, run it"): the seconds-long world check (tools/native/bar_world_test.cpp) runs whenever a piece changes the world's files (assets/world/). GitHub's long browser tests run only when the user asks ("Only when I ask", request 2026-10-25 #15); the build's quick checks still run with every deploy.
 - (2026-10-25) **Research, then build:** before any of a job's code changes, Claude researches what the job touches and writes the findings into the job's plan; the user sees them first ("We need to research to see what we are doing before we continue … 1 mistake is worse than making sure you are doing the right thing", request 2026-10-25 #12).
 - (2026-10-24) **Only what the user wants gets pushed:** talking, questions, checks and try-outs are never committed or pushed to GitHub; only changes the user asked to add or edit are, through a job.
@@ -56,13 +57,16 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J115 · Daylight string lights** (the world). Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5) · N3
+**J115 · Daylight string lights** (the world). Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5); with J28: Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.; with J109: Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13) · N3
 - [x] **J115.1** The string lights at 5000 K, cool industrial white near daylight (were 2700 K) *Check:* The strands light the hall white, not warm
 - [ ] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
+- [x] **J28.1** Chess bots with a strength you can see: each bot names its rating (Elo) and plays at that strength *Check:* Open chess: each bot shows its rating
+- [ ] **J28.2** A chess menu: pick a bot or wait for a person (1v1), and the game starts *Check:* Open chess, pick a bot: the game starts against it
+- [ ] **J109.1** Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it *Check:* Open a book, swipe from the right edge: the page curls over
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J109 → J28 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
+**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -101,8 +105,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Formerly* W15 · *Verdict:* Doable now — A new thing with physics (balls, a cue) the engine already has; its model grown by script
 - [ ] **J27** Room 3, taped off today (its question is still open). · N3
   *Formerly* W16 · *Verdict:* Doable now — Waits only on your answer to its open question: what room 3 becomes (a music studio, a quiet library lounge, or something else)
-- [ ] **J28** Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot. · N4
-  *Formerly* W17 · *Verdict:* Doable now — A chess engine with a chosen strength, from scratch in C++, is well within reach; finding a 1v1 uses the room
 - [ ] **J29** Live low-res machine screens and a fair queue (20 s to claim your turn). · N4
   *Formerly* W18 · *Verdict:* Doable at a cost — Phone speed: every live screen draws a second picture each frame; the fair queue itself is room logic and cheap
 - [ ] **J30** More arcade games; bots in two-player races. · N4
@@ -129,8 +131,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J73 — J73
 - [ ] **J106** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
   *Verdict:* Doable now — The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)
-- [ ] **J109** Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13) · N3
-  *Verdict:* Doable now — The reader (J99) lays out pages; a page curl is drawn by the page itself (CSS 3D or canvas)
 
 ### The site
 
