@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.6 The sound sync: a SYNC button in 4K Mania's song select plays clicks; you tap along, and the middle of how late your taps land is your phone's and headphones' delay (a light flashes on each click with the offset applied, -5/+5 to nudge, SAVE keeps it); the game then judges and draws every song by the sound as you hear it
+
+`9630884` · 2026-10-28 03:41 · 9 files, +178 −10 · tests: none
+
+Phone check: SYNC: tap along, SAVE; then play: the timing bar's marks sit in the middle
+
 ## J117.5 A smaller combo with no circle behind it: about 40 % smaller (26 px at most, was 44), a gentler pop, no glow disc and no COMBO label; the judgement word a little smaller too, so the notes behind stay readable
 
 `7b56cca` · 2026-10-28 03:39 · 3 files, +7 −9 · tests: none
