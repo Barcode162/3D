@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.3 Taps don't freeze the picture or drop holds: while you play, a gesture guard keeps the phone's own finger gestures (the three-finger Undo/Copy bar, the magnifier) from holding fingers back or taking them away, and any text field lets go of focus; the sound unlock no longer runs on every tap; the guard can be turned off in TEST to compare
+
+`4df6424` · 2026-10-28 03:37 · 6 files, +50 −4 · tests: none
+
+Phone check: Tap fast with four fingers and hold a long note: no freeze, the hold stays
+
 ## J117.2 Notes glide at one even speed: the song's time runs on the page's precise timer and only eases toward the sound clock (which moves in steps), snapping on a pause; notes are drawn for when the frame reaches the screen, and taps are judged on the same clock at their exact touch time
 
 `7bc0980` · 2026-10-28 03:36 · 7 files, +44 −9 · tests: none
