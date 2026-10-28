@@ -52,6 +52,7 @@ class RhythmGame {
   void draw(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
 
   bool autoplay = false;  // the game plays itself (for tests: ?autoplay)
+  uint64_t framesDrawn = 0;  // frames the GPU was given so far (the game sets it each frame)
 
   // What the cabinet's screen shows others: [combo, accuracy 0..1, lanes
   // held (bits), playing (1/0), song time].
@@ -210,6 +211,8 @@ class RhythmGame {
     double lastAudio = -1;
     int audioFrames = 0, audioStill = 0;          // frames where the sound clock didn't move
     double audioMaxStepMs = 0;
+    uint64_t drawnFrom = 0;
+    float drawnFps = 0;
   } test_;
   std::map<int, TestFinger> testFingers_;
   double lastTestLogMs_ = 0;
@@ -227,6 +230,7 @@ class RhythmGame {
   static constexpr int kSyncBeats = 48;
   bool guard_ = true;          // the gesture guard while playing (rhGuard, J117.3)
   bool guardOn_ = false;       // what the page was last told
+  bool captureOn_ = false;     // the page told the game has the screen
   void syncGuard();
 };
 

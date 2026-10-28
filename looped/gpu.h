@@ -33,6 +33,7 @@ class Gpu {
   // busy, fewer shows a touch sooner (each waiting frame is ~17 ms later).
   int maxFramesInFlight = 2;
   int framesInFlight() const { return inFlight_; }
+  uint64_t framesDrawn() const { return drawn_; }  // frames submitted so far
   // At most this many drawn frames a second (0 = as many as the screen
   // shows). The tests set it with ?fps= (bar/test_hooks.h).
   double maxFps = 0;
@@ -71,6 +72,7 @@ class Gpu {
   double lastDrawMs_ = -1e9;
   double lastDoneMs_ = 0;  // when the GPU last finished a frame (or the first wait began)
   bool noWait_ = false;  // the GPU never says "done": don't wait for it
+  uint64_t drawn_ = 0;
   uint64_t doneCount_ = 0;  // frames the GPU said it finished (its answers work)
   std::string canvasSelector_;
   std::function<void(bool)> onReady_;

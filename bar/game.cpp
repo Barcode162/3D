@@ -873,6 +873,7 @@ void updateInteraction(double nowMs, float dt) {
     }
   }
   if (g_app.rhythm.isOpen()) {
+    g_app.rhythm.framesDrawn = g_app.gpu.framesDrawn();  // TEST's frames drawn a second (J118)
     g_app.rhythm.update(nowMs, g_app.input.frame().presses, W, H);
     if (!g_app.rhythm.isOpen()) {
       syncCapture();

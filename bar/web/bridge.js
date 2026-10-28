@@ -60,6 +60,10 @@ window.bar3dBridge = (function () {
       canvas.addEventListener(type, function (e) {
         if (touches.length > 2000) return;  // nobody is reading (a stalled frame loop)
         var now = e.timeStamp || performance.now();  // when it happened, not when handled
+        if (code === 0) {  // how long iOS held a new touch before the page saw it (J118)
+          var held = performance.now() - now;
+          if (held >= 0 && held < 5000) { tStats.n++; tStats.sum += held; tStats.max = Math.max(tStats.max, held); if (held > 34) tStats.late++; }
+        }
         for (var i = 0; i < e.changedTouches.length; i++) {
           var t = e.changedTouches[i];
           touches.push(code, t.identifier, t.clientX, t.clientY, now);
@@ -78,6 +82,8 @@ window.bar3dBridge = (function () {
   // Undo / Copy bar, the magnifier) from holding fingers back or taking them
   // away. Only while it's on: elsewhere touches stay passive.
   var guard = false;
+  var tStats = { n: 0, sum: 0, max: 0, late: 0 };  // touch start → the page's listener
+  window.bar3dGameCapture = false;
   function guardTouch(e) { if (e.cancelable) e.preventDefault(); }
   function setGuard(on) {
     on = !!on;
@@ -201,10 +207,14 @@ window.bar3dBridge = (function () {
             case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
             case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
             case 'touchGuard': setGuard(op[1]); break;
+            case 'gameCapture': window.bar3dGameCapture = !!op[1]; break;
+            case 'touchStatsReset': tStats = { n: 0, sum: 0, max: 0, late: 0 }; break;
             // 4K Mania's finger test (J117.1): its numbers ride with every
             // report; [.., 1] also sends one now and shows the code.
             case 'maniaReport': {
-              window.bar3dMania = op[1];
+              window.bar3dMania = op[1] + ' Touches reached the page ' + (tStats.n ? (tStats.sum / tStats.n).toFixed(1) : '-') +
+                ' ms after the finger on average (max ' + tStats.max.toFixed(0) + ' ms, ' + tStats.late + ' of ' + tStats.n +
+                ' over 34 ms): that part is the phone, before the game can see it.';
               var U5 = window.bar3dUi, R = window.bar3dReport;
               if (op[2] && R) {
                 if (U5) U5['toast']('Sending the report…');

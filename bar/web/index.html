@@ -392,6 +392,13 @@
       });
     }
     document.addEventListener('pointerup', function (e) {
+      // While a game has the whole screen (4K Mania), no page lookups here:
+      // each one makes the browser lay the page out again, mid-frame (J118).
+      if (window.bar3dGameCapture) {
+        tapRing.push({ t: Math.round(performance.now()), x: Math.round(e.clientX), y: Math.round(e.clientY), on: 'game' });
+        if (tapRing.length > 12) tapRing.shift();
+        return;
+      }
       tapRing.push({ t: Math.round(performance.now()), x: Math.round(e.clientX), y: Math.round(e.clientY),
                      on: describe(e.target), top: describe(document.elementFromPoint(e.clientX, e.clientY)),
                      modal: window.bar3dModal ? bar3dModal.name() : '' });

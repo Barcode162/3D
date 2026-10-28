@@ -198,6 +198,7 @@ bool Gpu::mayDraw(double nowMs) {
 void Gpu::endFrame() {
   if (inFlight_ == 0) lastDoneMs_ = emscripten_get_now();  // the wait starts now
   ++inFlight_;
+  ++drawn_;
   queue.OnSubmittedWorkDone(wgpu::CallbackMode::AllowSpontaneous, [this](wgpu::QueueWorkDoneStatus, wgpu::StringView) {
     if (inFlight_ > 0) --inFlight_;
     ++doneCount_;

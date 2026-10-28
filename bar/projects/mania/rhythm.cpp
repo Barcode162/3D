@@ -305,6 +305,10 @@ void RhythmGame::close() {
 void RhythmGame::syncGuard() {
   const bool want = guard_ && (state_ == State::kPlaying || state_ == State::kWaitTap || state_ == State::kTest ||
                                state_ == State::kSync);
+  if (isOpen() != captureOn_) {  // the page skips its own per-tap work while the game has the screen (J118)
+    captureOn_ = isOpen();
+    engine::bridge::op(captureOn_ ? "[\"gameCapture\",1]" : "[\"gameCapture\",0]");
+  }
   if (want == guardOn_) return;
   guardOn_ = want;
   engine::bridge::op(want ? "[\"touchGuard\",1]" : "[\"touchGuard\",0]");
@@ -1696,6 +1700,7 @@ void RhythmGame::drawSync(engine::TextRenderer& text, float W, float H, float px
 
 void RhythmGame::openTest(double nowMs) {
   test_ = {};
+  engine::bridge::op("[\"touchStatsReset\"]");
   test_.openMs = test_.fpsFrom = nowMs;
   testFingers_.clear();
   lastTestLogMs_ = nowMs;
@@ -1717,10 +1722,10 @@ std::string RhythmGame::testSummary() const {
   char b[512];
   const double secs = std::max(0.001, (t.lastFrameMs - t.openMs) / 1000.0);
   std::snprintf(b, sizeof(b),
-                "Finger test: %.0f s, %d frames (%.0f a second now), longest gap %.0f ms, %d gaps over 50 ms; "
+                "Finger test: %.0f s, %d frames (%.0f a second now, %.0f drawn), longest gap %.0f ms, %d gaps over 50 ms; "
                 "%d touches, most at once %d, lost by the phone %d, late %d (touch to frame avg %.1f ms, max %.0f ms); "
                 "sound clock still on %d of %d frames, biggest step %.1f ms; gesture guard %s.",
-                secs, t.frames, t.fps, t.maxGapMs, t.gaps50, t.presses, t.maxDown, t.lost, t.late,
+                secs, t.frames, t.fps, t.drawnFps, t.maxGapMs, t.gaps50, t.presses, t.maxDown, t.lost, t.late,
                 t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs, t.audioStill, t.audioFrames, t.audioMaxStepMs, guard_ ? "on" : "off");
   return b;
 }
@@ -1737,6 +1742,8 @@ void RhythmGame::updateTest(double nowMs, const std::vector<engine::Input::RawPr
   ++t.fpsFrames;
   if (nowMs - t.fpsFrom >= 1000) {
     t.fps = static_cast<float>(t.fpsFrames * 1000.0 / (nowMs - t.fpsFrom));
+    if (t.drawnFrom > 0) t.drawnFps = static_cast<float>((framesDrawn - t.drawnFrom) * 1000.0 / (nowMs - t.fpsFrom));
+    t.drawnFrom = framesDrawn;
     t.fpsFrom = nowMs;
     t.fpsFrames = 0;
   }
@@ -1778,10 +1785,14 @@ void RhythmGame::updateTest(double nowMs, const std::vector<engine::Input::RawPr
       return;
     }
     if (testButton(2, W, H).contains(start.x, start.y)) {
+      LOG_INFO("%s", testSummary().c_str());  // what was measured with the guard as it was
       guard_ = !guard_;
       engine::settings::remember("rhGuard", guard_ ? 1 : 0);
-      LOG_INFO("4K Mania: gesture guard %s.", guard_ ? "on" : "off");
+      LOG_INFO("4K Mania: gesture guard %s (the test starts again).", guard_ ? "on" : "off");
       syncGuard();
+      openTest(nowMs);
+      engine::bridge::op("[\"touchStatsReset\"]");
+      return;
     }
     if (testButton(1, W, H).contains(start.x, start.y)) {
       LOG_INFO("%s", testSummary().c_str());
@@ -1829,7 +1840,7 @@ void RhythmGame::drawTest(engine::TextRenderer& text, float W, float H, float px
   row("FINGERS DOWN (MOST AT ONCE)", std::to_string(testFingers_.size()) + "  (" + std::to_string(t.maxDown) + ")");
   std::snprintf(line, sizeof(line), "%d lost   %d late   of %d", t.lost, t.late, t.presses);
   row("TOUCHES THE PHONE LOST OR HELD BACK", line);
-  std::snprintf(line, sizeof(line), "%.0f a second   longest gap %.0f ms", t.fps, t.maxGapMs);
+  std::snprintf(line, sizeof(line), "%.0f a second (%.0f drawn)   longest gap %.0f ms", t.fps, t.drawnFps, t.maxGapMs);
   row("FRAMES", line);
   std::snprintf(line, sizeof(line), "avg %.0f ms   max %.0f ms", t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs);
   row("TOUCH TO GAME", line);
