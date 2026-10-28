@@ -2,12 +2,15 @@
 // numbers of the prototype the Training pack was priced with (osu!mania's
 // formula, re-made twice: in Python for the plan, in C++ for the game).
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include <cstdio>
 #include <string>
 #include <vector>
 
 #include "bar/projects/mania/pack.h"
 #include "bar/projects/mania/stars.h"
+#include "looped/json.h"
 
 using app::ChartNote;
 
@@ -59,6 +62,28 @@ int main() {
   app::PackMap back;
   check("chart file reads back", app::parsePackMap(app::writePackMap(m), back) ? static_cast<double>(back.chart.notes.size()) : -1, 5);
   check("hold end reads back", back.chart.notes.size() == 5 ? back.chart.notes[4].end : -1, 3.0);
+  // Every Training map in the pack keeps its stage's rules and stars.
+  {
+    const auto read = [](const std::string& path) {
+      std::ifstream f(path);
+      std::stringstream ss;
+      ss << f.rdbuf();
+      return ss.str();
+    };
+    const engine::Json index = engine::Json::parse(read("assets/music/rhythm/pack/pack.json"));
+    int maps = 0, bad = 0;
+    for (const engine::Json& e : index["maps"].items()) {
+      app::PackMap pm;
+      ++maps;
+      if (!app::parsePackMap(read(e["chart"].string()), pm) ||
+          !app::checkPackMap(pm, app::stageRules(pm.stage)).empty()) {
+        std::printf("FAIL the Training map %s\n", e["id"].string().c_str());
+        ++bad;
+      }
+    }
+    check("Training maps keep their stage's rules", bad, 0);
+    check("the Training pack has maps", maps > 0 ? 1 : 0, 1);
+  }
   std::printf(failures ? "FAILED: %d\n" : "all star and chart checks passed\n", failures);
   return failures ? 1 : 0;
 }

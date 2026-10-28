@@ -12,7 +12,7 @@ The 4-key rhythm game on the "4K MANIA" cabinet, made to look and play like osu!
 
 ## What you can do with it
 
-Song select (a scrolling wheel, four difficulties with osu!mania star ratings, your best grade per song), then notes and hold notes falling to four keys, judgements, a timing bar, health and a results screen. TEST (fingers, frames, the sound clock; GUARD for the phone's gestures) and SYNC (tap along to clicks: your sound's delay).
+Song select (a scrolling wheel, four difficulties with osu!mania star ratings, your best grade per song), then notes and hold notes falling to four keys, judgements, a timing bar, health and a results screen. TEST (fingers, frames, the sound clock; GUARD for the phone's gestures) and SYNC (tap along to clicks: your sound's delay). TRAINING: the pack of 30 hand-built maps, ten stages from 2★ to 7★ (cleared at 95 %).
 
 ## How it works
 
@@ -20,7 +20,7 @@ Song select (a scrolling wheel, four difficulties with osu!mania star ratings, y
 
 ## Data
 
-`assets/music/rhythm/` (its own songs, with credits) plus the jukebox's (and songs loaded from your phone); best grades on the phone.
+`assets/music/rhythm/` (its own songs, with credits; the Training pack in `pack/`) plus the jukebox's (and songs loaded from your phone); best grades on the phone.
 
 ## Commands
 

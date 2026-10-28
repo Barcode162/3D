@@ -9,10 +9,10 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 362 | 3D models, audio, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 368 | 3D models, audio, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
 | `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 172 | 3D models, JSON, Markdown | deploy.yml → home/bar |
-| `assets/music/` | The jukebox's songs, with their licences and credits. | 48 | audio, JSON, Markdown | deploy.yml → home/bar |
+| `assets/music/` | The jukebox's songs, with their licences and credits. | 54 | audio, JSON, Markdown | deploy.yml → home/bar |
 | `assets/piano/` | The piano's recorded notes (Salamander Grand Piano, CC BY 3.0, J100; tools/piano_samples.sh), with their credit. | 121 | audio, Markdown | deploy.yml → home/bar |
 | `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
 | `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
@@ -74,13 +74,13 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 209 | JavaScript, Python, JSON | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 211 | JavaScript, Python, JSON | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 41 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 19 | JavaScript | not uploaded |
-| `tools/mania/` | 4K Mania's Training pack tools (J117): the song list and each song's measured beats (songs.py, timing.py, songs/), the map recipes (maps.json) for tools/native/mania_pack.cpp. | 33 | JSON, Python | not uploaded |
+| `tools/mania/` | 4K Mania's Training pack tools (J117): the song list and each song's measured beats (songs.py, timing.py, songs/), the map recipes (maps.json) for tools/native/mania_pack.cpp. | 34 | JSON, Python | not uploaded |
 | `tools/migrations/` | One-time conversions of the world files (kept as the record of what changed). | 3 | JavaScript, JSON | not uploaded |
-| `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 25 | C++, shell | not uploaded |
+| `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 26 | C++, shell | not uploaded |
 | `tools/preflight/` | The preflight checklist (J112): one small rule file per check in rules/<area>/ (copy TEMPLATE.mjs), run by node tools/preflight.mjs before any test, build or push; a broken rule names itself, the spot and the fix. | 15 | JavaScript | not uploaded |
 | `ui/` | The look kit shared by the site, the tools and the bar's menus: looped.js and looped.css (the parts), screens, fonts, icons, the theme CSS. | 46 | JSON, fonts, text | hub.yml → home/ui |
 | `ui/fonts/` | The fonts (with their licences in ui/CREDITS.md). | 10 | fonts, text | hub.yml → home/ui |

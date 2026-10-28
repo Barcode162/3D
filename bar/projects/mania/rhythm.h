@@ -27,6 +27,11 @@ class RhythmGame {
   struct SongChoice {
     std::string title, artist, url;
     float seconds = 0;  // length (0 = not known)
+    // A Training map (J117.9): its chart file and where it sits in the pack.
+    std::string packId, chartUrl, skill, about, licence;
+    int stage = 0;
+    float packStars = 0;
+    bool pack() const { return !packId.empty(); }
   };
   // The game's own songs (assets/music/rhythm/).
   static std::vector<SongChoice> builtInSongs();
@@ -82,7 +87,7 @@ class RhythmGame {
   };
   // The song select's layout (device pixels), portrait or landscape.
   struct MenuLayout {
-    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin, test, sync;
+    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin, test, sync, tabSongs, tabPack;
     float card = 0;  // a wheel card's height
   };
 
@@ -94,6 +99,14 @@ class RhythmGame {
   void menuSwipe(float dy, float W, float H);
   void resultsPress(engine::Vec2 p, float W, float H);
   void pickSong(int index);
+  // Songs or Training (J117.9): the wheel shows one or the other.
+  void setTraining(bool on);
+  void rebuildView();
+  int viewPos(int song) const;           // where a song sits on the wheel
+  void pickPos(int pos);                 // pick by wheel position
+  void loadPack();                       // the Training pack's list (once)
+  void addPackSongs();
+  bool cleared(int song) const;          // a Training map passed at 95 %
   MenuLayout menuLayout(float W, float H) const;
   void drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
@@ -173,7 +186,12 @@ class RhythmGame {
   double finishMs_ = 0;
   bool newBest_ = false;
   std::map<std::string, Best> best_;            // per song + difficulty (also kept on the phone)
-  std::map<std::string, Chart> charts_;         // made this session (url + difficulty)
+  std::map<std::string, Chart> charts_;         // made this session (url + difficulty), or a Training map's (packId)
+  bool training_ = false;                       // the wheel shows the Training pack
+  std::vector<int> view_;                       // the songs on the wheel (indices into songs_)
+  std::vector<SongChoice> packSongs_;           // the Training maps (assets/music/rhythm/pack/pack.json)
+  int packState_ = 0;                           // 0 not asked, 1 loading, 2 ready, 3 failed
+  std::map<std::string, int> chartLoads_;       // a Training map's chart: 1 loading, 2 ready, 3 failed
   std::map<std::string, float> starCache_;      // star rating per song + difficulty, once charted
   // The finger and frame test's numbers (since it opened).
   struct TestFinger {

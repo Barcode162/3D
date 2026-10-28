@@ -1,4 +1,5 @@
 #include "bar/projects/mania/rhythm.h"
+#include "bar/projects/mania/pack.h"
 #include "bar/projects/mania/stars.h"
 
 #include <algorithm>
@@ -7,6 +8,7 @@
 
 #include "looped/audio.h"
 #include "looped/bridge.h"
+#include "looped/fetch.h"
 #include "looped/font.h"
 #include "looped/frame_time.h"
 #include "looped/json.h"
@@ -247,7 +249,9 @@ std::vector<RhythmGame::SongChoice> RhythmGame::builtInSongs() {
 
 std::string RhythmGame::bestKey(int song, Difficulty d) const {
   if (song < 0 || song >= static_cast<int>(songs_.size())) return "";
-  return songs_[static_cast<size_t>(song)].title + "|" + kDifficultyName[static_cast<int>(d)];
+  const SongChoice& s = songs_[static_cast<size_t>(song)];
+  if (s.pack()) return "pack:" + s.packId;  // a Training map has one chart
+  return s.title + "|" + kDifficultyName[static_cast<int>(d)];
 }
 
 void RhythmGame::open(std::vector<SongChoice> extra) {
@@ -258,8 +262,12 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
       songs_.push_back(std::move(s));
     }
   }
+  addPackSongs();
+  loadPack();
+  training_ = engine::settings::remembered("rhTraining", 0) != 0;
   song_ = std::clamp(song_, 0, std::max(0, static_cast<int>(songs_.size()) - 1));
-  wheel_ = static_cast<float>(song_);
+  rebuildView();
+  wheel_ = static_cast<float>(viewPos(song_));
   scrollSpeed_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSpeed", 18)), 8, 40);
   skin_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSkin", 2)), 0, kSkinCount - 1);
   guard_ = engine::settings::remembered("rhGuard", 1) != 0;
@@ -317,6 +325,10 @@ int RhythmGame::score() const {
 }
 
 float RhythmGame::stars(int song, Difficulty d, bool* known) const {
+  if (song >= 0 && song < static_cast<int>(songs_.size()) && songs_[static_cast<size_t>(song)].pack()) {
+    if (known) *known = true;
+    return songs_[static_cast<size_t>(song)].packStars;
+  }
   const auto it = starCache_.find(bestKey(song, d));
   if (known) *known = it != starCache_.end();
   return it != starCache_.end() ? it->second : kTypicalStars[static_cast<int>(d)];
@@ -327,7 +339,23 @@ void RhythmGame::startSong() {
   song_ = std::clamp(song_, 0, static_cast<int>(songs_.size()) - 1);
   engine::audio::previewStop();
   previewSong_ = -1;
-  engine::Track::load(songs_[static_cast<size_t>(song_)].url);
+  const SongChoice& s = songs_[static_cast<size_t>(song_)];
+  if (s.pack() && chartLoads_[s.packId] != 2 && chartLoads_[s.packId] != 1) {
+    chartLoads_[s.packId] = 1;
+    const std::string id = s.packId;
+    engine::fetchFile(s.chartUrl, [this, id](bool ok, std::vector<uint8_t> bytes) {
+      PackMap m;
+      std::string err;
+      if (ok && parsePackMap(std::string(bytes.begin(), bytes.end()), m, &err)) {
+        charts_[id] = m.chart;
+        chartLoads_[id] = 2;
+      } else {
+        chartLoads_[id] = 3;
+        LOG_ERROR("4K Mania: the Training map %s didn't load (%s).", id.c_str(), err.c_str());
+      }
+    });
+  }
+  engine::Track::load(s.url);
   state_ = State::kLoading;
   analyzeShown_ = false;
 }
@@ -443,7 +471,7 @@ void RhythmGame::updateEffects(double nowMs, float W, float H) {
     // Sparkles flowing out of the picked song's card, and bubbles rising
     // slowly behind everything.
     const MenuLayout m = menuLayout(W, H);
-    const float mid = m.wheel.y + m.wheel.h / 2 + (static_cast<float>(song_) - wheel_) * m.card * 1.12f;
+    const float mid = m.wheel.y + m.wheel.h / 2 + (static_cast<float>(viewPos(song_)) - wheel_) * m.card * 1.12f;
     const float x0 = m.wheel.x + m.wheel.w * 0.04f, w = m.wheel.w * 0.92f;
     spawnDebt_ += dt * 45;
     while (spawnDebt_ >= 1) {
@@ -498,7 +526,9 @@ RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
     m.autoBtn = {W * 0.41f, H * 0.335f, W * 0.17f, H * 0.045f};
     m.test = {W * 0.60f, H * 0.335f, W * 0.16f, H * 0.045f};
     m.sync = {W * 0.78f, H * 0.335f, W * 0.17f, H * 0.045f};
-    m.wheel = {0, H * 0.4f, W, H * 0.465f};
+    m.tabSongs = {W * 0.05f, H * 0.392f, W * 0.43f, H * 0.042f};
+    m.tabPack = {W * 0.52f, H * 0.392f, W * 0.43f, H * 0.042f};
+    m.wheel = {0, H * 0.44f, W, H * 0.43f};
     m.card = H * 0.068f;
     m.back = {W * 0.05f, H * 0.89f, W * 0.18f, H * 0.065f};
     m.skin = {W * 0.27f, H * 0.89f, W * 0.3f, H * 0.065f};
@@ -512,7 +542,9 @@ RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
     m.autoBtn = {W * 0.205f, H * 0.625f, W * 0.07f, H * 0.09f};
     m.test = {W * 0.285f, H * 0.625f, W * 0.07f, H * 0.09f};
     m.sync = {W * 0.365f, H * 0.625f, W * 0.095f, H * 0.09f};
-    m.wheel = {W * 0.49f, 0, W * 0.51f, H};
+    m.tabSongs = {W * 0.52f, H * 0.03f, W * 0.22f, H * 0.09f};
+    m.tabPack = {W * 0.76f, H * 0.03f, W * 0.22f, H * 0.09f};
+    m.wheel = {W * 0.49f, H * 0.14f, W * 0.51f, H * 0.86f};
     m.card = H * 0.125f;
     m.back = {W * 0.03f, H * 0.8f, W * 0.09f, H * 0.13f};
     m.skin = {W * 0.14f, H * 0.8f, W * 0.13f, H * 0.13f};
@@ -526,9 +558,115 @@ void RhythmGame::pickSong(int index) {
   song_ = std::clamp(index, 0, static_cast<int>(songs_.size()) - 1);
 }
 
+// ---- Songs or Training (J117.9) ----
+
+void RhythmGame::setTraining(bool on) {
+  if (on == training_) return;
+  training_ = on;
+  engine::settings::remember("rhTraining", on ? 1 : 0);
+  rebuildView();
+  wheel_ = static_cast<float>(viewPos(song_));
+}
+
+void RhythmGame::rebuildView() {
+  view_.clear();
+  for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
+    if (songs_[static_cast<size_t>(i)].pack() == training_) view_.push_back(i);
+  }
+  if (!view_.empty() && std::find(view_.begin(), view_.end(), song_) == view_.end()) {
+    // The Training map you were last on, or the first one not yet cleared.
+    int pick = view_.front();
+    if (training_) {
+      const int remembered = static_cast<int>(engine::settings::remembered("rhPackPick", -1));
+      for (int i : view_) {
+        if (!cleared(i)) {
+          pick = i;
+          break;
+        }
+      }
+      if (remembered >= 0) {
+        for (int i : view_) {
+          if (songs_[static_cast<size_t>(i)].stage * 3 + (songs_[static_cast<size_t>(i)].skill == "speed" ? 0 :
+              songs_[static_cast<size_t>(i)].skill == "chords" ? 1 : 2) == remembered) pick = i;
+        }
+      }
+    }
+    song_ = pick;
+  }
+}
+
+int RhythmGame::viewPos(int song) const {
+  const auto it = std::find(view_.begin(), view_.end(), song);
+  return it == view_.end() ? 0 : static_cast<int>(it - view_.begin());
+}
+
+void RhythmGame::pickPos(int pos) {
+  if (view_.empty()) return;
+  song_ = view_[static_cast<size_t>(std::clamp(pos, 0, static_cast<int>(view_.size()) - 1))];
+  const SongChoice& s = songs_[static_cast<size_t>(song_)];
+  if (s.pack()) {
+    engine::settings::remember("rhPackPick", s.stage * 3 + (s.skill == "speed" ? 0 : s.skill == "chords" ? 1 : 2));
+  }
+}
+
+bool RhythmGame::cleared(int song) const {
+  const auto it = best_.find(bestKey(song, difficulty_));
+  return it != best_.end() && it->second.acc >= 0.95;
+}
+
+void RhythmGame::loadPack() {
+  if (packState_ != 0) return;
+  packState_ = 1;
+  engine::fetchFile("assets/music/rhythm/pack/pack.json", [this](bool ok, std::vector<uint8_t> bytes) {
+    std::string err;
+    engine::JsonLimits limits;
+    limits.maxString = 1 << 14;
+    const engine::Json j = ok ? engine::Json::parse(std::string(bytes.begin(), bytes.end()), &err, limits) : engine::Json();
+    if (!j["maps"].isArray()) {
+      packState_ = 3;
+      LOG_ERROR("4K Mania: the Training pack didn't load (%s).", ok ? err.c_str() : "no file");
+      return;
+    }
+    for (const engine::Json& e : j["maps"].items()) {
+      SongChoice s;
+      s.title = e["title"].string();
+      s.artist = e["artist"].string();
+      s.url = e["song"].string();
+      s.seconds = static_cast<float>(e["length"].number());
+      s.packId = e["id"].string();
+      s.chartUrl = e["chart"].string();
+      s.skill = e["skill"].string();
+      s.about = e["about"].string();
+      s.licence = e["licence"].string();
+      s.stage = e["stage"].integer(1);
+      s.packStars = static_cast<float>(e["stars"].number());
+      packSongs_.push_back(std::move(s));
+    }
+    packState_ = 2;
+    LOG_INFO("4K Mania: the Training pack has %zu maps.", packSongs_.size());
+    if (isOpen()) {
+      addPackSongs();
+      rebuildView();
+      wheel_ = static_cast<float>(viewPos(song_));
+    }
+  });
+}
+
+void RhythmGame::addPackSongs() {
+  for (const SongChoice& p : packSongs_) {
+    if (std::any_of(songs_.begin(), songs_.end(), [&](const SongChoice& o) { return o.packId == p.packId; })) continue;
+    songs_.push_back(p);
+    const std::string key = bestKey(static_cast<int>(songs_.size()) - 1, difficulty_);
+    const double acc = engine::settings::remembered(("rhAcc." + key).c_str(), -1);
+    if (acc >= 0) best_[key] = {acc, static_cast<int>(engine::settings::remembered(("rhScore." + key).c_str(), 0))};
+  }
+}
+
 void RhythmGame::menuPress(Vec2 p, float W, float H) {
   const MenuLayout m = menuLayout(W, H);
-  for (int d = 0; d < kDifficultyCount; ++d) {
+  if (m.tabSongs.contains(p.x, p.y)) return setTraining(false);
+  if (m.tabPack.contains(p.x, p.y)) return setTraining(true);
+  for (int d = 0; d < kDifficultyCount && !training_; ++d) {
     if (m.diff[d].contains(p.x, p.y)) difficulty_ = static_cast<Difficulty>(d);
   }
   if (m.speedDown.contains(p.x, p.y) || m.speedUp.contains(p.x, p.y)) {
@@ -542,20 +680,20 @@ void RhythmGame::menuPress(Vec2 p, float W, float H) {
   if (m.autoBtn.contains(p.x, p.y)) autoplay = !autoplay;
   if (m.test.contains(p.x, p.y)) return openTest(engine::clockMs());
   if (m.sync.contains(p.x, p.y)) return openSync();
-  if (m.play.contains(p.x, p.y)) startSong();
+  if (m.play.contains(p.x, p.y) && !view_.empty()) startSong();
   if (m.back.contains(p.x, p.y)) close();
-  if (m.wheel.contains(p.x, p.y) && !songs_.empty()) {
+  if (m.wheel.contains(p.x, p.y) && !view_.empty()) {
     const float step = m.card * 1.12f, mid = m.wheel.y + m.wheel.h / 2;
     const int i = static_cast<int>(std::lround(wheel_ + (p.y - mid) / step));
-    if (i < 0 || i >= static_cast<int>(songs_.size())) return;
-    if (i == song_) startSong();  // a second tap on the picked song plays it
-    else pickSong(i);
+    if (i < 0 || i >= static_cast<int>(view_.size())) return;
+    if (view_[static_cast<size_t>(i)] == song_) startSong();  // a second tap on the picked song plays it
+    else pickPos(i);
   }
 }
 
 void RhythmGame::menuSwipe(float dy, float W, float H) {
   const MenuLayout m = menuLayout(W, H);
-  pickSong(song_ - static_cast<int>(std::lround(dy / (m.card * 1.12f))));
+  pickPos(viewPos(song_) - static_cast<int>(std::lround(dy / (m.card * 1.12f))));
 }
 
 void RhythmGame::resultsPress(Vec2 p, float W, float H) {
@@ -597,12 +735,12 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   // The wheel glides to the picked song.
   const float dt = wheelMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - wheelMs_) / 1000.0)) : 0;
   wheelMs_ = nowMs;
-  wheel_ += (static_cast<float>(song_) - wheel_) * (1 - std::exp(-dt * 12));
+  wheel_ += (static_cast<float>(viewPos(song_)) - wheel_) * (1 - std::exp(-dt * 12));
   updateEffects(nowMs, W, H);
 
   // The song select (and results) play the picked song's preview, a moment
   // after you stop scrolling.
-  if ((state_ == State::kMenu || state_ == State::kResults) && !songs_.empty()) {
+  if ((state_ == State::kMenu || state_ == State::kResults) && !songs_.empty() && !view_.empty()) {
     if (song_ != lastPicked_) {
       lastPicked_ = song_;
       pickedMs_ = nowMs;
@@ -621,8 +759,8 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
     for (const engine::Input::RawPress& r : presses) {
       const Vec2 p{r.pos.x * W, r.pos.y * H};
       if (r.key >= 0 && r.key < 4 && r.down && state_ == State::kMenu) {  // keys: D/F song, J difficulty, K play
-        if (r.key == 0) pickSong(song_ - 1);
-        if (r.key == 1) pickSong(song_ + 1);
+        if (r.key == 0) pickPos(viewPos(song_) - 1);
+        if (r.key == 1) pickPos(viewPos(song_) + 1);
         if (r.key == 2) difficulty_ = static_cast<Difficulty>((static_cast<int>(difficulty_) + 1) % kDifficultyCount);
         if (r.key == 3) startSong();
         continue;
@@ -668,7 +806,22 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       analyzeShown_ = true;
       return;
     }
-    const std::string key = songs_[static_cast<size_t>(song_)].url + "#" + kDifficultyName[static_cast<int>(difficulty_)];
+    const SongChoice& picked = songs_[static_cast<size_t>(song_)];
+    if (picked.pack()) {  // a hand-built map (J117.9): its chart file, not one made by listening
+      const int loaded = chartLoads_[picked.packId];
+      if (loaded == 1) return;  // still coming
+      float rate = 44100;
+      engine::Track::takeSamples(rate);  // (frees the page's copy of the samples)
+      if (loaded != 2) {
+        engine::ui::toast("Couldn't load that map. Try again.");
+        chartLoads_.erase(picked.packId);
+        state_ = State::kMenu;
+        return;
+      }
+      beginPlay(charts_[picked.packId]);
+      return;
+    }
+    const std::string key = picked.url + "#" + kDifficultyName[static_cast<int>(difficulty_)];
     auto cached = charts_.find(key);
     if (cached == charts_.end()) {
       float rate = 44100;
@@ -912,7 +1065,8 @@ void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, do
     const SongChoice& s = songs_[static_cast<size_t>(song_)];
     text.addScreen(clip(s.title, 26), W / 2, H * 0.3f, 14 * px, center);
     center.color = kDifficultyColor[static_cast<int>(difficulty_)];
-    text.addScreen(kDifficultyName[static_cast<int>(difficulty_)], W / 2, H * 0.3f + 22 * px, 9 * px, center);
+    text.addScreen(s.pack() ? "TRAINING  STAGE " + std::to_string(s.stage) : std::string(kDifficultyName[static_cast<int>(difficulty_)]),
+                   W / 2, H * 0.3f + 22 * px, 9 * px, center);
     center.color = {1, 1, 1, 0.9f};
     const char* msg = state_ == State::kLoading ? "Loading the song..." : state_ == State::kAnalyzing ?
                       "Making the chart..." : "Tap to start";
@@ -937,10 +1091,11 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
   st.outlineWidth = 0.75f;
   // The wheel: bubbly cards above and below the picked song; the picked one
   // slides out, glows and bobs gently.
-  if (!songs_.empty()) {
+  if (!view_.empty()) {
     const float step = m.card * 1.12f, mid = m.wheel.y + m.wheel.h / 2;
-    for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
-      const float off = static_cast<float>(i) - wheel_;
+    for (int pos = 0; pos < static_cast<int>(view_.size()); ++pos) {
+      const int i = view_[static_cast<size_t>(pos)];
+      const float off = static_cast<float>(pos) - wheel_;
       const bool sel = i == song_;
       const float bob = sel ? std::sin(static_cast<float>(nowMs / 420.0)) * 2 * px : 0;
       const float y = mid + off * step - m.card / 2 + bob;
@@ -956,22 +1111,41 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
       roundRect(text, x - 2 * px, y - 2 * px, w + 4 * px, m.card + 4 * px, r + 2 * px, sel ? sk.accent : sk.ink);
       roundRect(text, x, y, w, m.card, r, sel ? mix(sk.card, sk.accent, 0.35f) : sk.card);
       roundRect(text, x + w * 0.03f, y + m.card * 0.08f, w * 0.94f, m.card * 0.3f, r * 0.6f, {1, 1, 1, sel ? 0.16f : 0.07f});
-      // A bubble on the left in the lane colours.
-      noteHead(text, sk, i % 4, x + m.card * 0.5f, y + m.card / 2, m.card * 0.9f, px, sk.lane[i % 4], nowMs);
       const SongChoice& s = songs_[static_cast<size_t>(i)];
+      const float big = std::min(m.card * 0.28f, 12 * px);
+      if (s.pack()) {
+        // The stage number in a bubble, in its skill's colour.
+        const Vec4 c = s.skill == "speed" ? Vec4{0.42f, 0.74f, 1.0f, 1} : s.skill == "chords" ? Vec4{1.0f, 0.5f, 0.75f, 1}
+                                                                                              : Vec4{0.4f, 0.95f, 0.72f, 1};
+        text.addShape(engine::font::kShapeDisc, x + m.card * 0.5f, y + m.card / 2, m.card * 0.38f, withAlpha(darker(c, 0.5f), 1), sk.ink, 0.5f);
+        st.align = 0.5f;
+        st.color = c;
+        text.addScreen(std::to_string(s.stage), x + m.card * 0.5f, y + m.card * 0.5f - big * 0.55f, big * 1.1f, st);
+      } else {
+        // A bubble on the left in the lane colours.
+        noteHead(text, sk, i % 4, x + m.card * 0.5f, y + m.card / 2, m.card * 0.9f, px, sk.lane[i % 4], nowMs);
+      }
       st.align = 0;
       st.color = {1, 1, 1, sel ? 1.0f : 0.85f};
-      const float big = std::min(m.card * 0.28f, 12 * px);
       text.addScreen(clip(s.title, 22), x + m.card * 1.05f, y + m.card * 0.2f, big, st);
       st.color = {0.85f, 0.85f, 0.95f, 0.9f};
       std::string sub = s.artist;
-      if (s.seconds > 0) sub += "  " + timeText(s.seconds);
+      if (s.pack()) {
+        char b[48];
+        std::snprintf(b, sizeof(b), "  %s  %.1f*", s.skill == "speed" ? "SPEED" : s.skill == "chords" ? "CHORDS" : "TECH", s.packStars);
+        sub = "STAGE " + std::to_string(s.stage) + b;
+      } else if (s.seconds > 0) {
+        sub += "  " + timeText(s.seconds);
+      }
       text.addScreen(clip(sub, 30), x + m.card * 1.05f, y + m.card * 0.6f, big * 0.6f, st);
       // Best grade on this difficulty, in a badge.
       const auto it = best_.find(bestKey(i, difficulty_));
       if (it != best_.end()) {
         const std::string g = gradeOf(it->second.acc, it->second.acc < 0.999);
         const float gr = m.card * 0.32f, gx = x + w - gr - 8 * px, gy = y + m.card / 2;
+        if (s.pack() && it->second.acc >= 0.95) {  // cleared: a ring around the grade
+          text.addShape(engine::font::kShapeRing, gx, gy, gr * 1.18f, {0.45f, 1.0f, 0.55f, 1});
+        }
         text.addShape(engine::font::kShapeDisc, gx, gy, gr, withAlpha(darker(gradeColor(g), 0.45f), 0.95f), sk.ink, 0.5f);
         st.align = 0.5f;
         st.color = gradeColor(g);
@@ -994,21 +1168,33 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
     const float tsize = std::min(m.info.h * 0.17f, 17 * px);
     text.addScreen(clip(s.title, 22), m.info.x + pad, m.info.y + pad + 16 * px, tsize, st);
     st.color = {0.85f, 0.85f, 0.95f, 1};
-    text.addScreen(s.artist, m.info.x + pad, m.info.y + pad + 20 * px + tsize, 8 * px, st);
-    char line[96];
+    text.addScreen(s.pack() ? s.artist + "  (" + s.licence + ")" : s.artist, m.info.x + pad, m.info.y + pad + 20 * px + tsize, 8 * px, st);
+    char line[128];
     bool known = false;
     const float sr = stars(song_, difficulty_, &known);
     std::snprintf(line, sizeof(line), "%s%s  %.1f STARS", s.seconds > 0 ? ("LENGTH " + timeText(s.seconds) + "   ").c_str() : "",
                   kDifficultyName[static_cast<int>(difficulty_)], sr);
+    if (s.pack()) {
+      std::snprintf(line, sizeof(line), "STAGE %d  %s  %.2f STARS", s.stage,
+                    s.skill == "speed" ? "SPEED" : s.skill == "chords" ? "CHORDS & JACKS" : "TECH", sr);
+    }
     const float y3 = m.info.y + pad + 34 * px + tsize;
     text.addScreen(known ? line : (std::string(line) + " (ABOUT)").c_str(), m.info.x + pad, y3, 7 * px, st);
     starRow(text, m.info.x + pad + 4 * px, y3 + 18 * px, 4 * px, sr, kDifficultyColor[static_cast<int>(difficulty_)]);
     const auto it = best_.find(bestKey(song_, difficulty_));
+    if (s.pack()) {  // what this map trains, in a line
+      st.color = {0.92f, 0.88f, 1.0f, 1};
+      text.addScreen(clip(s.about, 50), m.info.x + pad, y3 + 42 * px, 6.5f * px, st);
+    }
     if (it != best_.end()) {
       const std::string g = gradeOf(it->second.acc, it->second.acc < 0.999);
-      std::snprintf(line, sizeof(line), "BEST  %.2f%%  %07d", it->second.acc * 100, it->second.score);
+      std::snprintf(line, sizeof(line), "BEST  %.2f%%  %07d%s", it->second.acc * 100, it->second.score,
+                    s.pack() && it->second.acc >= 0.95 ? "  CLEARED" : s.pack() ? "  (95% CLEARS IT)" : "");
       st.color = gradeColor(g);
       text.addScreen(g + "  " + line, m.info.x + pad, y3 + 30 * px, 8 * px, st);
+    } else if (s.pack()) {
+      st.color = {0.8f, 0.8f, 0.9f, 0.85f};
+      text.addScreen("NOT PLAYED YET  (95% CLEARS IT)", m.info.x + pad, y3 + 30 * px, 7 * px, st);
     } else {
       st.color = {0.8f, 0.8f, 0.9f, 0.85f};
       text.addScreen("NOT PLAYED YET", m.info.x + pad, y3 + 30 * px, 7 * px, st);
@@ -1018,8 +1204,38 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
     noteHead(text, sk, song_ % 4, m.info.x + m.info.w - 26 * px, m.info.y + 24 * px - beat * 5 * px, 30 * px, px,
              sk.lane[song_ % 4], nowMs);
   }
-  // Difficulties, as bubble pills with their stars.
-  for (int d = 0; d < kDifficultyCount; ++d) {
+  // Difficulties, as bubble pills with their stars (songs); Training: the
+  // stages, each lit by how many of its three maps are cleared.
+  if (training_) {
+    const Rect a = m.diff[0], z = m.diff[kDifficultyCount - 1];
+    const float x0 = a.x, w = z.x + z.w - a.x, cw = w / 10;
+    int clearedTotal = 0;
+    for (int st10 = 1; st10 <= 10; ++st10) {
+      int n = 0, total = 0;
+      bool here = false;
+      for (int i : view_) {
+        const SongChoice& c = songs_[static_cast<size_t>(i)];
+        if (c.stage != st10) continue;
+        ++total;
+        n += cleared(i) ? 1 : 0;
+        here |= i == song_;
+      }
+      clearedTotal += n;
+      const float bx = x0 + static_cast<float>(st10 - 1) * cw;
+      const Vec4 c = n == total && total > 0 ? Vec4{0.45f, 1.0f, 0.55f, 1} : sk.accent2;
+      roundRect(text, bx + 2 * px, a.y, cw - 4 * px, a.h, 8 * px, withAlpha(c, here ? 0.85f : 0.25f + 0.2f * static_cast<float>(n)));
+      engine::TextStyle s;
+      s.align = 0.5f;
+      s.outline = sk.ink;
+      s.outlineWidth = 0.8f;
+      text.addScreen(std::to_string(st10), bx + cw / 2, a.y + a.h * 0.18f, std::min(a.h * 0.3f, 9 * px), s);
+      char b[8];
+      std::snprintf(b, sizeof(b), "%d/%d", n, total);
+      text.addScreen(b, bx + cw / 2, a.y + a.h * 0.6f, std::min(a.h * 0.22f, 6 * px), s);
+    }
+    (void)clearedTotal;
+  }
+  for (int d = 0; d < kDifficultyCount && !training_; ++d) {
     const Rect& r = m.diff[d];
     const bool on = static_cast<int>(difficulty_) == d;
     const float lift = on ? 3 * px : 0;
@@ -1053,6 +1269,8 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
          autoplay, sk.ink);
   bubble(text, m.test.x, m.test.y, m.test.w, m.test.h, "TEST", px, sk.accent2, true, sk.ink);
   bubble(text, m.sync.x, m.sync.y, m.sync.w, m.sync.h, "SYNC", px, sk.accent, true, sk.ink);
+  bubble(text, m.tabSongs.x, m.tabSongs.y, m.tabSongs.w, m.tabSongs.h, "SONGS", px, sk.accent2, !training_, sk.ink);
+  bubble(text, m.tabPack.x, m.tabPack.y, m.tabPack.w, m.tabPack.h, "TRAINING", px, sk.accent, training_, sk.ink);
   bubble(text, m.back.x, m.back.y, m.back.w, m.back.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
   // The skin button shows the skin's name and its four notes.
   bubble(text, m.skin.x, m.skin.y, m.skin.w, m.skin.h, "", px, mix(sk.card, sk.accent2, 0.5f), true, sk.ink);
@@ -1072,10 +1290,13 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
   const float playPulse = 1 + 0.03f * std::sin(static_cast<float>(nowMs / 250.0));
   const float pw = m.play.w * playPulse, ph = m.play.h * playPulse;
   bubble(text, m.play.x - (pw - m.play.w) / 2, m.play.y - (ph - m.play.h) / 2, pw, ph, "PLAY", px, sk.accent, true, sk.ink, 1.3f);
-  if (songs_.empty()) {
+  if (view_.empty()) {
     engine::TextStyle s;
     s.align = 0.5f;
-    text.addScreen("No songs", m.wheel.x + m.wheel.w / 2, m.wheel.y + m.wheel.h / 2, 12 * px, s);
+    s.outline = sk.ink;
+    s.outlineWidth = 0.8f;
+    const char* what = !training_ ? "No songs" : packState_ == 3 ? "The Training pack didn't load" : "Loading the Training pack...";
+    text.addScreen(what, m.wheel.x + m.wheel.w / 2, m.wheel.y + m.wheel.h / 2, 9 * px, s);
   }
 }
 
@@ -1262,7 +1483,10 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
   left.color = {1, 1, 1, 0.75f};
   text.addScreen(clip(songs_[static_cast<size_t>(song_)].title, 20), 48 * px, 14 * px, 7 * px, left);
   left.color = kDifficultyColor[static_cast<int>(difficulty_)];
-  text.addScreen(std::string(kDifficultyName[static_cast<int>(difficulty_)]) + (autoplay ? "  AUTO" : ""), 48 * px, 26 * px, 6 * px, left);
+  const SongChoice& now = songs_[static_cast<size_t>(song_)];
+  text.addScreen((now.pack() ? "STAGE " + std::to_string(now.stage) + " " + (now.skill == "speed" ? "SPEED" : now.skill == "chords" ? "CHORDS" : "TECH")
+                             : std::string(kDifficultyName[static_cast<int>(difficulty_)])) + (autoplay ? "  AUTO" : ""),
+                 48 * px, 26 * px, 6 * px, left);
   if (songTime_ < 0) {
     std::snprintf(line, sizeof(line), "%d", static_cast<int>(std::ceil(-songTime_)));
     center.color = {1, 1, 1, 1};
@@ -1284,8 +1508,13 @@ void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float
   st.color = {1, 1, 1, 1};
   text.addScreen(clip(songs_[static_cast<size_t>(song_)].title, 30), W / 2, H * 0.03f, 13 * px, st);
   st.color = kDifficultyColor[static_cast<int>(difficulty_)];
-  text.addScreen(std::string(kDifficultyName[static_cast<int>(difficulty_)]) + (autoplay ? "  (AUTO)" : ""), W / 2,
-                 H * 0.03f + 20 * px, 7 * px, st);
+  {
+    const SongChoice& hs = songs_[static_cast<size_t>(song_)];
+    const std::string label = hs.pack() ? "TRAINING  STAGE " + std::to_string(hs.stage) + "  " +
+                                              (hs.skill == "speed" ? "SPEED" : hs.skill == "chords" ? "CHORDS & JACKS" : "TECH")
+                                        : std::string(kDifficultyName[static_cast<int>(difficulty_)]);
+    text.addScreen(label + (autoplay ? "  (AUTO)" : ""), W / 2, H * 0.03f + 20 * px, 7 * px, st);
+  }
   const bool upright = H >= W;
   // The grade, big, in a bubble.
   const float gs = std::min(H * 0.2f, W * 0.3f);
@@ -1296,7 +1525,15 @@ void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float
   text.addShape(engine::font::kShapeDisc, gx - gr * 0.35f, gcy - gr * 0.4f, gr * 0.22f, {1, 1, 1, 0.3f});
   st.color = gradeColor(grade);
   text.addScreen(grade, gx, gy + gs * 0.1f, gs * 0.8f, st);
-  if (newBest_) {
+  const SongChoice& played = songs_[static_cast<size_t>(song_)];
+  if (played.pack()) {
+    st.color = acc >= 0.95 ? Vec4{0.45f, 1.0f, 0.55f, 1} : Vec4{1.0f, 0.75f, 0.4f, 1};
+    text.addScreen(acc >= 0.95 ? "CLEARED!" : "95% TO CLEAR", gx, gy + gs + gr * 0.2f + 6 * px, 10 * px, st);
+    if (newBest_) {
+      st.color = sk.accent;
+      text.addScreen("NEW BEST!", gx, gy + gs + gr * 0.2f + 22 * px, 8 * px, st);
+    }
+  } else if (newBest_) {
     st.color = sk.accent;
     text.addScreen("NEW BEST!", gx, gy + gs + gr * 0.2f + 6 * px, 10 * px, st);
   }

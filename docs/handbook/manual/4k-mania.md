@@ -96,3 +96,33 @@ harder than the map's own hard parts (×1.6 at stage 1 down to ×1.45).
 Beyond the checker, the maps follow the music: chords on the heavy hits,
 holds on long sounds, the same sound gets the same pattern, the densest part
 where the song is loudest, no scroll-speed changes.
+
+## The Training pack
+
+In the song select, **TRAINING** (beside SONGS) lists the pack: ten stages,
+three maps each (Speed, Chords & jacks, Tech), about half a star apart from
+2★ to 7★ (osu!mania stars). The strip of ten shows each stage's cleared
+maps; a map is cleared at 95 % accuracy (a green ring on its grade).
+
+- **Songs:** 30 hard-hitting tracks by TeknoAXE (CC BY 4.0, each checked on
+  its own page), 120-228 BPM, in `assets/music/rhythm/pack/` (credits:
+  `assets/music/CREDITS.md`, Help → Credits). `python3 tools/mania/songs.py`
+  checks the licence, downloads, shortens (2:30, fade-out), encodes and
+  times each one (`tools/mania/timing.py`: the beat grid fitted through
+  every drum hit, the tempo snapped to its whole number; ±4-11 ms, drift
+  under 1.1 ms), and measures per 1/8 beat how hard the kick, snare and hats
+  hit and per beat how loud it is and how it rings (`tools/mania/songs/`).
+- **Maps:** `tools/mania/maps.json` (one recipe a map: stage, skill, song,
+  what it trains) → `tools/native/mania_pack.cpp build` → the chart files and
+  `pack.json` in `assets/music/rhythm/pack/`. The builder places rows on the
+  beat grid where the music hits (steady layers by how loud each bar is,
+  finer notes on clear hits), gives chords to the heavy hits, lanes by the
+  skill's patterns (Speed: streams → jumpstream → handstream; Chords: jumps →
+  chordjacks, gluts; Tech: rolls, trills, runningmen, split jumptrills, holds
+  against taps, inverse), repairs what the stage's rules refuse, and turns
+  one dial (each harder pattern spread over a growing share of the notes,
+  so the stars climb smoothly) until the stars hit the stage's target.
+  `mania_pack check` re-checks the saved charts; `tools/native/mania_test.cpp`
+  does too, with the native tests.
+- **Playing one:** the chart comes from its file (no listening), the song
+  from the pack; bests are kept per map (`rhAcc.pack:<id>`).

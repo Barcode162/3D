@@ -1,0 +1,215 @@
+{
+ "about": "The Training pack's maps (J117.9-13): one per song, three per stage (Speed, Chords & jacks, Tech). tools/native/mania_pack.cpp builds each from its song's measured beats and the stage's rules.",
+ "maps": [
+  {
+   "id": "s1-speed",
+   "stage": 1,
+   "skill": "speed",
+   "song": "chiptune-speedway",
+   "about": "Half-beat runs and jumps on the beat: keep a steady pace with both hands."
+  },
+  {
+   "id": "s1-chords",
+   "stage": 1,
+   "skill": "chords",
+   "song": "midnight-stomp",
+   "about": "Jumps on the kick and snare: two keys landing together, cleanly."
+  },
+  {
+   "id": "s1-tech",
+   "stage": 1,
+   "skill": "tech",
+   "song": "hover-pit",
+   "about": "Your first holds: keep one finger down while the other hand taps."
+  },
+  {
+   "id": "s2-speed",
+   "stage": 2,
+   "skill": "speed",
+   "song": "diabolical-maneuvers",
+   "about": "Half-beat runs, jumps on the beat and short quarter-beat bursts, at 160."
+  },
+  {
+   "id": "s2-chords",
+   "stage": 2,
+   "skill": "chords",
+   "song": "thunder-on-the-floor",
+   "about": "Jumps on every hit: read which two keys come next."
+  },
+  {
+   "id": "s2-tech",
+   "stage": 2,
+   "skill": "tech",
+   "song": "basic-wobblefest",
+   "about": "Rolls and trills: fingers in order, evenly."
+  },
+  {
+   "id": "s3-speed",
+   "stage": 3,
+   "skill": "speed",
+   "song": "breaking-back-into-the-wubs",
+   "about": "Quarter-beat streams with breathers: stamina starts here."
+  },
+  {
+   "id": "s3-chords",
+   "stage": 3,
+   "skill": "chords",
+   "song": "running-rage",
+   "about": "Light jumpstream and three-key hands on the big hits."
+  },
+  {
+   "id": "s3-tech",
+   "stage": 3,
+   "skill": "tech",
+   "song": "back-to-the-grime",
+   "about": "Trills, rolls and an anchored finger (runningman)."
+  },
+  {
+   "id": "s4-speed",
+   "stage": 4,
+   "skill": "speed",
+   "song": "spiral-flight",
+   "about": "Jumpstream at 160: jumps inside a constant stream."
+  },
+  {
+   "id": "s4-chords",
+   "stage": 4,
+   "skill": "chords",
+   "song": "shattered-bass",
+   "about": "Chords that repeat a key (minijacks): hit the same key twice, fast."
+  },
+  {
+   "id": "s4-tech",
+   "stage": 4,
+   "skill": "tech",
+   "song": "pixel-warrior",
+   "about": "Split trills: each hand trills its own keys, with holds under the stream."
+  },
+  {
+   "id": "s5-speed",
+   "stage": 5,
+   "skill": "speed",
+   "song": "racket-and-bang",
+   "about": "Full jumpstream and the first handstream."
+  },
+  {
+   "id": "s5-chords",
+   "stage": 5,
+   "skill": "chords",
+   "song": "war-horse",
+   "about": "Chordjacks at half-beat: chords sharing keys, the heavy metal way."
+  },
+  {
+   "id": "s5-tech",
+   "stage": 5,
+   "skill": "tech",
+   "song": "the-freakazoid-race",
+   "about": "Jumptrills, split trills and runningmen in a race."
+  },
+  {
+   "id": "s6-speed",
+   "stage": 6,
+   "skill": "speed",
+   "song": "final-lap",
+   "about": "Handstream at 160: three keys inside the stream."
+  },
+  {
+   "id": "s6-chords",
+   "stage": 6,
+   "skill": "chords",
+   "song": "brutal-sines",
+   "about": "Chordjacks with hands: keep the chords clean when keys repeat."
+  },
+  {
+   "id": "s6-tech",
+   "stage": 6,
+   "skill": "tech",
+   "song": "up-for-a-race",
+   "about": "Inverse: every gap a hold. Read where to let go."
+  },
+  {
+   "id": "s7-speed",
+   "stage": 7,
+   "skill": "speed",
+   "song": "let-the-drumz-out",
+   "about": "Dense jumpstream at 180 with 1/8 bursts."
+  },
+  {
+   "id": "s7-chords",
+   "stage": 7,
+   "skill": "chords",
+   "song": "heat-grind",
+   "about": "Quarter-beat chordjack: jack speed under chords."
+  },
+  {
+   "id": "s7-tech",
+   "stage": 7,
+   "skill": "tech",
+   "song": "storm-wind",
+   "about": "Split jumptrills and runningmen at 180."
+  },
+  {
+   "id": "s8-speed",
+   "stage": 8,
+   "skill": "speed",
+   "song": "speed-run-acrobatics",
+   "about": "Stamina: dense streams for nearly four minutes."
+  },
+  {
+   "id": "s8-chords",
+   "stage": 8,
+   "skill": "chords",
+   "song": "low-rez-death-march",
+   "about": "Gluts and jumpjacks at 188: chords that walk across the keys."
+  },
+  {
+   "id": "s8-tech",
+   "stage": 8,
+   "skill": "tech",
+   "song": "launch-into-it",
+   "about": "Holds and streams mixed: one hand holds, the other flies."
+  },
+  {
+   "id": "s9-speed",
+   "stage": 9,
+   "skill": "speed",
+   "song": "celebrate-with-eight",
+   "about": "Fast handstream at 188."
+  },
+  {
+   "id": "s9-chords",
+   "stage": 9,
+   "skill": "chords",
+   "song": "flamethrower",
+   "about": "Dense chordjack: hands and quads at 188."
+  },
+  {
+   "id": "s9-tech",
+   "stage": 9,
+   "skill": "tech",
+   "song": "a-new-monstrosity",
+   "about": "Everything at 208: trills, anchors, inverse holds."
+  },
+  {
+   "id": "s10-speed",
+   "stage": 10,
+   "skill": "speed",
+   "song": "low-rez-fury",
+   "about": "The final stream: dense handstream at 228."
+  },
+  {
+   "id": "s10-chords",
+   "stage": 10,
+   "skill": "chords",
+   "song": "into-the-machine",
+   "about": "The final chordjack: quads and hands at 208."
+  },
+  {
+   "id": "s10-tech",
+   "stage": 10,
+   "skill": "tech",
+   "song": "frankensynth",
+   "about": "The final tech map: every skill at 208."
+  }
+ ]
+}
