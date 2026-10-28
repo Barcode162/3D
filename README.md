@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.7 Real stars and the map toolkit: osu!mania's own star formula (ported, MIT, credited) rates every chart, so the auto-made ones now read about 0.9/1.7/2.7/3.3★; chart files for hand-built maps and a map checker with every stage's rules from osu!mania's ranking criteria; a native check for both; the manual's 4K Mania page (timing, sync, stars, every pattern and what it trains, the rules)
+
+`5002616` · 2026-10-28 03:46 · 13 files, +594 −26 · tests: none
+
+Phone check: The song select shows the new stars (lower than before for the auto-made charts)
+
 ## J117.6 The sound sync: a SYNC button in 4K Mania's song select plays clicks; you tap along, and the middle of how late your taps land is your phone's and headphones' delay (a light flashes on each click with the offset applied, -5/+5 to nudge, SAVE keeps it); the game then judges and draws every song by the sound as you hear it
 
 `9630884` · 2026-10-28 03:41 · 9 files, +178 −10 · tests: none
