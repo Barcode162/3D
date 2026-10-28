@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.4 Ready for 120 Hz: while 4K Mania is open, one frame queued on the GPU (a tap shows on the next frame) and no 30-a-second cap from Power: Cooler; TEST shows the frame rate and, at 60, how to turn on Safari's 120
+
+`4ef318f` · 2026-10-28 03:38 · 4 files, +24 −2 · tests: none
+
+Phone check: With Safari's near-60fps flag off, TEST shows about 120
+
 ## J117.3 Taps don't freeze the picture or drop holds: while you play, a gesture guard keeps the phone's own finger gestures (the three-finger Undo/Copy bar, the magnifier) from holding fingers back or taking them away, and any text field lets go of focus; the sound unlock no longer runs on every tap; the guard can be turned off in TEST to compare
 
 `4df6424` · 2026-10-28 03:37 · 6 files, +50 −4 · tests: none
