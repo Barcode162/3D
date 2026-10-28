@@ -278,6 +278,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J117.1, J117.2, J117.3, J117.4, J117.5, J117.6, J117.7, J117.8, J117.9, J117.10, J117.11, J117.12, J117.13: 4K Mania upgrade: a smooth song clock (notes glide evenly, taps judged at their exact time), a gesture guard and lighter frames while playing, the finger test and the sound sync, a smaller combo with no circle, osu!mania's real star rating, and the Training pack: 30 hard-hitting new songs and 30 maps in ten stages from 2 to 7 stars → f974ddc^..27e76f8
 - `ba18f3c` J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
 - `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
 - `7779287` J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
