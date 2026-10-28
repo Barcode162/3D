@@ -182,6 +182,18 @@ window.bar3dBridge = (function () {
             case 'listener': { var A2 = window.bar3dAudio; if (A2) A2['setListener'].apply(A2, op.slice(1)); break; }
             case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
             case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
+            // 4K Mania's finger test (J116.1): its numbers ride with every
+            // report; [.., 1] also sends one now and shows the code.
+            case 'maniaReport': {
+              window.bar3dMania = op[1];
+              var U5 = window.bar3dUi, R = window.bar3dReport;
+              if (op[2] && R) {
+                if (U5) U5['toast']('Sending the report…');
+                R.send(false).then(function (code) { if (U5) U5['toast']('Report code: ' + code); },
+                                   function (e) { if (U5) U5['toast']('Could not send: ' + e.message); });
+              }
+              break;
+            }
             // Sounds (looped/audio.cpp): play, stop, change, emitter.
             case 'sp': { var A3 = window.bar3dAudio; if (A3) A3['soundPlay'](op[1], op[2], op[3], op[4], op[5], op[6], op[7], op[8], op[9], op[10] ? 'piano' : 'sfx', op[11], op[12]); break; }
             case 'ss': { var A4 = window.bar3dAudio; if (A4) A4['soundStop'](op[1], op[2], op[3]); break; }

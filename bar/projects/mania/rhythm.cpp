@@ -5,8 +5,10 @@
 #include <cstdio>
 
 #include "looped/audio.h"
+#include "looped/bridge.h"
 #include "looped/font.h"
 #include "looped/frame_time.h"
+#include "looped/json.h"
 #include "looped/log.h"
 #include "looped/ui.h"
 
@@ -477,9 +479,11 @@ RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
     m.info = {W * 0.05f, H * 0.035f, W * 0.9f, H * 0.2f};
     const float dy = H * 0.25f, dw = (W * 0.9f - 3 * W * 0.02f) / 4;
     for (int d = 0; d < kDifficultyCount; ++d) m.diff[d] = {W * 0.05f + static_cast<float>(d) * (dw + W * 0.02f), dy, dw, H * 0.065f};
-    m.speedDown = {W * 0.05f, H * 0.335f, W * 0.11f, H * 0.045f};
-    m.speedUp = {W * 0.5f, H * 0.335f, W * 0.11f, H * 0.045f};
-    m.autoBtn = {W * 0.67f, H * 0.335f, W * 0.28f, H * 0.045f};
+    m.speedDown = {W * 0.05f, H * 0.335f, W * 0.09f, H * 0.045f};
+    m.speedUp = {W * 0.30f, H * 0.335f, W * 0.09f, H * 0.045f};
+    m.autoBtn = {W * 0.41f, H * 0.335f, W * 0.17f, H * 0.045f};
+    m.test = {W * 0.60f, H * 0.335f, W * 0.16f, H * 0.045f};
+    m.sync = {W * 0.78f, H * 0.335f, W * 0.17f, H * 0.045f};
     m.wheel = {0, H * 0.4f, W, H * 0.465f};
     m.card = H * 0.068f;
     m.back = {W * 0.05f, H * 0.89f, W * 0.18f, H * 0.065f};
@@ -489,9 +493,11 @@ RhythmGame::MenuLayout RhythmGame::menuLayout(float W, float H) const {
     m.info = {W * 0.03f, H * 0.05f, W * 0.43f, H * 0.36f};
     const float dw = (W * 0.43f - 3 * W * 0.01f) / 4;
     for (int d = 0; d < kDifficultyCount; ++d) m.diff[d] = {W * 0.03f + static_cast<float>(d) * (dw + W * 0.01f), H * 0.45f, dw, H * 0.12f};
-    m.speedDown = {W * 0.03f, H * 0.625f, W * 0.055f, H * 0.09f};
-    m.speedUp = {W * 0.245f, H * 0.625f, W * 0.055f, H * 0.09f};
-    m.autoBtn = {W * 0.33f, H * 0.625f, W * 0.13f, H * 0.09f};
+    m.speedDown = {W * 0.03f, H * 0.625f, W * 0.045f, H * 0.09f};
+    m.speedUp = {W * 0.15f, H * 0.625f, W * 0.045f, H * 0.09f};
+    m.autoBtn = {W * 0.205f, H * 0.625f, W * 0.07f, H * 0.09f};
+    m.test = {W * 0.285f, H * 0.625f, W * 0.07f, H * 0.09f};
+    m.sync = {W * 0.365f, H * 0.625f, W * 0.095f, H * 0.09f};
     m.wheel = {W * 0.49f, 0, W * 0.51f, H};
     m.card = H * 0.125f;
     m.back = {W * 0.03f, H * 0.8f, W * 0.09f, H * 0.13f};
@@ -520,6 +526,7 @@ void RhythmGame::menuPress(Vec2 p, float W, float H) {
     engine::settings::remember("rhSkin", skin_);
   }
   if (m.autoBtn.contains(p.x, p.y)) autoplay = !autoplay;
+  if (m.test.contains(p.x, p.y)) return openTest(engine::clockMs());
   if (m.play.contains(p.x, p.y)) startSong();
   if (m.back.contains(p.x, p.y)) close();
   if (m.wheel.contains(p.x, p.y) && !songs_.empty()) {
@@ -554,7 +561,10 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   if (state_ == State::kClosed) return;
   for (const engine::Input::RawPress& r : presses) {
     if (r.key == 4 && r.down) {  // Escape
-      if (state_ == State::kPlaying || state_ == State::kWaitTap) {
+      if (state_ == State::kTest) {
+        LOG_INFO("%s", testSummary().c_str());
+        state_ = State::kMenu;
+      } else if (state_ == State::kPlaying || state_ == State::kWaitTap) {
         engine::Track::stop();
         state_ = State::kMenu;
       } else {
@@ -563,6 +573,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       return;
     }
   }
+  if (state_ == State::kTest) return updateTest(nowMs, presses, W, H);
   // The wheel glides to the picked song.
   const float dt = wheelMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - wheelMs_) / 1000.0)) : 0;
   wheelMs_ = nowMs;
@@ -854,6 +865,10 @@ void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, do
     drawTaps();
     return;
   }
+  if (state_ == State::kTest) {
+    drawTest(text, W, H, px, nowMs);
+    return;
+  }
   if (state_ == State::kLoading || state_ == State::kAnalyzing || state_ == State::kWaitTap) {
     engine::TextStyle center;
     center.align = 0.5f;
@@ -999,8 +1014,9 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
     const float cx = (m.speedDown.x + m.speedDown.w + m.speedUp.x) / 2;
     text.addScreen(b, cx, m.speedDown.y + m.speedDown.h * 0.3f, std::min(m.speedDown.h * 0.4f, 9 * px), s);
   }
-  bubble(text, m.autoBtn.x, m.autoBtn.y, m.autoBtn.w, m.autoBtn.h, autoplay ? "AUTO: ON" : "AUTO: OFF", px, sk.accent2,
+  bubble(text, m.autoBtn.x, m.autoBtn.y, m.autoBtn.w, m.autoBtn.h, autoplay ? "AUTO ON" : "AUTO", px, sk.accent2,
          autoplay, sk.ink);
+  bubble(text, m.test.x, m.test.y, m.test.w, m.test.h, "TEST", px, sk.accent2, true, sk.ink);
   bubble(text, m.back.x, m.back.y, m.back.w, m.back.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
   // The skin button shows the skin's name and its four notes.
   bubble(text, m.skin.x, m.skin.y, m.skin.w, m.skin.h, "", px, mix(sk.card, sk.accent2, 0.5f), true, sk.ink);
@@ -1278,6 +1294,160 @@ void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float
     const float x = W / 2 + (static_cast<float>(i) - 1.5f) * (bw + W * 0.02f) + W * 0.01f;
     bubble(text, x, by, bw, bh, labels[i], px, colors[i], true, sk.ink);
   }
+}
+
+
+// ---- The finger and frame test (J116.1) ----
+
+void RhythmGame::openTest(double nowMs) {
+  test_ = {};
+  test_.openMs = test_.fpsFrom = nowMs;
+  testFingers_.clear();
+  lastTestLogMs_ = nowMs;
+  engine::audio::previewStop();
+  previewSong_ = -1;
+  state_ = State::kTest;
+  LOG_INFO("Finger test opened.");
+}
+
+RhythmGame::Rect RhythmGame::testButton(int i, float W, float H) const {
+  const float y = H - H * 0.1f, h = H * 0.065f;
+  if (i == 0) return {W * 0.05f, y, W * 0.24f, h};
+  if (i == 1) return {W * 0.32f, y, W * 0.32f, h};
+  return {W * 0.67f, y, W * 0.28f, h};
+}
+
+std::string RhythmGame::testSummary() const {
+  const TestStats& t = test_;
+  char b[512];
+  const double secs = std::max(0.001, (t.lastFrameMs - t.openMs) / 1000.0);
+  std::snprintf(b, sizeof(b),
+                "Finger test: %.0f s, %d frames (%.0f a second now), longest gap %.0f ms, %d gaps over 50 ms; "
+                "%d touches, most at once %d, lost by the phone %d, late %d (touch to frame avg %.1f ms, max %.0f ms); "
+                "sound clock still on %d of %d frames, biggest step %.1f ms.",
+                secs, t.frames, t.fps, t.maxGapMs, t.gaps50, t.presses, t.maxDown, t.lost, t.late,
+                t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs, t.audioStill, t.audioFrames, t.audioMaxStepMs);
+  return b;
+}
+
+void RhythmGame::updateTest(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H) {
+  TestStats& t = test_;
+  if (t.lastFrameMs > 0) {
+    const double gap = nowMs - t.lastFrameMs;
+    t.maxGapMs = std::max(t.maxGapMs, gap);
+    if (gap > 50) ++t.gaps50;
+  }
+  t.lastFrameMs = nowMs;
+  ++t.frames;
+  ++t.fpsFrames;
+  if (nowMs - t.fpsFrom >= 1000) {
+    t.fps = static_cast<float>(t.fpsFrames * 1000.0 / (nowMs - t.fpsFrom));
+    t.fpsFrom = nowMs;
+    t.fpsFrames = 0;
+  }
+  // The sound clock (read once per frame by the page mailbox): how far it moved.
+  const double audio = engine::bridge::frame().audioTime;
+  if (audio > 0 && t.lastAudio > 0) {
+    ++t.audioFrames;
+    const double step = (audio - t.lastAudio) * 1000;
+    if (step < 0.01) ++t.audioStill;
+    t.audioMaxStepMs = std::max(t.audioMaxStepMs, step);
+  }
+  t.lastAudio = audio;
+  updateEffects(nowMs, W, H);
+  for (const engine::Input::RawPress& r : presses) {
+    if (r.key >= 0) continue;
+    const Vec2 p{r.pos.x * W, r.pos.y * H};
+    if (r.down) {
+      ++t.presses;
+      const double delay = std::max(0.0, nowMs - r.ms);
+      t.sumDelayMs += delay;
+      t.maxDelayMs = std::max(t.maxDelayMs, delay);
+      if (delay > 34) ++t.late;
+      testFingers_[r.id] = {p, std::clamp(static_cast<int>(p.x / (W / 4)), 0, 3), nowMs};
+      t.maxDown = std::max(t.maxDown, static_cast<int>(testFingers_.size()));
+      laneDownMs_[testFingers_[r.id].lane] = nowMs;
+      continue;
+    }
+    const auto it = testFingers_.find(r.id);
+    if (it == testFingers_.end()) continue;
+    const Vec2 start = it->second.pos;
+    testFingers_.erase(it);
+    if (r.cancelled) {
+      ++t.lost;
+      continue;
+    }
+    if (testButton(0, W, H).contains(start.x, start.y)) {
+      LOG_INFO("%s", testSummary().c_str());
+      state_ = State::kMenu;
+      return;
+    }
+    if (testButton(1, W, H).contains(start.x, start.y)) {
+      LOG_INFO("%s", testSummary().c_str());
+      engine::bridge::op("[\"maniaReport\"," + engine::jsonQuote(testSummary()) + ",1]");
+    }
+  }
+  // A line in the log every 10 s, so a report sent from Settings has it too.
+  if (nowMs - lastTestLogMs_ > 10000) {
+    lastTestLogMs_ = nowMs;
+    engine::bridge::op("[\"maniaReport\"," + engine::jsonQuote(testSummary()) + ",0]");
+  }
+}
+
+void RhythmGame::drawTest(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
+  const Skin& sk = kSkins[skin_];
+  const TestStats& t = test_;
+  for (int l = 0; l < 4; ++l) {
+    bool held = false;
+    for (const auto& f : testFingers_) held |= f.second.lane == l;
+    const float since = static_cast<float>(nowMs - laneDownMs_[l]);
+    const float on = held ? 1.0f : std::clamp(1.0f - since / 160.0f, 0.0f, 1.0f);
+    text.addRect(W / 4 * static_cast<float>(l), 0, W / 4, H, withAlpha(sk.lane[l], 0.05f + 0.12f * on));
+    if (l > 0) text.addRect(W / 4 * static_cast<float>(l) - 0.5f * px, 0, px, H, {1, 1, 1, 0.08f});
+  }
+  engine::TextStyle st;
+  st.outline = sk.ink;
+  st.outlineWidth = 0.8f;
+  st.color = sk.accent;
+  const float x = std::min(W, H) * 0.06f;
+  float y = H * 0.05f;
+  text.addScreen("FINGER TEST", x, y, 9 * px, st);
+  y += 18 * px;
+  st.color = {1, 1, 1, 1};
+  text.addScreen("Four fingers down, tap fast, hold three.", x, y, 7.5f * px, st);
+  y += 22 * px;
+  char line[128];
+  const auto row = [&](const char* label, const std::string& value) {
+    engine::TextStyle s = st;
+    s.color = {0.8f, 0.78f, 0.88f, 1};
+    text.addScreen(label, x, y, 6.5f * px, s);
+    s.color = {1, 1, 1, 1};
+    text.addScreen(value, x, y + 11 * px, 10 * px, s);
+    y += 30 * px;
+  };
+  row("FINGERS DOWN (MOST AT ONCE)", std::to_string(testFingers_.size()) + "  (" + std::to_string(t.maxDown) + ")");
+  std::snprintf(line, sizeof(line), "%d lost   %d late   of %d", t.lost, t.late, t.presses);
+  row("TOUCHES THE PHONE LOST OR HELD BACK", line);
+  std::snprintf(line, sizeof(line), "%.0f a second   longest gap %.0f ms", t.fps, t.maxGapMs);
+  row("FRAMES", line);
+  std::snprintf(line, sizeof(line), "avg %.0f ms   max %.0f ms", t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs);
+  row("TOUCH TO GAME", line);
+  if (t.audioFrames > 0) {
+    std::snprintf(line, sizeof(line), "still on %d%% of frames, steps up to %.0f ms", t.audioStill * 100 / t.audioFrames,
+                  t.audioMaxStepMs);
+  } else {
+    std::snprintf(line, sizeof(line), "no sound yet (tap once)");
+  }
+  row("SOUND CLOCK", line);
+  // Each finger where it came down.
+  for (const auto& f : testFingers_) {
+    const Vec4 c = sk.lane[f.second.lane];
+    text.addShape(engine::font::kShapeDisc, f.second.pos.x, f.second.pos.y, 34 * px, withAlpha(c, 0.35f));
+    text.addShape(engine::font::kShapeRing, f.second.pos.x, f.second.pos.y, 34 * px, c);
+  }
+  const Rect b0 = testButton(0, W, H), b1 = testButton(1, W, H);
+  bubble(text, b0.x, b0.y, b0.w, b0.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
+  bubble(text, b1.x, b1.y, b1.w, b1.h, "SEND REPORT", px, sk.accent, true, sk.ink);
 }
 
 void RhythmGame::screenState(float out[5]) const {

@@ -49,7 +49,7 @@
     "id": "J117.1",
     "text": "Finger and frame test: every finger, lost and late touches, freezes, frame rate, tap-to-screen and the song clock's steps, in the report",
     "check": "4K Mania → TEST: four fingers down, tap fast, hold three; send a report",
-    "done": false
+    "done": true
    },
    {
     "id": "J117.2",

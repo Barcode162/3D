@@ -301,6 +301,7 @@
           online: net && net.status ? net.status() : 0, players: net && net.names ? net.names().length : 0,
           errors: errors, perf: window.bar3dPerf || null, log: ring, taps: tapRing,
           modal: window.bar3dModal ? bar3dModal.name() : '',
+          mania: window.bar3dMania || '',  // 4K Mania's finger test (J116.1)
         };
         var names = [];
         try {

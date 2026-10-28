@@ -56,7 +56,7 @@ class RhythmGame {
   static void drawCabinet(engine::TextRenderer& text, const engine::Vec3 corners[4], const float state[5], double nowMs);
 
  private:
-  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults };
+  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults, kTest };
   enum Judge { kMax, k300, k200, k100, k50, kMiss, kJudgeCount };
   struct Note {
     double time, end;  // end > 0: a hold note
@@ -81,7 +81,7 @@ class RhythmGame {
   };
   // The song select's layout (device pixels), portrait or landscape.
   struct MenuLayout {
-    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin;
+    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin, test, sync;
     float card = 0;  // a wheel card's height
   };
 
@@ -97,6 +97,13 @@ class RhythmGame {
   void drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawResults(engine::TextRenderer& text, float W, float H, float px) const;
+  // The finger and frame test (J116.1): every finger, lost and late
+  // touches, freezes, the frame rate and the sound clock's steps.
+  void openTest(double nowMs);
+  void updateTest(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H);
+  void drawTest(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  Rect testButton(int i, float W, float H) const;  // 0 back, 1 send report, 2 gesture guard
+  std::string testSummary() const;
   // Playfield layout in device pixels.
   float columnWidth(float W, float H) const;
   float laneX(int lane, float W, float H) const;  // the column's middle
@@ -165,6 +172,26 @@ class RhythmGame {
   std::map<std::string, Best> best_;            // per song + difficulty (also kept on the phone)
   std::map<std::string, Chart> charts_;         // made this session (url + difficulty)
   std::map<std::string, float> starCache_;      // star rating per song + difficulty, once charted
+  // The finger and frame test's numbers (since it opened).
+  struct TestFinger {
+    engine::Vec2 pos;
+    int lane;
+    double ms;
+  };
+  struct TestStats {
+    double openMs = 0, lastFrameMs = 0, maxGapMs = 0;
+    int frames = 0, gaps50 = 0;                  // frames, and gaps over 50 ms (a visible freeze)
+    double fpsFrom = 0;
+    int fpsFrames = 0;
+    float fps = 0;
+    int presses = 0, maxDown = 0, lost = 0, late = 0;  // late: seen over 2 frames after the touch
+    double sumDelayMs = 0, maxDelayMs = 0;       // touch → the frame that read it
+    double lastAudio = -1;
+    int audioFrames = 0, audioStill = 0;          // frames where the sound clock didn't move
+    double audioMaxStepMs = 0;
+  } test_;
+  std::map<int, TestFinger> testFingers_;
+  double lastTestLogMs_ = 0;
 };
 
 }  // namespace app
