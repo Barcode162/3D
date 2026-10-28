@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.13 Training stages 9-10: Celebrate with Eight, Flamethrower, A New Monstrosity (about 6★: fast handstream at 188, dense chordjack with hands and quads, every tech skill at 208); Low Rez Fury, Into the Machine, Frankensynth (6.8 to 7.1★, the finals: dense handstream at 228, quad chordjack at 208, the last tech map); all 30 maps keep their stage's rules
+
+`27e76f8` · 2026-10-28 04:21 · 10 files, +1384 −5 · tests: none
+
+Phone check: TRAINING → stages 9 and 10: the hardest maps, about 6 to 7★
+
 ## J117.12 Training stages 7-8: Let the Drumz Out, Heat Grind, Storm Wind (about 5★: dense jumpstream with 1/8 bursts at 180, quarter-beat chordjack, split jumptrills and runningmen); Speed Run Acrobatics (a 4-minute stamina map), Low Rez Death March, Launch Into It (about 5.5★: gluts and jumpjacks at 188, holds and streams mixed)
 
 `1251c1f` · 2026-10-28 04:20 · 10 files, +1264 −5 · tests: none
