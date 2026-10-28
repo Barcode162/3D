@@ -73,7 +73,7 @@
     "id": "J117.5",
     "text": "A smaller combo with no circle behind it",
     "check": "Play: the combo is smaller, nothing behind it",
-    "done": false
+    "done": true
    },
    {
     "id": "J117.6",

@@ -1183,23 +1183,21 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
   if (combo_ >= 2) {
     char c[16];
     std::snprintf(c, sizeof(c), "%d", combo_);
-    const float pop = 1.0f + 0.22f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 90.0));
+    // About 40 % smaller than before, a gentler pop, nothing behind it (J117.5).
+    const float pop = 1.0f + 0.12f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 80.0));
     Vec4 col = comboColor(combo_);
     if (combo_ >= 1000) col = lighter(col, 0.25f * (0.5f + 0.5f * std::sin(static_cast<float>(nowMs / 120.0))));
-    const float size = std::min(cw * 0.75f, 44 * px) * pop;
-    text.addShape(engine::font::kShapeDisc, W / 2, H * 0.4f + size * 0.5f, size * 1.3f, withAlpha(col, 0.12f));
+    const float size = std::min(cw * 0.45f, 26 * px) * pop;
     center.color = col;
     text.addScreen(c, W / 2, H * 0.4f, size, center);
-    center.color = withAlpha(lighter(col, 0.4f), 0.85f);
-    text.addScreen("COMBO", W / 2, H * 0.4f + size + 4 * px, 6 * px, center);
   }
   if (sinceJudge < 500) {
     const Vec4 c = lastJudge_ == kMax ? maxColor(nowMs) : kJudgeColor[lastJudge_];
     const float fade = static_cast<float>(std::min(1.0, (500 - sinceJudge) / 150.0));
     center.color = withAlpha(c, fade);
     center.outline.w = 0.85f * fade;
-    const float pop = 1.0f + 0.3f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 90.0));
-    const float js = std::min(cw * 0.3f, 18 * px);
+    const float pop = 1.0f + 0.2f * static_cast<float>(std::max(0.0, 1.0 - sinceJudge / 80.0));
+    const float js = std::min(cw * 0.22f, 13 * px);
     text.addScreen(kJudgeName[lastJudge_], W / 2, H * 0.4f - js * 1.6f - 6 * px, js * pop, center);
     center.outline.w = 0.95f;
   }
