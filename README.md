@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.10 Training stages 3-4: Breaking Back into the Wubs, Running Rage, Back to the Grime (about 3★: quarter-beat streams with breathers, light jumpstream and hands, trills and runningmen); Spiral Flight, Shattered Bass, Pixel Warrior (about 3.5★: jumpstream at 160, minijacks in chords, split trills and holds under a stream)
+
+`67e028c` · 2026-10-28 04:20 · 10 files, +752 −5 · tests: none
+
+Phone check: TRAINING → stages 3 and 4: three maps each, a step harder than stage 2
+
 ## J117.9 The Training screen and stages 1-2: SONGS / TRAINING above the song wheel; Training lists the pack by stage (a strip of the ten stages with their cleared maps, each map's stage, skill, stars and what it trains, the artist and licence), plays a map from its chart file, and clears it at 95 % (CLEARED on the results, a green ring on the grade); the map builder (tools/native/mania_pack.cpp) and the 30 recipes; stages 1-2: Chiptune Speedway, Midnight Stomp, Hover Pit (about 2★), Diabolical Maneuvers, Thunder on the Floor, Basic Wobblefest (about 2.5★); the native check re-checks every map
 
 `cf727b9` · 2026-10-28 04:20 · 22 files, +1872 −72 · tests: none
