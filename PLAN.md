@@ -64,7 +64,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J117.4** Ready for 120 Hz: one frame queued, light frames, the frame rate in the test *Check:* With Safari's near-60fps flag off, the test shows about 120
 - [x] **J117.5** A smaller combo with no circle behind it *Check:* Play: the combo is smaller, nothing behind it
 - [x] **J117.6** The audio calibrator: a tap-along that syncs the sound to the notes *Check:* Calibrate, then play: the timing bar's marks sit in the middle
-- [ ] **J117.7** Real stars (osu!mania's formula), chart files, the map checker and the mapping guide *Check:* The song select shows the new stars
+- [x] **J117.7** Real stars (osu!mania's formula), chart files, the map checker and the mapping guide *Check:* The song select shows the new stars
 - [ ] **J117.8** The pack's new songs: open-licence, hard-hitting, timed exactly to the beat, credited *Check:* Training: hear the previews; autoplay ticks land on the beat; Credits name the artists
 - [ ] **J117.9** The Training screen and stages 1-2 *Check:* Training → stage 1: three maps about 2★
 - [ ] **J117.10** Stages 3-4 *Check:* Play stages 3-4

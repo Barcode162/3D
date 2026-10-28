@@ -1,4 +1,5 @@
 #include "bar/projects/mania/rhythm.h"
+#include "bar/projects/mania/stars.h"
 
 #include <algorithm>
 #include <cmath>
@@ -36,7 +37,7 @@ const Vec4 kLaneColor[4] = {{0.92f, 0.94f, 1.0f, 1}, {0.3f, 0.72f, 1.0f, 1}, {0.
 constexpr const char* kDifficultyName[kDifficultyCount] = {"EASY", "NORMAL", "HARD", "INSANE"};
 const Vec4 kDifficultyColor[kDifficultyCount] = {{0.45f, 0.9f, 0.5f, 1}, {0.45f, 0.75f, 1.0f, 1},
                                                  {1.0f, 0.72f, 0.28f, 1}, {1.0f, 0.35f, 0.55f, 1}};
-constexpr float kTypicalStars[kDifficultyCount] = {1.4f, 2.4f, 3.6f, 4.7f};
+constexpr float kTypicalStars[kDifficultyCount] = {0.9f, 1.7f, 2.7f, 3.3f};  // osu!mania stars of the auto-made charts (J117.7)
 
 Vec4 withAlpha(Vec4 c, float a) { return {c.x, c.y, c.z, c.w * a}; }
 Vec4 mix(Vec4 a, Vec4 b, float t) { return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t}; }
@@ -269,7 +270,7 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
       const std::string key = bestKey(i, static_cast<Difficulty>(d));
       const double acc = engine::settings::remembered(("rhAcc." + key).c_str(), -1);
       if (acc >= 0) best_[key] = {acc, static_cast<int>(engine::settings::remembered(("rhScore." + key).c_str(), 0))};
-      const double st = engine::settings::remembered(("rhStars." + key).c_str(), -1);
+      const double st = engine::settings::remembered(("rhStars2." + key).c_str(), -1);
       if (st >= 0) starCache_[key] = static_cast<float>(st);
     }
   }
@@ -675,20 +676,12 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       const double t0 = engine::clockMs();
       Chart chart = makeChart(samples.data(), samples.size(), rate, difficulty_);
       LOG_INFO("Chart made in %.0f ms (%zu samples at %.0f Hz).", engine::clockMs() - t0, samples.size(), rate);
-      // Star rating: mostly notes per second, plus chords and holds.
+      // Star rating: osu!mania's own formula (stars.h, J117.7).
       if (chart.length > 0 && !chart.notes.empty()) {
-        int chords = 0, holds = 0;
-        for (size_t i = 0; i < chart.notes.size(); ++i) {
-          if (i && chart.notes[i].time - chart.notes[i - 1].time < 1e-6) ++chords;
-          if (chart.notes[i].end > 0) ++holds;
-        }
-        const double active = std::max(10.0, chart.notes.back().time - chart.notes.front().time);
-        const double nps = static_cast<double>(chart.notes.size()) / active;
-        const float st = static_cast<float>(std::clamp(0.35 + 0.62 * nps + 2.5 * chords / static_cast<double>(chart.notes.size()) +
-                                                           0.8 * holds / static_cast<double>(chart.notes.size()), 0.5, 9.0));
+        const float st = static_cast<float>(starRating(chart.notes));
         const std::string sk = bestKey(song_, difficulty_);
         starCache_[sk] = st;
-        engine::settings::remember(("rhStars." + sk).c_str(), st);
+        engine::settings::remember(("rhStars2." + sk).c_str(), st);
       }
       cached = charts_.emplace(key, std::move(chart)).first;
     }
