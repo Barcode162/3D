@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.11 Training stages 5-6: Racket and Bang, War Horse, The Freakazoid Race (about 4★: full jumpstream with the first hands, half-beat chordjacks, jumptrills and split jumptrills); Final Lap, Brutal Sines, Up For a Race (about 4.5★: handstream at 160, chordjacks with hands, inverse holds)
+
+`206bfec` · 2026-10-28 04:20 · 10 files, +919 −5 · tests: none
+
+Phone check: TRAINING → stages 5 and 6
+
 ## J117.10 Training stages 3-4: Breaking Back into the Wubs, Running Rage, Back to the Grime (about 3★: quarter-beat streams with breathers, light jumpstream and hands, trills and runningmen); Spiral Flight, Shattered Bass, Pixel Warrior (about 3.5★: jumpstream at 160, minijacks in chords, split trills and holds under a stream)
 
 `67e028c` · 2026-10-28 04:20 · 10 files, +752 −5 · tests: none
