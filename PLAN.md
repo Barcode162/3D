@@ -70,7 +70,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J117.10** Stages 3-4 *Check:* Play stages 3-4
 - [x] **J117.11** Stages 5-6 *Check:* Play stages 5-6
 - [x] **J117.12** Stages 7-8 *Check:* Play stages 7-8
-- [ ] **J117.13** Stages 9-10 *Check:* Play stages 9-10
+- [x] **J117.13** Stages 9-10 *Check:* Play stages 9-10
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*

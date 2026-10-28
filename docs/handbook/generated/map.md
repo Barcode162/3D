@@ -9,10 +9,10 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 386 | 3D models, audio, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 392 | 3D models, audio, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
 | `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 172 | 3D models, JSON, Markdown | deploy.yml → home/bar |
-| `assets/music/` | The jukebox's songs, with their licences and credits. | 72 | audio, JSON, Markdown | deploy.yml → home/bar |
+| `assets/music/` | The jukebox's songs, with their licences and credits. | 78 | audio, JSON, Markdown | deploy.yml → home/bar |
 | `assets/piano/` | The piano's recorded notes (Salamander Grand Piano, CC BY 3.0, J100; tools/piano_samples.sh), with their credit. | 121 | audio, Markdown | deploy.yml → home/bar |
 | `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 10 | JSON | deploy.yml → home/bar |
 | `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
