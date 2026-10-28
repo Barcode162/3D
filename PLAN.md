@@ -131,7 +131,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J73 — J73
 - [ ] **J106** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
   *Verdict:* Doable now — The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)
-- [ ] **J116** 4K Mania upgrade: notes glide evenly, taps never freeze, four fingers and holds work, judged to the millisecond, ready for 120 Hz; a smaller combo with no circle; a Training pack of hand-built maps from about 2 to 6-7 stars (request 2026-10-28 #1) · N3 N5
+- [ ] **J116** 4K Mania upgrade: notes glide evenly, taps never freeze, four fingers and holds work, judged to the millisecond, ready for 120 Hz; a smaller combo with no circle; a Training pack of hand-built maps from about 2 to 6-7 stars on about 30 new open-licence songs (requests 2026-10-28 #1, #2) · N3 N5
   *Verdict:* Doable now — our own code and licensed songs; the tap freeze is measured on the phone first (J116.1); 240 fps can't be shown (the screen tops out at 120 Hz), so taps are judged to the millisecond instead
 
 ### The site
