@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.8 The Training pack's 30 songs: hard-hitting TeknoAXE tracks (drum and bass, chiptune, metal, dubstep, electro; Creative Commons BY 4.0, each checked on its own page), 120 to 228 BPM, timed exactly (the beat grid fitted through every drum hit: whole-number tempos, hits within a few ms, under 1 ms of drift), shortened to 2:30 with a fade (one 4:00 stamina song), credited in Help and the credits file; the song tool redoes it all (tools/mania/songs.py); autoplay ticks on every note, on the song's own clock
+
+`c160395` · 2026-10-28 04:15 · 77 files, +738 −6 · tests: none
+
+Phone check: Help → Credits lists the 30 songs; any song on autoplay: the ticks land on the notes and the beat
+
 ## J117.7 Real stars and the map toolkit: osu!mania's own star formula (ported, MIT, credited) rates every chart, so the auto-made ones now read about 0.9/1.7/2.7/3.3★; chart files for hand-built maps and a map checker with every stage's rules from osu!mania's ranking criteria; a native check for both; the manual's 4K Mania page (timing, sync, stars, every pattern and what it trains, the rules)
 
 `5002616` · 2026-10-28 03:46 · 13 files, +594 −26 · tests: none
