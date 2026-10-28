@@ -261,6 +261,7 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
   wheel_ = static_cast<float>(song_);
   scrollSpeed_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSpeed", 18)), 8, 40);
   skin_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSkin", 2)), 0, kSkinCount - 1);
+  guard_ = engine::settings::remembered("rhGuard", 1) != 0;
   // Bests and star ratings kept on this phone.
   for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
     for (int d = 0; d < kDifficultyCount; ++d) {
@@ -287,6 +288,15 @@ void RhythmGame::close() {
   engine::audio::setMusicGain(1.0f);
   engine::ui::setBodyClass("racing", false);
   state_ = State::kClosed;
+  syncGuard();
+}
+
+// The gesture guard is on while you play or test (if not turned off in the test).
+void RhythmGame::syncGuard() {
+  const bool want = guard_ && (state_ == State::kPlaying || state_ == State::kWaitTap || state_ == State::kTest);
+  if (want == guardOn_) return;
+  guardOn_ = want;
+  engine::bridge::op(want ? "[\"touchGuard\",1]" : "[\"touchGuard\",0]");
 }
 
 // Sideways the playfield is wider (taps use the whole screen anyway).
@@ -574,6 +584,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       return;
     }
   }
+  syncGuard();
   if (state_ == State::kTest) return updateTest(nowMs, presses, W, H);
   // The wheel glides to the picked song.
   const float dt = wheelMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - wheelMs_) / 1000.0)) : 0;
@@ -1333,9 +1344,9 @@ std::string RhythmGame::testSummary() const {
   std::snprintf(b, sizeof(b),
                 "Finger test: %.0f s, %d frames (%.0f a second now), longest gap %.0f ms, %d gaps over 50 ms; "
                 "%d touches, most at once %d, lost by the phone %d, late %d (touch to frame avg %.1f ms, max %.0f ms); "
-                "sound clock still on %d of %d frames, biggest step %.1f ms.",
+                "sound clock still on %d of %d frames, biggest step %.1f ms; gesture guard %s.",
                 secs, t.frames, t.fps, t.maxGapMs, t.gaps50, t.presses, t.maxDown, t.lost, t.late,
-                t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs, t.audioStill, t.audioFrames, t.audioMaxStepMs);
+                t.presses ? t.sumDelayMs / t.presses : 0.0, t.maxDelayMs, t.audioStill, t.audioFrames, t.audioMaxStepMs, guard_ ? "on" : "off");
   return b;
 }
 
@@ -1390,6 +1401,12 @@ void RhythmGame::updateTest(double nowMs, const std::vector<engine::Input::RawPr
       LOG_INFO("%s", testSummary().c_str());
       state_ = State::kMenu;
       return;
+    }
+    if (testButton(2, W, H).contains(start.x, start.y)) {
+      guard_ = !guard_;
+      engine::settings::remember("rhGuard", guard_ ? 1 : 0);
+      LOG_INFO("4K Mania: gesture guard %s.", guard_ ? "on" : "off");
+      syncGuard();
     }
     if (testButton(1, W, H).contains(start.x, start.y)) {
       LOG_INFO("%s", testSummary().c_str());
@@ -1457,6 +1474,11 @@ void RhythmGame::drawTest(engine::TextRenderer& text, float W, float H, float px
   const Rect b0 = testButton(0, W, H), b1 = testButton(1, W, H);
   bubble(text, b0.x, b0.y, b0.w, b0.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
   bubble(text, b1.x, b1.y, b1.w, b1.h, "SEND REPORT", px, sk.accent, true, sk.ink);
+  const Rect b2 = testButton(2, W, H);
+  bubble(text, b2.x, b2.y, b2.w, b2.h, guard_ ? "GUARD: ON" : "GUARD: OFF", px, sk.accent2, guard_, sk.ink);
+  engine::TextStyle note = st;
+  note.color = {0.8f, 0.78f, 0.88f, 1};
+  text.addScreen("Guard: blocks the phone's own finger gestures while you play.", x, b2.y - 16 * px, 6 * px, note);
 }
 
 void RhythmGame::screenState(float out[5]) const {

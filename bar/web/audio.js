@@ -99,6 +99,8 @@ window.bar3dAudio = (function () {
   }
 
   function unlock() {
+    // Already running: just stop listening (nothing to do on every tap).
+    if (ctx && ctx.state === 'running') { removeUnlock(); return; }
     if (!ctx) {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) { report('This browser has no Web Audio.'); return; }

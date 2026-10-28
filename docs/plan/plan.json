@@ -61,7 +61,7 @@
     "id": "J117.3",
     "text": "Taps never freeze the picture and holds stay held",
     "check": "Tap fast with four fingers and hold a long note: no freeze, no drop",
-    "done": false
+    "done": true
    },
    {
     "id": "J117.4",

@@ -194,6 +194,9 @@ class RhythmGame {
   } test_;
   std::map<int, TestFinger> testFingers_;
   double lastTestLogMs_ = 0;
+  bool guard_ = true;          // the gesture guard while playing (rhGuard, J117.3)
+  bool guardOn_ = false;       // what the page was last told
+  void syncGuard();
 };
 
 }  // namespace app
