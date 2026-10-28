@@ -158,6 +158,9 @@ bool Track::play(double delaySeconds) {
 }
 
 double Track::time() { return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackTime'](); }); }
+double Track::timeAt(double ms) {
+  return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackTime']($0); }, ms);
+}
 double Track::duration() { return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackDuration'](); }); }
 void Track::stop() { EM_ASM({ window['loopedHost']['audio']['trackStop'](); }); }
 

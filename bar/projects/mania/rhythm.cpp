@@ -342,6 +342,7 @@ void RhythmGame::beginPlay(const Chart& chart) {
   std::fill(std::begin(lanePressed_), std::end(lanePressed_), 0);
   fingerLane_.clear();
   newBest_ = false;
+  lastPlayFrameMs_ = 0;
   state_ = engine::Track::play(kLeadIn) ? State::kPlaying : State::kWaitTap;
 }
 
@@ -687,7 +688,14 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   }
 
   // ---- Playing ----
-  songTime_ = engine::Track::time();
+  // One clock for everything at this frame's time (J117.2); the picture is
+  // drawn a frame ahead, for when it reaches your eyes.
+  songTime_ = engine::Track::timeAt(nowMs);
+  if (lastPlayFrameMs_ > 0) {
+    const double dt = std::clamp((nowMs - lastPlayFrameMs_) / 1000.0, 0.004, 0.034);
+    drawLead_ += (dt - drawLead_) * 0.1;
+  }
+  lastPlayFrameMs_ = nowMs;
   const float cw = columnWidth(W, H);
   const float x0 = (W - 4 * cw) / 2;
   const bool sideways = W > H;
@@ -1050,7 +1058,8 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
   const double approach = approachSeconds();
   const bool round = sk.notes != kBars;
   const float noteH = round ? cw * 0.8f : cw * 0.3f;
-  const auto yOf = [&](double t) { return hitY - static_cast<float>((t - songTime_) / approach) * (hitY - topY); };
+  const double shown = songTime_ + drawLead_;  // the song's time when this frame is on screen
+  const auto yOf = [&](double t) { return hitY - static_cast<float>((t - shown) / approach) * (hitY - topY); };
   // Sideways: the four tall tap zones across the whole screen, lit while held.
   if (W > H) {
     for (int l = 0; l < 4; ++l) {
@@ -1100,7 +1109,7 @@ void RhythmGame::drawPlay(engine::TextRenderer& text, float W, float H, float px
   // Notes: heads, and hold notes (a body up to the end, with a cap).
   for (size_t i = firstOpen_; i < notes_.size(); ++i) {
     const Note& n = notes_[i];
-    if (n.time - songTime_ > approach * 1.1) break;
+    if (n.time - shown > approach * 1.1) break;
     const bool hold = n.end > 0;
     if (n.judged && !hold) continue;
     if (hold && n.tailDone && !n.holding) continue;

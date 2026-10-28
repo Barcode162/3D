@@ -146,7 +146,9 @@ class RhythmGame {
   bool analyzeShown_ = false;  // the "making the chart" text was drawn once
   std::vector<Note> notes_;
   size_t firstOpen_ = 0;       // first note that may still be unjudged
-  double songTime_ = -1000;
+  double songTime_ = -1000;    // the song's time at this frame (the smooth clock, J117.2)
+  double drawLead_ = 0.0167;    // notes are drawn for when the frame reaches the screen (s)
+  double lastPlayFrameMs_ = 0;
   double duration_ = 0;
   double bpm_ = 0;
   int counts_[kJudgeCount] = {};

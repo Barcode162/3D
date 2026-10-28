@@ -469,15 +469,33 @@ window.bar3dAudio = (function () {
       src.connect(g);
       g.connect(bus('music'));  // the music volume slider applies to it too
       track.start = ctx.currentTime + delay;
+      track.clock = null;
       src.start(track.start);
       track.node = src;
       return true;
     },
-    // Seconds into the song as you hear it (negative before it starts).
-    trackTime: function () {
+    // Seconds into the song as you hear it (negative before it starts), at
+    // page time `perfMs` (performance.now(); default: now). The sound clock
+    // moves in steps of its buffer, so the song time runs on the page's
+    // precise timer instead and only eases toward the sound clock (3 % of the
+    // gap a call), snapping if they're over 50 ms apart (a pause, a seek):
+    // notes then move by the same step every frame (J117.2, like osu!'s
+    // interpolating clock).
+    trackTime: function (perfMs) {
       if (!ctx || !track.node) return -1000;
+      var now = performance.now();
+      if (perfMs === undefined) perfMs = now;
       var latency = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
-      return ctx.currentTime - track.start - latency;
+      var raw = ctx.currentTime - track.start - latency;
+      var c = track.clock;
+      if (!c || ctx.state !== 'running') {
+        track.clock = ctx.state === 'running' ? { perf: now, song: raw } : null;
+        return raw + (perfMs - now) / 1000;
+      }
+      var est = c.song + (now - c.perf) / 1000, err = raw - est;
+      c.song = Math.abs(err) > 0.05 ? raw : est + err * 0.03;
+      c.perf = now;
+      return c.song + (perfMs - now) / 1000;
     },
     trackDuration: function () { return track.buffer ? track.buffer.duration : 0; },
     trackStop: function () {

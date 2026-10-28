@@ -82,6 +82,9 @@ class Track {
   static std::vector<float> takeSamples(float& rate);
   static bool play(double delaySeconds);  // false if sound isn't unlocked yet
   static double time();       // seconds into the song as heard (< 0 before it starts)
+  // The same at page time `ms` (the frame's time, a touch's time): one smooth
+  // clock for the picture and the taps (J117.2).
+  static double timeAt(double ms);
   static double duration();
   static void stop();
 };
