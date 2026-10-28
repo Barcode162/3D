@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.9 The Training screen and stages 1-2: SONGS / TRAINING above the song wheel; Training lists the pack by stage (a strip of the ten stages with their cleared maps, each map's stage, skill, stars and what it trains, the artist and licence), plays a map from its chart file, and clears it at 95 % (CLEARED on the results, a green ring on the grade); the map builder (tools/native/mania_pack.cpp) and the 30 recipes; stages 1-2: Chiptune Speedway, Midnight Stomp, Hover Pit (about 2★), Diabolical Maneuvers, Thunder on the Floor, Basic Wobblefest (about 2.5★); the native check re-checks every map
+
+`cf727b9` · 2026-10-28 04:20 · 22 files, +1872 −72 · tests: none
+
+Phone check: 4K Mania → TRAINING: stage 1's three maps at about 2★; play one
+
 ## J117.8 The Training pack's 30 songs: hard-hitting TeknoAXE tracks (drum and bass, chiptune, metal, dubstep, electro; Creative Commons BY 4.0, each checked on its own page), 120 to 228 BPM, timed exactly (the beat grid fitted through every drum hit: whole-number tempos, hits within a few ms, under 1 ms of drift), shortened to 2:30 with a fade (one 4:00 stamina song), credited in Help and the credits file; the song tool redoes it all (tools/mania/songs.py); autoplay ticks on every note, on the song's own clock
 
 `c160395` · 2026-10-28 04:15 · 77 files, +738 −6 · tests: none
