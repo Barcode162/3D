@@ -57,12 +57,20 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J115 · Daylight string lights** (the world). Daylight string lights: 5000 K light and white-glowing bulbs (request 2026-10-27 #5); with J28: Chess: bots with a chosen Elo, a menu to find a 1v1 or pick a bot.; with J109: Books with turning pages: swipe from the left or right edge and the page curls over, its text bending with it (request 2026-10-26 #13) · N3
-- [x] **J115.1** The string lights at 5000 K, cool industrial white near daylight (were 2700 K) *Check:* The strands light the hall white, not warm
-- [x] **J115.2** The bulbs themselves glow white (the model's Edison glow was orange) *Check:* The bulbs look white
-- [x] **J28.1** Chess bots with a strength you can see: each bot names its rating (Elo) and plays at that strength *Check:* Open chess: each bot shows its rating
-- [x] **J28.2** A chess menu: pick a bot or wait for a person (1v1), and the game starts *Check:* Open chess, pick a bot: the game starts against it
-- [x] **J109.1** Books turn their pages: a swipe from the left or right edge (or a tap there) curls the page over, its text bending with it *Check:* Open a book, swipe from the right edge: the page curls over
+**J117 · 4K Mania upgrade** (the world). 4K Mania upgrade: notes glide evenly, taps never freeze, four fingers and holds work, judged to the millisecond, ready for 120 Hz; a smaller combo with no circle; a Training pack of hand-built maps from about 2 to 6-7 stars on about 30 new open-licence songs (requests 2026-10-28 #1, #2) · N3 N5
+- [ ] **J117.1** Finger and frame test: every finger, lost and late touches, freezes, frame rate, tap-to-screen and the song clock's steps, in the report *Check:* 4K Mania → TEST: four fingers down, tap fast, hold three; send a report
+- [ ] **J117.2** Notes glide at one even speed: a smooth song clock for the picture and the taps *Check:* Play any song: no speeding up and slowing down
+- [ ] **J117.3** Taps never freeze the picture and holds stay held *Check:* Tap fast with four fingers and hold a long note: no freeze, no drop
+- [ ] **J117.4** Ready for 120 Hz: one frame queued, light frames, the frame rate in the test *Check:* With Safari's near-60fps flag off, the test shows about 120
+- [ ] **J117.5** A smaller combo with no circle behind it *Check:* Play: the combo is smaller, nothing behind it
+- [ ] **J117.6** The audio calibrator: a tap-along that syncs the sound to the notes *Check:* Calibrate, then play: the timing bar's marks sit in the middle
+- [ ] **J117.7** Real stars (osu!mania's formula), chart files, the map checker and the mapping guide *Check:* The song select shows the new stars
+- [ ] **J117.8** The pack's new songs: open-licence, hard-hitting, timed exactly to the beat, credited *Check:* Training: hear the previews; autoplay ticks land on the beat; Credits name the artists
+- [ ] **J117.9** The Training screen and stages 1-2 *Check:* Training → stage 1: three maps about 2★
+- [ ] **J117.10** Stages 3-4 *Check:* Play stages 3-4
+- [ ] **J117.11** Stages 5-6 *Check:* Play stages 5-6
+- [ ] **J117.12** Stages 7-8 *Check:* Play stages 7-8
+- [ ] **J117.13** Stages 9-10 *Check:* Play stages 9-10
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
@@ -131,8 +139,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J73 — J73
 - [ ] **J106** The world remake, step 6, the room shells remade: the hall, the lounge's and the arcade's walls, floors and ceilings at real size with clean edges and real materials; doors and windows become things that open · N3
   *Verdict:* Doable now — The props are out (J70-J73), so the shells are only walls, floors and ceilings; formerly J74's job, moved for the user's notes (2026-10-26 #12)
-- [ ] **J116** 4K Mania upgrade: notes glide evenly, taps never freeze, four fingers and holds work, judged to the millisecond, ready for 120 Hz; a smaller combo with no circle; a Training pack of hand-built maps from about 2 to 6-7 stars on about 30 new open-licence songs (requests 2026-10-28 #1, #2) · N3 N5
-  *Verdict:* Doable now — our own code and licensed songs; the tap freeze is measured on the phone first (J116.1); 240 fps can't be shown (the screen tops out at 120 Hz), so taps are judged to the millisecond instead
 
 ### The site
 
@@ -272,7 +278,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
+- `ba18f3c` J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
 - `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
 - `7779287` J114.1: The Studio parked: the bar plays the world built in, world changes skip the Studio's tests → 0010f40^..0010f40
 - `8b5f7ed` J112.1: The preflight checklist: plain rules, one file each, run before any test or push → 7ccec08^..7ccec08
