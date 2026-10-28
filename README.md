@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.2 Notes glide at one even speed: the song's time runs on the page's precise timer and only eases toward the sound clock (which moves in steps), snapping on a pause; notes are drawn for when the frame reaches the screen, and taps are judged on the same clock at their exact touch time
+
+`7bc0980` · 2026-10-28 03:36 · 7 files, +44 −9 · tests: none
+
+Phone check: Play any song: the notes never speed up or slow down
+
 ## J117.1 4K Mania's finger and frame test: a TEST button in the song select shows every finger, touches the phone lost or held back, the frame rate and longest gap, touch-to-game delay and how the sound clock steps; SEND REPORT sends them (every report carries them)
 
 `f974ddc` · 2026-10-28 03:35 · 7 files, +227 −17 · tests: none
