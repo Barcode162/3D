@@ -450,6 +450,21 @@ window.bar3dAudio = (function () {
         t.state = 3;
       });
     },
+    // A click track instead of a song (4K Mania's sync, J117.6): `beats`
+    // clicks at `bpm`, the first `first` seconds in, every fourth higher.
+    // Sample-exact, played and timed like a song.
+    trackLoadClicks: function (bpm, beats, first) {
+      this.trackStop();
+      var c = decodeContext(), rate = c.sampleRate || 44100;
+      var len = Math.ceil((first + beats * 60 / bpm + 0.5) * rate);
+      var buf = c.createBuffer(1, len, rate), d = buf.getChannelData(0);
+      var n = Math.round(0.03 * rate);
+      for (var k = 0; k < beats; k++) {
+        var at = Math.round((first + k * 60 / bpm) * rate), f = k % 4 === 0 ? 1760 : 1175;
+        for (var i = 0; i < n && at + i < len; i++) d[at + i] = 0.8 * Math.sin(2 * Math.PI * f * i / rate) * Math.exp(-i / (0.006 * rate));
+      }
+      track = { state: 2, buffer: buf, mono: null, node: null, start: 0, url: 'clicks' };
+    },
     trackState: function () { return track.state; },
     trackLength: function () { return track.mono ? track.mono.length : 0; },
     trackRate: function () { return track.monoRate || (track.buffer ? track.buffer.sampleRate : 44100); },

@@ -201,7 +201,7 @@ window.bar3dBridge = (function () {
             case 'info': { var U2 = window.bar3dUi; if (U2) U2['setInfo'](op[1]); break; }  // an object: merged
             case 'toast': { var U3 = window.bar3dUi; if (U3) U3['toast'](op[1]); break; }
             case 'touchGuard': setGuard(op[1]); break;
-            // 4K Mania's finger test (J116.1): its numbers ride with every
+            // 4K Mania's finger test (J117.1): its numbers ride with every
             // report; [.., 1] also sends one now and shows the code.
             case 'maniaReport': {
               window.bar3dMania = op[1];

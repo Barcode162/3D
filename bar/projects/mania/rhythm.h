@@ -56,7 +56,7 @@ class RhythmGame {
   static void drawCabinet(engine::TextRenderer& text, const engine::Vec3 corners[4], const float state[5], double nowMs);
 
  private:
-  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults, kTest };
+  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults, kTest, kSync };
   enum Judge { kMax, k300, k200, k100, k50, kMiss, kJudgeCount };
   struct Note {
     double time, end;  // end > 0: a hold note
@@ -97,7 +97,7 @@ class RhythmGame {
   void drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawResults(engine::TextRenderer& text, float W, float H, float px) const;
-  // The finger and frame test (J116.1): every finger, lost and late
+  // The finger and frame test (J117.1): every finger, lost and late
   // touches, freezes, the frame rate and the sound clock's steps.
   void openTest(double nowMs);
   void updateTest(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H);
@@ -194,6 +194,18 @@ class RhythmGame {
   } test_;
   std::map<int, TestFinger> testFingers_;
   double lastTestLogMs_ = 0;
+  // The sync (J117.6): tap along to clicks; the median of how late you tap
+  // is the delay of your phone and headphones, taken off the song's time.
+  void openSync();
+  void updateSync(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H);
+  void drawSync(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  Rect syncButton(int i, float W, float H) const;  // 0 back, 1 -5 ms, 2 +5 ms, 3 save
+  double syncMeasuredMs() const;                   // the median so far (needs a few taps)
+  double offsetMs_ = 0;          // rhOffset: the sound's delay, ms (positive: heard later)
+  double syncOffsetMs_ = 0;      // the value being set
+  std::vector<double> syncErrors_;
+  static constexpr double kSyncBpm = 100, kSyncFirst = 1.0;
+  static constexpr int kSyncBeats = 48;
   bool guard_ = true;          // the gesture guard while playing (rhGuard, J117.3)
   bool guardOn_ = false;       // what the page was last told
   void syncGuard();

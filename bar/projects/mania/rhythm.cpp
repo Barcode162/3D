@@ -262,6 +262,7 @@ void RhythmGame::open(std::vector<SongChoice> extra) {
   scrollSpeed_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSpeed", 18)), 8, 40);
   skin_ = std::clamp(static_cast<int>(engine::settings::remembered("rhSkin", 2)), 0, kSkinCount - 1);
   guard_ = engine::settings::remembered("rhGuard", 1) != 0;
+  offsetMs_ = std::clamp(engine::settings::remembered("rhOffset", 0), -300.0, 300.0);
   // Bests and star ratings kept on this phone.
   for (int i = 0; i < static_cast<int>(songs_.size()); ++i) {
     for (int d = 0; d < kDifficultyCount; ++d) {
@@ -293,7 +294,8 @@ void RhythmGame::close() {
 
 // The gesture guard is on while you play or test (if not turned off in the test).
 void RhythmGame::syncGuard() {
-  const bool want = guard_ && (state_ == State::kPlaying || state_ == State::kWaitTap || state_ == State::kTest);
+  const bool want = guard_ && (state_ == State::kPlaying || state_ == State::kWaitTap || state_ == State::kTest ||
+                               state_ == State::kSync);
   if (want == guardOn_) return;
   guardOn_ = want;
   engine::bridge::op(want ? "[\"touchGuard\",1]" : "[\"touchGuard\",0]");
@@ -538,6 +540,7 @@ void RhythmGame::menuPress(Vec2 p, float W, float H) {
   }
   if (m.autoBtn.contains(p.x, p.y)) autoplay = !autoplay;
   if (m.test.contains(p.x, p.y)) return openTest(engine::clockMs());
+  if (m.sync.contains(p.x, p.y)) return openSync();
   if (m.play.contains(p.x, p.y)) startSong();
   if (m.back.contains(p.x, p.y)) close();
   if (m.wheel.contains(p.x, p.y) && !songs_.empty()) {
@@ -572,7 +575,10 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   if (state_ == State::kClosed) return;
   for (const engine::Input::RawPress& r : presses) {
     if (r.key == 4 && r.down) {  // Escape
-      if (state_ == State::kTest) {
+      if (state_ == State::kSync) {
+        engine::Track::stop();
+        state_ = State::kMenu;
+      } else if (state_ == State::kTest) {
         LOG_INFO("%s", testSummary().c_str());
         state_ = State::kMenu;
       } else if (state_ == State::kPlaying || state_ == State::kWaitTap) {
@@ -586,6 +592,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   }
   syncGuard();
   if (state_ == State::kTest) return updateTest(nowMs, presses, W, H);
+  if (state_ == State::kSync) return updateSync(nowMs, presses, W, H);
   // The wheel glides to the picked song.
   const float dt = wheelMs_ > 0 ? static_cast<float>(std::min(0.1, (nowMs - wheelMs_) / 1000.0)) : 0;
   wheelMs_ = nowMs;
@@ -701,7 +708,7 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
   // ---- Playing ----
   // One clock for everything at this frame's time (J117.2); the picture is
   // drawn a frame ahead, for when it reaches your eyes.
-  songTime_ = engine::Track::timeAt(nowMs);
+  songTime_ = engine::Track::timeAt(nowMs) - offsetMs_ / 1000.0;  // as you hear it (the sync's offset, J117.6)
   if (lastPlayFrameMs_ > 0) {
     const double dt = std::clamp((nowMs - lastPlayFrameMs_) / 1000.0, 0.004, 0.034);
     drawLead_ += (dt - drawLead_) * 0.1;
@@ -888,6 +895,10 @@ void RhythmGame::draw(engine::TextRenderer& text, float W, float H, float px, do
     drawTest(text, W, H, px, nowMs);
     return;
   }
+  if (state_ == State::kSync) {
+    drawSync(text, W, H, px, nowMs);
+    return;
+  }
   if (state_ == State::kLoading || state_ == State::kAnalyzing || state_ == State::kWaitTap) {
     engine::TextStyle center;
     center.align = 0.5f;
@@ -1036,6 +1047,7 @@ void RhythmGame::drawMenu(engine::TextRenderer& text, float W, float H, float px
   bubble(text, m.autoBtn.x, m.autoBtn.y, m.autoBtn.w, m.autoBtn.h, autoplay ? "AUTO ON" : "AUTO", px, sk.accent2,
          autoplay, sk.ink);
   bubble(text, m.test.x, m.test.y, m.test.w, m.test.h, "TEST", px, sk.accent2, true, sk.ink);
+  bubble(text, m.sync.x, m.sync.y, m.sync.w, m.sync.h, "SYNC", px, sk.accent, true, sk.ink);
   bubble(text, m.back.x, m.back.y, m.back.w, m.back.h, "BACK", px, {1.0f, 0.4f, 0.4f, 1}, true, sk.ink);
   // The skin button shows the skin's name and its four notes.
   bubble(text, m.skin.x, m.skin.y, m.skin.w, m.skin.h, "", px, mix(sk.card, sk.accent2, 0.5f), true, sk.ink);
@@ -1315,7 +1327,130 @@ void RhythmGame::drawResults(engine::TextRenderer& text, float W, float H, float
 }
 
 
-// ---- The finger and frame test (J116.1) ----
+// ---- The sync (J117.6) ----
+
+void RhythmGame::openSync() {
+  engine::audio::previewStop();
+  previewSong_ = -1;
+  syncErrors_.clear();
+  syncOffsetMs_ = offsetMs_;
+  engine::Track::loadClicks(kSyncBpm, kSyncBeats, kSyncFirst);
+  engine::Track::play(0.3);
+  lastPlayFrameMs_ = 0;
+  state_ = State::kSync;
+  LOG_INFO("4K Mania: sync opened (offset now %.0f ms).", offsetMs_);
+}
+
+RhythmGame::Rect RhythmGame::syncButton(int i, float W, float H) const {
+  const float y = H - H * 0.1f, h = H * 0.065f, w = W * 0.21f;
+  return {W * 0.04f + static_cast<float>(i) * W * 0.24f, y, w, h};
+}
+
+double RhythmGame::syncMeasuredMs() const {
+  if (syncErrors_.size() < 6) return syncOffsetMs_;
+  std::vector<double> v = syncErrors_;
+  std::nth_element(v.begin(), v.begin() + static_cast<long>(v.size() / 2), v.end());
+  return v[v.size() / 2];
+}
+
+void RhythmGame::updateSync(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H) {
+  songTime_ = engine::Track::timeAt(nowMs);  // the sound's own time, no offset: that's what is measured
+  if (lastPlayFrameMs_ > 0) drawLead_ += (std::clamp((nowMs - lastPlayFrameMs_) / 1000.0, 0.004, 0.034) - drawLead_) * 0.1;
+  lastPlayFrameMs_ = nowMs;
+  updateEffects(nowMs, W, H);
+  const double beat = 60.0 / kSyncBpm, last = kSyncFirst + (kSyncBeats - 1) * beat;
+  if (songTime_ > last + 1.0) engine::Track::play(0.2);  // around again
+  for (const engine::Input::RawPress& r : presses) {
+    if (r.key >= 0 && r.key < 4 && !r.down) continue;
+    const Vec2 p{r.pos.x * W, r.pos.y * H};
+    int button = -1;
+    for (int i = 0; i < 4; ++i) {
+      if (r.key < 0 && syncButton(i, W, H).contains(p.x, p.y)) button = i;
+    }
+    if (button < 0) {
+      if (!r.down) continue;
+      // A tap along: how far from the nearest click, in ms (late = positive).
+      const double t = songTime_ - (nowMs - r.ms) / 1000.0;
+      const double k = std::round((t - kSyncFirst) / beat);
+      if (k < 2 || k >= kSyncBeats) continue;  // the first clicks are for finding the beat
+      const double err = (t - (kSyncFirst + k * beat)) * 1000;
+      if (std::fabs(err) > beat * 400) continue;  // nowhere near a click
+      syncErrors_.push_back(err);
+      if (syncErrors_.size() > 32) syncErrors_.erase(syncErrors_.begin());
+      if (syncErrors_.size() >= 6) syncOffsetMs_ = syncMeasuredMs();
+      laneDownMs_[std::clamp(static_cast<int>(p.x / (W / 4)), 0, 3)] = nowMs;
+      continue;
+    }
+    if (!r.down) continue;  // buttons work on the press
+    if (button == 0) {
+      engine::Track::stop();
+      state_ = State::kMenu;
+      return;
+    }
+    if (button == 1) syncOffsetMs_ = std::max(-300.0, syncOffsetMs_ - 5);
+    if (button == 2) syncOffsetMs_ = std::min(300.0, syncOffsetMs_ + 5);
+    if (button == 3) {
+      offsetMs_ = std::round(syncOffsetMs_);
+      engine::settings::remember("rhOffset", offsetMs_);
+      LOG_INFO("4K Mania: sync saved, offset %.0f ms (%zu taps).", offsetMs_, syncErrors_.size());
+      engine::ui::toast("Synced: " + std::to_string(static_cast<int>(offsetMs_)) + " ms");
+      engine::Track::stop();
+      state_ = State::kMenu;
+      return;
+    }
+  }
+}
+
+void RhythmGame::drawSync(engine::TextRenderer& text, float W, float H, float px, double nowMs) const {
+  const Skin& sk = kSkins[skin_];
+  engine::TextStyle st;
+  st.align = 0.5f;
+  st.outline = sk.ink;
+  st.outlineWidth = 0.8f;
+  st.color = sk.accent;
+  text.addScreen("SYNC YOUR SOUND", W / 2, H * 0.07f, 10 * px, st);
+  st.color = {1, 1, 1, 1};
+  text.addScreen("Tap anywhere along with the clicks you hear.", W / 2, H * 0.07f + 22 * px, 7 * px, st);
+  text.addScreen("Headphones change the delay: sync again when you switch.", W / 2, H * 0.07f + 34 * px, 6 * px, st);
+  // A light that flashes on each click, with the offset being set: when it
+  // matches what you hear, the offset is right.
+  const double beat = 60.0 / kSyncBpm;
+  const double shown = songTime_ + drawLead_ - syncOffsetMs_ / 1000.0;
+  const double k = std::floor((shown - kSyncFirst) / beat);
+  const float since = static_cast<float>(shown - (kSyncFirst + k * beat));
+  const bool accent = static_cast<int>(k) % 4 == 0;
+  const float flash = k >= 0 && k < kSyncBeats ? std::clamp(1.0f - since / 0.15f, 0.0f, 1.0f) : 0.0f;
+  const float r = std::min(W, H) * 0.16f;
+  const Vec4 c = accent ? sk.accent : sk.accent2;
+  text.addShape(engine::font::kShapeDisc, W / 2, H * 0.4f, r * (1 + 0.15f * flash), withAlpha(c, 0.15f + 0.6f * flash));
+  text.addShape(engine::font::kShapeRing, W / 2, H * 0.4f, r * 1.15f, withAlpha(c, 0.8f));
+  char line[96];
+  std::snprintf(line, sizeof(line), "%+.0f ms", syncOffsetMs_);
+  text.addScreen(line, W / 2, H * 0.4f - 10 * px, 14 * px, st);
+  st.color = {0.85f, 0.83f, 0.92f, 1};
+  std::snprintf(line, sizeof(line), syncErrors_.size() >= 6 ? "measured from %zu taps (saved now: %+.0f ms)"
+                                                             : "tap along a few more times (%zu so far; saved now: %+.0f ms)",
+                syncErrors_.size(), offsetMs_);
+  text.addScreen(line, W / 2, H * 0.62f, 7 * px, st);
+  // The last taps on a little bar (left = early, right = late).
+  const float bw = W * 0.7f, by = H * 0.68f;
+  text.addRect(W / 2 - bw / 2, by, bw, 2 * px, {1, 1, 1, 0.3f});
+  text.addRect(W / 2 - px, by - 6 * px, 2 * px, 14 * px, {1, 1, 1, 0.9f});
+  for (size_t i = 0; i < syncErrors_.size(); ++i) {
+    const float a = 0.25f + 0.75f * static_cast<float>(i + 1) / static_cast<float>(syncErrors_.size());
+    const float x = W / 2 + static_cast<float>(std::clamp(syncErrors_[i], -150.0, 150.0) / 150.0) * bw / 2;
+    text.addRect(x - px, by - 4 * px, 2 * px, 10 * px, withAlpha(sk.accent, a));
+  }
+  static const char* kLabels[4] = {"BACK", "-5", "+5", "SAVE"};
+  for (int i = 0; i < 4; ++i) {
+    const Rect b = syncButton(i, W, H);
+    bubble(text, b.x, b.y, b.w, b.h, kLabels[i], px, i == 0 ? Vec4{1.0f, 0.4f, 0.4f, 1} : i == 3 ? sk.accent : sk.accent2, true,
+           sk.ink);
+  }
+  (void)nowMs;
+}
+
+// ---- The finger and frame test (J117.1) ----
 
 void RhythmGame::openTest(double nowMs) {
   test_ = {};

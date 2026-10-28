@@ -76,6 +76,9 @@ class Track {
  public:
   enum class State { kNone, kLoading, kReady, kFailed };
   static void load(const std::string& url);
+  // A click track instead (sync tools): `beats` clicks at `bpm`, the first
+  // at `firstSeconds`; ready at once.
+  static void loadClicks(double bpm, int beats, double firstSeconds);
   static State state();
   // The song as mono samples (call once when ready; the copy is freed in
   // the browser afterwards). `rate` = samples per second.
