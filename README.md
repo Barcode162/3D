@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J117.5 A smaller combo with no circle behind it: about 40 % smaller (26 px at most, was 44), a gentler pop, no glow disc and no COMBO label; the judgement word a little smaller too, so the notes behind stay readable
+
+`7b56cca` · 2026-10-28 03:39 · 3 files, +7 −9 · tests: none
+
+Phone check: Play: the combo is smaller and nothing sits behind it
+
 ## J117.4 Ready for 120 Hz: while 4K Mania is open, one frame queued on the GPU (a tap shows on the next frame) and no 30-a-second cap from Power: Cooler; TEST shows the frame rate and, at 60, how to turn on Safari's 120
 
 `4ef318f` · 2026-10-28 03:38 · 4 files, +24 −2 · tests: none
