@@ -1465,6 +1465,12 @@ void RhythmGame::drawTest(engine::TextRenderer& text, float W, float H, float px
     std::snprintf(line, sizeof(line), "no sound yet (tap once)");
   }
   row("SOUND CLOCK", line);
+  if (t.fps > 0 && t.fps < 75) {  // Safari's 60 a second (J117.4)
+    engine::TextStyle tip = st;
+    tip.color = {1.0f, 0.83f, 0.54f, 1};
+    text.addScreen("For 120 a second: Settings > Apps > Safari > Advanced >", x, y, 6 * px, tip);
+    text.addScreen("Feature Flags > turn off \"Prefer Page Rendering Updates near 60fps\".", x, y + 9 * px, 6 * px, tip);
+  }
   // Each finger where it came down.
   for (const auto& f : testFingers_) {
     const Vec4 c = sk.lane[f.second.lane];

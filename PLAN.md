@@ -61,7 +61,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J117.1** Finger and frame test: every finger, lost and late touches, freezes, frame rate, tap-to-screen and the song clock's steps, in the report *Check:* 4K Mania → TEST: four fingers down, tap fast, hold three; send a report
 - [x] **J117.2** Notes glide at one even speed: a smooth song clock for the picture and the taps *Check:* Play any song: no speeding up and slowing down
 - [x] **J117.3** Taps never freeze the picture and holds stay held *Check:* Tap fast with four fingers and hold a long note: no freeze, no drop
-- [ ] **J117.4** Ready for 120 Hz: one frame queued, light frames, the frame rate in the test *Check:* With Safari's near-60fps flag off, the test shows about 120
+- [x] **J117.4** Ready for 120 Hz: one frame queued, light frames, the frame rate in the test *Check:* With Safari's near-60fps flag off, the test shows about 120
 - [ ] **J117.5** A smaller combo with no circle behind it *Check:* Play: the combo is smaller, nothing behind it
 - [ ] **J117.6** The audio calibrator: a tap-along that syncs the sound to the notes *Check:* Calibrate, then play: the timing bar's marks sit in the middle
 - [ ] **J117.7** Real stars (osu!mania's formula), chart files, the map checker and the mapping guide *Check:* The song select shows the new stars

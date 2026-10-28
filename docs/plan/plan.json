@@ -67,7 +67,7 @@
     "id": "J117.4",
     "text": "Ready for 120 Hz: one frame queued, light frames, the frame rate in the test",
     "check": "With Safari's near-60fps flag off, the test shows about 120",
-    "done": false
+    "done": true
    },
    {
     "id": "J117.5",
