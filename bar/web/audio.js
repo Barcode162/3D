@@ -514,6 +514,24 @@ window.bar3dAudio = (function () {
       c.perf = now;
       return c.song + (perfMs - now) / 1000;
     },
+    // A tick at `songTime` (4K Mania's autoplay, J117.8): scheduled on the
+    // song's own clock, so it lands exactly where the chart's note is.
+    trackTick: function (songTime, accent) {
+      if (!ctx || !track.node || ctx.state !== 'running') return;
+      var at = track.start + songTime;
+      if (at < ctx.currentTime) return;
+      if (!track.tick) {
+        var n = Math.round(0.025 * ctx.sampleRate), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.sin(2 * Math.PI * 2093 * i / ctx.sampleRate) * Math.exp(-i / (0.004 * ctx.sampleRate));
+        track.tick = b;
+      }
+      var src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = track.tick;
+      g.gain.value = accent ? 0.55 : 0.35;
+      src.connect(g);
+      g.connect(ctx.destination);
+      src.start(at);
+    },
     trackDuration: function () { return track.buffer ? track.buffer.duration : 0; },
     trackStop: function () {
       if (track.node) { try { track.node.stop(); } catch (e) {} track.node = null; }

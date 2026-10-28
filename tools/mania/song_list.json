@@ -1,0 +1,305 @@
+{
+ "about": "The Training pack's songs (J117.8): TeknoAXE (teknoaxe.com), each licensed Creative Commons Attribution 4.0 (checked on its own page). tools/mania/songs.py downloads, trims, times and measures them.",
+ "songs": [
+  {
+   "id": "chiptune-speedway",
+   "title": "Chiptune Speedway",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2029&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=Chiptune_Speedway.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "midnight-stomp",
+   "title": "Midnight Stomp",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2076&genre=Electro",
+   "download": "https://teknoaxe.com/direct_download.php?file=Midnight_Stomp.mp3",
+   "genre": "Electro",
+   "seconds": 150
+  },
+  {
+   "id": "hover-pit",
+   "title": "Hover Pit",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1935&genre=Electro",
+   "download": "https://teknoaxe.com/direct_download.php?file=Hover_Pit.mp3",
+   "genre": "Electro",
+   "seconds": 150
+  },
+  {
+   "id": "flaming-skulls",
+   "title": "Flaming Skulls",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1973&genre=Hard",
+   "download": "https://teknoaxe.com/direct_download.php?file=Flaming_Skulls.mp3",
+   "genre": "Hard",
+   "seconds": 150
+  },
+  {
+   "id": "thunder-on-the-floor",
+   "title": "Thunder on the Floor",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1564&genre=Electro",
+   "download": "https://teknoaxe.com/direct_download.php?file=Thunder_on_the_Floor.mp3",
+   "genre": "Electro",
+   "seconds": 150
+  },
+  {
+   "id": "basic-wobblefest",
+   "title": "Basic Wobblefest",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1256&genre=Dubstep",
+   "download": "https://teknoaxe.com/direct_download.php?file=Basic_Wobblefest.mp3",
+   "genre": "Dubstep",
+   "seconds": 150
+  },
+  {
+   "id": "breaking-back-into-the-wubs",
+   "title": "Breaking Back into the Wubs",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1191&genre=Dubstep",
+   "download": "https://teknoaxe.com/direct_download.php?file=Breaking_Back_into_the_Wubs.mp3",
+   "genre": "Dubstep",
+   "seconds": 150
+  },
+  {
+   "id": "running-rage",
+   "title": "Running Rage",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2402&genre=Metal",
+   "download": "https://teknoaxe.com/direct_download.php?file=Running_Rage.mp3",
+   "genre": "Metal",
+   "seconds": 150
+  },
+  {
+   "id": "back-to-the-grime",
+   "title": "Back to the Grime",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1398&genre=Dubstep",
+   "download": "https://teknoaxe.com/direct_download.php?file=Back_to_the_Grime.mp3",
+   "genre": "Dubstep",
+   "seconds": 150
+  },
+  {
+   "id": "spiral-flight",
+   "title": "Spiral Flight",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2341&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Spiral_Flight.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "shattered-bass",
+   "title": "Shattered Bass",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1967&genre=Hard",
+   "download": "https://teknoaxe.com/direct_download.php?file=Shattered_Bass.mp3",
+   "genre": "Hard",
+   "seconds": 150
+  },
+  {
+   "id": "pixel-warrior",
+   "title": "Pixel Warrior",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1981&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=Pixel_Warrior.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "racket-and-bang",
+   "title": "Racket and Bang",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2375&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Racket_and_Bang.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "war-horse",
+   "title": "War Horse",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2386&genre=Metal",
+   "download": "https://teknoaxe.com/direct_download.php?file=War_Horse.mp3",
+   "genre": "Metal",
+   "seconds": 150
+  },
+  {
+   "id": "the-freakazoid-race",
+   "title": "The Freakazoid Race",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2449&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=The_Freakazoid_Race.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "final-lap",
+   "title": "Final Lap",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1949&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Final_Lap.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "brutal-sines",
+   "title": "Brutal Sines",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2078&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Brutal_Sines.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "up-for-a-race",
+   "title": "Up For a Race",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1945&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=Up_For_a_Race.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "let-the-drumz-out",
+   "title": "Let the Drumz Out",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2053&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Let_the_Drumz_Out.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "heat-grind",
+   "title": "Heat Grind",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1743&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Heat_Grind.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "storm-wind",
+   "title": "Storm Wind",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2002&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Storm_Wind.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "speed-run-acrobatics",
+   "title": "Speed Run Acrobatics",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1718&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Speed_Run_Acrobatics.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 240
+  },
+  {
+   "id": "low-rez-death-march",
+   "title": "Low Rez Death March",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2400&genre=Dubstep",
+   "download": "https://teknoaxe.com/direct_download.php?file=Low_Rez_Death_March.mp3",
+   "genre": "Dubstep",
+   "seconds": 150
+  },
+  {
+   "id": "launch-into-it",
+   "title": "Launch Into It",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1927&genre=Drum_and_Bass",
+   "download": "https://teknoaxe.com/direct_download.php?file=Launch_Into_It.mp3",
+   "genre": "Drum_and_Bass",
+   "seconds": 150
+  },
+  {
+   "id": "celebrate-with-eight",
+   "title": "Celebrate with Eight",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2297&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=Celebrate_with_Eight.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "flamethrower",
+   "title": "Flamethrower",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2308&genre=Metal",
+   "download": "https://teknoaxe.com/direct_download.php?file=Flamethrower.mp3",
+   "genre": "Metal",
+   "seconds": 150
+  },
+  {
+   "id": "a-new-monstrosity",
+   "title": "A New Monstrosity",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2438&genre=Techno",
+   "download": "https://teknoaxe.com/direct_download.php?file=A_New_Monstrosity.mp3",
+   "genre": "Techno",
+   "seconds": 150
+  },
+  {
+   "id": "low-rez-fury",
+   "title": "Low Rez Fury",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1691&genre=Eight",
+   "download": "https://teknoaxe.com/direct_download.php?file=Low_Rez_Fury.mp3",
+   "genre": "Eight",
+   "seconds": 150
+  },
+  {
+   "id": "into-the-machine",
+   "title": "Into the Machine",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=2139&genre=Metal",
+   "download": "https://teknoaxe.com/direct_download.php?file=Into_the_Machine.mp3",
+   "genre": "Metal",
+   "seconds": 150
+  },
+  {
+   "id": "frankensynth",
+   "title": "Frankensynth",
+   "artist": "TeknoAXE",
+   "licence": "CC BY 4.0",
+   "page": "https://teknoaxe.com/Link_Code_3.php?q=1984&genre=Dubstep",
+   "download": "https://teknoaxe.com/direct_download.php?file=Frankensynth.mp3",
+   "genre": "Dubstep",
+   "seconds": 150
+  }
+ ]
+}

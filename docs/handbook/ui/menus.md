@@ -41,7 +41,7 @@ At the lounge chessboard the board opens full screen (since J28; `3D view` goes 
 
 ## Help → Credits (J100)
 
-`Help` ends with **Credits**: the piano's recorded notes (Salamander Grand Piano V3 by Alexander Holm, CC BY 3.0; the licence asks for this credit), the music (Kevin MacLeod, CC BY 4.0), the models (Poly Haven CC0 and our own), the books (public domain).
+`Help` ends with **Credits**: the piano's recorded notes (Salamander Grand Piano V3 by Alexander Holm, CC BY 3.0; the licence asks for this credit), the music (Kevin MacLeod, CC BY 4.0), 4K Mania's Training songs (30 by TeknoAXE, each named, CC BY 4.0, shortened with a fade-out; J117.8), the models (Poly Haven CC0 and our own), the books (public domain).
 
 ## Settings → Pointer (2026-10-26 #12)
 

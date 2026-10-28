@@ -787,6 +787,18 @@ void RhythmGame::update(double nowMs, const std::vector<engine::Input::RawPress>
       else hit->holding = true;
     }
   }
+  // Autoplay ticks on every note (J117.8), scheduled a moment ahead on the
+  // song's clock: you hear whether the chart sits exactly on the music.
+  if (autoplay) {
+    for (size_t i = firstOpen_; i < notes_.size(); ++i) {
+      Note& n = notes_[i];
+      if (n.time > songTime_ + offsetMs_ / 1000.0 + 0.25) break;
+      if (n.ticked) continue;
+      n.ticked = true;
+      const bool chord = (i > 0 && std::fabs(notes_[i - 1].time - n.time) < 0.002);
+      if (!chord) engine::Track::tick(n.time, false);
+    }
+  }
   for (size_t i = firstOpen_; i < notes_.size(); ++i) {
     Note& n = notes_[i];
     if (n.time > songTime_ + 0.2) break;

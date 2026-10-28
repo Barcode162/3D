@@ -74,6 +74,7 @@
     "tools/assets": "Scripts that make the 3D models (headless Blender) and the compressed textures.",
     "tools/githooks": "The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main).",
     "tools/lib": "Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands).",
+    "tools/mania": "4K Mania's Training pack tools (J117): the song list and each song's measured beats (songs.py, timing.py, songs/), the map recipes (maps.json) for tools/native/mania_pack.cpp.",
     "tools/migrations": "One-time conversions of the world files (kept as the record of what changed).",
     "tools/native": "Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light.",
     "tools/preflight": "The preflight checklist (J112): one small rule file per check in rules/<area>/ (copy TEMPLATE.mjs), run by node tools/preflight.mjs before any test, build or push; a broken rule names itself, the spot and the fix.",

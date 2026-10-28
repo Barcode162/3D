@@ -140,6 +140,25 @@ std::vector<std::string> checkPackMap(const PackMap& m, const StageRules& r) {
       out.push_back(b);
     }
   }
+  // Chords inside fast runs (osu!mania's Normal: none; Hard: at least a beat apart).
+  if (r.stage <= 4) {
+    double lastChord = -1e9;
+    for (size_t i = 0; i < rows.size(); ++i) {
+      if (rows[i].count < 2) continue;
+      const bool inRun = (i > 0 && (rows[i].t - rows[i - 1].t) / beat <= 0.26) ||
+                         (i + 1 < rows.size() && (rows[i + 1].t - rows[i].t) / beat <= 0.26);
+      if (!inRun) continue;
+      if (r.stage <= 2 && i > 0 && i + 1 < rows.size() && (rows[i].t - rows[i - 1].t) / beat <= 0.26 &&
+          (rows[i + 1].t - rows[i].t) / beat <= 0.26) {
+        std::snprintf(b, sizeof(b), "a chord in the middle of a fast run at %s (stage %d: none)", at(rows[i].t).c_str(), r.stage);
+        out.push_back(b);
+      } else if (r.stage >= 3 && (rows[i].t - lastChord) / beat < 0.98) {
+        std::snprintf(b, sizeof(b), "chords less than a beat apart in a fast run at %s (stage %d)", at(rows[i].t).c_str(), r.stage);
+        out.push_back(b);
+      }
+      lastChord = rows[i].t;
+    }
+  }
   // Fastest step, runs at a 1/4 beat or faster, trills.
   int run = 1, trill = 1;
   for (size_t i = 1; i < rows.size(); ++i) {

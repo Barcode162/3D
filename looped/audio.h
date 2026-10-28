@@ -89,6 +89,9 @@ class Track {
   // clock for the picture and the taps (J117.2).
   static double timeAt(double ms);
   static double duration();
+  // A short tick at a song time, scheduled on the song's clock (checking a
+  // chart's timing by ear).
+  static void tick(double songTime, bool accent);
   static void stop();
 };
 

@@ -158,6 +158,9 @@ bool Track::play(double delaySeconds) {
 }
 
 double Track::time() { return EM_ASM_DOUBLE({ return window['loopedHost']['audio']['trackTime'](); }); }
+void Track::tick(double songTime, bool accent) {
+  EM_ASM({ window['loopedHost']['audio']['trackTick']($0, $1); }, songTime, accent ? 1 : 0);
+}
 void Track::loadClicks(double bpm, int beats, double firstSeconds) {
   EM_ASM({ window['loopedHost']['audio']['trackLoadClicks']($0, $1, $2); }, bpm, beats, firstSeconds);
 }

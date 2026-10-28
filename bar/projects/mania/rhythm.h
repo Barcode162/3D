@@ -64,6 +64,7 @@ class RhythmGame {
     bool judged = false;      // the head (or the tap)
     bool holding = false;     // a hold note being held now
     bool tailDone = false;    // a hold note's end judged
+    bool ticked = false;      // autoplay's tick scheduled (J117.8)
     Judge headJudge = kMiss;
   };
   struct Burst {
