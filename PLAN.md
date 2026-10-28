@@ -57,20 +57,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J117 · 4K Mania upgrade** (the world). 4K Mania upgrade: notes glide evenly, taps never freeze, four fingers and holds work, judged to the millisecond, ready for 120 Hz; a smaller combo with no circle; a Training pack of hand-built maps from about 2 to 6-7 stars on about 30 new open-licence songs (requests 2026-10-28 #1, #2) · N3 N5
-- [x] **J117.1** Finger and frame test: every finger, lost and late touches, freezes, frame rate, tap-to-screen and the song clock's steps, in the report *Check:* 4K Mania → TEST: four fingers down, tap fast, hold three; send a report
-- [x] **J117.2** Notes glide at one even speed: a smooth song clock for the picture and the taps *Check:* Play any song: no speeding up and slowing down
-- [x] **J117.3** Taps never freeze the picture and holds stay held *Check:* Tap fast with four fingers and hold a long note: no freeze, no drop
-- [x] **J117.4** Ready for 120 Hz: one frame queued, light frames, the frame rate in the test *Check:* With Safari's near-60fps flag off, the test shows about 120
-- [x] **J117.5** A smaller combo with no circle behind it *Check:* Play: the combo is smaller, nothing behind it
-- [x] **J117.6** The audio calibrator: a tap-along that syncs the sound to the notes *Check:* Calibrate, then play: the timing bar's marks sit in the middle
-- [x] **J117.7** Real stars (osu!mania's formula), chart files, the map checker and the mapping guide *Check:* The song select shows the new stars
-- [x] **J117.8** The pack's new songs: open-licence, hard-hitting, timed exactly to the beat, credited *Check:* Training: hear the previews; autoplay ticks land on the beat; Credits name the artists
-- [x] **J117.9** The Training screen and stages 1-2 *Check:* Training → stage 1: three maps about 2★
-- [x] **J117.10** Stages 3-4 *Check:* Play stages 3-4
-- [x] **J117.11** Stages 5-6 *Check:* Play stages 5-6
-- [x] **J117.12** Stages 7-8 *Check:* Play stages 7-8
-- [x] **J117.13** Stages 9-10 *Check:* Play stages 9-10
+**J118 · 4K Mania** (the world). 4K Mania: taps don't stretch frames (report JJXXTD): no page lookups on taps while the game has the screen; TEST measures each GUARD setting alone and where touch delay comes from (request 2026-10-28 #5) · N3 N5
+- [ ] **J118.1** No page lookups on taps while 4K Mania has the screen; TEST per GUARD setting, frames drawn, and where touch delay comes from *Check:* TEST with GUARD on: tap with four fingers, SEND REPORT
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
