@@ -42,18 +42,14 @@ run jukebox.py "$tex" $out/jukebox.glb
 run stools.py "$tex" $out
 # The bar stools (J35.2): seat at 0.76 m (Poly Haven's is a counter stool,
 # 0.69 m), its back away from the counter (+z).
-ph bar_chair_round_01 bar_stool.glb --tris 8000 --height 0.825 --turn 180
 # The pendant lamps over the counter: lighting.py's own (request 2026-11-01 #5:
 # the scanned lamp of J35.5 broke the model spec, looped/draw/model_spec.h).
 # The lounge's pieces from Poly Haven (J70): the Chesterfield sofa (1.1x), the
 # armchairs, the mantel clock, the painting above the mantel, the vase.
-ph sofa_02 chesterfield_sofa.glb --tris 6000 --height 0.78
-ph GreenChair_01 armchair.glb --tris 6000
-ph mantel_clock_01 mantel_clock.glb --tris 6000
-ph fancy_picture_frame_01 painting.glb --height 0.75
-ph ceramic_vase_02 vase.glb --height 0.27 --tris 3000 --tex 512
 run furniture.py "$tex" $out
 run lighting.py "$tex" $out
+# The furnishings that were Poly Haven scans, ours since request 2026-11-01 #5 (the model spec).
+run furnishings.py "$tex" $out
 run decor.py "$tex" $out
 run glasses.py $out
 run drinks.py "$tex" $out "$scratch/drinks.jsonl" "$scratch/drink_things.json"
