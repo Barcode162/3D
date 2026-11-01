@@ -59,9 +59,8 @@ def knight_head(m):
     o = common.mesh_object("Knight head", bm, m)
     b = o.modifiers.new("bevel", "BEVEL")
     b.width = 0.0022
-    b.segments = 3
+    b.segments = 1
     b.limit_method = "ANGLE"
-    o.modifiers.new("smooth", "SUBSURF").levels = 1
     # Eyes and the mane's ridge.
     return o
 
@@ -73,10 +72,10 @@ def build(kind, color, out_path):
     wood = common.plain_material("Ivory" if color == "w" else "Ebony",
                                  (0.95, 0.9, 0.78) if color == "w" else (0.035, 0.03, 0.028), 0.0, 0.28)
     felt = common.plain_material("Felt", (0.08, 0.25, 0.1), 0.0, 1.0)
-    body = common.lathe("Piece", [(r * S, y * S) for r, y in PROFILES[kind]], wood, 32)
+    body = common.lathe("Piece", [(r * S, y * S) for r, y in PROFILES[kind]], wood, 12)  # 12 sides: the model spec (looped/draw/model_spec.h)
     body["smooth"] = True
     common.cylinder("Felt", Vector((0, 0.0004, 0)), 0.0128 * S if kind == "pawn" else 0.0138 * S, 0.0008, "y", felt,
-                    segments=24, bevel=0.0)
+                    segments=12, bevel=0.0)
     if kind == "knight":
         head = knight_head(wood)
         head.data.transform(Matrix.Diagonal((S, S, S, 1)))
@@ -94,8 +93,8 @@ def build(kind, color, out_path):
         for k in range(8):
             a = k * math.tau / 8
             common.sphere("Crown", Vector((math.cos(a) * 0.0078 * S, 0.0655 * S, math.sin(a) * 0.0078 * S)), 0.0016 * S,
-                          wood, 10, 6)
-        common.sphere("Crown top", Vector((0, 0.0685 * S, 0)), 0.0028 * S, wood, 12, 8)
+                          wood, 5, 3)
+        common.sphere("Crown top", Vector((0, 0.0685 * S, 0)), 0.0028 * S, wood, 8, 5)
     if kind == "bishop":  # the mitre's slit
         common.box("Slit", (-0.0062 * S, 0.046 * S, -0.0008 * S), (0.0062 * S, 0.0535 * S, 0.0008 * S),
                    common.plain_material("Shadow", (0.02, 0.015, 0.01), 0.0, 0.8), 0.0).data.transform(

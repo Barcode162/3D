@@ -12,7 +12,7 @@ constexpr float kMaxOpenShare = 0.05f;
 constexpr float kMaxSimplestShare = 0.25f;
 constexpr uint32_t kMaxMaterials = 8;
 constexpr uint32_t kBigModel = 2000;  // smaller models are drawn whole: a 224-triangle bottle costs almost nothing
-constexpr float kFreeTriangles = 100;              // every model, however small
+constexpr float kFreeTriangles = 300;              // every model, however small (a pawn you play with up close)
 constexpr float kMaxTrianglesPerSquareMetre = 40000;  // and this many per m² of its biggest side
 
 std::string pct(float x) {
@@ -39,7 +39,7 @@ const std::vector<ModelRule>& modelRules() {
       {"M-MATERIALS", "At most 8 materials with a picture (plain colours don't count).",
        "Each pictured material is its own draw and its own texture; plain colours are kept per corner in the new frame.",
        "Share pictures, or put several looks in one texture."},
-      {"M-DENSITY", "At most 100 triangles, plus 40,000 per square metre of its biggest side (a 10 cm candle: 500).",
+      {"M-DENSITY", "At most 300 triangles, plus 40,000 per square metre of its biggest side (a 10 cm candle: 700).",
        "Detail nobody can see at arm's length still has to be stored and simplified.",
        "Bake the fine detail into the texture instead of the triangles."},
   };
