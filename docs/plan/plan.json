@@ -63,17 +63,11 @@
     "text": "Tune: quality levels, smooth round things, small things lit right, the look you like (less warm)",
     "check": "The new-engine bar looks as you like on your phone, smooth at every level",
     "done": true
-   },
-   {
-    "id": "J118.4",
-    "text": "The switch, when you say: the new engine becomes the live bar with everything the bar does; the old renderer retired",
-    "check": "joshuavelasco.com/bar opens the new engine on every browser",
-    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J118 first: the new engine finished and the switch, request 2026-11-01 #6; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
+ "upNext": "J119 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
  "road": {
   "world": [
    {
@@ -775,6 +769,21 @@
     "verdict": {
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
+    }
+   },
+   {
+    "id": "J119",
+    "text": "The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired",
+    "serves": [
+     "N1",
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "after",
+     "after": "J118",
+     "why": "the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when"
     }
    }
   ],
