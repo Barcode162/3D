@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J116.2 The word lab: Looped Script's words, where every word is a script made of other words (33... see spec): a typed phrase becomes a thing with its light, its glow drawn live and the trail of why; unknown words get close spellings and like-words as hints; the page at /bar/labs/words/ and the labs' front page
+
+`ac817cf` · 2026-11-01 07:38 · 5 files, +25 −8 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/labs/words/ and type: a warm candle that flickers. Its flame glows and flickers, and the card shows why
+
 ## J118.1 4K Mania: taps don't stretch frames: while the game has the screen the page's tap recorder no longer makes the browser lay out the page on every tap; TEST starts again when GUARD is switched (each setting measured alone), shows frames drawn beside frames ticked, and the report says how long the phone held each touch before the page saw it
 
 `0cc99ac` · 2026-10-28 06:21 · 10 files, +48 −12 · tests: none
