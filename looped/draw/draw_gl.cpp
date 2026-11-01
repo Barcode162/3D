@@ -61,7 +61,7 @@ class GlDevice final : public Device {
   void resize(uint32_t* w, uint32_t* h) override {
     double cw = 0, ch = 0;
     emscripten_get_element_css_size(canvas_.c_str(), &cw, &ch);
-    const double dpr = std::min(2.0, emscripten_get_device_pixel_ratio());
+    const double dpr = std::min(static_cast<double>(maxPixelRatio), emscripten_get_device_pixel_ratio());
     const int pw = std::max(1, static_cast<int>(std::lround(cw * dpr))), ph = std::max(1, static_cast<int>(std::lround(ch * dpr)));
     int cur_w = 0, cur_h = 0;
     emscripten_get_canvas_element_size(canvas_.c_str(), &cur_w, &cur_h);
@@ -189,6 +189,7 @@ class GlDevice final : public Device {
           case Attr::kUint8x4: glVertexAttribIPointer(loc, 4, GL_UNSIGNED_BYTE, stride, off); break;
           case Attr::kHalf4: glVertexAttribPointer(loc, 4, GL_HALF_FLOAT, GL_FALSE, stride, off); break;
           case Attr::kUnorm16x2: glVertexAttribPointer(loc, 2, GL_UNSIGNED_SHORT, GL_TRUE, stride, off); break;
+          case Attr::kSnorm8x4: glVertexAttribPointer(loc, 4, GL_BYTE, GL_TRUE, stride, off); break;
         }
       }
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);

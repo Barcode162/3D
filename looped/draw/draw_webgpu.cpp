@@ -30,6 +30,7 @@ wgpu::VertexFormat formatOf(Attr a) {
     case Attr::kUint8x4: return wgpu::VertexFormat::Uint8x4;
     case Attr::kHalf4: return wgpu::VertexFormat::Float16x4;
     case Attr::kUnorm16x2: return wgpu::VertexFormat::Unorm16x2;
+    case Attr::kSnorm8x4: return wgpu::VertexFormat::Snorm8x4;
   }
   return wgpu::VertexFormat::Float32x4;
 }
@@ -59,7 +60,7 @@ class GpuDevice final : public Device {
   void resize(uint32_t* w, uint32_t* h) override {
     double cw = 0, ch = 0;
     emscripten_get_element_css_size(canvas_.c_str(), &cw, &ch);
-    const double dpr = std::min(2.0, emscripten_get_device_pixel_ratio());
+    const double dpr = std::min(static_cast<double>(maxPixelRatio), emscripten_get_device_pixel_ratio());
     const auto pw = static_cast<uint32_t>(std::max(1L, std::lround(cw * dpr))), ph = static_cast<uint32_t>(std::max(1L, std::lround(ch * dpr)));
     if (pw != width_ || ph != height_) {
       width_ = pw, height_ = ph;

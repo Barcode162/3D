@@ -7,8 +7,10 @@
 //   colour  = glow + surface · light / π, then the eye's curve (ACES) and sRGB.
 // The lamps live in a small texture (4 texels a lamp: position + radius,
 // colour · candela · brightness + shape, axis + one-sided, axis2), so a
-// corner can name any of 64. Each pixel's facing comes from the screen-space
-// slope of its position (the triangles are shaded flat, as baked).
+// corner can name any of 64. Each pixel's facing is its corners' facing,
+// blended (J118.3: round things shade smooth), turned towards the eye; where a
+// model has none, the screen-space slope of its position. The white balance
+// (group.yzw, J118.3) takes part of the bulbs' orange out before the curve.
 // Textures: 0 the light texture, 1 the picture, 2 the lamps.
 namespace nx {
 
@@ -17,7 +19,7 @@ struct U {
   viewProj: mat4x4f,
   eye: vec4f,          // xyz, exposure
   w: array<vec4f, 4>,
-  group: vec4f,        // x: has a picture
+  group: vec4f,        // x: has a picture; yzw: the white balance
   picAvg: vec4f,       // the picture's average colour
   glow: vec4f,
 };
@@ -38,13 +40,14 @@ struct VOut {
   @location(4) corner: vec4f,
   @location(5) @interpolate(flat) lamps: vec4u,
   @location(6) seen: vec4f,
+  @location(7) normal: vec3f,
 };
 
 @vertex fn vs_main(@location(0) p: vec3f, @location(1) uv: vec2f, @location(2) uv2: vec2f, @location(3) col: vec4f,
-                   @location(4) corner: vec4f, @location(5) lamps: vec4u, @location(6) seen: vec4f) -> VOut {
+                   @location(4) corner: vec4f, @location(5) lamps: vec4u, @location(6) seen: vec4f, @location(7) nrm: vec4f) -> VOut {
   var o: VOut;
   o.pos = u.viewProj * vec4f(p, 1.0);
-  o.world = p; o.uv = uv; o.uv2 = uv2; o.col = col; o.corner = corner; o.lamps = lamps; o.seen = seen;
+  o.world = p; o.uv = uv; o.uv2 = uv2; o.col = col; o.corner = corner; o.lamps = lamps; o.seen = seen; o.normal = nrm.xyz;
   return o;
 }
 
@@ -82,6 +85,7 @@ fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.
 
 @fragment fn fs_main(v: VOut) -> @location(0) vec4f {
   var n = normalize(cross(dpdx(v.world), dpdy(v.world)));
+  if (dot(v.normal, v.normal) > 0.25) { n = normalize(v.normal); }
   if (dot(n, u.eye.xyz - v.world) < 0.0) { n = -n; }
   let t = textureSampleLevel(tex0, samp0, max(v.uv2, vec2f(0.0)), 0.0);
   let pic = textureSample(tex1, samp1, v.uv).rgb;
@@ -97,7 +101,7 @@ fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.
   var surface = v.col.rgb;
   if (u.group.x > 0.5) { surface = surface * pic / max(u.picAvg.rgb, vec3f(0.02)); }
   let nits = u.glow.rgb + surface * max(e, vec3f(0.0)) / 3.14159265;
-  return vec4f(srgb(aces(nits * u.eye.w)), 1.0);
+  return vec4f(srgb(aces(nits * u.group.yzw * u.eye.w)), 1.0);
 }
 )WGSL";
 
@@ -118,10 +122,11 @@ layout(location = 3) in vec4 col;
 layout(location = 4) in vec4 corner;
 layout(location = 5) in uvec4 lamps;
 layout(location = 6) in vec4 seen;
-out vec3 vWorld; out vec2 vUv; out vec2 vUv2; out vec4 vCol; out vec4 vCorner; flat out uvec4 vLamps; out vec4 vSeen;
+layout(location = 7) in vec4 nrm;
+out vec3 vWorld; out vec2 vUv; out vec2 vUv2; out vec4 vCol; out vec4 vCorner; flat out uvec4 vLamps; out vec4 vSeen; out vec3 vNormal;
 void main() {
   gl_Position = viewProj * vec4(p, 1.0);
-  vWorld = p; vUv = uv; vUv2 = uv2; vCol = col; vCorner = corner; vLamps = lamps; vSeen = seen;
+  vWorld = p; vUv = uv; vUv2 = uv2; vCol = col; vCorner = corner; vLamps = lamps; vSeen = seen; vNormal = nrm.xyz;
 }
 //--- fragment
 #version 300 es
@@ -138,7 +143,7 @@ layout(std140) uniform U {
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
-in vec3 vWorld; in vec2 vUv; in vec2 vUv2; in vec4 vCol; in vec4 vCorner; flat in uvec4 vLamps; in vec4 vSeen;
+in vec3 vWorld; in vec2 vUv; in vec2 vUv2; in vec4 vCol; in vec4 vCorner; flat in uvec4 vLamps; in vec4 vSeen; in vec3 vNormal;
 out vec4 color;
 
 vec3 lampLux(uint i, vec3 p, vec3 n) {
@@ -173,6 +178,7 @@ vec3 srgb(vec3 x) { return mix(1.055 * pow(x, vec3(1.0 / 2.4)) - 0.055, 12.92 * 
 
 void main() {
   vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  if (dot(vNormal, vNormal) > 0.25) n = normalize(vNormal);
   if (dot(n, eye.xyz - vWorld) < 0.0) n = -n;
   vec4 t = textureLod(tex0, max(vUv2, vec2(0.0)), 0.0);
   vec3 pic = texture(tex1, vUv).rgb;
@@ -188,7 +194,7 @@ void main() {
   vec3 surface = vCol.rgb;
   if (group.x > 0.5) surface = surface * pic / max(picAvg.rgb, vec3(0.02));
   vec3 nits = glow.rgb + surface * max(e, vec3(0.0)) / 3.14159265;
-  color = vec4(srgb(aces(nits * eye.w)), 1.0);
+  color = vec4(srgb(aces(nits * group.yzw * eye.w)), 1.0);
 }
 )GLSL";
 

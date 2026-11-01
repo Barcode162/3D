@@ -32,7 +32,7 @@ using namespace engine;
 
 namespace {
 
-constexpr size_t kVertex = 44;
+constexpr size_t kVertex = 48;  // LNX2: 44 bytes + a facing (J118.3)
 constexpr float kEye = 1.6f, kRadius = 0.25f;
 
 struct Uniforms {
@@ -84,7 +84,8 @@ struct App {
   float moveX = 0, moveZ = 0;  // the left thumb (-1..1)
   Vec3 pickedAt{1e9f, 0, 0};
   float pickedYaw = 1e9f;
-  float limitPixels = 1;
+  float limitPixels = 1.5f;
+  Vec3 balance{1, 1, 1};  // the white balance (nx_balance)
   double lastT = 0, fpsT0 = 0;
   int frames = 0;
   uint64_t trianglesDrawn = 0, trianglesAll = 0;
@@ -109,6 +110,14 @@ EM_JS(void, js_loadPictures, (int count), { if (window['nextLoadPictures']) wind
 EM_JS(void, js_fetchPlace, (), { if (window['nextFetchPlace']) window['nextFetchPlace'](); });
 EM_JS(int, js_forceGl, (), { return /[?&]gl=1(&|$)/.test(location.search) ? 1 : 0; });
 
+// LNX2's packing undone (tools/native/bake_tool.cpp writePlace): byte planes back into items.
+std::vector<uint8_t> unplane(const uint8_t* p, size_t count, size_t stride) {
+  std::vector<uint8_t> out(count * stride);
+  for (size_t b = 0; b < stride; ++b)
+    for (size_t i = 0; i < count; ++i) out[i * stride + b] = p[b * count + i];
+  return out;
+}
+
 template <class T>
 T take(const uint8_t*& p) {
   T v;
@@ -118,7 +127,7 @@ T take(const uint8_t*& p) {
 }
 
 bool loadPlace(const uint8_t* data, size_t size) {
-  if (size < 36 || std::memcmp(data, "LNX1", 4) != 0) return false;
+  if (size < 36 || std::memcmp(data, "LNX2", 4) != 0) return false;
   const uint8_t* p = data + 4;
   take<uint32_t>(p);
   const uint32_t ng = take<uint32_t>(p), nl = take<uint32_t>(p);
@@ -131,10 +140,18 @@ bool loadPlace(const uint8_t* data, size_t size) {
     gr.glow = {take<float>(p), take<float>(p), take<float>(p)};
     gr.vertexCount = take<uint32_t>(p);
     const uint32_t ni = take<uint32_t>(p), nc = take<uint32_t>(p);
-    gr.vb = g.dev->vertexBuffer(p, static_cast<size_t>(gr.vertexCount) * kVertex);
+    const std::vector<uint8_t> verts = unplane(p, gr.vertexCount, kVertex);
+    gr.vb = g.dev->vertexBuffer(verts.data(), verts.size());
     p += static_cast<size_t>(gr.vertexCount) * kVertex;
+    const std::vector<uint8_t> steps = unplane(p, ni, 4);
     gr.tree.indices.resize(ni);
-    std::memcpy(gr.tree.indices.data(), p, ni * 4ull);
+    uint32_t prev = 0;
+    for (size_t i = 0; i < ni; ++i) {  // each index is the step from the one before, zigzagged
+      uint32_t z;
+      std::memcpy(&z, &steps[i * 4], 4);
+      prev += (z >> 1) ^ (0u - (z & 1));
+      gr.tree.indices[i] = prev;
+    }
     p += ni * 4ull;
     gr.tree.clusters.resize(nc);
     for (draw::Cluster& c : gr.tree.clusters) {
@@ -151,7 +168,8 @@ bool loadPlace(const uint8_t* data, size_t size) {
     gr.ib = g.dev->indexBuffer(gr.tree.indices.data(), gr.tree.indices.size());  // sized for the most; refilled with the picked
     g.groups.push_back(std::move(gr));
   }
-  g.atlas = g.dev->texture(static_cast<int>(aw), static_cast<int>(ah), draw::Format::kRgba16f, p);
+  const std::vector<uint8_t> atlas = unplane(p, static_cast<size_t>(aw) * ah * 4, 2);
+  g.atlas = g.dev->texture(static_cast<int>(aw), static_cast<int>(ah), draw::Format::kRgba16f, atlas.data());
   p += static_cast<size_t>(aw) * ah * 8;
   g.basis.resize(static_cast<size_t>(g.layers) * 3 * g.channels);
   for (float& b : g.basis) b = take<float>(p);
@@ -298,6 +316,7 @@ void frame() {
       if (!gr.drawn) continue;
       const bool pic = gr.picture >= 0 && static_cast<size_t>(gr.picture) < g.pictures.size() && g.pictures[static_cast<size_t>(gr.picture)];
       u.group[0] = pic ? 1.0f : 0.0f;
+      u.group[1] = g.balance.x, u.group[2] = g.balance.y, u.group[3] = g.balance.z;
       const Vec3 avg = pic ? g.pictureAvg[static_cast<size_t>(gr.picture)] : Vec3{1, 1, 1};
       u.picAvg[0] = avg.x, u.picAvg[1] = avg.y, u.picAvg[2] = avg.z;
       u.glow[0] = gr.glow.x, u.glow[1] = gr.glow.y, u.glow[2] = gr.glow.z;
@@ -330,7 +349,7 @@ void start(std::unique_ptr<draw::Device> dev) {
   pd.cullBack = false;
   pd.layout.stride = kVertex;
   pd.layout.items = {{draw::Attr::kFloat3, 0},  {draw::Attr::kFloat2, 12},  {draw::Attr::kUnorm16x2, 20}, {draw::Attr::kUnorm8x4, 24},
-                     {draw::Attr::kHalf4, 28},  {draw::Attr::kUint8x4, 36}, {draw::Attr::kUnorm8x4, 40}};
+                     {draw::Attr::kHalf4, 28},  {draw::Attr::kUint8x4, 36}, {draw::Attr::kUnorm8x4, 40}, {draw::Attr::kSnorm8x4, 44}};
   g.pipe = g.dev->pipeline(pd);
   js_status(draw::backendName(g.dev->backend()), g.dev->problem.c_str());
   js_fetchPlace();  // the page fetches data/place.bin.gz, unpacks it and hands it to nx_place
@@ -368,6 +387,29 @@ EMSCRIPTEN_KEEPALIVE void nx_detail(float limitPixels) {
   if (g.ready) pick();
 }
 EMSCRIPTEN_KEEPALIVE void nx_exposure(float e) { g.exposure = e; }
+// The white balance (J118.3): 0 shows the lamps' colour as it is (the first
+// preview: orange), 1 makes the room's average lamp white; between, part of
+// the orange goes, the brightness stays.
+EMSCRIPTEN_KEEPALIVE void nx_balance(float amount) {
+  // The room's light colour: its lamps' colours, weighted by how bright each is.
+  Vec3 warm{1.0f, 0.74f, 0.50f};  // a 2700 K bulb, until the bar has loaded
+  Vec3 sum{0, 0, 0};
+  for (const Lamp& l : g.lamps) sum = sum + l.color * l.cd;
+  if (sum.x > 0) warm = sum * (1 / std::max({sum.x, sum.y, sum.z}));
+  warm = {std::max(warm.x, 0.05f), std::max(warm.y, 0.05f), std::max(warm.z, 0.05f)};
+  Vec3 b{std::pow(1 / warm.x, amount), std::pow(1 / warm.y, amount), std::pow(1 / warm.z, amount)};
+  const float lum = 0.2126f * b.x + 0.7152f * b.y + 0.0722f * b.z;
+  g.balance = b * (1 / lum);
+}
+// A quality level (J118.3): 0 low, 1 medium, 2 high: how many pixels are
+// drawn and how much detail far things keep.
+EMSCRIPTEN_KEEPALIVE void nx_quality(int level) {
+  static const float ratio[3] = {1.0f, 1.5f, 2.0f}, limit[3] = {3.0f, 1.5f, 1.0f};
+  level = std::clamp(level, 0, 2);
+  if (g.dev) g.dev->maxPixelRatio = ratio[level];
+  g.limitPixels = limit[level];
+  if (g.ready) pick();
+}
 // The rig (J118.2): its text and the lamps as it names them (data/lamps.json,
 // in the bake's lamp order). Returns 1 when it plays.
 EMSCRIPTEN_KEEPALIVE int nx_rig(const char* text, const char* lampsJson) {

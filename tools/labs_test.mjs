@@ -133,6 +133,15 @@ try {
       await page.waitForTimeout(3000);
       const up = await levels();
       check(up[0] > 0.85, `pressed again, they come back up (${up[0].toFixed(2)})`);
+      // Quality (J118.3): Low draws fewer triangles than High.
+      const tris = async () => { await page.waitForTimeout(2500); return Number((/(\d+)k of/.exec(await page.textContent('#stats')) || [])[1]); };
+      await page.evaluate(() => Module._nx_quality(0));
+      const low = await tris();
+      await page.evaluate(() => Module._nx_quality(2));
+      const high = await tris();
+      check(low > 0 && high > low, `Quality: Low draws fewer triangles than High (${low}k vs ${high}k)`);
+      const label = await page.textContent('#quality');
+      check(/^Quality: (Low|Medium|High)$/.test(label) && /^Colour: (Warm|Soft|Neutral)$/.test(await page.textContent('#colour')), `the Quality and Colour buttons say their level (${label})`);
     }
     check(errs.length === 0, `the new-engine bar (${name}): no page errors` + (errs.length ? ': ' + errs[0] : ''));
     await page.close();

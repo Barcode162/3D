@@ -707,14 +707,23 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
   // Each geometry material's model file and material, and each corner's picture place (as SceneGeometry::add made them).
   std::vector<std::pair<std::string, int>> matSource;
   std::vector<Vec2> geoUv;
+  std::vector<Vec3> geoNormal;  // J118.3: each corner's facing, in the place (smooth round things)
   for (const Loaded::Placed& pl : L.placed) {
+    const Mat4 inv = inverse(pl.world);  // normals turn by the inverse's transpose (right under any scale)
     const ModelData& d = L.files.at(pl.file);
     for (size_t m = 0; m < d.materials.size(); ++m) matSource.push_back({pl.file, static_cast<int>(m)});
     matSource.push_back({pl.file, -1});
     for (const ModelPrimitive& p : d.primitives) {
       const bool has = p.material >= 0 && static_cast<size_t>(p.material) < d.materials.size();
       if (has && L.table.lookup(pl.file, d.materials[static_cast<size_t>(p.material)]).seeThrough) continue;
-      for (const ModelVertex& v : p.vertices) geoUv.push_back(v.uv);
+      for (const ModelVertex& v : p.vertices) {
+        geoUv.push_back(v.uv);
+        Vec3 n{inv.at(0, 0) * v.normal.x + inv.at(0, 1) * v.normal.y + inv.at(0, 2) * v.normal.z,
+               inv.at(1, 0) * v.normal.x + inv.at(1, 1) * v.normal.y + inv.at(1, 2) * v.normal.z,
+               inv.at(2, 0) * v.normal.x + inv.at(2, 1) * v.normal.y + inv.at(2, 2) * v.normal.z};
+        const float len = length(n);
+        geoNormal.push_back(len > 1e-8f ? n * (1 / len) : Vec3{0, 1, 0});
+      }
     }
   }
   if (geoUv.size() != L.geo.positions.size()) {
@@ -743,6 +752,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
   struct Vtx {
     Vec3 pos;
     Vec2 uv, uv2;
+    Vec3 normal{0, 1, 0};
     uint8_t col[4];
     double layer[4] = {0, 0, 0, 0};
     std::map<int, double> seen;
@@ -776,6 +786,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
         Vtx v;
         v.pos = L.geo.positions[gv];
         v.uv = geoUv[gv];
+        v.normal = geoNormal[gv];
         v.uv2 = uv2;
         v.col[0] = static_cast<uint8_t>(std::clamp(gm.albedo.x, 0.0f, 1.0f) * 255 + 0.5f);
         v.col[1] = static_cast<uint8_t>(std::clamp(gm.albedo.y, 0.0f, 1.0f) * 255 + 0.5f);
@@ -801,10 +812,22 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
       g.idx.push_back(vit->second);
     }
   }
-  std::vector<uint8_t> o = {'L', 'N', 'X', '1'};
+  // LNX2 (J118.3): as LNX1, with a facing per corner (48-byte corners), and
+  // packed so gzip finds the patterns: each group's corners as byte planes
+  // (every corner's first byte, then every second byte, …), its indices as
+  // the step from the one before (zigzag) in byte planes, the light texture
+  // in its two byte planes. The page unpacks the gzip; the engine undoes the rest.
+  std::vector<uint8_t> o = {'L', 'N', 'X', '2'};
+  auto planes = [&](size_t from, size_t stride) {  // turns o[from..] into byte planes of `stride`-byte items
+    const size_t n = (o.size() - from) / stride;
+    std::vector<uint8_t> t(n * stride);
+    for (size_t i = 0; i < n; ++i)
+      for (size_t b = 0; b < stride; ++b) t[b * n + i] = o[from + i * stride + b];
+    std::copy(t.begin(), t.end(), o.begin() + static_cast<std::ptrdiff_t>(from));
+  };
   auto u32 = [&](uint32_t x) { for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(x >> (8 * k))); };
   auto f32 = [&](float f) { uint32_t x; std::memcpy(&x, &f, 4); u32(x); };
-  u32(1), u32(static_cast<uint32_t>(groups.size())), u32(static_cast<uint32_t>(nl)), u32(static_cast<uint32_t>(K)), u32(static_cast<uint32_t>(channels)),
+  u32(2), u32(static_cast<uint32_t>(groups.size())), u32(static_cast<uint32_t>(nl)), u32(static_cast<uint32_t>(K)), u32(static_cast<uint32_t>(channels)),
       u32(static_cast<uint32_t>(A.width)), u32(static_cast<uint32_t>(A.height)), u32(static_cast<uint32_t>(picture.size()));
   size_t allTris = 0, allClusters = 0;
   for (Group& g : groups) {
@@ -816,6 +839,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
     u32(static_cast<uint32_t>(g.picture)), f32(g.glow.x), f32(g.glow.y), f32(g.glow.z);
     u32(static_cast<uint32_t>(g.v.size())), u32(static_cast<uint32_t>(tree.indices.size())), u32(static_cast<uint32_t>(tree.clusters.size()));
     auto u16 = [&](uint16_t x) { o.push_back(static_cast<uint8_t>(x & 255)), o.push_back(static_cast<uint8_t>(x >> 8)); };
+    const size_t vertsAt = o.size();
     for (const Vtx& v : g.v) {
       f32(v.pos.x), f32(v.pos.y), f32(v.pos.z), f32(v.uv.x), f32(v.uv.y);
       // The light texture's place in 16 bits (0..1; 0 for things lit at their corners: the colour's alpha says which).
@@ -828,8 +852,19 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
       for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(k < static_cast<int>(best.size()) ? best[static_cast<size_t>(k)].second : 0));
       for (int k = 0; k < 4; ++k)
         o.push_back(k < static_cast<int>(best.size()) && v.n ? static_cast<uint8_t>(std::lround(255 * std::min(1.0, best[static_cast<size_t>(k)].first / v.n))) : 0);
+      // Its facing, 8 bits a direction (-1..1), and a spare byte.
+      for (float c : {v.normal.x, v.normal.y, v.normal.z}) o.push_back(static_cast<uint8_t>(static_cast<int8_t>(std::lround(std::clamp(c, -1.0f, 1.0f) * 127))));
+      o.push_back(0);
     }
-    for (uint32_t i : tree.indices) u32(i);
+    planes(vertsAt, 48);
+    const size_t indicesAt = o.size();
+    uint32_t prev = 0;
+    for (uint32_t i : tree.indices) {
+      const int32_t d = static_cast<int32_t>(i - prev);
+      prev = i;
+      u32((static_cast<uint32_t>(d) << 1) ^ static_cast<uint32_t>(d >> 31));
+    }
+    planes(indicesAt, 4);
     for (const draw::Cluster& c : tree.clusters) {
       u32(c.first), u32(c.count), f32(c.center.x), f32(c.center.y), f32(c.center.z), f32(c.radius), f32(c.error), f32(c.parentCenter.x),
           f32(c.parentCenter.y), f32(c.parentCenter.z), f32(c.parentRadius), f32(c.parentError);
@@ -843,10 +878,12 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
   for (auto& x : st) x = x == 1;
   dilate(A, c4, st, 4);
   dilate(A, c4, st, 4);
+  const size_t atlasAt = o.size();
   for (float v : c4) {
     const uint16_t h = draw::toHalf(v);
     o.push_back(static_cast<uint8_t>(h & 255)), o.push_back(static_cast<uint8_t>(h >> 8));
   }
+  planes(atlasAt, 2);
   for (int k = 0; k < K; ++k)
     for (int d = 0; d < dims; ++d) f32(static_cast<float>(S.basis[k * dims + d]));
   for (const bake::Lamp& l : room.lamps) {

@@ -30,7 +30,7 @@ enum class Backend { kNone, kWebGpu, kWebGl2 };
 const char* backendName(Backend b);  // "WebGPU", "WebGL2", "none"
 
 enum class Format { kRgba8, kRgba16f };
-enum class Attr { kFloat2, kFloat3, kFloat4, kUnorm8x4, kUint8x4, kHalf4, kUnorm16x2 };
+enum class Attr { kFloat2, kFloat3, kFloat4, kUnorm8x4, kUint8x4, kHalf4, kUnorm16x2, kSnorm8x4 };
 
 struct VertexLayout {
   uint32_t stride = 0;
@@ -79,6 +79,9 @@ class Device {
   virtual void end() = 0;
   // Something went wrong (a shader didn't build): the first problem, in words.
   std::string problem;
+  // At most this many drawn pixels per CSS pixel (a quality level: 1 draws a
+  // quarter of a phone's pixels at 2x, 2 all of them; the screen's own ratio caps it).
+  float maxPixelRatio = 2;
 };
 
 // Makes the device for the canvas: WebGPU if the browser has it (unless

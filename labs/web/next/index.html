@@ -24,7 +24,7 @@
 <body>
 <canvas id="canvas" aria-label="The bar, drawn by the new engine"></canvas>
 <div class="hud"><span>New engine · <span class="badge" id="backend">…</span></span><span class="stats" id="stats"></span></div>
-<div class="tools"><a id="switch" href="?gl=1">Try WebGL2</a><button type="button" id="detail">Detail: 1 px</button><button type="button" id="dim" aria-pressed="false">Lights down</button><button type="button" id="music" aria-pressed="false">Music</button><a href="../">Labs</a></div>
+<div class="tools"><a id="switch" href="?gl=1">Try WebGL2</a><button type="button" id="quality">Quality: Medium</button><button type="button" id="colour">Colour: Soft</button><button type="button" id="dim" aria-pressed="false">Lights down</button><button type="button" id="music" aria-pressed="false">Music</button><a href="../">Labs</a></div>
 <div class="problem" id="problem"></div>
 <div class="loading" id="loading">Coming into the bar…</div>
 <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
@@ -75,6 +75,7 @@
       Module.HEAPU8.set(bytes, ptr);
       Module._nx_place(ptr, bytes.length);
       Module._free(ptr);
+      applyLook();
       return loadRig();
     }).catch(function (e) { window.nextStatus(document.getElementById('backend').textContent, 'The bar didn\'t load: ' + e.message); });
   };
@@ -124,9 +125,21 @@
   function keyMove() { if (Module._nx_move) Module._nx_move((keys.d ? 1 : 0) - (keys.a ? 1 : 0), (keys.s ? 1 : 0) - (keys.w ? 1 : 0)); }
   window.addEventListener('keydown', function (e) { keys[e.key.toLowerCase()] = true; keyMove(); });
   window.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; keyMove(); });
-  // Detail: how many pixels of error far parts may have.
-  var levels = [1, 2, 0.5], li = 0;
-  document.getElementById('detail').onclick = function () { li = (li + 1) % levels.length; this.textContent = 'Detail: ' + levels[li] + ' px'; Module._nx_detail(levels[li]); };
+  // Quality (J118.3): Low, Medium, High (how many pixels are drawn and how much detail far things keep), kept on this phone.
+  // Colour: how much of the bulbs' orange stays (Warm: all of it, Soft: about half, Neutral: little).
+  function stored(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : Number(v); } catch (e) { return d; } }
+  function store(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
+  var qualities = ['Low', 'Medium', 'High'], qi = stored('next.quality', 1);
+  var colours = [['Warm', 0], ['Soft', 0.55], ['Neutral', 0.85]], ci = stored('next.colour', 1);
+  function applyLook() {
+    document.getElementById('quality').textContent = 'Quality: ' + qualities[qi];
+    document.getElementById('colour').textContent = 'Colour: ' + colours[ci][0];
+    if (Module._nx_quality) { Module._nx_quality(qi); Module._nx_balance(colours[ci][1]); }
+  }
+  window.nextApplyLook = applyLook;
+  document.getElementById('quality').onclick = function () { qi = (qi + 1) % 3; store('next.quality', qi); applyLook(); };
+  document.getElementById('colour').onclick = function () { ci = (ci + 1) % 3; store('next.colour', ci); applyLook(); };
+  applyLook();
 </script>
 <script src="next.js"></script>
 </body>

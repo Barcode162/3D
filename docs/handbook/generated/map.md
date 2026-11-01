@@ -62,7 +62,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `incoming/` | Source material before it becomes assets. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/` | Meridian's source material. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/blender/` | Blender scripts that made Meridian's models. | 7 | Python, shell | not uploaded |
-| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 223 | pictures, other, C++ | deploy.yml → home/bar/labs |
+| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 223 | pictures, C++, other | deploy.yml → home/bar/labs |
 | `labs/draw/` | The draw lab's program (draw_lab.cpp, scene_shader.h): the light lab's baked room drawn with the one light formula on WebGPU or WebGL2, for its page (labs/web/draw/). | 3 | C++ | deploy.yml → home/bar/labs |
 | `labs/next/` | The bar on the new engine (next_app.cpp, next_shader.h): the baked bar (tools/native/bake_tool.cpp writePlace) drawn with its clusters on WebGPU or WebGL2 and walked through, for its page (labs/web/next/, opened by the bar's ?engine=next). | 2 | C++ | deploy.yml → home/bar/labs |
 | `labs/physics/` | The physics lab's program (physics_lab.cpp): the two stools as bodies; lit live while they move, the light around them worked out again in the browser when they rest (settle and repair), for its page (labs/web/physics/). | 1 | C++ | deploy.yml → home/bar/labs |
