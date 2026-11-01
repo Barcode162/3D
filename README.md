@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J116.3 Worlds in words and the light lab: the light lab is written as sentences (place words: in the middle, on the table, by it, on the left wall, in the near right corner, moves; a cause rule: when the lights go down, the lamp and the bulb dim to a quarter) and made into the world file; the baker keeps each lamp's own light sharp and smooths only the bounce, puts a table's top in the light texture, lights small things at their corners, and adds a light grid for moving things; 5.5-6.3% off the exact reference; the light lab page relights the baked room live
+
+`c8168c5` · 2026-11-01 08:34 · 36 files, +2172 −69 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/labs/light/: the room relights live (lights alive), The lights go down dims the lamp and the bulb, the sliders change each light, the reference sits beside it with about 6% off
+
 ## J116.2 The word lab: Looped Script's words, where every word is a script made of other words (33... see spec): a typed phrase becomes a thing with its light, its glow drawn live and the trail of why; unknown words get close spellings and like-words as hints; the page at /bar/labs/words/ and the labs' front page
 
 `ac817cf` · 2026-11-01 07:38 · 5 files, +25 −8 · tests: none
