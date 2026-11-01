@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bar3D · new engine</title>
+<meta name="description" content="The bar on Looped's new engine (J116.6): baked light, detail only where it's seen, WebGPU or WebGL2 so every browser can come in.">
+<style>
+  :root { --text: #e9e7e2; --soft: #b8bcc6; --accent: #ffb35c; --bad: #ff6b6b; }
+  html, body { margin: 0; height: 100%; background: #050506; color: var(--text); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; overscroll-behavior: none; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; touch-action: none; }
+  .hud { position: fixed; left: 0; right: 0; top: 0; padding: max(10px, env(safe-area-inset-top)) 12px 8px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; text-shadow: 0 1px 3px #000; }
+  .badge { background: rgba(0,0,0,.45); border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 3px 9px; font-weight: 600; pointer-events: auto; }
+  .stats { color: var(--soft); text-align: right; font-variant-numeric: tabular-nums; }
+  .problem { position: fixed; left: 12px; right: 12px; top: 60px; color: var(--bad); display: none; text-shadow: 0 1px 3px #000; }
+  .loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--soft); pointer-events: none; }
+  .stick { position: fixed; left: max(20px, env(safe-area-inset-left)); bottom: max(24px, env(safe-area-inset-bottom)); width: 120px; height: 120px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); background: rgba(0,0,0,.18); touch-action: none; }
+  .knob { position: absolute; left: 40px; top: 40px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.35); }
+  .hint { position: fixed; right: 14px; bottom: max(24px, env(safe-area-inset-bottom)); color: var(--soft); text-align: right; pointer-events: none; text-shadow: 0 1px 3px #000; }
+  .tools { position: fixed; right: 12px; top: max(44px, calc(env(safe-area-inset-top) + 34px)); display: flex; gap: 6px; }
+  .tools a, .tools button { background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.25); color: var(--text); border-radius: 10px; padding: 6px 9px; font: inherit; text-decoration: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas" aria-label="The bar, drawn by the new engine"></canvas>
+<div class="hud"><span>New engine · <span class="badge" id="backend">…</span></span><span class="stats" id="stats"></span></div>
+<div class="tools"><a id="switch" href="?gl=1">Try WebGL2</a><button type="button" id="detail">Detail: 1 px</button><a href="../">Labs</a></div>
+<div class="problem" id="problem"></div>
+<div class="loading" id="loading">Coming into the bar…</div>
+<div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+<div class="hint">Left thumb: walk · right thumb: look</div>
+<script>
+  var forcedGl = /[?&]gl=1(&|$)/.test(location.search);
+  document.getElementById('switch').textContent = forcedGl ? 'Try WebGPU' : 'Try WebGL2';
+  document.getElementById('switch').href = forcedGl ? '?' : '?gl=1';
+  window.nextStatus = function (backend, problem) {
+    document.getElementById('backend').textContent = backend;
+    var p = document.getElementById('problem');
+    p.textContent = problem; p.style.display = problem ? 'block' : 'none';
+  };
+  window.nextStats = function (fps, drawn, all) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('stats').textContent = Math.round(fps) + ' fps · ' + Math.round(drawn / 1000) + 'k of ' + Math.round(all / 1000) + 'k triangles';
+  };
+  // The pictures: decoded by the browser, shrunk to at most 512, handed to the engine.
+  window.nextLoadPictures = function (count) {
+    fetch('data/tex/list.json').then(function (r) { return r.json(); }).then(function (names) {
+      names.forEach(function (name, i) {
+        var img = new Image();
+        img.onload = function () {
+          var s = Math.min(1, 512 / Math.max(img.width, img.height));
+          var w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          var x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+          var px = x.getImageData(0, 0, w, h).data;
+          var ptr = Module._malloc(px.length);
+          Module.HEAPU8.set(px, ptr);
+          Module._nx_picture(i, w, h, ptr);
+          Module._free(ptr);
+        };
+        img.src = 'data/tex/' + name;
+      });
+    });
+  };
+  // The baked bar: gzipped on the server, unpacked here (DecompressionStream: Safari 16.4+, Chrome, Firefox).
+  window.nextFetchPlace = function () {
+    var load = document.getElementById('loading');
+    fetch('data/place.bin.gz').then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var total = Number(r.headers.get('content-length')) || 0, got = 0;
+      var counted = new TransformStream({ transform: function (chunk, c) { got += chunk.length; if (total) load.textContent = 'Coming into the bar… ' + Math.round(100 * got / total) + '%'; c.enqueue(chunk); } });
+      return new Response(r.body.pipeThrough(counted).pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    }).then(function (buf) {
+      var bytes = new Uint8Array(buf), ptr = Module._malloc(bytes.length);
+      Module.HEAPU8.set(bytes, ptr);
+      Module._nx_place(ptr, bytes.length);
+      Module._free(ptr);
+    }).catch(function (e) { window.nextStatus(document.getElementById('backend').textContent, 'The bar didn\'t load: ' + e.message); });
+  };
+  var Module = { canvas: document.getElementById('canvas'), print: function (t) { console.log(t); }, printErr: function (t) { console.warn(t); } };
+  // The left thumb: a stick.
+  var stick = document.getElementById('stick'), knob = document.getElementById('knob'), stickId = null;
+  function stickAt(t) {
+    var r = stick.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var dx = t.clientX - cx, dy = t.clientY - cy, m = Math.hypot(dx, dy), lim = r.width / 2 - 20;
+    if (m > lim) { dx *= lim / m; dy *= lim / m; }
+    knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    if (Module._nx_move) Module._nx_move(dx / lim, dy / lim);
+  }
+  stick.addEventListener('touchstart', function (e) { e.preventDefault(); stickId = e.changedTouches[0].identifier; stickAt(e.changedTouches[0]); }, { passive: false });
+  stick.addEventListener('touchmove', function (e) { e.preventDefault(); for (var t of e.changedTouches) if (t.identifier === stickId) stickAt(t); }, { passive: false });
+  function stickEnd(e) { for (var t of e.changedTouches) if (t.identifier === stickId) { stickId = null; knob.style.transform = ''; if (Module._nx_move) Module._nx_move(0, 0); } }
+  stick.addEventListener('touchend', stickEnd); stick.addEventListener('touchcancel', stickEnd);
+  // The right thumb (or a mouse): look around.
+  var canvas = document.getElementById('canvas'), lookId = null, lx = 0, ly = 0;
+  canvas.addEventListener('touchstart', function (e) { e.preventDefault(); var t = e.changedTouches[0]; lookId = t.identifier; lx = t.clientX; ly = t.clientY; }, { passive: false });
+  canvas.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    for (var t of e.changedTouches) if (t.identifier === lookId) { if (Module._nx_look) Module._nx_look((t.clientX - lx) * 0.25, -(t.clientY - ly) * 0.25); lx = t.clientX; ly = t.clientY; }
+  }, { passive: false });
+  canvas.addEventListener('touchend', function (e) { for (var t of e.changedTouches) if (t.identifier === lookId) lookId = null; });
+  var mouse = false;
+  canvas.addEventListener('mousedown', function (e) { mouse = true; lx = e.clientX; ly = e.clientY; });
+  window.addEventListener('mouseup', function () { mouse = false; });
+  window.addEventListener('mousemove', function (e) { if (!mouse || !Module._nx_look) return; Module._nx_look((e.clientX - lx) * 0.25, -(e.clientY - ly) * 0.25); lx = e.clientX; ly = e.clientY; });
+  var keys = {};
+  function keyMove() { if (Module._nx_move) Module._nx_move((keys.d ? 1 : 0) - (keys.a ? 1 : 0), (keys.s ? 1 : 0) - (keys.w ? 1 : 0)); }
+  window.addEventListener('keydown', function (e) { keys[e.key.toLowerCase()] = true; keyMove(); });
+  window.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; keyMove(); });
+  // Detail: how many pixels of error far parts may have.
+  var levels = [1, 2, 0.5], li = 0;
+  document.getElementById('detail').onclick = function () { li = (li + 1) % levels.length; this.textContent = 'Detail: ' + levels[li] + ' px'; Module._nx_detail(levels[li]); };
+</script>
+<script src="next.js"></script>
+</body>
+</html>

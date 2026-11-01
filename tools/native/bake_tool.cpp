@@ -13,10 +13,13 @@
 
 #include <array>
 #include <set>
+#include <tuple>
 #include <atomic>
 #include <thread>
 
+#include "bar/light_rig.h"
 #include "looped/bake/probes.h"
+#include "looped/draw/clusters.h"
 #include "looped/draw/half.h"
 #include "looped/bake/unwrap.h"
 
@@ -561,7 +564,7 @@ void writeLabPicture(const std::string& path, int w, int h, const std::vector<st
 // channel) and the channels' thing ids (u16 length + text each).
 void writeScene(const std::string& path, const Loaded& L, const bake::Room& room, const Atlas& A, const std::vector<float>& coeff, int layers,
                 const Squeeze& S, int dims, int channels, const std::vector<uint32_t>& cornerOf, const std::vector<float>& corners,
-                const std::vector<float>& cornerSeen) {
+                const std::vector<float>& cornerSeen, const std::vector<std::string>& channelNames) {
   constexpr uint32_t kNo = 0xFFFFFFFFu;
   const int K = std::min(layers, 4);
   std::vector<uint8_t> o = {'L', 'S', 'C', 'N'};
@@ -639,7 +642,7 @@ void writeScene(const std::string& path, const Loaded& L, const bake::Room& room
         f32(l.oneSided ? 1.0f : 0.0f), f32(static_cast<float>(l.channel)), f32(0);
   }
   for (int c = 0; c < channels; ++c) {
-    const std::string id = L.scene.world->thing(L.scene.lightThing[static_cast<size_t>(c)]).id;
+    const std::string& id = channelNames[static_cast<size_t>(c)];
     o.push_back(static_cast<uint8_t>(id.size() & 255)), o.push_back(static_cast<uint8_t>(id.size() >> 8));
     o.insert(o.end(), id.begin(), id.end());
   }
@@ -681,6 +684,196 @@ void writeRepair(const std::string& path, const Loaded& L, const bake::Room& roo
   std::printf("what the physics lab needs to repair: %s (%.1f MB)\n", path.c_str(), o.size() / 1e6);
 }
 
+// The baked place for the new engine at full scale (J116.6): <dir>/place.bin
+// ("LNX1") and its pictures (<dir>/tex/<n>.jpg|png). Geometry is grouped
+// by picture (and glow), each group's corners joined and cut into clusters
+// with simpler versions (looped/draw/clusters.h), so the frame draws only
+// the detail each part needs.
+//   counts (u32: version, groups, lamps, layers, channels, atlas w, atlas h, pictures)
+//   per group: u32 picture (-1 none), f32 glow rgb, u32 vertices, u32 indices, u32 clusters;
+//     vertices (44 bytes: position f32x3, picture place f32x2, light-texture place unorm16x2, colour u8x4 (a 255
+//     in the light texture, 0 lit at its corners), corner light in the layers f16x4, four lamps u8x4, how much
+//     of each it sees u8x4); indices (u32, cluster by cluster); clusters (u32 first, count; f32 centre
+//     xyz, radius, error, parent centre xyz, parent radius, parent error)
+//   the light texture (RGBA16F), the layers' make-up, the lamps (18 f32 each), the channels' names,
+//   the walk: spawn xyz + yaw (f32), blockers (u32 n; minX minZ maxX maxZ), raised floors (u32 n; + height)
+void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room, const Atlas& A, const std::vector<float>& coeff, int layers,
+                const Squeeze& S, int dims, int channels, const std::vector<uint32_t>& cornerOf, const std::vector<float>& corners,
+                const std::vector<float>& cornerSeen, const std::vector<std::string>& channelNames) {
+  constexpr uint32_t kNo = 0xFFFFFFFFu;
+  const int K = std::min(layers, 4);
+  const size_t nl = room.lamps.size();
+  std::filesystem::create_directories(dir + "/tex");
+  // Each geometry material's model file and material, and each corner's picture place (as SceneGeometry::add made them).
+  std::vector<std::pair<std::string, int>> matSource;
+  std::vector<Vec2> geoUv;
+  for (const Loaded::Placed& pl : L.placed) {
+    const ModelData& d = L.files.at(pl.file);
+    for (size_t m = 0; m < d.materials.size(); ++m) matSource.push_back({pl.file, static_cast<int>(m)});
+    matSource.push_back({pl.file, -1});
+    for (const ModelPrimitive& p : d.primitives) {
+      const bool has = p.material >= 0 && static_cast<size_t>(p.material) < d.materials.size();
+      if (has && L.table.lookup(pl.file, d.materials[static_cast<size_t>(p.material)]).seeThrough) continue;
+      for (const ModelVertex& v : p.vertices) geoUv.push_back(v.uv);
+    }
+  }
+  if (geoUv.size() != L.geo.positions.size()) {
+    std::printf("writePlace: corners don't line up (%zu vs %zu); nothing written\n", geoUv.size(), L.geo.positions.size());
+    return;
+  }
+  // The pictures, once each.
+  std::map<std::pair<std::string, int>, int> picture;
+  std::vector<std::string> pictureNames;
+  auto pictureOf = [&](uint32_t mat) -> int {
+    const auto& [file, m] = matSource[mat];
+    if (m < 0) return -1;
+    const ModelData& d = L.files.at(file);
+    const int img = d.materials[static_cast<size_t>(m)].baseColorImage;
+    if (img < 0 || static_cast<size_t>(img) >= d.images.size()) return -1;
+    auto it = picture.find({file, img});
+    if (it != picture.end()) return it->second;
+    const int id = static_cast<int>(picture.size());
+    const ModelImage& im = d.images[static_cast<size_t>(img)];
+    const std::string name = std::to_string(id) + (im.mimeType == "image/png" ? ".png" : ".jpg");
+    std::ofstream(dir + "/tex/" + name, std::ios::binary).write(reinterpret_cast<const char*>(im.bytes.data()), static_cast<std::streamsize>(im.bytes.size()));
+    pictureNames.push_back(name);
+    picture.emplace(std::make_pair(file, img), id);
+    return id;
+  };
+  struct Vtx {
+    Vec3 pos;
+    Vec2 uv, uv2;
+    uint8_t col[4];
+    double layer[4] = {0, 0, 0, 0};
+    std::map<int, double> seen;
+    int n = 0;
+  };
+  struct Group {
+    int picture;
+    Vec3 glow;
+    std::vector<Vtx> v;
+    std::map<std::tuple<uint32_t, float, float>, uint32_t> at;
+    std::vector<uint32_t> idx;
+  };
+  std::vector<Group> groups;
+  std::map<std::tuple<int, int, int, int>, size_t> groupOf;
+  for (uint32_t t = 0; t < L.geo.triangleCount(); ++t) {
+    const uint32_t mat = L.geo.triMaterial[t];
+    const GeoMaterial& gm = L.geo.materials[mat];
+    const int pic = pictureOf(mat);
+    const Vec3 glow = gm.emission * room.emissiveNits;
+    const auto gk = std::make_tuple(pic, static_cast<int>(glow.x * 100), static_cast<int>(glow.y * 100), static_cast<int>(glow.z * 100));
+    auto git = groupOf.find(gk);
+    if (git == groupOf.end()) git = groupOf.emplace(gk, groups.size()).first, groups.push_back({pic, glow, {}, {}, {}});
+    Group& g = groups[git->second];
+    const uint32_t ci = cornerOf[t];
+    for (int c3 = 0; c3 < 3; ++c3) {
+      const uint32_t gv = L.geo.indices[3 * t + c3];
+      const Vec2 uv2 = A.mapped[t] ? Vec2{A.triUv[t][c3].x / A.width, A.triUv[t][c3].y / A.height} : Vec2{-1, -1};
+      const auto key = std::make_tuple(gv, uv2.x, uv2.y);
+      auto vit = g.at.find(key);
+      if (vit == g.at.end()) {
+        Vtx v;
+        v.pos = L.geo.positions[gv];
+        v.uv = geoUv[gv];
+        v.uv2 = uv2;
+        v.col[0] = static_cast<uint8_t>(std::clamp(gm.albedo.x, 0.0f, 1.0f) * 255 + 0.5f);
+        v.col[1] = static_cast<uint8_t>(std::clamp(gm.albedo.y, 0.0f, 1.0f) * 255 + 0.5f);
+        v.col[2] = static_cast<uint8_t>(std::clamp(gm.albedo.z, 0.0f, 1.0f) * 255 + 0.5f);
+        v.col[3] = A.mapped[t] ? 255 : 0;
+        vit = g.at.emplace(key, static_cast<uint32_t>(g.v.size())).first;
+        g.v.push_back(std::move(v));
+      }
+      Vtx& v = g.v[vit->second];
+      if (ci != kNo) {  // lit at its corners: the bounce in the layers, and how much of each lamp it sees
+        const float* r = &corners[(static_cast<size_t>(ci) * 3 + c3) * dims];
+        for (int k = 0; k < K; ++k) {
+          double u = 0;
+          for (int d = 0; d < dims; ++d) u += S.basis[k * dims + d] * r[d];
+          v.layer[k] += u;
+        }
+        for (size_t l = 0; l < nl; ++l) {
+          const float sn = cornerSeen[(static_cast<size_t>(ci) * 3 + c3) * nl + l];
+          if (sn > 0) v.seen[static_cast<int>(l)] += sn;
+        }
+        ++v.n;
+      }
+      g.idx.push_back(vit->second);
+    }
+  }
+  std::vector<uint8_t> o = {'L', 'N', 'X', '1'};
+  auto u32 = [&](uint32_t x) { for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(x >> (8 * k))); };
+  auto f32 = [&](float f) { uint32_t x; std::memcpy(&x, &f, 4); u32(x); };
+  u32(1), u32(static_cast<uint32_t>(groups.size())), u32(static_cast<uint32_t>(nl)), u32(static_cast<uint32_t>(K)), u32(static_cast<uint32_t>(channels)),
+      u32(static_cast<uint32_t>(A.width)), u32(static_cast<uint32_t>(A.height)), u32(static_cast<uint32_t>(picture.size()));
+  size_t allTris = 0, allClusters = 0;
+  for (Group& g : groups) {
+    std::vector<Vec3> pos(g.v.size());
+    for (size_t i = 0; i < pos.size(); ++i) pos[i] = g.v[i].pos;
+    const draw::ClusterTree tree = draw::buildClusters(pos, g.idx);
+    allTris += tree.fullTriangles;
+    allClusters += tree.clusters.size();
+    u32(static_cast<uint32_t>(g.picture)), f32(g.glow.x), f32(g.glow.y), f32(g.glow.z);
+    u32(static_cast<uint32_t>(g.v.size())), u32(static_cast<uint32_t>(tree.indices.size())), u32(static_cast<uint32_t>(tree.clusters.size()));
+    auto u16 = [&](uint16_t x) { o.push_back(static_cast<uint8_t>(x & 255)), o.push_back(static_cast<uint8_t>(x >> 8)); };
+    for (const Vtx& v : g.v) {
+      f32(v.pos.x), f32(v.pos.y), f32(v.pos.z), f32(v.uv.x), f32(v.uv.y);
+      // The light texture's place in 16 bits (0..1; 0 for things lit at their corners: the colour's alpha says which).
+      u16(static_cast<uint16_t>(std::lround(std::clamp(v.uv2.x, 0.0f, 1.0f) * 65535))), u16(static_cast<uint16_t>(std::lround(std::clamp(v.uv2.y, 0.0f, 1.0f) * 65535)));
+      o.insert(o.end(), v.col, v.col + 4);
+      for (int k = 0; k < 4; ++k) u16(draw::toHalf(v.n ? static_cast<float>(v.layer[k] / v.n) : 0.0f));
+      std::vector<std::pair<double, int>> best;
+      for (const auto& [l, sum] : v.seen) best.push_back({sum, l});
+      std::sort(best.rbegin(), best.rend());
+      for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(k < static_cast<int>(best.size()) ? best[static_cast<size_t>(k)].second : 0));
+      for (int k = 0; k < 4; ++k)
+        o.push_back(k < static_cast<int>(best.size()) && v.n ? static_cast<uint8_t>(std::lround(255 * std::min(1.0, best[static_cast<size_t>(k)].first / v.n))) : 0);
+    }
+    for (uint32_t i : tree.indices) u32(i);
+    for (const draw::Cluster& c : tree.clusters) {
+      u32(c.first), u32(c.count), f32(c.center.x), f32(c.center.y), f32(c.center.z), f32(c.radius), f32(c.error), f32(c.parentCenter.x),
+          f32(c.parentCenter.y), f32(c.parentCenter.z), f32(c.parentRadius), f32(c.parentError);
+    }
+  }
+  // The light texture: the layers' numbers, spread into the empty texels next to pieces.
+  std::vector<float> c4(A.pos.size() * 4, 0.0f);
+  for (size_t i = 0; i < A.pos.size(); ++i)
+    for (int k = 0; k < K; ++k) c4[i * 4 + k] = coeff[i * layers + k];
+  std::vector<uint8_t> st = A.state;
+  for (auto& x : st) x = x == 1;
+  dilate(A, c4, st, 4);
+  dilate(A, c4, st, 4);
+  for (float v : c4) {
+    const uint16_t h = draw::toHalf(v);
+    o.push_back(static_cast<uint8_t>(h & 255)), o.push_back(static_cast<uint8_t>(h >> 8));
+  }
+  for (int k = 0; k < K; ++k)
+    for (int d = 0; d < dims; ++d) f32(static_cast<float>(S.basis[k * dims + d]));
+  for (const bake::Lamp& l : room.lamps) {
+    f32(l.position.x), f32(l.position.y), f32(l.position.z), f32(l.color.x), f32(l.color.y), f32(l.color.z), f32(l.cd), f32(l.radius),
+        f32(static_cast<float>(l.shape)), f32(l.axis.x), f32(l.axis.y), f32(l.axis.z), f32(l.axis2.x), f32(l.axis2.y), f32(l.axis2.z),
+        f32(l.oneSided ? 1.0f : 0.0f), f32(static_cast<float>(l.channel)), f32(0);
+  }
+  for (const std::string& id : channelNames) {
+    o.push_back(static_cast<uint8_t>(id.size() & 255)), o.push_back(static_cast<uint8_t>(id.size() >> 8));
+    o.insert(o.end(), id.begin(), id.end());
+  }
+  f32(L.scene.spawnPosition.x), f32(L.scene.spawnPosition.y), f32(L.scene.spawnPosition.z), f32(L.scene.spawnYaw);
+  u32(static_cast<uint32_t>(L.scene.blockers.size()));
+  for (const app::Blocker& b : L.scene.blockers) f32(b.minX), f32(b.minZ), f32(b.maxX), f32(b.maxZ);
+  u32(static_cast<uint32_t>(L.scene.floors.size()));
+  for (const app::FloorArea& f : L.scene.floors) f32(f.minX), f32(f.minZ), f32(f.maxX), f32(f.maxZ), f32(f.height);
+  {
+    std::ofstream list(dir + "/tex/list.json");
+    list << "[";
+    for (size_t i = 0; i < pictureNames.size(); ++i) list << (i ? ", " : "") << "\"" << pictureNames[i] << "\"";
+    list << "]\n";
+  }
+  std::ofstream(dir + "/place.bin", std::ios::binary).write(reinterpret_cast<const char*>(o.data()), static_cast<std::streamsize>(o.size()));
+  std::printf("the place for the new engine: %s/place.bin (%.1f MB; %zu groups, %zu triangles in %zu clusters, %zu pictures)\n", dir.c_str(),
+              o.size() / 1e6, groups.size(), allTris, allClusters, picture.size());
+}
+
 int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spots) {
   std::filesystem::create_directories(out);
   const int samples = envInt("SAMPLES", 128), bounces = envInt("BOUNCES", 4), layersWanted = envInt("LAYERS", 4);
@@ -688,9 +881,31 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
   double t0 = nowMs();
   bake::Room room;
   std::vector<bake::Lamp> lamps = bake::lampsOf(L.scene.lights);
+  // The light channels: the place's rig (assets/world/rigs/<place>.looped)
+  // groups lamps that always change together; without one, each lamp is its own.
+  std::vector<std::string> channelNames;
+  {
+    words::Rig rig;
+    words::Problems rp;
+    const std::vector<uint8_t> text = readBytes(app::rigPath(L.scene.place));
+    if (!text.empty() && rig.load(std::string(text.begin(), text.end()), app::rigLamps(L.scene), app::rigEvents(), rp)) {
+      for (const auto& c : rig.channels()) channelNames.push_back(c.name);
+      for (size_t i = 0; i < lamps.size(); ++i) {
+        int c = rig.channelOf(static_cast<int>(i));
+        if (c < 0) {  // a lamp the rig doesn't name: its own channel
+          c = static_cast<int>(channelNames.size());
+          channelNames.push_back(L.scene.world->thing(L.scene.lightThing[i]).id);
+        }
+        lamps[i].channel = c;
+      }
+    } else {
+      for (size_t i = 0; i < lamps.size(); ++i) channelNames.push_back(L.scene.world->thing(L.scene.lightThing[i]).id);
+      for (const auto& x : rp) std::printf("rig: %s\n", x.text().c_str());
+    }
+  }
   room.build(L.geo, lamps);
-  const int channels = static_cast<int>(lamps.size());  // each lamp its own channel here
-  std::printf("room: %zu triangles, %d lamps (each its own channel), ray tree in %.0f ms\n", L.geo.triangleCount(), channels, nowMs() - t0);
+  const int channels = static_cast<int>(channelNames.size());
+  std::printf("room: %zu triangles, %zu lamps in %d light channels, ray tree in %.0f ms\n", L.geo.triangleCount(), lamps.size(), channels, nowMs() - t0);
   t0 = nowMs();
   const Plan P = plan(L, room.bvh);
   Atlas A = layAtlas(L, P);
@@ -792,13 +1007,24 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
             bake::Rng rng(0xC0FFEEull * (j * 3 + c3 + 1), j + 17);
             std::fill(acc.begin(), acc.end(), Vec3{});
             for (int sm = 0; sm < cs; ++sm) bake::incomingByChannel(room, p, n, rng, bounces, 0, acc.data());  // bounced light only
-            // How much of each lamp this corner sees (its direct light is worked out per pixel).
+            // How much of its four strongest lamps this corner sees (their
+            // direct light is worked out per pixel; the others' is too weak to matter).
+            std::vector<std::pair<float, size_t>> strength;
             for (size_t l = 0; l < room.lamps.size(); ++l) {
-              int clear = 0;
+              Vec3 e;
+              for (int k = 0; k < 2; ++k) e = e + bake::lampLux(room, room.lamps[l], p, n, rng, false);
+              if (light::luminance(e) > 0) strength.push_back({light::luminance(e), l});
+            }
+            std::sort(strength.rbegin(), strength.rend());
+            for (size_t l = 0; l < room.lamps.size(); ++l) cornerSeen[(j * 3 + c3) * room.lamps.size() + l] = 0;
+            for (size_t k = 0; k < strength.size() && k < 4; ++k) {
+              const size_t l = strength[k].second;
+              int clear = 0, facing = 0;
               const int rays = 48;
-              for (int r = 0; r < rays; ++r) clear += light::luminance(bake::lampLux(room, room.lamps[l], p, n, rng, true)) > 0 ? 1 : 0;
-              int facing = 0;
-              for (int r = 0; r < rays; ++r) facing += light::luminance(bake::lampLux(room, room.lamps[l], p, n, rng, false)) > 0 ? 1 : 0;
+              for (int r = 0; r < rays; ++r) {
+                clear += light::luminance(bake::lampLux(room, room.lamps[l], p, n, rng, true)) > 0 ? 1 : 0;
+                facing += light::luminance(bake::lampLux(room, room.lamps[l], p, n, rng, false)) > 0 ? 1 : 0;
+              }
               cornerSeen[(j * 3 + c3) * room.lamps.size() + l] = facing ? static_cast<float>(clear) / facing : 1.0f;
             }
             float* q = &corners[(j * 3 + c3) * dims];
@@ -825,13 +1051,11 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
   }
   // ---- Against the reference, at each spot ----
   if (spots.empty()) spots = {"front=0,1.65,2.9,0,-12", "corner=2.6,1.7,2.6,-45,-15", "table=-1.5,1.3,1.6,43,-25"};
+  if (std::getenv("NOREF")) spots.clear();  // a bake without the comparison (the reference is slow)
   std::string summary = "{\"place\": \"" + L.scene.place + "\", \"atlas\": [" + std::to_string(A.width) + ", " + std::to_string(A.height) +
                         "], \"texels\": " + std::to_string(kept) + ", \"layers\": " + std::to_string(layers) + ", \"samples\": " +
                         std::to_string(samples) + ", \"bakeSeconds\": " + std::to_string(B.ms / 1000) + ", \"channels\": [";
-  for (int c = 0; c < channels; ++c) {
-    const auto& th = L.scene.world->thing(L.scene.lightThing[static_cast<size_t>(c)]);
-    summary += std::string(c ? ", " : "") + "\"" + th.id + "\"";
-  }
+  for (int c = 0; c < channels; ++c) summary += std::string(c ? ", " : "") + "\"" + channelNames[static_cast<size_t>(c)] + "\"";
   summary += "], \"spots\": [";
   bool firstSpot = true;
   for (const std::string& arg : spots) {
@@ -971,8 +1195,11 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
       }
     writePng(out + "/" + name + ".png", 2 * v.width, v.height, bake::toDisplay(pair, 2 * v.width, v.height, Mood{}));
   }
-  writeScene(out + "/scene.bin", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen);
-  writeRepair(out + "/repair.bin", L, room, A);
+  if (L.scene.place == "lab") {  // the labs' small room files (the draw and physics labs)
+    writeScene(out + "/scene.bin", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen, channelNames);
+    writeRepair(out + "/repair.bin", L, room, A);
+  }
+  writePlace(out + "/next", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen, channelNames);
   summary += "]}\n";
   std::ofstream(out + "/summary.json") << summary;
   // The baked layers, for the frame (J116.4).

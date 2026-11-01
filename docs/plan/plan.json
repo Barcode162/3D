@@ -75,29 +75,11 @@
     "text": "The physics lab: furniture as bodies; what comes to rest joins the baked room and only the light around it is worked out again",
     "check": "Knock the stool over in the lab: the light around it settles, nothing stutters",
     "done": true
-   },
-   {
-    "id": "J116.6",
-    "text": "The bar inherits it all: its world, lights and behaviours in words, baked, drawn by the skeleton on both kinds of browser, behind ?engine=next",
-    "check": "The bar on the new skeleton on your phone, every frame drawn",
-    "done": false
-   },
-   {
-    "id": "J116.7",
-    "text": "Tune: quality levels as light-map sizes; the look matched to the liked screenshot",
-    "check": "The user says it looks right",
-    "done": false
-   },
-   {
-    "id": "J116.8",
-    "text": "The switch, when the user says: the skeleton becomes the live bar; the old renderer, lighting and JSON world files retired",
-    "check": "The live bar on the new skeleton",
-    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
+ "upNext": "J118 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J118 first: the new engine finished and the switch, request 2026-11-01 #6; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
  "road": {
   "world": [
    {
@@ -799,6 +781,20 @@
     "verdict": {
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
+    }
+   },
+   {
+    "id": "J118",
+    "text": "The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says",
+    "serves": [
+     "N1",
+     "N2",
+     "N3"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "J116 shipped the skeleton, the labs and the bar drawn by the new engine at a hidden link; this finishes it"
     }
    }
   ],

@@ -28,6 +28,8 @@ wgpu::VertexFormat formatOf(Attr a) {
     case Attr::kFloat4: return wgpu::VertexFormat::Float32x4;
     case Attr::kUnorm8x4: return wgpu::VertexFormat::Unorm8x4;
     case Attr::kUint8x4: return wgpu::VertexFormat::Uint8x4;
+    case Attr::kHalf4: return wgpu::VertexFormat::Float16x4;
+    case Attr::kUnorm16x2: return wgpu::VertexFormat::Unorm16x2;
   }
   return wgpu::VertexFormat::Float32x4;
 }
@@ -48,6 +50,8 @@ class GpuDevice final : public Device {
     sd.minFilter = wgpu::FilterMode::Linear;
     sd.addressModeU = sd.addressModeV = wgpu::AddressMode::ClampToEdge;
     sampler_ = device_.CreateSampler(&sd);
+    sd.addressModeU = sd.addressModeV = wgpu::AddressMode::Repeat;
+    repeatSampler_ = device_.CreateSampler(&sd);
   }
 
   Backend backend() const override { return Backend::kWebGpu; }
@@ -105,7 +109,7 @@ class GpuDevice final : public Device {
     return static_cast<Handle>(buffers_.size());
   }
 
-  Handle texture(int w, int h, Format f, const void* data) override {
+  Handle texture(int w, int h, Format f, const void* data, bool repeat) override {
     wgpu::TextureDescriptor td;
     td.size = {static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1};
     td.format = f == Format::kRgba16f ? wgpu::TextureFormat::RGBA16Float : wgpu::TextureFormat::RGBA8Unorm;
@@ -120,6 +124,7 @@ class GpuDevice final : public Device {
     queue_.WriteTexture(&dst, data, static_cast<size_t>(w) * h * bpp, &layout, &td.size);
     textures_.push_back(t.CreateView());
     textureObjects_.push_back(t);
+    textureRepeats_.push_back(repeat);
     return static_cast<Handle>(textures_.size());
   }
 
@@ -133,6 +138,11 @@ class GpuDevice final : public Device {
     layout.rowsPerImage = static_cast<uint32_t>(h);
     const wgpu::Extent3D size{static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1};
     queue_.WriteTexture(&dst, data, static_cast<size_t>(w) * h * bpp, &layout, &size);
+  }
+
+  void updateIndices(Handle b, const uint32_t* data, size_t count) override {
+    if (!b || b > buffers_.size() || !count) return;
+    queue_.WriteBuffer(buffers_[b - 1], 0, data, count * 4);
   }
 
   void updateVertices(Handle b, size_t offset, const void* data, size_t bytes) override {
@@ -259,7 +269,7 @@ class GpuDevice final : public Device {
         e[1 + 2 * static_cast<size_t>(k)].binding = static_cast<uint32_t>(1 + 2 * k);
         e[1 + 2 * static_cast<size_t>(k)].textureView = t ? textures_[t - 1] : nullptr;
         e[2 + 2 * static_cast<size_t>(k)].binding = static_cast<uint32_t>(2 + 2 * k);
-        e[2 + 2 * static_cast<size_t>(k)].sampler = sampler_;
+        e[2 + 2 * static_cast<size_t>(k)].sampler = t && textureRepeats_[t - 1] ? repeatSampler_ : sampler_;
       }
       wgpu::BindGroupDescriptor bd;
       bd.layout = p.layout;
@@ -308,6 +318,8 @@ class GpuDevice final : public Device {
   std::vector<wgpu::Buffer> buffers_;
   std::vector<wgpu::TextureView> textures_;
   std::vector<wgpu::Texture> textureObjects_;
+  std::vector<bool> textureRepeats_;
+  wgpu::Sampler repeatSampler_;
   std::vector<Pipe> pipes_;
 };
 

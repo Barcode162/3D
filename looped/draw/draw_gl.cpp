@@ -86,7 +86,7 @@ class GlDevice final : public Device {
     return b;
   }
 
-  Handle texture(int w, int h, Format f, const void* data) override {
+  Handle texture(int w, int h, Format f, const void* data, bool repeat) override {
     GLuint t;
     glGenTextures(1, &t);
     glBindTexture(GL_TEXTURE_2D, t);
@@ -94,8 +94,8 @@ class GlDevice final : public Device {
     else glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
     return t;
   }
 
@@ -108,6 +108,13 @@ class GlDevice final : public Device {
   void updateVertices(Handle b, size_t offset, const void* data, size_t bytes) override {
     glBindBuffer(GL_ARRAY_BUFFER, b);
     glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(bytes), data);
+  }
+
+  void updateIndices(Handle b, const uint32_t* data, size_t count) override {
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, b);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(count * 4), data);
+    for (Pipe& p : pipes_) p.boundVertices = 0;  // rebind next draw
   }
 
   Handle pipeline(const PipelineDesc& d) override {
@@ -180,6 +187,8 @@ class GlDevice final : public Device {
           case Attr::kFloat4: glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, off); break;
           case Attr::kUnorm8x4: glVertexAttribPointer(loc, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, off); break;
           case Attr::kUint8x4: glVertexAttribIPointer(loc, 4, GL_UNSIGNED_BYTE, stride, off); break;
+          case Attr::kHalf4: glVertexAttribPointer(loc, 4, GL_HALF_FLOAT, GL_FALSE, stride, off); break;
+          case Attr::kUnorm16x2: glVertexAttribPointer(loc, 2, GL_UNSIGNED_SHORT, GL_TRUE, stride, off); break;
         }
       }
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);

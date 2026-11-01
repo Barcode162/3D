@@ -4,6 +4,8 @@
 //     bake is within 8% of the exact reference over everything seen;
 //   the draw lab draws on WebGPU and on WebGL2, and the two pictures are the
 //     same (lights held still) (J116.4: one interface, two backends);
+//   the bar on the new engine loads on both backends, draws only the detail it
+//     needs, and walks without passing through walls (J116.6);
 //   the physics lab: a knocked stool settles, the light around it is worked
 //     out again, and no frame's own work stutters (J116.5).
 // Usage: node tools/labs_test.mjs (after the build).
@@ -90,6 +92,32 @@ try {
     check(state === 3, `physics lab: it comes to rest, the light around it is worked out again, and it joins the room (${((Date.now() - t0) / 1000).toFixed(0)} s here)`);
     check(worst > 0 && worst < 40, `physics lab: no frame's own work stutters (slowest ${worst} ms, under 40)`);
     check(errs.length === 0, 'physics lab: no page errors' + (errs.length ? ': ' + errs[0] : ''));
+    await page.close();
+  }
+  // ---- The bar on the new engine (J116.6): both backends, the clusters, walking ----
+  for (const [name, query] of [['WebGL2', '?gl=1'], ['WebGPU', '']]) {
+    const page = await browser.newPage({ viewport: { width: 900, height: 600 } });
+    const errs = errorsOf(page);
+    await page.goto(site.url + 'labs/next/index.html' + query);
+    await page.waitForFunction(() => window.Module && Module._nx_ready && Module._nx_ready() === 1, null, { timeout: 180000 });
+    await page.waitForFunction(() => /triangles/.test(document.getElementById('stats').textContent), null, { timeout: 120000 });
+    const [stats, backend, problem] = await page.evaluate(() => ['stats', 'backend', 'problem'].map((id) => document.getElementById(id).textContent));
+    const m = /(\d+)k of (\d+)k triangles/.exec(stats);
+    check(backend === name && !problem, `the new-engine bar draws with ${name}` + (problem ? ': ' + problem : ''));
+    check(m && Number(m[1]) < Number(m[2]), `the new-engine bar (${name}) draws only the detail it needs: ${stats}`);
+    if (name === 'WebGL2') {
+      const start = await page.evaluate(() => [Module._nx_eyeX(), Module._nx_eyeZ()]);
+      await page.evaluate(() => Module._nx_move(0, -1));  // walk forward
+      await page.waitForTimeout(3000);
+      const moved = await page.evaluate(() => [Module._nx_eyeX(), Module._nx_eyeZ()]);
+      check(Math.hypot(moved[0] - start[0], moved[1] - start[1]) > 0.2, `walking moves you (${start.map((v) => v.toFixed(1))} → ${moved.map((v) => v.toFixed(1))})`);
+      await page.evaluate(() => Module._nx_look(90, 0));  // turn and walk into a wall for a while
+      await page.waitForTimeout(25000);
+      const after = await page.evaluate(() => [Module._nx_eyeX(), Module._nx_eyeZ()]);
+      await page.evaluate(() => Module._nx_move(0, 0));
+      check(after[0] > -13 && after[0] < 10 && after[1] > -16.5 && after[1] < 9.7, `the walls hold you in (inside the bar's rooms) (after 25 s walking into one: ${after.map((v) => v.toFixed(1))})`);
+    }
+    check(errs.length === 0, `the new-engine bar (${name}): no page errors` + (errs.length ? ': ' + errs[0] : ''));
     await page.close();
   }
   // Compare the two pictures (decoded in the page, which has a PNG reader).

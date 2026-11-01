@@ -32,7 +32,7 @@ What each folder is, how many files it holds, its main languages, and which work
 | `cloud/games/` | Games the room runs itself (darts, glasses, jukebox, race). | 4 | JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `cloud/sim/` | The bar's own C++ physics built for the room (room_sim.wasm), for the glasses. | 3 | shell, C++, JavaScript | deploy.yml → Cloudflare (the room server and the ledger) |
 | `dev/` | Dev, the control room (joshuavelasco.com/dev): its page, tabs and store API. | 12 | JavaScript, PHP, CSS | hub.yml → home/dev |
-| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 214 | Markdown, JSON | plan.yml → private/dev |
+| `docs/` | The books: Charter, Playbook, Handbook, Plan, Records, and the old notes until J6.6 sorts them. | 215 | Markdown, JSON | plan.yml → private/dev |
 | `docs/archive/` | History: old plans, instructions and notes (DECISIONS, STUDIO, ENGINE, REFERENCE, AUTOMATION, the audits...). Never instructions. | 29 | Markdown, JSON | not uploaded |
 | `docs/charter/` | The Charter: what the project is, the user's rules (rules.json, word for word), the glossary. | 3 | Markdown, JSON | plan.yml → private/dev |
 | `docs/handbook/` | The Handbook: how everything works (maps, systems, pages and controls, recipes); generated/ is written by tools/handbook.mjs. | 105 | Markdown, JSON | not uploaded |
@@ -40,8 +40,8 @@ What each folder is, how many files it holds, its main languages, and which work
 | `docs/handbook/manual/` | The manual: how light, materials, the world, avatars, recipes and the timeline work, with every dial (and the road ahead for each). | 8 | Markdown | not uploaded |
 | `docs/handbook/systems/` | One page per system, by chapter (engine, world, site, tools, backbone), one template. | 51 | Markdown | not uploaded |
 | `docs/handbook/ui/` | Every page and its controls, by exact label (checked against the live pages by tools/ui_labels_test.mjs). | 28 | Markdown | not uploaded |
-| `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 34 | Markdown, JSON | plan.yml → private/dev |
-| `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 33 | Markdown | plan.yml → private/dev |
+| `docs/plan/` | The plan's data (plan.json, written only by tools/plan.mjs) and the jobs' specs. | 35 | Markdown, JSON | plan.yml → private/dev |
+| `docs/plan/jobs/` | One spec per job after the restructure (J<n>.md), from TEMPLATE.md. | 34 | Markdown | plan.yml → private/dev |
 | `docs/playbook/` | The Playbook: the only instructions, one procedure per situation. | 10 | Markdown | not uploaded |
 | `docs/records/` | The Records: known issues, and the folders below. | 33 | Markdown | plan.yml → private/dev |
 | `docs/records/decisions/` | Decisions in force, numbered (tools/records.mjs decision). | 10 | Markdown | plan.yml → private/dev |
@@ -62,10 +62,11 @@ What each folder is, how many files it holds, its main languages, and which work
 | `incoming/` | Source material before it becomes assets. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/` | Meridian's source material. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/blender/` | Blender scripts that made Meridian's models. | 7 | Python, shell | not uploaded |
-| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 19 | C++, other, HTML | deploy.yml → home/bar/labs |
+| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 221 | pictures, C++, other | deploy.yml → home/bar/labs |
 | `labs/draw/` | The draw lab's program (draw_lab.cpp, scene_shader.h): the light lab's baked room drawn with the one light formula on WebGPU or WebGL2, for its page (labs/web/draw/). | 3 | C++ | deploy.yml → home/bar/labs |
+| `labs/next/` | The bar on the new engine (next_app.cpp, next_shader.h): the baked bar (tools/native/bake_tool.cpp writePlace) drawn with its clusters on WebGPU or WebGL2 and walked through, for its page (labs/web/next/, opened by the bar's ?engine=next). | 2 | C++ | deploy.yml → home/bar/labs |
 | `labs/physics/` | The physics lab's program (physics_lab.cpp): the two stools as bodies; lit live while they move, the light around them worked out again in the browser when they rest (settle and repair), for its page (labs/web/physics/). | 1 | C++ | deploy.yml → home/bar/labs |
-| `labs/web/` | The labs' pages, copied to the site at /bar/labs/: the list of labs and each lab's page (words/: the word lab; light/: the light lab, with its baked pictures in data/; draw/: the draw lab, with the baked room and the repair data in data/; physics/: the physics lab). | 14 | other, HTML, pictures | deploy.yml → home/bar/labs |
+| `labs/web/` | The labs' pages, copied to the site at /bar/labs/: the list of labs and each lab's page (words/: the word lab; light/: the light lab, with its baked pictures in data/; draw/: the draw lab, with the baked room and the repair data in data/; physics/: the physics lab; next/: the bar on the new engine, its bake in data/). | 214 | pictures, other, HTML | deploy.yml → home/bar/labs |
 | `labs/words/` | The word lab's program (words_lab.cpp): Looped Script's words compiled to WebAssembly for its page (labs/web/words/). | 1 | C++ | deploy.yml → home/bar/labs |
 | `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 155 | C++, WGSL, HTML | deploy.yml → home/bar |
 | `looped/apps/` | Programs built on the engine alone (J86): the place viewer (looped/apps/viewer, served at /bar/looped/). | 2 | HTML, C++ | deploy.yml → home/bar |

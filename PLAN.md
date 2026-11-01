@@ -64,13 +64,10 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - [x] **J116.3** Worlds in words and the light lab: places and things as sentences placed by place words; the lab room baked per light channel and relit by its words, matching the reference within a set error *Check:* The light lab page: the room from its sentences, its baked light beside the reference
 - [x] **J116.4** The draw lab: one drawing interface with WebGPU and WebGL2 backends; the lab drawn the same on both; a clear page for a browser with neither *Check:* The draw lab on Firefox for Android and an older iPhone
 - [x] **J116.5** The physics lab: furniture as bodies; what comes to rest joins the baked room and only the light around it is worked out again *Check:* Knock the stool over in the lab: the light around it settles, nothing stutters
-- [ ] **J116.6** The bar inherits it all: its world, lights and behaviours in words, baked, drawn by the skeleton on both kinds of browser, behind ?engine=next *Check:* The bar on the new skeleton on your phone, every frame drawn
-- [ ] **J116.7** Tune: quality levels as light-map sizes; the look matched to the liked screenshot *Check:* The user says it looks right
-- [ ] **J116.8** The switch, when the user says: the skeleton becomes the live bar; the old renderer, lighting and JSON world files retired *Check:* The live bar on the new skeleton
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (the user's notes of 2026-10-26 #13 first: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
+**Up next, in order:** J118 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J118 first: the new engine finished and the switch, request 2026-11-01 #6; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -181,6 +178,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
+- [ ] **J118** The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
+  *Verdict:* Doable now — J116 shipped the skeleton, the labs and the bar drawn by the new engine at a hidden link; this finishes it
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5

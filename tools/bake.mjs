@@ -7,7 +7,7 @@ import { statSync, existsSync, mkdirSync } from 'node:fs';
 import { LIGHT_SOURCES } from './lib/native_sources.mjs';
 
 const out = 'build/native/bake_tool';
-const srcs = `tools/native/bake_tool.cpp looped/bake/unwrap.cpp looped/bake/probes.cpp ${LIGHT_SOURCES}`.split(' ');
+const srcs = `tools/native/bake_tool.cpp looped/bake/unwrap.cpp looped/bake/probes.cpp looped/draw/clusters.cpp bar/light_rig.cpp looped/words/rig.cpp looped/words/syntax.cpp looped/words/program.cpp ${LIGHT_SOURCES}`.split(' ');
 const deps = [...srcs, 'tools/native/light_tool.cpp', 'looped/bake/unwrap.h', 'looped/bake/probes.h', 'looped/bake/light_paths.h', 'looped/bvh.h', 'looped/scene_geometry.h', 'bar/bar_scene.h'];
 mkdirSync('build/native', { recursive: true });
 const stale = !existsSync(out) || deps.some((f) => statSync(f).mtimeMs > statSync(out).mtimeMs);

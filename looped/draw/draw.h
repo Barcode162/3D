@@ -30,7 +30,7 @@ enum class Backend { kNone, kWebGpu, kWebGl2 };
 const char* backendName(Backend b);  // "WebGPU", "WebGL2", "none"
 
 enum class Format { kRgba8, kRgba16f };
-enum class Attr { kFloat2, kFloat3, kFloat4, kUnorm8x4, kUint8x4 };
+enum class Attr { kFloat2, kFloat3, kFloat4, kUnorm8x4, kUint8x4, kHalf4, kUnorm16x2 };
 
 struct VertexLayout {
   uint32_t stride = 0;
@@ -61,13 +61,16 @@ class Device {
   virtual void resize(uint32_t* width, uint32_t* height) = 0;
   virtual Handle vertexBuffer(const void* data, size_t bytes) = 0;
   virtual Handle indexBuffer(const uint32_t* data, size_t count) = 0;
-  virtual Handle texture(int width, int height, Format f, const void* data) = 0;
+  // `repeat`: the picture tiles past its edges (a counter's wood grain); else its edges stretch.
+  virtual Handle texture(int width, int height, Format f, const void* data, bool repeat = false) = 0;
   virtual Handle pipeline(const PipelineDesc& d) = 0;
   // New contents for a texture made by texture() (same size and format), or
   // for part of a vertex buffer (J116.5: the light repaired around a thing
   // that moved, the thing's own corners).
   virtual void updateTexture(Handle t, int width, int height, Format f, const void* data) = 0;
   virtual void updateVertices(Handle b, size_t offset, const void* data, size_t bytes) = 0;  // offset and bytes: whole 4-byte words
+  // New contents for the start of an index buffer (J116.6: the clusters picked for this view).
+  virtual void updateIndices(Handle b, const uint32_t* data, size_t count) = 0;
   // A frame: clear the screen (and depth), then draws, then present.
   virtual bool begin(const float clear[4]) = 0;
   // `uniforms` (std140, at most 4096 bytes) for this draw only.
