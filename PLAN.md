@@ -275,6 +275,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
+- (this push) J118.1, J118.2, J118.3: The new engine's bar at the hidden link, carried on: the bar written in words (one line a thing), its lights alive (they breathe and buzz, Lights down and Music), round things smooth, Colour and Quality buttons, and a smaller download (13 MB); today's bar stays the main one; the switch is J119 → c69a6c2^..0cd70b5
 - `4f914fe` J116.2, J116.3, J116.4, J116.5: Looped rebuilt, first half: the new engine draws on WebGPU or WebGL2 (every browser), its own Nanite-like detail (only what's seen gets triangles), a model spec every model meets, the labs, and the whole bar drawn by it at a hidden link (/bar/?engine=next); the rest is J118 → ac817cf^..b4cd055
 - `285c547` J117.1, J117.2, J117.3, J117.4, J117.5, J117.6, J117.7, J117.8, J117.9, J117.10, J117.11, J117.12, J117.13: 4K Mania upgrade: a smooth song clock (notes glide evenly, taps judged at their exact time), a gesture guard and lighter frames while playing, the finger test and the sound sync, a smaller combo with no circle, osu!mania's real star rating, and the Training pack: 30 hard-hitting new songs and 30 maps in ten stages from 2 to 7 stars → f974ddc^..27e76f8
 - `ba18f3c` J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2

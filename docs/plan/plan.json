@@ -1131,6 +1131,10 @@
  "doneIntro": "*Newest first: build code, the pieces, the commits. \"undo\" reverts one line.*",
  "done": [
   {
+   "build": null,
+   "text": "J118.1, J118.2, J118.3: The new engine's bar at the hidden link, carried on: the bar written in words (one line a thing), its lights alive (they breathe and buzz, Lights down and Music), round things smooth, Colour and Quality buttons, and a smaller download (13 MB); today's bar stays the main one; the switch is J119 → c69a6c2^..0cd70b5"
+  },
+  {
    "build": "4f914fe",
    "text": "J116.2, J116.3, J116.4, J116.5: Looped rebuilt, first half: the new engine draws on WebGPU or WebGL2 (every browser), its own Nanite-like detail (only what's seen gets triangles), a model spec every model meets, the labs, and the whole bar drawn by it at a hidden link (/bar/?engine=next); the rest is J118 → ac817cf^..b4cd055"
   },
