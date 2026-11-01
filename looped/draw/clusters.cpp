@@ -146,10 +146,19 @@ std::vector<std::vector<uint32_t>> partition(const std::vector<Vec3>& pos, const
           if (!used[u]) frontier.push({length(mid[u] - cc), u});
     };
     take(order[next].second);
-    while (static_cast<int>(c.size()) < most && !frontier.empty()) {
-      const uint32_t t = frontier.top().second;
-      frontier.pop();
-      if (!used[t]) take(t);
+    size_t scan = next;
+    while (static_cast<int>(c.size()) < most) {
+      if (!frontier.empty()) {
+        const uint32_t t = frontier.top().second;
+        frontier.pop();
+        if (!used[t]) take(t);
+        continue;
+      }
+      // Nothing touching left (a shelf of separate books): the next loose
+      // triangle nearby (in Morton order) joins, so loose pieces share clusters.
+      while (scan < n && used[order[scan].second]) ++scan;
+      if (scan >= n) break;
+      take(order[scan].second);
     }
     out.push_back(std::move(c));
   }
