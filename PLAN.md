@@ -58,16 +58,15 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J116 · One light formula, every browser, the first script** (the engine). Looped, rebuilt (request 2026-10-27 #13): the engine's skeleton as separate pieces (words, world, light, drawing, physics), each perfected in its own lab, and the language everywhere (places, things, lights and behaviours as sentences; every word a script made of other words, #10, #11); one light formula on WebGL2 and WebGPU (#7, #8, #9); the bar inherits it all and today's bar stays live until the user says switch (#12, #13) · N1 N2 N3
-- [x] **J116.1** The reference: our own path tracer renders a world with every light correct, the standard every step is measured against *Check:* The reference pictures, side by side with today's bar
-- [x] **J116.2** The word lab: the language core, every word a script made of other words (thing, describing, doing, place, cause and amount words), the first dictionary, one meaning per sentence, errors with line and fix hint, the safe runner, a page to try phrases *Check:* On the word lab page, type a warm candle that flickers: it shows what it means and does
-- [x] **J116.3** Worlds in words and the light lab: places and things as sentences placed by place words; the lab room baked per light channel and relit by its words, matching the reference within a set error *Check:* The light lab page: the room from its sentences, its baked light beside the reference
-- [x] **J116.4** The draw lab: one drawing interface with WebGPU and WebGL2 backends; the lab drawn the same on both; a clear page for a browser with neither *Check:* The draw lab on Firefox for Android and an older iPhone
-- [x] **J116.5** The physics lab: furniture as bodies; what comes to rest joins the baked room and only the light around it is worked out again *Check:* Knock the stool over in the lab: the light around it settles, nothing stutters
+**J118 · The new engine, finished** (the engine). The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
+- [ ] **J118.1** The bar's world in words, made from a converter with a test that it equals today's *Check:* The bar on the new engine looks the same as before; the words file reads like a list of the bar's things
+- [ ] **J118.2** The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down) *Check:* /bar/?engine=next: the neon buzzes, the bulbs breathe
+- [ ] **J118.3** Tune: quality levels, smooth round things, small things lit right, the look you like (less warm) *Check:* The new-engine bar looks as you like on your phone, smooth at every level
+- [ ] **J118.4** The switch, when you say: the new engine becomes the live bar with everything the bar does; the old renderer retired *Check:* joshuavelasco.com/bar opens the new engine on every browser
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J118 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J118 first: the new engine finished and the switch, request 2026-11-01 #6; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
+**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J118 first: the new engine finished and the switch, request 2026-11-01 #6; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -178,8 +177,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
-- [ ] **J118** The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
-  *Verdict:* Doable now — J116 shipped the skeleton, the labs and the bar drawn by the new engine at a hidden link; this finishes it
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
