@@ -802,6 +802,7 @@ window.bar3dUi = (function () {
       el('div', { class: 'mSmall', style: 'white-space:pre-line', text:
       'Piano: Salamander Grand Piano V3 by Alexander Holm (CC BY 3.0, creativecommons.org/licenses/by/3.0), shortened and re-encoded.\n' +
       'Music: Kevin MacLeod (incompetech.com), CC BY 4.0.\n' +
+      '4K Mania Training: "Chiptune Speedway", "Midnight Stomp", "Hover Pit", "Flaming Skulls", "Thunder on the Floor", "Basic Wobblefest", "Breaking Back into the Wubs", "Running Rage", "Back to the Grime", "Spiral Flight", "Shattered Bass", "Pixel Warrior", "Racket and Bang", "War Horse", "The Freakazoid Race", "Final Lap", "Brutal Sines", "Up For a Race", "Let the Drumz Out", "Heat Grind", "Storm Wind", "Speed Run Acrobatics", "Low Rez Death March", "Launch Into It", "Celebrate with Eight", "Flamethrower", "A New Monstrosity", "Low Rez Fury", "Into the Machine", "Frankensynth", by TeknoAXE (teknoaxe.com), CC BY 4.0 (creativecommons.org/licenses/by/4.0), shortened with a fade-out.\n' +
       'Models and textures: Poly Haven (CC0) and our own.\n' +
       'Books: public-domain works from Project Gutenberg\'s texts.' })]);
   }

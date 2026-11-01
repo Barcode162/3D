@@ -37,6 +37,7 @@
 // Chapters: world, site, engine, tools, backbone. Verdict kinds: now, after
 // (with --after), cost, experiment, impossible, rule.
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { load, write, render, parseVerdict, VERDICTS, PARTS, CHAPTERS, PLAN_MD } from './lib/plandata.mjs';
 export { PARTS, CHAPTERS };
 
@@ -233,7 +234,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const spec = [which, item?.formerly].filter(Boolean).map((t) => `docs/plan/jobs/${t}.md`).find((f) => { try { readFileSync(f); return true; } catch { return false; } });
       if (spec) console.log(`  its spec: ${spec}: the verdict must agree with its decisions`);
     } else if (cmd === 'nextid') {
-      console.log(nextId(plan));
+      // Never a number already used anywhere: the plan, the job specs, and the
+      // job branches on GitHub (another session's job may not be on main yet;
+      // incident 2026-10-28-job-number-reused).
+      let n = +nextId(plan).slice(1);
+      try { for (const f of readdirSync('docs/plan/jobs')) { const m = /^J(\d+)\.md$/.exec(f); if (m) n = Math.max(n, +m[1] + 1); } } catch {}
+      try {
+        const heads = execSync('git ls-remote --heads origin "job/*"', { encoding: 'utf8', timeout: 20000, stdio: ['ignore', 'pipe', 'ignore'] });
+        for (const m of heads.matchAll(/refs\/heads\/job\/J(\d+)/g)) n = Math.max(n, +m[1] + 1);
+      } catch {}
+      console.log(`J${n}`);
     } else if (cmd === 'rule') {
       const old = flags('replaces')[0];
       if (old) {

@@ -1157,10 +1157,26 @@ void phaseNetIn(FrameIn& f) {
   }
 }
 
+// While 4K Mania is open (J117.4) it draws only its own layer, so: one frame
+// queued on the GPU (a tap shows on the next frame, not two later) and no
+// 30-a-second cap from Power → Cooler, so it can keep up with a 120 Hz screen.
+void maniaFramePacing() {
+  static bool was = false;
+  const bool open = g_app.rhythm.isOpen();
+  if (open == was) return;
+  was = open;
+  const double testFps = g_app.hooks.number("fps", 0);  // the tests' ?fps= wins
+  g_app.gpu.maxFramesInFlight = open ? 1 : 2;
+  g_app.gpu.maxFps = testFps > 0 ? testFps
+                     : !open && g_app.quality.power() == engine::QualityController::kCooler ? 30 : 0;
+  LOG_INFO("4K Mania: %s.", open ? "one frame queued, no frame cap" : "frames back to the bar's pacing");
+}
+
 void phaseGames(FrameIn& f) {
   PROFILE(engine::Phase::kGames);
   g_app.piano.update(f.nowMs, f.world, f.events);
   g_app.bartender.update(f.nowMs, f.world);
+  maniaFramePacing();
 }
 
 // The room's answers about seats and machines: if it gave them to someone

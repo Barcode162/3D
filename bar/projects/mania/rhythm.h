@@ -27,6 +27,11 @@ class RhythmGame {
   struct SongChoice {
     std::string title, artist, url;
     float seconds = 0;  // length (0 = not known)
+    // A Training map (J117.9): its chart file and where it sits in the pack.
+    std::string packId, chartUrl, skill, about, licence;
+    int stage = 0;
+    float packStars = 0;
+    bool pack() const { return !packId.empty(); }
   };
   // The game's own songs (assets/music/rhythm/).
   static std::vector<SongChoice> builtInSongs();
@@ -56,7 +61,7 @@ class RhythmGame {
   static void drawCabinet(engine::TextRenderer& text, const engine::Vec3 corners[4], const float state[5], double nowMs);
 
  private:
-  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults };
+  enum class State { kClosed, kMenu, kLoading, kAnalyzing, kWaitTap, kPlaying, kResults, kTest, kSync };
   enum Judge { kMax, k300, k200, k100, k50, kMiss, kJudgeCount };
   struct Note {
     double time, end;  // end > 0: a hold note
@@ -64,6 +69,7 @@ class RhythmGame {
     bool judged = false;      // the head (or the tap)
     bool holding = false;     // a hold note being held now
     bool tailDone = false;    // a hold note's end judged
+    bool ticked = false;      // autoplay's tick scheduled (J117.8)
     Judge headJudge = kMiss;
   };
   struct Burst {
@@ -81,7 +87,7 @@ class RhythmGame {
   };
   // The song select's layout (device pixels), portrait or landscape.
   struct MenuLayout {
-    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin;
+    Rect info, diff[kDifficultyCount], speedDown, speedUp, play, back, wheel, autoBtn, skin, test, sync, tabSongs, tabPack;
     float card = 0;  // a wheel card's height
   };
 
@@ -93,10 +99,25 @@ class RhythmGame {
   void menuSwipe(float dy, float W, float H);
   void resultsPress(engine::Vec2 p, float W, float H);
   void pickSong(int index);
+  // Songs or Training (J117.9): the wheel shows one or the other.
+  void setTraining(bool on);
+  void rebuildView();
+  int viewPos(int song) const;           // where a song sits on the wheel
+  void pickPos(int pos);                 // pick by wheel position
+  void loadPack();                       // the Training pack's list (once)
+  void addPackSongs();
+  bool cleared(int song) const;          // a Training map passed at 95 %
   MenuLayout menuLayout(float W, float H) const;
   void drawMenu(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawPlay(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
   void drawResults(engine::TextRenderer& text, float W, float H, float px) const;
+  // The finger and frame test (J117.1): every finger, lost and late
+  // touches, freezes, the frame rate and the sound clock's steps.
+  void openTest(double nowMs);
+  void updateTest(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H);
+  void drawTest(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  Rect testButton(int i, float W, float H) const;  // 0 back, 1 send report, 2 gesture guard
+  std::string testSummary() const;
   // Playfield layout in device pixels.
   float columnWidth(float W, float H) const;
   float laneX(int lane, float W, float H) const;  // the column's middle
@@ -139,7 +160,9 @@ class RhythmGame {
   bool analyzeShown_ = false;  // the "making the chart" text was drawn once
   std::vector<Note> notes_;
   size_t firstOpen_ = 0;       // first note that may still be unjudged
-  double songTime_ = -1000;
+  double songTime_ = -1000;    // the song's time at this frame (the smooth clock, J117.2)
+  double drawLead_ = 0.0167;    // notes are drawn for when the frame reaches the screen (s)
+  double lastPlayFrameMs_ = 0;
   double duration_ = 0;
   double bpm_ = 0;
   int counts_[kJudgeCount] = {};
@@ -163,8 +186,48 @@ class RhythmGame {
   double finishMs_ = 0;
   bool newBest_ = false;
   std::map<std::string, Best> best_;            // per song + difficulty (also kept on the phone)
-  std::map<std::string, Chart> charts_;         // made this session (url + difficulty)
+  std::map<std::string, Chart> charts_;         // made this session (url + difficulty), or a Training map's (packId)
+  bool training_ = false;                       // the wheel shows the Training pack
+  std::vector<int> view_;                       // the songs on the wheel (indices into songs_)
+  std::vector<SongChoice> packSongs_;           // the Training maps (assets/music/rhythm/pack/pack.json)
+  int packState_ = 0;                           // 0 not asked, 1 loading, 2 ready, 3 failed
+  std::map<std::string, int> chartLoads_;       // a Training map's chart: 1 loading, 2 ready, 3 failed
   std::map<std::string, float> starCache_;      // star rating per song + difficulty, once charted
+  // The finger and frame test's numbers (since it opened).
+  struct TestFinger {
+    engine::Vec2 pos;
+    int lane;
+    double ms;
+  };
+  struct TestStats {
+    double openMs = 0, lastFrameMs = 0, maxGapMs = 0;
+    int frames = 0, gaps50 = 0;                  // frames, and gaps over 50 ms (a visible freeze)
+    double fpsFrom = 0;
+    int fpsFrames = 0;
+    float fps = 0;
+    int presses = 0, maxDown = 0, lost = 0, late = 0;  // late: seen over 2 frames after the touch
+    double sumDelayMs = 0, maxDelayMs = 0;       // touch → the frame that read it
+    double lastAudio = -1;
+    int audioFrames = 0, audioStill = 0;          // frames where the sound clock didn't move
+    double audioMaxStepMs = 0;
+  } test_;
+  std::map<int, TestFinger> testFingers_;
+  double lastTestLogMs_ = 0;
+  // The sync (J117.6): tap along to clicks; the median of how late you tap
+  // is the delay of your phone and headphones, taken off the song's time.
+  void openSync();
+  void updateSync(double nowMs, const std::vector<engine::Input::RawPress>& presses, float W, float H);
+  void drawSync(engine::TextRenderer& text, float W, float H, float px, double nowMs) const;
+  Rect syncButton(int i, float W, float H) const;  // 0 back, 1 -5 ms, 2 +5 ms, 3 save
+  double syncMeasuredMs() const;                   // the median so far (needs a few taps)
+  double offsetMs_ = 0;          // rhOffset: the sound's delay, ms (positive: heard later)
+  double syncOffsetMs_ = 0;      // the value being set
+  std::vector<double> syncErrors_;
+  static constexpr double kSyncBpm = 100, kSyncFirst = 1.0;
+  static constexpr int kSyncBeats = 48;
+  bool guard_ = true;          // the gesture guard while playing (rhGuard, J117.3)
+  bool guardOn_ = false;       // what the page was last told
+  void syncGuard();
 };
 
 }  // namespace app

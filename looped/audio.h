@@ -76,13 +76,22 @@ class Track {
  public:
   enum class State { kNone, kLoading, kReady, kFailed };
   static void load(const std::string& url);
+  // A click track instead (sync tools): `beats` clicks at `bpm`, the first
+  // at `firstSeconds`; ready at once.
+  static void loadClicks(double bpm, int beats, double firstSeconds);
   static State state();
   // The song as mono samples (call once when ready; the copy is freed in
   // the browser afterwards). `rate` = samples per second.
   static std::vector<float> takeSamples(float& rate);
   static bool play(double delaySeconds);  // false if sound isn't unlocked yet
   static double time();       // seconds into the song as heard (< 0 before it starts)
+  // The same at page time `ms` (the frame's time, a touch's time): one smooth
+  // clock for the picture and the taps (J117.2).
+  static double timeAt(double ms);
   static double duration();
+  // A short tick at a song time, scheduled on the song's clock (checking a
+  // chart's timing by ear).
+  static void tick(double songTime, bool accent);
   static void stop();
 };
 

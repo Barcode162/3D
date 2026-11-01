@@ -99,6 +99,8 @@ window.bar3dAudio = (function () {
   }
 
   function unlock() {
+    // Already running: just stop listening (nothing to do on every tap).
+    if (ctx && ctx.state === 'running') { removeUnlock(); return; }
     if (!ctx) {
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) { report('This browser has no Web Audio.'); return; }
@@ -448,6 +450,21 @@ window.bar3dAudio = (function () {
         t.state = 3;
       });
     },
+    // A click track instead of a song (4K Mania's sync, J117.6): `beats`
+    // clicks at `bpm`, the first `first` seconds in, every fourth higher.
+    // Sample-exact, played and timed like a song.
+    trackLoadClicks: function (bpm, beats, first) {
+      this.trackStop();
+      var c = decodeContext(), rate = c.sampleRate || 44100;
+      var len = Math.ceil((first + beats * 60 / bpm + 0.5) * rate);
+      var buf = c.createBuffer(1, len, rate), d = buf.getChannelData(0);
+      var n = Math.round(0.03 * rate);
+      for (var k = 0; k < beats; k++) {
+        var at = Math.round((first + k * 60 / bpm) * rate), f = k % 4 === 0 ? 1760 : 1175;
+        for (var i = 0; i < n && at + i < len; i++) d[at + i] = 0.8 * Math.sin(2 * Math.PI * f * i / rate) * Math.exp(-i / (0.006 * rate));
+      }
+      track = { state: 2, buffer: buf, mono: null, node: null, start: 0, url: 'clicks' };
+    },
     trackState: function () { return track.state; },
     trackLength: function () { return track.mono ? track.mono.length : 0; },
     trackRate: function () { return track.monoRate || (track.buffer ? track.buffer.sampleRate : 44100); },
@@ -469,15 +486,51 @@ window.bar3dAudio = (function () {
       src.connect(g);
       g.connect(bus('music'));  // the music volume slider applies to it too
       track.start = ctx.currentTime + delay;
+      track.clock = null;
       src.start(track.start);
       track.node = src;
       return true;
     },
-    // Seconds into the song as you hear it (negative before it starts).
-    trackTime: function () {
+    // Seconds into the song as you hear it (negative before it starts), at
+    // page time `perfMs` (performance.now(); default: now). The sound clock
+    // moves in steps of its buffer, so the song time runs on the page's
+    // precise timer instead and only eases toward the sound clock (3 % of the
+    // gap a call), snapping if they're over 50 ms apart (a pause, a seek):
+    // notes then move by the same step every frame (J117.2, like osu!'s
+    // interpolating clock).
+    trackTime: function (perfMs) {
       if (!ctx || !track.node) return -1000;
+      var now = performance.now();
+      if (perfMs === undefined) perfMs = now;
       var latency = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
-      return ctx.currentTime - track.start - latency;
+      var raw = ctx.currentTime - track.start - latency;
+      var c = track.clock;
+      if (!c || ctx.state !== 'running') {
+        track.clock = ctx.state === 'running' ? { perf: now, song: raw } : null;
+        return raw + (perfMs - now) / 1000;
+      }
+      var est = c.song + (now - c.perf) / 1000, err = raw - est;
+      c.song = Math.abs(err) > 0.05 ? raw : est + err * 0.03;
+      c.perf = now;
+      return c.song + (perfMs - now) / 1000;
+    },
+    // A tick at `songTime` (4K Mania's autoplay, J117.8): scheduled on the
+    // song's own clock, so it lands exactly where the chart's note is.
+    trackTick: function (songTime, accent) {
+      if (!ctx || !track.node || ctx.state !== 'running') return;
+      var at = track.start + songTime;
+      if (at < ctx.currentTime) return;
+      if (!track.tick) {
+        var n = Math.round(0.025 * ctx.sampleRate), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.sin(2 * Math.PI * 2093 * i / ctx.sampleRate) * Math.exp(-i / (0.004 * ctx.sampleRate));
+        track.tick = b;
+      }
+      var src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = track.tick;
+      g.gain.value = accent ? 0.55 : 0.35;
+      src.connect(g);
+      g.connect(ctx.destination);
+      src.start(at);
     },
     trackDuration: function () { return track.buffer ? track.buffer.duration : 0; },
     trackStop: function () {

@@ -23,6 +23,7 @@ declare -A TESTS=(
   [entity_test]="tools/native/entity_test.cpp bar/entities.cpp $SCENE"
   [proto_test]="tools/native/proto_test.cpp looped/netproto.cpp looped/json.cpp"
   [chess_test]="tools/native/chess_test.cpp bar/projects/chess/chess_rules.cpp"
+  [mania_test]="tools/native/mania_test.cpp bar/projects/mania/stars.cpp bar/projects/mania/pack.cpp looped/json.cpp"
   [activity_test]="tools/native/activity_test.cpp bar/activity.cpp"
   [interaction_test]="tools/native/interaction_test.cpp bar/interaction.cpp"
   [world_test]="tools/native/world_test.cpp looped/world/loop.cpp looped/world/kind.cpp looped/world/world.cpp looped/json.cpp"
