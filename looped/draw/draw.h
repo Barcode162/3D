@@ -1,0 +1,80 @@
+#pragma once
+// The drawing piece of the new skeleton (J116.4; the plan:
+// docs/plan/jobs/J116.md → The skeleton): one small interface, two
+// backends. WebGPU where the browser has it (Chrome, Edge, Safari 26), WebGL2
+// everywhere else (about every browser since 2021), so anyone can play
+// (request 2026-10-27 #7). The new frame needs no compute shaders (the light
+// is baked: looped/bake/), so both backends draw the same picture from the
+// same few calls:
+//
+//   a vertex buffer and an index buffer, textures (RGBA8, RGBA16F), one
+//   uniform block per draw (fixed slots, std140 layout), pipelines made from
+//   a WGSL and a GLSL ES 3.0 copy of the same shader, passes that clear and
+//   draw into the screen.
+//
+// WebGPU groups resources in bind groups and keeps textures and samplers
+// apart; WebGL2 binds each texture and uniform block one by one. The
+// interface names fixed slots (uniform block 0, textures 0..3), and each
+// backend maps them its own way: WGSL group 0 binding 0 is the uniforms,
+// bindings 1 + 2k / 2 + 2k are texture k and its sampler; GLSL has the
+// uniform block "U" at binding 0 and samplers "tex0".."tex3".
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace engine::draw {
+
+enum class Backend { kNone, kWebGpu, kWebGl2 };
+const char* backendName(Backend b);  // "WebGPU", "WebGL2", "none"
+
+enum class Format { kRgba8, kRgba16f };
+enum class Attr { kFloat2, kFloat3, kFloat4, kUnorm8x4, kUint8x4 };
+
+struct VertexLayout {
+  uint32_t stride = 0;
+  struct Item {
+    Attr type;
+    uint32_t offset;
+  };
+  std::vector<Item> items;  // location i = items[i]
+};
+
+struct PipelineDesc {
+  std::string wgsl;  // entry points vs_main, fs_main
+  std::string glsl;  // vertex and fragment in one text, split at "//--- fragment"
+  VertexLayout layout;
+  int textures = 0;     // how many texture slots it reads (0..4)
+  bool depth = true;
+  bool cullBack = false;
+  std::string label;
+};
+
+using Handle = uint32_t;  // 0 = none
+
+class Device {
+ public:
+  virtual ~Device() = default;
+  virtual Backend backend() const = 0;
+  // The drawing size (device pixels) for this frame; resizes the canvas to its CSS size.
+  virtual void resize(uint32_t* width, uint32_t* height) = 0;
+  virtual Handle vertexBuffer(const void* data, size_t bytes) = 0;
+  virtual Handle indexBuffer(const uint32_t* data, size_t count) = 0;
+  virtual Handle texture(int width, int height, Format f, const void* data) = 0;
+  virtual Handle pipeline(const PipelineDesc& d) = 0;
+  // A frame: clear the screen (and depth), then draws, then present.
+  virtual bool begin(const float clear[4]) = 0;
+  // `uniforms` (std140, at most 4096 bytes) for this draw only.
+  virtual void drawIndexed(Handle pipeline, Handle vertices, Handle indices, uint32_t count, const void* uniforms, size_t uniformBytes,
+                           const Handle* textures, int textureCount) = 0;
+  virtual void end() = 0;
+  // Something went wrong (a shader didn't build): the first problem, in words.
+  std::string problem;
+};
+
+// Makes the device for the canvas: WebGPU if the browser has it (unless
+// `forceGl`), else WebGL2; `ready` gets null when neither works.
+void create(const char* canvasSelector, bool forceGl, std::function<void(std::unique_ptr<Device>)> ready);
+
+}  // namespace engine::draw

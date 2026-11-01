@@ -42,6 +42,7 @@ export const CHECKS = {
   menu:     [['menu', `${NP} node tools/menu_test.mjs`], ['menu_games', `${NP} node tools/menu_games_test.mjs`]],
   avatar:   [['avatar', `${NP} node tools/avatar_test.mjs`]],
   voice:    [['voice', `${NP} node tools/voice_test.mjs`]],
+  labs:     [['labs', `${NP} node tools/labs_test.mjs`]],  // J116: the word, light and draw labs (WebGPU and WebGL2 the same picture)
 };
 // Which systems a changed file needs (first match wins; unknown files → game).
 export const RULES = [
@@ -67,6 +68,7 @@ export const RULES = [
   [/^studio\/|^tools\/studio/, ['build', 'studio']],
   // The Studio is parked (J114, request 2026-10-27 #3): a world change no
   // longer runs its tests; a change to the Studio itself still does.
+  [/^labs\/|^looped\/(words|bake|draw)\/|^tools\/(labs|words|bake)\.mjs$|^tools\/labs_test|^assets\/words\//, ['build', 'native', 'labs']],  // the new skeleton's labs (J116): not in the live bar until the switch
   [/^assets\/world\//, ['build', 'native', 'game']],
   [/^bar\/studio_mode/, ['build', 'native', 'game', 'studio']],
   [/^cloud\/|^proto\//, ['room', 'build', 'native']],
@@ -89,6 +91,7 @@ export const NOT_ON_CI = {
   'tools/playbook_test.mjs': 'it checks the Playbook against the tools, nothing that deploys; it runs in every quick check before a piece is committed',
   'tools/handbook.mjs': 'it checks the Handbook against the files (generated pages current, folders described, links); it runs in every quick check',
   'tools/locks_test.mjs': 'it checks the locks of the work machine (git hooks, Claude Code hooks), nothing that deploys; it runs in every quick check',
+  'tools/labs_test.mjs': 'the labs (J116) are not the live bar until the user switches; it runs with every piece that changes them (check.mjs changed)',
 };
 // Test files that aren't in CHECKS at all, and why.
 export const NOT_LISTED = {

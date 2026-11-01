@@ -68,7 +68,7 @@
     "id": "J116.4",
     "text": "The draw lab: one drawing interface with WebGPU and WebGL2 backends; the lab drawn the same on both; a clear page for a browser with neither",
     "check": "The draw lab on Firefox for Android and an older iPhone",
-    "done": false
+    "done": true
    },
    {
     "id": "J116.5",

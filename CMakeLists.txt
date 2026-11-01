@@ -13,10 +13,10 @@ endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS looped/*.cpp)
 list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/apps/")  # programs built on the engine (below)
-# The new skeleton's pieces (J116, Looped rebuilt): the words and the baker
-# are built into their labs (below), not into the live bar, until the user
-# switches (J116.8).
-list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/(words|bake)/")
+# The new skeleton's pieces (J116, Looped rebuilt): the words, the baker and
+# the drawing piece are built into their labs (below), not into the live
+# bar, until the user switches (J116.8).
+list(FILTER ENGINE_SOURCES EXCLUDE REGEX "/looped/(words|bake|draw)/")
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS bar/*.cpp)
 list(FILTER APP_SOURCES EXCLUDE REGEX "/bar/light_rig\\.cpp$")  # the bar's rig in words: J116.6
 
@@ -187,6 +187,21 @@ add_custom_command(OUTPUT ${SITE}/labs/words/words_lab.js ${SITE}/labs/words/wor
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:words_lab>/words_lab.js $<TARGET_FILE_DIR:words_lab>/words_lab.wasm ${SITE}/labs/words
                    VERBATIM)
 list(APPEND SITE_OUTPUTS ${SITE}/labs/words/words_lab.js ${SITE}/labs/words/words_lab.wasm)
+# The draw lab (J116.4): the drawing piece (looped/draw/) on WebGPU or WebGL2.
+file(GLOB DRAW_SOURCES CONFIGURE_DEPENDS looped/draw/*.cpp)
+add_executable(draw_lab labs/draw/draw_lab.cpp ${DRAW_SOURCES} looped/world/loop.cpp looped/json.cpp)
+target_include_directories(draw_lab PRIVATE ${CMAKE_SOURCE_DIR})
+target_compile_options(draw_lab PRIVATE -Wall -Wextra -Werror --use-port=emdawnwebgpu)
+target_link_options(draw_lab PRIVATE
+  --use-port=emdawnwebgpu -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1
+  "-sEXPORTED_FUNCTIONS=_main,_dl_lightsDown,_dl_alive,_dl_exposure,_dl_spot"
+  "-sEXPORTED_RUNTIME_METHODS=ccall"
+  $<IF:$<CONFIG:Release>,-O3,-g>)
+add_custom_command(OUTPUT ${SITE}/labs/draw/draw_lab.js ${SITE}/labs/draw/draw_lab.wasm DEPENDS draw_lab
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${SITE}/labs/draw
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:draw_lab>/draw_lab.js $<TARGET_FILE_DIR:draw_lab>/draw_lab.wasm ${SITE}/labs/draw
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/labs/draw/draw_lab.js ${SITE}/labs/draw/draw_lab.wasm)
 site_copy(${CMAKE_SOURCE_DIR}/labs/web "labs/")
 
 add_custom_target(site ALL DEPENDS ${SITE_OUTPUTS})

@@ -3,6 +3,7 @@
   "entries": [
     { "path": "bar/", "workflow": "deploy.yml", "to": "home/bar", "how": "built into the game (cmake), then uploaded" },
     { "path": "looped/", "workflow": "deploy.yml", "to": "home/bar", "how": "the engine, built into the game" },
+    { "path": "labs/", "workflow": "deploy.yml", "to": "home/bar/labs", "how": "the new engine's labs (J116): built into the site at /bar/labs/ with the game (cmake), then uploaded" },
     { "path": "assets/", "workflow": "deploy.yml", "to": "home/bar", "how": "the built-in world and models, packed into the game" },
     { "path": "CMakeLists.txt", "workflow": "deploy.yml", "to": "home/bar", "how": "how the game is built" },
     { "path": "server/", "workflow": "deploy.yml", "to": "home/bar", "how": "account.php, report.php, gate.php, gate.html, relay.php, .htaccess, sent by name next to the game" },
