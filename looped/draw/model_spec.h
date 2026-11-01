@@ -6,8 +6,11 @@
 // fix it. The tools check every model against them (node tools/clusters.mjs
 // spec); a model that breaks one is remade, not worked around. Plain C++.
 //
-// The shape rules (simplify, seams, pieces, open edges) apply to models of
-// 2,000 triangles or more: smaller ones are drawn whole.
+// Three rules must hold: a big model (2,000+ triangles) simplifies to a
+// quarter; no more triangles than its size needs; at most 8 materials with a
+// picture (plain colours cost nothing: the new frame keeps them per corner).
+// When a big model doesn't simplify, the usual causes are named with it:
+// texture seams, swarms of loose pieces, open edges.
 //
 // Measured after joining corners that share a position and a texture place
 // (the new frame shades by each triangle's own facing, so split normals
@@ -27,6 +30,7 @@ struct ModelMeasure {
   float openShare = 0;        // edges with a triangle on one side only (holes, open sheets)
   float simplestShare = 0;    // the simplest whole version, as a share of every triangle
   uint32_t materials = 0;
+  uint32_t pictured = 0;      // materials with a picture (plain colours are kept per corner in the new frame)
   float size = 0;             // its biggest side (metres)
 };
 
@@ -40,6 +44,7 @@ struct ModelRule {
 struct ModelProblem {
   const ModelRule* rule;
   std::string measured;  // "38% of corners on seams (at most 20%)"
+  bool cause = false;    // not a rule of its own: why M-SIMPLIFY failed
 };
 
 // The rules, in order.

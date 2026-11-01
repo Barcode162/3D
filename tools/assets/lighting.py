@@ -43,6 +43,19 @@ def pendant():
                           (0.04, -0.875), (0.02, -0.89), (0.0, -0.893)], bulb, 24)
     common.tube("Filament", [Vector((-0.012, -0.79, 0)), Vector((-0.006, -0.82, 0.004)), Vector((0, -0.79, 0)),
                              Vector((0.006, -0.82, -0.004)), Vector((0.012, -0.79, 0))], 0.0025, filament, sides=6)
+    # The bar's bulb lights hang 0.93 m below the mount (the scanned lamp's
+    # size): a longer cord puts this bulb there too (12 cm lower).
+    import bpy
+    from mathutils import Matrix
+    drop = 0.12
+    for o in bpy.context.scene.objects:
+        if o.type != "MESH" or o.name.startswith("Canopy"):
+            continue
+        if o.name.startswith("Cord"):  # stretched from the canopy down
+            k = (0.62 + drop) / 0.62
+            o.data.transform(Matrix.Translation((0, -0.03, 0)) @ Matrix.Scale(k, 4, (0, 1, 0)) @ Matrix.Translation((0, 0.03, 0)))
+        else:
+            o.data.transform(Matrix.Translation((0, -drop, 0)))
     common.finish_and_export(os.path.join(out_dir, "pendant_lamp.glb"), uv_scale={})
 
 
@@ -134,6 +147,8 @@ def candle():
     common.finish_and_export(os.path.join(out_dir, "candle.glb"), uv_scale={})
 
 
-# pendant(): replaced by Poly Haven's hanging lamp (J35.5, build_all.sh)
-neon_sign()
-candle()
+# Which to build (all by default): e.g. -- <tex> <out> pendant
+_which = sys.argv[sys.argv.index("--") + 1:][2:] or ["pendant", "neon_sign", "candle"]
+# The pendant is ours again (request 2026-11-01 #5: the scanned lamp of J35.5 broke the model spec).
+for _name in _which:
+    {"pendant": pendant, "neon_sign": neon_sign, "candle": candle}[_name]()

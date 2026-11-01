@@ -43,9 +43,8 @@ run stools.py "$tex" $out
 # The bar stools (J35.2): seat at 0.76 m (Poly Haven's is a counter stool,
 # 0.69 m), its back away from the counter (+z).
 ph bar_chair_round_01 bar_stool.glb --tris 8000 --height 0.825 --turn 180
-# The pendant lamps over the counter (J35.5): 80% size, hanging from their
-# top (lighting.py's own pendant is no longer used).
-ph hanging_industrial_lamp pendant_lamp.glb --tris 8000 --height 1.07 --hang
+# The pendant lamps over the counter: lighting.py's own (request 2026-11-01 #5:
+# the scanned lamp of J35.5 broke the model spec, looped/draw/model_spec.h).
 # The lounge's pieces from Poly Haven (J70): the Chesterfield sofa (1.1x), the
 # armchairs, the mantel clock, the painting above the mantel, the vase.
 ph sofa_02 chesterfield_sofa.glb --tris 6000 --height 0.78

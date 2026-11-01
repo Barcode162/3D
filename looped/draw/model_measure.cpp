@@ -72,6 +72,8 @@ ModelMeasure measureModel(const ModelData& m, std::vector<ClusterTree>* trees) {
   M.trianglesPerPart = M.parts ? static_cast<float>(M.triangles) / static_cast<float>(M.parts) : 0;
   M.simplestShare = M.triangles ? static_cast<float>(root) / static_cast<float>(M.triangles) : 0;
   M.materials = static_cast<uint32_t>(m.materials.size());
+  for (const ModelMaterial& mm : m.materials)
+    M.pictured += mm.baseColorImage >= 0 || mm.normalImage >= 0 || mm.emissiveImage >= 0 || mm.metalRoughImage >= 0 || mm.occlusionImage >= 0;
   const Vec3 ext = m.boundsMax - m.boundsMin;
   M.size = std::max({ext.x, ext.y, ext.z});
   return M;

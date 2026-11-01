@@ -11,7 +11,7 @@ posters, dartboard, menus, chalkboard) is drawn by the scripts themselves.
 | `bar_stool.glb`, `table_stool.glb` | `stools.py` | Leather Red 02, Fabric Leather 02 |
 | `round_table.glb` | `furniture.py` | Wood Table 001, Dark Wood, Leather Red 02 |
 | `jukebox.glb` | `jukebox.py` | Dark Wood |
-| `candle.glb` | `lighting.py` | none |
+| `candle.glb`, `pendant_lamp.glb` (ours again since 2026-11-01) | `lighting.py` | none |
 | `dartboard.glb`, `chalkboard.glb` | `decor.py` | Dark Wood, Wood Table 001 |
 | `pint_glass.glb`, `rocks_glass.glb` | `glasses.py` | none |
 | `hall.glb` (the new room shell) | `hall.py` | Herringbone Parquet, Red Brick 03, Brick Wall 006, Painted Plaster Wall, Plastered Wall 02, Dark Wood, Wood Table 001, Black Painted Planks, Concrete Floor Worn 001, Plywood, Rubber Tiles, Velour Velvet, Fabric Pattern 07 |
@@ -36,7 +36,6 @@ Whole models from [Poly Haven](https://polyhaven.com/models) (CC0), slimmed by
 
 | Model | Poly Haven model | Authors |
 |---|---|---|
-| `pendant_lamp.glb` | [Hanging Industrial Lamp](https://polyhaven.com/a/hanging_industrial_lamp) (80% size, its glass made see-through) | Kuutti Siitonen |
 | `chesterfield_sofa.glb` | [Sofa 02](https://polyhaven.com/a/sofa_02) (1.1x) | Kirill Sannikov |
 | `armchair.glb` | [Green Chair 01](https://polyhaven.com/a/GreenChair_01) | Kirill Sannikov |
 | `mantel_clock.glb` | [Mantel Clock 01](https://polyhaven.com/a/mantel_clock_01) | Yann Kervran, Rico Cilliers |

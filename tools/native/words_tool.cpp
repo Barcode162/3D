@@ -117,6 +117,7 @@ bool make(const std::string& name, std::string& json, Place& place) {
         it = checked.emplace(t->model, std::move(probs)).first;
       }
       for (const draw::ModelProblem& mp : it->second) {
+        if (mp.cause) continue;  // shown with the rule it explains, in the checker
         p.push_back({q.line, 1, "the model " + t->model + " (" + q.word + ") breaks " + mp.rule->id + ": " + mp.measured, mp.rule->fix, false});
         ok = false;
       }

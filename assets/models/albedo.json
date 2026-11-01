@@ -4874,27 +4874,66 @@
   }
  },
  "pendant_lamp.glb": {
-  "hanging_industrial_lamp": {
+  "Brass": {
    "albedo": [
-    0.2097,
-    0.2001,
-    0.1524
+    0.91,
+    0.7,
+    0.38
    ],
-   "emissive": [
-    0.4804,
-    0.4469,
-    0.3604
-   ],
-   "metal": 0.278
+   "metal": 1.0,
+   "rough": 0.4
   },
-  "hanging_industrial_lamp_glass": {
+  "Cloth cord": {
    "albedo": [
-    0.8,
-    0.8,
-    0.8
+    0.04,
+    0.03,
+    0.025
    ],
    "metal": 0.0,
-   "seeThrough": true
+   "rough": 0.95
+  },
+  "Edison bulb": {
+   "albedo": [
+    1.0,
+    0.75,
+    0.45
+   ],
+   "emissive": [
+    10.0,
+    6.2,
+    3.0
+   ],
+   "metal": 0.0
+  },
+  "Filament": {
+   "albedo": [
+    1.0,
+    0.8,
+    0.5
+   ],
+   "emissive": [
+    20.0,
+    17.0,
+    11.0
+   ],
+   "metal": 0.0
+  },
+  "Shade enamel": {
+   "albedo": [
+    0.9,
+    0.85,
+    0.75
+   ],
+   "metal": 0.0
+  },
+  "Shade steel": {
+   "albedo": [
+    0.03,
+    0.035,
+    0.03
+   ],
+   "metal": 0.8,
+   "rough": 0.45
   }
  },
  "piano.glb": {
@@ -6008,13 +6047,13 @@
   "Edison bulb": {
    "albedo": [
     1.0,
-    0.8,
-    0.5
+    0.98,
+    0.95
    ],
    "emissive": [
     9.0,
-    5.58,
-    2.52
+    8.73,
+    8.28
    ],
    "metal": 0.0
   }

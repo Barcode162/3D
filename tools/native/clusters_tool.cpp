@@ -59,11 +59,12 @@ int main(int argc, char** argv) {
       ++fail;
       failTris += tris;
       std::printf("%-26s %6u triangles:", f.c_str(), tris);
-      for (const auto& p : problems) std::printf("  %s %s;", p.rule->id, p.measured.c_str()), ++byRule[p.rule->id];
+      for (const auto& p : problems) std::printf(p.cause ? "  (because %s %s)" : "  %s %s;", p.rule->id, p.measured.c_str()), byRule[p.rule->id] += !p.cause;
       std::printf("\n");
     }
     std::printf("\n%d models meet the spec, %d don't (%.0f%% of all triangles)\n", pass, fail, 100.0 * failTris / std::max<uint64_t>(1, allTris));
-    for (const auto& r : draw::modelRules()) std::printf("  %-12s broken by %3d: %s\n", r.id, byRule[r.id], r.rule);
+    for (const auto& r : draw::modelRules())
+      if (r.rule[0] != '(') std::printf("  %-12s broken by %3d: %s\n", r.id, byRule[r.id], r.rule);
     return 0;
   }
   std::vector<std::pair<uint32_t, std::string>> big;
