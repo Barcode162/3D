@@ -24,7 +24,7 @@
 <body>
 <canvas id="canvas" aria-label="The bar, drawn by the new engine"></canvas>
 <div class="hud"><span>New engine · <span class="badge" id="backend">…</span></span><span class="stats" id="stats"></span></div>
-<div class="tools"><a id="switch" href="?gl=1">Try WebGL2</a><button type="button" id="detail">Detail: 1 px</button><a href="../">Labs</a></div>
+<div class="tools"><a id="switch" href="?gl=1">Try WebGL2</a><button type="button" id="detail">Detail: 1 px</button><button type="button" id="dim" aria-pressed="false">Lights down</button><button type="button" id="music" aria-pressed="false">Music</button><a href="../">Labs</a></div>
 <div class="problem" id="problem"></div>
 <div class="loading" id="loading">Coming into the bar…</div>
 <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
@@ -75,8 +75,25 @@
       Module.HEAPU8.set(bytes, ptr);
       Module._nx_place(ptr, bytes.length);
       Module._free(ptr);
+      return loadRig();
     }).catch(function (e) { window.nextStatus(document.getElementById('backend').textContent, 'The bar didn\'t load: ' + e.message); });
   };
+  // The lights alive (J118.2): the bar's rig and its lamps' names; the engine plays them each frame.
+  function loadRig() {
+    return Promise.all([fetch('data/rig.looped').then(function (r) { return r.text(); }), fetch('data/lamps.json').then(function (r) { return r.text(); })])
+      .then(function (t) { window.nextRig = Module.ccall('nx_rig', 'number', ['string', 'string'], [t[0], t[1]]); });
+  }
+  function toggle(id, on, off) {
+    var b = document.getElementById(id);
+    b.addEventListener('click', function () {
+      var now = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(now));
+      b.style.background = now ? 'rgba(255,200,120,.35)' : '';
+      Module.ccall('nx_event', null, ['string'], [now ? on : off]);
+    });
+  }
+  toggle('dim', 'lights-down', 'lights-up');
+  toggle('music', 'music', 'quiet');
   var Module = { canvas: document.getElementById('canvas'), print: function (t) { console.log(t); }, printErr: function (t) { console.warn(t); } };
   // The left thumb: a stick.
   var stick = document.getElementById('stick'), knob = document.getElementById('knob'), stickId = null;

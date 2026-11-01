@@ -56,7 +56,7 @@
     "id": "J118.2",
     "text": "The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down)",
     "check": "/bar/?engine=next: the neon buzzes, the bulbs breathe",
-    "done": false
+    "done": true
    },
    {
     "id": "J118.3",

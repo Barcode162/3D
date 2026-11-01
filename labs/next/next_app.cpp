@@ -3,6 +3,10 @@
 // WebGPU or WebGL2, each part with the detail its distance needs (its
 // clusters, looped/draw/clusters.h), lit by the one formula, and walked
 // through with the thumbs. Today's bar is untouched; this is its preview.
+// The lights are alive (J118.2): the bar's rig (assets/world/rigs/bar.looped,
+// looped/words/rig.h) runs each frame and sets each light channel's
+// brightness and colour; the page sends it what happens (the lights going
+// down, the music).
 //   the page: labs/web/next/index.html (?gl=1 forces WebGL2)
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
@@ -19,7 +23,10 @@
 #include "looped/draw/clusters.h"
 #include "looped/draw/draw.h"
 #include "looped/draw/half.h"
+#include "looped/json.h"
 #include "looped/math.h"
+#include "looped/words/rig.h"
+#include "looped/world/loop.h"
 
 using namespace engine;
 
@@ -84,6 +91,13 @@ struct App {
   bool ready = false;
   std::vector<uint32_t> scratch;
   std::vector<uint32_t> picked;
+  // The rig (J118.2).
+  words::Rig rig;
+  std::vector<int> rigChannel;  // the place's channel k → the rig's (-1: steady)
+  bool rigMapped = false;
+  world::Clock clock;
+  float bpm = 120;
+  std::vector<Vec3> level;  // each place channel's colour × brightness this frame
 };
 App g;
 
@@ -218,6 +232,16 @@ void pick() {
   g.pickedYaw = g.yaw;
 }
 
+// The rig's channels by name, as the bake grouped the lamps (the same rig file).
+void mapRig() {
+  g.rigChannel.assign(static_cast<size_t>(g.channels), -1);
+  const auto& rc = g.rig.channels();
+  for (int k = 0; k < g.channels; ++k)
+    for (size_t r = 0; r < rc.size(); ++r)
+      if (rc[r].name == g.channelNames[static_cast<size_t>(k)]) g.rigChannel[static_cast<size_t>(k)] = static_cast<int>(r);
+  g.rigMapped = true;
+}
+
 void frame() {
   if (!g.ready) return;
   uint32_t w = 1, h = 1;
@@ -234,8 +258,17 @@ void frame() {
   next.y = floorAt(next.x, next.z) + kEye;
   g.eye = next;
   if (length(g.eye - g.pickedAt) > 0.15f) pick();
-  // The light: every channel at 1 for now (the rig plays them in J116.7).
-  std::vector<float> s(static_cast<size_t>(g.channels), 1.0f);
+  // The light: the rig sets each channel (steady at 1 without one).
+  if (g.clock.music) g.clock.beats += dt * g.bpm / 60;
+  g.clock.seconds = now;
+  if (g.rig.loaded()) {
+    if (!g.rigMapped) mapRig();
+    g.rig.update(g.clock);
+  }
+  std::vector<Vec3>& s = g.level;
+  s.assign(static_cast<size_t>(g.channels), Vec3{1, 1, 1});
+  for (int k = 0; k < g.channels && g.rigMapped; ++k)
+    if (const int r = g.rigChannel[static_cast<size_t>(k)]; r >= 0) s[static_cast<size_t>(k)] = g.rig.channel(r);
   Uniforms u{};
   lab::SceneUniforms cam{};
   lab::camera(cam, g.eye, g.yaw, g.pitch, static_cast<float>(w) / static_cast<float>(h), g.dev->backend() == draw::Backend::kWebGpu, g.exposure);
@@ -243,13 +276,18 @@ void frame() {
   std::memcpy(u.eye, cam.eye, sizeof u.eye);
   for (int k = 0; k < g.layers && k < 4; ++k)
     for (int c = 0; c < g.channels; ++c)
-      for (int e = 0; e < 3; ++e) u.w[k][e] += g.basis[static_cast<size_t>(k * 3 * g.channels + 3 * c + e)] * s[static_cast<size_t>(c)];
+      for (int e = 0; e < 3; ++e) {
+        const Vec3& v = s[static_cast<size_t>(c)];
+        u.w[k][e] += g.basis[static_cast<size_t>(k * 3 * g.channels + 3 * c + e)] * (e == 0 ? v.x : e == 1 ? v.y : v.z);
+      }
   // The lamps' texture.
   std::vector<uint16_t> lt(4 * 4 * 64, 0);
   for (size_t i = 0; i < g.lamps.size() && i < 64; ++i) {
     const Lamp& l = g.lamps[i];
-    const float b = l.cd * s[static_cast<size_t>(std::clamp(l.channel, 0, g.channels - 1))];
-    const float row[16] = {l.pos.x, l.pos.y, l.pos.z, l.radius, l.color.x * b, l.color.y * b, l.color.z * b, l.shape,
+    // Each lamp its own flicker (the rig's `each`); the baked room light carries the channel's average.
+    const Vec3 v = g.rig.loaded() ? g.rig.lamp(static_cast<int>(i)) : Vec3{1, 1, 1};
+    const float b = l.cd;
+    const float row[16] = {l.pos.x, l.pos.y, l.pos.z, l.radius, l.color.x * b * v.x, l.color.y * b * v.y, l.color.z * b * v.z, l.shape,
                            l.axis.x, l.axis.y, l.axis.z, l.oneSided, l.axis2.x, l.axis2.y, l.axis2.z, 0};
     for (int k = 0; k < 16; ++k) lt[i * 16 + static_cast<size_t>(k)] = draw::toHalf(row[k]);
   }
@@ -330,6 +368,48 @@ EMSCRIPTEN_KEEPALIVE void nx_detail(float limitPixels) {
   if (g.ready) pick();
 }
 EMSCRIPTEN_KEEPALIVE void nx_exposure(float e) { g.exposure = e; }
+// The rig (J118.2): its text and the lamps as it names them (data/lamps.json,
+// in the bake's lamp order). Returns 1 when it plays.
+EMSCRIPTEN_KEEPALIVE int nx_rig(const char* text, const char* lampsJson) {
+  std::vector<words::LampInfo> lamps;
+  const Json list = Json::parse(lampsJson);  // kept: a loop over a temporary's items would read freed memory
+  for (const Json& j : list.items()) {
+    words::LampInfo l;
+    l.id = j["id"].string();
+    l.kind = j["kind"].string();
+    l.seed = static_cast<uint32_t>(j["seed"].number(1));
+    l.lumens = static_cast<float>(j["lumens"].number());
+    l.kelvin = static_cast<float>(j["kelvin"].number());
+    lamps.push_back(std::move(l));
+  }
+  static const std::vector<std::string> events = {"music", "quiet", "fire-on", "fire-off", "lights-down", "lights-up"};
+  words::Problems p;
+  const bool ok = g.rig.load(text, lamps, events, p);
+  g.rigMapped = false;
+  if (!ok && g.dev) {
+    const std::string why = "The lights' rig didn't load: " + (p.empty() ? std::string("?") : p[0].text());
+    js_status(draw::backendName(g.dev->backend()), why.c_str());
+  }
+  return ok ? 1 : 0;
+}
+// Something happened: music, quiet, lights-down, lights-up, fire-on, fire-off.
+EMSCRIPTEN_KEEPALIVE void nx_event(const char* e) {
+  const std::string ev = e;
+  if (ev == "music") g.clock.music = true, g.clock.beats = 0;
+  if (ev == "quiet") g.clock.music = false;
+  g.rig.send(ev, emscripten_get_now() / 1000.0);
+}
+// For the test: channel k's brightness this frame (its colour's average), and how many channels the rig plays.
+EMSCRIPTEN_KEEPALIVE float nx_level(int k) {
+  if (k < 0 || static_cast<size_t>(k) >= g.level.size()) return -1;
+  const Vec3& v = g.level[static_cast<size_t>(k)];
+  return (v.x + v.y + v.z) / 3;
+}
+EMSCRIPTEN_KEEPALIVE int nx_rigChannels() {
+  int n = 0;
+  for (int r : g.rigChannel) n += r >= 0;
+  return n;
+}
 EMSCRIPTEN_KEEPALIVE int nx_ready() { return g.ready ? 1 : 0; }
 // For the test: where you stand.
 EMSCRIPTEN_KEEPALIVE float nx_eyeX() { return g.eye.x; }

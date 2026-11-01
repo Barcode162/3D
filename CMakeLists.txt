@@ -218,13 +218,13 @@ add_custom_command(OUTPUT ${SITE}/labs/physics/physics_lab.js ${SITE}/labs/physi
                    VERBATIM)
 list(APPEND SITE_OUTPUTS ${SITE}/labs/physics/physics_lab.js ${SITE}/labs/physics/physics_lab.wasm)
 # The bar on the new engine (J116.6): the baked bar, drawn with the clusters on WebGPU or WebGL2.
-add_executable(next labs/next/next_app.cpp ${DRAW_SOURCES} looped/draw/clusters.cpp)
+add_executable(next labs/next/next_app.cpp ${DRAW_SOURCES} looped/draw/clusters.cpp looped/json.cpp looped/words/rig.cpp looped/words/program.cpp looped/words/syntax.cpp looped/world/loop.cpp)
 target_include_directories(next PRIVATE ${CMAKE_SOURCE_DIR})
 target_compile_options(next PRIVATE -Wall -Wextra -Werror --use-port=emdawnwebgpu)
 target_link_options(next PRIVATE
   --use-port=emdawnwebgpu -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=256MB
-  "-sEXPORTED_FUNCTIONS=_main,_malloc,_free,_nx_place,_nx_picture,_nx_move,_nx_look,_nx_detail,_nx_exposure,_nx_ready,_nx_eyeX,_nx_eyeZ"
-  "-sEXPORTED_RUNTIME_METHODS=ccall,HEAPU8"
+  "-sEXPORTED_FUNCTIONS=_main,_malloc,_free,_nx_place,_nx_picture,_nx_move,_nx_look,_nx_detail,_nx_exposure,_nx_ready,_nx_eyeX,_nx_eyeZ,_nx_rig,_nx_event,_nx_level,_nx_rigChannels"
+  "-sEXPORTED_RUNTIME_METHODS=ccall,HEAPU8,stringToNewUTF8"
   $<IF:$<CONFIG:Release>,-O3,-g>)
 add_custom_command(OUTPUT ${SITE}/labs/next/next.js ${SITE}/labs/next/next.wasm DEPENDS next
                    COMMAND ${CMAKE_COMMAND} -E make_directory ${SITE}/labs/next

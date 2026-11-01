@@ -60,7 +60,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 ## 4. Now
 **J118 · The new engine, finished** (the engine). The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
 - [x] **J118.1** The bar's world in words, made from a converter with a test that it equals today's *Check:* The bar on the new engine looks the same as before; the words file reads like a list of the bar's things
-- [ ] **J118.2** The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down) *Check:* /bar/?engine=next: the neon buzzes, the bulbs breathe
+- [x] **J118.2** The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down) *Check:* /bar/?engine=next: the neon buzzes, the bulbs breathe
 - [ ] **J118.3** Tune: quality levels, smooth round things, small things lit right, the look you like (less warm) *Check:* The new-engine bar looks as you like on your phone, smooth at every level
 - [ ] **J118.4** The switch, when you say: the new engine becomes the live bar with everything the bar does; the old renderer retired *Check:* joshuavelasco.com/bar opens the new engine on every browser
 

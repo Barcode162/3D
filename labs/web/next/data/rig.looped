@@ -1,0 +1,68 @@
+# The bar's lights, in Looped Script (J116.2; the language: looped/words/rig.h).
+#
+# Each `light` is one light channel: its lamps always change together, so
+# the light they give the room is worked out once (the bake) and relit each
+# frame by one number. The world says where each lamp is, its lumens and
+# its colour; this says how they change. Brightness 1 = as the world gives
+# it. `each`: every lamp breathes or buzzes its own way (the channel carries
+# their average).
+#
+# Words: wave, noise, flicker and thump (on the music's beat) are the
+# engine's own shapes. A `shape` makes a new word from them (request
+# 2026-10-27 #10); its settings have usual values you can change where
+# it's used: `buzz(by 60%, every 1.2 s)`, or just `buzz`.
+
+shape breathe (by 6%, every 8 s, speed 0.5)
+  1 + by * noise(period every, speed speed)
+
+shape buzz (by 12%, every 2 s, speed 1)
+  1 + by * flicker(period every, speed speed)
+
+light over the bar: light-bulb-1 to light-bulb-4, mirror-light
+  brightness each breathe
+  when lights down: fade to 25% over 0.3 s
+  when lights up: fade to 100% over 0.3 s
+
+light lamps: light-bulb-5 to light-bulb-8, light-wall-sconce-*
+  brightness each breathe
+
+light spots: stage-spot-*, dart-spot-*
+  brightness each breathe
+
+light strings: string-light-*
+  state calm
+    brightness each breathe(by 4%, every 9 s, speed 0.4)
+    when music: go to dancing
+  state dancing
+    brightness 1 - 1.5% + 8% * thump(period 2 beats, fade 5)
+    when quiet: go to calm
+  when lights down: fade to 25% over 0.3 s
+  when lights up: fade to 100% over 0.3 s
+
+light neon: light-neon-*
+  brightness each buzz(speed 0.8)
+
+light arcade neon: light-arcade-* except every light-neon-wave
+  brightness each buzz(speed 0.8)
+
+light arcade wave: every light-neon-wave
+  brightness 1 + 18% * wave(period 5 s)
+
+light sign: light-sign
+  brightness each buzz(by 60%, every 1.2 s)
+
+light fire: light-fire
+  state lit
+    brightness each buzz(by 40%, every 0.5 s)
+    when fire off: go to out over 1.2 s
+  state out
+    brightness each 1 - 94% + 4% * noise(period 3 s, speed 0.5)
+    when fire on: go to lit
+
+light jukebox: light-jukebox
+  state waiting
+    brightness each 1 + 20% * wave(period 3 s)
+    when music: go to playing
+  state playing
+    brightness 1 - 25% + 70% * thump(period 1 beat)
+    when quiet: go to waiting

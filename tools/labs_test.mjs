@@ -94,7 +94,7 @@ try {
     check(errs.length === 0, 'physics lab: no page errors' + (errs.length ? ': ' + errs[0] : ''));
     await page.close();
   }
-  // ---- The bar on the new engine (J116.6): both backends, the clusters, walking ----
+  // ---- The bar on the new engine (J116.6): both backends, the clusters, walking, the lights alive (J118.2) ----
   for (const [name, query] of [['WebGL2', '?gl=1'], ['WebGPU', '']]) {
     const page = await browser.newPage({ viewport: { width: 900, height: 600 } });
     const errs = errorsOf(page);
@@ -116,6 +116,23 @@ try {
       const after = await page.evaluate(() => [Module._nx_eyeX(), Module._nx_eyeZ()]);
       await page.evaluate(() => Module._nx_move(0, 0));
       check(after[0] > -13 && after[0] < 10 && after[1] > -16.5 && after[1] < 9.7, `the walls hold you in (inside the bar's rooms) (after 25 s walking into one: ${after.map((v) => v.toFixed(1))})`);
+      // The lights alive (J118.2): the rig plays every channel; they move; the lights going down dims the bar's.
+      await page.waitForFunction(() => window.nextRig !== undefined, null, { timeout: 60000 });
+      const played = await page.evaluate(() => [window.nextRig, Module._nx_rigChannels()]);
+      check(played[0] === 1 && played[1] === 10, `the rig plays the bar's lights (loaded ${played[0]}, ${played[1]} of 10 channels)`);
+      const levels = () => page.evaluate(() => Array.from({ length: 10 }, (_, k) => Module._nx_level(k)));
+      const seen = [];
+      for (let i = 0; i < 6; ++i) { seen.push(await levels()); await page.waitForTimeout(1200); }
+      const moving = seen[0].filter((_, k) => Math.max(...seen.map((l) => l[k])) - Math.min(...seen.map((l) => l[k])) > 0.002).length;
+      check(moving >= 3, `the lights breathe and buzz: ${moving} of 10 channels changed over 7 s`);
+      await page.click('#dim');
+      await page.waitForTimeout(3000);
+      const down = await levels();
+      check(down[0] > 0.15 && down[0] < 0.35 && seen[0][0] > 0.85, `Lights down dims the lights over the bar to a quarter (${seen[0][0].toFixed(2)} → ${down[0].toFixed(2)})`);
+      await page.click('#dim');
+      await page.waitForTimeout(3000);
+      const up = await levels();
+      check(up[0] > 0.85, `pressed again, they come back up (${up[0].toFixed(2)})`);
     }
     check(errs.length === 0, `the new-engine bar (${name}): no page errors` + (errs.length ? ': ' + errs[0] : ''));
     await page.close();

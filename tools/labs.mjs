@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // The labs' data (J116, Looped rebuilt):
 //   node tools/labs.mjs bar [--bake] [--quick]   the bar for the new engine (labs/web/next/data/) from build/bake/bar
+//                                        (--lights: only the lamps and the rig, after the rig changed)
 //                                        (--quick: a fast, grainy bake, a few minutes; the full one about half an hour)
 //   node tools/labs.mjs light [--bake]   the light lab's pictures and numbers (labs/web/light/data/) from
 //                                        build/bake/lab-page, and the draw lab's baked room (labs/web/draw/data/);
@@ -22,15 +23,20 @@ if (cmd === 'bar') {  // the bar on the new engine (J116.6): its bake into labs/
     });
   }
   const to = 'labs/web/next/data';
-  rmSync(to, { recursive: true, force: true });
-  mkdirSync(`${to}/tex`, { recursive: true });
-  writeFileSync(`${to}/place.bin.gz`, gzipSync(readFileSync(`${from}/next/place.bin`), { level: 9 }));  // the page unpacks it
-  for (const f of readdirSync(`${from}/next/tex`)) copyFileSync(`${from}/next/tex/${f}`, `${to}/tex/${f}`);
-  console.log(`the bar for the new engine: ${to} (${readdirSync(`${to}/tex`).length - 1} pictures)`);
+  if (!rest.includes('--lights')) {
+    rmSync(to, { recursive: true, force: true });
+    mkdirSync(`${to}/tex`, { recursive: true });
+    writeFileSync(`${to}/place.bin.gz`, gzipSync(readFileSync(`${from}/next/place.bin`), { level: 9 }));  // the page unpacks it
+    for (const f of readdirSync(`${from}/next/tex`)) copyFileSync(`${from}/next/tex/${f}`, `${to}/tex/${f}`);
+  }
+  // The lights alive (J118.2): the rig plays the lamps, named as the bake orders them.
+  writeFileSync(`${to}/lamps.json`, execSync('node tools/bake.mjs lamps bar', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
+  copyFileSync('assets/world/rigs/bar.looped', `${to}/rig.looped`);
+  console.log(`the bar for the new engine: ${to} (${readdirSync(`${to}/tex`).length - 1} pictures, the lamps and the rig)`);
   process.exit(0);
 }
 if (cmd !== 'light') {
-  console.log('usage: node tools/labs.mjs light [--bake] | bar [--bake] [--quick]');
+  console.log('usage: node tools/labs.mjs light [--bake] | bar [--bake] [--quick] [--lights]');
   process.exit(2);
 }
 const from = 'build/bake/lab-page', to = 'labs/web/light/data';

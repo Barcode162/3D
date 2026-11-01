@@ -1250,6 +1250,17 @@ int main(int argc, char** argv) {
   load(place, L);
   if (cmd == "unwrap") return unwrapReport(L);
   if (cmd == "bake") return bakeCommand(L, argc > 3 ? argv[3] : "build/bake/" + place, std::vector<std::string>(argv + std::min(argc, 4), argv + argc));
-  std::printf("usage: bake_tool unwrap|bake [place] ...\n");
+  if (cmd == "lamps") {  // J118.2: the lamps as the rig names them, in the bake's lamp order, for the new engine's rig
+    std::string j = "[";
+    const std::vector<words::LampInfo> lamps = app::rigLamps(L.scene);
+    for (size_t i = 0; i < lamps.size(); ++i) {
+      char b[96];
+      std::snprintf(b, sizeof b, ", \"seed\": %u, \"lumens\": %.6g, \"kelvin\": %.6g}", lamps[i].seed, lamps[i].lumens, lamps[i].kelvin);
+      j += std::string(i ? ",\n " : "") + "{\"id\": \"" + lamps[i].id + "\", \"kind\": \"" + lamps[i].kind + "\"" + b;
+    }
+    std::printf("%s]\n", j.c_str());
+    return 0;
+  }
+  std::printf("usage: bake_tool unwrap|bake|lamps [place] ...\n");
   return 2;
 }
