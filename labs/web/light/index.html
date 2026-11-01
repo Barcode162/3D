@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Light lab · Looped</title>
+<meta name="description" content="The light lab (J116.3): a room written in words, its light baked once per light channel and relit live, beside the exact reference.">
+<style>
+  :root { --bg: #0d0e12; --panel: #16181f; --line: #262a35; --text: #e9e7e2; --soft: #9aa0ad; --accent: #ffb35c; --good: #7be0a0; --chip: #1f2230; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 60px; padding-top: max(18px, env(safe-area-inset-top)); }
+  h1 { font-size: 22px; margin: 0 0 2px; }
+  .sub { color: var(--soft); margin: 0 0 14px; font-size: 14px; }
+  .tabs { display: flex; gap: 6px; margin: 0 0 10px; }
+  .tab { flex: 1; background: var(--chip); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 8px 0; font: inherit; font-size: 14px; cursor: pointer; }
+  .tab.on { border-color: var(--accent); color: var(--accent); }
+  canvas { width: 100%; aspect-ratio: 16 / 9; display: block; border-radius: 14px; background: #07080b; border: 1px solid var(--line); image-rendering: auto; }
+  .row { display: flex; gap: 8px; margin: 10px 0 0; flex-wrap: wrap; }
+  button.big { flex: 1; min-width: 150px; background: var(--chip); border: 1px solid var(--line); color: var(--text); border-radius: 12px; padding: 11px 12px; font: inherit; cursor: pointer; }
+  button.big.on { border-color: var(--accent); color: var(--accent); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 12px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--soft); margin: 0 0 8px; font-weight: 600; }
+  .light { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+  .light:first-of-type { border-top: 0; }
+  .light b { font-weight: 600; }
+  .light .now { color: var(--soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .light input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  .bar { grid-column: 1 / -1; height: 4px; background: #0b0c10; border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; }
+  img.pair { width: 100%; border-radius: 10px; display: block; border: 1px solid var(--line); }
+  .labels { display: flex; justify-content: space-around; color: var(--soft); font-size: 13px; margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .stat { background: #0f1117; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--soft); font-size: 13px; }
+  pre { background: #0b0c10; border: 1px solid var(--line); border-radius: 10px; padding: 10px; overflow-x: auto; font: 13px/1.5 ui-monospace, Menlo, monospace; margin: 0; white-space: pre-wrap; }
+  .note { color: var(--soft); font-size: 13px; margin: 8px 0 0; }
+  footer { color: var(--soft); font-size: 13px; margin-top: 18px; }
+  footer a { color: var(--soft); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Light lab</h1>
+  <p class="sub">A room written in words. Its light was worked out once, light by light (every bounce, every shadow); now it's relit live by a handful of numbers, the way the new engine will draw the bar.</p>
+
+  <div class="tabs" id="tabs"></div>
+  <canvas id="view" width="400" height="225" aria-label="The light lab, relit live"></canvas>
+  <div class="row">
+    <button class="big" id="down" type="button">The lights go down</button>
+    <button class="big on" id="alive" type="button">Lights alive</button>
+  </div>
+
+  <div class="card"><h2>The lights (one channel each)</h2><div id="lights"></div>
+    <p class="note">Each light's share of the room (direct, shadows and every bounce) was baked once. Moving a slider multiplies its share: no light is worked out again.</p></div>
+
+  <div class="card"><h2>Beside the exact reference</h2>
+    <img class="pair" id="pair" alt="Left: the reference, every light path traced. Right: the baked light.">
+    <div class="labels"><span>reference (every path traced)</span><span>baked, relit</span></div>
+    <div class="stats" id="stats" style="margin-top:10px"></div>
+    <p class="note">Light only (every surface grey), so the two compare fairly. "Off" is how far the baked light is from the reference, as a share of all the light seen.</p></div>
+
+  <div class="card"><h2>The room, in words</h2><pre id="words">…</pre></div>
+
+  <footer>J116.3 · the words: <a href="../../assets/world/places/lab.looped">lab.looped</a> · <a href="../">all labs</a></footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var DATA = 'data/';
+  var summary = null, place = null, rules = [], spot = null, pics = {};
+  var level = [], manual = [], down = false, alive = true, exposure = 1;
+  var ctx = $('view').getContext('2d');
+
+  // ---- The world's loop shapes (looped/world/loop.cpp), for lights alive ----
+  function hash01(a, b) {
+    var h = (Math.imul(a, 0x9E3779B1) ^ Math.imul((b + 0x7F4A7C15) >>> 0, 0x85EBCA77)) >>> 0;
+    h ^= h >>> 15; h = Math.imul(h, 0x2C1B3C6D) >>> 0; h ^= h >>> 12; h = Math.imul(h, 0x297A2D39) >>> 0; h ^= h >>> 15;
+    return (h & 0xFFFFFF) / 16777216;
+  }
+  function noise1(t, seed) {
+    var i = Math.floor(t), f = t - i, u = f * f * (3 - 2 * f), k = (i | 0) >>> 0;
+    return hash01(seed, k) * (1 - u) + hash01(seed, (k + 1) >>> 0) * u;
+  }
+  function piece(p, cycles, seed) {
+    var t = cycles * (p.every || 1) + (p.phase || 0), u = t - Math.floor(t), amp = p.amp || 0, rate = p.rate || 1;
+    switch (p.shape) {
+      case 'wave': return amp * Math.sin(u * 2 * Math.PI);
+      case 'noise': return amp * (noise1(t * rate, seed) * 2 - 1);
+      case 'flicker': {
+        var slow = noise1(t * rate * 0.7, seed), fast = noise1(t * rate * 23, seed + 1), d = -0.15 * fast;
+        if (slow > 0.82) d -= (slow - 0.82) / 0.18 * (0.5 + 0.5 * fast);
+        return amp * d;
+      }
+      case 'beat': return amp * Math.exp(-u * (p.decay || 7));
+      default: return 0;
+    }
+  }
+  function loopOf(thing) {
+    var loops = thing && thing.loops;
+    if (!loops) return null;
+    for (var k in loops) return loops[k];
+    return null;
+  }
+
+  // ---- The rules, read from the room's words ("when …, the X and the Y dim to a quarter") ----
+  function readRules(text) {
+    var out = [];
+    text.split('\n').forEach(function (line) {
+      var m = /^\s*(when|while)\s+([^,]+),\s*(.+?)\s+(dim|dims|go|goes|brighten|brightens)\s+(?:to\s+)?(.+?)\s*$/.exec(line);
+      if (!m) return;
+      var amounts = { 'a quarter': 0.25, 'half': 0.5, 'a half': 0.5, 'a third': 1 / 3, 'full': 1, 'out': 0 };
+      var lv = amounts[m[5]];
+      if (lv === undefined && /%$/.test(m[5])) lv = parseFloat(m[5]) / 100;
+      var names = m[3].split(/\s*,\s*|\s+and\s+/).map(function (s) { return s.replace(/^the\s+/, '').replace(/\s+/g, '-'); });
+      out.push({ event: m[2], names: names, level: lv === undefined ? 1 : lv });
+    });
+    return out;
+  }
+
+  // ---- The pictures: per channel light (RGBE), glow (RGBE), surface colour ----
+  function decode(buf) {
+    var b = new Uint8Array(buf), w = b[4] | b[5] << 8, h = b[6] | b[7] << 8, nc = b[8] | b[9] << 8, n = w * h, o = 10;
+    function rgbe() {
+      var f = new Float32Array(n * 3);
+      for (var i = 0; i < n; i++, o += 4) {
+        var e = b[o + 3];
+        if (!e) continue;
+        var s = Math.pow(2, e - 136);
+        f[i * 3] = b[o] * s; f[i * 3 + 1] = b[o + 1] * s; f[i * 3 + 2] = b[o + 2] * s;
+      }
+      return f;
+    }
+    var ch = [];
+    for (var c = 0; c < nc; c++) ch.push(rgbe());
+    var glow = rgbe(), albedo = new Float32Array(n * 3), seen = new Uint8Array(n);
+    for (var i = 0; i < n; i++, o += 4) {
+      albedo[i * 3] = b[o] / 255; albedo[i * 3 + 1] = b[o + 1] / 255; albedo[i * 3 + 2] = b[o + 2] / 255; seen[i] = b[o + 3];
+    }
+    return { w: w, h: h, ch: ch, glow: glow, albedo: albedo, seen: seen };
+  }
+
+  function weights(t) {
+    var w = [];
+    summary.channels.forEach(function (id, c) {
+      var thing = place.things.find(function (x) { return x.id === id; });
+      var v = 1;
+      var lp = loopOf(thing);
+      if (alive && lp) {
+        var cycles = t / (lp.period || 1);
+        (lp.pieces || []).forEach(function (p, k) { if (p.ch === 'light') v += piece(p, cycles, 7919 * (c + 1) + k); });
+      }
+      if (down) rules.forEach(function (r) { if (/lights go down/.test(r.event) && r.names.indexOf(id) >= 0) v *= r.level; });
+      v *= manual[c];
+      w.push(Math.max(0, v));
+    });
+    return w;
+  }
+
+  function aces(x) { var v = (x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14); return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function srgb(x) { return x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055; }
+  var LUT = new Uint8Array(4097);
+  for (var k = 0; k <= 4096; k++) LUT[k] = Math.round(255 * srgb(aces(k / 4096 * 8)));
+  function tone(x) { var i = (x * 512) | 0; return LUT[i < 0 ? 0 : i > 4096 ? 4096 : i]; }
+
+  function meter(p) {  // a fixed exposure from the room with every light on
+    var sum = 0, n = 0;
+    for (var i = 0; i < p.w * p.h; i++) {
+      if (!p.seen[i]) continue;
+      var e = 0;
+      for (var c = 0; c < p.ch.length; c++) e += 0.2126 * p.ch[c][i * 3] + 0.7152 * p.ch[c][i * 3 + 1] + 0.0722 * p.ch[c][i * 3 + 2];
+      var a = 0.2126 * p.albedo[i * 3] + 0.7152 * p.albedo[i * 3 + 1] + 0.0722 * p.albedo[i * 3 + 2];
+      sum += Math.log(1e-4 + a * e / Math.PI); n++;
+    }
+    return 0.1 / Math.exp(sum / Math.max(1, n));
+  }
+
+  var img = null;
+  function draw(t) {
+    var p = pics[spot && spot.name];
+    if (!p) return;
+    if (!img || img.width !== p.w) img = ctx.createImageData(p.w, p.h);
+    var w = weights(t), d = img.data, n = p.w * p.h, nc = p.ch.length;
+    for (var i = 0; i < n; i++) {
+      var r = 0, g = 0, b = 0, j = i * 3;
+      for (var c = 0; c < nc; c++) { var L = p.ch[c], s = w[c]; r += L[j] * s; g += L[j + 1] * s; b += L[j + 2] * s; }
+      var q = exposure;
+      d[i * 4] = tone((p.glow[j] + p.albedo[j] * r / Math.PI) * q);
+      d[i * 4 + 1] = tone((p.glow[j + 1] + p.albedo[j + 1] * g / Math.PI) * q);
+      d[i * 4 + 2] = tone((p.glow[j + 2] + p.albedo[j + 2] * b / Math.PI) * q);
+      d[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    w.forEach(function (v, c) {
+      var bar = document.querySelector('#bar' + c);
+      if (bar) bar.style.width = Math.min(100, v * 70) + '%';
+      var now = document.querySelector('#now' + c);
+      if (now) now.textContent = Math.round(v * 100) + '%';
+    });
+  }
+
+  function pickSpot(s) {
+    spot = s;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) { b.classList.toggle('on', b.dataset.name === s.name); });
+    $('pair').src = DATA + s.name + '.png';
+    var pct = function (x) { return (x * 100).toFixed(1) + '%'; };
+    $('stats').innerHTML =
+      '<div class="stat"><b>' + pct(s.error) + '</b><span>off, everything seen</span></div>' +
+      '<div class="stat"><b>' + pct(s.surfaces) + '</b><span>off, room surfaces (the light texture)</span></div>' +
+      '<div class="stat"><b>' + pct(s.small) + '</b><span>off, small things (lit at their corners)</span></div>' +
+      '<div class="stat"><b>' + summary.layers + ' × ' + summary.channels.length + '</b><span>shared layers × light channels</span></div>';
+    if (pics[s.name]) return;
+    fetch(DATA + s.name + '.bin').then(function (r) { return r.arrayBuffer(); }).then(function (buf) {
+      pics[s.name] = decode(buf);
+      if (!exposure || exposure === 1) exposure = meter(pics[s.name]);
+      $('view').width = pics[s.name].w; $('view').height = pics[s.name].h; img = null;
+    });
+  }
+
+  function start() {
+    summary.spots.forEach(function (s) {
+      var b = document.createElement('button');
+      b.className = 'tab'; b.type = 'button'; b.dataset.name = s.name; b.textContent = s.name;
+      b.onclick = function () { pickSpot(s); };
+      $('tabs').appendChild(b);
+    });
+    summary.channels.forEach(function (id, c) {
+      manual.push(1);
+      var row = document.createElement('div');
+      row.className = 'light';
+      row.innerHTML = '<b>' + id.replace(/-/g, ' ') + '</b><span class="now" id="now' + c + '"></span>' +
+        '<div class="bar"><i id="bar' + c + '"></i></div><input type="range" min="0" max="200" value="100" aria-label="' + id + ' brightness">';
+      row.querySelector('input').oninput = function (e) { manual[c] = e.target.value / 100; };
+      $('lights').appendChild(row);
+    });
+    $('down').onclick = function () { down = !down; this.classList.toggle('on', down); };
+    $('alive').onclick = function () { alive = !alive; this.classList.toggle('on', alive); };
+    pickSpot(summary.spots[0]);
+    var t0 = performance.now();
+    (function frame(now) { draw((now - t0) / 1000); requestAnimationFrame(frame); })(t0);
+  }
+
+  Promise.all([
+    fetch(DATA + 'summary.json').then(function (r) { return r.json(); }),
+    fetch('../../assets/world/places/lab.json').then(function (r) { return r.json(); }),
+    fetch('../../assets/world/places/lab.looped').then(function (r) { return r.text(); })
+  ]).then(function (all) {
+    summary = all[0]; place = all[1];
+    $('words').textContent = all[2].split('\n').filter(function (l) { return !/^#/.test(l); }).join('\n').trim();
+    rules = readRules(all[2]);
+    start();
+  }).catch(function (e) { $('words').textContent = 'Couldn\'t load the lab: ' + e; });
+})();
+</script>
+</body>
+</html>

@@ -632,17 +632,17 @@ Every thing in every place of the built-in world (the repo's copy; the live vers
 
 | Thing | Kind | Sits on | Model | Note |
 |---|---|---|---|---|
-| `room` | `home-room` |  |  | no model |
+| `room` | `word-shell` |  |  | no model |
 | `table` | `round_table` |  | `round_table.glb` |  |
 | `candle` | `candle` |  | `candle.glb` |  |
+| `candle-flame` | `word-light` |  |  | no model |
 | `stool-1` | `table_stool` |  | `table_stool.glb` |  |
 | `stool-2` | `table_stool` |  | `table_stool.glb` |  |
-| `lamp` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
-| `lamp-light` | `light-bulb` |  |  | no model |
-| `corner-bulb` | `light-bulb` |  |  | no model |
-| `neon-tube` | `light-neon` |  |  | no model |
-| `wall-sign` | `light-neon-wave` |  |  | no model |
-| `candle-flame` | `light-fire` |  |  | no model |
+| `pendant-lamp` | `pendant_lamp` |  | `pendant_lamp.glb` |  |
+| `pendant-lamp-bulb` | `word-light` |  |  | no model |
+| `bulb` | `word-light` |  |  | no model |
+| `neon-tube` | `word-light` |  |  | no model |
+| `sign` | `word-light` |  |  | no model |
 
 ## showroom (54 things)
 

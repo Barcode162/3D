@@ -9,15 +9,15 @@ What each folder is, how many files it holds, its main languages, and which work
 | `.claude/` | Claude Code's settings for this repo: the session-start status and the locks (tools/lib/guard.mjs). | 1 | JSON | not uploaded |
 | `.github/` | GitHub's own folder. | 4 | YAML | not uploaded |
 | `.github/workflows/` | The four workflows: deploy.yml (the game, the room), hub.yml (the site and the tools' pages), plan.yml (the plan to Dev), classic.yml (the old public bar). | 4 | YAML | not uploaded |
-| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 395 | 3D models, audio, JSON | deploy.yml → home/bar |
+| `assets/` | Files the game loads while it runs (copied to the site's assets/). | 397 | 3D models, audio, JSON | deploy.yml → home/bar |
 | `assets/midi/` | The piano's songs as MIDI files, with their credits. | 11 | MIDI, Markdown | deploy.yml → home/bar |
 | `assets/models/` | 3D models (.glb) made by tools/assets/ in headless Blender, with their credits. | 172 | 3D models, JSON, Markdown | deploy.yml → home/bar |
 | `assets/music/` | The jukebox's songs, with their licences and credits. | 78 | audio, JSON, Markdown | deploy.yml → home/bar |
 | `assets/piano/` | The piano's recorded notes (Salamander Grand Piano, CC BY 3.0, J100; tools/piano_samples.sh), with their credit. | 121 | audio, Markdown | deploy.yml → home/bar |
 | `assets/words/` | Looped Script's dictionary (J116.2): every word a small script made of other words (things, describing words, doings, amounts), read by looped/words/ and the word lab. | 1 | other | deploy.yml → home/bar |
-| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 12 | JSON, other | deploy.yml → home/bar |
-| `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 3 | JSON | deploy.yml → home/bar |
-| `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 4 | JSON | deploy.yml → home/bar |
+| `assets/world/` | The built-in world: its schema, catalog, materials, songs list, and the kinds and places files. | 14 | JSON, other | deploy.yml → home/bar |
+| `assets/world/kinds/` | What each kind of thing is (model, shapes, seats, tap areas, loops, states), one file per place. | 4 | JSON | deploy.yml → home/bar |
+| `assets/world/places/` | Every thing in a place, where it sits and its parts, one file per place (bar, home). | 5 | JSON, other | deploy.yml → home/bar |
 | `bar/` | Bar3D itself, in C++: the frame's phases, the world, the player, the bar's games and jobs, the HUD, the Studio mode. | 163 | C++, pictures, JavaScript | deploy.yml → home/bar |
 | `bar/projects/` | The bar's projects, each with its project.json (web: copied to the site; native: built into the game). | 52 | C++, JavaScript, JSON | deploy.yml → home/bar |
 | `bar/projects/chess/` | The lounge's chessboard and its computer player (C++). | 5 | C++, JSON | deploy.yml → home/bar |
@@ -62,16 +62,17 @@ What each folder is, how many files it holds, its main languages, and which work
 | `incoming/` | Source material before it becomes assets. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/` | Meridian's source material. | 8 | Python, Markdown, shell | not uploaded |
 | `incoming/meridian/blender/` | Blender scripts that made Meridian's models. | 7 | Python, shell | not uploaded |
-| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 3 | HTML, C++ | not uploaded |
-| `labs/web/` | The labs' pages, copied to the site at /bar/labs/: the list of labs and each lab's page (words/: the word lab). | 2 | HTML | not uploaded |
+| `labs/` | The labs (J116, Looped rebuilt): each piece of the new engine perfected in its own small program and page before the bar inherits it; built by CMakeLists.txt into the site at /bar/labs/. | 11 | other, pictures, HTML | not uploaded |
+| `labs/web/` | The labs' pages, copied to the site at /bar/labs/: the list of labs and each lab's page (words/: the word lab; light/: the light lab, with its baked pictures in data/). | 10 | other, pictures, HTML | not uploaded |
 | `labs/words/` | The word lab's program (words_lab.cpp): Looped Script's words compiled to WebAssembly for its page (labs/web/words/). | 1 | C++ | not uploaded |
-| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 139 | C++, WGSL, HTML | deploy.yml → home/bar |
+| `looped/` | Looped, the engine (C++, namespace engine): GPU, math, meshes, camera, input, text, audio, physics, skeletons, jobs, the profiler, the network codec. Never includes bar/. | 146 | C++, WGSL, HTML | deploy.yml → home/bar |
 | `looped/apps/` | Programs built on the engine alone (J86): the place viewer (looped/apps/viewer, served at /bar/looped/). | 2 | HTML, C++ | deploy.yml → home/bar |
 | `looped/apps/viewer/` | The place viewer: any place from the world files, drawn and alive, with an orbit camera; no bar code. | 2 | HTML, C++ | deploy.yml → home/bar |
-| `looped/bake/` | The light, worked out ahead of time (J116): the reference path tracer (light_paths), the unwrapper that lays surfaces flat into one light texture (unwrap); built into the tools and labs, not the live bar until the switch. | 4 | C++ | deploy.yml → home/bar |
+| `looped/bake/` | The light, worked out ahead of time (J116): the reference path tracer (light_paths), the unwrapper that lays surfaces flat into one light texture (unwrap), the light grid for small and moving things (probes); built into the tools and labs, not the live bar until the switch. | 6 | C++ | deploy.yml → home/bar |
+| `looped/draw/` | The new skeleton's drawing piece (J116.4): half floats for its textures (half.h), used by the baker's export too. | 1 | C++ | deploy.yml → home/bar |
 | `looped/drive/` | The new driving physics (docs/plan/jobs/W20.md). | 6 | C++ | deploy.yml → home/bar |
 | `looped/shaders/` | The WGSL shaders, built into the game. | 10 | WGSL | deploy.yml → home/bar |
-| `looped/words/` | Looped Script (J116.2): reading text (syntax), numbers over time (program), the dictionary and phrases (words), the light rig (rig); built into the labs, not the live bar until the switch. | 8 | C++ | deploy.yml → home/bar |
+| `looped/words/` | Looped Script (J116.2, J116.3): reading text (syntax), numbers over time (program), the dictionary and phrases (words), places in words with place and cause words (place) and their world files (place_json), the light rig (rig); built into the labs, not the live bar until the switch. | 12 | C++ | deploy.yml → home/bar |
 | `looped/world/` | The world core: things, kinds, places, states, rules, loops on the shared clock. | 10 | C++ | deploy.yml → home/bar |
 | `news/` | The public news page (joshuavelasco.com/news). | 1 | PHP | hub.yml → home/news |
 | `proto/` | The room protocol's test vectors (both codecs must pass them). | 1 | JSON | not uploaded |
@@ -80,13 +81,13 @@ What each folder is, how many files it holds, its main languages, and which work
 | `studio/` | The Studio (joshuavelasco.com/studio): the world editor around the bar in studio mode, and the world store's API. | 24 | JavaScript, pictures, JSON | hub.yml → home/studio |
 | `toolbelt/` | The Toolbelt (every tool and the one list of projects: tools.json) and its page. | 6 | HTML, JSON, PHP | hub.yml → home/toolbelt |
 | `toolbelt/ui-editor/` | The UI Editor (themes and screens) and the UI store's API. | 4 | PHP, CSS, JavaScript | hub.yml → home/toolbelt |
-| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 216 | JavaScript, Python, JSON | not uploaded |
+| `tools/` | The work tools and the tests (Node and shell): the front door project.mjs, piece, ship, plan, checks, records, the stores' tools. | 220 | JavaScript, Python, JSON | not uploaded |
 | `tools/assets/` | Scripts that make the 3D models (headless Blender) and the compressed textures. | 41 | Python, shell | not uploaded |
 | `tools/githooks/` | The git locks (pre-commit: secrets and the plan; commit-msg: the freeze; pre-push: main). | 3 | other | not uploaded |
 | `tools/lib/` | Shared pieces of the tools (checks list, browser, gallery, plan data, the guard, the front door's commands). | 20 | JavaScript | not uploaded |
 | `tools/mania/` | 4K Mania's Training pack tools (J117): the song list and each song's measured beats (songs.py, timing.py, songs/), the map recipes (maps.json) for tools/native/mania_pack.cpp. | 34 | JSON, Python | not uploaded |
 | `tools/migrations/` | One-time conversions of the world files (kept as the record of what changed). | 3 | JavaScript, JSON | not uploaded |
-| `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 29 | C++, shell | not uploaded |
+| `tools/native/` | Tests and tools that run the engine without a browser (g++ and em++): physics, cars, races, the world, light. | 31 | C++, shell | not uploaded |
 | `tools/preflight/` | The preflight checklist (J112): one small rule file per check in rules/<area>/ (copy TEMPLATE.mjs), run by node tools/preflight.mjs before any test, build or push; a broken rule names itself, the spot and the fix. | 15 | JavaScript | not uploaded |
 | `ui/` | The look kit shared by the site, the tools and the bar's menus: looped.js and looped.css (the parts), screens, fonts, icons, the theme CSS. | 46 | JSON, fonts, text | hub.yml → home/ui |
 | `ui/fonts/` | The fonts (with their licences in ui/CREDITS.md). | 10 | fonts, text | hub.yml → home/ui |

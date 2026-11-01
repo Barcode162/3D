@@ -11,8 +11,8 @@ const read = (f) => JSON.parse(readFileSync(f, 'utf8'));
 const schema = read('assets/world/schema.json');
 
 const files = [
-  ...readdirSync('assets/world/places').map((f) => ['place', `assets/world/places/${f}`]),
-  ...readdirSync('assets/world/kinds').map((f) => ['kinds', `assets/world/kinds/${f}`]),
+  ...readdirSync('assets/world/places').filter((f) => f.endsWith('.json')).map((f) => ['place', `assets/world/places/${f}`]),
+  ...readdirSync('assets/world/kinds').filter((f) => f.endsWith('.json')).map((f) => ['kinds', `assets/world/kinds/${f}`]),
   ['catalog', 'assets/world/catalog.json'], ['songs', 'assets/world/songs.json'], ['materials', 'assets/world/materials.json'],
 ];
 for (const [what, f] of files) {

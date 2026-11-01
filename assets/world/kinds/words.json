@@ -1,0 +1,9 @@
+{
+  "about": "Kinds for places written in words (J116.3, looped/words/place_json.h): a room's shell and a light, each filled in by the place's own words.",
+  "kinds": [
+    {"id": "word-shell", "about": "A room's floor, walls and ceiling, as the place's `a room ...` line says: plain boxes.", "still": "a room's shell; its lights and everything in it loop"},
+    {"id": "word-light", "is": "light", "about": "A light as its words say: its colour, lumens and shape, its glowing box, and what it does (its loop, from the doing word).",
+     "loops": {"live": {"period": 1, "pieces": [{"ch": "light", "shape": "hold", "amp": 0}]}},
+     "states": {"on": {"loop": "live"}}, "start": "on"}
+  ]
+}

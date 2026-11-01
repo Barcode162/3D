@@ -677,7 +677,12 @@ bool Words::setting(const Line& l, size_t& i, size_t to, Thing& t, Problems& p) 
   }
   if (is(j, "long") || is(j, "across")) {
     if (!needLight()) return false;
-    for (Thing* h : holders) h->light.a = static_cast<float>(metres(v, unit)), h->trail.push_back(number(v) + " " + unit + " " + k[j].text);
+    for (Thing* h : holders) {
+      h->light.a = static_cast<float>(metres(v, unit));
+      // A long thing's glowing box grows with its light (a 1.6 m neon tube is 1.6 m long).
+      if (k[j].is("long") && h->box.x > 0) h->box.x = h->light.a;
+      h->trail.push_back(number(v) + " " + unit + " " + k[j].text);
+    }
     i = j + 1;
     return true;
   }

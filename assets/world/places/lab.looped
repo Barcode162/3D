@@ -1,0 +1,19 @@
+# The light lab (J116.3), written in Looped Script's words. This file is
+# the place: assets/world/places/lab.json is made from it by
+#   node tools/words.mjs place lab
+# (never edited by hand). The words are in assets/words/; the place words
+# and cause words in looped/words/place.h.
+
+place the light lab
+  about: a small test room with one light of every kind, so the light formula is perfected here in seconds before the bar inherits it
+  you come in at 0 1.65 2.6, facing 0
+  a room 6 by 6 and 3 high, with an oak floor, a plaster ceiling 0.55 0.5 0.46, plaster walls 0.42 0.36 0.32 and a brick back wall
+  a table in the middle
+  a candle on the table
+  two stools by the table, facing it
+  a warm pendant lamp hanging from the ceiling, 1.4 m left and 1.2 m back, 324 lumens
+  a bulb in the near right corner, near the ceiling, 3000 K
+  a neon tube on the left wall, 2.1 m up, 0.6 m forward, 1.6 m long, 160 lumens
+  a sign on the back wall, 2.15 m up, 0.8 m right, waving
+
+  when the lights go down, the pendant lamp and the bulb dim to a quarter

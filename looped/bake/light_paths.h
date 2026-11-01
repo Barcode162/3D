@@ -64,6 +64,10 @@ struct Room {
   bool clear(Vec3 a, Vec3 b, const Lamp& lamp) const;
 };
 
+// The light from one lamp onto (p, n) (lux): a random point on it, shadow
+// tested or not (the average over many calls is exact).
+Vec3 lampLux(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng, bool shadowTested);
+
 // Light from the lamps falling on the surface at `p` (facing `n`): `picks`
 // lamps chosen at random by how much each could give, shadow tested; an
 // estimate of lux whose average is exact. Only lamps with `use[i]` set (all

@@ -1,31 +1,25 @@
 {
   "id": "lab",
-  "about": "The light lab (J116.3): a small test room with one lamp of every kind, so the light formula is perfected in seconds here before the bar inherits it. A bulb under a shade, a bare bulb in a corner, a neon tube, a flat sign on a wall, a candle; a table and two stools to cast shadows (the physics lab knocks them over).",
-  "kinds": ["kinds/bar.json", "kinds/home.json"],
+  "about": "Made from lab.looped by node tools/words.mjs place lab (never edited by hand). a small test room with one light of every kind, so the light formula is perfected here in seconds before the bar inherits it",
+  "kinds": ["kinds/bar.json", "kinds/words.json"],
   "air": {"ambient": [0.08, 0.06, 0.05], "fog": [0.02, 0.015, 0.015], "fogDensity": 0.01, "beams": 0.01},
   "spawn": {"at": [0, 1.65, 2.6], "yaw": 0},
   "lightGrid": {"min": [-4, 0, -4], "max": [4, 0, 4]},
-  "rooms": [{"id": "lab", "min": [-3.25, -0.2, -3.25], "max": [3.25, 3.3, 3.25]}],
+  "rooms": [{"id": "lab", "min": [-3.05, -0.2, -3.05], "max": [3.05, 3.3, 3.05]}],
   "doorways": [],
   "areas": {"arcade": {"min": [0, 0, 0], "max": [0, 0, 0]}},
   "points": {"arcade-door": [0, 0, 0]},
   "things": [
-    {"id": "room", "kind": "home-room", "at": [0, 0, 0]},
+    {"id": "room", "kind": "word-shell", "at": [0, 0, 0], "parts": {"boxes": [{"at": [0, -0.05, 0], "size": [6, 0.1, 6], "material": "oak-floor"}, {"at": [0, 3.05, 0], "size": [6, 0.1, 6], "material": "plaster", "color": [0.55, 0.5, 0.46]}, {"at": [0, 1.5, -3.1], "size": [6, 3, 0.2], "material": "brick"}, {"at": [0, 1.5, 3.1], "size": [6, 3, 0.2], "material": "plaster", "color": [0.42, 0.36, 0.32]}, {"at": [-3.1, 1.5, 0], "size": [0.2, 3, 6], "material": "plaster", "color": [0.42, 0.36, 0.32]}, {"at": [3.1, 1.5, 0], "size": [0.2, 3, 6], "material": "plaster", "color": [0.42, 0.36, 0.32]}], "blocks": [[-4, -4, 4, -3], [-4, 3, 4, 4], [-4, -4, -3, 4], [3, -4, 4, 4]]}},
     {"id": "table", "kind": "round_table", "at": [0, 0, 0]},
     {"id": "candle", "kind": "candle", "at": [0, 0.785, 0]},
-    {"id": "stool-1", "kind": "table_stool", "at": [0.78, 0, 0], "turn": 90},
-    {"id": "stool-2", "kind": "table_stool", "at": [-0.78, 0, 0], "turn": -90},
-    {"id": "lamp", "kind": "pendant_lamp", "at": [-1.4, 2.94, -1.2]},
-    {"id": "lamp-light", "kind": "light-bulb", "at": [-1.4, 2.15, -1.2], "parts": {"light": {"color": [1, 1, 1], "intensity": 1.8, "range": 5.5, "radius": 0.08, "dims": true, "lumens": 324, "kelvin": 2400}}},
-    {"id": "corner-bulb", "kind": "light-bulb", "at": [2.5, 2.55, 2.5], "parts": {
-      "light": {"color": [1, 1, 1], "intensity": 1, "range": 4.5, "radius": 0.05, "lumens": 200, "kelvin": 3000},
-      "boxes": [{"at": [0, 0, 0], "size": [0.1, 0.1, 0.1], "color": [1, 0.85, 0.65], "glow": 3, "solid": false}]}},
-    {"id": "neon-tube", "kind": "light-neon", "at": [-2.96, 2.1, 0.6], "parts": {
-      "light": {"color": [1, 0.25, 0.6], "intensity": 0.9, "range": 3.5, "radius": 0.03, "lumens": 160, "shape": "tube", "center": [0, 0, 0], "axis": [0, 0, 1], "length": 1.6},
-      "boxes": [{"at": [0, 0, 0], "size": [0.03, 0.03, 1.6], "color": [1, 0.25, 0.6], "glow": 5, "solid": false}]}},
-    {"id": "wall-sign", "kind": "light-neon-wave", "at": [0.8, 2.15, -2.98], "parts": {
-      "light": {"color": [0.3, 0.8, 1], "intensity": 0.9, "range": 3.5, "radius": 0.05, "lumens": 150, "shape": "panel", "center": [0, 0, 0.02], "axis": [1, 0, 0], "length": 1.0, "axis2": [0, 1, 0], "width": 0.3, "wall": true},
-      "boxes": [{"at": [0, 0, 0], "size": [1.0, 0.3, 0.03], "color": [0.3, 0.8, 1], "glow": 5, "solid": false}]}},
-    {"id": "candle-flame", "kind": "light-fire", "at": [0, 0.9, 0], "parts": {"light": {"color": [1, 1, 1], "intensity": 0.3, "range": 2, "radius": 0.01, "lumens": 12, "kelvin": 1800}}}
+    {"id": "candle-flame", "kind": "word-light", "at": [0, 0.875, 0], "parts": {"light": {"color": [1, 1, 1], "kelvin": 1800, "lumens": 12, "intensity": 1, "range": 5, "radius": 0.005}}, "loops": {"live": {"period": 0.5, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.3, "rate": 1}]}}},
+    {"id": "stool-1", "kind": "table_stool", "at": [0.785, 0, 0], "turn": 90},
+    {"id": "stool-2", "kind": "table_stool", "at": [-0.785, 0, 0], "turn": -90},
+    {"id": "pendant-lamp", "kind": "pendant_lamp", "at": [-1.4, 2.94, -1.2]},
+    {"id": "pendant-lamp-bulb", "kind": "word-light", "at": [-1.4, 2.14, -1.2], "parts": {"light": {"color": [1, 1, 1], "kelvin": 2400, "lumens": 324, "intensity": 1, "range": 5, "radius": 0.03, "dims": true}, "boxes": [{"at": [0, 0, 0], "size": [0.06, 0.09, 0.06], "color": [1, 0.3511, 0.0538], "glow": 5, "solid": false}]}},
+    {"id": "bulb", "kind": "word-light", "at": [2.5, 2.55, 2.5], "parts": {"light": {"color": [1, 1, 1], "kelvin": 3000, "lumens": 200, "intensity": 1, "range": 5, "radius": 0.03, "dims": true}, "boxes": [{"at": [0, 0, 0], "size": [0.06, 0.09, 0.06], "color": [1, 0.6048, 0.3049], "glow": 5, "solid": false}]}},
+    {"id": "neon-tube", "kind": "word-light", "at": [-2.97, 2.1, 0.6], "turn": 90, "parts": {"light": {"color": [1, 0.25, 0.6], "lumens": 160, "intensity": 1, "range": 5, "radius": 0.03, "shape": "tube", "center": [0, 0, 0], "axis": [1, 0, 0], "length": 1.6}, "boxes": [{"at": [0, 0, 0], "size": [1.6, 0.03, 0.03], "color": [1, 0.25, 0.6], "glow": 5, "solid": false}]}, "loops": {"live": {"period": 2, "pieces": [{"ch": "light", "shape": "flicker", "amp": 0.12, "rate": 0.8}]}}},
+    {"id": "sign", "kind": "word-light", "at": [0.8, 2.15, -2.97], "parts": {"light": {"color": [0.3, 0.8, 1], "lumens": 150, "intensity": 1, "range": 5, "radius": 0.05, "shape": "panel", "center": [0, 0, 0.02], "axis": [1, 0, 0], "length": 1, "axis2": [0, 1, 0], "width": 0.3, "wall": true}, "boxes": [{"at": [0, 0, 0], "size": [1, 0.3, 0.03], "color": [0.3, 0.6, 1], "glow": 5, "solid": false}]}, "loops": {"live": {"period": 5, "pieces": [{"ch": "light", "shape": "wave", "amp": 0.18}]}}}
   ]
 }

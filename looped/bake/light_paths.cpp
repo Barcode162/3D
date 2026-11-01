@@ -85,7 +85,7 @@ float potential(const Lamp& l, Vec3 p, Vec3 n) {
 
 // The light from one lamp onto (p, n), sampled at a random point on the
 // lamp, shadow tested (lux). `p` is already off the surface.
-Vec3 lampLight(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng) {
+Vec3 lampLight(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng, bool test = true) {
   const float u = rng.uniform(), v = rng.uniform();
   if (l.shape == 0) {
     // A ball: what it gives is the same as its middle's (a glowing ball
@@ -97,7 +97,7 @@ Vec3 lampLight(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng) {
     Vec3 q;
     do q = {rng.uniform() * 2 - 1, rng.uniform() * 2 - 1, rng.uniform() * 2 - 1};
     while (dot(q, q) > 1);
-    if (!room.clear(p, l.position + q * l.radius, l)) return {};
+    if (test && !room.clear(p, l.position + q * l.radius, l)) return {};
     return l.color * (l.cd * c / std::max(d2, l.radius * l.radius));
   }
   Vec3 q = l.position + l.axis * (2 * u - 1);
@@ -109,12 +109,16 @@ Vec3 lampLight(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng) {
   if (c <= 0) return {};
   const float emit = l.shape == 2 ? panelEmit(l, panelNormal(l), -dir) : 1.0f;
   if (emit <= 0) return {};
-  if (!room.clear(p, q, l)) return {};
+  if (test && !room.clear(p, q, l)) return {};
   const float rr = std::min(l.radius, 0.05f);
   return l.color * (l.cd * emit * c / std::max(d2, rr * rr));
 }
 
 }  // namespace
+
+Vec3 lampLux(const Room& room, const Lamp& l, Vec3 p, Vec3 n, Rng& rng, bool shadowTested) {
+  return lampLight(room, l, p, n, rng, shadowTested);
+}
 
 Lamp lampOf(const PointLight& p, bool halfOneSided) {
   Lamp l;
