@@ -113,7 +113,11 @@ bool make(const std::string& name, std::string& json, Place& place) {
         ModelData d;
         std::string error;
         std::vector<draw::ModelProblem> probs;
-        if (parseGlb(bytes, d, error)) probs = draw::checkModel(draw::measureModel(d));
+        if (parseGlb(bytes, d, error)) {
+          draw::ModelMeasure mm = draw::measureModel(d);
+          mm.file = t->model;
+          probs = draw::checkModel(mm);
+        }
         it = checked.emplace(t->model, std::move(probs)).first;
       }
       for (const draw::ModelProblem& mp : it->second) {

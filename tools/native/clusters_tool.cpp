@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     if (file.rfind("#box-", 0) == 0) continue;
     Built b;
     b.measure = draw::measureModel(m, &b.prims);
+    b.measure.file = file;
     b.full = b.measure.triangles;
     for (const draw::ClusterTree& t : b.prims) b.root += t.rootTriangles, b.levels = std::max(b.levels, t.levels);
     built[file] = std::move(b);

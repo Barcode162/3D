@@ -198,7 +198,7 @@ for i in range(cols):
               Vector((cx - s, y, cz + s)), Vector((cx - s, y, cz - s))]
         common.tube("LED square", sq, 0.016, m, sides=6)
 common.torus("Ceiling ring", Vector(((AX0 + AX1) / 2, AH - 0.35, zmid)), 1.1, 0.025, neon["purple"], axis="y",
-             segments=48, sides=8)
+             segments=32, sides=6)
 for a in (0, math.pi / 2, math.pi, 1.5 * math.pi):
     common.cylinder("Ring wire", Vector(((AX0 + AX1) / 2 + 1.1 * math.cos(a), AH - 0.17, zmid + 1.1 * math.sin(a))),
                     0.004, 0.34, "y", trim_m, segments=6)

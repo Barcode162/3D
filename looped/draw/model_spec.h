@@ -32,6 +32,7 @@ struct ModelMeasure {
   uint32_t materials = 0;
   uint32_t pictured = 0;      // materials with a picture (plain colours are kept per corner in the new frame)
   float size = 0;             // its biggest side (metres)
+  std::string file;           // its file name ("credit_coin.glb"), for the models seen up close
 };
 
 struct ModelRule {

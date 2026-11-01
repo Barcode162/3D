@@ -19,7 +19,9 @@ int main(int argc, char** argv) {
       ++bad;
       continue;
     }
-    const engine::draw::ModelMeasure m = engine::draw::measureModel(d);
+    engine::draw::ModelMeasure m = engine::draw::measureModel(d);
+    const std::string path = argv[a];
+    m.file = path.substr(path.find_last_of('/') + 1);
     const auto problems = engine::draw::checkModel(m);
     std::printf("%s: %u triangles, %.2f m, seams %.0f%%, %u pieces, open %.0f%%, simplest %.0f%%, %u materials: %s\n", argv[a], m.triangles, m.size,
                 m.seamShare * 100, m.parts, m.openShare * 100, m.simplestShare * 100, m.materials, problems.empty() ? "meets the spec" : "BREAKS IT");

@@ -194,13 +194,13 @@ def on_deck(x, s):
 
 # Joystick: base plate, shaft, red ball top; two buttons.
 jb = on_deck(-0.16, 0.12)
-common.cylinder("Joystick base", jb, 0.035, 0.006, "y", body, segments=16)
+common.cylinder("Joystick base", jb, 0.035, 0.006, "y", body, segments=10)
 common.cylinder("Joystick shaft", jb + Vector((0, 0.045, 0)), 0.006, 0.09, "y", chrome, segments=8)
 common.sphere("Joystick ball", jb + Vector((0, 0.1, 0)), 0.02, red_ball, 16, 10)
 for i, (x, k) in enumerate(((0.08, "pink"), (0.17, "yellow"))):
     p = on_deck(x, 0.13 + 0.01 * i)
-    common.cylinder("Button", p + Vector((0, 0.006, 0)), 0.022, 0.012, "y", btn[k], segments=18)
-    common.cylinder("Button ring", p, 0.027, 0.004, "y", chrome, segments=18)
+    common.cylinder("Button", p + Vector((0, 0.006, 0)), 0.022, 0.012, "y", btn[k], segments=10)
+    common.cylinder("Button ring", p, 0.027, 0.004, "y", chrome, segments=10)
 # Screen: bezel slab and the glowing picture just in front of it.
 slab("Bezel", 0.21, 1.12, 0.04, 1.60, 0.03, body)
 s_t = Vector((0, 1.60 - 1.12, 0.04 - 0.21)).normalized()
@@ -212,6 +212,6 @@ common.panel("Marquee", Vector((0, 1.75, 0.252)), (1, 0, 0), (0, 1, 0), IN1 - IN
 common.box("Marquee shelf", (IN0, 1.62, 0.04), (IN1, 1.64, 0.25), body, 0.0)
 # Speaker grilles under the marquee.
 for x in (-0.2, 0.2):
-    common.cylinder("Speaker", Vector((x, 1.63, 0.15)), 0.04, 0.004, "y", metal, segments=16)
+    common.cylinder("Speaker", Vector((x, 1.63, 0.15)), 0.04, 0.004, "y", metal, segments=10)
 
 common.finish_and_export(out_path, uv_scale={})

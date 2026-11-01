@@ -34,16 +34,16 @@ flip = Matrix.Rotation(math.pi / 2, 4, "X")  # lathe spins around y; the coin fa
 h = T / 2
 profile = [(0.0, -h + FACE), (R - 0.012, -h + FACE), (R - 0.0105, -h), (R - 0.003, -h), (R, -h + 0.003),
            (R, h - 0.003), (R - 0.003, h), (R - 0.0105, h), (R - 0.012, h - FACE), (0.0, h - FACE)]
-body = common.lathe("Body", [(r, y) for (r, y) in profile], gold, segments=72)
+body = common.lathe("Body", [(r, y) for (r, y) in profile], gold, segments=36)  # the model spec (looped/draw/model_spec.h): seen up close
 common.transform(body, flip)
 
 # The faces' brushed metal: thin discs on the sunk faces.
 for side in (-1, 1):
     disc = common.cylinder("Face", Vector((0, 0, side * (h - FACE + 0.0004))), R - 0.0122, 0.0008, "z", brushed,
-                           segments=64, bevel=0.0003)
+                           segments=40, bevel=0.0)
 
 # Ridged edge: little bars all the way round.
-ridges = 84
+ridges = 36
 for k in range(ridges):
     a = 2 * math.pi * k / ridges
     c = Vector((math.cos(a) * (R + 0.0004), math.sin(a) * (R + 0.0004), 0))
@@ -53,19 +53,19 @@ for k in range(ridges):
 # The glowing enamel ring and the loop emblem, on both faces.
 for side in (-1, 1):
     z = side * (h - FACE + 0.0012)
-    ring = common.torus("Enamel ring", Vector((0, 0, 0)), 0.041, 0.0021, enamel, axis="z", segments=64, sides=10)
+    ring = common.torus("Enamel ring", Vector((0, 0, 0)), 0.041, 0.0021, enamel, axis="z", segments=40, sides=6)
     common.transform(ring, Matrix.Translation(Vector((0, 0, z))))
     # The loop: a lemniscate (infinity sign), 5.6 cm wide, raised.
     pts = []
-    steps = 96
+    steps = 36
     for i in range(steps):
         t = 2 * math.pi * i / steps
         d = 1 + math.sin(t) ** 2
         pts.append(Vector((0.028 * math.cos(t) / d, 0.028 * math.sin(t) * math.cos(t) / d, z + side * 0.0012)))
-    common.tube("Loop", pts, 0.0032, polished, sides=12, closed=True)
+    common.tube("Loop", pts, 0.0032, polished, sides=6, closed=True)
     # Four small studs between the ring and the edge.
     for k in range(4):
         a = math.pi / 4 + k * math.pi / 2
-        common.sphere("Stud", Vector((math.cos(a) * 0.0335, math.sin(a) * 0.0335, z)), 0.0022, polished, 12, 6)
+        common.sphere("Stud", Vector((math.cos(a) * 0.0335, math.sin(a) * 0.0335, z)), 0.0022, polished, 6, 4)
 
 common.finish_and_export(out, {})
