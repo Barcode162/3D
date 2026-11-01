@@ -3,7 +3,9 @@
 //   the light lab loads its baked pictures and words, relights, and its
 //     bake is within 8% of the exact reference over everything seen;
 //   the draw lab draws on WebGPU and on WebGL2, and the two pictures are the
-//     same (lights held still) (J116.4: one interface, two backends).
+//     same (lights held still) (J116.4: one interface, two backends);
+//   the physics lab: a knocked stool settles, the light around it is worked
+//     out again, and no frame's own work stutters (J116.5).
 // Usage: node tools/labs_test.mjs (after the build).
 import { launchBrowser } from './lib/browser.mjs';
 import { serveSite } from './lib/site.mjs';
@@ -64,6 +66,30 @@ try {
     check(!problem, `draw lab (${name}): no problem shown` + (problem ? ': ' + problem : ''));
     pictures[name] = await page.locator('canvas').screenshot();
     check(errs.length === 0, `draw lab (${name}): no page errors` + (errs.length ? ': ' + errs[0] : ''));
+    await page.close();
+  }
+  // ---- The physics lab: knock a stool over; it settles, the light around it is redone, no frame stutters ----
+  {
+    const page = await browser.newPage({ viewport: { width: 800, height: 900 } });
+    const errs = errorsOf(page);
+    await page.goto(site.url + 'labs/physics/index.html?gl=1');
+    await page.waitForFunction(() => window.Module && Module._pl_ready && Module._pl_ready() === 1, null, { timeout: 60000 });
+    await page.click('#k0');
+    await page.waitForFunction(() => Module._pl_state(0) === 1, null, { timeout: 10000 });
+    check(true, 'physics lab: the knocked stool moves (lit live)');
+    let worst = 0;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 240000) {
+      const st = await page.evaluate(() => [Module._pl_state(0), document.getElementById('fps').textContent]);
+      const m = /slowest frame (\d+) ms/.exec(st[1]);
+      if (m) worst = Math.max(worst, Number(m[1]));
+      if (st[0] === 3) break;
+      await page.waitForTimeout(1000);
+    }
+    const state = await page.evaluate(() => Module._pl_state(0));
+    check(state === 3, `physics lab: it comes to rest, the light around it is worked out again, and it joins the room (${((Date.now() - t0) / 1000).toFixed(0)} s here)`);
+    check(worst > 0 && worst < 40, `physics lab: no frame's own work stutters (slowest ${worst} ms, under 40)`);
+    check(errs.length === 0, 'physics lab: no page errors' + (errs.length ? ': ' + errs[0] : ''));
     await page.close();
   }
   // Compare the two pictures (decoded in the page, which has a PNG reader).

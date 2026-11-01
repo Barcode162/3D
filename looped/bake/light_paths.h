@@ -57,6 +57,28 @@ struct Room {
   std::vector<Lamp> lamps;
   float emissiveNits = 8;  // a glow of 1 in the models is this bright (cd/m², as the renderer)
   void build(const SceneGeometry& g, std::vector<Lamp> l);
+
+  // Things that move (J116.5: a stool knocked over). Each has its own ray
+  // tree over its triangles as they were baked; `turn` and `shift` say
+  // where it is now (now = turn · baked + shift), so moving it costs
+  // nothing and the room's tree is never rebuilt. A hit's `tri` is the
+  // room's triangle number either way; `present` false leaves it out (a
+  // thing lighting itself).
+  struct Mover {
+    Bvh bvh;
+    std::vector<uint32_t> tris;  // its triangles, in the room's numbering
+    Quat turn;
+    Vec3 shift;
+    bool present = true;
+  };
+  std::vector<Mover> movers;
+  std::vector<int16_t> moverOf;  // per triangle: its mover, or -1
+  // A triangle's facing now (a mover's turned with it).
+  Vec3 normal(uint32_t tri) const;
+  // The room's tree without the movers' triangles, then one tree per mover.
+  void build(const SceneGeometry& g, std::vector<Lamp> l, const std::vector<std::vector<uint32_t>>& moverTris);
+  bool intersect(Vec3 origin, Vec3 dir, float tMin, float tMax, Bvh::Hit* hit) const;
+  bool occluded(Vec3 origin, Vec3 dir, float tMin, float tMax) const;
   // Is the straight line a → b (a point on lamp `lamp`) clear? The lamp's
   // own glowing bulb doesn't count (its model's glowing faces, and any of
   // its faces within the bulb's reach of b); its shade does (J116.1: the

@@ -119,7 +119,25 @@ class GpuDevice final : public Device {
     layout.rowsPerImage = static_cast<uint32_t>(h);
     queue_.WriteTexture(&dst, data, static_cast<size_t>(w) * h * bpp, &layout, &td.size);
     textures_.push_back(t.CreateView());
+    textureObjects_.push_back(t);
     return static_cast<Handle>(textures_.size());
+  }
+
+  void updateTexture(Handle t, int w, int h, Format f, const void* data) override {
+    if (!t || t > textureObjects_.size()) return;
+    const uint32_t bpp = f == Format::kRgba16f ? 8 : 4;
+    wgpu::TexelCopyTextureInfo dst;
+    dst.texture = textureObjects_[t - 1];
+    wgpu::TexelCopyBufferLayout layout;
+    layout.bytesPerRow = static_cast<uint32_t>(w) * bpp;
+    layout.rowsPerImage = static_cast<uint32_t>(h);
+    const wgpu::Extent3D size{static_cast<uint32_t>(w), static_cast<uint32_t>(h), 1};
+    queue_.WriteTexture(&dst, data, static_cast<size_t>(w) * h * bpp, &layout, &size);
+  }
+
+  void updateVertices(Handle b, size_t offset, const void* data, size_t bytes) override {
+    if (!b || b > buffers_.size() || (offset & 3) || (bytes & 3)) return;  // whole 4-byte words (vertices are 72 bytes)
+    queue_.WriteBuffer(buffers_[b - 1], offset, data, bytes);
   }
 
   Handle pipeline(const PipelineDesc& d) override {
@@ -289,6 +307,7 @@ class GpuDevice final : public Device {
   uint64_t draws_ = 0;
   std::vector<wgpu::Buffer> buffers_;
   std::vector<wgpu::TextureView> textures_;
+  std::vector<wgpu::Texture> textureObjects_;
   std::vector<Pipe> pipes_;
 };
 

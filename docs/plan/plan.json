@@ -74,7 +74,7 @@
     "id": "J116.5",
     "text": "The physics lab: furniture as bodies; what comes to rest joins the baked room and only the light around it is worked out again",
     "check": "Knock the stool over in the lab: the light around it settles, nothing stutters",
-    "done": false
+    "done": true
    },
    {
     "id": "J116.6",

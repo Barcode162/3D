@@ -99,6 +99,17 @@ class GlDevice final : public Device {
     return t;
   }
 
+  void updateTexture(Handle t, int w, int h, Format f, const void* data) override {
+    glBindTexture(GL_TEXTURE_2D, t);
+    if (f == Format::kRgba16f) glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_HALF_FLOAT, data);
+    else glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  }
+
+  void updateVertices(Handle b, size_t offset, const void* data, size_t bytes) override {
+    glBindBuffer(GL_ARRAY_BUFFER, b);
+    glBufferSubData(GL_ARRAY_BUFFER, static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(bytes), data);
+  }
+
   Handle pipeline(const PipelineDesc& d) override {
     const size_t cut = d.glsl.find("//--- fragment");
     if (cut == std::string::npos) {

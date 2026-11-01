@@ -647,6 +647,40 @@ void writeScene(const std::string& path, const Loaded& L, const bake::Room& room
   std::printf("the baked room for the new frame: %s (%.1f MB)\n", path.c_str(), o.size() / 1e6);
 }
 
+// What the physics lab needs to redo the light near a thing that moved
+// (J116.5): "LREP", counts (u32: triangles, models, texels, lamps), each
+// triangle's model (u32), each lamp's own model (i32), each model's thing
+// id (u16 length + text; "" for plain boxes), and every texel on a surface
+// (u16 x, u16 y, position f32x3, facing f32x3).
+void writeRepair(const std::string& path, const Loaded& L, const bake::Room& room, const Atlas& A) {
+  std::vector<uint8_t> o = {'L', 'R', 'E', 'P'};
+  auto u32 = [&](uint32_t v) { for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(v >> (8 * k))); };
+  auto f32 = [&](float f) { uint32_t v; std::memcpy(&v, &f, 4); u32(v); };
+  std::vector<size_t> texels;
+  for (size_t i = 0; i < A.state.size(); ++i)
+    if (A.state[i] == 1) texels.push_back(i);
+  const size_t models = L.scene.models.size() + L.scene.objects.size();
+  u32(static_cast<uint32_t>(L.geo.triangleCount())), u32(static_cast<uint32_t>(models)), u32(static_cast<uint32_t>(texels.size())),
+      u32(static_cast<uint32_t>(room.lamps.size()));
+  for (uint32_t m : L.geo.triModel) u32(m);
+  for (const bake::Lamp& l : room.lamps) u32(static_cast<uint32_t>(l.model));
+  for (size_t m = 0; m < models; ++m) {
+    std::string id;
+    if (m < L.scene.models.size() && m < L.scene.modelThing.size() && L.scene.modelThing[m] >= 0)
+      id = L.scene.world->thing(L.scene.modelThing[m]).id;
+    o.push_back(static_cast<uint8_t>(id.size() & 255)), o.push_back(static_cast<uint8_t>(id.size() >> 8));
+    o.insert(o.end(), id.begin(), id.end());
+  }
+  for (size_t i : texels) {
+    const int x = static_cast<int>(i % A.width), y = static_cast<int>(i / A.width);
+    o.push_back(static_cast<uint8_t>(x & 255)), o.push_back(static_cast<uint8_t>(x >> 8));
+    o.push_back(static_cast<uint8_t>(y & 255)), o.push_back(static_cast<uint8_t>(y >> 8));
+    f32(A.pos[i].x), f32(A.pos[i].y), f32(A.pos[i].z), f32(A.nrm[i].x), f32(A.nrm[i].y), f32(A.nrm[i].z);
+  }
+  std::ofstream(path, std::ios::binary).write(reinterpret_cast<const char*>(o.data()), static_cast<std::streamsize>(o.size()));
+  std::printf("what the physics lab needs to repair: %s (%.1f MB)\n", path.c_str(), o.size() / 1e6);
+}
+
 int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spots) {
   std::filesystem::create_directories(out);
   const int samples = envInt("SAMPLES", 128), bounces = envInt("BOUNCES", 4), layersWanted = envInt("LAYERS", 4);
@@ -938,6 +972,7 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
     writePng(out + "/" + name + ".png", 2 * v.width, v.height, bake::toDisplay(pair, 2 * v.width, v.height, Mood{}));
   }
   writeScene(out + "/scene.bin", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen);
+  writeRepair(out + "/repair.bin", L, room, A);
   summary += "]}\n";
   std::ofstream(out + "/summary.json") << summary;
   // The baked layers, for the frame (J116.4).

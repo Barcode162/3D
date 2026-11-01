@@ -5,7 +5,7 @@
 //   light = Σk u_k(x) · w_k              (the room's baked light, any brightnesses)
 //         + Σ4 lamp_i(x) · seen_i(x)     (small things: their four lamps, worked out per pixel)
 //   colour = glow + surface · light / π, then the eye's curve (ACES) and sRGB.
-// The uniform block (std140, 1168 bytes) is SceneUniforms in draw_lab.cpp.
+// The uniform block (std140, 1552 bytes) is lab::SceneUniforms (labs/draw/room_view.h).
 namespace lab {
 
 inline const char* kSceneWgsl = R"WGSL(
@@ -17,6 +17,10 @@ struct U {
   lampCol: array<vec4f, 16>,
   lampAx: array<vec4f, 16>,
   lampAx2: array<vec4f, 16>,
+  objTurn: array<vec4f, 2>,
+  objShift: array<vec4f, 2>,
+  objCube: array<vec4f, 12>,
+  objSeen: array<vec4f, 8>,
 };
 @group(0) @binding(0) var<uniform> u: U;
 @group(0) @binding(1) var tex0: texture_2d<f32>;
@@ -32,13 +36,30 @@ struct VOut {
   @location(5) corner: vec4f,
   @location(6) @interpolate(flat) lamps: vec4u,
   @location(7) seen: vec4f,
+  @location(8) @interpolate(flat) obj: u32,
 };
+
+fn qrot(q: vec4f, v: vec3f) -> vec3f {
+  let t = 2.0 * cross(q.xyz, v);
+  return v + q.w * t + cross(q.xyz, t);
+}
 
 @vertex fn vs_main(@location(0) p: vec3f, @location(1) n: vec3f, @location(2) uv: vec2f, @location(3) albedo: vec4f,
                    @location(4) glow: vec3f, @location(5) corner: vec4f, @location(6) lamps: vec4u, @location(7) seen: vec4f) -> VOut {
   var o: VOut;
-  o.pos = u.viewProj * vec4f(p, 1.0);
-  o.world = p; o.normal = n; o.uv = uv; o.albedo = albedo; o.glow = glow; o.corner = corner; o.lamps = lamps; o.seen = seen;
+  var wp = p;
+  var wn = n;
+  o.obj = 0u;
+  if (albedo.a > 0.002 && albedo.a < 0.99) {  // a thing that moves (J116.5): its number in the alpha
+    let k = min(u32(round(albedo.a * 255.0)) - 1u, 1u);
+    if (u.objShift[k].w > 0.5) {
+      wp = qrot(u.objTurn[k], p) + u.objShift[k].xyz;
+      wn = qrot(u.objTurn[k], n);
+      o.obj = k + 1u;
+    }
+  }
+  o.pos = u.viewProj * vec4f(wp, 1.0);
+  o.world = wp; o.normal = wn; o.uv = uv; o.albedo = albedo; o.glow = glow; o.corner = corner; o.lamps = lamps; o.seen = seen;
   return o;
 }
 
@@ -75,7 +96,17 @@ fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.
   if (dot(n, u.eye.xyz - v.world) < 0.0) { n = -n; }
   var e = vec3f(0.0);
   let t = textureSampleLevel(tex0, samp0, max(v.uv, vec2f(0.0)), 0.0);
-  if (v.albedo.a > 0.5) {
+  if (v.obj > 0u) {  // moving: the bounce from six ways, every lamp per pixel times how much it sees
+    let k = v.obj - 1u;
+    let n2 = n * n;
+    e = select(u.objCube[k * 6u + 1u].rgb, u.objCube[k * 6u].rgb, n.x >= 0.0) * n2.x
+      + select(u.objCube[k * 6u + 3u].rgb, u.objCube[k * 6u + 2u].rgb, n.y >= 0.0) * n2.y
+      + select(u.objCube[k * 6u + 5u].rgb, u.objCube[k * 6u + 4u].rgb, n.z >= 0.0) * n2.z;
+    let at = v.world + n * 0.002;
+    for (var l = 0u; l < 16u; l++) {
+      e += lampLux(l, at, n) * u.objSeen[k * 4u + l / 4u][l % 4u];
+    }
+  } else if (v.albedo.a > 0.99) {
     e = t.x * u.w[0].rgb + t.y * u.w[1].rgb + t.z * u.w[2].rgb + t.w * u.w[3].rgb;
   } else {
     e = v.corner.x * u.w[0].rgb + v.corner.y * u.w[1].rgb + v.corner.z * u.w[2].rgb + v.corner.w * u.w[3].rgb;
@@ -98,6 +129,10 @@ layout(std140) uniform U {
   vec4 lampCol[16];
   vec4 lampAx[16];
   vec4 lampAx2[16];
+  vec4 objTurn[2];
+  vec4 objShift[2];
+  vec4 objCube[12];
+  vec4 objSeen[8];
 };
 layout(location = 0) in vec3 p;
 layout(location = 1) in vec3 n;
@@ -108,10 +143,21 @@ layout(location = 5) in vec4 corner;
 layout(location = 6) in uvec4 lamps;
 layout(location = 7) in vec4 seen;
 out vec3 vWorld; out vec3 vNormal; out vec2 vUv; out vec4 vAlbedo; out vec3 vGlow; out vec4 vCorner;
-flat out uvec4 vLamps; out vec4 vSeen;
+flat out uvec4 vLamps; out vec4 vSeen; flat out uint vObj;
+vec3 qrot(vec4 q, vec3 v) { vec3 t = 2.0 * cross(q.xyz, v); return v + q.w * t + cross(q.xyz, t); }
 void main() {
-  gl_Position = viewProj * vec4(p, 1.0);
-  vWorld = p; vNormal = n; vUv = uv; vAlbedo = albedo; vGlow = glow; vCorner = corner; vLamps = lamps; vSeen = seen;
+  vec3 wp = p, wn = n;
+  vObj = 0u;
+  if (albedo.a > 0.002 && albedo.a < 0.99) {  // a thing that moves (J116.5): its number in the alpha
+    uint k = min(uint(round(albedo.a * 255.0)) - 1u, 1u);
+    if (objShift[k].w > 0.5) {
+      wp = qrot(objTurn[k], p) + objShift[k].xyz;
+      wn = qrot(objTurn[k], n);
+      vObj = k + 1u;
+    }
+  }
+  gl_Position = viewProj * vec4(wp, 1.0);
+  vWorld = wp; vNormal = wn; vUv = uv; vAlbedo = albedo; vGlow = glow; vCorner = corner; vLamps = lamps; vSeen = seen;
 }
 //--- fragment
 #version 300 es
@@ -125,10 +171,14 @@ layout(std140) uniform U {
   vec4 lampCol[16];
   vec4 lampAx[16];
   vec4 lampAx2[16];
+  vec4 objTurn[2];
+  vec4 objShift[2];
+  vec4 objCube[12];
+  vec4 objSeen[8];
 };
 uniform sampler2D tex0;
 in vec3 vWorld; in vec3 vNormal; in vec2 vUv; in vec4 vAlbedo; in vec3 vGlow; in vec4 vCorner;
-flat in uvec4 vLamps; in vec4 vSeen;
+flat in uvec4 vLamps; in vec4 vSeen; flat in uint vObj;
 out vec4 color;
 
 vec3 lampLux(uint i, vec3 p, vec3 n) {
@@ -162,7 +212,15 @@ void main() {
   if (dot(nn, eye.xyz - vWorld) < 0.0) nn = -nn;
   vec3 e = vec3(0.0);
   vec4 t = textureLod(tex0, max(vUv, vec2(0.0)), 0.0);
-  if (vAlbedo.a > 0.5) {
+  if (vObj > 0u) {  // moving: the bounce from six ways, every lamp per pixel times how much it sees
+    uint k = vObj - 1u;
+    vec3 n2 = nn * nn;
+    e = (nn.x >= 0.0 ? objCube[k * 6u].rgb : objCube[k * 6u + 1u].rgb) * n2.x
+      + (nn.y >= 0.0 ? objCube[k * 6u + 2u].rgb : objCube[k * 6u + 3u].rgb) * n2.y
+      + (nn.z >= 0.0 ? objCube[k * 6u + 4u].rgb : objCube[k * 6u + 5u].rgb) * n2.z;
+    vec3 at = vWorld + nn * 0.002;
+    for (uint l = 0u; l < 16u; l++) e += lampLux(l, at, nn) * objSeen[k * 4u + l / 4u][l % 4u];
+  } else if (vAlbedo.a > 0.99) {
     e = t.x * w[0].rgb + t.y * w[1].rgb + t.z * w[2].rgb + t.w * w[3].rgb;
   } else {
     e = vCorner.x * w[0].rgb + vCorner.y * w[1].rgb + vCorner.z * w[2].rgb + vCorner.w * w[3].rgb;

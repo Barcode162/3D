@@ -171,6 +171,61 @@ void Room::build(const SceneGeometry& g, std::vector<Lamp> l) {
   lamps = std::move(l);
 }
 
+void Room::build(const SceneGeometry& g, std::vector<Lamp> l, const std::vector<std::vector<uint32_t>>& moverTris) {
+  geo = &g;
+  lamps = std::move(l);
+  // The room without the movers: their triangles squashed to one far point.
+  std::vector<Vec3> pos = g.positions;
+  std::vector<uint32_t> idx = g.indices;
+  pos.push_back({1e6f, 1e6f, 1e6f});
+  const auto far = static_cast<uint32_t>(pos.size() - 1);
+  movers.clear();
+  moverOf.assign(g.triangleCount(), -1);
+  for (const std::vector<uint32_t>& tris : moverTris) {
+    for (uint32_t t : tris) moverOf[t] = static_cast<int16_t>(movers.size());
+    Mover m;
+    m.tris = tris;
+    std::vector<uint32_t> own;
+    own.reserve(tris.size() * 3);
+    for (uint32_t t : tris)
+      for (int k = 0; k < 3; ++k) own.push_back(g.indices[3 * t + k]), idx[3 * t + k] = far;
+    m.bvh.build(g.positions, own);
+    movers.push_back(std::move(m));
+  }
+  bvh.build(pos, idx);
+}
+
+Vec3 Room::normal(uint32_t tri) const {
+  const Vec3 n = geo->normal(tri);
+  if (tri < moverOf.size() && moverOf[tri] >= 0) return movers[static_cast<size_t>(moverOf[tri])].turn.rotate(n);
+  return n;
+}
+
+bool Room::intersect(Vec3 o, Vec3 d, float tMin, float tMax, Bvh::Hit* hit) const {
+  bool any = bvh.intersect(o, d, tMin, tMax, hit);
+  for (const Mover& m : movers) {
+    if (!m.present) continue;
+    const Quat back = conjugate(m.turn);
+    Bvh::Hit h;
+    if (m.bvh.intersect(back.rotate(o - m.shift), back.rotate(d), tMin, any ? hit->t : tMax, &h)) {
+      h.tri = m.tris[h.tri];
+      *hit = h;
+      any = true;
+    }
+  }
+  return any;
+}
+
+bool Room::occluded(Vec3 o, Vec3 d, float tMin, float tMax) const {
+  if (bvh.occluded(o, d, tMin, tMax)) return true;
+  for (const Mover& m : movers) {
+    if (!m.present) continue;
+    const Quat back = conjugate(m.turn);
+    if (m.bvh.occluded(back.rotate(o - m.shift), back.rotate(d), tMin, tMax)) return true;
+  }
+  return false;
+}
+
 bool Room::clear(Vec3 a, Vec3 b, const Lamp& lamp) const {
   Vec3 d = b - a;
   const float dist = length(d);
@@ -178,7 +233,7 @@ bool Room::clear(Vec3 a, Vec3 b, const Lamp& lamp) const {
   d = d * (1.0f / dist);
   const float tMax = dist - kEps;
   ++tRays;
-  if (!bvh.occluded(a, d, 1e-4f, tMax)) return true;
+  if (!occluded(a, d, 1e-4f, tMax)) return true;
   if (lamp.model < 0) return false;
   // Something's in the way: fine if it's only the lamp's own bulb.
   const float bulb = lamp.radius + 0.03f;
@@ -186,7 +241,7 @@ bool Room::clear(Vec3 a, Vec3 b, const Lamp& lamp) const {
   for (int k = 0; k < 32; ++k) {
     Bvh::Hit h;
     ++tRays;
-    if (!bvh.intersect(a, d, t0, tMax, &h)) return true;
+    if (!intersect(a, d, t0, tMax, &h)) return true;
     if (static_cast<int>(geo->triModel[h.tri]) != lamp.model) return false;
     const GeoMaterial& m = geo->materials[geo->triMaterial[h.tri]];
     const bool glowing = m.emission.x + m.emission.y + m.emission.z > 0.05f;
@@ -234,9 +289,9 @@ void walkPath(const Room& room, Vec3 p, Vec3 n, Rng& rng, int bounces, int first
     const Vec3 dir = cosineDir(n, rng);
     Bvh::Hit h;
     ++tRays;
-    if (!room.bvh.intersect(p, dir, 1e-4f, 200.0f, &h)) break;
+    if (!room.intersect(p, dir, 1e-4f, 200.0f, &h)) break;
     const GeoMaterial& mat = room.geo->materials[room.geo->triMaterial[h.tri]];
-    Vec3 nq = room.geo->normal(h.tri);
+    Vec3 nq = room.normal(h.tri);
     if (dot(nq, dir) > 0) nq = -nq;
     const Vec3 a{std::min(mat.albedo.x, 0.97f), std::min(mat.albedo.y, 0.97f), std::min(mat.albedo.z, 0.97f)};
     weight = mulComponents(weight, a);
@@ -307,9 +362,9 @@ Picture render(const Room& room, const View& view, const RenderSettings& s) {
           const Vec3 dir = normalize(f + right * sx + up * sy);
           Bvh::Hit h;
           ++tRays;
-          if (!room.bvh.intersect(view.eye, dir, 0.05f, 200.0f, &h)) continue;
+          if (!room.intersect(view.eye, dir, 0.05f, 200.0f, &h)) continue;
           const GeoMaterial& mat = room.geo->materials[room.geo->triMaterial[h.tri]];
-          Vec3 n = room.geo->normal(h.tri);
+          Vec3 n = room.normal(h.tri);
           if (dot(n, dir) > 0) n = -n;
           const Vec3 p = view.eye + dir * h.t + n * kEps;
           const Vec3 e = incomingLight(room, p, n, rng, s.bounces, nullptr, s.picks);

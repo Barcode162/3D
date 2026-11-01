@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Physics lab · Looped</title>
+<meta name="description" content="The physics lab (J116.5): knock a stool over; it is lit live while it moves, and when it rests only the light around it is worked out again.">
+<style>
+  :root { --bg: #0d0e12; --panel: #16181f; --line: #262a35; --text: #e9e7e2; --soft: #9aa0ad; --accent: #ffb35c; --chip: #1f2230; --bad: #ff6b6b; --good: #7be0a0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 60px; padding-top: max(18px, env(safe-area-inset-top)); }
+  h1 { font-size: 22px; margin: 0 0 2px; }
+  .sub { color: var(--soft); margin: 0 0 12px; font-size: 14px; }
+  .bar { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; font-size: 14px; gap: 8px; }
+  .badge { background: var(--chip); border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 4px 10px; font-weight: 600; }
+  .fps { color: var(--soft); font-variant-numeric: tabular-nums; text-align: right; }
+  canvas { width: 100%; aspect-ratio: 16 / 9; display: block; border-radius: 14px; background: #07080b; border: 1px solid var(--line); touch-action: none; }
+  .row { display: flex; gap: 8px; margin: 10px 0 0; flex-wrap: wrap; }
+  button, a.btn { flex: 1; min-width: 140px; background: var(--chip); border: 1px solid var(--line); color: var(--text); border-radius: 12px; padding: 11px 12px; font: inherit; cursor: pointer; text-align: center; text-decoration: none; }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-top: 12px; font-size: 14px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--soft); margin: 0 0 8px; font-weight: 600; }
+  .stool { padding: 6px 0; border-top: 1px solid var(--line); }
+  .stool:first-of-type { border-top: 0; }
+  .stool b { display: block; }
+  .stool span { color: var(--soft); }
+  .meter { height: 4px; background: #0b0c10; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--good); transition: width .2s; }
+  .note { color: var(--soft); }
+  .problem { color: var(--bad); margin-top: 8px; display: none; }
+  footer { color: var(--soft); font-size: 13px; margin-top: 18px; }
+  footer a { color: var(--soft); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Physics lab</h1>
+  <p class="sub">Knock a stool over. While it moves it's lit live; once it rests, only the light around it is worked out again, a little each frame, and the rest of the room keeps the light baked once.</p>
+  <div class="bar"><span>Drawing with <span class="badge" id="backend">…</span></span><span class="fps" id="fps"></span></div>
+  <canvas id="canvas" aria-label="The light lab with two stools that can be knocked over"></canvas>
+  <div class="problem" id="problem"></div>
+  <div class="row">
+    <button type="button" id="k0">Knock the right stool</button>
+    <button type="button" id="k1">Knock the left stool</button>
+  </div>
+  <div class="row">
+    <button type="button" id="back">Put them back</button>
+    <button type="button" class="on" id="alive">Lights alive</button>
+  </div>
+  <div class="card"><h2>The stools</h2>
+    <div class="stool"><b>Right stool</b><span id="s0">baked</span><div class="meter"><i id="m0"></i></div></div>
+    <div class="stool"><b>Left stool</b><span id="s1">baked</span><div class="meter"><i id="m1"></i></div></div>
+  </div>
+  <div class="card note"><b style="color:var(--text)">Settle and repair.</b> What's moving is lit from the room itself (its bounce and how much of each lamp it sees, a few light paths a frame). When it rests, the floor and walls within a metre of where it was and where it is now are worked out again with it in its new place, a few milliseconds a frame, so nothing stutters. Then its own corners join the baked room. "Slowest frame" shows the worst frame of each second.</div>
+  <footer>J116.5 · <a href="../draw/">the draw lab</a> · <a href="../">all labs</a></footer>
+</main>
+<script>
+  var forcedGl = /[?&]gl=1(&|$)/.test(location.search);
+  window.physicsLabStatus = function (backend, problem) {
+    document.getElementById('backend').textContent = backend;
+    var p = document.getElementById('problem');
+    p.textContent = problem; p.style.display = problem ? 'block' : 'none';
+  };
+  window.physicsLabFps = function (fps, worst) {
+    document.getElementById('fps').textContent = Math.round(fps) + ' frames a second · slowest frame ' + Math.round(worst) + ' ms';
+  };
+  window.physicsLabStool = function (i, state, progress) {
+    var s = document.getElementById('s' + i);
+    if (s && s.textContent !== state) s.textContent = state;
+    var m = document.getElementById('m' + i);
+    if (m) m.style.width = Math.round(progress * 100) + '%';
+  };
+  var Module = { canvas: document.getElementById('canvas'), print: function (t) { console.log(t); }, printErr: function (t) { console.warn(t); } };
+  document.getElementById('k0').onclick = function () { Module._pl_knock(0); };
+  document.getElementById('k1').onclick = function () { Module._pl_knock(1); };
+  document.getElementById('back').onclick = function () { Module._pl_putBack(); };
+  var alive = true;
+  document.getElementById('alive').onclick = function () { alive = !alive; this.classList.toggle('on', alive); Module._pl_alive(alive ? 1 : 0); };
+</script>
+<script src="physics_lab.js"></script>
+</body>
+</html>

@@ -144,7 +144,7 @@ ProbeGrid bakeProbes(const Room& room, Vec3 lo, Vec3 hi, int channels, const Pro
           const Vec3 d{sr * std::cos(phi), u, sr * std::sin(phi)};
           Bvh::Hit h;
           ++looks;
-          if (room.bvh.intersect(p, d, 1e-4f, 50, &h) && h.back) ++behind;
+          if (room.intersect(p, d, 1e-4f, 50, &h) && h.back) ++behind;
         }
         if (behind * 4 >= looks) continue;  // a quarter of looks from inside: not open
         g.open[i] = 1;

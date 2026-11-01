@@ -202,6 +202,21 @@ add_custom_command(OUTPUT ${SITE}/labs/draw/draw_lab.js ${SITE}/labs/draw/draw_l
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:draw_lab>/draw_lab.js $<TARGET_FILE_DIR:draw_lab>/draw_lab.wasm ${SITE}/labs/draw
                    VERBATIM)
 list(APPEND SITE_OUTPUTS ${SITE}/labs/draw/draw_lab.js ${SITE}/labs/draw/draw_lab.wasm)
+# The physics lab (J116.5): the stools as bodies; the light repaired around them when they rest.
+add_executable(physics_lab labs/physics/physics_lab.cpp ${DRAW_SOURCES} looped/bake/light_paths.cpp looped/bvh.cpp looped/scene_geometry.cpp
+               looped/gltf.cpp looped/physics.cpp looped/world/loop.cpp looped/json.cpp)
+target_include_directories(physics_lab PRIVATE ${CMAKE_SOURCE_DIR})
+target_compile_options(physics_lab PRIVATE -Wall -Wextra -Werror --use-port=emdawnwebgpu)
+target_link_options(physics_lab PRIVATE
+  --use-port=emdawnwebgpu -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1
+  "-sEXPORTED_FUNCTIONS=_main,_pl_knock,_pl_putBack,_pl_alive,_pl_spot,_pl_state,_pl_ready"
+  "-sEXPORTED_RUNTIME_METHODS=ccall"
+  $<IF:$<CONFIG:Release>,-O3,-g>)
+add_custom_command(OUTPUT ${SITE}/labs/physics/physics_lab.js ${SITE}/labs/physics/physics_lab.wasm DEPENDS physics_lab
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${SITE}/labs/physics
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:physics_lab>/physics_lab.js $<TARGET_FILE_DIR:physics_lab>/physics_lab.wasm ${SITE}/labs/physics
+                   VERBATIM)
+list(APPEND SITE_OUTPUTS ${SITE}/labs/physics/physics_lab.js ${SITE}/labs/physics/physics_lab.wasm)
 site_copy(${CMAKE_SOURCE_DIR}/labs/web "labs/")
 
 add_custom_target(site ALL DEPENDS ${SITE_OUTPUTS})

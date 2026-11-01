@@ -29,5 +29,5 @@ for (const f of readdirSync(from)) if (f.endsWith('.png') && !f.endsWith('-error
 const drawTo = 'labs/web/draw/data';
 rmSync(drawTo, { recursive: true, force: true });
 mkdirSync(drawTo, { recursive: true });
-if (existsSync(`${from}/scene.bin`)) copyFileSync(`${from}/scene.bin`, `${drawTo}/scene.bin`);
+for (const f of ["scene.bin", "repair.bin"]) if (existsSync(`${from}/${f}`)) copyFileSync(`${from}/${f}`, `${drawTo}/${f}`);  // the physics lab reads them here too
 console.log(`the light lab's data: ${readdirSync(to).join(', ')}; the draw lab's: ${readdirSync(drawTo).join(', ')}`);
