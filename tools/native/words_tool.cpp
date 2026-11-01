@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 
+#include "looped/draw/model_spec.h"
 #include "looped/gltf.h"
 #include "looped/json.h"
 #include "looped/words/place.h"
@@ -94,8 +95,33 @@ bool make(const std::string& name, std::string& json, Place& place) {
   if (!loadWords(w)) return false;
   const std::string file = "assets/world/places/" + name + ".looped";
   Problems p;
-  const bool ok = readPlace(w, readText(file), file, materialIds(), modelSize, place, p) &&
-                  placeToJson(place, name, kindIndex(), w.dictionary(), json, p);
+  bool ok = readPlace(w, readText(file), file, materialIds(), modelSize, place, p) &&
+             placeToJson(place, name, kindIndex(), w.dictionary(), json, p);
+  // Every model a thing is made of meets the model spec (looped/draw/model_spec.h), or the place is refused.
+  static std::map<std::string, std::vector<draw::ModelProblem>> checked;
+  for (const Placed& q : place.things) {
+    std::vector<const Thing*> stack{&q.thing};
+    while (!stack.empty()) {
+      const Thing* t = stack.back();
+      stack.pop_back();
+      for (const Thing& part : t->parts) stack.push_back(&part);
+      if (t->model.empty()) continue;
+      auto it = checked.find(t->model);
+      if (it == checked.end()) {
+        std::ifstream f("assets/models/" + t->model, std::ios::binary);
+        std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        ModelData d;
+        std::string error;
+        std::vector<draw::ModelProblem> probs;
+        if (parseGlb(bytes, d, error)) probs = draw::checkModel(draw::measureModel(d));
+        it = checked.emplace(t->model, std::move(probs)).first;
+      }
+      for (const draw::ModelProblem& mp : it->second) {
+        p.push_back({q.line, 1, "the model " + t->model + " (" + q.word + ") breaks " + mp.rule->id + ": " + mp.measured, mp.rule->fix, false});
+        ok = false;
+      }
+    }
+  }
   for (const Problem& x : p) std::printf("%s %s\n", file.c_str(), x.text().c_str());
   return ok;
 }

@@ -48,3 +48,15 @@ const std::vector<ModelRule>& modelRules();
 std::vector<ModelProblem> checkModel(const ModelMeasure& m);
 
 }  // namespace engine::draw
+
+namespace engine {
+struct ModelData;
+}
+
+namespace engine::draw {
+struct ClusterTree;
+// Measures a model for the spec: joins corners (position, and texture
+// place where its material has a picture), builds each part's clusters
+// (`trees`, when given, gets them), and counts seams, pieces, open edges.
+ModelMeasure measureModel(const ModelData& m, std::vector<ClusterTree>* trees = nullptr);
+}  // namespace engine::draw

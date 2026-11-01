@@ -8,8 +8,8 @@ import { statSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 
 const out = 'build/native/words_tool';
 const words = readdirSync('looped/words').filter((f) => f.endsWith('.cpp') && f !== 'rig.cpp').map((f) => `looped/words/${f}`);
-const srcs = ['tools/native/words_tool.cpp', ...words, 'looped/world/loop.cpp', 'looped/json.cpp', 'looped/gltf.cpp'];
-const deps = [...srcs, ...readdirSync('looped/words').filter((f) => f.endsWith('.h')).map((f) => `looped/words/${f}`)];
+const srcs = ['tools/native/words_tool.cpp', ...words, 'looped/world/loop.cpp', 'looped/json.cpp', 'looped/gltf.cpp', 'looped/draw/clusters.cpp', 'looped/draw/model_spec.cpp', 'looped/draw/model_measure.cpp'];
+const deps = [...srcs, 'looped/draw/clusters.h', 'looped/draw/model_spec.h', ...readdirSync('looped/words').filter((f) => f.endsWith('.h')).map((f) => `looped/words/${f}`)];
 mkdirSync('build/native', { recursive: true });
 const stale = !existsSync(out) || deps.some((f) => statSync(f).mtimeMs > statSync(out).mtimeMs);
 if (stale) {

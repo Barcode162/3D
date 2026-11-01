@@ -124,11 +124,11 @@ def candle():
     profile = [(0.0, 0.0), (r - 0.003, 0.0), (r, 0.003), (r + 0.002, h * 0.5), (r, h - 0.002),
                (r - wall / 2, h), (r - wall, h - 0.002), (r - wall + 0.001, h * 0.5), (r - wall, 0.008),
                (0.0, 0.008)]
-    common.lathe("Votive", profile, glass, 28)
-    common.cylinder("Candle", Vector((0, 0.008 + 0.0225, 0)), r - wall - 0.004, 0.045, "y", wax, segments=20)
+    common.lathe("Votive", profile, glass, 12)  # 12 sides: the model spec's budget (looped/draw/model_spec.h)
+    common.cylinder("Candle", Vector((0, 0.008 + 0.0225, 0)), r - wall - 0.004, 0.045, "y", wax, segments=12)
     common.cylinder("Wick", Vector((0, 0.058, 0)), 0.0012, 0.01, "y", wick, segments=6)
     common.lathe("Flame", [(0.0, 0.059), (0.006, 0.064), (0.0075, 0.072), (0.005, 0.082), (0.0015, 0.092),
-                           (0.0, 0.096)], flame, 12)
+                           (0.0, 0.096)], flame, 8)
     common.lathe("Flame core", [(0.0, 0.0605), (0.003, 0.064), (0.0035, 0.07), (0.0015, 0.076), (0.0, 0.078)],
                  core, 8)
     common.finish_and_export(os.path.join(out_dir, "candle.glb"), uv_scale={})

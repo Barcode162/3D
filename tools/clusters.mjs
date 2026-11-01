@@ -7,7 +7,7 @@ import { statSync, existsSync, mkdirSync } from 'node:fs';
 import { LIGHT_SOURCES } from './lib/native_sources.mjs';
 
 const out = 'build/native/clusters_tool';
-const srcs = `tools/native/clusters_tool.cpp looped/draw/clusters.cpp looped/draw/model_spec.cpp ${LIGHT_SOURCES}`.split(' ');
+const srcs = `tools/native/clusters_tool.cpp looped/draw/clusters.cpp looped/draw/model_spec.cpp looped/draw/model_measure.cpp ${LIGHT_SOURCES}`.split(' ');
 const deps = [...srcs, 'tools/native/light_tool.cpp', 'looped/draw/clusters.h', 'looped/draw/model_spec.h'];
 mkdirSync('build/native', { recursive: true });
 const stale = !existsSync(out) || deps.some((f) => statSync(f).mtimeMs > statSync(out).mtimeMs);
