@@ -3,7 +3,7 @@
 //   node tools/ship.mjs "<what the job did>" [--news "<friendly lines>"] [--skip-check "<why>"] [--no-wait]
 // 1. Refuses unless: on a job branch job/J<n>; nothing unsaved; every commit
 //    not on main belongs to the job (only the plan and the session line may be
-//    unsaved: the finish commits them) (subject "J<x>.<k> …", "J<x> …", "Notes: …",
+//    unsaved: the finish commits them) (subject "J<x>.<k> …", "J<x> …", "Notes: …", "Tools: …",
 //    "World: …", "UI: …"); every piece of J<n> ticked; the plan's files agree.
 // 2. Runs the checks for everything the job changed since main (--skip-check
 //    only with the reason, which goes into the reply).
@@ -33,7 +33,7 @@ if (unsaved.length) refuse(`there are unsaved changes (${unsaved.join(', ')}): c
 if (!run('node tools/preflight.mjs')) refuse('the preflight checklist found broken rules (above)');
 sh('git fetch -q origin main');
 const foreign = sh('git log --format=%s origin/main..HEAD').split('\n').filter(Boolean)
-  .filter((s) => !/^(J\d+(\.\d+)? |Notes: |World: |UI: |Merge )/.test(s));
+  .filter((s) => !/^(J\d+(\.\d+)? |Notes: |World: |UI: |Tools: |Merge )/.test(s));
 if (foreign.length) refuse(`commits that belong to no job: ${foreign.map((s) => `"${s.slice(0, 60)}"`).join(', ')}`);
 const plan = JSON.parse(readFileSync('docs/plan/plan.json', 'utf8'));
 if (plan.now?.id === job && plan.now.pieces.some((p) => !p.done)) refuse(`${job} still has open pieces: ${plan.now.pieces.filter((p) => !p.done).map((p) => p.id).join(', ')}`);
