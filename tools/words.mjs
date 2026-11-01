@@ -19,4 +19,6 @@ if (stale) {
   console.error('done');
 }
 const args = process.argv.slice(2);
+const COMMANDS = ['place', 'show', 'print', 'check'];  // the native tool's (tools/native/words_tool.cpp)
+if (args.length && !COMMANDS.includes(args[0])) { console.log(`node tools/words.mjs ${COMMANDS.join(' | ')}`); process.exit(2); }
 process.exit(spawnSync(out, args.length ? args : ['check'], { stdio: 'inherit' }).status ?? 1);
