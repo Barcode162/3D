@@ -964,6 +964,14 @@
      "after": "J64",
      "why": "Needs payments (J64, parked)"
     }
+   },
+   {
+    "text": "Crowds that react (like the Witcher 4 demo's townsfolk): bar regulars who notice you, step aside, turn to the music, many at once and cheap (request 2026-11-01 #2)",
+    "verdict": {
+     "kind": "after",
+     "after": "J116",
+     "why": "needs things that say how to use them, and the new skeleton"
+    }
    }
   ],
   "site": [
@@ -1010,6 +1018,14 @@
     "verdict": {
      "kind": "experiment",
      "why": "Why pacing the bounce makes a square isn't known yet"
+    }
+   },
+   {
+    "text": "Things that say how to use them (like Unreal's Smart Objects): a stool's words say 'sit here, facing the table', a dartboard's 'throw from the line', so people and future characters use the world without code per thing (request 2026-11-01 #2)",
+    "verdict": {
+     "kind": "after",
+     "after": "J116",
+     "why": "needs the word web on the bar (J116.6) first"
     }
    }
   ],

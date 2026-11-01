@@ -220,6 +220,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J77 — A new place, after the world remake
 - J23 · VIP marketplace (real money, its own place, unlocked forever by a first purchase; numbered, seasonal and event items) and trading (request 2026-10-24 #7: no paid services for now)
   *Verdict:* Doable after J64 — Needs payments (J64, parked)
+- Crowds that react (like the Witcher 4 demo's townsfolk): bar regulars who notice you, step aside, turn to the music, many at once and cheap (request 2026-11-01 #2)
+  *Verdict:* Doable after J116 — needs things that say how to use them, and the new skeleton
 
 ### The site
 - The front door scene running live in Looped instead of a clip (after R6, same places).
@@ -237,6 +239,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - Lamps sorted in 3D cells: left out after research (no gain in the bar: every lamp reaches every cell; the per-pixel cap shortens lamps, not the cells; docs/plan/jobs/J88.md)
 - Bounced light at its own pace (J88.3, undone by J96): redo once the cause of its square of light is found (incident 2026-10-25-square-of-light)
   *Verdict:* Needs an experiment — Why pacing the bounce makes a square isn't known yet
+- Things that say how to use them (like Unreal's Smart Objects): a stool's words say 'sit here, facing the table', a dartboard's 'throw from the line', so people and future characters use the world without code per thing (request 2026-11-01 #2)
+  *Verdict:* Doable after J116 — needs the word web on the bar (J116.6) first
 
 ### The tools
 - AI dock: a workspace on the site where you talk to Claude and it works on the project there.
