@@ -527,13 +527,15 @@ ClusterTree buildClusters(const std::vector<Vec3>& pos, const std::vector<uint32
           best = shared.begin()->first;
           for (const auto& [o, n] : shared)
             if (n > shared[best] || (n == shared[best] && o < best)) best = o;
-        } else {
-          // Nothing touching left (loose pieces: bottles, screws): the nearest cluster.
+        } else if (g.size() == 1) {
+          // It touches nothing left (a loose piece: a bottle, a screw): the nearest cluster.
           const Vec3 here = T.clusters[seed].center;
           float bestD = 1e30f;
           for (uint32_t o : active)
             if (!grouped[o] && length(T.clusters[o].center - here) < bestD) bestD = length(T.clusters[o].center - here), best = o;
           if (best == UINT32_MAX) break;
+        } else {
+          break;
         }
         g.push_back(best);
         grouped[best] = 1;
