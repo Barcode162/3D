@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J118.2 The bar's lights alive on the new engine: the bar's rig (assets/world/rigs/bar.looped) runs every frame in the new engine and sets its ten light groups (the bulbs and lamps breathe, the neon and the sign buzz, the arcade wave rolls, the fire flickers, the strings and the jukebox follow the music's beat); new buttons Lights down (the lights over the bar and the strings fade to a quarter) and Music (the strings dance, the jukebox pulses); the baker lists the lamps by name for it (node tools/bake.mjs lamps bar), no new bake needed; the labs test checks the rig plays, the lights move and Lights down dims them
+
+`dc941b5` · 2026-11-01 20:49 · 11 files, +283 −21 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/?engine=next: the neon buzzes and the bulbs breathe; tap Lights down: the lights over the bar fade to a quarter; tap Music: the string lights pulse with a beat
+
 ## J118.1 The bar's world in words: assets/world/places/bar.looped lists every thing on one line (what it is, where it stands, its turn and size, its own name when it has one, its settings under it), written once by a converter (tools/place_words.mjs) from the world file and checked to make back exactly the same world, all 603 things; now the words are the source and bar.json is made from them (node tools/words.mjs place bar, read by looped/words/place_list.cpp); the migrations and the Studio's pull write the words again when they change the JSON; the recipes say how to move, add and remove a thing in words
 
 `c69a6c2` · 2026-11-01 20:24 · 16 files, +2122 −4668 · tests: none
