@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J116.4 The draw lab: the new engine's drawing piece, one interface with a WebGPU and a WebGL2 backend (WebGPU where the browser has it, WebGL2 everywhere else, a plain message where neither); the baker exports the baked room, and the draw lab draws it live with the one light formula on either, the lights flickering by their world loops; the labs test shows both backends draw the same picture (0.05 of 255 apart)
+
+`f46d356` · 2026-11-01 08:40 · 18 files, +1362 −15 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/labs/draw/: it says Drawing with WebGPU (or WebGL2 on an older phone); drag to look around; tap Try WebGL2: the same room
+
 ## J116.3 Worlds in words and the light lab: the light lab is written as sentences (place words: in the middle, on the table, by it, on the left wall, in the near right corner, moves; a cause rule: when the lights go down, the lamp and the bulb dim to a quarter) and made into the world file; the baker keeps each lamp's own light sharp and smooths only the bounce, puts a table's top in the light texture, lights small things at their corners, and adds a light grid for moving things; 5.5-6.3% off the exact reference; the light lab page relights the baked room live
 
 `c8168c5` · 2026-11-01 08:34 · 36 files, +2172 −69 · tests: none
