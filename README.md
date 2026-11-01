@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J118.3 Tune the new-engine bar: round things shade smooth (each corner keeps its facing from the model), a Colour button (Warm as the first preview, Soft by default with part of the lamps' orange taken out, Neutral), a Quality button (Low, Medium, High: how many pixels are drawn and how much detail far things keep; remembered on the phone), and the download from 17.2 to 13.3 MB (the baked file packed so gzip finds its patterns); the bar baked again; the labs test checks the quality levels
+
+`0cd70b5` · 2026-11-01 21:36 · 14 files, +160 −32 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/?engine=next: round things (stools, glasses, lamps) look smooth; tap Colour: Warm, Soft, Neutral change how orange it is; tap Quality: Low runs smoother, High looks sharper
+
 ## J118.2 The bar's lights alive on the new engine: the bar's rig (assets/world/rigs/bar.looped) runs every frame in the new engine and sets its ten light groups (the bulbs and lamps breathe, the neon and the sign buzz, the arcade wave rolls, the fire flickers, the strings and the jukebox follow the music's beat); new buttons Lights down (the lights over the bar and the strings fade to a quarter) and Music (the strings dance, the jukebox pulses); the baker lists the lamps by name for it (node tools/bake.mjs lamps bar), no new bake needed; the labs test checks the rig plays, the lights move and Lights down dims them
 
 `dc941b5` · 2026-11-01 20:49 · 11 files, +283 −21 · tests: none
