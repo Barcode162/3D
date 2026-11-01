@@ -17,13 +17,13 @@ Bar3D's place: the main bar, the arcade behind doorway A, room 3, and a second p
 
 ## How it works
 
-- The layout is a file: `assets/world/places/bar.json` (every thing) with `assets/world/kinds/bar.json` (what each kind is). `bar/bar_scene.cpp` turns them into the renderer's, physics' and seats' lists; `bar/world_bar.*` plays every thing's loop on the shared clock.
+- The layout is written in words: `assets/world/places/bar.looped` (one line per thing, J118.1), made into `assets/world/places/bar.json` by `node tools/words.mjs place bar` (never edited by hand; a tool that changes the JSON, a migration or the Studio's pull, writes the words again from it), with `assets/world/kinds/bar.json` (what each kind is). `bar/bar_scene.cpp` turns them into the renderer's, physics' and seats' lists; `bar/world_bar.*` plays every thing's loop on the shared clock.
 - Rooms and doorways cut drawing: your room in full, another room only through its doorway on screen. Models used only in another room stream in when you come within 8 m, after 20 s, or when its doorway is in view.
 - The arcade: an 8 × 8 m room (x 0.4..8.4, z -15.7..-7.7) with a cosmic carpet, neon and 7 lights; its chiptune is made in code and follows where you are.
 
 ## Data
 
-`assets/world/places/*.json`, `kinds/*.json`; the live version in the world store ([data map](../../data-map.md)).
+`assets/world/places/bar.looped` (the bar's source), `places/*.json`, `kinds/*.json`; the live version in the world store ([data map](../../data-map.md)).
 
 ## Commands
 

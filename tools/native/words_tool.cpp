@@ -2,6 +2,7 @@
 //   build/native/words_tool place <name>   assets/world/places/<name>.looped → <name>.json
 //   build/native/words_tool check          every place in words has its JSON, and it's current
 //   build/native/words_tool show <name>    where each thing went, and the place's rules
+//   build/native/words_tool print <name>   the world file the words make, without writing it
 // Built and run by tools/words.mjs.
 #include <algorithm>
 #include <cstdio>
@@ -15,6 +16,7 @@
 #include "looped/json.h"
 #include "looped/words/place.h"
 #include "looped/words/place_json.h"
+#include "looped/words/place_list.h"
 #include "looped/words/words.h"
 
 using namespace engine;
@@ -90,12 +92,31 @@ ModelSize modelSize(const std::string& file) {
   return cache[file] = s;
 }
 
-bool make(const std::string& name, std::string& json, Place& place) {
+// A kind file's kind ids, for a list place's `kinds from`.
+std::vector<std::string> kindsOf(const std::string& file) {
+  std::vector<std::string> out;
+  const std::string path = "assets/world/" + file;
+  if (!fs::exists(path)) return out;
+  const Json j = Json::parse(readText(path));
+  for (const Json& k : j["kinds"].items()) out.push_back(k["id"].string());
+  return out;
+}
+
+bool make(const std::string& name, std::string& json, Place& place, int* count = nullptr) {
+  const std::string file = "assets/world/places/" + name + ".looped";
+  const std::string text = readText(file);
+  if (isPlaceList(text)) {  // a list place (J118.1: the bar)
+    Problems p;
+    int n = 0;
+    const bool ok = placeListToJson(text, name, kindsOf, json, n, p);
+    for (const Problem& x : p) std::printf("%s %s\n", file.c_str(), x.text().c_str());
+    if (count) *count = n;
+    return ok;
+  }
   Words w;
   if (!loadWords(w)) return false;
-  const std::string file = "assets/world/places/" + name + ".looped";
   Problems p;
-  bool ok = readPlace(w, readText(file), file, materialIds(), modelSize, place, p) &&
+  bool ok = readPlace(w, text, file, materialIds(), modelSize, place, p) &&
              placeToJson(place, name, kindIndex(), w.dictionary(), json, p);
   // Every model a thing is made of meets the model spec (looped/draw/model_spec.h), or the place is refused.
   static std::map<std::string, std::vector<draw::ModelProblem>> checked;
@@ -136,11 +157,13 @@ bool make(const std::string& name, std::string& json, Place& place) {
 #ifndef WORDS_TOOL_NO_MAIN
 int main(int argc, char** argv) {
   const std::string cmd = argc > 1 ? argv[1] : "check";
-  if (cmd == "place" || cmd == "show") {
+  if (cmd == "place" || cmd == "show" || cmd == "print") {
     if (argc < 3) return std::printf("which place?\n"), 2;
     std::string json;
     Place place;
-    if (!make(argv[2], json, place)) return 1;
+    int count = -1;
+    if (!make(argv[2], json, place, &count)) return 1;
+    if (cmd == "print") return std::fputs(json.c_str(), stdout), 0;
     if (cmd == "show") {
       for (const Placed& q : place.things)
         std::printf("%-14s %-13s at %6.3f %6.3f %6.3f  turned %4.0f\n", q.name.c_str(), q.word.c_str(), q.at.x, q.at.y, q.at.z, q.turn);
@@ -152,7 +175,7 @@ int main(int argc, char** argv) {
       return 0;
     }
     std::ofstream("assets/world/places/" + std::string(argv[2]) + ".json", std::ios::binary) << json;
-    std::printf("wrote assets/world/places/%s.json (%zu things)\n", argv[2], place.things.size());
+    std::printf("wrote assets/world/places/%s.json (%zu things)\n", argv[2], count >= 0 ? static_cast<size_t>(count) : place.things.size());
     return 0;
   }
   if (cmd == "check") {

@@ -25,19 +25,19 @@ today: [inventory.md](generated/inventory.md).
 ### 1. Move a thing
 *"Move the jukebox closer to the stage", "turn the sofa".*
 1. Find the thing's id in [inventory.md](generated/inventory.md) (or the Studio's World list).
-2. In `assets/world/places/<place>.json`, change its `at` (metres, on its parent), `turn` (degrees about up) or `scale`.
-3. `python3 tools/place_format.py assets/world/places/<place>.json`.
+2. **The bar** is written in words (J118.1): in `assets/world/places/bar.looped`, change its line's `at x y z` (metres, on its parent), `turned <degrees>` or `scaled <size>`, then `node tools/words.mjs place bar` (makes `bar.json`; never edit that by hand). **Other places** (home, the showroom): in `assets/world/places/<place>.json`, change its `at`, `turn` or `scale`.
+3. Other places only: `python3 tools/place_format.py assets/world/places/<place>.json`.
 4. The piece (pictures from the spots near it: `--spots`); phone check: where to stand and what's moved.
 
 ### 2. Add a thing
 *"Put a candle on every table".*
 1. Pick its kind ([inventory.md](generated/inventory.md) → kinds; a new kind: recipe 10).
-2. Add `{"id": "<kind>-<n>", "kind": "<kind>", "parent": "<thing it sits on>", "at": [x, y, z]}` to the place file. The id never changes once players have seen it.
+2. **The bar:** add a line to `bar.looped`, `a <kind's words> at x y z` (bar_stool → `a bar stool`), with `turned`, `scaled`, `held by <thing it sits on>`, then `node tools/words.mjs place bar`. Its id is `<kind>-<n>`, its place among the things of its kind, so a new thing goes **after the last of its kind** (or says `called <id>`): a line put earlier would renumber the ones after it. Every form: `looped/words/place_list.h`. **Other places:** add `{"id": "<kind>-<n>", "kind": "<kind>", "parent": "<thing it sits on>", "at": [x, y, z]}` to the place file. The id never changes once players have seen it.
 3. Format; the entity check (`tools/native/entity_test.cpp`, in `native`) wants `bar/entity_ids.txt` updated when the thing is shared (a seat, a use): that's a deliberate layout change.
 4. The piece; phone check.
 
 ### 3. Remove a thing
-*"Take the chalkboard away".* Remove its entry from the place file (and things whose `parent` is it, or give them a new parent); update `bar/entity_ids.txt` if it was listed; format; the piece.
+*"Take the chalkboard away".* Remove its entry from the place file (the bar: its line in `bar.looped`, and give the next things of its kind `called <their id>` so their ids stay; then `node tools/words.mjs place bar`) and things whose `parent` is it, or give them a new parent; update `bar/entity_ids.txt` if it was listed; format (other places); the piece.
 
 ### 4. Change a light
 *"Make the neon redder", "brighter lamps over the bar".* A lamp's `light` part (colour, lumens, Kelvin, size) is on its kind (every lamp of that kind) or on the thing (only that one). Colour by Kelvin for white light (1800 K candle, 2700 K warm bulb); lumens for brightness. Phone check at night positions; the new light is checked on the phone (KI-28). Fields: [data-world.md](generated/data-world.md) → Light.

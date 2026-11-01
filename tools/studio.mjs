@@ -57,6 +57,8 @@ if (cmd === 'status') {
     const before = existsSync(file) ? readFileSync(file, 'utf8') : '';
     writeFileSync(file, JSON.stringify(content, null, 2) + '\n');
     execFileSync('python3', ['tools/place_format.py', file]);
+    // A place written as a list in words (J118.1: the bar) keeps its words the source: they're written again from the JSON.
+    { const m = /places\/([a-z0-9_-]+)\.json$/.exec(file); if (m && existsSync(`assets/world/places/${m[1]}.looped`) && /^\s*kinds from /m.test(readFileSync(`assets/world/places/${m[1]}.looped`, 'utf8'))) execFileSync('node', ['tools/place_words.mjs', m[1], '--force'], { stdio: 'inherit' }); }
     if (readFileSync(file, 'utf8') !== before) written.push(path);
   }
   writeFileSync(MARK, JSON.stringify({ version: live.version, author: live.author, at: live.at, note: live.note }, null, 2) + '\n');

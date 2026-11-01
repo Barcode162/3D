@@ -1,0 +1,875 @@
+# Bar, written in Looped Script's words (J118.1). This file is the
+# place: assets/world/places/bar.json is made from it by
+#   node tools/words.mjs place bar
+# (never edited by hand). One line per thing: what it is, where its foot
+# sits (x right, y up, z towards the door, in metres), how far it is turned
+# (degrees), its size, its own id when it has one, then its parts' settings.
+# The kinds are in assets/world/kinds/; the reader is looped/words/place_list.cpp.
+
+place the bar
+  about: The bar: every thing in it and where it sits. Parts are in the thing's own space (they turn with it), except floor rectangles (blocks, floors) and tap boxes, which keep the world's axes.
+  kinds from kinds/bar.json
+  you come in at 0.4 1.65 5.2, facing 0
+  the air: ambient 0.07 0.05 0.045, fog 0.025 0.015 0.015, fogDensity 0.008, beams 0.008
+  the light grid: min -12.5 0 -16, max 9.5 0 8.5
+  a room: id bar, min -9.31 -0.2 -7.45, max 9.45 4.2 9.2
+  a room: id arcade, min 0.25 -0.2 -15.85, max 8.55 3.6 -7.6
+  a room: id room-3, min -12.6 -0.2 -4, max -9.3 3 -0.3
+  a doorway: rooms bar arcade, corners 2.8 0 -7.55 to 4.6 0 -7.55 to 4.6 2.6 -7.55 to 2.8 2.6 -7.55
+  a doorway: rooms bar room-3, corners -9.15 0 -3.4 to -9.15 0 -1.6 to -9.15 2.6 -1.6 to -9.15 2.6 -3.4
+  an area arcade: min 0.4 0 -15.7, max 8.4 3.4 -7.7
+  a point arcade-door at 3.7 1.2 -7.4
+
+  the hall at 0 0 0
+
+  the bar counter l at 0 0 0
+
+  a pint glass at -5.66228 1.08 -4.42954
+  a pint glass at -3.69307 1.08 -4.20768
+  a pint glass at -1.72386 1.08 -4.29138
+  a pint glass at -0.00081 1.08 -4.6196
+
+  a rocks glass at -4.86824 1.08 -4.35319
+  a rocks glass at -2.61251 1.08 -4.26596
+
+  a bar stool at -7.04049 0 -4.04348, turned -16.319
+  a bar stool at -5.95008 0 -3.77298, turned -11.546
+  a bar stool at -4.85966 0 -3.59638, turned -6.853
+  a bar stool at -3.76924 0 -3.51, turned -2.206
+  a bar stool at -2.67883 0 -3.5121, turned 2.427
+  a bar stool at -1.58841 0 -3.60272, turned 7.075
+  a bar stool at -0.498 0 -3.78369, turned 11.771
+  a bar stool at 0.59242 0 -4.0588, turned 16.549
+
+  a pendant lamp at -6.6 3.04 -4.6
+  a pendant lamp at -4.3 3.04 -4.6
+  a pendant lamp at -2 3.04 -4.6
+  a pendant lamp at 0.2 3.04 -4.6
+
+  the back bar tall at 0 0 0
+
+  a bottle at -8.62 1.13 -7.38, turned 0, scaled 0.974, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.13 -7.38, turned 0, scaled 1.006, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.13 -7.38, turned 0, scaled 1.029, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.13 -7.38, turned 0, scaled 0.991, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.13 -7.38, turned 0, scaled 1.003, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 1.215 -7.38, turned 0, scaled 0.992, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 1.215 -7.38, turned 0, scaled 1.014, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 1.215 -7.38, turned 0, scaled 1.011, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 1.215 -7.38, turned 0, scaled 1.006, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 1.215 -7.38, turned 0, scaled 1.029, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 1.3 -7.38, turned 0, scaled 1.012, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.3 -7.38, turned 0, scaled 0.991, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.3 -7.38, turned 0, scaled 0.993, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.3 -7.38, turned 0, scaled 1.008, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.3 -7.38, turned 0, scaled 1.012, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 1.385 -7.38, turned 0, scaled 0.983, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 1.385 -7.38, turned 0, scaled 1.019, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 1.385 -7.38, turned 0, scaled 0.997, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 1.385 -7.38, turned 0, scaled 1.016, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 1.385 -7.38, turned 0, scaled 0.975, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 1.47 -7.38, turned 0, scaled 0.989, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.47 -7.38, turned 0, scaled 0.971, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.47 -7.38, turned 0, scaled 0.995, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.47 -7.38, turned 0, scaled 0.985, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.47 -7.38, turned 0, scaled 0.991, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 1.555 -7.38, turned 0, scaled 0.983, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 1.555 -7.38, turned 0, scaled 1.021, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 1.555 -7.38, turned 0, scaled 1.008, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 1.555 -7.38, turned 0, scaled 0.991, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 1.555 -7.38, turned 0, scaled 1, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 1.64 -7.38, turned 0, scaled 0.981, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.64 -7.38, turned 0, scaled 1.027, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.64 -7.38, turned 0, scaled 1.024, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.64 -7.38, turned 0, scaled 1.004, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.64 -7.38, turned 0, scaled 0.979, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 1.725 -7.38, turned 0, scaled 1.027, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 1.725 -7.38, turned 0, scaled 0.983, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 1.725 -7.38, turned 0, scaled 0.973, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 1.725 -7.38, turned 0, scaled 0.995, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 1.725 -7.38, turned 0, scaled 0.993, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 1.81 -7.38, turned 0, scaled 1.021, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.81 -7.38, turned 0, scaled 0.979, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.81 -7.38, turned 0, scaled 0.974, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.81 -7.38, turned 0, scaled 0.996, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.81 -7.38, turned 0, scaled 0.972, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 1.895 -7.38, turned 0, scaled 1.01, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 1.895 -7.38, turned 0, scaled 0.999, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 1.895 -7.38, turned 0, scaled 1.022, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 1.895 -7.38, turned 0, scaled 1.026, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 1.895 -7.38, turned 0, scaled 0.984, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 1.98 -7.38, turned 0, scaled 1.017, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 1.98 -7.38, turned 0, scaled 1, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 1.98 -7.38, turned 0, scaled 1.027, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 1.98 -7.38, turned 0, scaled 0.975, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 1.98 -7.38, turned 0, scaled 0.997, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 2.065 -7.38, turned 0, scaled 1.029, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 2.065 -7.38, turned 0, scaled 0.973, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 2.065 -7.38, turned 0, scaled 0.988, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 2.065 -7.38, turned 0, scaled 0.989, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 2.065 -7.38, turned 0, scaled 0.992, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 2.15 -7.38, turned 0, scaled 1.03, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 2.15 -7.38, turned 0, scaled 0.981, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 2.15 -7.38, turned 0, scaled 1.019, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 2.15 -7.38, turned 0, scaled 0.986, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 2.15 -7.38, turned 0, scaled 1.022, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 2.235 -7.38, turned 0, scaled 0.979, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 2.235 -7.38, turned 0, scaled 0.976, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 2.235 -7.38, turned 0, scaled 1.029, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 2.235 -7.38, turned 0, scaled 0.971, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 2.235 -7.38, turned 0, scaled 1.009, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 2.32 -7.38, turned 0, scaled 0.982, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 2.32 -7.38, turned 0, scaled 1.005, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 2.32 -7.38, turned 0, scaled 0.989, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 2.32 -7.38, turned 0, scaled 1.007, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 2.32 -7.38, turned 0, scaled 1.011, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 2.405 -7.38, turned 0, scaled 1.015, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 2.405 -7.38, turned 0, scaled 0.977, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 2.405 -7.38, turned 0, scaled 1.02, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 2.405 -7.38, turned 0, scaled 0.984, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 2.405 -7.38, turned 0, scaled 1.006, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -8.62 2.49 -7.38, turned 0, scaled 1.019, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.45 2.49 -7.38, turned 0, scaled 1.016, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.28 2.49 -7.38, turned 0, scaled 1.002, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.11 2.49 -7.38, turned 0, scaled 1, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -7.94 2.49 -7.38, turned 0, scaled 0.979, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.535 2.575 -7.38, turned 0, scaled 1.023, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.365 2.575 -7.38, turned 0, scaled 1.006, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -8.195 2.575 -7.38, turned 0, scaled 1.016, made of bottle_wine_1_tilt90_0.glb in bottle-glass
+  a bottle at -8.025 2.575 -7.38, turned 0, scaled 1.028, made of bottle_wine_2_tilt90_0.glb in bottle-glass
+  a bottle at -7.855 2.575 -7.38, turned 0, scaled 1.012, made of bottle_wine_3_tilt90_0.glb in bottle-glass
+  a bottle at -7.4175 1.3375 -7.2389, turned -9.69, scaled 0.988, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -7.277 1.3375 -7.2406, turned -19.78, scaled 0.98, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -7.1535 1.3375 -7.2593, turned -10.22, scaled 1.021, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -7.0282 1.3375 -7.2334, turned -11.39, scaled 0.98, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -6.8613 1.3375 -7.2225, turned 24.09, scaled 0.995, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -6.7382 1.3375 -7.2102, turned -9, scaled 1.02, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -6.5853 1.3375 -7.2204, turned -12.59, scaled 0.975, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -6.417 1.3375 -7.2262, turned -3.29, scaled 1.004, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -7.4175 1.6975 -7.263, turned 21.86, scaled 0.972, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -7.2595 1.6975 -7.2547, turned -9.75, scaled 1.007, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -7.118 1.6975 -7.26, turned 0.13, scaled 0.972, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -6.9731 1.6975 -7.2176, turned -14.56, scaled 1.005, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -6.8477 1.6975 -7.2378, turned -23.85, scaled 0.976, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -6.7057 1.6975 -7.2596, turned 17.42, scaled 0.972, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -6.5575 1.6975 -7.2377, turned -12.12, scaled 1.013, made of bottle_square_2.glb in bottle-glass
+  a bottle at -6.4351 1.6975 -7.2585, turned 4.25, scaled 0.989, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -7.4175 2.0575 -7.2106, turned 12.69, scaled 0.971, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -7.256 2.0575 -7.2594, turned 8.64, scaled 1.002, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -7.0983 2.0575 -7.2158, turned -2.96, scaled 0.977, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -6.9532 2.0575 -7.2335, turned 13.18, scaled 0.993, made of bottle_square_2.glb in bottle-glass
+  a bottle at -6.8008 2.0575 -7.2476, turned -0.32, scaled 0.974, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -6.6768 2.0575 -7.2093, turned 8.26, scaled 0.984, made of bottle_square_2.glb in bottle-glass
+  a bottle at -6.5456 2.0575 -7.2602, turned -11.21, scaled 1.007, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -7.4175 2.4175 -7.214, turned 4.83, scaled 1.029, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -7.2662 2.4175 -7.218, turned -5.86, scaled 1.014, made of bottle_square_1.glb in bottle-glass
+  a bottle at -7.104 2.4175 -7.2359, turned 4.31, scaled 1.023, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at -6.9547 2.4175 -7.2527, turned -12.12, scaled 1.003, made of bottle_wine_2.glb in bottle-glass
+  a bottle at -6.8155 2.4175 -7.2336, turned 18.42, scaled 1.01, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -6.6777 2.4175 -7.2287, turned 0.05, scaled 0.985, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at -6.5364 2.4175 -7.2156, turned 8.05, scaled 0.977, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -6.205 1.3375 -7.2609, turned 9.47, scaled 1.002, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -6.0715 1.3375 -7.2182, turned 4.92, scaled 1.005, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at -5.9102 1.3375 -7.2486, turned 13.97, scaled 1.01, made of bottle_wine_2.glb in bottle-glass
+  a bottle at -5.7768 1.3375 -7.2403, turned 4.09, scaled 0.988, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -5.6085 1.3375 -7.2202, turned -2.72, scaled 0.978, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -5.4478 1.3375 -7.2335, turned -20.03, scaled 0.995, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -5.303 1.3375 -7.2174, turned -4.06, scaled 0.987, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -6.205 1.6975 -7.2054, turned 17.49, scaled 0.978, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -6.0457 1.6975 -7.2637, turned -5.37, scaled 1.027, made of bottle_stubby_2.glb in bottle-glass
+  a bottle at -5.9125 1.6975 -7.2372, turned 14.93, scaled 1.003, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -5.7472 1.6975 -7.2594, turned 10.06, scaled 0.999, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -5.5839 1.6975 -7.261, turned 10.21, scaled 1.012, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -5.4222 1.6975 -7.2135, turned 8.79, scaled 1.015, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -5.2838 1.6975 -7.2161, turned -0.81, scaled 0.974, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -6.205 2.0575 -7.2517, turned 3.94, scaled 0.993, made of bottle_square_1.glb in bottle-glass
+  a bottle at -6.0366 2.0575 -7.2338, turned -13.95, scaled 1.012, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -5.8806 2.0575 -7.2389, turned -6.62, scaled 1.011, made of bottle_square_1.glb in bottle-glass
+  a bottle at -5.7159 2.0575 -7.2391, turned 10.55, scaled 1.027, made of bottle_stubby_2.glb in bottle-glass
+  a bottle at -5.5909 2.0575 -7.2601, turned 26.13, scaled 0.986, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -5.4541 2.0575 -7.2585, turned -9.45, scaled 0.99, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at -5.3063 2.0575 -7.2543, turned -13.72, scaled 0.985, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -6.205 2.4175 -7.2121, turned 18.11, scaled 1.008, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -6.0611 2.4175 -7.2219, turned -3.21, scaled 1.027, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -5.9342 2.4175 -7.257, turned -0.12, scaled 1, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -5.7938 2.4175 -7.2569, turned -1.77, scaled 1.015, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -5.639 2.4175 -7.2299, turned 1.14, scaled 1.014, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -5.4983 2.4175 -7.2303, turned 9.26, scaled 0.997, made of bottle_tequila_1.glb in bottle-glass
+  a bottle at -5.3322 2.4175 -7.2312, turned 17.68, scaled 0.978, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -6.205 2.7775 -7.2144, turned 1.25, scaled 1.002, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -6.0696 2.7775 -7.2083, turned 6.13, scaled 1.012, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -5.9076 2.7775 -7.235, turned 19.26, scaled 0.976, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -5.7609 2.7775 -7.2477, turned -17.4, scaled 0.985, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -5.6146 2.7775 -7.2155, turned 2.41, scaled 1, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -5.4884 2.7775 -7.2631, turned 12.47, scaled 1.026, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at -5.3431 2.7775 -7.2442, turned 13.51, scaled 1.026, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -4.9925 1.3375 -7.2152, turned -14.94, scaled 1.01, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -4.8311 1.3375 -7.2302, turned -4, scaled 0.979, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -4.6629 1.3375 -7.2312, turned 10.23, scaled 0.979, made of bottle_tequila_1.glb in bottle-glass
+  a bottle at -4.499 1.3375 -7.2051, turned -6.73, scaled 1.028, made of bottle_square_2.glb in bottle-glass
+  a bottle at -4.349 1.3375 -7.2429, turned 23.48, scaled 1.022, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -4.2237 1.3375 -7.226, turned 5.83, scaled 0.999, made of bottle_square_1.glb in bottle-glass
+  a bottle at -4.0952 1.3375 -7.2364, turned 6.05, scaled 1.013, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at -4.9925 1.6975 -7.2425, turned 7.37, scaled 0.999, made of bottle_tequila_1.glb in bottle-glass
+  a bottle at -4.8706 1.6975 -7.2093, turned -3.69, scaled 1.016, made of bottle_stubby_2.glb in bottle-glass
+  a bottle at -4.718 1.6975 -7.2631, turned 0.85, scaled 1.009, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -4.58 1.6975 -7.2364, turned 0.68, scaled 0.975, made of bottle_square_2.glb in bottle-glass
+  a bottle at -4.453 1.6975 -7.2178, turned 8.63, scaled 1.023, made of bottle_wine_3.glb in bottle-glass
+  a bottle at -4.296 1.6975 -7.2239, turned -3.51, scaled 1.005, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -4.1611 1.6975 -7.2134, turned -5.91, scaled 0.985, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at -4.0097 1.6975 -7.2111, turned -12.33, scaled 1.027, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -4.9925 2.0575 -7.2585, turned 2.11, scaled 0.998, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -4.8392 2.0575 -7.2368, turned 6.6, scaled 1.008, made of bottle_square_1.glb in bottle-glass
+  a bottle at -4.6918 2.0575 -7.2296, turned 2.88, scaled 1.007, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -4.5466 2.0575 -7.2597, turned 7.77, scaled 1.029, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -4.3887 2.0575 -7.2562, turned 5.99, scaled 1.021, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -4.2213 2.0575 -7.2076, turned -24.85, scaled 0.988, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -4.0791 2.0575 -7.246, turned -7.3, scaled 1.027, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -4.9925 2.4175 -7.2207, turned 11.7, scaled 0.983, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -4.8405 2.4175 -7.2623, turned -17.05, scaled 1.019, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -4.7046 2.4175 -7.2401, turned 15.97, scaled 0.976, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -4.5846 2.4175 -7.2592, turned -6.84, scaled 0.989, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -4.4405 2.4175 -7.2158, turned -7.48, scaled 0.97, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -4.3149 2.4175 -7.2561, turned -23.05, scaled 0.971, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -4.1595 2.4175 -7.2227, turned 15.2, scaled 0.983, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at -4.0177 2.4175 -7.2498, turned 3.21, scaled 1.006, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -3.74 1.606 -7.23, turned 0.78, scaled 0.983, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -3.5194 1.606 -7.23, turned -2.3, scaled 1.006, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -3.2988 1.606 -7.23, turned 2.33, scaled 1, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -3.0781 1.606 -7.23, turned -9.65, scaled 1.028, made of bottle_square_2.glb in bottle-glass
+  a bottle at -2.8575 1.606 -7.23, turned 7.31, scaled 1.021, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -3.74 2.256 -7.23, turned 3.26, scaled 0.995, made of bottle_magnum_1.glb in bottle-glass
+  a bottle at -3.5194 2.256 -7.23, turned 6.73, scaled 1.024, made of bottle_magnum_1.glb in bottle-glass
+  a bottle at -3.2988 2.256 -7.23, turned -9.93, scaled 1.017, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -3.0781 2.256 -7.23, turned -8.34, scaled 0.984, made of bottle_square_1.glb in bottle-glass
+  a bottle at -2.8575 2.256 -7.23, turned -6.82, scaled 1.029, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -2.5675 1.3375 -7.2465, turned -2.5, scaled 0.995, made of bottle_wine_3.glb in bottle-glass
+  a bottle at -2.4464 1.3375 -7.2228, turned 1.33, scaled 1.02, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -2.3159 1.3375 -7.2166, turned 1.47, scaled 1.024, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -2.1525 1.3375 -7.2556, turned 2.69, scaled 1.022, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -2.0206 1.3375 -7.2389, turned 2.36, scaled 1.025, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -1.8594 1.3375 -7.224, turned 11.33, scaled 1.023, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -1.6959 1.3375 -7.2279, turned 11.31, scaled 1.01, made of bottle_square_1.glb in bottle-glass
+  a bottle at -2.5675 1.6975 -7.2339, turned 3.86, scaled 1.026, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -2.4002 1.6975 -7.2506, turned -19.16, scaled 1.018, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -2.2441 1.6975 -7.2098, turned -7.51, scaled 1.028, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -2.1176 1.6975 -7.2607, turned -11.64, scaled 0.983, made of bottle_wine_3.glb in bottle-glass
+  a bottle at -1.9691 1.6975 -7.2508, turned 15.21, scaled 1.015, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at -1.8071 1.6975 -7.241, turned 18.86, scaled 1.007, made of bottle_square_1.glb in bottle-glass
+  a bottle at -1.6812 1.6975 -7.2243, turned 15.41, scaled 1.003, made of bottle_tequila_1.glb in bottle-glass
+  a bottle at -2.5675 2.0575 -7.2291, turned 5.45, scaled 0.973, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at -2.4201 2.0575 -7.264, turned -27.7, scaled 1.027, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at -2.2649 2.0575 -7.235, turned -3.41, scaled 1.005, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at -2.1207 2.0575 -7.2588, turned 0.04, scaled 0.972, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -1.9979 2.0575 -7.2484, turned -7.98, scaled 1.012, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -1.868 2.0575 -7.2097, turned -23.64, scaled 1.029, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -1.7308 2.0575 -7.2462, turned -8.48, scaled 1.005, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -1.6029 2.0575 -7.2208, turned 3.07, scaled 0.986, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -2.5675 2.4175 -7.2363, turned -12.75, scaled 1.019, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -2.4094 2.4175 -7.2061, turned 13.21, scaled 1.018, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -2.2865 2.4175 -7.226, turned 4.46, scaled 1.025, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -2.1403 2.4175 -7.2554, turned -24.48, scaled 0.999, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at -1.9742 2.4175 -7.2165, turned -17.34, scaled 1.007, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -1.8377 2.4175 -7.231, turned 12.77, scaled 1.03, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -1.6865 2.4175 -7.2317, turned 4.43, scaled 1.03, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -1.355 1.3375 -7.2438, turned -23.6, scaled 1.019, made of bottle_square_1.glb in bottle-glass
+  a bottle at -1.215 1.3375 -7.2608, turned -0.09, scaled 1.03, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -1.0533 1.3375 -7.2367, turned 3.93, scaled 1.014, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -0.8862 1.3375 -7.2321, turned 4.67, scaled 1.004, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -0.7347 1.3375 -7.2609, turned -6.39, scaled 1.02, made of bottle_wine_1.glb in bottle-glass
+  a bottle at -0.5874 1.3375 -7.2539, turned -8.91, scaled 0.997, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -0.4389 1.3375 -7.2534, turned -19.49, scaled 1.023, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -1.355 2.4175 -7.2441, turned -12.48, scaled 0.989, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -1.2092 2.4175 -7.2626, turned -19.37, scaled 1.01, made of bottle_slim_1.glb in bottle-glass
+  a bottle at -1.0528 2.4175 -7.2453, turned -7.37, scaled 1.022, made of bottle_wine_3.glb in bottle-glass
+  a bottle at -0.9231 2.4175 -7.2395, turned -1.77, scaled 0.982, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at -0.7686 2.4175 -7.2633, turned -13.7, scaled 1.015, made of bottle_stubby_1.glb in bottle-glass
+  a bottle at -0.6262 2.4175 -7.2248, turned 13.2, scaled 0.996, made of bottle_square_2.glb in bottle-glass
+  a bottle at -0.4849 2.4175 -7.2179, turned 3.6, scaled 0.98, made of bottle_slim_3.glb in bottle-glass
+  a bottle at -1.355 2.7775 -7.215, turned 14.91, scaled 1.001, made of bottle_tequila_1.glb in bottle-glass
+  a bottle at -1.1991 2.7775 -7.2384, turned -5.7, scaled 0.994, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at -1.051 2.7775 -7.2148, turned 2.69, scaled 1.018, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at -0.9204 2.7775 -7.2649, turned 18.97, scaled 0.975, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -0.7512 2.7775 -7.2598, turned -20.39, scaled 0.988, made of bottle_square_2.glb in bottle-glass
+  a bottle at -0.6152 2.7775 -7.2085, turned 2.35, scaled 0.998, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at -0.4842 2.7775 -7.2295, turned 24.76, scaled 0.973, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -0.3532 2.7775 -7.2264, turned -3.24, scaled 1.009, made of bottle_stubby_2.glb in bottle-glass
+  a bottle at -0.1425 1.3375 -7.2418, turned -6.92, scaled 0.975, made of bottle_whiskey_3.glb in bottle-glass
+  a bottle at -0.0081 1.3375 -7.2419, turned 23.35, scaled 0.99, made of bottle_slim_3.glb in bottle-glass
+  a bottle at 0.1337 1.3375 -7.2212, turned 2.32, scaled 1.007, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at 0.3027 1.3375 -7.2243, turned -23.3, scaled 1.001, made of bottle_slim_2.glb in bottle-glass
+  a bottle at 0.4682 1.3375 -7.226, turned -11.45, scaled 1.006, made of bottle_square_1.glb in bottle-glass
+  a bottle at 0.6245 1.3375 -7.2428, turned 1.3, scaled 1.006, made of bottle_liqueur_1.glb in bottle-glass
+  a bottle at 0.7533 1.3375 -7.2323, turned 22.2, scaled 0.971, made of bottle_slim_2.glb in bottle-glass
+  a bottle at -0.1425 1.6975 -7.2618, turned 16.02, scaled 0.972, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at -0.0066 1.6975 -7.216, turned 5.39, scaled 0.98, made of bottle_liqueur_3.glb in bottle-glass
+  a bottle at 0.1576 1.6975 -7.2252, turned -5.62, scaled 1.002, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at 0.2817 1.6975 -7.21, turned 11.16, scaled 1.006, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at 0.4158 1.6975 -7.2098, turned -26.81, scaled 1.011, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at 0.5369 1.6975 -7.246, turned 2.93, scaled 1.026, made of bottle_tequila_2.glb in bottle-glass
+  a bottle at 0.6682 1.6975 -7.209, turned 6.85, scaled 1.017, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at -0.1425 2.0575 -7.2552, turned 3.3, scaled 0.991, made of bottle_whiskey_2.glb in bottle-glass
+  a bottle at 0.0262 2.0575 -7.2273, turned -0.2, scaled 0.983, made of bottle_champagne_2.glb in bottle-glass
+  a bottle at 0.1473 2.0575 -7.2212, turned -15.77, scaled 0.993, made of bottle_wine_3.glb in bottle-glass
+  a bottle at 0.2695 2.0575 -7.2168, turned -1.54, scaled 1.019, made of bottle_slim_2.glb in bottle-glass
+  a bottle at 0.3965 2.0575 -7.229, turned -4.82, scaled 0.972, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at 0.5513 2.0575 -7.2339, turned -4.13, scaled 0.983, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at 0.689 2.0575 -7.2216, turned 13.72, scaled 0.991, made of bottle_cognac_1.glb in bottle-glass
+  a bottle at -0.1425 2.4175 -7.2469, turned 21.93, scaled 1.005, made of bottle_liqueur_2.glb in bottle-glass
+  a bottle at -0.0157 2.4175 -7.2383, turned 7, scaled 1.01, made of bottle_cognac_2.glb in bottle-glass
+  a bottle at 0.1157 2.4175 -7.212, turned 6.1, scaled 0.995, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at 0.263 2.4175 -7.2331, turned 25.91, scaled 0.974, made of bottle_slim_3.glb in bottle-glass
+  a bottle at 0.4211 2.4175 -7.2129, turned 6.19, scaled 1.014, made of bottle_whiskey_1.glb in bottle-glass
+  a bottle at 0.5663 2.4175 -7.2641, turned 5.52, scaled 1.014, made of bottle_wine_2.glb in bottle-glass
+  a bottle at 0.721 2.4175 -7.2122, turned -1.96, scaled 0.982, made of bottle_champagne_1.glb in bottle-glass
+  a bottle at -0.55 1.03 -7.125, turned 0, scaled 1.009, made of bottle_champagne_1_tilt17_0.glb in bottle-glass
+
+  a round table at -3 0 -0.6
+
+  a candle at -3 0.785 -0.6
+
+  a rocks glass at -2.78 0.785 -0.48
+
+  a table stool at -3.78 0 -0.6, turned -90
+  a table stool at -2.22 0 -0.6, turned 90
+
+  a round table at -0.2 0 -1.4, turned 40.107
+
+  a candle at -0.2 0.785 -1.4
+
+  a table stool at -0.68486 0 -2.01099, turned -141.56599
+  a table stool at 0.28486 0 -0.789, turned 38.434
+
+  a round table at 2.4 0 -0.4, turned 80.214
+
+  a candle at 2.4 0.785 -0.4
+
+  a rocks glass at 2.62 0.785 -0.28
+
+  a table stool at 2.57722 0 -1.1596, turned 166.868
+  a table stool at 2.22278 0 0.3596, turned -13.132
+
+  a round table at -1.6 0 2, turned 120.321
+
+  a candle at -1.6 0.785 2
+
+  a table stool at -0.89482 0 1.66664, turned 115.301
+  a table stool at -2.30518 0 2.33336, turned -64.699
+
+  a round table at 1.4 0 2.4, turned 160.42799
+
+  a candle at 1.4 0.785 2.4
+
+  a rocks glass at 1.62 0.785 2.52
+
+  a table stool at 2.09947 0 2.74517, turned 63.735
+  a table stool at 0.70053 0 2.05483, turned -116.265
+
+  a round table at 4.2 0 1.6, turned -159.465
+
+  a candle at 4.2 0.785 1.6
+
+  a table stool at 4.36442 0 2.36247, turned 12.169
+  a table stool at 4.03558 0 0.83753, turned -167.83099
+
+  a glow prop at 0 0 0, made of string_lights.glb in glow-glass, called string_lights
+
+  a neon sign at -6.3 0 -3.465, made of neon_cocktails.glb in glow-glass, called neon_cocktails
+  a neon sign at 9 0 -2, turned -90, made of neon_game_on.glb in glow-glass, called neon_game_on
+  a neon sign at -3.8 0 7, turned 180, made of neon_play.glb in glow-glass, called neon_play
+  a neon sign at -7.2 0 7, turned 180, made of neon_note.glb in glow-glass, called neon_note
+
+  a wall prop at -5 2.3 7, turned 180, made of gallery_photo_1.glb in dark-wood, called gallery_photo_1
+  a wall prop at -4.4 2.55 7, turned 180, made of gallery_photo_2.glb in dark-wood, called gallery_photo_2
+  a wall prop at -4.45 2.05 7, turned 180, made of gallery_photo_3.glb in dark-wood, called gallery_photo_3
+  a wall prop at -3.25 2.5 7, turned 180, made of gallery_photo_4.glb in dark-wood, called gallery_photo_4
+  a wall prop at -2.65 2.15 7, turned 180, made of gallery_photo_5.glb in dark-wood, called gallery_photo_5
+  a wall prop at -2.6 2.75 7, turned 180, made of gallery_photo_6.glb in dark-wood, called gallery_photo_6
+  a wall prop at -4.95 1.6 7, turned 180, made of gallery_photo_7.glb in dark-wood, called gallery_photo_7
+  a wall prop at 4.85 2.9 -7.4, made of tin_sign_1.glb in black-steel, called tin_sign_1
+  a wall prop at 5.55 2.55 -7.4, made of tin_sign_2.glb in black-steel, called tin_sign_2
+  a wall prop at 5 2.2 -7.4, made of tin_sign_3.glb in black-steel, called tin_sign_3
+  a wall prop at 5.6 3.3 -7.4, made of tin_sign_4.glb in black-steel, called tin_sign_4
+  a wall prop at 4.9 1.55 -7.4, made of license_plate_1.glb in black-steel, called license_plate_1
+  a wall prop at 5.3 1.55 -7.4, made of license_plate_2.glb in black-steel, called license_plate_2
+  a wall prop at 4.9 1.79 -7.4, made of license_plate_3.glb in black-steel, called license_plate_3
+  a wall prop at 5.3 1.79 -7.4, made of license_plate_4.glb in black-steel, called license_plate_4
+  a wall prop at 5.75 1.9 -7.4, made of record_1.glb in lacquer, called record_1
+  a wall prop at 4.75 3.45 -7.4, made of record_2.glb in lacquer, called record_2
+  a wall prop at 5.9 2.95 -7.4, made of record_3.glb in lacquer, called record_3
+  a wall prop at -2.6 3.42 -3.465, made of wall_clock.glb in brass, called wall_clock
+
+  a screen prop at 0.9 3.05 -3.465, made of wall_tv.glb in black-steel, called wall_tv
+
+  a wall prop at 1.95 0 5.75, turned 28.648, made of chalk_a_frame.glb in dark-wood, called chalk_a_frame
+
+  a plant at -1.85 0 6.7, made of floor_plant_1.glb in brick, called floor_plant_1
+  a plant at 5.35 0 6.65, made of floor_plant_2.glb in brick, called floor_plant_2
+  a plant at -5.15 0.15 6.65, made of floor_plant_3.glb in brick, called floor_plant_3
+  a plant at 8.55 0 6.6, made of floor_plant_4.glb in brick, called floor_plant_4
+
+  a hanging plant at -1.2 2.9 7.55, made of hanging_plant_1.glb in brick, called hanging_plant_1
+  a hanging plant at 0.8 2.9 7.55, made of hanging_plant_2.glb in brick, called hanging_plant_2
+
+  a wall prop at -8.7 3.35 -3.3, turned 135, made of corner_speaker.glb in black-steel, called corner_speaker-1
+  a wall prop at 8.7 3.35 6.7, turned -135, made of corner_speaker.glb in black-steel, called corner_speaker-2
+  a wall prop at -8.7 3.35 6.7, turned 135, made of corner_speaker.glb in black-steel, called corner_speaker-3
+  a wall prop at 8.7 3.35 -4, turned -45, made of corner_speaker.glb in black-steel, called corner_speaker-4
+
+  a glow prop at -1 0 7, turned 180, made of wall_sconce.glb in brass, called wall_sconce-1
+  a glow prop at -5.45 0 7, turned 180, made of wall_sconce.glb in brass, called wall_sconce-2
+  a glow prop at -9 0 -4.6, turned 90, made of wall_sconce.glb in brass, called wall_sconce-3
+  a glow prop at -9 0 3.15, turned 90, made of wall_sconce.glb in brass, called wall_sconce-4
+
+  a wall prop at 2.75 0 -7.4, made of fire_extinguisher.glb in black-steel, called fire_extinguisher-1
+  a wall prop at -5.6 0 7, turned 180, made of fire_extinguisher.glb in black-steel, called fire_extinguisher-2
+  a wall prop at -4 4 0, made of smoke_detector.glb in lacquer, called smoke_detector-1
+  a wall prop at 3 4 3, made of smoke_detector.glb in lacquer, called smoke_detector-2
+  a wall prop at -6 4 5, made of smoke_detector.glb in lacquer, called smoke_detector-3
+  a wall prop at 4 4 -2, made of smoke_detector.glb in lacquer, called smoke_detector-4
+  a wall prop at -1 4 5.5, made of smoke_detector.glb in lacquer, called smoke_detector-5
+  a wall prop at 2.2 1.25 7, turned 180, made of wall_switch.glb in lacquer, called wall_switch-1
+  a wall prop at 4.35 0.35 7, turned 180, made of wall_switch.glb in lacquer, called wall_switch-2
+  a wall prop at 9 1.25 0.7, turned -90, made of wall_switch.glb in lacquer, called wall_switch-3
+  a wall prop at -5.6 0.35 7, turned 180, made of wall_switch.glb in lacquer, called wall_switch-4
+  a wall prop at 1.1 0.35 -7.4, made of wall_switch.glb in lacquer, called wall_switch-5
+  a wall prop at 3.925 1.75 7, turned 180, made of coat_rack.glb in dark-wood, called coat_rack
+  a wall prop at 4.6 0 6.7, made of umbrella_stand.glb in brass, called umbrella_stand
+  a wall prop at 1.95 0 6.7, made of trash_can.glb in chrome, called trash_can
+  a wall prop at 4.95 0 -7.1, made of beer_crate.glb in lacquer, called beer_crate-1
+  a wall prop at 5.4 0 -7.08, turned 2.865, made of beer_crate.glb in lacquer, called beer_crate-2
+  a wall prop at 5.15 0.28 -7.1, turned -5.73, made of beer_crate.glb in lacquer, called beer_crate-3
+  a wall prop at 5.65 0 -6.65, turned 17.189, made of beer_crate.glb in lacquer, called beer_crate-4
+  a wall prop at 5.75 0 -7.1, made of keg.glb in chrome, called keg
+  a wall prop at -0.2 0 7.25, made of bay_table.glb in dark-wood, called bay_table
+
+  the fireplace at -8.55 0 0.8, turned 90
+
+  the painting at -8.535 1.975 0.8, turned 90
+
+  the mantel clock at -8.43 1.23 0.8, turned 90
+
+  a candlestick at -8.43 1.23 0.25, turned 90
+  a candlestick at -8.43 1.23 1.35, turned 90
+
+  a mantel photo b at -8.49 1.23 0.45, turned 78.541, called mantel_photo-1
+
+  a mantel photo a at -8.49 1.23 1.12, turned 107.189, called mantel_photo-2
+
+  the mantel books at -8.42 1.23 1.52, turned 90
+
+  the vase at -8.42 1.23 0.07, turned 90
+
+  the fire tools at -8.2 0 1.84, turned 90
+
+  the log basket at -8.2 0 -0.29, turned 90
+
+  the rug at -7.12 0 0.8
+
+  the coffee table at -6.95 0 0.8
+
+  a glass at -6.75 0.45 1.22, turned 0, made of drink_rocks_whiskey_ice.glb in bottle-glass, called drink-1
+  a glass at -7.15 0.45 0.38, turned 0, made of drink_snifter_whiskey.glb in bottle-glass, called drink-2
+
+  a bottle at -6.93 0.45 1.28, turned 0, made of bottle_square_1.glb in bottle-glass, called table_bottle-3
+
+  a glass at -5.9 0.565 2.7, turned 0, made of drink_wine_red_wine.glb in bottle-glass, called drink-4
+  a glass at -0.05 0.565 7.15, turned 0, made of drink_coupe_pink.glb in bottle-glass, called drink-5
+  a glass at -0.35 0.565 7.35, turned 0, made of drink_wine_white_wine.glb in bottle-glass, called drink-6
+  a glass at -6.6587 1.08 -4.6834, turned 0, made of drink_coupe_pink.glb in bottle-glass, called drink-7
+  a glass at -6.0704 1.08 -4.5354, turned 0, made of drink_pint_beer.glb in bottle-glass, called drink-8
+  a glass at -4.9766 1.08 -4.3373, turned 0, made of drink_wine_red_wine.glb in bottle-glass, called drink-9
+  a glass at -4.2728 1.08 -4.261, turned 0, made of drink_martini_blue.glb in bottle-glass, called drink-10
+  a glass at -2.808 1.08 -4.2277, turned 0, made of drink_highball_cola_ice.glb in bottle-glass, called drink-11
+  a glass at -1.9508 1.08 -4.2863, turned 0, made of drink_rocks_whiskey_ice.glb in bottle-glass, called drink-12
+  a glass at -0.95 1.08 -4.4288, turned 0, made of drink_pint_beer.glb in bottle-glass, called drink-13
+  a glass at -0.3561 1.08 -4.5522, turned 0, made of drink_coupe_orange.glb in bottle-glass, called drink-14
+
+  the chesterfield sofa at -5.75 0 0.8, turned -90
+
+  an armchair at -7.25 0 -0.5, turned -51.566
+  an armchair at -7.25 0 2.1, turned -128.434
+
+  a bookshelf at -9 0 2.625, turned 90, called lounge_bookshelf
+
+  the floor lamp at -6.3 0 2.75
+
+  the side table at -5.85 0 2.65
+
+  the fire flames at -8.71 0.12 0.8
+
+  a chess at -7.1425 0.4705 0.9925, made of chess_rook_w.glb in dark-wood, called chess_rook_w-1
+    its chess: piece 4
+  a chess at -7.1425 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-1
+    its chess: piece 1
+  a chess at -7.1425 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-1
+    its chess: piece 9
+  a chess at -7.1425 0.4705 0.6075, made of chess_rook_b.glb in dark-wood, called chess_rook_b-1
+    its chess: piece 12
+  a chess at -7.0875 0.4705 0.9925, made of chess_knight_w.glb in dark-wood, called chess_knight_w-1
+    its chess: piece 2
+  a chess at -7.0875 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-2
+    its chess: piece 1
+  a chess at -7.0875 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-2
+    its chess: piece 9
+  a chess at -7.0875 0.4705 0.6075, made of chess_knight_b.glb in dark-wood, called chess_knight_b-1
+    its chess: piece 10
+  a chess at -7.0325 0.4705 0.9925, made of chess_bishop_w.glb in dark-wood, called chess_bishop_w-1
+    its chess: piece 3
+  a chess at -7.0325 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-3
+    its chess: piece 1
+  a chess at -7.0325 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-3
+    its chess: piece 9
+  a chess at -7.0325 0.4705 0.6075, made of chess_bishop_b.glb in dark-wood, called chess_bishop_b-1
+    its chess: piece 11
+  a chess at -6.9775 0.4705 0.9925, made of chess_queen_w.glb in dark-wood, called chess_queen_w-1
+    its chess: piece 5
+  a chess at -6.9775 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-4
+    its chess: piece 1
+  a chess at -6.9775 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-4
+    its chess: piece 9
+  a chess at -6.9775 0.4705 0.6075, made of chess_queen_b.glb in dark-wood, called chess_queen_b-1
+    its chess: piece 13
+  a chess at -6.9225 0.4705 0.9925, made of chess_king_w.glb in dark-wood, called chess_king_w
+    its chess: piece 6
+  a chess at -6.9225 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-5
+    its chess: piece 1
+  a chess at -6.9225 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-5
+    its chess: piece 9
+  a chess at -6.9225 0.4705 0.6075, made of chess_king_b.glb in dark-wood, called chess_king_b
+    its chess: piece 14
+  a chess at -6.8675 0.4705 0.9925, made of chess_bishop_w.glb in dark-wood, called chess_bishop_w-2
+    its chess: piece 3
+  a chess at -6.8675 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-6
+    its chess: piece 1
+  a chess at -6.8675 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-6
+    its chess: piece 9
+  a chess at -6.8675 0.4705 0.6075, made of chess_bishop_b.glb in dark-wood, called chess_bishop_b-2
+    its chess: piece 11
+  a chess at -6.8125 0.4705 0.9925, made of chess_knight_w.glb in dark-wood, called chess_knight_w-2
+    its chess: piece 2
+  a chess at -6.8125 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-7
+    its chess: piece 1
+  a chess at -6.8125 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-7
+    its chess: piece 9
+  a chess at -6.8125 0.4705 0.6075, made of chess_knight_b.glb in dark-wood, called chess_knight_b-2
+    its chess: piece 10
+  a chess at -6.7575 0.4705 0.9925, made of chess_rook_w.glb in dark-wood, called chess_rook_w-2
+    its chess: piece 4
+  a chess at -6.7575 0.4705 0.9375, made of chess_pawn_w.glb in dark-wood, called chess_pawn_w-8
+    its chess: piece 1
+  a chess at -6.7575 0.4705 0.6625, made of chess_pawn_b.glb in dark-wood, called chess_pawn_b-8
+    its chess: piece 9
+  a chess at -6.7575 0.4705 0.6075, made of chess_rook_b.glb in dark-wood, called chess_rook_b-2
+    its chess: piece 12
+  a chess at -6.95 -0.1295 0.8, made of chess_queen_w.glb in dark-wood, called chess_queen_w-2
+    its chess: piece 5
+  a chess at -6.95 -0.1295 0.8, made of chess_queen_b.glb in dark-wood, called chess_queen_b-2
+    its chess: piece 13
+  a chess at -6.95 -0.1295 0.8, made of chess_queen_w.glb in dark-wood, called chess_queen_w-3
+    its chess: piece 5
+  a chess at -6.95 -0.1295 0.8, made of chess_queen_b.glb in dark-wood, called chess_queen_b-3
+    its chess: piece 13
+
+  a light bulb at -6.6 2.11 -4.6
+    its light: color 1 1 1, intensity 2, range 5, radius 0.08, dims yes, lumens 360, kelvin 2700
+  a light bulb at -4.3 2.11 -4.6
+    its light: color 1 1 1, intensity 2, range 5, radius 0.08, dims yes, lumens 360, kelvin 2700
+  a light bulb at -2 2.11 -4.6
+    its light: color 1 1 1, intensity 2, range 5, radius 0.08, dims yes, lumens 360, kelvin 2700
+  a light bulb at 0.2 2.11 -4.6
+    its light: color 1 1 1, intensity 2, range 5, radius 0.08, dims yes, lumens 360, kelvin 2700
+  a light bulb at -6.281 1.985 -7.054
+    its light: color 1 1 1, intensity 0.8, range 3.8, radius 0.6, lumens 144, kelvin 2700
+  a light bulb at -1.544 1.985 -7.056
+    its light: color 1 1 1, intensity 0.8, range 3.8, radius 0.6, lumens 144, kelvin 2700
+  a light bulb at -3.95 2 -6.8
+    its light: color 1 1 1, intensity 0.9, range 3.5, radius 0.8, lumens 162, kelvin 2700, shape tube, center -0.561 0.005 -0.323, axis 1 0 0, length 1.06
+
+  a light groove at -6.25 3.275 -1.65, called string-light-1-1
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.816 -0.069 0.573, length 5.757
+  a light groove at -1.55 3.075 1.65, called string-light-1-2
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.818 0 0.575, length 5.743
+  a light groove at 3.15 3.275 4.95, called string-light-1-3
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.816 0.069 0.573, length 5.757
+  a light groove at -6.25 3.275 4.95, called string-light-2-1
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.816 -0.069 -0.573, length 5.757
+  a light groove at -1.55 3.075 1.65, called string-light-2-2
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.818 0 -0.575, length 5.743
+  a light groove at 3.15 3.275 -1.65, called string-light-2-3
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.816 0.069 -0.573, length 5.757
+  a light groove at -1.9 3.275 -1.75, called string-light-3-1
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 135, kelvin 5000, shape tube, center 0 0 0, axis 0.802 -0.076 0.592, length 5.235
+  a light groove at 2.3 3.075 1.35, called string-light-3-2
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 135, kelvin 5000, shape tube, center 0 0 0, axis 0.805 0 0.594, length 5.22
+  a light groove at 6.5 3.275 4.45, called string-light-3-3
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 135, kelvin 5000, shape tube, center 0 0 0, axis 0.802 0.076 0.592, length 5.235
+  a light groove at -5.733 3.275 2.2, called string-light-4-1
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.998 -0.07 0, length 5.747
+  a light groove at 0 3.075 2.2, called string-light-4-2
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 1 0 0, length 5.733
+  a light groove at 5.733 3.275 2.2, called string-light-4-3
+    its light: color 1 1 1, intensity 1, range 3.5, radius 0.03, dims yes, lumens 150, kelvin 5000, shape tube, center 0 0 0, axis 0.998 0.07 0, length 5.747
+
+  a light bulb at 8.85 3.76 3.6, called mirror-light
+    its light: color 1 1 1, intensity 1, range 4.5, radius 0.035, dims yes, lumens 480, kelvin 2700, shape tube, center 0 0 0, axis 0 0 1, length 3.3
+  a light bulb at -6.366 3.316 4.644, called stage-spot-1
+    its light: color 1 1 1, intensity 1, range 5, radius 0.07, dims no, lumens 200, kelvin 3000
+  a light bulb at -6.392 3.323 5.414, called stage-spot-2
+    its light: color 1 1 1, intensity 1, range 5, radius 0.07, dims no, lumens 200, kelvin 3000
+  a light bulb at -6.354 3.308 6.185, called stage-spot-3
+    its light: color 1 1 1, intensity 1, range 5, radius 0.07, dims no, lumens 200, kelvin 3000
+  a light bulb at 5.672 3.718 5.647, called dart-spot-1
+    its light: color 1 1 1, intensity 1, range 4, radius 0.04, dims no, lumens 150, kelvin 3000
+  a light bulb at 6.328 3.718 5.647, called dart-spot-2
+    its light: color 1 1 1, intensity 1, range 4, radius 0.04, dims no, lumens 150, kelvin 3000
+
+  a light neon at -0.2 1.8 7.6
+    its light: color 0.55 0.6 0.9, intensity 0.6, range 4, radius 1, lumens 108
+  a light neon at 8.3 1.3 -2, called light-neon-3
+    its light: color 0.5 0.6 1, intensity 0.9, range 3.5, radius 0.5, lumens 162, shape tube, center 0.356 -0.22 0.981, axis 0.016 0.072 0.997, length 1.73
+  a light neon at 6.653 1.887 -5.648, called light-neon-4
+    its light: color 0.85 0.4 1, intensity 1.2, range 4, radius 0.5, lumens 216
+  a light neon at 7.07574 3 -5.47574, called light-neon-5
+    its light: color 1 0.3 0.7, intensity 0.8, range 3, radius 0.09, lumens 144
+  a light neon at -6.3 0 -3.465, called light-neon-cocktails
+    its light: color 1 0.18 0.55, intensity 1, range 4, radius 0.05, lumens 180, shape panel, center -0.04 3.49 0.08, axis 1 0 0, length 2.21, axis2 0 1 0, width 0.28, wall yes
+  a light neon at 9 0 -2, turned -90, called light-neon-game-on
+    its light: color 0.3 1 0.35, intensity 1, range 4, radius 0.05, lumens 170, shape panel, center -0.05 3.4 0.08, axis 1 0 0, length 2.03, axis2 0 1 0, width 0.33, wall yes
+  a light neon at -3.8 0 7, turned 180, called light-neon-play
+    its light: color 1 0.55 0.15, intensity 1, range 4, radius 0.05, lumens 110, shape panel, center -0.04 3.08 0.08, axis 1 0 0, length 0.91, axis2 0 1 0, width 0.27, wall yes
+  a light neon at -7.2 0 7, turned 180, called light-neon-note
+    its light: color 1 0.18 0.55, intensity 1, range 4, radius 0.05, lumens 100, shape panel, center -0.05 2.9 0.08, axis 1 0 0, length 0.48, axis2 0 1 0, width 0.73, wall yes
+  a light neon at 6 0 7, turned 180, called light-neon-darts
+    its light: color 1 0.15 0.08, intensity 1, range 4, radius 0.05, lumens 120, shape panel, center -0.04 2.43 0.08, axis 1 0 0, length 1.15, axis2 0 1 0, width 0.27, wall yes
+
+  a light neon wave at 0.51 3.26 -11.755, called light-arcade-high-w
+    its light: color 0.1 0.85 1, intensity 1, range 4, radius 0.05, lumens 160, shape panel, center 0 0 0, axis 0 0 -1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+  a light neon wave at 8.29 3.26 -11.755, called light-arcade-high-e
+    its light: color 0.1 0.85 1, intensity 1, range 4, radius 0.05, lumens 160, shape panel, center 0 0 0, axis 0 0 1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+  a light neon wave at 4.4 3.26 -15.59, called light-arcade-high-n
+    its light: color 0.1 0.85 1, intensity 1, range 4, radius 0.05, lumens 160, shape panel, center 0 0 0, axis 1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+
+  a light neon at 4.4 3.26 -7.92, called light-arcade-high-s
+    its light: color 0.1 0.85 1, intensity 1, range 4, radius 0.05, lumens 160, shape panel, center 0 0 0, axis -1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 0.51 1 -11.755, called light-arcade-wainscot-w
+    its light: color 0.6 0.3 1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 0 0, axis 0 0 -1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 8.29 1 -11.755, called light-arcade-wainscot-e
+    its light: color 0.6 0.3 1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 0 0, axis 0 0 1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 4.4 1 -15.59, called light-arcade-wainscot-n
+    its light: color 0.6 0.3 1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 0 0, axis 1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 4.4 1 -7.92, called light-arcade-wainscot-s
+    its light: color 0.6 0.3 1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 0 0, axis -1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 0.51 0.08 -11.755, called light-arcade-floor-w
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 100, shape panel, center 0 0 0, axis 0 0 -1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 8.29 0.08 -11.755, called light-arcade-floor-e
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 100, shape panel, center 0 0 0, axis 0 0 1, length 7.59, axis2 0 1 0, width 0.12, wall yes
+
+  a light neon wave at 4.4 0.08 -15.59, called light-arcade-floor-n
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 100, shape panel, center 0 0 0, axis 1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+
+  a light neon at 4.4 0.08 -7.92, called light-arcade-floor-s
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 100, shape panel, center 0 0 0, axis -1 0 0, length 7.7, axis2 0 1 0, width 0.12, wall yes
+  a light neon at 3.7 2.8 -7.92, called light-arcade-door
+    its light: color 1 0.85 0.1, intensity 1, range 3, radius 0.05, lumens 70, shape panel, center 0 0 0, axis 1 0 0, length 1.8, axis2 0 1 0, width 0.1, wall yes
+  a light neon at 0.46 0 -10.1, turned 90, called light-arcade-neon-bolt
+    its light: color 1 0.85 0.1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 2 0.08, axis 1 0 0, length 0.99, axis2 0 1 0, width 1.14, wall yes
+  a light neon at 0.46 0 -13.2, turned 90, called light-arcade-neon-ring
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 2.05 0.08, axis 1 0 0, length 1.14, axis2 0 1 0, width 1.14, wall yes
+  a light neon at 8.34 0 -10.2, turned -90, called light-arcade-neon-triangle
+    its light: color 0.1 0.85 1, intensity 1, range 4, radius 0.05, lumens 140, shape panel, center 0 2.21 0.08, axis 1 0 0, length 1.13, axis2 0 1 0, width 0.96, wall yes
+  a light neon at 8.34 0 -13.3, turned -90, called light-arcade-neon-zigzag
+    its light: color 0.45 1 0.2, intensity 1, range 4, radius 0.05, lumens 150, shape panel, center 0 2 0.08, axis 1 0 0, length 1.95, axis2 0 1 0, width 0.44, wall yes
+  a light neon at 4.4 0 -15.64, called light-arcade-neon-wave
+    its light: color 1 0.12 0.62, intensity 1, range 4, radius 0.05, lumens 300, shape panel, center 0 2.65 0.08, axis 1 0 0, length 7.21, axis2 0 1 0, width 0.4, wall yes
+
+  the light sign at 3.7 0 -7.4
+
+  a light neon at 3.7 0 -7.83, turned 180, called light-arcade-sign-inside
+    its light: color 1 0.2 0.65, intensity 1, range 4, radius 0.05, lumens 110, shape panel, center 0 2.95 0.08, axis 1 0 0, length 1.4, axis2 0 1 0, width 0.35, wall yes
+
+  a light bulb at -1 0 7, turned 180, called light-wall-sconce-1
+    its light: color 1 1 1, intensity 1, range 4, radius 0.05, lumens 200, shape panel, center 0 2.09 0.24, axis 1 0 0, length 0.12, axis2 0 1 0, width 0.12, wall yes, kelvin 2700
+  a light bulb at -5.45 0 7, turned 180, called light-wall-sconce-2
+    its light: color 1 1 1, intensity 1, range 4, radius 0.05, lumens 200, shape panel, center 0 2.09 0.24, axis 1 0 0, length 0.12, axis2 0 1 0, width 0.12, wall yes, kelvin 2700
+  a light bulb at -9 0 -4.6, turned 90, called light-wall-sconce-3
+    its light: color 1 1 1, intensity 1, range 4, radius 0.05, lumens 200, shape panel, center 0 2.09 0.24, axis 1 0 0, length 0.12, axis2 0 1 0, width 0.12, wall yes, kelvin 2700
+  a light bulb at -9 0 3.15, turned 90, called light-wall-sconce-4
+    its light: color 1 1 1, intensity 1, range 4, radius 0.05, lumens 200, shape panel, center 0 2.09 0.24, axis 1 0 0, length 0.12, axis2 0 1 0, width 0.12, wall yes, kelvin 2700
+
+  a light neon at 4.4 0 -15.2, called light-arcade-cabinet-screen
+    its light: color 0.8 0.85 1, intensity 1, range 4, radius 0.05, lumens 110, shape panel, center 0 1.35 0.5, axis 1 0 0, length 0.5, axis2 0 1 0, width 0.4, wall yes
+
+  the light fire at -8.57 0.161 0.8
+
+  a light bulb at -6.3 1.5 2.75, called light-bulb-8
+    its light: color 1 1 1, intensity 1.1, range 4, radius 0.04, lumens 198, kelvin 2400
+
+  the light jukebox at -3.8 1.2 5.85
+
+  a light neon at -10.8 1.8 -3.1, called light-neon-6
+    its light: color 1 1 1, intensity 1.6, range 4, radius 0.12, lumens 288, kelvin 3800
+
+  a seat spot at -1.4 0 7.5, called window-seat
+    a seat: name "Window seat", hip 0 0.56 0, facing 0, low 0.6, kind chair
+    a seat: name "Window seat", hip 1.2 0.56 0, facing 0, low 0.6, kind chair
+    a seat: name "Window seat", hip 2.4 0.56 0, facing 0, low 0.6, kind chair
+
+  the piano at -8 0.3 5.6, turned 104.897
+
+  the stage at 0 0 0
+
+  the dartboard at 6 1.73 7, turned 180
+
+  the chalkboard at 7.7 1.6 7, turned 180
+
+  a round table at 4.65 0 5
+
+  a pint glass at 4.8 0.785 5.1
+
+  a sim rig at 7.75 0 -3, turned -90
+    its rig: machine 0
+    a seat: name "Racing sim", hip 0 0.4 0.2, facing 0, low 1, kind sim, machine 0
+  a sim rig at 7.75 0 -1, turned -90
+    its rig: machine 1
+    a seat: name "Racing sim", hip 0 0.4 0.2, facing 0, low 1, kind sim, machine 1
+
+  the rhythm at 7.5 0 -5.9, turned -45
+
+  the jukebox at -3.8 0 6.55, turned 180
+
+  the big mirror at 0 0 0
+
+  a mirror button full at 8.988 1.39 0.89, called mirror_button-1
+    an use: action mirror-mode, tag 0 0 0, box -0.06 -0.04 -0.05 to 0.01 0.04 0.05, lights yes, mirror big_mirror
+
+  a mirror button avatars at 8.988 1.3 0.89, called mirror_button-2
+    an use: action mirror-mode, value 1, tag 0 0 0, box -0.06 -0.04 -0.05 to 0.01 0.04 0.05, lights yes, mirror big_mirror
+
+  a mirror button off at 8.988 1.21 0.89, called mirror_button-3
+    an use: action mirror-mode, value 2, tag 0 0 0, box -0.06 -0.04 -0.05 to 0.01 0.04 0.05, lights yes, mirror big_mirror
+
+  the arcade at 0 0 0
+
+  a wall prop at -6.25 0.3 6.3, made of stage_mic.glb in chrome, called stage_mic
+  a wall prop at -5.72 0.3 6.62, made of stage_guitar.glb in lacquer, called stage_guitar
+  a wall prop at -6.95 0.3 6.78, turned 180, made of stage_amp.glb in leather, called stage_amp
+
+  a glow prop at -6.3 4 5.4, made of stage_lights.glb in black-steel, called stage_lights
+
+  a wall prop at -6.8 0.3 6.35, made of stage_stool.glb in leather, called stage_stool
+  a wall prop at 6 1.73 6.96, turned 180, made of board_darts.glb in black-steel, called board_darts
+  a wall prop at 6 1.73 7, turned 180, made of dart_surround.glb in black-steel, called dart_surround
+  a wall prop at 6.72 1.35 7, turned 180, made of dart_holder.glb in black-steel, called dart_holder
+  a wall prop at 6 0 4.59, turned 180, made of oche.glb in brass, called oche
+
+  a glow prop at 6 4 5.56, turned 180, made of dart_spotlights.glb in black-steel, called dart_spotlights
+
+  a neon sign at 6 0 7, turned 180, made of neon_darts.glb in glow-glass, called neon_darts
+
+  a wall prop at -9 0 -2.5, turned 90, made of caution_tape.glb in lacquer, called caution_tape
+  a wall prop at -9.35 0 -2.5, turned 90, made of plastic_sheet.glb in bottle-glass, called plastic_sheet
+  a wall prop at -8.4 0 -2.15, turned 90, made of sawhorse_1.glb in lacquer, called sawhorse_1
+  a wall prop at -8.25 0 -2.8, turned 90, made of sawhorse_2.glb in lacquer, called sawhorse_2
+  a wall prop at -8.55 0 -1.35, turned 90, made of cone_1.glb in lacquer, called cone_1
+  a wall prop at -8.5 0 -3.7, turned 90, made of cone_2.glb in lacquer, called cone_2
+  a wall prop at -8.05 0 -3.65, turned 90, made of cone_3.glb in lacquer, called cone_3
+  a wall prop at -8.45 0 -0.95, turned 90, made of easel_sign.glb in glow-glass, called easel_sign
+
+  a glow prop at -10.65 0 -3.172, turned 90, made of work_light.glb in black-steel, called work_light
+
+  a wall prop at -11.1 0 -1.9, turned 90, made of step_ladder.glb in chrome, called step_ladder
+  a wall prop at -10.5 0 -2.74, turned 90, made of paint_bucket_1.glb in lacquer, called paint_bucket_1
+  a wall prop at -10.95 0 -3.46, turned 90, made of paint_bucket_2.glb in lacquer, called paint_bucket_2
+  a wall prop at -9.9 0 -3.1, turned 90, made of paint_bucket_3.glb in lacquer, called paint_bucket_3
+  a wall prop at -10.35 0 -2.38, turned 90, made of drop_cloth.glb in leather, called drop_cloth
+  a wall prop at -10.05 0 -1.88, turned 90, made of lumber.glb in door-wood, called lumber
+  a wall prop at -12.15 0 -2.962, turned 90, made of drywall.glb in plaster, called drywall
+  a wall prop at -9.9 0 -3.34, turned 90, made of toolbox.glb in lacquer, called toolbox
+
+  a neon sign at 0.46 0 -10.1, turned 90, made of arcade_neon_bolt.glb in glow-glass, called arcade_neon_bolt
+  a neon sign at 0.46 0 -13.2, turned 90, made of arcade_neon_ring.glb in glow-glass, called arcade_neon_ring
+  a neon sign at 8.34 0 -10.2, turned -90, made of arcade_neon_triangle.glb in glow-glass, called arcade_neon_triangle
+  a neon sign at 8.34 0 -13.3, turned -90, made of arcade_neon_zigzag.glb in glow-glass, called arcade_neon_zigzag
+  a neon sign at 4.4 0 -15.64, made of arcade_neon_wave.glb in glow-glass, called arcade_neon_wave
+  a neon sign at 3.7 0 -7.4, made of arcade_sign_bar.glb in glow-glass, called arcade_sign_bar
+  a neon sign at 3.7 0 -7.83, turned 180, made of arcade_sign_inside.glb in glow-glass, called arcade_sign_inside
+
+  a wall prop at 0.75 0 -11.7, turned 90, made of arcade_bench.glb in leather, called arcade_bench
+
+  the arcade cabinet at 4.4 0 -15.2
+
+  the credit coin at 0 -20 0
+
+  a seat spot at 0.78 0 -12.2, called arcade-bench
+    a seat: name "Arcade bench", hip 0 0.48 0, facing 90, low 1, kind sofa
+    a seat: name "Arcade bench", hip 0 0.48 1, facing 90, low 1, kind sofa
+
+  a drink spot at -6.86628 1.08 -4.6385
+    its drink: slot 0
+    an use: prompt Drink, action drink, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -5.82598 1.08 -4.38043
+    its drink: slot 1
+    an use: prompt Drink, action drink, value 1, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -4.78568 1.08 -4.21195
+    its drink: slot 2
+    an use: prompt Drink, action drink, value 2, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -3.74538 1.08 -4.12954
+    its drink: slot 3
+    an use: prompt Drink, action drink, value 3, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -2.70508 1.08 -4.13154
+    its drink: slot 4
+    an use: prompt Drink, action drink, value 4, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -1.66478 1.08 -4.218
+    its drink: slot 5
+    an use: prompt Drink, action drink, value 5, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at -0.62448 1.08 -4.39065
+    its drink: slot 6
+    an use: prompt Drink, action drink, value 6, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+  a drink spot at 0.41582 1.08 -4.65312
+    its drink: slot 7
+    an use: prompt Drink, action drink, value 7, tag 0 0.06 0, box -0.09 -0.03 -0.09 to 0.09 0.15 0.09, direct yes
+
+  a spot at -2.66255 0.5 -5.26471, called bartender
+    its bartender: stand 0 1.15 0
+    an use: name BARTENDER, prompt "Bartender station\nTap: start a shift", action bartender, tag 0 1.6 0, box -0.6 0 -0.4 to 0.6 1 0.4
+  a spot at -2.22021 1.02 -4.29169, called service-bell
+    an use: prompt "Service bell\nTap: ring it", action bell, tag 0 0.1 0, box -0.12 0 -0.12 to 0.12 0.2 0.12, direct yes
+  a spot at -1.05196 1.04 -4.49181, called tip-jar
+    an use: prompt "Tip jar\nTap: leave a tip", action tip-jar, tag 0 0.12 0, box -0.12 0 -0.12 to 0.12 0.24 0.12, direct yes
+  a spot at -4.54284 1.08 -4.61736, called beer-taps
+    an use: prompt "Beer taps\nTap: pour a beer", action taps, tag 0 0.3 0, box -0.35 0 -0.2 to 0.35 0.6 0.2, direct yes
+  a spot at -1.2 1 -7.05, called coffee-machine
+    an use: prompt "Coffee machine\nTap: make a coffee", action coffee, tag 0 0.25 0, box -0.3 0 -0.3 to 0.3 0.5 0.3, direct yes
+
+  the light switch at 2.25 1.2 6.95
+    an use: prompt "Light switch\nTap: dim the lights", action light-switch, tag 0 0.1 0, box -0.08 0 -0.08 to 0.08 0.2 0.08, direct yes
+
+  a spot at 3.2 0 6.95, called street-door
+    an use: prompt "Street door\nTap: knock", action door, tag 0 1.1 0, box -0.7 0 -0.12 to 0.7 2.2 0.12, direct yes
+  a spot at -8.8 0.2 2.625, called bookshelf
+    an use: prompt "Bookshelf\nTap: read a book", action books, tag 0 1 0, box -0.25 0 -0.6 to 0.25 2 0.6, direct yes
+  a spot at -6.95 0.38 0.8, called chess
+    its chessboard: center 0 0.0905 0, square 0.055
+    its project: id chess, name Chess, about "A game of chess on the fireside table, against a friend or the bar."
+    an use: prompt "Chess\nTap: play a game", action chess, tag 0 0.12 0, box -0.3 0 -0.3 to 0.3 0.24 0.3, direct yes
+  a spot at -5.72 0.3 6.62, called guitar
+    an use: prompt "Guitar\nTap: strum", action guitar, tag 0 0.6 0, box -0.25 0 -0.25 to 0.25 1.2 0.25, direct yes
+  a spot at -6.25 1.5 6.3, called microphone
+    an use: prompt "Microphone\nTap: speak to the whole bar", action mic, tag 0 0.2 0, box -0.12 0 -0.12 to 0.12 0.4 0.12, direct yes
+  a spot at 6 -0.15 4.44, called darts
+    its project: id darts, name Darts, about "501 at the dartboard; the room keeps the score."
+    an use: name DARTS, prompt "Darts\nTap: play darts", action darts, tag 0 2.5 2.26, box -0.6 0 -0.3 to 0.6 1.8 0.3
+
+  a moth at 0 -0.64 0, held by pendant_lamp-2
+  a moth at 0 -0.64 0, held by pendant_lamp-2
+  a moth at 0 -0.64 0, held by pendant_lamp-2
+  a moth at 0 -0.64 0, held by pendant_lamp-4
+  a moth at 0 -0.64 0, held by pendant_lamp-4
+
+  an ember at -8.15 0.95 0.8
+  an ember at -8.15 0.95 0.8
+  an ember at -8.15 0.95 0.8
+  an ember at -8.15 0.95 0.8
+  an ember at -8.15 0.95 0.8
+  an ember at -8.15 0.95 0.8

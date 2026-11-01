@@ -31,7 +31,7 @@ declare -A TESTS=(
   [walk_test]="tools/native/walk_test.cpp $SCENE"
   [physics_test]="tools/native/physics_test.cpp looped/physics.cpp bar/props.cpp $SCENE"
   [rig_test]="tools/native/rig_test.cpp bar/light_rig.cpp looped/words/syntax.cpp looped/words/program.cpp looped/words/rig.cpp $SCENE"
-  [place_test]="tools/native/place_test.cpp looped/words/words.cpp looped/words/program.cpp looped/words/syntax.cpp looped/words/place.cpp looped/words/place_json.cpp looped/world/loop.cpp looped/json.cpp looped/gltf.cpp looped/draw/clusters.cpp looped/draw/model_spec.cpp looped/draw/model_measure.cpp"
+  [place_test]="tools/native/place_test.cpp looped/words/words.cpp looped/words/program.cpp looped/words/syntax.cpp looped/words/place.cpp looped/words/place_json.cpp looped/words/place_list.cpp looped/world/loop.cpp looped/json.cpp looped/gltf.cpp looped/draw/clusters.cpp looped/draw/model_spec.cpp looped/draw/model_measure.cpp"
   [clusters_test]="tools/native/clusters_test.cpp looped/draw/clusters.cpp"
   [words_test]="tools/native/words_test.cpp looped/words/words.cpp looped/words/program.cpp looped/words/syntax.cpp looped/world/loop.cpp looped/json.cpp"
 )

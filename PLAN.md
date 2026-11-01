@@ -59,7 +59,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 4. Now
 **J118 · The new engine, finished** (the engine). The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
-- [ ] **J118.1** The bar's world in words, made from a converter with a test that it equals today's *Check:* The bar on the new engine looks the same as before; the words file reads like a list of the bar's things
+- [x] **J118.1** The bar's world in words, made from a converter with a test that it equals today's *Check:* The bar on the new engine looks the same as before; the words file reads like a list of the bar's things
 - [ ] **J118.2** The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down) *Check:* /bar/?engine=next: the neon buzzes, the bulbs breathe
 - [ ] **J118.3** Tune: quality levels, smooth round things, small things lit right, the look you like (less warm) *Check:* The new-engine bar looks as you like on your phone, smooth at every level
 - [ ] **J118.4** The switch, when you say: the new engine becomes the live bar with everything the bar does; the old renderer retired *Check:* joshuavelasco.com/bar opens the new engine on every browser
@@ -274,7 +274,7 @@ live in the docs listed in part 8; they never hold plans or ticks.
 
 ## 7. Done
 *Newest first: build code, the pieces, the commits. "undo" reverts one line.*
-- (this push) J116.2, J116.3, J116.4, J116.5: Looped rebuilt, first half: the new engine draws on WebGPU or WebGL2 (every browser), its own Nanite-like detail (only what's seen gets triangles), a model spec every model meets, the labs, and the whole bar drawn by it at a hidden link (/bar/?engine=next); the rest is J118 → ac817cf^..b4cd055
+- `4f914fe` J116.2, J116.3, J116.4, J116.5: Looped rebuilt, first half: the new engine draws on WebGPU or WebGL2 (every browser), its own Nanite-like detail (only what's seen gets triangles), a model spec every model meets, the labs, and the whole bar drawn by it at a hidden link (/bar/?engine=next); the rest is J118 → ac817cf^..b4cd055
 - `285c547` J117.1, J117.2, J117.3, J117.4, J117.5, J117.6, J117.7, J117.8, J117.9, J117.10, J117.11, J117.12, J117.13: 4K Mania upgrade: a smooth song clock (notes glide evenly, taps judged at their exact time), a gesture guard and lighter frames while playing, the finger test and the sound sync, a smaller combo with no circle, osu!mania's real star rating, and the Training pack: 30 hard-hitting new songs and 30 maps in ten stages from 2 to 7 stars → f974ddc^..27e76f8
 - `ba18f3c` J115.1, J28.1, J28.2, J115.2, J109.1, J109.1 (fix): Daylight string lights with white bulbs, chess bots with ratings and a picker, books that turn with a curl → 8d081c5^..477ceb2
 - `088a198` J113.3 (fix): Only real objects give light: lights on every glowing thing and nowhere else, no square patches, whiter string lights, thinner haze → 9f6c581^..9f6c581
