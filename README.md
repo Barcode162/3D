@@ -6,6 +6,12 @@ benchmarks by `tools/bench.mjs` (see `bench.jsonl`).
 
 Latest benchmark (2026-10-22 18:44, 922ec64): gi_triangles_full 642040 tris, gi_triangles 99105 tris, gi_load_ms 167 ms, gi_simplify_ms 28 ms, gi_bvh_ms 239 ms, gi_patches 58292, gi_probes_usable 10128, gi_build_ms 6666 ms, gi_rays_per_s 0.59 M/s, gi_solve4_ms 12.6 ms
 
+## J116.5 The physics lab: the light's room takes things that move without rebuilding its ray tree; the lab's two stools are bodies; knocked over, a stool is lit live from the room itself, and when it rests every texel within a metre of where it was and where it is gets the lamps' light again (4 ms a frame, the slowest frame 12 ms), then its own corners join the baked room; put them back restores the bake
+
+`b4cd055` · 2026-11-01 08:58 · 23 files, +1199 −140 · tests: none
+
+Phone check: Open joshuavelasco.com/bar/labs/physics/ and tap Knock the right stool: it falls, its old shadow fades once it rests and a new one appears under it; the status says settled; the slowest frame stays low
+
 ## J116.4 The draw lab: the new engine's drawing piece, one interface with a WebGPU and a WebGL2 backend (WebGPU where the browser has it, WebGL2 everywhere else, a plain message where neither); the baker exports the baked room, and the draw lab draws it live with the one light formula on either, the lights flickering by their world loops; the labs test shows both backends draw the same picture (0.05 of 255 apart)
 
 `f46d356` · 2026-11-01 08:40 · 18 files, +1362 −15 · tests: none
