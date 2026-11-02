@@ -196,6 +196,12 @@ class GpuDevice final : public Device {
     vbl.attributes = attrs.data();
     wgpu::ColorTargetState target;
     target.format = format_;
+    wgpu::BlendState blend;
+    if (d.blend) {
+      blend.color = {wgpu::BlendOperation::Add, wgpu::BlendFactor::One, wgpu::BlendFactor::OneMinusSrcAlpha};
+      blend.alpha = {wgpu::BlendOperation::Add, wgpu::BlendFactor::One, wgpu::BlendFactor::OneMinusSrcAlpha};
+      target.blend = &blend;
+    }
     wgpu::FragmentState fs;
     fs.module = module;
     fs.entryPoint = "fs_main";
@@ -203,7 +209,7 @@ class GpuDevice final : public Device {
     fs.targets = &target;
     wgpu::DepthStencilState ds;
     ds.format = wgpu::TextureFormat::Depth24Plus;
-    ds.depthWriteEnabled = d.depth;
+    ds.depthWriteEnabled = d.depth && !d.blend;
     ds.depthCompare = d.depth ? wgpu::CompareFunction::Less : wgpu::CompareFunction::Always;
     wgpu::RenderPipelineDescriptor rp;
     rp.label = d.label.c_str();

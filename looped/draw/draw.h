@@ -48,6 +48,10 @@ struct PipelineDesc {
   int textures = 0;     // how many texture slots it reads (0..4)
   bool depth = true;
   bool cullBack = false;
+  // See-through (J119.1, glass): the colour is mixed over what's behind
+  // (premultiplied: out = colour + behind × (1 - alpha)), and it leaves the
+  // depth as it was, so glass behind glass still shows.
+  bool blend = false;
   std::string label;
 };
 

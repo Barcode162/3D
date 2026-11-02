@@ -36,10 +36,10 @@
   }
  ],
  "now": {
-  "id": "J118",
-  "title": "The new engine, finished",
+  "id": "J119",
+  "title": "The switch to the new engine, when the user says",
   "chapter": "the engine",
-  "about": "The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says",
+  "about": "The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired",
   "serves": [
    "N1",
    "N2",
@@ -47,27 +47,69 @@
   ],
   "pieces": [
    {
-    "id": "J118.1",
-    "text": "The bar's world in words, made from a converter with a test that it equals today's",
-    "check": "The bar on the new engine looks the same as before; the words file reads like a list of the bar's things",
-    "done": true
+    "id": "J119.1",
+    "text": "Glass: bottles, glasses and windows drawn see-through on the new engine, tinted, catching the lamps' highlights",
+    "check": "/bar/?engine=next: the bottles behind the bar and the glasses on the counter are see-through and glint",
+    "done": false
    },
    {
-    "id": "J118.2",
-    "text": "The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down)",
-    "check": "/bar/?engine=next: the neon buzzes, the bulbs breathe",
-    "done": true
+    "id": "J119.2",
+    "text": "Shine and reflections: wood, metal and the bar top catch the lamps; shiny things reflect the room; the big mirror reflects the bar and you",
+    "check": "/bar/?engine=next: walk past the bar top and the lamps glint in it; the big mirror shows the room",
+    "done": false
    },
    {
-    "id": "J118.3",
-    "text": "Tune: quality levels, smooth round things, small things lit right, the look you like (less warm)",
-    "check": "The new-engine bar looks as you like on your phone, smooth at every level",
-    "done": true
+    "id": "J119.3",
+    "text": "Haze, light beams and glow around the lights, and sharper pictures on High",
+    "check": "/bar/?engine=next: a soft haze, beams under the lamps, the neon glows; close-up textures are crisp on High",
+    "done": false
+   },
+   {
+    "id": "J119.4",
+    "text": "Sitting and tapping things: seats, the light switches, the mirror buttons, the drink spots",
+    "check": "/bar/?engine=next: tap a stool to sit, tap a switch to turn the lights down",
+    "done": false
+   },
+   {
+    "id": "J119.5",
+    "text": "Sound and music: the jukebox and the room's sounds on the new engine",
+    "check": "/bar/?engine=next: the jukebox plays and the lights follow its beat",
+    "done": false
+   },
+   {
+    "id": "J119.6",
+    "text": "People: others in the bar with you, and voice, on the new engine",
+    "check": "Two phones at /bar/?engine=next see each other and can talk",
+    "done": false
+   },
+   {
+    "id": "J119.7",
+    "text": "The games on the new engine: chess, darts, the arcade, the racing sims",
+    "check": "/bar/?engine=next: play a game of each",
+    "done": false
+   },
+   {
+    "id": "J119.8",
+    "text": "Menus, the HUD and the other places (home) on the new engine",
+    "check": "/bar/?engine=next: the menu opens; Places takes you home and back",
+    "done": false
+   },
+   {
+    "id": "J119.9",
+    "text": "Moving things: pick up and put down, knocked things fall, the light follows them",
+    "check": "/bar/?engine=next: pick up a glass, knock a stool over, its shadow moves",
+    "done": false
+   },
+   {
+    "id": "J119.10",
+    "text": "The switch, when you say: the new engine becomes the live bar on every browser; the old renderer retired",
+    "check": "joshuavelasco.com/bar opens the new engine",
+    "done": false
    }
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J119 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
+ "upNext": "J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
  "road": {
   "world": [
    {
@@ -769,21 +811,6 @@
     "verdict": {
      "kind": "now",
      "why": "Our own engine code: patterns and timelines on the shared clock the world model already has"
-    }
-   },
-   {
-    "id": "J119",
-    "text": "The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired",
-    "serves": [
-     "N1",
-     "N2",
-     "N3"
-    ],
-    "done": false,
-    "verdict": {
-     "kind": "after",
-     "after": "J118",
-     "why": "the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when"
     }
    }
   ],

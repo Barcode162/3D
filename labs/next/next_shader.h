@@ -11,6 +11,10 @@
 // blended (J118.3: round things shade smooth), turned towards the eye; where a
 // model has none, the screen-space slope of its position. The white balance
 // (group.yzw, J118.3) takes part of the bulbs' orange out before the curve.
+// Glass (glow.w = 1, J119.1; drawn last, mixed over what's behind): a touch
+// of its tint lit like a small thing, the room mirrored in it more at a slant
+// (Schlick's Fresnel, 4% head on), and each of its four lamps as a sharp
+// highlight (Blinn-Phong, normalised); its colour's alpha is how much it hides.
 // Textures: 0 the light texture, 1 the picture, 2 the lamps.
 namespace nx {
 
@@ -80,6 +84,25 @@ fn lampLux(i: u32, p: vec3f, n: vec3f) -> vec3f {
   return t1.rgb * (emit * cs / d2);
 }
 
+// A lamp's sharp highlight on a smooth surface (glass): its light from the
+// lamp's nearest point, bounced towards the eye.
+fn lampSpec(i: u32, p: vec3f, n: vec3f, view: vec3f, shininess: f32) -> vec3f {
+  let t0 = textureLoad(tex2, vec2i(0, i32(i)), 0);
+  let t1 = textureLoad(tex2, vec2i(1, i32(i)), 0);
+  let t2 = textureLoad(tex2, vec2i(2, i32(i)), 0);
+  let t3 = textureLoad(tex2, vec2i(3, i32(i)), 0);
+  var q = t0.xyz;
+  if (t1.w > 0.5) { q = q + t2.xyz * clamp(dot(p - t0.xyz, t2.xyz) / max(dot(t2.xyz, t2.xyz), 1e-6), -1.0, 1.0); }
+  if (t1.w > 1.5) { q = q + t3.xyz * clamp(dot(p - t0.xyz, t3.xyz) / max(dot(t3.xyz, t3.xyz), 1e-6), -1.0, 1.0); }
+  let d = q - p;
+  let d2 = max(dot(d, d), 0.01);
+  let l = d * inverseSqrt(d2);
+  let h = normalize(l + view);
+  let cs = max(dot(n, l), 0.0);
+  let f = 0.04 + 0.96 * pow(1.0 - max(dot(h, view), 0.0), 5.0);
+  return t1.rgb * (f * (shininess + 8.0) / 25.1327 * pow(max(dot(n, h), 0.0), shininess) * cs / d2);
+}
+
 fn aces(x: vec3f) -> vec3f { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), vec3f(0.0), vec3f(1.0)); }
 fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.055, 12.92 * x, x <= vec3f(0.0031308)); }
 
@@ -90,7 +113,8 @@ fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.
   let t = textureSampleLevel(tex0, samp0, max(v.uv2, vec2f(0.0)), 0.0);
   let pic = textureSample(tex1, samp1, v.uv).rgb;
   var e = vec3f(0.0);
-  if (v.col.a > 0.5) {
+  let glass = u.glow.w > 0.5;
+  if (v.col.a > 0.5 && !glass) {
     e = t.x * u.w[0].rgb + t.y * u.w[1].rgb + t.z * u.w[2].rgb + t.w * u.w[3].rgb;
   } else {
     e = v.corner.x * u.w[0].rgb + v.corner.y * u.w[1].rgb + v.corner.z * u.w[2].rgb + v.corner.w * u.w[3].rgb;
@@ -100,6 +124,17 @@ fn srgb(x: vec3f) -> vec3f { return select(1.055 * pow(x, vec3f(1.0 / 2.4)) - 0.
   }
   var surface = v.col.rgb;
   if (u.group.x > 0.5) { surface = surface * pic / max(u.picAvg.rgb, vec3f(0.02)); }
+  if (glass) {
+    let view = normalize(u.eye.xyz - v.world);
+    let f = 0.04 + 0.96 * pow(1.0 - max(dot(n, view), 0.0), 5.0);
+    let bounce = max(v.corner.x * u.w[0].rgb + v.corner.y * u.w[1].rgb + v.corner.z * u.w[2].rgb + v.corner.w * u.w[3].rgb, vec3f(0.0));
+    let at = v.world + n * 0.002;
+    var hl = lampSpec(v.lamps.x, at, n, view, 300.0) * v.seen.x + lampSpec(v.lamps.y, at, n, view, 300.0) * v.seen.y;
+    hl += lampSpec(v.lamps.z, at, n, view, 300.0) * v.seen.z + lampSpec(v.lamps.w, at, n, view, 300.0) * v.seen.w;
+    let lit = surface * max(e, vec3f(0.0)) / 3.14159265 * v.col.a * 0.35 + f * bounce / 3.14159265 + hl;
+    let a = clamp(v.col.a * (1.0 - f) + f, 0.0, 1.0);
+    return vec4f(srgb(aces(lit * u.group.yzw * u.eye.w)), a);
+  }
   let nits = u.glow.rgb + surface * max(e, vec3f(0.0)) / 3.14159265;
   return vec4f(srgb(aces(nits * u.group.yzw * u.eye.w)), 1.0);
 }
@@ -173,6 +208,22 @@ vec3 lampLux(uint i, vec3 p, vec3 n) {
   }
   return t1.rgb * (emit * cs / d2);
 }
+vec3 lampSpec(uint i, vec3 p, vec3 n, vec3 view, float shininess) {
+  vec4 t0 = texelFetch(tex2, ivec2(0, int(i)), 0);
+  vec4 t1 = texelFetch(tex2, ivec2(1, int(i)), 0);
+  vec4 t2 = texelFetch(tex2, ivec2(2, int(i)), 0);
+  vec4 t3 = texelFetch(tex2, ivec2(3, int(i)), 0);
+  vec3 q = t0.xyz;
+  if (t1.w > 0.5) q = q + t2.xyz * clamp(dot(p - t0.xyz, t2.xyz) / max(dot(t2.xyz, t2.xyz), 1e-6), -1.0, 1.0);
+  if (t1.w > 1.5) q = q + t3.xyz * clamp(dot(p - t0.xyz, t3.xyz) / max(dot(t3.xyz, t3.xyz), 1e-6), -1.0, 1.0);
+  vec3 d = q - p;
+  float d2 = max(dot(d, d), 0.01);
+  vec3 l = d * inversesqrt(d2);
+  vec3 h = normalize(l + view);
+  float cs = max(dot(n, l), 0.0);
+  float f = 0.04 + 0.96 * pow(1.0 - max(dot(h, view), 0.0), 5.0);
+  return t1.rgb * (f * (shininess + 8.0) / 25.1327 * pow(max(dot(n, h), 0.0), shininess) * cs / d2);
+}
 vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 vec3 srgb(vec3 x) { return mix(1.055 * pow(x, vec3(1.0 / 2.4)) - 0.055, 12.92 * x, vec3(lessThanEqual(x, vec3(0.0031308)))); }
 
@@ -183,7 +234,8 @@ void main() {
   vec4 t = textureLod(tex0, max(vUv2, vec2(0.0)), 0.0);
   vec3 pic = texture(tex1, vUv).rgb;
   vec3 e = vec3(0.0);
-  if (vCol.a > 0.5) {
+  bool glass = glow.w > 0.5;
+  if (vCol.a > 0.5 && !glass) {
     e = t.x * w[0].rgb + t.y * w[1].rgb + t.z * w[2].rgb + t.w * w[3].rgb;
   } else {
     e = vCorner.x * w[0].rgb + vCorner.y * w[1].rgb + vCorner.z * w[2].rgb + vCorner.w * w[3].rgb;
@@ -193,6 +245,18 @@ void main() {
   }
   vec3 surface = vCol.rgb;
   if (group.x > 0.5) surface = surface * pic / max(picAvg.rgb, vec3(0.02));
+  if (glass) {
+    vec3 view = normalize(eye.xyz - vWorld);
+    float f = 0.04 + 0.96 * pow(1.0 - max(dot(n, view), 0.0), 5.0);
+    vec3 bounce = max(vCorner.x * w[0].rgb + vCorner.y * w[1].rgb + vCorner.z * w[2].rgb + vCorner.w * w[3].rgb, vec3(0.0));
+    vec3 at = vWorld + n * 0.002;
+    vec3 hl = lampSpec(vLamps.x, at, n, view, 300.0) * vSeen.x + lampSpec(vLamps.y, at, n, view, 300.0) * vSeen.y;
+    hl += lampSpec(vLamps.z, at, n, view, 300.0) * vSeen.z + lampSpec(vLamps.w, at, n, view, 300.0) * vSeen.w;
+    vec3 lit = surface * max(e, vec3(0.0)) / 3.14159265 * vCol.a * 0.35 + f * bounce / 3.14159265 + hl;
+    float a = clamp(vCol.a * (1.0 - f) + f, 0.0, 1.0);
+    color = vec4(srgb(aces(lit * group.yzw * eye.w)), a);
+    return;
+  }
   vec3 nits = glow.rgb + surface * max(e, vec3(0.0)) / 3.14159265;
   color = vec4(srgb(aces(nits * group.yzw * eye.w)), 1.0);
 }

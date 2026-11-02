@@ -58,14 +58,21 @@ live in the docs listed in part 8; they never hold plans or ticks.
 - **The backbone:** server, accounts, money. *Now:* accounts with ages, the ledger (credits), the multiplayer room, voice; accounts still on IONOS; both deploys report their real state to Dev (J2).
 
 ## 4. Now
-**J118 · The new engine, finished** (the engine). The new engine, finished: the bar in words, lights alive, tuned, and the switch when the user says · N1 N2 N3
-- [x] **J118.1** The bar's world in words, made from a converter with a test that it equals today's *Check:* The bar on the new engine looks the same as before; the words file reads like a list of the bar's things
-- [x] **J118.2** The bar's lights alive on the new engine: the rig plays them (breathing, buzzing, the strings with the music, the lights going down) *Check:* /bar/?engine=next: the neon buzzes, the bulbs breathe
-- [x] **J118.3** Tune: quality levels, smooth round things, small things lit right, the look you like (less warm) *Check:* The new-engine bar looks as you like on your phone, smooth at every level
+**J119 · The switch to the new engine, when the user says** (the engine). The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired · N1 N2 N3
+- [ ] **J119.1** Glass: bottles, glasses and windows drawn see-through on the new engine, tinted, catching the lamps' highlights *Check:* /bar/?engine=next: the bottles behind the bar and the glasses on the counter are see-through and glint
+- [ ] **J119.2** Shine and reflections: wood, metal and the bar top catch the lamps; shiny things reflect the room; the big mirror reflects the bar and you *Check:* /bar/?engine=next: walk past the bar top and the lamps glint in it; the big mirror shows the room
+- [ ] **J119.3** Haze, light beams and glow around the lights, and sharper pictures on High *Check:* /bar/?engine=next: a soft haze, beams under the lamps, the neon glows; close-up textures are crisp on High
+- [ ] **J119.4** Sitting and tapping things: seats, the light switches, the mirror buttons, the drink spots *Check:* /bar/?engine=next: tap a stool to sit, tap a switch to turn the lights down
+- [ ] **J119.5** Sound and music: the jukebox and the room's sounds on the new engine *Check:* /bar/?engine=next: the jukebox plays and the lights follow its beat
+- [ ] **J119.6** People: others in the bar with you, and voice, on the new engine *Check:* Two phones at /bar/?engine=next see each other and can talk
+- [ ] **J119.7** The games on the new engine: chess, darts, the arcade, the racing sims *Check:* /bar/?engine=next: play a game of each
+- [ ] **J119.8** Menus, the HUD and the other places (home) on the new engine *Check:* /bar/?engine=next: the menu opens; Places takes you home and back
+- [ ] **J119.9** Moving things: pick up and put down, knocked things fall, the light follows them *Check:* /bar/?engine=next: pick up a glass, knock a stool over, its shadow moves
+- [ ] **J119.10** The switch, when you say: the new engine becomes the live bar on every browser; the old renderer retired *Check:* joshuavelasco.com/bar opens the new engine
 
 ## 5. The road
 *Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as "Formerly".*
-**Up next, in order:** J119 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
+**Up next, in order:** J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)
 
 ### The world
 - [ ] **J9** Alive avatars: breathing, blinking, looking at whoever talks, shifting weight, feet planted on stairs; one body with sliders. · N3
@@ -176,8 +183,6 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable after J80 — Proves the language on real things without changing what you see
 - [ ] **J85** The Loop Maker, step 1, the engine: a library of loops (patterns: sway, breathe, pulse…) used by name anywhere, and a place's timeline like a DAW's arrangement (tracks over things, clips of patterns at a beat, faded and layered on what each thing does), on the shared clock and the music's beat, the same on every phone and in the room; the showroom's stage plays a 16-beat show. Its plan: docs/plan/jobs/J85.md. · N2 N3
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
-- [ ] **J119** The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired · N1 N2 N3
-  *Verdict:* Doable after J118 — the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5

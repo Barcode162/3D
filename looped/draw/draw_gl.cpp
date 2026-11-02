@@ -204,6 +204,9 @@ class GlDevice final : public Device {
     }
     if (p.desc.depth) glEnable(GL_DEPTH_TEST), glDepthFunc(GL_LESS);
     else glDisable(GL_DEPTH_TEST);
+    glDepthMask(p.desc.blend ? GL_FALSE : GL_TRUE);
+    if (p.desc.blend) glEnable(GL_BLEND), glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    else glDisable(GL_BLEND);
     if (p.desc.cullBack) glEnable(GL_CULL_FACE), glCullFace(GL_BACK), glFrontFace(GL_CCW);
     else glDisable(GL_CULL_FACE);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count), GL_UNSIGNED_INT, nullptr);

@@ -47,6 +47,8 @@ static_assert(sizeof(Uniforms) == 192, "std140");
 
 struct Group {
   int picture = -1;
+  bool glass = false;  // J119.1: drawn last, see-through
+  Vec3 middle;         // the middle of its corners (glass is drawn farthest first)
   Vec3 glow;
   uint32_t vertexCount = 0;
   draw::ClusterTree tree;
@@ -69,7 +71,7 @@ struct Floor {
 
 struct App {
   std::unique_ptr<draw::Device> dev;
-  draw::Handle pipe = 0, atlas = 0, lampTex = 0, white = 0;
+  draw::Handle pipe = 0, glassPipe = 0, atlas = 0, lampTex = 0, white = 0;
   std::vector<Group> groups;
   std::vector<draw::Handle> pictures;
   std::vector<Vec3> pictureAvg;
@@ -127,7 +129,7 @@ T take(const uint8_t*& p) {
 }
 
 bool loadPlace(const uint8_t* data, size_t size) {
-  if (size < 36 || std::memcmp(data, "LNX2", 4) != 0) return false;
+  if (size < 36 || std::memcmp(data, "LNX3", 4) != 0) return false;
   const uint8_t* p = data + 4;
   take<uint32_t>(p);
   const uint32_t ng = take<uint32_t>(p), nl = take<uint32_t>(p);
@@ -137,11 +139,19 @@ bool loadPlace(const uint8_t* data, size_t size) {
   for (uint32_t k = 0; k < ng; ++k) {
     Group gr;
     gr.picture = static_cast<int>(take<uint32_t>(p));
+    gr.glass = take<uint32_t>(p) != 0;
     gr.glow = {take<float>(p), take<float>(p), take<float>(p)};
     gr.vertexCount = take<uint32_t>(p);
     const uint32_t ni = take<uint32_t>(p), nc = take<uint32_t>(p);
     const std::vector<uint8_t> verts = unplane(p, gr.vertexCount, kVertex);
     gr.vb = g.dev->vertexBuffer(verts.data(), verts.size());
+    Vec3 sum{0, 0, 0};
+    for (size_t i = 0; i < gr.vertexCount; ++i) {
+      float xyz[3];
+      std::memcpy(xyz, &verts[i * kVertex], 12);
+      sum = sum + Vec3{xyz[0], xyz[1], xyz[2]};
+    }
+    gr.middle = gr.vertexCount ? sum * (1.0f / static_cast<float>(gr.vertexCount)) : Vec3{0, 0, 0};
     p += static_cast<size_t>(gr.vertexCount) * kVertex;
     const std::vector<uint8_t> steps = unplane(p, ni, 4);
     gr.tree.indices.resize(ni);
@@ -311,17 +321,30 @@ void frame() {
   }
   g.dev->updateTexture(g.lampTex, 4, 64, draw::Format::kRgba16f, lt.data());
   const float clear[4] = {0.01f, 0.01f, 0.012f, 1};
+  // The glass after everything else, farthest first, so nearer glass mixes over farther.
+  std::vector<const Group*> order;
+  for (const Group& gr : g.groups)
+    if (!gr.glass) order.push_back(&gr);
+  std::vector<const Group*> glass;
+  for (const Group& gr : g.groups)
+    if (gr.glass) glass.push_back(&gr);
+  std::sort(glass.begin(), glass.end(), [](const Group* a, const Group* b) {
+    const Vec3 da = a->middle - g.eye, db = b->middle - g.eye;
+    return dot(da, da) > dot(db, db);
+  });
+  order.insert(order.end(), glass.begin(), glass.end());
   if (g.dev->begin(clear)) {
-    for (const Group& gr : g.groups) {
+    for (const Group* grp : order) {
+      const Group& gr = *grp;
       if (!gr.drawn) continue;
       const bool pic = gr.picture >= 0 && static_cast<size_t>(gr.picture) < g.pictures.size() && g.pictures[static_cast<size_t>(gr.picture)];
       u.group[0] = pic ? 1.0f : 0.0f;
       u.group[1] = g.balance.x, u.group[2] = g.balance.y, u.group[3] = g.balance.z;
       const Vec3 avg = pic ? g.pictureAvg[static_cast<size_t>(gr.picture)] : Vec3{1, 1, 1};
       u.picAvg[0] = avg.x, u.picAvg[1] = avg.y, u.picAvg[2] = avg.z;
-      u.glow[0] = gr.glow.x, u.glow[1] = gr.glow.y, u.glow[2] = gr.glow.z;
+      u.glow[0] = gr.glow.x, u.glow[1] = gr.glow.y, u.glow[2] = gr.glow.z, u.glow[3] = gr.glass ? 1.0f : 0.0f;
       const draw::Handle tex[3] = {g.atlas, pic ? g.pictures[static_cast<size_t>(gr.picture)] : g.white, g.lampTex};
-      g.dev->drawIndexed(g.pipe, gr.vb, gr.ib, gr.drawn, &u, sizeof u, tex, 3);
+      g.dev->drawIndexed(gr.glass ? g.glassPipe : g.pipe, gr.vb, gr.ib, gr.drawn, &u, sizeof u, tex, 3);
     }
     g.dev->end();
   }
@@ -351,6 +374,9 @@ void start(std::unique_ptr<draw::Device> dev) {
   pd.layout.items = {{draw::Attr::kFloat3, 0},  {draw::Attr::kFloat2, 12},  {draw::Attr::kUnorm16x2, 20}, {draw::Attr::kUnorm8x4, 24},
                      {draw::Attr::kHalf4, 28},  {draw::Attr::kUint8x4, 36}, {draw::Attr::kUnorm8x4, 40}, {draw::Attr::kSnorm8x4, 44}};
   g.pipe = g.dev->pipeline(pd);
+  pd.label = "glass";
+  pd.blend = true;
+  g.glassPipe = g.dev->pipeline(pd);
   js_status(draw::backendName(g.dev->backend()), g.dev->problem.c_str());
   js_fetchPlace();  // the page fetches data/place.bin.gz, unpacks it and hands it to nx_place
 }
@@ -446,6 +472,18 @@ EMSCRIPTEN_KEEPALIVE float nx_level(int k) {
   if (k < 0 || static_cast<size_t>(k) >= g.level.size()) return -1;
   const Vec3& v = g.level[static_cast<size_t>(k)];
   return (v.x + v.y + v.z) / 3;
+}
+// For the test: how many glass groups there are, and how many of their triangles this view draws (J119.1).
+EMSCRIPTEN_KEEPALIVE int nx_glassGroups() {
+  int n = 0;
+  for (const Group& gr : g.groups) n += gr.glass;
+  return n;
+}
+EMSCRIPTEN_KEEPALIVE int nx_glassDrawn() {
+  uint32_t n = 0;
+  for (const Group& gr : g.groups)
+    if (gr.glass) n += gr.drawn / 3;
+  return static_cast<int>(n);
 }
 EMSCRIPTEN_KEEPALIVE int nx_rigChannels() {
   int n = 0;

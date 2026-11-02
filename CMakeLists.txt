@@ -223,7 +223,7 @@ target_include_directories(next PRIVATE ${CMAKE_SOURCE_DIR})
 target_compile_options(next PRIVATE -Wall -Wextra -Werror --use-port=emdawnwebgpu)
 target_link_options(next PRIVATE
   --use-port=emdawnwebgpu -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=256MB
-  "-sEXPORTED_FUNCTIONS=_main,_malloc,_free,_nx_place,_nx_picture,_nx_move,_nx_look,_nx_detail,_nx_exposure,_nx_ready,_nx_eyeX,_nx_eyeZ,_nx_rig,_nx_event,_nx_level,_nx_rigChannels,_nx_balance,_nx_quality"
+  "-sEXPORTED_FUNCTIONS=_main,_malloc,_free,_nx_place,_nx_picture,_nx_move,_nx_look,_nx_detail,_nx_exposure,_nx_ready,_nx_eyeX,_nx_eyeZ,_nx_rig,_nx_event,_nx_level,_nx_rigChannels,_nx_balance,_nx_quality,_nx_glassGroups,_nx_glassDrawn"
   "-sEXPORTED_RUNTIME_METHODS=ccall,HEAPU8,stringToNewUTF8"
   $<IF:$<CONFIG:Release>,-O3,-g>)
 add_custom_command(OUTPUT ${SITE}/labs/next/next.js ${SITE}/labs/next/next.wasm DEPENDS next

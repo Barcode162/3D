@@ -105,6 +105,8 @@ try {
     const m = /(\d+)k of (\d+)k triangles/.exec(stats);
     check(backend === name && !problem, `the new-engine bar draws with ${name}` + (problem ? ': ' + problem : ''));
     check(m && Number(m[1]) < Number(m[2]), `the new-engine bar (${name}) draws only the detail it needs: ${stats}`);
+    const glass = await page.evaluate(() => [Module._nx_glassGroups(), Module._nx_glassDrawn()]);
+    check(glass[0] > 10 && glass[1] > 1000, `the new-engine bar (${name}) draws its glass: ${glass[0]} glass groups, ${glass[1]} triangles in view (J119.1)`);
     if (name === 'WebGL2') {
       const start = await page.evaluate(() => [Module._nx_eyeX(), Module._nx_eyeZ()]);
       await page.evaluate(() => Module._nx_move(0, -1));  // walk forward

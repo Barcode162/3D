@@ -699,7 +699,7 @@ void writeRepair(const std::string& path, const Loaded& L, const bake::Room& roo
 //   the walk: spawn xyz + yaw (f32), blockers (u32 n; minX minZ maxX maxZ), raised floors (u32 n; + height)
 void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room, const Atlas& A, const std::vector<float>& coeff, int layers,
                 const Squeeze& S, int dims, int channels, const std::vector<uint32_t>& cornerOf, const std::vector<float>& corners,
-                const std::vector<float>& cornerSeen, const std::vector<std::string>& channelNames) {
+                const std::vector<float>& cornerSeen, const std::vector<std::string>& channelNames, const bake::ProbeGrid& G) {
   constexpr uint32_t kNo = 0xFFFFFFFFu;
   const int K = std::min(layers, 4);
   const size_t nl = room.lamps.size();
@@ -761,6 +761,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
   struct Group {
     int picture;
     Vec3 glow;
+    bool glass = false;  // J119.1: see-through, drawn last
     std::vector<Vtx> v;
     std::map<std::tuple<uint32_t, float, float>, uint32_t> at;
     std::vector<uint32_t> idx;
@@ -774,7 +775,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
     const Vec3 glow = gm.emission * room.emissiveNits;
     const auto gk = std::make_tuple(pic, static_cast<int>(glow.x * 100), static_cast<int>(glow.y * 100), static_cast<int>(glow.z * 100));
     auto git = groupOf.find(gk);
-    if (git == groupOf.end()) git = groupOf.emplace(gk, groups.size()).first, groups.push_back({pic, glow, {}, {}, {}});
+    if (git == groupOf.end()) git = groupOf.emplace(gk, groups.size()).first, groups.push_back({pic, glow, false, {}, {}, {}});
     Group& g = groups[git->second];
     const uint32_t ci = cornerOf[t];
     for (int c3 = 0; c3 < 3; ++c3) {
@@ -812,12 +813,108 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
       g.idx.push_back(vit->second);
     }
   }
+  // The glass (J119.1): the see-through parts the light passes through (so
+  // not in the room the light was traced in), as groups of their own, lit
+  // like the small things: the light grid's bounce at each corner, in the
+  // same layers, and the four lamps it sees most, worked out per pixel.
+  // Their colour's alpha is how much light they stop.
+  {
+    std::map<std::pair<int, int>, size_t> glassOf;  // (picture, opacity in 1/100s) → group
+    std::vector<Vec3> bounce(static_cast<size_t>(channels));
+    for (const Loaded::Placed& pl : L.placed) {
+      const ModelData& d = L.files.at(pl.file);
+      const Mat4 inv = inverse(pl.world);
+      for (const ModelPrimitive& prim : d.primitives) {
+        if (prim.material < 0 || static_cast<size_t>(prim.material) >= d.materials.size()) continue;
+        const ModelMaterial& mm = d.materials[static_cast<size_t>(prim.material)];
+        const GeoMaterial gm = L.table.lookup(pl.file, mm);
+        if (!gm.seeThrough) continue;
+        if (gm.emission.x + gm.emission.y + gm.emission.z > 0) continue;  // glowing glass (a neon tube's casing): its glow is drawn by the tube, as before
+        // The picture (a label, a frosted pattern), as the opaque groups find theirs.
+        int pic = -1;
+        if (mm.baseColorImage >= 0 && static_cast<size_t>(mm.baseColorImage) < d.images.size()) {
+          auto it = picture.find({pl.file, mm.baseColorImage});
+          if (it != picture.end()) pic = it->second;
+          else {
+            pic = static_cast<int>(picture.size());
+            const ModelImage& im = d.images[static_cast<size_t>(mm.baseColorImage)];
+            const std::string name = std::to_string(pic) + (im.mimeType == "image/png" ? ".png" : ".jpg");
+            std::ofstream(dir + "/tex/" + name, std::ios::binary).write(reinterpret_cast<const char*>(im.bytes.data()), static_cast<std::streamsize>(im.bytes.size()));
+            pictureNames.push_back(name);
+            picture.emplace(std::make_pair(pl.file, mm.baseColorImage), pic);
+          }
+        }
+        const float opacity = std::clamp(mm.baseColor[3], 0.08f, 1.0f);
+        const auto key = std::make_pair(pic, static_cast<int>(std::lround(opacity * 100)));
+        auto git = glassOf.find(key);
+        if (git == glassOf.end()) git = glassOf.emplace(key, groups.size()).first, groups.push_back({pic, {}, true, {}, {}, {}});
+        Group& g = groups[git->second];
+        const uint32_t base = static_cast<uint32_t>(g.v.size());
+        for (const ModelVertex& mv : prim.vertices) {
+          Vtx v;
+          const Vec4 wp = transformPoint(pl.world, mv.position);
+          v.pos = {wp.x, wp.y, wp.z};
+          Vec3 n{inv.at(0, 0) * mv.normal.x + inv.at(0, 1) * mv.normal.y + inv.at(0, 2) * mv.normal.z,
+                 inv.at(1, 0) * mv.normal.x + inv.at(1, 1) * mv.normal.y + inv.at(1, 2) * mv.normal.z,
+                 inv.at(2, 0) * mv.normal.x + inv.at(2, 1) * mv.normal.y + inv.at(2, 2) * mv.normal.z};
+          const float len = length(n);
+          v.normal = len > 1e-8f ? n * (1 / len) : Vec3{0, 1, 0};
+          v.uv = mv.uv;
+          v.uv2 = {-1, -1};
+          v.col[0] = static_cast<uint8_t>(std::clamp(gm.albedo.x, 0.0f, 1.0f) * 255 + 0.5f);
+          v.col[1] = static_cast<uint8_t>(std::clamp(gm.albedo.y, 0.0f, 1.0f) * 255 + 0.5f);
+          v.col[2] = static_cast<uint8_t>(std::clamp(gm.albedo.z, 0.0f, 1.0f) * 255 + 0.5f);
+          v.col[3] = static_cast<uint8_t>(opacity * 255 + 0.5f);
+          // The bounce, both sides (glass is seen from either), in the layers.
+          G.atAll(v.pos, v.normal, bounce.data());
+          std::vector<Vec3> back(static_cast<size_t>(channels));
+          G.atAll(v.pos, v.normal * -1.0f, back.data());
+          for (int k = 0; k < K; ++k) {
+            double u = 0;
+            for (int c = 0; c < channels; ++c) {
+              const Vec3 b = (bounce[static_cast<size_t>(c)] + back[static_cast<size_t>(c)]) * 0.5f;
+              u += S.basis[k * dims + 3 * c] * b.x + S.basis[k * dims + 3 * c + 1] * b.y + S.basis[k * dims + 3 * c + 2] * b.z;
+            }
+            v.layer[k] = u;
+          }
+          // The lamps it sees most (how much of each, times how strong it is from here).
+          for (size_t l = 0; l < nl; ++l) {
+            const float sn = G.seenFrom(v.pos, v.normal, static_cast<int>(l));
+            if (sn <= 0) continue;
+            const Vec3 toLamp = room.lamps[l].position - v.pos;
+            if (dot(toLamp, toLamp) < 0.09f) continue;  // its own lamp's fitting (a shade round the bulb): no sharp highlight from inside
+            v.seen[static_cast<int>(l)] = sn;
+          }
+          // Keep the four strongest, by what they give here (seen x candela / distance²).
+          if (v.seen.size() > 4) {
+            std::vector<std::pair<double, int>> rank;
+            for (const auto& [l, sn] : v.seen) {
+              const Vec3 dl = room.lamps[static_cast<size_t>(l)].position - v.pos;
+              rank.push_back({sn * room.lamps[static_cast<size_t>(l)].cd / std::max(0.04f, dot(dl, dl)), l});
+            }
+            std::sort(rank.rbegin(), rank.rend());
+            std::map<int, double> keep;
+            for (int k = 0; k < 4; ++k) keep[rank[static_cast<size_t>(k)].second] = v.seen[rank[static_cast<size_t>(k)].second];
+            v.seen = keep;
+          }
+          v.n = 1;
+          g.v.push_back(std::move(v));
+        }
+        for (uint32_t i : prim.indices) g.idx.push_back(base + i);
+      }
+    }
+    size_t glassGroups = 0, glassTris = 0;
+    for (const Group& g : groups)
+      if (g.glass) ++glassGroups, glassTris += g.idx.size() / 3;
+    std::printf("glass: %zu triangles in %zu groups, lit from the light grid\n", glassTris, glassGroups);
+  }
   // LNX2 (J118.3): as LNX1, with a facing per corner (48-byte corners), and
   // packed so gzip finds the patterns: each group's corners as byte planes
   // (every corner's first byte, then every second byte, …), its indices as
   // the step from the one before (zigzag) in byte planes, the light texture
   // in its two byte planes. The page unpacks the gzip; the engine undoes the rest.
-  std::vector<uint8_t> o = {'L', 'N', 'X', '2'};
+  // LNX3 (J119.1): each group says whether it's glass (a word after its picture).
+  std::vector<uint8_t> o = {'L', 'N', 'X', '3'};
   auto planes = [&](size_t from, size_t stride) {  // turns o[from..] into byte planes of `stride`-byte items
     const size_t n = (o.size() - from) / stride;
     std::vector<uint8_t> t(n * stride);
@@ -827,7 +924,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
   };
   auto u32 = [&](uint32_t x) { for (int k = 0; k < 4; ++k) o.push_back(static_cast<uint8_t>(x >> (8 * k))); };
   auto f32 = [&](float f) { uint32_t x; std::memcpy(&x, &f, 4); u32(x); };
-  u32(2), u32(static_cast<uint32_t>(groups.size())), u32(static_cast<uint32_t>(nl)), u32(static_cast<uint32_t>(K)), u32(static_cast<uint32_t>(channels)),
+  u32(3), u32(static_cast<uint32_t>(groups.size())), u32(static_cast<uint32_t>(nl)), u32(static_cast<uint32_t>(K)), u32(static_cast<uint32_t>(channels)),
       u32(static_cast<uint32_t>(A.width)), u32(static_cast<uint32_t>(A.height)), u32(static_cast<uint32_t>(picture.size()));
   size_t allTris = 0, allClusters = 0;
   for (Group& g : groups) {
@@ -836,7 +933,7 @@ void writePlace(const std::string& dir, const Loaded& L, const bake::Room& room,
     const draw::ClusterTree tree = draw::buildClusters(pos, g.idx);
     allTris += tree.fullTriangles;
     allClusters += tree.clusters.size();
-    u32(static_cast<uint32_t>(g.picture)), f32(g.glow.x), f32(g.glow.y), f32(g.glow.z);
+    u32(static_cast<uint32_t>(g.picture)), u32(g.glass ? 1u : 0u), f32(g.glow.x), f32(g.glow.y), f32(g.glow.z);
     u32(static_cast<uint32_t>(g.v.size())), u32(static_cast<uint32_t>(tree.indices.size())), u32(static_cast<uint32_t>(tree.clusters.size()));
     auto u16 = [&](uint16_t x) { o.push_back(static_cast<uint8_t>(x & 255)), o.push_back(static_cast<uint8_t>(x >> 8)); };
     const size_t vertsAt = o.size();
@@ -1236,7 +1333,7 @@ int bakeCommand(Loaded& L, const std::string& out, std::vector<std::string> spot
     writeScene(out + "/scene.bin", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen, channelNames);
     writeRepair(out + "/repair.bin", L, room, A);
   }
-  writePlace(out + "/next", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen, channelNames);
+  writePlace(out + "/next", L, room, A, coeff, layers, S, dims, channels, cornerOf, corners, cornerSeen, channelNames, G);
   summary += "]}\n";
   std::ofstream(out + "/summary.json") << summary;
   // The baked layers, for the frame (J116.4).
