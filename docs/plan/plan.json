@@ -785,6 +785,18 @@
      "after": "J118",
      "why": "the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when"
     }
+   },
+   {
+    "id": "J120",
+    "text": "The Last Ember: a story game on Looped, written in Looped Script, in the ENG repo (request 2026-11-02 #1, #2)",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "Looped's drawing piece and Looped Script exist; the game copies them into ENG and adds story words on top, from scratch, no outside assets"
+    }
    }
   ],
   "tools": [

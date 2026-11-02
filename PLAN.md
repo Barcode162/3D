@@ -178,6 +178,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Our own engine code: patterns and timelines on the shared clock the world model already has
 - [ ] **J119** The switch to the new engine, when the user says: everything today's bar does (people, seats, the games, the menus) on the new engine, then it becomes the live bar on every browser and the old renderer is retired · N1 N2 N3
   *Verdict:* Doable after J118 — the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when
+- [ ] **J120** The Last Ember: a story game on Looped, written in Looped Script, in the ENG repo (request 2026-11-02 #1, #2) · N2
+  *Verdict:* Doable now — Looped's drawing piece and Looped Script exist; the game copies them into ENG and adds story words on top, from scratch, no outside assets
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
