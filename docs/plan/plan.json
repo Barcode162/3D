@@ -797,6 +797,18 @@
      "kind": "now",
      "why": "Looped's drawing piece and Looped Script exist; the game copies them into ENG and adds story words on top, from scratch, no outside assets"
     }
+   },
+   {
+    "id": "J121",
+    "text": "A Skyrim-sized world from our own rules, streamed, with the clusters and the best light a phone can show, in ENG (requests 2026-11-02 #3, #4)",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Streamed generated worlds and clusters are known practice; how far realism goes on an iPhone browser is found step by step"
+    }
    }
   ],
   "tools": [
