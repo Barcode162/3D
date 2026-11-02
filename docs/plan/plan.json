@@ -809,6 +809,18 @@
      "kind": "experiment",
      "why": "Streamed generated worlds and clusters are known practice; how far realism goes on an iPhone browser is found step by step"
     }
+   },
+   {
+    "id": "J122",
+    "text": "One light for everywhere: realistic, cheap, measured against our path tracer; a zoned test world (request 2026-11-02 #5)",
+    "serves": [
+     "N2"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "experiment",
+     "why": "Each technique is known practice; the mix that looks right on an iPhone browser is found by measuring against our own path tracer and the user's eye"
+    }
    }
   ],
   "tools": [

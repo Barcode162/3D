@@ -182,6 +182,8 @@ live in the docs listed in part 8; they never hold plans or ticks.
   *Verdict:* Doable now — Looped's drawing piece and Looped Script exist; the game copies them into ENG and adds story words on top, from scratch, no outside assets
 - [ ] **J121** A Skyrim-sized world from our own rules, streamed, with the clusters and the best light a phone can show, in ENG (requests 2026-11-02 #3, #4) · N2
   *Verdict:* Needs an experiment — Streamed generated worlds and clusters are known practice; how far realism goes on an iPhone browser is found step by step
+- [ ] **J122** One light for everywhere: realistic, cheap, measured against our path tracer; a zoned test world (request 2026-11-02 #5) · N2
+  *Verdict:* Needs an experiment — Each technique is known practice; the mix that looks right on an iPhone browser is found by measuring against our own path tracer and the user's eye
 
 ### The tools
 - [ ] **J56** Engine flags in the Toolbelt: switch features (?light=classic, ?bounce=0 ...) without typing addresses. · N5
