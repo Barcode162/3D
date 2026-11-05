@@ -67,7 +67,7 @@
   ]
  },
  "roadIntro": "*Next and later, by chapter. Every item: its job number, what it is, the North star line it serves, and its verdict (docs/playbook/intake.md step 3), judged as if unfrozen: nothing outside the freeze's list starts before J8. Old tags stay valid as \"Formerly\".*",
- "upNext": "J119 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J119 first when we come back to the engine: the rest of the bar on the new engine and the switch when the user says, request 2026-11-01 #7; then the user's notes of 2026-10-26 #13: quality levels and speed, the piano, the books, chess bots; then the shells and the new rooms; the Studio's jobs parked with it)",
+ "upNext": "J123 → J119 → J106 → J103 → J104 → J105 → J75 → J76 → J77 → J85 → J65 → J20 → J68 → J37 → J39 → J43 → J78 → J79 → J81 → J24 → J25 → J13 → J9 (J123 first: the foundations before anything else, request 2026-11-05 #1; then J119 when we come back to the bar)",
  "road": {
   "world": [
    {
@@ -784,6 +784,20 @@
      "kind": "after",
      "after": "J118",
      "why": "the new engine draws and lights the bar at the hidden link (J118); the rest of the bar comes over piece by piece, and the user decides when"
+    }
+   },
+   {
+    "id": "J123",
+    "text": "Solid foundations: one engine (Loop3D), a clean and smooth picture measured on the phone, then our own project file and AI templates",
+    "serves": [
+     "N2",
+     "N3",
+     "N5"
+    ],
+    "done": false,
+    "verdict": {
+     "kind": "now",
+     "why": "research first (the user's rule); the pieces start on the user's choice, each measured on the phone"
     }
    }
   ],
