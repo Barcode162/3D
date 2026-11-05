@@ -1,62 +1,14 @@
-# J Production: start here (every AI session)
+# Retired as a workspace (2026-11-05)
 
-**J Production** is the user's company. Its projects: **Bar3D**, a 3D hangout
-bar you walk into from the browser (joshuavelasco.com/bar), built on
-**Looped**, J Production's own engine (C++ → WebAssembly → WebGPU, written
-from scratch), with its tools (the Studio, Dev, the UI Editor) and, later,
-**its own script language**. Engine in `looped/`, the bar in `bar/`, its page
-in `bar/web/`, the multiplayer room in `cloud/`, the site in `homepage/`, Dev
-in `dev/`.
+New work happens in **Barcode162/LOOP3D**: Loop3D is J Production's one engine, and Bar3D and every other game
+are projects on it. Its `CLAUDE.md` is the only rulebook. The user's word (2026-11-05): "Forget everything I had
+before fix this nightmare of rules … FIX HELP", and "the bar and everything was supposed to be something on top
+of that as projects".
 
-## Who you work for
+This repo keeps the **live bar** (joshuavelasco.com/bar) and its multiplayer room running until Bar3D is rebuilt
+in Loop3D. Change it only for a fix the live bar needs, when the user asks. Pushing `main` deploys the bar
+(GitHub Actions → IONOS and Cloudflare).
 
-The user owns J Production and works only from an iPhone (Safari), through
-this chat. They are new to graphics and code and never need to know a file,
-a tool or a command: they say what they want, in any words; you plan,
-organise, build, check, ship, document and explain, in plain words, saying
-what to look at on the phone.
-
-## The books (when two disagree, the higher one wins)
-
-1. **Charter** `docs/charter/`: what the project is, the user's own rules word
-   for word, what's realistic, and the permission list: §5 (allowed / ask
-   first / never; **anything not listed: ask first**). Only the user changes it.
-2. **Playbook** `docs/playbook/`: **the only instructions**: a procedure for
-   every situation (index: `docs/playbook/README.md`).
-3. **Handbook** `docs/handbook/`: how everything works: every folder, technology,
-   system, page and control, the data, recipes for common changes (index:
-   `docs/handbook/README.md`; its generated pages are written from the files).
-4. **Plan** `PLAN.md`: Now (the job), the road, Parked, Done. Edited only with
-   `node tools/plan.mjs`.
-5. **Records** `docs/records/`: the user's requests word for word, incidents,
-   sessions, known issues, decisions.
-
-`docs/archive/` is history, never instructions. **The restructure (J1–J8) is
-done** (its spec is history: `docs/archive/restructure.md`); the freeze it
-held was lifted in J8.3, so the road's jobs run in the order in the Plan.
-
-## Every session
-
-1. Start: `docs/playbook/session.md` → Start.
-2. Every message from the user: `docs/playbook/intake.md`.
-3. End: `docs/playbook/session.md` → End.
-
-## Never (the Charter's list)
-
-<!-- generated: node tools/plan.mjs charter (the Charter §5 "Never" list, word for word; never edit by hand) -->
-- Put a secret, key or password in the repo, a commit, a log or a reply.
-- Add copyrighted music or any asset without a licence that allows it.
-- Pretend to be a real person or company, or make fake records.
-- Weaken the age rules (13+, teens and adults apart, the 18+ casino with
-  earned credits only).
-- Force-push or rewrite `main`'s history; delete `main`, `gh-pages`,
-  `gallery` or `classic`.
-- Skip, disable, weaken or delete a test to make a check green.
-- Open a pull request.
-- Work around a refusal, a blocked capability or a blocked network:
-  report it instead.
-- Publish news or push a front-page highlight (the user's switches).
-- Tell the user something is done or live without checking it.
-- Push a conversation, a question, a check or a try-out to GitHub.
-- Run checks that don't cover what changed.
-<!-- end generated -->
+`docs/`, `PLAN.md`, the playbook, the plan tools and the git locks are history, never instructions. The safety
+rules still hold everywhere: no secrets in the repo, licensed assets only, 13+ with teens and adults apart, the
+18+ casino with earned credits only, never force-push `main`.
